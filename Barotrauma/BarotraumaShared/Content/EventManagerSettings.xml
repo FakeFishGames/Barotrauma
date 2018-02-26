@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EventManagerSettings>
+  
+    <!-- DefaultEventThreshold
+      Event threshold determines how low the intensity of the current situation has to be for a new random event to be created.
+      The threshold may increase over time, but is reset to this default value after creating a new event. -->
+
+  <!-- EventThresholdIncrease
+      How much the event threshold increases per second. Can be used to make sure that new events will be created
+      eventually even if the current crisis situation is not resolved (e.g. sub laying flooded on the ocean floor...)-->
+
+  <!-- IntensityUpdateInterval
+      How often the event manager recalculates the intensity of the current situation.-->
+
+  <!-- EventCooldown
+      Minimum amount of time between creating new random events. -->
+
+  <!-- MinEventDifficulty, MaxEventDifficulty
+      The created events will be randomly chosen from events whose difficulty is between these values. -->
+
+  <!-- MinLevelDifficulty, MaxLevelDifficulty
+      The difficulty of the selected level determines which event manager settings are used. If the difficulty
+      of the level matches multiple settings, the setting is selected randomly. -->
+  
+  <Easy
+    DefaultEventThreshold="0.2"
+    EventThresholdIncrease="0.0005"
+    IntensityUpdateInterval="5.0"
+    EventCooldown="300.0"
+    MinEventDifficulty="0.0"
+    MaxEventDifficulty="10.0"
+    MinLevelDifficulty="0.0"
+    MaxLevelDifficulty="20.0"/>
+
+  <Medium
+    DefaultEventThreshold="0.3"
+    EventThresholdIncrease="0.0007"
+    IntensityUpdateInterval="5.0"
+    EventCooldown="250.0"
+    MinEventDifficulty="5.0"
+    MaxEventDifficulty="25.0"
+    MinLevelDifficulty="10.0"
+    MaxLevelDifficulty="40.0"/>
+
+  <Hard
+    DefaultEventThreshold="0.4"
+    EventThresholdIncrease="0.0009"
+    IntensityUpdateInterval="5.0"
+    EventCooldown="200.0"
+    MinEventDifficulty="10.0"
+    MaxEventDifficulty="40.0"
+    MinLevelDifficulty="35.0"
+    MaxLevelDifficulty="75.0"/>
+
+  <Hellish
+    DefaultEventThreshold="0.5"
+    EventThresholdIncrease="0.001"
+    IntensityUpdateInterval="5.0"
+    EventCooldown="100.0"
+    MinEventDifficulty="20.0"
+    MaxEventDifficulty="100.0"
+    MinLevelDifficulty="75.0"
+    MaxLevelDifficulty="100.0"/>
+</EventManagerSettings>

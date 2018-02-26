@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(containedItem, effect));
+                    itemsWithStatusEffects.Add(new Pair<Item, StatusEffect>(containedItem, effect));
                 }
             }
 

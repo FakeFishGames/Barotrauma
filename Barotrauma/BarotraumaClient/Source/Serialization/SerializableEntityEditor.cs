@@ -39,19 +39,23 @@ namespace Barotrauma
                 //if (editable != null) boxHeight = (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f);
 
                 object value = property.GetValue();
+                if (property.PropertyType == typeof(string) && value == null)
+                {
+                    value = "";
+                }
 
                 GUIComponent propertyField = null;
                 if (value is bool)
                 {
                     propertyField = CreateBoolField(entity, property, (bool)value, y, this);
                 }
-                else if (value.GetType().IsEnum)
-                {
-                    propertyField = CreateEnumField(entity, property, value, y, this);
-                }
                 else if (value is string)
                 {
                     propertyField = CreateStringField(entity, property, (string)value, y, this);
+                }
+                else if (value.GetType().IsEnum)
+                {
+                    propertyField = CreateEnumField(entity, property, value, y, this);
                 }
                 else if (value is int)
                 {

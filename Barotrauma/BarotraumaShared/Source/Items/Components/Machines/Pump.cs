@@ -148,6 +148,20 @@ namespace Barotrauma.Items.Components
             if (!IsActive) currPowerConsumption = 0.0f;
         }
 
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            if (objective.Option.ToLowerInvariant() == "stop pumping")
+            {
+                FlowPercentage = 0.0f;
+            }
+            else
+            {
+                IsActive = true;
+                FlowPercentage = -100.0f;
+            }
+            return true;
+        }
+
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
             float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;

@@ -4,9 +4,13 @@
     category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
-    cargocontainername="Metal Crate"    
-    price="10">
-
+    cargocontainername="Metal Crate">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    
     <Sprite texture ="headset.png" depth="0.6"/>
 
     <Body width="12" height="8" density="10"/>

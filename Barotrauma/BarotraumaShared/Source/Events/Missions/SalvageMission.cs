@@ -23,10 +23,10 @@ namespace Barotrauma
             }
         }
 
-        public SalvageMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public SalvageMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            string itemName = element.GetAttributeString("itemname", "");
+            string itemName = prefab.XmlConfig.GetAttributeString("itemname", "");
 
             itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
@@ -35,7 +35,7 @@ namespace Barotrauma
                 return;
             }
 
-            string spawnPositionTypeStr = element.GetAttributeString("spawntype", "");
+            string spawnPositionTypeStr = prefab.XmlConfig.GetAttributeString("spawntype", "");
 
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse<Level.PositionType>(spawnPositionTypeStr, true, out spawnPositionType))

@@ -661,7 +661,20 @@ namespace Barotrauma
             float damageAmount = 0.0f;
             for (int i = 0; i < SectionCount; i++)
             {
-                if (Vector2.DistanceSquared(SectionPosition(i, true), worldPosition) <= attack.DamageRange * attack.DamageRange)
+                Vector2 sectionPosition = SectionPosition(i, true);
+                Vector2 diff = Vector2.Zero;
+                if (isHorizontal)
+                {
+                    diff.X = Math.Max(Math.Abs(sectionPosition.X - worldPosition.X) - WallSectionSize / 2, 0.0f);
+                    diff.Y = Math.Max(Math.Abs(sectionPosition.Y - worldPosition.Y) - rect.Height / 2, 0.0f);
+                }
+                else
+                {
+                    diff.X = Math.Max(Math.Abs(sectionPosition.X - worldPosition.X) - rect.Width / 2, 0.0f);
+                    diff.Y = Math.Max(Math.Abs(sectionPosition.Y - worldPosition.Y) - WallSectionSize / 2, 0.0f);
+                }
+
+                if (diff.LengthSquared() <= attack.DamageRange * attack.DamageRange)
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
@@ -673,7 +686,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (playSound)// && !SectionBodyDisabled(i))
+            if (playSound)
             {
                 string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
@@ -715,7 +728,8 @@ namespace Barotrauma
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 
-                    //remove existing gap if damage is below 50%
+                    //remove existing gap if damage is below leak threshold
+                    sections[sectionIndex].gap.Open = 0.0f;
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
 #if CLIENT

@@ -4,12 +4,16 @@
   <Item
     name="Medical Syringe"
     category="Equipment"
-    Tags="smallitem,medical"    
-    price="50"
+    Tags="smallitem,medical"
     canuseonself="true"
     cargocontainername="Chemical Crate"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
-
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="70"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
@@ -41,12 +45,16 @@
   <Item
     name="Bandage"
     category="Equipment"
-    Tags="smallitem,medical"    
+    Tags="smallitem,medical,stopbleeding"    
     canuseonself="true"
-    price="20"
     cargocontainername="Chemical Crate"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
-
+    
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    
     <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
 
     <Body width="11" height="16" density="20"/>
@@ -69,9 +77,13 @@
     name="Iron Powder"
     category="Material"
     Tags="smallitem,chem"
-    cargocontainername="Chemical Crate"
-    price="5">
-
+    cargocontainername="Chemical Crate">
+    
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+    <Price locationtype="Outpost" buyprice="30"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
 
     <Body width="8" height="16" density="40"/>
@@ -90,9 +102,12 @@
      Tags="smallitem,chem,medical"  
      cargocontainername="Chemical Crate"   
      description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
-     canuseonself="true"
-     price="10">
-
+     canuseonself="true">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
@@ -114,9 +129,12 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.6"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -134,9 +152,13 @@
     spritecolor="0.0,0.9,0.1,1.0"
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
-    canuseonself="true"    
-    price="20">
-
+    canuseonself="true">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0"/>      
@@ -158,9 +180,12 @@
     category="Material"
     spritecolor="0.7,0.7,0.7,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -177,9 +202,12 @@
     category="Material"
     spritecolor="0.8,0.8,0.8,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -200,9 +228,12 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -221,9 +252,12 @@
      spritecolor="0.7,0.9,1.0,1.0"
      cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
-     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds."
-     price="50">
-
+     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds.">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -245,9 +279,13 @@
      cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
      canuseonself="true"
-     description="Most commonly used for treating oxygen deprivation."
-     price="50">
-
+     description="Most commonly used for treating oxygen deprivation.">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -264,10 +302,14 @@
     category="Material"
     spritecolor="0.6,0.4,0.2,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
+    Tags="smallitem,chem,medical,stopbleeding"    
     canuseonself="true"
-    description="A hemostatic agent that slows down bleeding."
-    price="50">
+    description="A hemostatic agent that slows down bleeding.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
@@ -290,12 +332,15 @@
     category="Material"
     spritecolor="0.8,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    
+    Tags="smallitem,chem,medical,heal"
     canuseonself="true"
-    description="Highly effective at treating various types of physical trauma."
-    price="50">
+    description="Highly effective at treating various types of physical trauma.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -317,11 +362,12 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    
-    description="A highly potent corrigodone-based stimulant."
-    price="150">
+    Tags="smallitem,chem,medical,heal,stopbleeding"
+    description="A highly potent corrigodone-based stimulant.">
 
+    <Price locationtype="Research" buyprice="150"/>
+    <Price locationtype="Military" buyprice="200"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -339,8 +385,10 @@
    spritecolor="0.8,0.3,0.8,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="A potent muscle stimulant."
-   price="50">
+   description="A potent muscle stimulant.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -359,9 +407,12 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
-   price="300">
+   description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.">
 
+    <Price locationtype="Research" buyprice="300"/>
+    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="City" buyprice="500"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -436,9 +487,11 @@
     spritecolor="0.1,0.1,0.1,1.0"
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,explosive"
-    impacttolerance="8"
-    price="50">
-
+    impacttolerance="8">
+    
+    <Price locationtype="Research" buyprice="30"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -458,9 +511,13 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.8"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
+    Tags="smallitem,chem,medical">
 
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -477,9 +534,11 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="50">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="30"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -496,8 +555,10 @@
     category="Material"
     spritecolor="0.2,0.35,0.06,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    price="50">
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -516,9 +577,10 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
-   price="2000">
+   description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.">
 
+    <Price locationtype="Research" buyprice="1000"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -538,9 +600,11 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="A highly potent neurotoxin."
-   price="1000">
-
+   description="A highly potent neurotoxin.">
+    
+    <Price locationtype="Research" buyprice="500"/>
+    <Price locationtype="Military" buyprice="1000"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>

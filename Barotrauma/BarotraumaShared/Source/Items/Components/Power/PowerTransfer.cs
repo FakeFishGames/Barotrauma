@@ -7,12 +7,13 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-        static float fullPower;
-        static float fullLoad;
+        private static float fullPower;
+        private static float fullLoad;
 
         private int updateCount;
 
-        const float FireProbability = 0.15f;
+        const float FireProbabilityMin = 0.05f;
+        const float FireProbabilityMax = 0.5f;
 
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
@@ -165,8 +166,12 @@ namespace Barotrauma.Items.Components
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
 #endif
+                    
+                    float currentIntensity = GameMain.GameSession?.EventManager != null ? 
+                        GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
 
-                    if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                    //higher probability for fires if the current intensity is low
+                    if (Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbabilityMax, FireProbabilityMin, currentIntensity))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }

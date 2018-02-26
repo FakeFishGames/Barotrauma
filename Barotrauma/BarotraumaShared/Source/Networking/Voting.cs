@@ -26,7 +26,7 @@ namespace Barotrauma
                 var existingVotable = voteList.Find(v => v.First == vote || v.First.Equals(vote));
                 if (existingVotable == null)
                 {
-                    voteList.Add(Pair<object, int>.Create(vote, 1));
+                    voteList.Add(new Pair<object, int>(vote, 1));
                 }
                 else
                 {

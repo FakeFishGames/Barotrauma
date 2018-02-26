@@ -58,9 +58,13 @@
   <Item
     name="Fuel Rod"
     Tags="smallitem,reactorfuel"
-    cargocontainername="Metal Crate"
-    price="200">
-
+    cargocontainername="Metal Crate">
+    
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="Research" buyprice="300"/>
+    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Outpost" buyprice="800"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Uranium Powder" mincondition="0.1" maxcondition="0.5"/>

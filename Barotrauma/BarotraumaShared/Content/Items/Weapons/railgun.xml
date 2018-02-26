@@ -4,8 +4,7 @@
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="railgunbase.png" depth = "0.01"/>
 
@@ -36,8 +35,7 @@
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -59,8 +57,7 @@
   <Item
     name="Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -73,8 +70,12 @@
   
   <Item
     name="Railgun Shell"
-    category="Misc"    
-    price="200">
+    category="Misc"
+    radarsize="5">
+
+    <Price locationtype="Outpost" buyprice="300"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="300"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -105,9 +106,11 @@
 
   <Item
     name="Nuclear Shell"
-    category="Misc"    
-    price="500">
-
+    category="Misc"
+    radarsize="5">
+    
+    <Price locationtype="Military" buyprice="500"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Steel Bar"/>

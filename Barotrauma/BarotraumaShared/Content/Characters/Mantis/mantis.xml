@@ -18,8 +18,11 @@
     attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
-    attachtowalls="true"
-    fleehealththreshold="20"/>
+    aggressiveboarding="true"
+    fleehealththreshold="20">
+    <latchonto
+      attachtowalls="true"/>
+  </ai>
   
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
@@ -28,6 +31,7 @@
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
+           impacttolerance="10"
            flip="true">
 
     <collider radius="60"/>
@@ -66,8 +70,8 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack range="200" damagerange="100" duration="0.25" damage="50" stun="0.1" bleedingdamage="5" structuredamage="20"  damagetype="slash" targetforce="-100" severlimbsprobability="0.8"
-              torque="-20" force="10" applyforceonlimbs="0,1,6"/>
+      <attack range="200" damagerange="100" duration="0.25" damage="50" stun="0.1" bleedingdamage="5" structuredamage="10" damagetype="slash" targetforce="-100" severlimbsprobability="0.8"
+              torque="-20" force="10" applyforceonlimbs="0,6"/>
       <sound tag="footstep_armor"/>
     </limb>
 

@@ -18,7 +18,7 @@
       </StatusEffect>
     </Door>
 
-    <AiTarget sightrange="500.0"/>
+    <AiTarget sightrange="1500.0"/>
 
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="40"/>
@@ -52,7 +52,7 @@
       </StatusEffect>
     </Door>
 
-    <AiTarget sightrange="500.0"/>
+    <AiTarget sightrange="1500.0"/>
 
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="40"/>

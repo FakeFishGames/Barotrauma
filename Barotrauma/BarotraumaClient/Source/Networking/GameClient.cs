@@ -749,7 +749,7 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.MissionTypes[missionTypeIndex]);
                 GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
             }
             else
@@ -882,7 +882,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1130,14 +1130,22 @@ namespace Barotrauma.Networking
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 
-        public void SendChatMessage(string message)
+        public void SendChatMessage(ChatMessage msg)
+        {
+            if (client.ServerConnection == null) return;            
+            lastQueueChatMsgID++;
+            msg.NetStateID = lastQueueChatMsgID;
+            chatMsgQueue.Add(msg);
+        }
+
+        public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
             if (client.ServerConnection == null) return;
 
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, 
-                ChatMessageType.Default, 
+                message,
+                type, 
                 gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;

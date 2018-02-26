@@ -17,10 +17,14 @@ namespace Barotrauma
 
         private bool requireEquip;
 
+        private AIObjectiveGoTo gotoObjective;
+
         public override bool CanBeCompleted
         {
             get
             {
+                if (gotoObjective != null && !gotoObjective.CanBeCompleted) return false;
+
                 return canBeCompleted;
             }
         }
@@ -75,7 +79,7 @@ namespace Barotrauma
                     return;
                 }
 
-                AddSubObjective(new AIObjectiveGoTo(target.Item, character));
+                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
             }
             else
             {
