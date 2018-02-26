@@ -1555,6 +1555,8 @@ namespace Barotrauma
 
             ushort inventoryId  = msg.ReadUInt16();
 
+            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
+
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
             int inventorySlotIndex = -1;

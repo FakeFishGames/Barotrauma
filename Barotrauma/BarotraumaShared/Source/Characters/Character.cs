@@ -1957,6 +1957,10 @@ namespace Barotrauma
         {
             isDead = false;
 
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+            }
             aiTarget = new AITarget(this);
 
             Health = Math.Max(maxHealth * 0.1f, health);
