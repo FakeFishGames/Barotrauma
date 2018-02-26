@@ -147,10 +147,10 @@ namespace Barotrauma
                 soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
                 soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
 
-                int index = (int)Math.Floor(strongestFlow / 100.0f);
-                index = Math.Min(index, 2);
+                int index = (int)Math.Floor(MathHelper.Lerp(0, SoundPlayer.FlowSounds.Count - 1, strongestFlow / 600.0f));
+                index = Math.Min(index, SoundPlayer.FlowSounds.Count - 1);
 
-                var flowSound = SoundPlayer.flowSounds[index];
+                var flowSound = SoundPlayer.FlowSounds[index];
                 if (flowSound != currentFlowSound && soundIndex > -1)
                 {
                     Sounds.SoundManager.Stop(soundIndex);
