@@ -13,11 +13,23 @@ namespace Barotrauma
 {
     partial class Ragdoll
     {
-        public static List<Ragdoll> list = new List<Ragdoll>();
+        private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
 
-        public Limb[] Limbs;
+        private Limb[] limbs;
+        public Limb[] Limbs
+        {
+            get
+            {
+                if (limbs == null)
+                {
+                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed);
+                    return new Limb[0];
+                }
+                return limbs;
+            }
+        }
         
         private bool frozen;
         public bool Frozen
@@ -281,7 +293,7 @@ namespace Barotrauma
 
             float scale = element.GetAttributeFloat("scale", 1.0f);
             
-            Limbs           = new Limb[element.Elements("limb").Count()];
+            limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
@@ -417,11 +429,13 @@ namespace Barotrauma
 
         public void AddLimb(Limb limb)
         {
+            if (Limbs.Contains(limb)) return;
+
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
 
-            Array.Resize(ref Limbs, Limbs.Length + 1);
+            Array.Resize(ref limbs, Limbs.Length + 1);
 
-            Limbs[Limbs.Length-1] = limb;
+            Limbs[Limbs.Length - 1] = limb;
 
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
@@ -441,7 +455,7 @@ namespace Barotrauma
                 i++;
             }
 
-            Limbs = newLimbs;
+            limbs = newLimbs;
             if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
 
             //remove all joints that were attached to the removed limb
@@ -1501,7 +1515,7 @@ namespace Barotrauma
                 {
                     l.Remove();
                 }
-                Limbs = null;
+                limbs = null;
             }
 
             foreach (PhysicsBody b in collider)
