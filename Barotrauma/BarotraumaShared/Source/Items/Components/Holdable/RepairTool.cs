@@ -183,7 +183,6 @@ namespace Barotrauma.Items.Components
             if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
             {
                 List<FireSource> fireSourcesInRange = new List<FireSource>();
-
                 //step along the ray in 10% intervals, collecting all fire sources in the range 
                 for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
@@ -194,7 +193,6 @@ namespace Barotrauma.Items.Components
                     if (hull == null) continue;
                     foreach (FireSource fs in hull.FireSources)
                     {
-                        hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
                         if (fs.IsInDamageRange(displayPos, 125.0f) && !fireSourcesInRange.Contains(fs))
                         {
                             fireSourcesInRange.Add(fs);

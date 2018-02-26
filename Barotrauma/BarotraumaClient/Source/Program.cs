@@ -170,11 +170,43 @@ namespace Barotrauma
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version + " NILMOD SERVER MODIFICATION");
+            sb.AppendLine("Nilmod version stamp: " + NilMod.NilModVersionDate);
             sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
+
+            if (GameMain.GameSession != null)
+            {
+                if (GameMain.GameSession.GameMode != null) sb.AppendLine("Gamemode: " + GameMain.GameSession.GameMode.Name);
+                if (GameMain.GameSession.Mission != null) sb.AppendLine("Mission: " + GameMain.GameSession.Mission.Name);
+            }
+
+            if (Character.CharacterList != null && Character.CharacterList.Count > 0)
+            {
+                sb.AppendLine("\n");
+                if (Character.CharacterList.FindAll(c => c.Removed).Count > 0) sb.AppendLine("Removed character references detected, " + Character.CharacterList.Count + " Characters in list, " + Character.CharacterList.FindAll(c => c.Removed).Count + " Removed.");
+
+                int foundnullanimcontroller = 0;
+                int foundnulllimbs = 0;
+                int foundzerolengthlimbs = 0;
+                for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
+                {
+                    if (Character.CharacterList[i].AnimController == null)
+                    {
+                        foundnullanimcontroller += 1;
+                    }
+                    else
+                    {
+                        if (Character.CharacterList[i].AnimController.Limbs == null) foundnulllimbs += 1;
+                        if (Character.CharacterList[i].AnimController.Limbs.Length < 1) foundzerolengthlimbs += 1;
+                    }
+                }
+                if (foundnullanimcontroller > 0) sb.AppendLine(foundnullanimcontroller + " Characters with null AnimControllers found.");
+                if (foundnulllimbs > 0) sb.AppendLine(foundnulllimbs + " Characters with null limbs[] reference found.");
+                if (foundzerolengthlimbs > 0) sb.AppendLine(foundzerolengthlimbs + " characters with 0 limbs found.");
+            }
 
             if (GameMain.Server != null)
             {
