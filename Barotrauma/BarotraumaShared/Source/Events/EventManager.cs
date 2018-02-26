@@ -197,7 +197,7 @@ namespace Barotrauma
                 if (character.IsDead) continue;
                 if (character.AIController is HumanAIController || character.IsRemotePlayer || character == Character.Controlled)
                 {
-                    avgCrewHealth += character.Health / character.MaxHealth * (character.IsUnconscious ? 0.5f : 1.0f);
+                    avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
                 }
             }

@@ -542,7 +542,7 @@ namespace Barotrauma
             Vector2 velocity = f1.Body.LinearVelocity;
 
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
-                                    
+
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody)
             {
@@ -550,8 +550,14 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
+                        Vector2 temp;
+                        FarseerPhysics.Common.FixedArray2<Vector2> points;
+                        contact.GetWorldManifold(out temp, out points);
 
+                        Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
+                        if (character.Submarine != null) impactPos += character.Submarine.Position;
+                        
+                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }
                 }

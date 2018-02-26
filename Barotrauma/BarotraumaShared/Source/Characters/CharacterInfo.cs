@@ -67,7 +67,7 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
-        public CauseOfDeath CauseOfDeath;
+        public Pair<CauseOfDeathType, AfflictionPrefab> CauseOfDeath;
 
         public byte TeamID;
 

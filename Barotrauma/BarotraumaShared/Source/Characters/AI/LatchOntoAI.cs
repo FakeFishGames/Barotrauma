@@ -195,8 +195,7 @@ namespace Barotrauma
             attachJoints.Clear();
         }
 
-
-        private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
+        private void OnCharacterDeath(Character character, CauseOfDeathType causeOfDeath)
         {
             DeattachFromBody();
             character.OnDeath -= OnCharacterDeath;

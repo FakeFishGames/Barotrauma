@@ -58,7 +58,7 @@ namespace Barotrauma
             Enabled = true;
         }
 
-        public virtual void OnAttacked(Character attacker, float amount) { }
+        public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
 
         public virtual void SelectTarget(AITarget target) { }
 

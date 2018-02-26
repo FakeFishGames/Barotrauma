@@ -527,7 +527,8 @@ namespace Barotrauma
                 Vector2 n;
                 FixedArray2<Vector2> contactPos;
                 contact.GetWorldManifold(out n, out contactPos);
-                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, DamageType.Blunt, damageAmount, 0.0f, 0.0f, true, 0.0f);
+                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
+                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 
                 if (limb.character.IsDead)
                 {

@@ -35,10 +35,11 @@
     <!-- spike/tentacle thingy -->
     <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.052" origin="0.5,0.5"/>
-      <attack range="70" damagerange="35" duration="0.2" bleedingdamage="0.5" damage="10" stun="0.5" damagetype="slash" targetforce="10"
+      <attack range="70" damagerange="35" duration="0.2"  targetforce="10"
               force="5" applyforceonlimbs="1" torque="-10">
-        <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
-        <StatusEffect type="OnUse" target="This" Health="1.0" disabledeltatime="true"/>
+        <affliction name="Bleeding" strength="10"/>
+        <affliction name="Husk infection" strength="5"/>
+        <affliction name="Stun" strength="0.5"/>        
       </attack>
     </limb>
 

@@ -21,7 +21,10 @@
     <!-- head -->
     <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
-      <attack type="Hit" range="120" damagerange="60" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="100"/>
+      <attack type="Hit" range="120" damagerange="60" duration="0.2" force="10" targetforce="100">
+        <affliction name="Internal Damage" strength="50"/>
+        <affliction name="Stun" strength="2"/>
+      </attack>
     </limb>
 
 
@@ -30,7 +33,11 @@
     </limb>
     <limb id = "2" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>      
+      <attack range="150" damagerange="75" duration="0.5" torque="150">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="20"/>
+        <affliction name="Stun" strength="1"/>
+      </attack>
     </limb>
     
     <limb id = "3" width="30" height="178">
@@ -39,7 +46,11 @@
 
     <limb id = "4" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>            
+      <attack range="150" damagerange="75" duration="0.5" torque="150">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="20"/>
+        <affliction name="Stun" strength="1"/>
+      </attack>
     </limb>        
 
     <!-- head to body -->

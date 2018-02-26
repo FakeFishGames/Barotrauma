@@ -54,14 +54,19 @@
 
     <limb id = "8" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
-      <attack range="1000" hitdetectiontype="Contact" duration="0.25" damage="30" stun="5.0" force="100" torque="-100" structuredamage="500" damagetype="slash"/>
+      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="-100" structuredamage="500" damagetype="slash">
+        <affliction name="Internal Damage" strength="30"/>
+        <affliction name="Stun" strength="5"/>        
+      </attack>
     </limb>
     
     <limb id = "9" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
-      <attack range="1000" hitdetectiontype="Contact" duration="0.25" damage="30" stun="5.0" force="100" torque="100" structuredamage="500" damagetype="slash"/>
-    </limb>
-        
+      <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="100" structuredamage="500" damagetype="slash">
+        <affliction name="Internal Damage" strength="30"/>
+        <affliction name="Stun" strength="5"/>
+      </attack>
+    </limb>        
 
     <!-- head to body -->
     <joint limb1="0" limb1anchor="0,-80" limb2="1" limb2anchor="0,170" lowerlimit="-10" upperlimit="10"/>

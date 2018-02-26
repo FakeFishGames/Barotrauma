@@ -264,7 +264,8 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+                targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
+                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 
 #if CLIENT
                 Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);

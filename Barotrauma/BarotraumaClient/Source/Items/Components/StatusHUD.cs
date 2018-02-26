@@ -143,7 +143,8 @@ namespace Barotrauma.Items.Components
                 texts.Add(target.Name);
             }
 
-            if (target.IsDead)
+            //TODO: reimplement
+            /*if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
                 texts.Add(TextManager.Get("CauseOfDeath") + ": " + TextManager.Get("CauseOfDeath." + target.CauseOfDeath.ToString()));
@@ -153,8 +154,8 @@ namespace Barotrauma.Items.Components
                 if (target.IsUnconscious) texts.Add(TextManager.Get("Unconscious"));
                 if (target.Stun > 0.01f) texts.Add(TextManager.Get("Stunned"));
 
-                int healthTextIndex = target.Health > 95.0f ? 0 :
-                    MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health / 200.0f + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
+                int healthTextIndex = target.Vitality > 0.9f ? 0 :
+                    MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
 
                 texts.Add(HealthTexts[healthTextIndex]);
 
@@ -178,7 +179,7 @@ namespace Barotrauma.Items.Components
                         texts.Add(TextManager.Get("HuskInfectionActive"));
                     }
                 }
-            }
+            }*/
 
             foreach (string text in texts)
             {

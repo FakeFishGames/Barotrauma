@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Afflictions>
+
+  <!-- Basic afflictions. 
+  These afflictions are required by the vanilla game; 
+  modifying them may require modifications to the code. -->
+  
+  <InternalDamage
+    name="Internal Damage"
+    description="Internal damage"
+    type="damage"
+    limbspecific="true"
+    maxstrength="100"
+    damageoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="100"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
+  </InternalDamage>
+
+  <Bleeding
+    name="Bleeding"
+    description="Bleeding"
+    type="bleeding"
+    limbspecific="true"
+    maxstrength="100"
+    damageoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="10"
+      strengthchange="-0.1"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+   </Bleeding>
+
+  <Burn
+    name="Burn"
+    description="Burns"
+    type="burn"
+    limbspecific="true"
+    maxstrength="100"
+    burnoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="50"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Burn>
+
+  <OxygenLow
+    name="Oxygen low"
+    description="Oxygen low"
+    type="oxygenlow"
+    limbspecific="false"
+    indicatorlimb="Torso"    
+    activationthreshold="1"
+    maxstrength="200">
+    <Effect minstrength="0" maxstrength="200"
+      maxvitalitydecrease="200"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </OxygenLow>
+
+  <Bloodloss
+    name="Bloodloss"
+    description="Bloodloss"
+    type="bloodloss"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    activationthreshold="5"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="200"
+      strengthchange="-0.1"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
+  </Bloodloss>
+
+  <Stun
+    name="Stun"
+    description="Stunned"
+    type="stun"
+    limbspecific="false"
+    indicatorlimb="Head"
+    activationthreshold="1.0"
+    maxstrength="30">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"
+      strengthchange="-1.0"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </Stun>
+
+  <AfflictionHusk
+    name="Husk infection"
+    description="Husk infection"
+    type="huskinfection"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    activationthreshold="0"
+    showiconthreshold="100"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"
+      strengthchange="0.3"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </AfflictionHusk>
+  
+  <!-- Special afflictions -->
+
+  <Affliction
+    name="Drunk"
+    description="Drunk"
+    type="poison"
+    limbspecific="false"
+    indicatorlimb="Head"
+    activationthreshold="20"
+    maxstrength="100">
+
+    <!-- Low level of drunkenness decreases vitality and speed slightly -->
+    <Effect minstrength="20" maxstrength="40"
+      maxvitalitydecrease="10"
+      strengthchange="-0.1">
+      <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
+    </Effect>
+
+    <!-- Heavier drunkenness decreases vitality and speed more -->
+    <Effect minstrength="40" maxstrength="80"
+      maxvitalitydecrease="30"
+      strengthchange="-0.2">
+      <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
+    </Effect>
+
+    <!-- After drinking enough the effect starts to get lethal -->
+    <Effect minstrength="80" maxstrength="100"
+      maxvitalitydecrease="100"
+      strengthchange="-0.2">
+      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+    </Effect>
+    
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
+
+  <AfflictionBleeding
+    name="Gunshot wound"
+    description="Gunshot wound"
+    type="bleeding"
+    limbspecific="true"
+    maxstrength="100"
+    damageoverlayalpha="1"
+    strengthchange="-0.1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="10"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+  </AfflictionBleeding>
+</Afflictions>
