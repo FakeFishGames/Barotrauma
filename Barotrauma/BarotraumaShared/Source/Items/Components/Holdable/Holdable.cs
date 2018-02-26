@@ -384,6 +384,11 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
+            if (!attachable)
+            {
+                DebugConsole.ThrowError("Sent an attachment event for an item that's not attachable.");
+            }
+
             msg.Write(Attached);
         }
 
