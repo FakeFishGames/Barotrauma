@@ -3,6 +3,7 @@ using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
+using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
@@ -15,6 +16,8 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        const float MaxDrag = 0.1f;
+
         public const float DamageDepth = -30000.0f;
         private const float ImpactDamageMultiplier = 10.0f;
 
@@ -253,15 +256,27 @@ namespace Barotrauma
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();
-
+            
             if (Body.LinearVelocity.LengthSquared() > 0.000001f)
             {
-                float dragCoefficient = 0.01f;
+                //TODO: sync current drag with clients?
+                float attachedMass = 0.0f;
+                JointEdge jointEdge = Body.FarseerBody.JointList;
+                while (jointEdge != null)
+                {
+                    Body otherBody = jointEdge.Joint.BodyA == Body.FarseerBody ? jointEdge.Joint.BodyB : jointEdge.Joint.BodyA;
+                    Character character = (otherBody.UserData as Limb)?.character;
+                    if (character != null) attachedMass += character.Mass;
+
+                    jointEdge = jointEdge.Next;
+                }
+                
+                float dragCoefficient = MathHelper.Clamp(0.01f + attachedMass / 5000.0f, 0.0f, MaxDrag);
 
                 float speedLength = (Body.LinearVelocity == Vector2.Zero) ? 0.0f : Body.LinearVelocity.Length();
                 float drag = speedLength * speedLength * dragCoefficient * Body.Mass;
 
-                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;                
+                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;
             }
 
             ApplyForce(totalForce);

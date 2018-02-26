@@ -12,15 +12,29 @@ namespace Barotrauma
 
         private int state;
 
+        private Vector2 spawnPos;
+
+        private bool spawnPending;
+
+        public override Vector2 DebugDrawPos
+        {
+            get { return spawnPos; }
+        }
+
+        public override string DebugDrawText
+        {
+            get { return "ArtifactEvent (" + itemPrefab.Name + ")"; }
+        }
+
         public override string ToString()
         {
             return "ScriptedEvent (" + (itemPrefab == null ? "null" : itemPrefab.Name) + ")";
         }
 
-        public ArtifactEvent(XElement element)
-            : base(element)
+        public ArtifactEvent(ScriptedEventPrefab prefab)
+            : base(prefab)
         {
-            string itemName = element.GetAttributeString("itemname", "");
+            string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
             itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
 
             if (itemPrefab == null)
@@ -29,14 +43,18 @@ namespace Barotrauma
             }
         }
 
-        public override void Init()
+        public override void Init(bool affectSubImmediately)
         {
-            base.Init();
+            spawnPos = Level.Loaded.GetRandomItemPos(
+                (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.5f) ? Level.PositionType.MainPath : Level.PositionType.Cave | Level.PositionType.Ruin,
+                500.0f, 10000.0f, 30.0f);
 
-            Vector2 position = Level.Loaded.GetRandomItemPos(
-                Level.PositionType.Cave | Level.PositionType.MainPath | Level.PositionType.Ruin, 500.0f, 10000.0f, 30.0f);
+            spawnPending = true;
+        }
 
-            item = new Item(itemPrefab, position, null);
+        private void SpawnItem()
+        {
+            item = new Item(itemPrefab, spawnPos, null);
             item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 
@@ -59,10 +77,21 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("Initialized ArtifactEvent (" + item.Name + ")", Color.White);
             }
+
+            if (GameMain.Server != null)
+            {
+                Entity.Spawner.CreateNetworkEvent(item, false);
+            }
         }
 
         public override void Update(float deltaTime)
         {
+            if (spawnPending)
+            {
+                SpawnItem();
+                spawnPending = false;
+            }
+
             switch (state)
             {
                 case 0:

@@ -39,6 +39,11 @@ namespace Barotrauma
             private set;
         }
 
+        public Door ConnectedDoor
+        {
+            get { return ConnectedGap?.ConnectedDoor; }
+        }
+
         public Hull CurrentHull
         {
             get { return currentHull; }

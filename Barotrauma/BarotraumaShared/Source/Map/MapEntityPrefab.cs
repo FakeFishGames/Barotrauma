@@ -24,7 +24,7 @@ namespace Barotrauma
         protected static Vector2 placePosition;
 
         protected ConstructorInfo constructor;
-
+        
         //is it possible to stretch the entity horizontally/vertically
         [Serialize(false, false)]
         public bool ResizeHorizontal { get; protected set; }
@@ -79,14 +79,7 @@ namespace Barotrauma
             get;
             protected set;
         }
-
-        [Serialize(0, false)]
-        public int Price
-        {
-            get { return price; }
-            protected set { price = Math.Max(value, 0); }
-        }
-
+        
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
         public string[] Aliases

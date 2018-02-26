@@ -5,12 +5,17 @@ namespace Barotrauma
 {
     partial class FixRequirement
     {
-        string name;
+        private string name;
 
-        List<Skill> requiredSkills;
-        List<string> requiredItems;
+        private readonly List<Skill> requiredSkills;
+        private readonly List<string> requiredItems;
 
         public bool Fixed;
+
+        public List<string> RequiredItems
+        {
+            get { return requiredItems; }
+        }
 
         public FixRequirement(XElement element)
         {
@@ -38,28 +43,27 @@ namespace Barotrauma
             }
         }
 
-        public bool CanBeFixed(Character character)
+        public bool HasRequiredSkills(Character character)
         {
-            if (character == null) return false;
-
-            bool success = true;
-            foreach (string itemName in requiredItems)
-            {
-                Item item = character.Inventory.FindItem(itemName);
-                bool itemFound = (item != null);
-               
-                if (!itemFound) success = false;
-            }
-
             foreach (Skill skill in requiredSkills)
             {
-                float characterSkill = character.GetSkillLevel(skill.Name);
-                bool sufficientSkill = characterSkill >= skill.Level;
-
-                if (!sufficientSkill) success = false;
+                if (character.GetSkillLevel(skill.Name) < skill.Level) return false;
             }
+            return true;
+        }
 
-            return success;
+        public bool HasRequiredItems(Character character)
+        {
+            foreach (string itemName in requiredItems)
+            {
+                if (character.Inventory.FindItem(itemName) == null) return false;
+            }
+            return true;
+        }
+
+        public bool CanBeFixed(Character character)
+        {
+            return character != null && HasRequiredSkills(character) && HasRequiredItems(character);
         }
     }
 }

@@ -13,6 +13,13 @@ namespace Barotrauma
 
         public List<LocationConnection> Connections;
 
+        private string baseName;
+        private int nameFormatIndex;
+
+        public bool Discovered;
+
+        public int TypeChangeTimer;
+
         public string Name
         {
             get { return name; }
@@ -22,20 +29,16 @@ namespace Barotrauma
         {
             get { return mapPosition; }
         }
-
-        public bool Discovered;
         
         public LocationType Type
         {
             get { return type; }
         }
 
-        public Location(Vector2 mapPosition)
+        public Location(Vector2 mapPosition, int? zone)
         {
-            this.type = LocationType.Random();
-
+            this.type = LocationType.Random("", zone);
             this.name = RandomName(type);
-
             this.mapPosition = mapPosition;
 
 #if CLIENT
@@ -49,16 +52,32 @@ namespace Barotrauma
             Connections = new List<LocationConnection>();
         }
 
-        public static Location CreateRandom(Vector2 position)
+        public static Location CreateRandom(Vector2 position, int? zone)
         {
-            return new Location(position);        
+            return new Location(position, zone);        
+        }
+
+        public void ChangeType(LocationType newType)
+        {
+            if (newType == type) return;
+
+            type = newType;
+            name = type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", baseName);
+
+#if CLIENT
+            if (type.HasHireableCharacters)
+            {
+                hireManager = new HireManager();
+                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
+            }
+#endif
         }
 
         private string RandomName(LocationType type)
         {
-            string randomName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
-            int nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
-            return type.NameFormats[nameFormatIndex].Replace("[name]", randomName);
+            baseName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
+            nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
+            return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
     }
 }

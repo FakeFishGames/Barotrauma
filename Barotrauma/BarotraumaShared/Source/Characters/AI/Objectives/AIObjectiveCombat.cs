@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,9 @@ namespace Barotrauma
 
         private AIObjectiveFindSafety escapeObjective;
 
-        float coolDownTimer;
+        private AIObjectiveContainItem reloadWeaponObjective;
+
+        private float coolDownTimer;
 
         private readonly float enemyStrength;
 
@@ -40,25 +43,64 @@ namespace Barotrauma
             coolDownTimer -= deltaTime;
 
             var weapon = character.Inventory.FindItem("weapon");
-
             if (weapon == null)
             {
                 Escape(deltaTime);
             }
             else
             {
-                //TODO: make sure the weapon is ready to use (projectiles/batteries loaded)
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    if (character.Inventory.TryPutItem(weapon, 3, false, character))
+                    if (character.Inventory.TryPutItem(weapon, 3, true, character))
                     {
                         weapon.Equip(character);
                     }
                     else
                     {
+                        //couldn't equip the item, escape
+                        Escape(deltaTime);
                         return;
                     }
                 }
+
+                //make sure the weapon is loaded
+                var weaponComponent = weapon.GetComponent<RangedWeapon>() as ItemComponent ?? weapon.GetComponent<MeleeWeapon>() as ItemComponent;
+                Item[] containedItems = weapon.ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (RelatedItem requiredItem in weaponComponent.requiredItems)
+                    {
+                        if (requiredItem.Type != RelatedItem.RelationType.Contained) continue;
+
+                        Item containedItem = Array.Find(containedItems, it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                        if (containedItem == null)
+                        {
+                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Names, weapon.GetComponent<ItemContainer>());
+                            if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
+                            {
+                                reloadWeaponObjective = newReloadWeaponObjective;
+                            }
+                        }
+                    }
+                }
+
+                if (reloadWeaponObjective != null)
+                {
+                    if (reloadWeaponObjective.IsCompleted())
+                    {
+                        reloadWeaponObjective = null;
+                    }
+                    else if (!reloadWeaponObjective.CanBeCompleted)
+                    {
+                        Escape(deltaTime);
+                    }
+                    else
+                    {
+                        reloadWeaponObjective.TryComplete(deltaTime);
+                    }
+                    return;
+                }
+                
                 character.CursorPosition = enemy.Position;
                 character.SetInput(InputType.Aim, false, true);
 
