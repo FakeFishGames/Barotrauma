@@ -701,15 +701,16 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (monsterEnabled == null)
             {
-                List<string> monsterNames1 = Directory.GetDirectories("Content/Characters").ToList();
+                List<string> monsterNames1 = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
                 for (int i = 0; i < monsterNames1.Count; i++)
                 {
-                    monsterNames1[i] = monsterNames1[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
                 }
+
                 monsterEnabled = new Dictionary<string, bool>();
                 foreach (string s in monsterNames1)
                 {
-                    monsterEnabled.Add(s, true);
+                    if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
                 }
             }
 
