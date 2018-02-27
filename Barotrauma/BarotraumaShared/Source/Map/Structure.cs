@@ -140,7 +140,7 @@ namespace Barotrauma
             }
         }
 
-        public List<string> Tags
+        public HashSet<string> Tags
         {
             get { return prefab.Tags; }
         }

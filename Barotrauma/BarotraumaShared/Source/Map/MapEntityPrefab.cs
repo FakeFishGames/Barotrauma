@@ -41,7 +41,7 @@ namespace Barotrauma
             get { return name; }
         }
 
-        public List<string> Tags
+        public HashSet<string> Tags
         {
             get;
             protected set;
