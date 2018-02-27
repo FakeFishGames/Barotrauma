@@ -2112,6 +2112,7 @@ namespace Barotrauma
                     spawnPos = cursorPos;
                     break;
                 case "inventory":
+                    extraParams = 1;
                     if (Character.Spied != null)
                     {
                         spawnInventory = Character.Spied.Inventory;
@@ -2120,6 +2121,11 @@ namespace Barotrauma
                     {
                         spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     }
+                    break;
+                    //Deny usage of inside
+                case "inside":
+                    DebugConsole.NewMessage("Inside is not valid for item spawning.",Color.Red);
+                    extraParams = 1;
                     break;
                 default:
                     extraParams = 0;
