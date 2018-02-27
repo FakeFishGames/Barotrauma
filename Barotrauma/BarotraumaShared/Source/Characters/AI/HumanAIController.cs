@@ -217,7 +217,7 @@ namespace Barotrauma
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float totalDamage = attackResult.Damage;
-            if (totalDamage <= 0.0f) return;
+            if (totalDamage <= 0.0f || attacker == null) return;
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
 
