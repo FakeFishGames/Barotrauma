@@ -90,8 +90,13 @@ namespace Barotrauma
             StructurePrefab sp = new StructurePrefab();
             sp.name = element.Name.ToString();
             
-            sp.Tags = new List<string>();
-            sp.Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            sp.Tags = new HashSet<string>();
+            string joinedTags = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            foreach (string tag in joinedTags.Split(','))
+            {
+                sp.Tags.Add(tag.Trim().ToLowerInvariant());
+            }
 
             foreach (XElement subElement in element.Elements())
             {

@@ -175,6 +175,7 @@ namespace Barotrauma.Items.Components
             light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
             light.Range = range * (float)Math.Sqrt(lightBrightness);
 #endif
+            item.SightRange = Math.Max(range * (float)Math.Sqrt(lightBrightness), item.SightRange);
 
             voltage = 0.0f;
         }

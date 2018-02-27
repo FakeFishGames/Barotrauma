@@ -145,7 +145,11 @@ namespace Barotrauma
                 if (aiTarget == null) return 0.0f;
                 return aiTarget.SightRange;
             }
-            set { aiTarget.SightRange = value; }
+            set
+            {
+                if (aiTarget == null) return;
+                aiTarget.SightRange = value;
+            }
         }
 
         public virtual string Name

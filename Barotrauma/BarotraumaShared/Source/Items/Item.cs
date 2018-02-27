@@ -227,11 +227,11 @@ namespace Barotrauma
         {
             get { return condition; }
         }
-        
+
         [Editable, Serialize("", true)]
         public string Tags
         {
-            get { return string.Join(",",tags); }
+            get { return string.Join(",", tags); }
             set
             {
                 tags.Clear();
@@ -242,8 +242,7 @@ namespace Barotrauma
                 {
                     string newTag = tag.Trim();
                     if (!tags.Contains(newTag)) tags.Add(newTag);
-                }   
-
+                }
             }
         }
 
@@ -687,7 +686,8 @@ namespace Barotrauma
         {
             if (tag == null) return true;
 
-            return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
+            return tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()) || 
+                prefab.Tags.Contains(tag) || prefab.Tags.Contains(tag.ToLowerInvariant());
         }
 
 
@@ -809,6 +809,13 @@ namespace Barotrauma
             {
                 Spawner.AddToRemoveQueue(this);
                 return;
+            }
+
+            //aitarget goes silent/invisible if the components don't keep it active
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange -= deltaTime * 1000.0f;
+                aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, null);

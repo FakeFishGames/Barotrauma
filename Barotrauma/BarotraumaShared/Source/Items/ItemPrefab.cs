@@ -296,8 +296,13 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
-            Tags = new List<string>();
-            Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            Tags = new HashSet<string>();
+            string joinedTags = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            foreach (string tag in joinedTags.Split(','))
+            {
+                Tags.Add(tag.Trim().ToLowerInvariant());
+            }
 
             SerializableProperty.DeserializeProperties(this, element);
 
