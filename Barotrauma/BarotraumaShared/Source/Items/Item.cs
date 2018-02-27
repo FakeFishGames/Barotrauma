@@ -387,8 +387,8 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
-                        aiTarget.SightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
-                        aiTarget.SoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
+                        aiTarget.MinSightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
+                        aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
                         FixRequirements.Add(new FixRequirement(subElement));

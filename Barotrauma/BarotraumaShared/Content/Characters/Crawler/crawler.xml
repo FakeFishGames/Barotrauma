@@ -24,7 +24,7 @@
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>
-    <targetpriority tag="dead" state="Escape" priority="55"/>
+    <targetpriority tag="dead" state="Eat" priority="55"/>
   </ai>
 
   <ragdoll headposition="50" headangle="-70"
