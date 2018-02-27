@@ -794,15 +794,20 @@ namespace Barotrauma
                 else if (target.Entity != null)
                 {
                     //skip the target if it's a room and the character is already inside a sub
-                    if (character.AnimController.CurrentHull != null && target.Entity is Hull) continue;
-
-                    targetingTag = "room";
-
+                    if (character.CurrentHull != null && target.Entity is Hull) continue;
+                    
                     //multiply the priority of the target if it's a door from outside to inside and the AI is an aggressive boarder
                     Door door = null;
                     if (target.Entity is Item)
                     {
                         Item item = (Item)target.Entity;
+
+                        //item inside and we're outside -> attack the hull
+                        if (item.CurrentHull != null && character.CurrentHull == null)
+                        {
+                            targetingTag = "room";
+                        }
+
                         door = item.GetComponent<Door>();
                         foreach (TargetingPriority prio in targetingPriorities.Values)
                         {
@@ -812,6 +817,10 @@ namespace Barotrauma
                                 break;
                             }
                         }
+                    }
+                    else
+                    {
+                        targetingTag = "room";
                     }
 
                     if (door != null)
@@ -836,8 +845,7 @@ namespace Barotrauma
                 if (targetingTag == null) continue;
                 if (!targetingPriorities.ContainsKey(targetingTag)) continue;
 
-                targetingPriority = targetingPriorities[targetingTag];
-                valueModifier *= targetingPriority.Priority;
+                valueModifier *= targetingPriorities[targetingTag].Priority;
 
                 if (valueModifier == 0.0f) continue;
 
@@ -870,6 +878,7 @@ namespace Barotrauma
                     {
                         selectedAiTarget = target;
                         selectedTargetMemory = targetMemory;
+                        targetingPriority = targetingPriorities[targetingTag];
 
                         targetValue = valueModifier;
                     }
