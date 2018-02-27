@@ -20,6 +20,7 @@
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="human" state="None" priority="10"/>
+    <targetpriority tag="light" state="None" priority="10"/>
   </ai>
 
   <ragdoll waveamplitude="0.0" 

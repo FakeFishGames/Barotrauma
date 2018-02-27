@@ -309,13 +309,21 @@ namespace Barotrauma
                 return;
             }
 
-            if (wallAttackPos == Vector2.Zero)
+            if (wallAttackPos != Vector2.Zero) return;
+            
+            if (selectedAiTarget != null)
+            {
+                Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
+
+                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringSeek(targetSimPos, 1.0f);
+            }
+            else
             {
                 //wander around randomly
                 steeringManager.SteeringAvoid(deltaTime, 0.1f);
                 steeringManager.SteeringWander(0.5f);
-                return;
-            }
+            }          
         }
 
         #endregion
@@ -794,7 +802,16 @@ namespace Barotrauma
                     Door door = null;
                     if (target.Entity is Item)
                     {
-                        door = ((Item)target.Entity).GetComponent<Door>();
+                        Item item = (Item)target.Entity;
+                        door = item.GetComponent<Door>();
+                        foreach (TargetingPriority prio in targetingPriorities.Values)
+                        {
+                            if (item.HasTag(prio.TargetTag))
+                            {
+                                targetingTag = prio.TargetTag;
+                                break;
+                            }
+                        }
                     }
 
                     if (door != null)
