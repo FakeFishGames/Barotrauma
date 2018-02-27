@@ -11,13 +11,13 @@
 
   <ai
     combatstrength="1000"
-    attackpriorityhumans="100.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="0.0"
-    attackprioritystronger="-80.0"
     attackcooldown="15.0"
-    sight="0.5" 
-    hearing="1.0"/>
+    sight="0.5"
+    hearing="1.0">
+    <targetpriority tag="human" state="Attack" priority="100"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="stronger" state="Escape" priority="50"/>
+  </ai>
     
   <ragdoll waveamplitude="0.0" swimspeed="4.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
 

@@ -10,18 +10,20 @@
 
   <ai
     combatstrength="250"
-    attackpriorityhumans="500.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="60"
-    attackprioritystronger="-70"
-    eatpriority="45"
     attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
     aggressiveboarding="true"
     fleehealththreshold="20">
+    
     <latchonto
       attachtowalls="true"/>
+
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="60"/>
+    <targetpriority tag="dead" state="Eat" priority="45"/>
+    <targetpriority tag="stronger" state="Escape" priority="70"/>
   </ai>
   
   <ragdoll headposition="120" headangle="-90" 

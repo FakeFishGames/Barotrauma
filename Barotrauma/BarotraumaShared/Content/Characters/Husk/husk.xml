@@ -4,16 +4,19 @@
   <sound file="Content/Characters/Husk/Husk1.ogg" state="Attack" range="1000"/>
   <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
   <sound file="Content/Characters/Husk/Husk3.ogg" state="Attack" range="1000"/>
-  
-  <ai 
+
+  <ai
     combatstrength="100"
-    attackpriorityhumans="500"
-    attackpriorityrooms="5.0"
-    attackpriorityweaker="50"
-    attackprioritystronger="-30"
     sight="0.5"
     hearing="1.0"
-    attackcooldown="1.0"/>
+    aggressiveboarding="true"
+    attackcooldown="1.0">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="room" state="Attack" priority="5"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="husk" state="Attack" priority="0"/>
+    <targetpriority tag="stronger" state="Escape" priority="30"/>
+  </ai>
   
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"

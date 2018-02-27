@@ -8,21 +8,23 @@
 
   <ai
     combatstrength="100"
-    attackpriorityhumans="500"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="50"
-    attackprioritystronger="-60"
-    eatpriority="55"
     sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
     aggressiveboarding="true"
     attackcooldown="3.0">
+    
     <latchonto 
       attachtowalls="true"
       attachtosub="true"
       mindeattachspeed="3.0"
       maxdeattachspeed="10.0"/>
+
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="dead" state="Escape" priority="55"/>
   </ai>
 
   <ragdoll headposition="50" headangle="-70"
@@ -31,7 +33,7 @@
            runspeedmultiplier="2" swimspeedmultiplier="2.0"
            stepsize ="15.0,20.0"
            legtorque="10"
-           impacttolerance="5"
+           impacttolerance="7"
            flip="true">
 
     <collider width="45" radius="22"/>

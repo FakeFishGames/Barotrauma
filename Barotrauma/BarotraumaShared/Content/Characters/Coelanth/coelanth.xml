@@ -7,13 +7,14 @@
 
   <ai
     combatstrength="400"
-    attackpriorityhumans="90.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="50"
-    attackprioritystronger="-100"
-    eatpriority="40"
     sight="0.1"
-    hearing="1.0"/>
+    hearing="1.0">
+    <targetpriority tag="human" state="Attack" priority="90"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="dead" state="Eat" priority="40"/>
+    <targetpriority tag="stronger" state="Escape" priority="100"/>
+  </ai>
 
   <ragdoll 
     waveamplitude="50.0" 

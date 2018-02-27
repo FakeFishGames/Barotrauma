@@ -5,13 +5,13 @@
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
 
-  <ai 
-    combatstrength="10000" 
-    attackpriorityrooms="100.0"
-    attackpriorityweaker="0" 
-    attackstronger="-30" 
-    sight="0.1" 
-    hearing="2.0"/>
+  <ai
+    combatstrength="10000"
+    sight="0.1"
+    hearing="2.0">
+    <targetpriority tag="room" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="30"/>
+  </ai>
   
   <ragdoll waveamplitude="100.0" wavelength="1000" speed="2.0" scale ="2.0" flip="false" canentersubmarine="false">
 

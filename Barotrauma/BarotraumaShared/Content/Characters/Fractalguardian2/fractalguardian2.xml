@@ -12,7 +12,9 @@
     attackpriorityhumans="100"
     sight="1.0"
     hearing="2.0"
-    attackcooldown="1"/>
+    attackcooldown="1">
+    <targetpriority tag="human" state="Attack" priority="100"/>
+  </ai>
   
   <ragdoll waveamplitude="0.0" swimspeed="1.0" walkspeed="0.3" flip="false" canentersubmarine="false" rotatetowardsmovement="false">
 

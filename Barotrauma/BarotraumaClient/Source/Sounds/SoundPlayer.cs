@@ -413,7 +413,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
-                if (enemyAI == null || (enemyAI.AttackHumans < 0.0f && enemyAI.AttackRooms < 0.0f)) continue;
+                if (enemyAI == null || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
 
                 if (targetSubmarine != null)
                 {
