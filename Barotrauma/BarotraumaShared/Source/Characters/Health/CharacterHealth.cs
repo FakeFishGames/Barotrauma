@@ -135,6 +135,8 @@ namespace Barotrauma
             afflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
 
             limbHealths.Add(new LimbHealth());
+
+            InitProjSpecific(character);
         }
 
         public CharacterHealth(XElement element, Character character)
@@ -159,10 +161,10 @@ namespace Barotrauma
                 limbHealths.Add(new LimbHealth());
             }
 
-            InitProjSpecific(element, character);
+            InitProjSpecific(character);
         }
 
-        partial void InitProjSpecific(XElement element, Character character);
+        partial void InitProjSpecific(Character character);
 
         public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
         {
