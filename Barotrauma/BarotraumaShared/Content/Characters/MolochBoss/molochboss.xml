@@ -10,9 +10,11 @@
     combatstrength="1200"
     attackcooldown="15.0"
     sight="0.5" hearing="1.0">
-    <targetpriority tag="human" state="Attack" priority="40"/>
-    <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="100"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="45"/>
+    <targetpriority tag="human" state="Attack" priority="40"/>
   </ai>
 
   <ragdoll waveamplitude="0.0" swimspeed="2.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false" scale="1.5">

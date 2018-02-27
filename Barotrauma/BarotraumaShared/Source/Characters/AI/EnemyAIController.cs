@@ -253,6 +253,12 @@ namespace Barotrauma
                 }
             }
 
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            {
+                State = AIState.None;
+                return;
+            }
+
             latchOntoAI?.Update(this, deltaTime);
 
             if (Character.Submarine == null)
@@ -343,12 +349,6 @@ namespace Barotrauma
 
         private void UpdateAttack(float deltaTime)
         {
-            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
-            {
-                State = AIState.None;
-                return;
-            }
-
             selectedTargetMemory.Priority -= deltaTime;
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;

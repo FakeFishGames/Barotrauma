@@ -69,7 +69,7 @@
   <Item
     name="Nasonov Artifact"
     category="Alien"
-    Tags="alien"
+    Tags="alien,nasonov"
     pickdistance="150"
     indestructible="true"
     radarsize="30">
