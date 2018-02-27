@@ -2593,6 +2593,10 @@ namespace Barotrauma
         {
             isDead = false;
 
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+            }
             aiTarget = new AITarget(this);
             if (health <= 0f) health = 0.01f;
 
