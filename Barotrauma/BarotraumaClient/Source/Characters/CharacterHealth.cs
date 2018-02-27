@@ -59,7 +59,7 @@ namespace Barotrauma
             statusIconBloodloss = new Sprite("Content/UI/Health/statusIcons.png", new Rectangle(48, 0, 48, 48), null);
         }
 
-        partial void InitProjSpecific(XElement element, Character character)
+        partial void InitProjSpecific(Character character)
         {
             healthBar = new GUIProgressBar(new Rectangle(5, GameMain.GraphicsHeight - 138, 20, 128), Color.White, null, 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
@@ -370,10 +370,8 @@ namespace Barotrauma
                 if (limbHealth.IndicatorSprite == null) continue;
 
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
-
                 Color color = damageLerp < 0.5f ?
                     Color.Lerp(Color.Green, Color.Orange, damageLerp * 2.0f) : Color.Lerp(Color.Orange, Color.Red, (damageLerp - 0.5f) * 2.0f);
-
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)
@@ -391,6 +389,7 @@ namespace Barotrauma
             i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
+                if (limbHealth.IndicatorSprite == null) continue;
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 Rectangle highlightArea = new Rectangle(
