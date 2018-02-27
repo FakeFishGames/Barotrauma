@@ -74,8 +74,8 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
-            while (dustOffset.Y <= -1024.0f) dustOffset.Y += 1024.0f;
+            dustOffset -= Vector2.UnitY * 100.0f * deltaTime;
+            while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
