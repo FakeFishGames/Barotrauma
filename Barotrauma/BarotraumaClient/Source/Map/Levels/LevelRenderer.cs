@@ -74,7 +74,7 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            dustOffset -= Vector2.UnitY * 100.0f * deltaTime;
+            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
             while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
         }
 
