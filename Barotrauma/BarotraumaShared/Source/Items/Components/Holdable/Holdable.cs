@@ -126,7 +126,15 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
-            DropConnectedWires(dropper);
+            Drop(true, dropper);
+        }
+
+        private void Drop(bool dropConnectedWires, Character dropper)
+        {
+            if (dropConnectedWires)
+            {
+                DropConnectedWires(dropper);
+            }
 
             if (attachable)
             {
@@ -147,7 +155,7 @@ namespace Barotrauma.Items.Components
                 picker = dropper;
             }
             if (picker.Inventory == null) return;
-            
+
             item.Submarine = picker.Submarine;
             if (item.body != null)
             {
@@ -360,6 +368,12 @@ namespace Barotrauma.Items.Components
             item.body.Dir = -item.body.Dir;
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.Submarine != null && item.Submarine.Loading) return;
+            OnMapLoaded();
+        }
+
         public override void OnMapLoaded()
         {
             if (!attachable) return;
@@ -384,17 +398,20 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            if (!attachable)
+            if (!attachable || body == null)
             {
                 DebugConsole.ThrowError("Sent an attachment event for an item that's not attachable.");
             }
 
             msg.Write(Attached);
+            msg.Write(body.SimPosition.X);
+            msg.Write(body.SimPosition.Y);
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             bool isAttached = msg.ReadBoolean();
+            Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
             if (!attachable)
             {
@@ -404,10 +421,8 @@ namespace Barotrauma.Items.Components
 
             if (isAttached)
             {
-                if (item.ParentInventory != null)
-                {
-                    item.ParentInventory.RemoveItem(item);
-                }
+                Drop(false, null);
+                item.SetTransform(simPosition, 0.0f);
                 AttachToWall();
             }
             else
