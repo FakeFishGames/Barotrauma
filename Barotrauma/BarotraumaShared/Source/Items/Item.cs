@@ -461,6 +461,11 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.OnItemLoaded();
+            }
         }
 
         public override MapEntity Clone()
