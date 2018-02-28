@@ -1624,7 +1624,6 @@ namespace Barotrauma.Networking
         public void SpawnCreaturePrompt()
         {
             var SpawnCreaturePrompt = new GUIMessageBox("Creature Spawn", "", new string[] { "Left Click to spawn", "Cancel Spawn" }, 410, 430, Alignment.TopCenter);
-            //var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", SpawnCreaturePrompt.children[0]);
             var spawnNameFrame = new GUIListBox(new Rectangle(0, 30, 200, 180), Color.White, "", SpawnCreaturePrompt.children[0]);
             var spawnTypeFrame = new GUIListBox(new Rectangle(210, 30, 120, 120), Color.White, "", SpawnCreaturePrompt.children[0]);
             var PromptText = new GUITextBlock(new Rectangle(0, 210, 340, 85), "Use the left list to select the creature to spawn, use the right list to choose where/how to spawn it, finally use the slider for how many to spawn. cancel or right click after using cursor to cancel spawning. left click with cursor mode to spawn in the level.", "", Alignment.TopLeft, Alignment.TopLeft, SpawnCreaturePrompt.children[0],true, GUI.SmallFont);
@@ -1632,18 +1631,18 @@ namespace Barotrauma.Networking
 
             string[] Characters;
             Characters = System.IO.Directory.GetDirectories("Content/Characters/");
-            //banReasonBox.Wrap = true;
-            //banReasonBox.MaxTextLength = 100;
 
-            foreach (string character in Characters)
+            List<string> characterFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+
+            foreach (string characterfile in characterFiles)
             {
                 var charTextBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(character.Remove(0, "Content/Characters/".Length), GUI.Font, spawnNameFrame.Rect.Width - 65), "ListBoxElement",
+                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(System.IO.Path.GetFileName(characterfile.Replace(".xml","")), GUI.Font, spawnNameFrame.Rect.Width - 65), "ListBoxElement",
                 Alignment.TopLeft, Alignment.CenterLeft, spawnNameFrame)
                 {
                     Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
-                    ToolTip = "Spawns the character from Content/Characters/" + character.Remove(0, "Content/Characters/".Length) + "/",
-                    UserData = character.Remove(0, "Content/Characters/".Length),
+                    ToolTip = "Spawns the character from " + characterfile.Replace(System.IO.Path.GetFileName(characterfile),""),
+                    UserData = System.IO.Path.GetFileNameWithoutExtension(characterfile),
                     TextColor = new Color(Color.White, 1.0f)
                 };
             }
@@ -1707,28 +1706,6 @@ namespace Barotrauma.Networking
                 return true;
             };
             SpawnCountSlider.OnMoved(SpawnCountSlider, SpawnCountSlider.BarScroll);
-
-            //GUINumberInput durationInputDays = null, durationInputHours = null;
-            //GUITickBox permaBanTickBox = null;
-
-            //new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", SpawnCreaturePrompt.children[0]);
-            //permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, SpawnCreaturePrompt.children[0]);
-            //permaBanTickBox.Selected = true;
-
-            //var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, SpawnCreaturePrompt.children[0]);
-            //durationContainer.Visible = false;
-
-            //permaBanTickBox.OnSelected += (tickBox) =>
-            //{
-            //    durationContainer.Visible = !tickBox.Selected;
-            //    return true;
-            //};
-
-            //new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-            //durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", 0, 1000, durationContainer);
-
-            //new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-            //durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", 0, 24, durationContainer);
 
             SpawnCreaturePrompt.Buttons[0].OnClicked += (btn, userData) =>
             {

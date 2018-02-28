@@ -238,8 +238,6 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
-            Sound.Init();
-
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -287,7 +285,7 @@ namespace Barotrauma
             Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
-
+            Sound.Init();
             GUI.LoadContent();
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;

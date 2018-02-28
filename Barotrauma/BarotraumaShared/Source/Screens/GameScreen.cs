@@ -264,10 +264,17 @@ namespace Barotrauma
                         }
                         else
                         {
-                            character = Character.Create(
-                            "Content/Characters/"
-                            + Arguments[0].ToString().ToUpper().First() + Arguments[0].ToString().Substring(1)
-                            + "/" + Arguments[0].ToString().ToLower() + ".xml", WorldCoordinate);
+                            System.Collections.Generic.List<string> characterFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+
+                            foreach (string characterFile in characterFiles)
+                            {
+                                if (System.IO.Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == Arguments[0].ToString().ToLowerInvariant())
+                                {
+                                    character = Character.Create(
+                                    characterFile, WorldCoordinate);
+                                }
+                            }
+                            
                         }
                         break;
 

@@ -361,59 +361,62 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
-
-                List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
-                bodies.Add(c.AnimController.Collider);
-
-                foreach (PhysicsBody body in bodies)
+                //Nilmod crash prevention
+                if (c?.AnimController.Limbs != null)
                 {
-                    float diff = 0.0f;
+                    List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
+                    bodies.Add(c.AnimController.Collider);
 
-                    if (isHorizontal)
+                    foreach (PhysicsBody body in bodies)
                     {
-                        if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
-
-                        diff = body.SimPosition.Y - item.SimPosition.Y;
-                    }
-                    else
-                    {
-                        if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
-
-                        diff = body.SimPosition.X - item.SimPosition.X;
-                    }
-                   
-                    if (Math.Sign(diff) != dir)
-                    {
-#if CLIENT
-                        SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, body);
-#endif
+                        float diff = 0.0f;
 
                         if (isHorizontal)
                         {
-                            body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), body.Rotation);
-                            body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
+                            if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
+
+                            diff = body.SimPosition.Y - item.SimPosition.Y;
                         }
                         else
                         {
-                            body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
+                            if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
+
+                            diff = body.SimPosition.X - item.SimPosition.X;
+                        }
+
+                        if (Math.Sign(diff) != dir)
+                        {
+#if CLIENT
+                            SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, body);
+#endif
+
+                            if (isHorizontal)
+                            {
+                                body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), body.Rotation);
+                                body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
+                            }
+                            else
+                            {
+                                body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
+                                body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                            }
+                        }
+
+                        if (isHorizontal)
+                        {
+                            if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
+
+                            body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                        }
+                        else
+                        {
+                            if (Math.Abs(body.SimPosition.X - item.SimPosition.X) > simSize.X * 0.5f) continue;
+
                             body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
                         }
+
+                        c.SetStun(GameMain.NilMod.DoorStun);
                     }
-
-                    if (isHorizontal)
-                    {
-                        if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
-
-                        body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
-                    }
-                    else
-                    {
-                        if (Math.Abs(body.SimPosition.X - item.SimPosition.X) > simSize.X * 0.5f) continue;
-
-                        body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
-                    }
-
-                    c.SetStun(0.2f);
                 }
             }
         }

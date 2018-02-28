@@ -595,7 +595,7 @@ namespace Barotrauma
                 msg.Write(bleeding > 0.0f);
                 if (bleeding > 0.0f)
                 {
-                    msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
+                    msg.WriteRangedSingle(Math.Max(0.35f,bleeding), 0.0f, 5.0f, 8);
                 }
 
                 msg.Write(Stun > 0.0f);

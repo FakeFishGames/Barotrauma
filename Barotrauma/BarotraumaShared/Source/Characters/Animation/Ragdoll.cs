@@ -24,7 +24,28 @@ namespace Barotrauma
             {
                 if (limbs == null)
                 {
-                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed);
+                    if(character != null)
+                    {
+                        DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed);
+                        Character foundcharacter = Character.CharacterList.Find(c => c == character);
+
+                        DebugConsole.ThrowError("Character list: " + (foundcharacter != null ? "is in list, Ragdoll list: " : "not in list, Ragdoll list: ")
+                            + (list.Contains(this) ? "is in list." : "is not in list."));
+
+                        DebugConsole.NewMessage("Character info - Speciesname: " + character.SpeciesName
+                            + ", ConfigPath: " + character.ConfigPath
+                            + ", IsDead: " + (character.IsDead ? "Dead, Cause: " + character.CauseOfDeath + "." : "Alive."), Color.Red);
+
+                        DebugConsole.NewMessage("NILMOD: Attempting removal of broken character to prevent server crash (Clients will crash).", Color.Red);
+                        character.Remove();
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character reference is null!");
+                        DebugConsole.NewMessage("NILMOD: Attempting removal of broken ragdoll to prevent server crash (Clients will crash).", Color.Red);
+                        this.Remove();
+                    }
+                        
                     return new Limb[0];
                 }
                 return limbs;
@@ -564,7 +585,15 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
+                        float Damage = MathHelper.Clamp((impact - ImpactTolerance)*GameMain.NilMod.ImpactDamageMultiplier,GameMain.NilMod.MinImpactDamage,GameMain.NilMod.MaxImpactDamage);
+                        float BleedDamage = MathHelper.Clamp((impact - ImpactTolerance) * GameMain.NilMod.ImpactBleedMultiplier, GameMain.NilMod.MinImpactBleed, GameMain.NilMod.MaxImpactBleed);
+
+                        if(Damage > 0)
+                        {
+                            character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
+
+                            if (BleedDamage > 0) character.Bleeding += BleedDamage;
+                        }
 
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }

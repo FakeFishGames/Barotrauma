@@ -40,7 +40,7 @@ namespace Barotrauma
         public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
 
         const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "27/02/2018-1";
+        public const string NilModVersionDate = "28/02/2018-1";
         public Version NilModNetworkingVersion = new Version(0,0,0,0);
 
         public int Admins;
@@ -307,6 +307,12 @@ namespace Barotrauma
         public float ArmourResistanceMultiplierBleed;
         public float ArmourResistancePowerBleed;
         public float ArmourMinimumBleedPercent;
+        public float ImpactDamageMultiplier;
+        public float MinImpactDamage;
+        public float MaxImpactDamage;
+        public float ImpactBleedMultiplier;
+        public float MinImpactBleed;
+        public float MaxImpactBleed;
 
         //Player Settings
         public Boolean PlayerCanTraumaDeath;
@@ -403,6 +409,8 @@ namespace Barotrauma
         public float PCrushWallDamageChanceIncrease;
         public float PCrushWallMaxDamageChance;
         public float PCrushInterval;
+        public float DoorStun;
+
 
         //Items
 
@@ -817,6 +825,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("PCrushWallDamageChanceIncrease = " + PCrushWallDamageChanceIncrease.ToString() + "% Chance increase per approx. 100 meters.", ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("PCrushWallMaxDamageChance = " + HullUnbreathablePercent.ToString() + "% Max chance of base+increase to damage a section.", ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("HullUnbreathablePercent = " + HullUnbreathablePercent.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("DoorStun = " + DoorStun.ToString(), ServerLog.MessageType.NilMod);
 
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
 
@@ -854,8 +863,12 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("ArmourResistanceMultiplierBleed = " + ArmourResistanceMultiplierBleed.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ArmourResistancePowerBleed = " + ArmourResistancePowerBleed.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ArmourMinimumBleedPercent = " + ArmourMinimumBleedPercent.ToString(), ServerLog.MessageType.NilMod);
-
-
+            GameMain.Server.ServerLog.WriteLine("ImpactDamageMultiplier = " + ImpactDamageMultiplier.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MinImpactDamage = " + MinImpactDamage.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxImpactDamage = " + MaxImpactDamage.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("ImpactBleedMultiplier = " + ImpactBleedMultiplier.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MinImpactBleed = " + MinImpactBleed.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxImpactBleed = " + MaxImpactBleed.ToString(), ServerLog.MessageType.NilMod);
 
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
 
@@ -1197,7 +1210,7 @@ namespace Barotrauma
                     ElectricalOverloadFiresChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
                     ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
                     ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
-
+                    DoorStun = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("DoorStun", 0.2f), 0f, 60f);
 
                     //All Character Settings
                     XElement ServerModAllCharacterSettings = doc.Root.Element("ServerModAllCharacterSettings");
@@ -1235,8 +1248,14 @@ namespace Barotrauma
                     ArmourResistancePowerBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerBleed", 0f), 0f, 1f);
                     ArmourResistanceMultiplierBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
                     ArmourMinimumBleedPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumBleedPercent", 0f), 0f, 100f);
-
-
+                    ImpactDamageMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImpactDamageMultiplier", 1f), 0f, 100f);
+                    MinImpactDamage = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinImpactDamage", 0f), 0f, 100000f);
+                    MaxImpactDamage = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MaxImpactDamage", 1000f), 0f, 100000f);
+                    if (MinImpactDamage > MaxImpactDamage) MinImpactDamage = MaxImpactDamage;
+                    ImpactBleedMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImpactBleedMultiplier", 0f), 0f, 10f);
+                    MinImpactBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinImpactBleed", 0f), 0f, 100000f);
+                    MaxImpactBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MaxImpactBleed", 0.5f), 0f, 100000f);
+                    if (MinImpactBleed > MaxImpactBleed) MinImpactBleed = MaxImpactBleed;
 
 
                     //Player Settings
@@ -1576,6 +1595,7 @@ namespace Barotrauma
                 @"    ElectricalOverloadFiresChance=""" + ElectricalOverloadFiresChance + @"""",
                 @"    ElectricalFailMaxVoltage=""" + ElectricalFailMaxVoltage + @"""",
                 @"    ElectricalFailStunTime=""" + ElectricalFailStunTime + @"""",
+                @"    DoorStun=""" + DoorStun + @"""",
                 "  />",
 
                 "",
@@ -1615,6 +1635,12 @@ namespace Barotrauma
                 @"    ArmourResistanceMultiplierBleed=""" + ArmourResistanceMultiplierBleed + @"""",
                 @"    ArmourResistancePowerBleed=""" + ArmourResistancePowerBleed + @"""",
                 @"    ArmourMinimumBleedPercent=""" + ArmourMinimumBleedPercent + @"""",
+                @"    ImpactDamageMultiplier=""" + ImpactDamageMultiplier + @"""",
+                @"    MinImpactDamage=""" + MinImpactDamage + @"""",
+                @"    MaxImpactDamage=""" + MaxImpactDamage + @"""",
+                @"    ImpactBleedMultiplier=""" + ImpactBleedMultiplier + @"""",
+                @"    MinImpactBleed=""" + MinImpactBleed + @"""",
+                @"    MaxImpactBleed=""" + MaxImpactBleed + @"""",
                 "  />",
 
                 "",
@@ -2041,6 +2067,7 @@ namespace Barotrauma
             ElectricalOverloadFiresChance = 15f;
             ElectricalFailMaxVoltage = 0.1f;
             ElectricalFailStunTime = 5f;
+            DoorStun = 0.2f;
 
             //All Character Settings
             PlayerOxygenUsageAmount = -5.0f;
@@ -2076,6 +2103,12 @@ namespace Barotrauma
             ArmourResistancePowerBleed = 0f;
             ArmourResistanceMultiplierBleed = 0f;
             ArmourMinimumBleedPercent = 0f;
+            ImpactDamageMultiplier = 1.0f;
+            MinImpactDamage = 0f;
+            MaxImpactDamage = 0f;
+            ImpactBleedMultiplier = 1000f;
+            MinImpactBleed = 0f;
+            MaxImpactBleed = 0.5f;
 
             //Player Settings
             PlayerCanTraumaDeath = true;

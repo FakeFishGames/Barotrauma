@@ -201,6 +201,8 @@ namespace Barotrauma
             keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
             keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
 
+            keyMapping[(int)InputType.Ragdoll] = new KeyOrMouse(Keys.Space);
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

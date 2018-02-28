@@ -178,7 +178,7 @@ namespace Barotrauma.Items.Components
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
             Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
-                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel, false);
+                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
             if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
             {
