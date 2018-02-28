@@ -1541,6 +1541,7 @@ namespace Barotrauma
             {
                 list[i].Remove();
             }
+            System.Diagnostics.Debug.Assert(list.Count == 0, "Some ragdolls were not removed in Ragdoll.RemoveAll");
         }
     }
 }
