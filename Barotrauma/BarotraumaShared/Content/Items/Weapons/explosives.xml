@@ -90,7 +90,7 @@
 
     <Body width="14" height="12"/>
 
-    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Action" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
 
