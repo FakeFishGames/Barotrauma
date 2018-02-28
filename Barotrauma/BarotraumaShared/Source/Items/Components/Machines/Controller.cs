@@ -74,8 +74,9 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
-
+            
             if (character == null 
+                || character.Removed
                 || character.SelectedConstruction != item
                 || !character.CanInteractWith(item))
             {
@@ -147,7 +148,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (character == null || activator != character || character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (activator != character)
+            {
+                return false;
+            }
+
+            if (character == null || character.Removed ||
+                character.SelectedConstruction != item || !character.CanInteractWith(item))
             {
                 character = null;
                 return false;
@@ -162,9 +169,15 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.character == null || this.character != character || this.character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (this.character != character)
             {
-                character = null;
+                return false;
+            }
+
+            if (this.character == null || character.Removed ||
+                this.character.SelectedConstruction != item || !character.CanInteractWith(item))
+            {
+                this.character = null;
                 return false;
             }
             if (character == null) return false;     
@@ -224,6 +237,8 @@ namespace Barotrauma.Items.Components
 
         private void CancelUsing(Character character)
         {
+            if (character == null || character.Removed) return;
+
             foreach (LimbPos lb in limbPositions)
             {
                 Limb limb = character.AnimController.GetLimb(lb.limbType);
@@ -241,10 +256,10 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character activator)
         {
-            if (activator == null) return false;
+            if (activator == null || activator.Removed) return false;
 
             //someone already using the item
-            if (character != null)
+            if (character != null && !character.Removed)
             {
                 if (character == activator)
                 {
@@ -256,8 +271,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                character = activator;
-                    
+                character = activator;                    
                 IsActive = true;
             }
 
