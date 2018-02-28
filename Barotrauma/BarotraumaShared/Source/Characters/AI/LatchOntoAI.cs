@@ -118,7 +118,7 @@ namespace Barotrauma
                         {
                             //move closer to the wall
                             DeattachFromBody();
-                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 0.1f);
+                            enemyAI.SteeringManager.SteeringAvoid(deltaTime, 1.0f, 0.1f);
                             enemyAI.SteeringManager.SteeringSeek(wallAttachPos);
                         }
                     }
