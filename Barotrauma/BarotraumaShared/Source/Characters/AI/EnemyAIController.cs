@@ -89,6 +89,8 @@ namespace Barotrauma
         //how far the NPC can hear targets from (0.0 = deaf, 1.0 = hears every target within soundRange)
         private float hearing;
 
+        private float colliderSize;
+
         public AITarget SelectedAiTarget
         {
             get { return selectedAiTarget; }
@@ -131,25 +133,16 @@ namespace Barotrauma
 
             XElement aiElement = doc.Root.Element("ai");
             if (aiElement == null) return;
-
-            /*attackRooms     = aiElement.GetAttributeFloat(0.0f, "attackrooms", "attackpriorityrooms") / 100.0f;
-            attackHumans    = aiElement.GetAttributeFloat(0.0f, "attackhumans", "attackpriorityhumans") / 100.0f;
-            attackWeaker    = aiElement.GetAttributeFloat(0.0f, "attackweaker", "attackpriorityweaker") / 100.0f;
-            attackStronger  = aiElement.GetAttributeFloat(0.0f, "attackstronger", "attackprioritystronger") / 100.0f;
-            eatDeadPriority = aiElement.GetAttributeFloat("eatpriority", 0.0f) / 100.0f;*/
-
+            
             combatStrength = aiElement.GetAttributeFloat("combatstrength", 1.0f);
-
             attackCoolDown  = aiElement.GetAttributeFloat("attackcooldown", 5.0f);
+            attackWhenProvoked = aiElement.GetAttributeBool("attackwhenprovoked", false);
+            aggressiveBoarding = aiElement.GetAttributeBool("aggressiveboarding", false);
 
             sight           = aiElement.GetAttributeFloat("sight", 0.0f);
             hearing         = aiElement.GetAttributeFloat("hearing", 0.0f);
 
-            attackWhenProvoked = aiElement.GetAttributeBool("attackwhenprovoked", false);
-
             fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
-
-            aggressiveBoarding = aiElement.GetAttributeBool("aggressiveboarding", false);
 
             foreach (XElement subElement in aiElement.Elements())
             {
@@ -182,6 +175,19 @@ namespace Barotrauma
             insideSteering = new IndoorsSteeringManager(this, false, canBreakDoors);
             steeringManager = outsideSteering;
             State = AIState.None;
+
+            colliderSize = 0.1f;
+            switch (Character.AnimController.Collider.BodyShape)
+            {
+                case PhysicsBody.Shape.Capsule:
+                case PhysicsBody.Shape.HorizontalCapsule:
+                case PhysicsBody.Shape.Circle:
+                    colliderSize = Character.AnimController.Collider.radius * 2;
+                    break;
+                case PhysicsBody.Shape.Rectangle:
+                    colliderSize = Math.Min(Character.AnimController.Collider.width, Character.AnimController.Collider.height);
+                    break;
+            }
         }
         
         public TargetingPriority GetTargetingPriority(string targetTag)
@@ -253,13 +259,13 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            latchOntoAI?.Update(this, deltaTime);
+
+            if (selectedAiTarget != null && (selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed))
             {
                 State = AIState.None;
                 return;
             }
-
-            latchOntoAI?.Update(this, deltaTime);
 
             if (Character.Submarine == null)
             {
@@ -321,13 +327,13 @@ namespace Barotrauma
             {
                 Vector2 targetSimPos = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
 
-                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);
                 steeringManager.SteeringSeek(targetSimPos, 1.0f);
             }
             else
             {
                 //wander around randomly
-                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, 1.0f);
                 steeringManager.SteeringWander(0.5f);
             }          
         }
@@ -338,9 +344,18 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
+            if (selectedAiTarget == null)
+            {
+                State = AIState.None;
+                return;
+            }
+
+            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 2);
             SteeringManager.SteeringWander(1.0f);
-            SteeringManager.SteeringAvoid(deltaTime, 2f);
+            if (Character.CurrentHull == null)
+            {
+                SteeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 5f);
+            }
         }
 
         #endregion
@@ -349,6 +364,12 @@ namespace Barotrauma
 
         private void UpdateAttack(float deltaTime)
         {
+            if (selectedAiTarget == null)
+            {
+                State = AIState.None;
+                return;
+            }
+
             selectedTargetMemory.Priority -= deltaTime;
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
@@ -475,6 +496,10 @@ namespace Barotrauma
             if (attackLimb != null)
             {
                 steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), 3);
+                if (Character.CurrentHull == null)
+                {
+                    SteeringManager.SteeringAvoid(deltaTime, colliderSize * 1.5f, 1.0f);
+                }
 
                 if (steeringManager is IndoorsSteeringManager)
                 {
@@ -630,7 +655,7 @@ namespace Barotrauma
                 steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
             }
 
-            steeringManager.SteeringAvoid(deltaTime, 1.0f);
+            steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);
         }
 
         #endregion
@@ -639,7 +664,7 @@ namespace Barotrauma
 
         private void UpdateEating(float deltaTime)
         {
-            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            if (selectedAiTarget == null)
             {
                 State = AIState.None;
                 return;
@@ -932,19 +957,6 @@ namespace Barotrauma
 
         private int GetMinimumPassableHoleCount()
         {
-            float colliderSize = 0.1f;
-            switch (Character.AnimController.Collider.BodyShape)
-            {
-                case PhysicsBody.Shape.Capsule:
-                case PhysicsBody.Shape.HorizontalCapsule:
-                case PhysicsBody.Shape.Circle:
-                    colliderSize = Character.AnimController.Collider.radius * 2;
-                    break;
-                case PhysicsBody.Shape.Rectangle:
-                    colliderSize = Math.Min(Character.AnimController.Collider.width, Character.AnimController.Collider.height);
-                    break;
-            }
-
             return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
         }
 
