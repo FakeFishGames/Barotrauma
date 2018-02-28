@@ -1086,7 +1086,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (forceSelectKey)
+                    if (forceSelectKey && ic.CanBeSelected)
                     {
                         if (ic.PickKey == InputType.Select) pickHit = true;
                         if (ic.SelectKey == InputType.Select) selectHit = true;
