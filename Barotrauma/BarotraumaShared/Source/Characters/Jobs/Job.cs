@@ -6,7 +6,6 @@ namespace Barotrauma
 {
     class Job
     {
-
         private readonly JobPrefab prefab;
 
         private Dictionary<string, Skill> skills;
@@ -30,12 +29,7 @@ namespace Barotrauma
         {
             get { return prefab.Items; }
         }
-
-        //public List<bool> EquipSpawnItem
-        //{
-        //    get { return prefab.EquipItem; }
-        //}
-
+        
         public List<Skill> Skills
         {
             get { return skills.Values.ToList(); }
