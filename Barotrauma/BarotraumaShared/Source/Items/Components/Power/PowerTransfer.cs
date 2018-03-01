@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
                             if (this is RelayComponent == powerTransfer is RelayComponent)
                             {
                                 if (!powerTransfer.CanTransfer) continue;
-                                powerTransfer.CheckJunctions(deltaTime, true, inputOnly);
+                                powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, inputOnly);
                             }
                             else
                             {
