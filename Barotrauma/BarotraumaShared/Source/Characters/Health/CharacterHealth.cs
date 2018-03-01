@@ -93,7 +93,14 @@ namespace Barotrauma
 
         public float MaxVitality
         {
-            get { return maxVitality; }
+            get
+            {
+                if (character?.Info?.Job?.Prefab != null)
+                {
+                    return maxVitality + character.Info.Job.Prefab.VitalityModifier;
+                }
+                return maxVitality;
+            }
         }
 
         public float MinVitality
@@ -400,7 +407,7 @@ namespace Barotrauma
 
         private void CalculateVitality()
         {
-            vitality = maxVitality;
+            vitality = MaxVitality;
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
