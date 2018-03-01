@@ -1880,7 +1880,7 @@ namespace Barotrauma
             Kill(causeOfDeath.First, causeOfDeath.Second, isNetworkMessage);
         }
 
-        public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeathType, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (isDead) return;
 
@@ -1898,15 +1898,15 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+            GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
 
-            OnDeath?.Invoke(this, causeOfDeath);
+            this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
+            OnDeath?.Invoke(this, causeOfDeathType);
 
             KillProjSpecific();
 
             isDead = true;
 
-            this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeath, causeOfDeathAffliction);
             if (info != null) info.CauseOfDeath = this.causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
