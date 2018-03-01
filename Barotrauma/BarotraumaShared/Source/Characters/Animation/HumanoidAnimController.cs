@@ -919,11 +919,16 @@ namespace Barotrauma
             Vector2 diff = target.SimPosition - character.SimPosition;
             Limb targetHead = target.AnimController.GetLimb(LimbType.Head);
             Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
+            if (targetTorso == null)
+            {
+                Anim = Animation.None;
+                return;
+            }
+
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
-
             targetMovement = new Vector2(diff.X, 0.0f);
             TargetDir = headDiff.X > 0.0f ? Direction.Right : Direction.Left;
 
@@ -944,9 +949,8 @@ namespace Barotrauma
                 }
             }*/
 
-
             int skill = character.GetSkillLevel("Medical");
-            if (cprAnimState % 17 > 15.0f)
+            if (cprAnimState % 17 > 15.0f && targetHead != null)
             {
                 float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
                 head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
@@ -970,8 +974,11 @@ namespace Barotrauma
             }
             else
             {
-                head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
-                head.pullJoint.Enabled = true;
+                if (targetHead != null)
+                {
+                    head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
+                    head.pullJoint.Enabled = true;
+                }
                 torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.1f));
                 torso.pullJoint.Enabled = true;
                 if (cprPump >= 1)

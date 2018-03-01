@@ -45,7 +45,7 @@
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-1.0"/>
 
       <!-- welding a door, it will get stuck after a while -->
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="20.0" Condition="3.0"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block" Stuck="20.0" Condition="3.0"/>
 
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable name="structure"/>
@@ -95,7 +95,7 @@
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
       <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-1.0"/>
-      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-20.0" Condition="-3.0"/>
+      <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block,Alien Door,Alien Hatch" Stuck="-20.0" Condition="-3.0"/>
 
       <ParticleEmitter particle="plasma" particlespersecond="50"/>
       <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>

@@ -117,7 +117,7 @@ namespace Barotrauma
         public static string ConvertInputType(string inputType)
         {
             if (inputType == "ActionHit" || inputType == "Action") return "Use";
-            if (inputType == "SecondarHit" || inputType == "Secondary") return "Aim";
+            if (inputType == "SecondaryHit" || inputType == "Secondary") return "Aim";
 
             return inputType;
         }

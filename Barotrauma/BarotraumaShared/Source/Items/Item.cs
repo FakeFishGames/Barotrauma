@@ -461,6 +461,11 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.OnItemLoaded();
+            }
         }
 
         public override MapEntity Clone()
@@ -1125,7 +1130,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (forceSelectKey)
+                    if (forceSelectKey && ic.CanBeSelected)
                     {
                         if (ic.PickKey == InputType.Select) pickHit = true;
                         if (ic.SelectKey == InputType.Select) selectHit = true;
@@ -1611,6 +1616,8 @@ namespace Barotrauma
             ushort itemId       = msg.ReadUInt16();
 
             ushort inventoryId  = msg.ReadUInt16();
+
+            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;

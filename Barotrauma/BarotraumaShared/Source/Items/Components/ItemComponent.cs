@@ -575,7 +575,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Called when all items have been loaded. Use to initialize connections between items.
+        /// </summary>
         public virtual void OnMapLoaded() { }
+
+        /// <summary>
+        /// Called when all the components of the item have been loaded. Use to initialize connections between components and such.
+        /// </summary>
+        public virtual void OnItemLoaded() { }
         
         public static ItemComponent Load(XElement element, Item item, string file, bool errorMessages = true)
         {
