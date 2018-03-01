@@ -1527,7 +1527,12 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
-            msg.Write(Description);
+            msg.Write(Description != prefab.Description);
+            if (Description != prefab.Description)
+            {
+                msg.Write(Description);
+            }            
+
             msg.Write(ID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
@@ -1545,20 +1550,29 @@ namespace Barotrauma
                 int index = ParentInventory.FindIndex(this);
                 msg.Write(index < 0 ? (byte)255 : (byte)index);
             }
+            
+            bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
+            msg.Write(tagsChanged);
+            if (tagsChanged)
+            {
+                msg.Write(Tags);
+            }
 
-            //TODO: See if tags are different from their prefab before sending 'em
-            msg.Write(Tags);            
         }
 
         public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
         {
             if (GameMain.Server != null) return null;
 
-            string itemName     = msg.ReadString();
-            string itemDesc     = msg.ReadString();
-            ushort itemId       = msg.ReadUInt16();
-
-            ushort inventoryId  = msg.ReadUInt16();
+            string itemName = msg.ReadString();
+            bool descriptionChanged = msg.ReadBoolean();
+            string itemDesc = "";
+            if (descriptionChanged)
+            {
+                itemDesc = msg.ReadString();
+            }
+            ushort itemId = msg.ReadUInt16();
+            ushort inventoryId = msg.ReadUInt16();
 
             DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
 
@@ -1581,8 +1595,13 @@ namespace Barotrauma
                 }
             }
 
-            string tags = msg.ReadString();
-
+            bool tagsChanged = msg.ReadBoolean();
+            string tags = "";
+            if (tagsChanged)
+            {
+                tags = msg.ReadString();
+            }
+            
             if (!spawn) return null;
 
             //----------------------------------------
@@ -1592,7 +1611,7 @@ namespace Barotrauma
 
             Inventory inventory = null;
 
-            var inventoryOwner = Entity.FindEntityByID(inventoryId);
+            var inventoryOwner = FindEntityByID(inventoryId);
             if (inventoryOwner != null)
             {
                 if (inventoryOwner is Character)
@@ -1610,16 +1629,15 @@ namespace Barotrauma
             }
 
             var item = new Item(itemPrefab, pos, sub);
-
-            item.Description = itemDesc;
             item.ID = itemId;
+            if (descriptionChanged) item.Description = itemDesc;
+            if (tagsChanged) item.Tags = tags;
+
             if (sub != null)
             {
                 item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
                 item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
             }
-
-            if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
 
             if (inventory != null)
             {
