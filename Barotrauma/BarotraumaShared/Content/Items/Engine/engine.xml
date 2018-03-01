@@ -12,7 +12,7 @@
     <trigger x="20" y ="0" width="333" height="113"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="40"/>
+      <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
@@ -41,7 +41,7 @@
     <trigger x="15" y ="0" width="194" height="73"/>
     
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="30"/>
+      <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>

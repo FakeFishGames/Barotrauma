@@ -4,7 +4,7 @@
        minnumber="1" maxnumber="1" minkarma="0.7" initialcount="1">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
-      <Skill name="Construction" level="20,30"/>
+      <Skill name="Mechanical Engineering" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
       <Skill name="Medical" level="10,30"/>
     </Skills>
@@ -23,12 +23,12 @@
     </Items>
   </Job>
   
-  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." 
+  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's Mechanical Engineering skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." 
        minnumber="1" minkarma="0.5" initialcount="1">
     <Skills>
+      <Skill name="Electrical Engineering" level="60,80"/>
+      <Skill name="Mechanical Engineering" level="25,35"/>
       <Skill name="Weapons" level="10,30"/>
-      <Skill name="Construction" level="20,30"/>
-      <Skill name="Electrical Engineering" level="50,60"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
@@ -42,12 +42,12 @@
     </Items>
   </Job>
 
-  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." 
+  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high Mechanical Engineering skill. Together with engineers they ensure a submarine is working to its fullest." 
        minnumber="1" minkarma="0.5" initialcount="1">
     <Skills>
+      <Skill name="Mechanical Engineering" level="60,80"/>
+      <Skill name="Electrical Engineering" level="25,35"/>
       <Skill name="Weapons" level="10,30"/>
-      <Skill name="Construction" level="50,60"/>
-      <Skill name="Electrical Engineering" level="30,35"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
@@ -66,7 +66,7 @@
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Medical" level="30,40"/>
-      <Skill name="Construction" level="10,20"/>
+      <Skill name="Mechanical Engineering" level="10,20"/>
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
     <Items>
@@ -84,10 +84,10 @@
 
   <Job name="Medical Doctor" description="Although usually taken for granted, Doctors play an important role on the submarine, possessing the required skill to treat injured or unconscious crew members. Their skills can also be useful for creating various non-medicinal chemicals." maxnumber="2" minkarma="0.7">
     <Skills>
-      <Skill name="Weapons" level="10,20"/>
-      <Skill name="Construction" level="10,20"/>
-      <Skill name="Electrical Engineering" level="10,20"/>
       <Skill name="Medical" level="60,70"/>
+      <Skill name="Weapons" level="10,20"/>
+      <Skill name="Mechanical Engineering" level="10,20"/>
+      <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>
@@ -104,7 +104,7 @@
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true" minkarma="0.0">
     <Skills>
       <Skill name="Weapons" level="20,30"/>
-      <Skill name="Construction" level="20,30"/>
+      <Skill name="Mechanical Engineering" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
       <Skill name="Medical" level="10,20"/>
     </Skills>

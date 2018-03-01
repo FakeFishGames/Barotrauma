@@ -20,7 +20,7 @@
     <AiTarget sightrange="1500.0"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="40"/>
+      <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
   
@@ -53,7 +53,7 @@
     <AiTarget sightrange="1500.0"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="40"/>
+      <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -86,7 +86,7 @@
     <AiTarget sightrange="500.0"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="40"/>
+      <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -117,7 +117,7 @@
     <Wire/>
     
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Mechanical Engineering" level="60"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -156,7 +156,7 @@
     <Wire/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Mechanical Engineering" level="60"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -191,7 +191,7 @@
     <AiTarget sightrange="500.0"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="30"/>
+      <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 

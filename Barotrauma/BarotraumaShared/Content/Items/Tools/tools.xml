@@ -51,7 +51,7 @@
       <Fixable name="structure"/>
 
       <!-- construction skill 20 required to use the item -->
-      <RequiredSkill name="Construction" level="20"/>
+      <RequiredSkill name="Mechanical Engineering" level="20"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
@@ -108,7 +108,7 @@
 
       <Fixable name="structure"/>
 
-      <RequiredSkill name="Construction" level="30"/>
+      <RequiredSkill name="Mechanical Engineering" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
