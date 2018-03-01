@@ -7,6 +7,7 @@
     Tags="smallitem,medical"
     canuseonself="true"
     cargocontainername="Chemical Crate"
+    usecontainedspritecolor="true"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
     
     <Price locationtype="Research" buyprice="50"/>
