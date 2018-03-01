@@ -125,6 +125,14 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
                 }
             }
+            if (dictionary.Count > 0)
+            {
+                DebugConsole.ThrowError("Some entities were not removed in Entity.RemoveAll:");
+                foreach (Entity e in dictionary.Values)
+                {
+                    DebugConsole.ThrowError(" - " + e.ToString() + "(ID " + e.id + ")");
+                }
+            }
             dictionary.Clear();
         }
 

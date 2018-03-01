@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
 
             StopPicking(picker);
 
-            if (!picker.IsRemotePlayer) OnPicked(picker);
+            if (!picker.IsRemotePlayer || GameMain.Server != null) OnPicked(picker);
 
             yield return CoroutineStatus.Success;
         }
@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
 
             if (item.body != null && !item.body.Enabled)
             {
-                    item.body.ResetDynamics();
+                item.body.ResetDynamics();
                 item.SetTransform(bodyDropPos, 0.0f);
                 item.body.Enabled = true;
             }

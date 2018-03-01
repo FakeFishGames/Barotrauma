@@ -207,7 +207,7 @@ namespace Barotrauma
 
         public bool CanInteract
         {
-            get { return AllowInput && IsHumanoid && !LockHands; }
+            get { return AllowInput && IsHumanoid && !LockHands && !Removed; }
         }
 
         public Vector2 CursorPosition
@@ -456,7 +456,7 @@ namespace Barotrauma
         {
             get
             {
-                return isDead || Stun > 0.0f || LockHands || IsUnconscious || Removed;
+                return !Removed && (isDead || Stun > 0.0f || LockHands || IsUnconscious);
             }
         }
 
@@ -1090,7 +1090,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
+            if (c == this || Removed || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1936,7 +1936,19 @@ namespace Barotrauma
 
         public void Revive(bool isNetworkMessage)
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to revive an already removed character\n" + Environment.StackTrace);
+                return;
+            }
+
             isDead = false;
+
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+            }
+
             aiTarget = new AITarget(this);
             SetAllDamage(0.0f, 0.0f, 0.0f);
             Oxygen = 100.0f;
@@ -1962,12 +1974,10 @@ namespace Barotrauma
         
         public override void Remove()
         {
-#if DEBUG
             if (Removed)
             {
                 DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
             }
-#endif
 
             base.Remove();
 
