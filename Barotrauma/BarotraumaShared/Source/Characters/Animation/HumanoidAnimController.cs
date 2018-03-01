@@ -948,7 +948,7 @@ namespace Barotrauma
             }
 
             int skill = character.GetSkillLevel("Medical");
-            if (cprAnimState % 17 > 15.0f && targetHead != null)
+            if (cprAnimState % 17 > 15.0f && targetHead != null && head != null)
             {
                 float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
                 head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
@@ -968,7 +968,7 @@ namespace Barotrauma
             }
             else
             {
-                if (targetHead != null)
+                if (targetHead != null && head != null)
                 {
                     head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
                     head.pullJoint.Enabled = true;
