@@ -133,6 +133,8 @@ namespace Barotrauma.Items.Components
                 PowerTransfer pt = p as PowerTransfer;
                 if (pt == null) continue;
 
+                if (pt is RelayComponent != this is RelayComponent) continue;
+
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                 pt.Item.SendSignal(0, "", "power", null, fullPower / Math.Max(fullLoad, 1.0f));
@@ -141,6 +143,10 @@ namespace Barotrauma.Items.Components
                 //damage the item if voltage is too high 
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
+
+                //relays don't blow up if the power is higher than load, only if the output is high enough 
+                //(i.e. enough power passing through the relay)
+                if (this is RelayComponent) continue;
                 if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f, 2.1f), 200.0f)) continue;
 
                 float prevCondition = pt.item.Condition;
@@ -170,7 +176,6 @@ namespace Barotrauma.Items.Components
                         new FireSource(pt.item.WorldPosition);
                     }
                 }
-
             }
         }
 
@@ -255,9 +260,12 @@ namespace Barotrauma.Items.Components
 
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime)
+        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, bool inputOnly = false)
         {
-            updateCount = 1;
+            if (increaseUpdateCount)
+            {
+                updateCount = 1;
+            }
             connectedList.Add(this);
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -283,8 +291,17 @@ namespace Barotrauma.Items.Components
                         PowerTransfer powerTransfer = powered as PowerTransfer;
                         if (powerTransfer != null)
                         {
-                            if (!powerTransfer.CanTransfer) continue;
-                            powerTransfer.CheckJunctions(deltaTime);
+                            if (this is RelayComponent == powerTransfer is RelayComponent)
+                            {
+                                if (!powerTransfer.CanTransfer) continue;
+                                powerTransfer.CheckJunctions(deltaTime, true, inputOnly);
+                            }
+                            else
+                            {
+                                if (!powerTransfer.CanTransfer) continue;
+                                powerTransfer.CheckJunctions(deltaTime, false, !c.IsOutput);
+                            }
+
                             continue;
                         }
 
@@ -293,7 +310,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (recipient.Name == "power_in")
                             {
-                                fullLoad += powerContainer.CurrPowerConsumption;
+                                if (!inputOnly) fullLoad += powerContainer.CurrPowerConsumption;
                             }
                             else
                             {
@@ -306,7 +323,7 @@ namespace Barotrauma.Items.Components
                             //positive power consumption = the construction requires power -> increase load
                             if (powered.CurrPowerConsumption > 0.0f)
                             {
-                                fullLoad += powered.CurrPowerConsumption;
+                                if (!inputOnly) fullLoad += powered.CurrPowerConsumption;
                             }
                             else if (powered.CurrPowerConsumption < 0.0f)
                             //negative power consumption = the construction is a 

@@ -18,10 +18,28 @@ namespace Barotrauma
             get { return prefab.GetActiveSprite(condition); }
         }
 
+        public Color GetSpriteColor()
+        {
+            Color color = spriteColor;
+            if (prefab.UseContainedSpriteColor && ownInventory != null)
+            {
+                for (int i = 0; i < ownInventory.Items.Length; i++)
+                {
+                    if (ownInventory.Items[i] != null)
+                    {
+                        color = ownInventory.Items[i].spriteColor;
+                        break;
+                    }
+                }
+            }
+            return color;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
-            Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
+            
+            Color color = (IsSelected && editing) ? Color.Red : GetSpriteColor();
             if (isHighlighted) color = Color.Orange;
 
             Sprite activeSprite = prefab.sprite;
