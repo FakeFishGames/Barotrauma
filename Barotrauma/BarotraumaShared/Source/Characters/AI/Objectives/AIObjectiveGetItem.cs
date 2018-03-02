@@ -129,7 +129,7 @@ namespace Barotrauma
 
                 if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
                 {
-                    character.Inventory.TryPutItem(targetItem, targetSlot, false, character);
+                    character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                 }
             }
             else

@@ -386,7 +386,7 @@ namespace Barotrauma
                 {
                     Inventory selectedInventory = selectedSlot.Inventory;
                     int slotIndex = selectedSlot.SlotIndex;
-                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
+                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
                     {
                         if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                         GUI.PlayUISound(GUISoundType.PickItem);

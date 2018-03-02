@@ -95,7 +95,11 @@
     <Wearable slots="Head+Torso+Legs">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depth="0.004" inheritlimbdepth="false" depthlimb="Head" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depth="0.004" inheritlimbdepth="false" depthlimb="Head" hidelimb="true">
+        <LightComponent range="100.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="10" IsOn="true">
+          <sprite texture="Content/Items/Diving/DivingSuitLight.png" depth="0.025" origin="0.1,0.82" alpha="1.0"/>
+        </LightComponent>
+      </sprite>
 
       <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.0" inheritlimbdepth="false" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" depth="0.016" inheritlimbdepth="false" hidelimb="true"/>
@@ -129,10 +133,13 @@
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.6" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
 
-    <ItemContainer capacity="1" hideitems="true">
+    <ItemContainer capacity="2" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygenite Shard"/>
+      <Containable name="Battery Cell, Fulgurium Battery Cell">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
     </ItemContainer>
   </Item>
 

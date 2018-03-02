@@ -51,7 +51,7 @@ namespace Barotrauma
             {
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    if (character.Inventory.TryPutItem(weapon, 3, true, character))
+                    if (character.Inventory.TryPutItem(weapon, 3, true, false, character))
                     {
                         weapon.Equip(character);
                     }
