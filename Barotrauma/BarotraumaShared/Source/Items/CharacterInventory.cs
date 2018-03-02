@@ -113,7 +113,7 @@ namespace Barotrauma
                 bool free = true;
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i]!=null && Items[i]!=item)
+                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] != null && Items[i] != item)
                     {
                         free = false;
 #if CLIENT
@@ -144,7 +144,7 @@ namespace Barotrauma
             return placed;
         }
 
-        public override bool TryPutItem(Item item, int index, bool allowSwapping, Character user, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             //there's already an item in the slot
             if (Items[index] != null)
@@ -152,7 +152,7 @@ namespace Barotrauma
                 if (Items[index] == item) return false;
 
                 bool combined = false;
-                if (Items[index].Combine(item))
+                if (allowCombine && Items[index].Combine(item))
                 {
                     System.Diagnostics.Debug.Assert(Items[index] != null);
                  
@@ -168,25 +168,48 @@ namespace Barotrauma
                 else if (item.ParentInventory == this && allowSwapping)
                 {
                     int currentIndex = Array.IndexOf(Items, item);
-
+                    
                     Item existingItem = Items[index];
 
-                    Items[currentIndex] = null;
-                    Items[index] = null;
-                    //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false, user, createNetworkEvent) &&
-                        TryPutItem(item, index, false, user, createNetworkEvent))
+                    for (int i = 0; i < capacity; i++)
                     {
-
+                        if (Items[i] == item || Items[i] == existingItem) Items[i] = null;
+                    }
+                    
+                    //if the item in the slot can be moved to the slot of the moved item
+                    if (TryPutItem(existingItem, currentIndex, false, false, user, createNetworkEvent) &&
+                        TryPutItem(item, index, false, false, user, createNetworkEvent))
+                    {
+#if CLIENT
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (Items[i] == item || Items[i] == existingItem)
+                            {
+                                slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
+                            }
+                        }
+#endif
                     }
                     else
                     {
-                        Items[currentIndex] = null;
-                        Items[index] = null;
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (Items[i] == item || Items[i] == existingItem) Items[i] = null;
+                        }
 
                         //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false, user, createNetworkEvent);
-                        TryPutItem(existingItem, index, false, user, createNetworkEvent);
+                        TryPutItem(item, currentIndex, false, false, user, createNetworkEvent);
+                        TryPutItem(existingItem, index, false, false, user, createNetworkEvent);
+#if CLIENT
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (Items[i] == existingItem)
+                            {
+                                slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                            }
+                        }
+#endif
+
                     }
                 }
 
