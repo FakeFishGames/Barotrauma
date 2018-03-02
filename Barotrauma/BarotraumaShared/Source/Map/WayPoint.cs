@@ -302,61 +302,69 @@ namespace Barotrauma
                 var ladders = item.GetComponent<Items.Components.Ladder>();
                 if (ladders == null) continue;
 
-                WayPoint[] ladderPoints = new WayPoint[2];
-
-                ladderPoints[0] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, submarine);
-                ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y-1.0f), SpawnType.Path, submarine);                
+                List<WayPoint> ladderPoints = new List<WayPoint>();
+                ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, submarine));
 
                 WayPoint prevPoint = ladderPoints[0];
                 Vector2 prevPos = prevPoint.SimPosition;
-
                 List<Body> ignoredBodies = new List<Body>();
-
-                while (prevPoint != ladderPoints[1])
+                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 100.0f; y += 100.0f)
                 {
-                    var pickedBody = Submarine.PickBody(prevPos, ladderPoints[1].SimPosition, ignoredBodies, null, false);
+                    var pickedBody = Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, 
+                        ignoredBodies, null, false);
 
-                    if (pickedBody == null) break;
+                    if (pickedBody == null)
+                    {
+                        prevPos = Submarine.LastPickedPosition;
+                        continue;
+                    }
 
                     ignoredBodies.Add(pickedBody);
 
-                    if (pickedBody.UserData is Item)
+                    if (pickedBody.UserData is Item && ((Item)pickedBody.UserData).GetComponent<Door>() != null)
                     {
                         var door = ((Item)pickedBody.UserData).GetComponent<Door>();
-                        if (door != null)
-                        {
-                            WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, submarine);
-                            newPoint.Ladders = ladders;
-                            newPoint.ConnectedGap = door.LinkedGap;
 
-                            newPoint.ConnectTo(prevPoint);
-
-                            prevPoint = newPoint;
-
-                            prevPos = ConvertUnits.ToSimUnits(door.Item.Position - Vector2.UnitY * door.Item.Rect.Height);
-                        }
-                        else
-                        {
-                            prevPos = Submarine.LastPickedPosition;
-                        }
+                        WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, submarine);
+                        ladderPoints.Add(newPoint);
+                        newPoint.ConnectedGap = door.LinkedGap;
+                        newPoint.ConnectTo(prevPoint);
+                        prevPoint = newPoint;
+                        prevPos = new Vector2(prevPos.X, ConvertUnits.ToSimUnits(door.Item.Position.Y - door.Item.Rect.Height));
                     }
                     else
                     {
-                        prevPos = Submarine.LastPickedPosition;
+                        WayPoint newPoint = new WayPoint(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.UnitY * heightFromFloor, SpawnType.Path, submarine);
+                        ladderPoints.Add(newPoint);
+                        newPoint.ConnectTo(prevPoint);
+                        prevPoint = newPoint;
+                        prevPos = ConvertUnits.ToSimUnits(newPoint.Position);
                     }
                 }
 
-                prevPoint.ConnectTo(ladderPoints[1]);
-                
-                for (int i = 0; i < 2; i++)
+                ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
+
+                prevPoint.ConnectTo(ladderPoints[ladderPoints.Count - 1]);
+
+                for (int i = 0; i < ladderPoints.Count; i++)
                 {
                     ladderPoints[i].Ladders = ladders;
-
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
                         WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-150.0f, 10f));
                         if (closest == null) continue;
                         ladderPoints[i].ConnectTo(closest);
+                    }
+
+                    if (i == ladderPoints.Count - 1 && ladderPoints.Count > 2)
+                    {
+                        for (int dir = -1; dir <= 1; dir += 2)
+                        {
+                            WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-150.0f, 10f));
+                            if (closest == null) continue;
+                            ladderPoints[i].ConnectTo(closest);
+                        }
                     }
                 }
             }
@@ -395,13 +403,6 @@ namespace Barotrauma
 
                 var wayPoint = new WayPoint(
                     new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2), SpawnType.Path, submarine, gap);
-
-                for (int dir = -1; dir <= 1; dir += 2)
-                {
-                    WayPoint closest = wayPoint.FindClosest(dir, false, new Vector2(-outSideWaypointInterval, outSideWaypointInterval) / 2.0f);
-                    if (closest == null) continue;
-                    wayPoint.ConnectTo(closest);
-                }
             }
 
             var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());
@@ -460,7 +461,6 @@ namespace Barotrauma
                 }
             }
             
-
             return closest;
         }
 

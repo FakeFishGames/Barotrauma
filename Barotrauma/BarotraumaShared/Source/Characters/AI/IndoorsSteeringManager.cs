@@ -145,46 +145,56 @@ namespace Barotrauma
                     currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
                 }
             }
-
-            var collider = character.AnimController.Collider;
-            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
-
-            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
-                currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
-                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f)
-            {
-                currentPath.SkipToNextNode();
-            }
-
-            if (currentPath.CurrentNode == null) return Vector2.Zero;
             
+            var collider = character.AnimController.Collider;
+
             if (character.AnimController.Anim == AnimController.Animation.Climbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
-                
-                if (currentPath.CurrentNode.Ladders != null)
+
+                //climbing ladders -> don't move horizontally
+                diff.X = 0.0f;
+
+                //at the same height as the waypoint
+                if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 1.25f)
                 {
                     //climbing ladders -> don't move horizontally
                     diff.X = 0.0f;
 
-                    //at the same height as the waypoint
-                    if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
+                    float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
+                    if (heightFromFloor <= 0.0f)
                     {
-                        float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
-
-                        //we can safely skip to the next waypoint if the character is at a safe height above the floor,
-                        //or if the next waypoint in the path is also on ladders
-                        if ((heightFromFloor > 0.0f && heightFromFloor < collider.height) || 
-                            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
+                        diff.Y = Math.Max(diff.Y, 1.0f);
+                    }
+                    
+                    //we can safely skip to the next waypoint if the character is at a safe height above the floor,
+                    //or if the next waypoint in the path is also on ladders
+                    if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
+                        (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
+                    {
+                        if (currentPath.NextNode.Ladders == null)
                         {
-                            currentPath.SkipToNextNode();
+                            character.AnimController.Anim = AnimController.Animation.None;
                         }
+                        currentPath.SkipToNextNode();
                     }
                 }
 
                 character.AnimController.IgnorePlatforms = false;
                 return diff;
             }
+            else
+            {
+                Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+                if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
+                    currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
+                    currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f)
+                {
+                    currentPath.SkipToNextNode();
+                }
+            }
+
+            if (currentPath.CurrentNode == null) return Vector2.Zero;
 
             return currentPath.CurrentNode.SimPosition - pos;
         }
@@ -257,7 +267,7 @@ namespace Barotrauma
                             return;
                         }
 
-                        closestButton.Item.TryInteract(character, false, true);
+                        closestButton.Item.TryInteract(character, false, true, true);
                         break;
                     }
                 }
