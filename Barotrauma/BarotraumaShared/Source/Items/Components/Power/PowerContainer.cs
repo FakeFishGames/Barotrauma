@@ -186,7 +186,7 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "power_in")
             {
-                rechargeVoltage = power;
+                rechargeVoltage = Math.Min(power, 1.0f);
             }
             else
             {
