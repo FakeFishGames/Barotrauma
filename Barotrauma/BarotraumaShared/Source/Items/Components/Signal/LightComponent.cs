@@ -21,6 +21,8 @@ namespace Barotrauma.Items.Components
 
         private bool castShadows;
 
+        public PhysicsBody ParentBody;
+
         [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
         public float Range
         {
@@ -133,15 +135,17 @@ namespace Barotrauma.Items.Components
                 light.Color = Color.Transparent;
                 return;
             }
-            light.Position = item.Position;
+            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
 #endif
 
-            if (item.body != null)
+            PhysicsBody body = ParentBody ?? item.body;
+
+            if (body != null)
             {
 #if CLIENT
-                light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+                light.Rotation = body.Dir > 0.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
 #endif
-                if (!item.body.Enabled)
+                if (!body.Enabled)
                 {
 #if CLIENT
                     light.Color = Color.Transparent;
