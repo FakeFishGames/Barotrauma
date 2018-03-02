@@ -1642,7 +1642,7 @@ namespace Barotrauma
             if (inventory != null)
             {
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, null, false))
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
                 {
                     return null;
                 }
