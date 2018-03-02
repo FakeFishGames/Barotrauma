@@ -1183,7 +1183,7 @@ namespace Barotrauma
         {
             Vector2 movePos = simPosition;
 
-            if (original != simPosition)
+            if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
                 //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
