@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using Lidgren.Network;
 #if CLIENT
+using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
 #endif
 
@@ -144,6 +145,7 @@ namespace Barotrauma.Items.Components
             {
 #if CLIENT
                 light.Rotation = body.Dir > 0.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+                light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
 #endif
                 if (!body.Enabled)
                 {
