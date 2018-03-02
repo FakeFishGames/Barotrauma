@@ -313,11 +313,12 @@ namespace Barotrauma
                 WayPoint prevPoint = ladderPoints[0];
                 Vector2 prevPos = prevPoint.SimPosition;
                 List<Body> ignoredBodies = new List<Body>();
-                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y; y += 100.0f)
+
+                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 100.0f; y += 100.0f)
                 {
                     var pickedBody = Submarine.PickBody(
-                        prevPos, ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)),
-                        ignoredBodies, Physics.CollisionPlatform | Physics.CollisionWall, false);
+                        ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, 
+                        ignoredBodies, null, false);
 
                     if (pickedBody == null)
                     {
@@ -336,7 +337,7 @@ namespace Barotrauma
                         newPoint.ConnectedGap = door.LinkedGap;
                         newPoint.ConnectTo(prevPoint);
                         prevPoint = newPoint;
-                        prevPos = ConvertUnits.ToSimUnits(door.Item.Position - Vector2.UnitY * door.Item.Rect.Height);
+                        prevPos = new Vector2(prevPos.X, ConvertUnits.ToSimUnits(door.Item.Position.Y - door.Item.Rect.Height));
                     }
                     else
                     {
@@ -349,12 +350,12 @@ namespace Barotrauma
                 }
 
                 ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
-
+                
                 prevPoint.ConnectTo(ladderPoints[1]);
-
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
                     ladderPoint.Ladders = ladders;
+
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
                         WayPoint closest = ladderPoint.FindClosest(dir, true, new Vector2(-150.0f, 10f));
@@ -398,13 +399,6 @@ namespace Barotrauma
 
                 var wayPoint = new WayPoint(
                     new Vector2(gap.Rect.Center.X, gap.Rect.Y - gap.Rect.Height / 2), SpawnType.Path, submarine, gap);
-
-                for (int dir = -1; dir <= 1; dir += 2)
-                {
-                    WayPoint closest = wayPoint.FindClosest(dir, false, new Vector2(-outSideWaypointInterval, outSideWaypointInterval) / 2.0f);
-                    if (closest == null) continue;
-                    wayPoint.ConnectTo(closest);
-                }
             }
 
             var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());
@@ -463,7 +457,6 @@ namespace Barotrauma
                 }
             }
             
-
             return closest;
         }
 

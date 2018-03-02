@@ -182,6 +182,8 @@ namespace Barotrauma.Items.Components
         {
             this.item = item;
 
+            name = element.Name.ToString();
+
             properties = SerializableProperty.GetProperties(this);
 
             //canBePicked = ToolBox.GetAttributeBool(element, "canbepicked", false);
