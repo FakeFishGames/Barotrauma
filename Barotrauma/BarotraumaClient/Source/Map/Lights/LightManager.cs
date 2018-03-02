@@ -226,8 +226,11 @@ namespace Barotrauma.Lights
                 Vector2 drawPos = Character.Controlled.DrawPosition;
                 drawPos.Y = -drawPos.Y;
 
+                //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough)
+                float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
+                Color haloColor = Color.White * (1.0f - ambientBrightness);                
                 spriteBatch.Draw(
-                    LightSource.LightTexture, drawPos, null, Color.White * 0.3f, 0.0f,
+                    LightSource.LightTexture, drawPos, null, haloColor * 0.4f, 0.0f,
                     new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
             }
             spriteBatch.End();
