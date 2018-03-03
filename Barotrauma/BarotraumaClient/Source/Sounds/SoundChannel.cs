@@ -1,38 +1,79 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenTK.Audio.OpenAL;
 
 namespace Barotrauma
 {
-    class SoundChannel
+    class SoundChannel : IDisposable
     {
-        private Sound sound;
-        private int alSourceIndex;
-
-        public bool Stream
+        public Sound Sound
         {
             get;
             private set;
         }
 
-        private bool isPlaying;
-        public bool IsPlaying
+        public int ALSourceIndex
         {
-            get { return isPlaying; }
-            set { /* TODO: implement */ }
+            get;
+            private set;
         }
 
-        public SoundChannel(Sound sound,bool stream)
+        public bool IsStream
         {
+            get;
+            private set;
+        }
 
-            Stream = stream;
+        private int streamSeekPos;
+        private bool reachedEndSample;
+        public bool IsPlaying
+        {
+            get
+            {
+                return AL.GetSourceState(ALSourceIndex) == ALSourceState.Playing;
+            }
+        }
+
+        public SoundChannel(Sound sound)
+        {
+            Sound = sound;
+
+            IsStream = sound.Stream;
+
+            streamSeekPos = 0; reachedEndSample = false;
+
+            ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
+
+            if (ALSourceIndex!=-1)
+            {
+                if (!IsStream)
+                {
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            if (ALSourceIndex != -1)
+            {
+                AL.SourceStop(Sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                ALSourceIndex = -1;
+            }
         }
 
         public void UpdateStream()
         {
-            //TODO: implement
+            if (!IsStream) throw new Exception("Called UpdateStream on a non-streamed sound channel!");
+
+            if (!reachedEndSample)
+            {
+                short[] buffer = new short[8192];
+                int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
+                if (readSamples < 8192)
+                {
+                    reachedEndSample = true;
+                }
+            }
         }
     }
 }

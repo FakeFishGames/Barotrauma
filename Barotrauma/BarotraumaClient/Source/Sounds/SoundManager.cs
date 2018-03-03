@@ -16,13 +16,17 @@ namespace Barotrauma
         private ContextHandle alcContext;
         private uint[] alSources;
 
-        private Thread streamingThread;
-        private List<Sound> sounds;
-        private List<SoundChannel> soundChannels;
+        private List<Sound> loadedSounds;
+        private List<SoundChannel> playingChannels;
 
-        SoundManager()
+        private Thread streamingThread;
+
+        public SoundManager()
         {
             working = false;
+
+            loadedSounds = new List<Sound>();
+            playingChannels = new List<SoundChannel>();
 
             streamingThread = null;
 
@@ -65,21 +69,66 @@ namespace Barotrauma
             working = true;
         }
 
+        public Sound LoadSound(string filename,bool stream)
+        {
+            return new OggSound(this, filename, stream);
+        }
+
+        public uint GetSourceFromIndex(int ind)
+        {
+            return alSources[ind];
+        }
+
+        public int AssignFreeSourceToChannel(SoundChannel newChannel)
+        {
+            //remove a channel that has stopped
+            for (int i=0;i<playingChannels.Count;i++)
+            {
+                if (!playingChannels[i].IsPlaying)
+                {
+                    playingChannels[i].Dispose();
+                    playingChannels[i] = newChannel;
+                    return i;
+                }
+            }
+            //all of the currently stored channels are playing
+            //add a new channel to the list if we have available sources
+            if (playingChannels.Count < SOURCE_COUNT)
+            {
+                playingChannels.Add(newChannel);
+                return playingChannels.Count-1;
+            }
+            //we couldn't get a free source to assign to this channel!
+            return -1;
+        }
+
+        public void KillChannels(Sound sound)
+        {
+            for (int i = playingChannels.Count-1; i >= 0; i--)
+            {
+                if (playingChannels[i].Sound == sound)
+                {
+                    playingChannels[i].Dispose();
+                    playingChannels.RemoveAt(i);
+                }
+            }
+        }
+
         void UpdateStreaming()
         {
             while (true)
             {
-                lock (soundChannels)
+                lock (playingChannels)
                 {
-                    for (int i=0;i<soundChannels.Count;i++)
+                    for (int i=0;i<playingChannels.Count;i++)
                     {
-                        if (soundChannels[i].Stream)
+                        if (playingChannels[i].IsStream)
                         {
-
+                            playingChannels[i].UpdateStream();
                         }
                     }
 
-                    if (soundChannels.Count == 0) break;
+                    if (playingChannels.Count == 0) break;
                 }
                 Thread.Sleep(30);
             }
