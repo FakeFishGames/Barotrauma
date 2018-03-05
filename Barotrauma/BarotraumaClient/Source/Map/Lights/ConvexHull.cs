@@ -9,6 +9,7 @@ namespace Barotrauma.Lights
     class ConvexHullList
     {
         private List<ConvexHull> list;
+        public HashSet<ConvexHull> IsHidden;
 
         public readonly Submarine Submarine;
         public List<ConvexHull> List
@@ -19,13 +20,16 @@ namespace Barotrauma.Lights
                 Debug.Assert(value != null);
                 Debug.Assert(!list.Contains(null));
                 list = value;
+                IsHidden.RemoveWhere(ch => !list.Contains(ch));
             }
         }
+        
 
         public ConvexHullList(Submarine submarine)
         {
             Submarine = submarine;
             list = new List<ConvexHull>();
+            IsHidden = new HashSet<ConvexHull>();
         }
     }
 
@@ -34,15 +38,18 @@ namespace Barotrauma.Lights
         public SegmentPoint Start;
         public SegmentPoint End;
 
+        public ConvexHull ConvexHull;
+
         public bool IsHorizontal;
 
-        public Segment(SegmentPoint start, SegmentPoint end)
+        public Segment(SegmentPoint start, SegmentPoint end, ConvexHull convexHull)
         {
             Start = start;
             End = end;
+            ConvexHull = convexHull;
 
-            start.Segment = this;
-            end.Segment = this;
+            start.ConvexHull = convexHull;
+            end.ConvexHull = convexHull;
 
             IsHorizontal = Math.Abs(start.Pos.X - end.Pos.X) > Math.Abs(start.Pos.Y - end.Pos.Y);
         }
@@ -53,14 +60,13 @@ namespace Barotrauma.Lights
         public Vector2 Pos;        
         public Vector2 WorldPos;
 
-        public Segment Segment;
+        public ConvexHull ConvexHull;
 
-        public SegmentPoint(Vector2 pos)
+        public SegmentPoint(Vector2 pos, ConvexHull convexHull)
         {
             Pos = pos;
             WorldPos = pos;
-
-            Segment = null;
+            ConvexHull = convexHull;
         }
 
         public override string ToString()
@@ -244,13 +250,13 @@ namespace Barotrauma.Lights
 
             for (int i = 0; i < 4; i++)
             {
-                vertices[i]     = new SegmentPoint(points[i]);
-                losVertices[i]  = new SegmentPoint(points[i]);
+                vertices[i]     = new SegmentPoint(points[i], this);
+                losVertices[i]  = new SegmentPoint(points[i], this);
 
             }
             for (int i = 0; i < 4; i++)
             {
-                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4]);
+                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4], this);
             }
             
             int margin = 0;
