@@ -101,6 +101,7 @@ namespace Barotrauma
 
                         GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                             + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                        campaign.LastUpdateID++;
                     }
                 };
 
@@ -139,6 +140,7 @@ namespace Barotrauma
 
                             GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                 + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                            campaign.LastUpdateID++;
                         }
                     }
                     //Money is not the default amount on loading, so its likely a game in progress
@@ -163,6 +165,7 @@ namespace Barotrauma
                         }
                         GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                             + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                        campaign.LastUpdateID++;
                     }
                 };
 
@@ -200,6 +203,7 @@ namespace Barotrauma
                             //If money is exactly the same as what we start as, assume its actually a new game that was saved and reloaded!
                             if (campaign.Money == GameMain.NilMod.CampaignInitialMoney)
                             {
+                                GameMain.NilMod.CampaignStart = true;
                                 int totalcost = 0;
                                 int totalitems = 0;
                                 foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
@@ -219,11 +223,13 @@ namespace Barotrauma
 
                                 GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                     + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                                campaign.LastUpdateID++;
                             }
                         }
                         //Money is not the default amount on loading, so its likely a game in progress
                         else
                         {
+                            GameMain.NilMod.CampaignStart = false;
                             int totalcost = 0;
                             int totalitems = 0;
                             foreach (CampaignPurchase cp in GameMain.NilMod.ServerExistingCampaignAutobuy)
@@ -243,6 +249,7 @@ namespace Barotrauma
                             }
                             GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                 + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                            campaign.LastUpdateID++;
                         }
                     }
 
@@ -341,6 +348,7 @@ namespace Barotrauma
                                 }
                                 GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                 + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                                campaign.LastUpdateID++;
                             }
                         }
 
@@ -489,7 +497,7 @@ namespace Barotrauma
 
             bool success = 
                 (GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead)) && !GameMain.NilMod.RoundEnded;
+                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead)) && (!GameMain.NilMod.RoundEnded || Submarine.MainSub.AtEndPosition);
 
             /*if (success)
             {
@@ -668,6 +676,13 @@ namespace Barotrauma
                         }
                         GameMain.NetworkMember.AddChatMessage("Campaign: There are " + (GameMain.NilMod.CampaignMaxFails - GameMain.NilMod.CampaignFails) + " Attempts remaining on this save unless you start pulling off some success!", ChatMessageType.Server, "", null);
                     }
+                    //Reload the game and such
+                    SaveUtil.LoadGame(GameMain.GameSession.SavePath);
+#if CLIENT
+                    GameMain.NetLobbyScreen.modeList.Select(2, true);
+#endif
+                    GameMain.GameSession.Map.SelectRandomLocation(true);
+                    LastSaveID += 1;
                 }
             }
 
@@ -697,6 +712,7 @@ namespace Barotrauma
                     }
                     GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                 + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                    LastUpdateID++;
                 }
                 //If its a round that wasn't the first, buy the mid-round items!
                 else
@@ -720,6 +736,7 @@ namespace Barotrauma
                     }
                     GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
                                 + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                    LastUpdateID++;
                 }
             }
         }

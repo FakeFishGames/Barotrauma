@@ -2234,6 +2234,7 @@ namespace Barotrauma
             ElectricalOverloadFiresChance = 15f;
             ElectricalFailMaxVoltage = 0.1f;
             ElectricalFailStunTime = 5f;
+            ElectricalRelayMaxPowerMultiplier = 1f;
             DoorStun = 0.2f;
 
             //All Character Settings

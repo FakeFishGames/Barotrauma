@@ -15,7 +15,7 @@ namespace Barotrauma
         private GUIFrame infoFrame;
         private GUIListBox playerList;
 
-        private GUIListBox subList, modeList, chatBox;
+        public GUIListBox subList, modeList, chatBox;
         public GUIListBox ChatBox
         {
             get
