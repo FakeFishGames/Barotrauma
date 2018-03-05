@@ -988,6 +988,23 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             }));
 
+            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            },
+            null, (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            }));
+
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 if (GameMain.Client == null)

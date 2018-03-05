@@ -46,6 +46,8 @@ namespace Barotrauma
             events = new List<ScriptedEvent>();        
         }
 
+        public bool Enabled = true;
+
         public void StartRound(Level level)
         {
             if (GameMain.Client != null) return;
@@ -156,7 +158,7 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null || !Enabled) return;
 
             CalculateCurrentIntensity(deltaTime);
 
