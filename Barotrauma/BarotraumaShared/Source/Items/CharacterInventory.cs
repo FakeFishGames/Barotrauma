@@ -50,7 +50,14 @@ namespace Barotrauma
             }
 
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-
+            foreach (ItemComponent ic in Items[slotIndex].components)
+            {
+                if (ic.DeleteOnUse)
+                {
+                    Entity.Spawner.AddToRemoveQueue(Items[slotIndex]);
+                }
+            }
+            
             return true;
         }
         
