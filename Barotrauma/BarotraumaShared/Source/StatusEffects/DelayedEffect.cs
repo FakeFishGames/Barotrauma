@@ -26,7 +26,7 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.Count == 1 && d.Targets[0] == target)) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target)) return;
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
 
@@ -44,7 +44,7 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.SequenceEqual(targets))) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) return;
 
             //remove invalid targets
             if (targetNames != null)
