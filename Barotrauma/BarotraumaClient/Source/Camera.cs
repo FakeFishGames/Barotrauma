@@ -44,7 +44,6 @@ namespace Barotrauma
                 zoom = Math.Max(value, GameMain.DebugDraw ? 0.01f : 0.1f);
                 
                 Vector2 center = WorldViewCenter;
-
                 float newWidth = resolution.X / zoom;
                 float newHeight = resolution.Y / zoom;
 

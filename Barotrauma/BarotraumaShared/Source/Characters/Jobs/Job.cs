@@ -149,7 +149,9 @@ namespace Barotrauma
                 if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
                     item.Description = spawnPoint.IdCardDesc;
             }
-            
+
+            item.AddTag("Starter_Item");
+
             if (parentItem != null) parentItem.Combine(item);
 
             foreach (XElement childItemElement in itemElement.Elements())

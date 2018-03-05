@@ -84,9 +84,11 @@ namespace Barotrauma.Particles
                 Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
 
                 Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
-
-                if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
-                if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
+                if (!(Screen.Selected is ParticleEditorScreen))
+                {
+                    if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
+                    if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
+                }
 
                 if (particles[particleCount] == null) particles[particleCount] = new Particle();
 

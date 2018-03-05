@@ -148,7 +148,7 @@ namespace Barotrauma.Networking
             if (inGameClients.Count > 0)
             {
                 lastSentToAll = inGameClients[0].LastRecvEntityEventID;
-                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
+                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent((ushort)(lastSentToAll - 1), c.LastRecvEntityEventID)) lastSentToAll = (ushort)(c.LastRecvEntityEventID - 1); });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
                 if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > (10.0f * GameMain.NilMod.DesyncTimerMultiplier))
@@ -159,7 +159,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
-                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync (Expected old event, inform the server host increasing 'DesyncTimerMultiplier' could help.");
                     }
                     );
                 }
@@ -172,7 +172,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
-                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync (Event no longer exists)");
                     }
                     );
                 }

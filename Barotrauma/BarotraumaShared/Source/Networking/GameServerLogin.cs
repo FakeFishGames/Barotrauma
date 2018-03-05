@@ -25,7 +25,7 @@ namespace Barotrauma.Networking
             failedAttempts = 0;
         }
     }
-    
+
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
@@ -39,42 +39,35 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban)).Count,GameMain.NilMod.MaxAdminSlots);
-            GameMain.NilMod.Moderators = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxModeratorSlots);
-            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly).Count, GameMain.NilMod.MaxSpectatorSlots);
-            
-            //Code so they don't reduce current player counts multiple times when counted for multiple  slots
-            int ModAdminSpectators = Math.Min((Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxAdminSlots)
-                + Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxModeratorSlots)), GameMain.NilMod.MaxSpectatorSlots);
-
-            int CurrentPlayers = ConnectedClients.Count - (GameMain.NilMod.Admins + GameMain.NilMod.Moderators + GameMain.NilMod.Spectators - ModAdminSpectators);
+            GameMain.NilMod.RecheckPlayerCounts();
 
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == conn);
             if (unauthClient == null)
             {
                 //Clients permissions
                 var precheckPermissions = clientPermissions.Find(cp => cp.IP == conn.RemoteEndPoint.Address.ToString());
+                int nonce;
 
                 //new client, generate nonce and add to unauth queue
-                if ((CurrentPlayers + unauthenticatedClients.Count) >= maxPlayers)
+                if ((GameMain.NilMod.CurrentPlayers + unauthenticatedClients.Count) > maxPlayers)
                 {
-                    if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Ban))
+                    if (precheckPermissions.OwnerSlot && GameMain.NilMod.Owners + 1 <= GameMain.NilMod.MaxOwnerSlots)
                     {
-                        if (GameMain.NilMod.Admins + 1 > GameMain.NilMod.MaxAdminSlots)
-                        {
-                            //Server is full and exceeded its admin slots.
-                            conn.Disconnect("Server full - Server is at " + GameMain.NilMod.Admins + "/" + GameMain.NilMod.MaxAdminSlots + " Admin Slots.");
-                            return;
-                        }
+                        nonce = CryptoRandom.Instance.Next();
+                        unauthClient = new UnauthenticatedClient(conn, nonce);
+                        unauthenticatedClients.Add(unauthClient);
                     }
-                    else if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Kick))
+                    else if (precheckPermissions.AdministratorSlot && GameMain.NilMod.Admins + 1 <= GameMain.NilMod.MaxAdminSlots)
                     {
-                        if (GameMain.NilMod.Moderators + 1 > GameMain.NilMod.MaxModeratorSlots)
-                        {
-                            //Server is full and exceeded its admin slots.
-                            conn.Disconnect("Server full - Server is at " + GameMain.NilMod.Moderators + "/" + GameMain.NilMod.MaxModeratorSlots + " Moderator Slots.");
-                            return;
-                        }
+                        nonce = CryptoRandom.Instance.Next();
+                        unauthClient = new UnauthenticatedClient(conn, nonce);
+                        unauthenticatedClients.Add(unauthClient);
+                    }
+                    else if (precheckPermissions.AdministratorSlot && GameMain.NilMod.Trusted + 1 <= GameMain.NilMod.MaxTrustedSlots)
+                    {
+                        nonce = CryptoRandom.Instance.Next();
+                        unauthClient = new UnauthenticatedClient(conn, nonce);
+                        unauthenticatedClients.Add(unauthClient);
                     }
                     else
                     {
@@ -83,10 +76,14 @@ namespace Barotrauma.Networking
                         return;
                     }
                 }
+                else
+                {
+                    nonce = CryptoRandom.Instance.Next();
+                    unauthClient = new UnauthenticatedClient(conn, nonce);
+                    unauthenticatedClients.Add(unauthClient);
+                }
 
-                int nonce = CryptoRandom.Instance.Next();
-                unauthClient = new UnauthenticatedClient(conn, nonce);
-                unauthenticatedClients.Add(unauthClient);
+
             }
             unauthClient.AuthTimer = 10.0f;
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
@@ -148,7 +145,7 @@ namespace Barotrauma.Networking
                         //not disconnecting the player here, because they'll still use the same connection and nonce if they try logging in again
                         NetOutgoingMessage reject = server.CreateMessage();
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
-                        reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.failedAttempts)+" more attempts before you're banned from the server.");
+                        reject.Write("Wrong password! You have " + Convert.ToString(4 - unauthClient.failedAttempts) + " more attempts before you're banned from the server.");
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
                         server.SendMessage(reject, unauthClient.Connection, NetDeliveryMethod.Unreliable);
@@ -187,7 +184,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (clPackageHash.Substring(0,7).Contains("NILMOD_"))
+            if (clPackageHash.Substring(0, 7).Contains("NILMOD_"))
             {
                 if (!GameMain.NilMod.AllowNilModClients)
                 {
@@ -204,7 +201,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if(!GameMain.NilMod.AllowVanillaClients)
+                if (!GameMain.NilMod.AllowVanillaClients)
                 {
                     DisconnectUnauthClient(inc, unauthClient, "This server does not permit Vanilla clients (Please rejoin using Nilmod).");
                     Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Vanilla clients are not permitted to connect).", ServerLog.MessageType.Connection);
@@ -288,16 +285,16 @@ namespace Barotrauma.Networking
                 {
                     if (GameMain.NilMod.KickedClients[i].IPAddress == unauthClient.Connection.RemoteEndPoint.Address.ToString())
                     {
-                        if(GameMain.NilMod.KickedClients[i].RejoinTimer > 0f)
+                        if (GameMain.NilMod.KickedClients[i].RejoinTimer > 0f)
                         {
-                            DisconnectUnauthClient(inc, unauthClient, "You have been kicked for " + ToolBox.SecondsToReadableTime(GameMain.NilMod.KickedClients[i].RejoinTimer) + ".\n" + GameMain.NilMod.KickedClients[i].KickReason.Replace("You have been kicked from the server.",""));
+                            DisconnectUnauthClient(inc, unauthClient, "You have been kicked for " + ToolBox.SecondsToReadableTime(GameMain.NilMod.KickedClients[i].RejoinTimer) + ".\n" + GameMain.NilMod.KickedClients[i].KickReason.Replace("You have been kicked from the server.", ""));
                             return;
                         }
                         else
                         {
                             kickedclient = GameMain.NilMod.KickedClients[i];
                         }
-                        
+
                     }
                 }
             }
@@ -316,7 +313,7 @@ namespace Barotrauma.Networking
                 }
                 string banText = "";
 
-                if(GameMain.NilMod.BansInfoAddBanName)
+                if (GameMain.NilMod.BansInfoAddBanName)
                 {
                     banText = "You've been banned as '" + banList.GetBanName(inc.SenderEndPoint.Address.ToString()) + "'.";
                 }
@@ -328,16 +325,16 @@ namespace Barotrauma.Networking
                 //Add Ban duration text
                 if (banList.GetBanExpiry(inc.SenderEndPoint.Address.ToString()) != null && GameMain.NilMod.BansInfoAddBanDuration)
                 {
-                    if(GameMain.NilMod.BansInfoUseRemainingTime)
+                    if (GameMain.NilMod.BansInfoUseRemainingTime)
                     {
                         TimeSpan banRemaining = Convert.ToDateTime(banList.GetBanExpiry(inc.SenderEndPoint.Address.ToString())).Subtract(DateTime.Now);
 
                         banText += "\n" + "Expires in: ";
-                        if(banRemaining.Days > 0) banText += banRemaining.Days + " Days, ";
+                        if (banRemaining.Days > 0) banText += banRemaining.Days + " Days, ";
                         if (banRemaining.Hours > 0) banText += banRemaining.Hours + " Hours, ";
                         if (banRemaining.Minutes > 0) banText += banRemaining.Minutes + " Minutes, ";
 
-                        banText = banText.Substring(0,banText.Length - 2);
+                        banText = banText.Substring(0, banText.Length - 2);
                     }
                     else
                     {
@@ -346,7 +343,7 @@ namespace Barotrauma.Networking
                     }
                 }
                 //Permanent ban text
-                else if(banList.GetBanExpiry(inc.SenderEndPoint.Address.ToString()) == null && GameMain.NilMod.BansInfoAddBanDuration)
+                else if (banList.GetBanExpiry(inc.SenderEndPoint.Address.ToString()) == null && GameMain.NilMod.BansInfoAddBanDuration)
                 {
                     if (GameMain.NilMod.BansInfoAddBanName)
                     {
@@ -427,13 +424,13 @@ namespace Barotrauma.Networking
                         ReconnectedClient = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.IPAddress == inc.SenderConnection.RemoteEndPoint.Address.ToString() && dc.clientname == clName);
                     }
 
-                    if(kickedclient != null)
+                    if (kickedclient != null)
                     {
                         GameMain.Server.SendChatMessage("Recently Kicked Player " + clName + " (" + kickedclient.clientname + ") has rejoined the server.", ChatMessageType.Server, null);
                         DebugConsole.NewMessage("Recently Kicked Player " + clName + " (" + kickedclient.clientname + ") (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") has joined the server.", Color.White);
                         Log("Recently Kicked Player " + clName + " (" + kickedclient.clientname + ") (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") has joined the server.", ServerLog.MessageType.Connection);
 
-                        if(GameMain.NilMod.ClearKickStateNameOnRejoin)
+                        if (GameMain.NilMod.ClearKickStateNameOnRejoin)
                         {
                             GameMain.NilMod.KickedClients.Remove(kickedclient);
                         }
@@ -462,13 +459,16 @@ namespace Barotrauma.Networking
             if (savedPermissions != null)
             {
                 newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
+                newClient.OwnerSlot = savedPermissions.OwnerSlot;
+                newClient.AdministratorSlot = savedPermissions.AdministratorSlot;
+                newClient.TrustedSlot = savedPermissions.TrustedSlot;
             }
             else
             {
                 newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
-                
+
         private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, string reason)
         {
             inc.SenderConnection.Disconnect(reason);

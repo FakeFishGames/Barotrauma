@@ -193,7 +193,10 @@ namespace Barotrauma.Networking
             endRoundButton.ToolTip = "Immediately ends the game round.";
             endRoundButton.Visible = false;
             endRoundButton.Enabled = true;
-            endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
+            endRoundButton.OnClicked = (btn, userdata) => {
+                GameMain.NilMod.RoundEnded = true;
+                EndGame(); return true;
+            };
             tempbuttonpagelist.Add(endRoundButton);
 
             ButtonCoordX -= 140;

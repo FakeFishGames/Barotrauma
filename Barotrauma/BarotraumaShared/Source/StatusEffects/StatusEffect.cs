@@ -54,7 +54,7 @@ namespace Barotrauma
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
-        public bool Stackable; //Can the same status effect be applied several times to the same targets?
+        public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
 

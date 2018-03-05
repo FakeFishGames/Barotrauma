@@ -87,7 +87,7 @@ namespace Barotrauma
             selectedItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, "", tabs[(int)Tab.Store]);
             selectedItemList.OnSelected = SellItem;
             
-            storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, Alignment.TopRight, "", tabs[(int)Tab.Store]);
+            storeItemList = new GUIListBox(new Rectangle(0, 50, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 100), Color.White * 0.7f, Alignment.TopRight, "", tabs[(int)Tab.Store]);
             storeItemList.OnSelected = BuyItem;
 
             int x = storeItemList.Rect.X - storeItemList.Parent.Rect.X;
@@ -99,7 +99,7 @@ namespace Barotrauma
             int buttonWidth = Math.Min(sellColumnWidth / itemCategories.Count, 100);
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new Rectangle(x, 0, buttonWidth, 20), category.ToString(), "", tabs[(int)Tab.Store]);
+                var categoryButton = new GUIButton(new Rectangle(x, 20, buttonWidth, 20), category.ToString(), "", tabs[(int)Tab.Store]);
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
 
@@ -153,16 +153,52 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
+            //mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
+            if(mapZoom <= 0.5f)
+            {
+                if (PlayerInput.ScrollWheelSpeed >= 0) mapZoom += PlayerInput.ScrollWheelSpeed / 1250.0f;
+                if (PlayerInput.ScrollWheelSpeed < 0) mapZoom += PlayerInput.ScrollWheelSpeed / 4000.0f;
+            }
+            else if(mapZoom <= 1f)
+            {
+                if (PlayerInput.ScrollWheelSpeed >= 0) mapZoom += PlayerInput.ScrollWheelSpeed / 1500.0f;
+                if (PlayerInput.ScrollWheelSpeed < 0) mapZoom += PlayerInput.ScrollWheelSpeed / 3000.0f;
+            }
+            else if (mapZoom <= 2f)
+            {
+                if (PlayerInput.ScrollWheelSpeed >= 0) mapZoom += PlayerInput.ScrollWheelSpeed / 2000.0f;
+                if (PlayerInput.ScrollWheelSpeed < 0) mapZoom += PlayerInput.ScrollWheelSpeed / 2000.0f;
+            }
+            else if (mapZoom <= 3f)
+            {
+                if (PlayerInput.ScrollWheelSpeed >= 0) mapZoom += PlayerInput.ScrollWheelSpeed / 3000.0f;
+                if (PlayerInput.ScrollWheelSpeed < 0) mapZoom += PlayerInput.ScrollWheelSpeed / 1500.0f;
+            }
+            else
+            {
+                if (PlayerInput.ScrollWheelSpeed >= 0) mapZoom += PlayerInput.ScrollWheelSpeed / 4000.0f;
+                if (PlayerInput.ScrollWheelSpeed < 0) mapZoom += PlayerInput.ScrollWheelSpeed / 1250.0f;
+            }
+            mapZoom = MathHelper.Clamp(mapZoom, 0.25f, 4.0f);
             
             if (GameMain.GameSession?.Map != null)
             {
-                GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
+                if (GameMain.Server != null || GameMain.Client != null)
+                {
+                    GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
+                    tabs[(int)selectedTab].Rect.X + 20,
+                    tabs[(int)selectedTab].Rect.Y + 40,
+                    tabs[(int)selectedTab].Rect.Width - 310,
+                    tabs[(int)selectedTab].Rect.Height - 60), mapZoom);
+                }
+                else
+                {
+                    GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
                     tabs[(int)selectedTab].Rect.X + 20,
                     tabs[(int)selectedTab].Rect.Y + 20,
                     tabs[(int)selectedTab].Rect.Width - 310,
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                    tabs[(int)selectedTab].Rect.Height - 20), mapZoom);
+                }
             }
         }
 
@@ -170,11 +206,22 @@ namespace Barotrauma
         {
             if (selectedTab == Tab.Map && GameMain.GameSession?.Map != null)
             {
-                GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
-                    tabs[(int)selectedTab].Rect.X + 20, 
-                    tabs[(int)selectedTab].Rect.Y + 20,
-                    tabs[(int)selectedTab].Rect.Width - 310, 
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                if (GameMain.Server != null || GameMain.Client != null)
+                {
+                    GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
+                        tabs[(int)selectedTab].Rect.X + 20,
+                        tabs[(int)selectedTab].Rect.Y + 40,
+                        tabs[(int)selectedTab].Rect.Width - 310,
+                        tabs[(int)selectedTab].Rect.Height - 60), mapZoom);
+                }
+                else
+                {
+                    GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
+                        tabs[(int)selectedTab].Rect.X + 20,
+                        tabs[(int)selectedTab].Rect.Y + 20,
+                        tabs[(int)selectedTab].Rect.Width - 310,
+                        tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                }
             }
         }
 
@@ -198,7 +245,17 @@ namespace Barotrauma
 
             if (location == null) return;
 
-            var titleText = new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, "", Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
+            GUITextBlock titleText;
+
+            if (GameMain.Server != null || GameMain.Client != null)
+            {
+                titleText = new GUITextBlock(new Rectangle(0, 10, 250, 0), location.Name, "", Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
+            }
+            else
+            {
+                titleText = new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, "", Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
+            }
+
 
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Mission != null)
             {

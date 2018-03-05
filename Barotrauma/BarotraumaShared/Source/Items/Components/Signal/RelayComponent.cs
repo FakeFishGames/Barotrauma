@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
 
-            if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower) item.Condition = 0.0f;
+            if (Math.Min(-currPowerConsumption, PowerLoad) > (maxPower * GameMain.NilMod.ElectricalRelayMaxPowerMultiplier)) item.Condition = 0.0f;
         }
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)

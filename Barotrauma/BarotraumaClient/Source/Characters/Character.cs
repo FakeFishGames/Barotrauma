@@ -334,10 +334,24 @@ namespace Barotrauma
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
             if (moveCam)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
+                if (GUI.PauseMenuOpen || IsUnconscious ||
                     (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
+                }
+                else if (DebugConsole.IsOpen && (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f))
+                {
+                    Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
+                    Structure structure = body == null ? null : body.UserData as Structure;
+
+                    float sightDist = Submarine.LastPickedFraction;
+                    if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
+                    {
+                        sightDist = 1.0f;
+                    }
+                    cam.ZoomModifier = -0.4f;
+                    //cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
+                    if (deltaTime > 0.0f) cam.OffsetAmount = 300.0f;
                 }
                 else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                 {

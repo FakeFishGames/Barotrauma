@@ -192,7 +192,7 @@ namespace Barotrauma
             }
 
             GameMain.NetworkMember.EndVoteCount = 0;
-            GameMain.NetworkMember.EndVoteMax = 1;
+            GameMain.NetworkMember.EndVoteMax = GameMain.Server.maxPlayers;
         }
     }
 }

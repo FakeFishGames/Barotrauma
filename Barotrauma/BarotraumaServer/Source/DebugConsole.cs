@@ -178,6 +178,7 @@ namespace Barotrauma
             commands.Add(new Command("endgame|endround|end", CommandType.Network, "end/endgame/endround: End the current round.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.NetLobbyScreen) return;
+                GameMain.NilMod.RoundEnded = true;
                 GameMain.Server.EndGame();
             }));
 

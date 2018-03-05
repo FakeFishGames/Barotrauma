@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || reloadTimer>0.0f) return false;
+            if (character == null || reloadTimer > 0.0f) return false;
             if (!character.IsKeyDown(InputType.Aim) || hitting) return false;
 
             //don't allow hitting if the character is already hitting with another weapon
@@ -172,6 +172,7 @@ namespace Barotrauma.Items.Components
         private void SetUser(Character character)
         {
             if (user == character) return;
+            if (user != null && user.Removed) user = null;
 
             if (user != null)
             {
@@ -190,13 +191,13 @@ namespace Barotrauma.Items.Components
                                 continue;
                             }
                         }
+
+                        foreach (Limb limb in character.AnimController.Limbs)
+                        {
+                            item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+                        }
                     }
                 }
-            }
-
-            foreach (Limb limb in character.AnimController.Limbs)
-            {
-                item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
             }
 
             user = character;
@@ -218,6 +219,13 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+            if (user == null || user.Removed)
+            {
+                RestoreCollision();
+                hitting = false;
+                user = null;
+            }
+
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
@@ -256,7 +264,22 @@ namespace Barotrauma.Items.Components
                 }
                 else if (targetStructure != null)
                 {
+                    Boolean ModifyRangeValues = false;
+                    if (attack.DamageRange == 0) ModifyRangeValues = true;
+
+                    if (ModifyRangeValues)
+                    {
+                        attack.DamageRange = 75f;
+                        attack.Range = 75f;
+                    }
+
                     attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
+
+                    if (ModifyRangeValues)
+                    {
+                        attack.DamageRange = 0f;
+                        attack.Range = 0f;
+                    }
                 }
                 else
                 {

@@ -25,6 +25,12 @@ namespace Barotrauma.Networking
         {
             public readonly string IP;
             public readonly string Name;
+
+            //Slots
+            public Boolean TrustedSlot;
+            public Boolean AdministratorSlot;
+            public Boolean OwnerSlot;
+
             public List<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
@@ -41,7 +47,8 @@ namespace Barotrauma.Networking
 
         public const string SettingsFile = "serversettings.xml";
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
-        public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
+        public static readonly string VanillaClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
+        public static readonly string NilmodClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "nilmod_clientpermissions.xml";
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -73,7 +80,7 @@ namespace Barotrauma.Networking
 
         private bool isPublic;
 
-        private int maxPlayers;
+        public int maxPlayers;
 
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
 
@@ -374,23 +381,28 @@ namespace Barotrauma.Networking
         {
             clientPermissions.Clear();
 
-            if (!File.Exists(ClientPermissionsFile))
+            if (!File.Exists(NilmodClientPermissionsFile))
             {
-                if (File.Exists("Data/clientpermissions.txt"))
+                if (File.Exists(VanillaClientPermissionsFile))
+                {
+                    LoadVanillaClientPermissions();
+                    SaveClientPermissions();
+                }
+                else if (File.Exists("Data/clientpermissions.txt"))
                 {
                     LoadClientPermissionsOld("Data/clientpermissions.txt");
                 }
                 return;
             }
 
-            XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
+            XDocument doc = XMLExtensions.TryLoadXml(NilmodClientPermissionsFile);
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");
                 string clientIP = clientElement.GetAttributeString("ip", "");
                 if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientIP))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
+                    DebugConsole.ThrowError("Error in " + NilmodClientPermissionsFile + " - all clients must have a name and an IP address.");
                     continue;
                 }
 
@@ -398,7 +410,7 @@ namespace Barotrauma.Networking
                 ClientPermissions permissions;
                 if (!Enum.TryParse(permissionsStr, out permissions))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
+                    DebugConsole.ThrowError("Error in " + NilmodClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
                     continue;
                 }
 
@@ -413,7 +425,7 @@ namespace Barotrauma.Networking
                         DebugConsole.Command command = DebugConsole.FindCommand(commandName);
                         if (command == null)
                         {
-                            DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
+                            DebugConsole.ThrowError("Error in " + NilmodClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
                             continue;
                         }
 
@@ -421,7 +433,15 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                SavedClientPermission newsavedpermission = new SavedClientPermission(clientName, clientIP, permissions, permittedCommands);
+
+
+                //Nilmod slots
+                newsavedpermission.OwnerSlot = clientElement.GetAttributeBool("OwnerSlot", false);
+                newsavedpermission.AdministratorSlot = clientElement.GetAttributeBool("AdministratorSlot", false);
+                newsavedpermission.TrustedSlot = clientElement.GetAttributeBool("TrustedSlot", false);
+
+                clientPermissions.Add(newsavedpermission);
             }
         }
 
@@ -439,7 +459,7 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to open client permission file " + ClientPermissionsFile, e);
+                DebugConsole.ThrowError("Failed to open client permission file " + file, e);
                 return;
             }
 
@@ -458,9 +478,64 @@ namespace Barotrauma.Networking
                 {
                     clientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));
                 }
-            }            
+            }
         }
-        
+
+        public void LoadVanillaClientPermissions()
+        {
+            clientPermissions.Clear();
+
+            if (!File.Exists(VanillaClientPermissionsFile))
+            {
+                if (File.Exists("Data/clientpermissions.txt"))
+                {
+                    LoadClientPermissionsOld("Data/clientpermissions.txt");
+                }
+                return;
+            }
+
+            XDocument doc = XMLExtensions.TryLoadXml(VanillaClientPermissionsFile);
+            foreach (XElement clientElement in doc.Root.Elements())
+            {
+                string clientName = clientElement.GetAttributeString("name", "");
+                string clientIP = clientElement.GetAttributeString("ip", "");
+                if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientIP))
+                {
+                    DebugConsole.ThrowError("Error in " + VanillaClientPermissionsFile + " - all clients must have a name and an IP address.");
+                    continue;
+                }
+
+                string permissionsStr = clientElement.GetAttributeString("permissions", "");
+                ClientPermissions permissions;
+                if (!Enum.TryParse(permissionsStr, out permissions))
+                {
+                    DebugConsole.ThrowError("Error in " + VanillaClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
+                    continue;
+                }
+
+                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+                if (permissions.HasFlag(ClientPermissions.ConsoleCommands))
+                {
+                    foreach (XElement commandElement in clientElement.Elements())
+                    {
+                        if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
+
+                        string commandName = commandElement.GetAttributeString("name", "");
+                        DebugConsole.Command command = DebugConsole.FindCommand(commandName);
+                        if (command == null)
+                        {
+                            DebugConsole.ThrowError("Error in " + VanillaClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
+                            continue;
+                        }
+
+                        permittedCommands.Add(command);
+                    }
+                }
+
+                clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+            }
+        }
+
         public void SaveClientPermissions()
         {
             //delete old client permission file
@@ -475,9 +550,12 @@ namespace Barotrauma.Networking
 
             foreach (SavedClientPermission clientPermission in clientPermissions)
             {
-                XElement clientElement = new XElement("Client", 
+                XElement clientElement = new XElement("Client",
                     new XAttribute("name", clientPermission.Name),
                     new XAttribute("ip", clientPermission.IP),
+                    new XAttribute("OwnerSlot", clientPermission.OwnerSlot),
+                    new XAttribute("AdministratorSlot", clientPermission.AdministratorSlot),
+                    new XAttribute("TrustedSlot", clientPermission.TrustedSlot),
                     new XAttribute("permissions", clientPermission.Permissions.ToString()));
 
                 if (clientPermission.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
@@ -497,14 +575,14 @@ namespace Barotrauma.Networking
                 settings.Indent = true;
                 settings.NewLineOnAttributes = true;
 
-                using (var writer = XmlWriter.Create(ClientPermissionsFile, settings))
+                using (var writer = XmlWriter.Create(NilmodClientPermissionsFile, settings))
                 {
                     doc.Save(writer);
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving client permissions to " + ClientPermissionsFile + " failed", e);
+                DebugConsole.ThrowError("Saving client permissions to " + NilmodClientPermissionsFile + " failed", e);
             }
         }
 
@@ -513,14 +591,14 @@ namespace Barotrauma.Networking
             DebugConsole.NewMessage("Server is hosted on: " + GameMain.NilMod.ExternalIP + ":" + Port, Color.Cyan);
             DebugConsole.NewMessage((isPublic ? @"Publicly Under the name: """ + name + @"""" : @"Privately Under the name: """ + name + @"""") + " with UPNP " + (config.EnableUPnP ? "enabled." : "disabled."), Color.Cyan);
             DebugConsole.NewMessage("With max players: " + maxPlayers + ".", Color.Cyan);
-            
+
             DebugConsole.NewMessage(" ", Color.Cyan);
 
-            if(password != "")
+            if (password != "")
             {
                 DebugConsole.NewMessage(@"Server is using the password """ + password + (whitelist.Enabled ? @""" and has an active white list with " + whitelist.WhiteListedPlayers.Count() + " whitelisted players." : "with its whitelist disabled."), Color.Cyan);
             }
-            else if(whitelist.Enabled)
+            else if (whitelist.Enabled)
             {
                 DebugConsole.NewMessage("Server is not using a password but has an active white list with " + whitelist.WhiteListedPlayers.Count() + " whitelisted players.", Color.Cyan);
             }

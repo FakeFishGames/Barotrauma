@@ -601,26 +601,24 @@ namespace Barotrauma
                 }
                 if (RefinedMessage.Contains("#TRAITORTARGET"))
                 {
-                    if (GameMain.NilMod.TraitorTarget == "")
+                    if (GameMain.Server.TraitorManager.TraitorList.Find(t => clientreceiver.Character == t.Character) != null)
                     {
-                        if (GameMain.Server.ConnectedClients.Count() > 0)
-                        {
-                            RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", GameMain.Server.ConnectedClients[Rand.Int(GameMain.Server.ConnectedClients.Count() - 1)].Name);
-                        }
-                        else
-                        {
-                            RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", "Nobody");
-                        }
+                        Traitor traitor = GameMain.Server.TraitorManager.TraitorList.Find(t => clientreceiver.Character == t.Character);
+                        RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", traitor.TargetCharacter.Name);
                     }
                     else
                     {
-                        RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", GameMain.NilMod.TraitorTarget);
+                        RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", "REDACTED");
                     }
 
                 }
                 if (RefinedMessage.Contains("#TRAITORNAME"))
                 {
-                    RefinedMessage = RefinedMessage.Replace("#TRAITORNAME", GameMain.NilMod.Traitor);
+                    if (GameMain.Server.TraitorManager.TraitorList.Find(t => clientreceiver.Character == t.Character) != null)
+                    {
+                        Traitor traitor = GameMain.Server.TraitorManager.TraitorList.Find(t => clientreceiver.Character == t.Character);
+                        RefinedMessage = RefinedMessage.Replace("#TRAITORNAME", traitor.Character.Name);
+                    }
                 }
                 if (RefinedMessage.Contains("#SHUTTLELEAVETIME"))
                 {
@@ -636,7 +634,8 @@ namespace Barotrauma
                 }
                 if (RefinedMessage.Contains("#REWARD"))
                 {
-                    RefinedMessage = RefinedMessage.Replace("#REWARD", GameMain.GameSession.Mission.Reward.ToString());
+                    int reward = Convert.ToInt32((Math.Round(GameMain.NilMod.CampaignSurvivalReward + GameMain.NilMod.CampaignBonusMissionReward + (GameMain.GameSession.Mission.Reward * GameMain.NilMod.CampaignBaseRewardMultiplier), 0)));
+                    RefinedMessage = RefinedMessage.Replace("#REWARD", reward.ToString());
                 }
                 if (RefinedMessage.Contains("#RADARLABEL"))
                 {

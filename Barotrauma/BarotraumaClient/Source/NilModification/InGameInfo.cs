@@ -454,9 +454,14 @@ namespace Barotrauma
 
             for (int i = characterlist.Count() - 1; i >= 0; i--)
             {
-                if (characterlist[i].client != null)
+                if (characterlist[i].Removed)
+                {
+                    characterlist.RemoveAt(i);
+                }
+                else if (characterlist[i].client != null)
                 {
                     characterlist[i].character = null;
+                    characterlist[i].previousclient = null;
                 }
                 else if (characterlist[i].client == null)
                 {

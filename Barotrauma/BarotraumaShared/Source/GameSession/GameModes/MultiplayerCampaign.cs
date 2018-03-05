@@ -38,73 +38,327 @@ namespace Barotrauma
 #if CLIENT
         public static void StartCampaignSetup(Boolean AutoSetup = false)
         {
-            var setupBox = new GUIMessageBox("Campaign Setup", "", new string [0], 500, 500);
-            setupBox.InnerFrame.Padding = new Vector4(20.0f, 80.0f, 20.0f, 20.0f);
-
-            var newCampaignContainer = new GUIFrame(new Rectangle(0,40,0,0), null, setupBox.InnerFrame);
-            var loadCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox.InnerFrame);
-
-            var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
-
-            var newCampaignButton = new GUIButton(new Rectangle(0,0,120,20), "New campaign", "", setupBox.InnerFrame);
-            newCampaignButton.OnClicked += (btn, obj) =>
+            if (!AutoSetup)
             {
-                newCampaignContainer.Visible = true;
-                loadCampaignContainer.Visible = false;
-                return true;
-            };
+                var setupBox = new GUIMessageBox("Campaign Setup", "", new string[0], 500, 500);
+                setupBox.InnerFrame.Padding = new Vector4(20.0f, 80.0f, 20.0f, 20.0f);
 
-            var loadCampaignButton = new GUIButton(new Rectangle(130, 0, 120, 20), "Load campaign", "", setupBox.InnerFrame);
-            loadCampaignButton.OnClicked += (btn, obj) =>
-            {
-                newCampaignContainer.Visible = false;
-                loadCampaignContainer.Visible = true;
-                return true;
-            };
+                var newCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox.InnerFrame);
+                var loadCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox.InnerFrame);
 
-            loadCampaignContainer.Visible = false;
+                var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
 
-            campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
-            {
-                GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
-                var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
-                campaign.GenerateMap(mapSeed);
-                campaign.SetDelegates();
-
-                setupBox.Close();
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);            
-                campaign.Map.SelectRandomLocation(true);
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                campaign.LastSaveID++;
-            };
-
-            campaignSetupUI.LoadGame = (string fileName) =>
-            {
-                SaveUtil.LoadGame(fileName);
-                var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
-                campaign.LastSaveID++;
-
-                setupBox.Close();
-
-                GameMain.NetLobbyScreen.ToggleCampaignMode(true);        
-                campaign.Map.SelectRandomLocation(true);
-            };
-
-            var cancelButton = new GUIButton(new Rectangle(0,0,120,30), "Cancel", Alignment.BottomLeft, "", setupBox.InnerFrame);
-            cancelButton.OnClicked += (btn, obj) =>
-            {
-                setupBox.Close();
-                int otherModeIndex = 0;
-                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.children.Count; otherModeIndex++)
+                var newCampaignButton = new GUIButton(new Rectangle(0, 0, 120, 20), "New campaign", "", setupBox.InnerFrame);
+                newCampaignButton.OnClicked += (btn, obj) =>
                 {
-                    if (GameMain.NetLobbyScreen.ModeList.children[otherModeIndex].UserData is MultiplayerCampaign) continue;
-                    break;
-                }
+                    newCampaignContainer.Visible = true;
+                    loadCampaignContainer.Visible = false;
+                    return true;
+                };
 
-                GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
-                return true;
-            };
+                var loadCampaignButton = new GUIButton(new Rectangle(130, 0, 120, 20), "Load campaign", "", setupBox.InnerFrame);
+                loadCampaignButton.OnClicked += (btn, obj) =>
+                {
+                    newCampaignContainer.Visible = false;
+                    loadCampaignContainer.Visible = true;
+                    return true;
+                };
+
+                loadCampaignContainer.Visible = false;
+
+                campaignSetupUI.StartNewGame = (Submarine sub, string saveName, string mapSeed) =>
+                {
+                    GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                    var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                    campaign.GenerateMap(mapSeed);
+                    campaign.SetDelegates();
+
+                    setupBox.Close();
+
+                    GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+                    campaign.Map.SelectRandomLocation(true);
+                    SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                    campaign.LastSaveID++;
+
+                    if (GameMain.NilMod.CampaignAutoPurchase)
+                    {
+                        int totalcost = 0;
+                        int totalitems = 0;
+                        foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
+                        {
+                            if (!cp.isvalid) continue;
+
+                            ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                            for (int i = 0; i < cp.count; i++)
+                            {
+                                if (campaign.Money >= prefab.Price)
+
+                                    totalitems += 1;
+                                totalcost += prefab.Price;
+                                campaign.CargoManager.PurchaseItem(prefab);
+                            }
+                        }
+
+                        GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                            + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                    }
+                };
+
+                campaignSetupUI.LoadGame = (string fileName) =>
+                {
+                    SaveUtil.LoadGame(fileName);
+                    var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                    campaign.LastSaveID++;
+
+                    setupBox.Close();
+
+                    GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+                    campaign.Map.SelectRandomLocation(true);
+
+                    if (GameMain.NilMod.CampaignAutoPurchase)
+                    {
+                        //If money is exactly the same as what we start as, assume its actually a new game that was saved and reloaded!
+                        if (campaign.Money == GameMain.NilMod.CampaignInitialMoney)
+                        {
+                            int totalcost = 0;
+                            int totalitems = 0;
+                            foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
+                            {
+                                if (!cp.isvalid) continue;
+
+                                ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                                for (int i = 0; i < cp.count; i++)
+                                {
+                                    if (campaign.Money >= prefab.Price)
+
+                                        totalitems += 1;
+                                    totalcost += prefab.Price;
+                                    campaign.CargoManager.PurchaseItem(prefab);
+                                }
+                            }
+
+                            GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                        }
+                    }
+                    //Money is not the default amount on loading, so its likely a game in progress
+                    else
+                    {
+                        int totalcost = 0;
+                        int totalitems = 0;
+                        foreach (CampaignPurchase cp in GameMain.NilMod.ServerExistingCampaignAutobuy)
+                        {
+                            if (!cp.isvalid) continue;
+
+                            ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                            for (int i = 0; i < cp.count; i++)
+                            {
+                                if (campaign.Money >= prefab.Price)
+                                {
+                                    totalitems += 1;
+                                    totalcost += prefab.Price;
+                                    campaign.CargoManager.PurchaseItem(prefab);
+                                }
+                            }
+                        }
+                        GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                            + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                    }
+                };
+
+                var cancelButton = new GUIButton(new Rectangle(0, 0, 120, 30), "Cancel", Alignment.BottomLeft, "", setupBox.InnerFrame);
+                cancelButton.OnClicked += (btn, obj) =>
+                {
+                    setupBox.Close();
+                    int otherModeIndex = 0;
+                    for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.children.Count; otherModeIndex++)
+                    {
+                        if (GameMain.NetLobbyScreen.ModeList.children[otherModeIndex].UserData is MultiplayerCampaign) continue;
+                        break;
+                    }
+
+                    GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
+                    return true;
+                };
+            }
+            else
+            {
+                string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
+                string Savepath = "Data" + System.IO.Path.DirectorySeparatorChar + "Saves" + System.IO.Path.DirectorySeparatorChar + "Multiplayer" + System.IO.Path.DirectorySeparatorChar + GameMain.NilMod.CampaignDefaultSaveName + ".save";
+                if (saveFiles.Contains(Savepath))
+                {
+                    SaveUtil.LoadGame(Savepath);
+                    var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                    campaign.LastSaveID++;
+                    GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+                    GameMain.GameSession.Map.SelectRandomLocation(true);
+
+                    if (GameMain.Server != null)
+                    {
+                        if (GameMain.NilMod.CampaignAutoPurchase)
+                        {
+                            //If money is exactly the same as what we start as, assume its actually a new game that was saved and reloaded!
+                            if (campaign.Money == GameMain.NilMod.CampaignInitialMoney)
+                            {
+                                int totalcost = 0;
+                                int totalitems = 0;
+                                foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
+                                {
+                                    if (!cp.isvalid) continue;
+
+                                    ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                                    for (int i = 0; i < cp.count; i++)
+                                    {
+                                        if (campaign.Money >= prefab.Price)
+
+                                            totalitems += 1;
+                                        totalcost += prefab.Price;
+                                        campaign.CargoManager.PurchaseItem(prefab);
+                                    }
+                                }
+
+                                GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                    + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                            }
+                        }
+                        //Money is not the default amount on loading, so its likely a game in progress
+                        else
+                        {
+                            int totalcost = 0;
+                            int totalitems = 0;
+                            foreach (CampaignPurchase cp in GameMain.NilMod.ServerExistingCampaignAutobuy)
+                            {
+                                if (!cp.isvalid) continue;
+
+                                ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                                for (int i = 0; i < cp.count; i++)
+                                {
+                                    if (campaign.Money >= prefab.Price)
+                                    {
+                                        totalitems += 1;
+                                        totalcost += prefab.Price;
+                                        campaign.CargoManager.PurchaseItem(prefab);
+                                    }
+                                }
+                            }
+                            GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                        }
+                    }
+
+                    DebugConsole.NewMessage(@"Campaign save """ + GameMain.NilMod.CampaignDefaultSaveName + @""" automatically loaded!", Color.Cyan);
+                    DebugConsole.NewMessage("On Submarine: " + GameMain.GameSession.Submarine.Name, Color.Cyan);
+                    DebugConsole.NewMessage("Using Level Seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
+                    DebugConsole.NewMessage(GameMain.NetLobbyScreen.SelectedMode.Name,Color.Cyan);
+                }
+                else
+                {
+                    string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, GameMain.NilMod.CampaignDefaultSaveName);
+                    Submarine CampaignSub = null;
+
+                    var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList<Submarine>();
+
+                    if (!GameMain.NilMod.CampaignUseRandomSubmarine)
+                    {
+                        if (GameMain.NilMod.DefaultSubmarine != "" && subsToShow.Count >= 0)
+                        {
+                            CampaignSub = subsToShow.Find(s => s.Name.ToLowerInvariant() == GameMain.NilMod.DefaultSubmarine.ToLowerInvariant());
+
+                            if (CampaignSub == null)
+                            {
+                                subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus) && !s.HasTag(SubmarineTag.Shuttle)).ToList<Submarine>();
+                                if (subsToShow.Count > 0)
+                                {
+                                    CampaignSub = subsToShow[Rand.Range((int)0, subsToShow.Count())];
+                                }
+                                else
+                                {
+                                    subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList<Submarine>();
+                                    if (subsToShow.Count > 0)
+                                    {
+                                        DebugConsole.NewMessage("Error - No default submarine found in nilmodsettings, a random submarine has been chosen", Color.Red);
+                                        CampaignSub = subsToShow[Rand.Range((int)0, subsToShow.Count())];
+                                    }
+                                    else
+                                    {
+                                        DebugConsole.NewMessage("Error - No saved submarines to initialize campaign with.", Color.Red);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus) && !s.HasTag(SubmarineTag.Shuttle)).ToList<Submarine>();
+
+                        if (subsToShow.Count >= 0)
+                        {
+                            CampaignSub = subsToShow[Rand.Range((int)0, subsToShow.Count())];
+                        }
+                        else
+                        {
+                            subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList<Submarine>();
+                            if (subsToShow.Count >= 0) CampaignSub = subsToShow[Rand.Range((int)0, subsToShow.Count())];
+                        }
+                    }
+
+                    if (CampaignSub != null)
+                    {
+                        GameMain.NilMod.CampaignFails = 0;
+                        GameMain.GameSession = new GameSession(new Submarine(CampaignSub.FilePath, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+                        var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                        campaign.GenerateMap(GameMain.NetLobbyScreen.LevelSeed);
+                        campaign.SetDelegates();
+
+                        GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+                        GameMain.GameSession.Map.SelectRandomLocation(true);
+
+                        GameMain.NilMod.CampaignStart = true;
+
+                        SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                        campaign.LastSaveID++;
+
+                        if (GameMain.Server != null)
+                        {
+                            if (GameMain.NilMod.CampaignAutoPurchase)
+                            {
+                                int totalitems = 0;
+                                int totalcost = 0;
+                                foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
+                                {
+                                    if (!cp.isvalid) continue;
+
+                                    ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                                    for (int i = 0; i < cp.count; i++)
+                                    {
+                                        if (campaign.Money >= prefab.Price)
+                                        {
+                                            totalitems += 1;
+                                            totalcost += prefab.Price;
+                                            campaign.CargoManager.PurchaseItem(prefab);
+                                        }
+                                    }
+                                }
+                                GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                            }
+                        }
+
+
+
+                        DebugConsole.NewMessage(@"New campaign """ + GameMain.NilMod.CampaignDefaultSaveName + @""" automatically started!", Color.Cyan);
+                        DebugConsole.NewMessage("On Submarine: " + CampaignSub.Name, Color.Cyan);
+                        DebugConsole.NewMessage("Using Level Seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.ToggleCampaignMode(false);
+                        GameMain.NetLobbyScreen.SelectedModeIndex = 0;
+                        GameMain.NetLobbyScreen.SelectMode(0);
+                        //Cancel it here
+                    }
+                }
+            }
         }
 #elif SERVER
         public static void StartCampaignSetup(Boolean AutoSetup = false)
@@ -164,20 +418,20 @@ namespace Barotrauma
             else
             {
                 string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer);
-                if(saveFiles.Contains(GameMain.NilMod.CampaignSaveName))
+                if(saveFiles.Contains(GameMain.NilMod.CampaignDefaultSaveName))
                 {
-                    SaveUtil.LoadGame(GameMain.NilMod.CampaignSaveName);
+                    SaveUtil.LoadGame(GameMain.NilMod.CampaignDefaultSaveName);
                     ((MultiplayerCampaign)GameMain.GameSession.GameMode).LastSaveID++;
                     GameMain.NetLobbyScreen.ToggleCampaignMode(true);
                     GameMain.GameSession.Map.SelectRandomLocation(true);
 
-                    DebugConsole.NewMessage(@"Campaign save """ + GameMain.NilMod.CampaignSaveName + @""" automatically loaded!", Color.Cyan);
+                    DebugConsole.NewMessage(@"Campaign save """ + GameMain.NilMod.CampaignDefaultSaveName + @""" automatically loaded!", Color.Cyan);
                     DebugConsole.NewMessage("On Submarine: " + GameMain.NetLobbyScreen.SelectedSub.Name, Color.Cyan);
                     DebugConsole.NewMessage("Using Level Seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
                 }
                 else
                 {
-                    string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, GameMain.NilMod.CampaignSaveName);
+                    string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, GameMain.NilMod.CampaignDefaultSaveName);
                     GameMain.GameSession = new GameSession(new Submarine(GameMain.NetLobbyScreen.SelectedSub.FilePath, ""), savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
                     var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
                     campaign.GenerateMap(GameMain.NetLobbyScreen.LevelSeed);
@@ -188,7 +442,7 @@ namespace Barotrauma
                     SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                     campaign.LastSaveID++;
 
-                    DebugConsole.NewMessage(@"New campaign """ + GameMain.NilMod.CampaignSaveName + @""" automatically started!", Color.Cyan);
+                    DebugConsole.NewMessage(@"New campaign """ + GameMain.NilMod.CampaignDefaultSaveName + @""" automatically started!", Color.Cyan);
                     DebugConsole.NewMessage("On Submarine: " + GameMain.NetLobbyScreen.SelectedSub.Name, Color.Cyan);
                     DebugConsole.NewMessage("Using Level Seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
                 }
@@ -234,8 +488,8 @@ namespace Barotrauma
             lastUpdateID++;
 
             bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+                (GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
+                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead)) && !GameMain.NilMod.RoundEnded;
 
             /*if (success)
             {
@@ -257,18 +511,57 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Inventory == null) continue;
-                foreach (Item item in c.Inventory.Items)
+                //Character is inside of a submarine and still alive in some form
+                if (c.Submarine != null)
                 {
-                    if (item != null) item.Remove();
+                    CheckSubInventory(c.Inventory.Items);
+                }
+                //Not on the submarine or dead, just remove everything.
+                else
+                {
+                    foreach (Item item in c.Inventory.Items)
+                    {
+                        if (item != null)
+                        {
+                            item.Remove();
+                        }
+                    }
+                }
+            }
+
+            //Code for removing items from the level which started in a players inventory, makes a bit of a mess though.
+            for (int i = Item.ItemList.ToArray().Length - 1; i >= 0; i--)
+            {
+                if (Item.ItemList[i] == null) continue;
+                if (Item.ItemList[i].Submarine == null) continue;
+                if (Item.ItemList[i] != null)
+                {
+                    if (Item.ItemList[i].HasTag("Starter_Item") && Item.ItemList[i].ContainedItems != null)
+                    {
+                        CheckSubInventory(Item.ItemList[i].ContainedItems);
+                        Item.ItemList[i].Remove();
+                    }
+                    else if (Item.ItemList[i].HasTag("Starter_Item"))
+                    {
+                        Item.ItemList[i].Remove();
+                    }
                 }
             }
 
 #if CLIENT
             GameMain.GameSession.CrewManager.EndRound();
+            if(GameSession.inGameInfo != null) GameSession.inGameInfo.ResetGUIListData();
 #endif
 
             if (success)
             {
+                GameMain.NilMod.CampaignStart = false;
+                //Make the save last longer if its being successful.
+                if (GameMain.NilMod.CampaignFails > 0)
+                {
+                    GameMain.NilMod.CampaignFails -= GameMain.NilMod.CampaignSuccessFailReduction;
+                    if (GameMain.NilMod.CampaignFails < 0) GameMain.NilMod.CampaignFails = 0;
+                }
                 bool atEndPosition = Submarine.MainSub.AtEndPosition;
 
                 /*if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
@@ -293,16 +586,216 @@ namespace Barotrauma
                     map.SelectRandomLocation(true);
                 }
 
+                //Repair submarine walls
+                foreach (Structure w in Structure.WallList)
+                {
+                    for (int i = 0; i < w.SectionCount; i++)
+                    {
+                        w.AddDamage(i, -100000.0f);
+                    }
+                }
+
+                //Remove water, replenish oxygen, Extinguish fires
+                foreach (Hull hull in Hull.hullList)
+                {
+                    hull.OxygenPercentage = 100.0f;
+                    hull.WaterVolume = 0f;
+
+                    for (int i = hull.FireSources.Count - 1; i >= 0; i--)
+                    {
+                        hull.FireSources[i].Remove();
+                    }
+                }
+
+                //Repair devices, electricals and shutdown reactors.
+                foreach (Item it in Item.ItemList)
+                {
+                    if (it.GetComponent<Barotrauma.Items.Components.Powered>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.Reactor>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.Engine>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.Steering>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.Radar>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.MiniMap>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.Door>() != null ||
+                        it.GetComponent<Barotrauma.Items.Components.RelayComponent>() != null) it.Condition = it.Prefab.Health;
+
+                    if (it.GetComponent<Barotrauma.Items.Components.Reactor>() != null)
+                    {
+                        //Compatability for BTE.
+                        if (it.Prefab.Name == "Diesel-Electric Generator") continue;
+                        Barotrauma.Items.Components.Reactor reactor = it.GetComponent<Barotrauma.Items.Components.Reactor>();
+                        reactor.AutoTemp = false;
+                        reactor.FissionRate = 0;
+                        reactor.CoolingRate = 100;
+                        reactor.Temperature = 0;
+                    }
+
+                    if(it.GetComponent<Barotrauma.Items.Components.PowerContainer>() != null)
+                    {
+                        var powerContainer = it.GetComponent<Barotrauma.Items.Components.PowerContainer>();
+                        powerContainer.Charge = Math.Min(powerContainer.Capacity * 0.9f, powerContainer.Charge);
+                    }
+                }
+
+                Money += GameMain.NilMod.CampaignSurvivalReward;
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+            }
+            else
+            {
+                GameMain.NilMod.CampaignFails += 1;
+
+                if (GameMain.NilMod.CampaignFails > GameMain.NilMod.CampaignMaxFails)
+                {
+                    GameMain.NilMod.CampaignFails = 0;
+                    CoroutineManager.StartCoroutine(ResetCampaignMode(), "ResetCampaign");
+
+                    foreach (Client c in GameMain.Server.ConnectedClients)
+                    {
+                        NilMod.NilModEventChatter.SendServerMessage("Campaign Info: No more chances remain, the campaign is lost!", c);
+                        NilMod.NilModEventChatter.SendServerMessage("Starting a new campaign...", c);
+                    }
+                    GameMain.NetworkMember.AddChatMessage("Campaign Info: No more chances remain, the campaign is lost!", ChatMessageType.Server, "", null);
+                    GameMain.NetworkMember.AddChatMessage("Starting a new campaign...", ChatMessageType.Server, "", null);
+                }
+                else
+                {
+                    if((GameMain.NilMod.CampaignMaxFails - GameMain.NilMod.CampaignFails) < 3)
+                    {
+                        foreach(Client c in GameMain.Server.ConnectedClients)
+                        {
+                            NilMod.NilModEventChatter.SendServerMessage("Campaign Info: There are " + (GameMain.NilMod.CampaignMaxFails - GameMain.NilMod.CampaignFails) + " Attempts remaining on this save unless you start pulling off some success!", c);
+                        }
+                        GameMain.NetworkMember.AddChatMessage("Campaign: There are " + (GameMain.NilMod.CampaignMaxFails - GameMain.NilMod.CampaignFails) + " Attempts remaining on this save unless you start pulling off some success!", ChatMessageType.Server, "", null);
+                    }
+                }
+            }
+
+            //If its campaign start, add the starter items to the buy menu
+            if (GameMain.NilMod.CampaignAutoPurchase)
+            {
+                var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+
+                if (GameMain.NilMod.CampaignStart)
+                {
+                    int totalitems = 0;
+                    int totalcost = 0;
+                    foreach (CampaignPurchase cp in GameMain.NilMod.ServerNewCampaignAutobuy)
+                    {
+                        if (!cp.isvalid) continue;
+
+                        ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                        for (int i = 0; i < cp.count; i++)
+                        {
+                            if (campaign.Money >= prefab.Price)
+                            {
+                                totalitems += 1;
+                                totalcost += prefab.Price;
+                                campaign.CargoManager.PurchaseItem(prefab);
+                            }
+                        }
+                    }
+                    GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                }
+                //If its a round that wasn't the first, buy the mid-round items!
+                else
+                {
+                    int totalitems = 0;
+                    int totalcost = 0;
+                    foreach (CampaignPurchase cp in GameMain.NilMod.ServerExistingCampaignAutobuy)
+                    {
+                        if (!cp.isvalid) continue;
+
+                        ItemPrefab prefab = (ItemPrefab)ItemPrefab.Find(cp.itemprefab);
+                        for (int i = 0; i < cp.count; i++)
+                        {
+                            if (campaign.Money >= prefab.Price)
+                            {
+                                totalitems += 1;
+                                totalcost += prefab.Price;
+                                campaign.CargoManager.PurchaseItem(prefab);
+                            }
+                        }
+                    }
+                    GameMain.Server.ServerLog.WriteLine("AUTOBUY: Added " + totalitems + " Items costing "
+                                + totalcost + " money.", ServerLog.MessageType.ServerMessage);
+                }
             }
         }
 
-        public static MultiplayerCampaign LoadNew(XElement element)
+        public void CheckSubInventory(Item[] items)
+        {
+            foreach (Item item in items)
+            {
+                if (item != null)
+                {
+                    if (!item.HasTag("Starter_Item") && item.ContainedItems != null)
+                    {
+                        CheckSubInventory(item.ContainedItems);
+                        item.Drop();
+                        item.FindHull();
+                    }
+                    else if(!item.HasTag("Starter_Item"))
+                    {
+                        item.Drop();
+                        item.FindHull();
+                    }
+                    else if(item.HasTag("Starter_Item") && item.ContainedItems != null)
+                    {
+                        CheckSubInventory(item.ContainedItems);
+                        item.Remove();
+                    }
+                    else
+                    {
+                        item.Remove();
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<object> ResetCampaignMode()
+        {
+            float waittime = 0f;
+            GameMain.NetLobbyScreen.SelectedModeIndex = 0;
+#if Client
+            GameMain.NetLobbyScreen.modeList.Select(0, true);
+#endif
+
+            GameMain.NetLobbyScreen.ToggleCampaignMode(false);
+            SaveUtil.DeleteSave(GameMain.GameSession.SavePath);
+
+            GameMain.NilMod.CampaignStart = true;
+
+            if (GameMain.Server.AutoRestart)
+            {
+                GameMain.Server.AutoRestartTimer += 11f;
+            }
+
+            while (waittime < 11f)
+            {
+                waittime += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            StartCampaignSetup(true);
+            GameMain.NetLobbyScreen.SelectedModeIndex = 2;
+            SetDelegates();
+
+            if(GameMain.Server.AutoRestart)
+            {
+                GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
+            }
+
+            yield return CoroutineStatus.Success;
+        }
+
+            public static MultiplayerCampaign LoadNew(XElement element)
         {
             MultiplayerCampaign campaign = new MultiplayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Campaign"), null);
             campaign.Load(element);            
             campaign.SetDelegates();
-            
+
             return campaign;
         }
 

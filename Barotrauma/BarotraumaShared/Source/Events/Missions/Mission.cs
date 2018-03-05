@@ -251,7 +251,7 @@ namespace Barotrauma
             var mode = GameMain.GameSession.GameMode as CampaignMode;
             if (mode == null) return;
 
-            mode.Money += reward;
+            mode.Money += Convert.ToInt32(Math.Round((reward * GameMain.NilMod.CampaignBaseRewardMultiplier) + GameMain.NilMod.CampaignBonusMissionReward,0));
         }
     }
 }

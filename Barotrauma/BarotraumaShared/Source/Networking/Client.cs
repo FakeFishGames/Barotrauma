@@ -28,7 +28,7 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.Server == null) return;
                 if (!GameMain.Server.KarmaEnabled) return;
-                karma = Math.Min(Math.Max(value,0.0f),1.0f);
+                karma = Math.Min(Math.Max(value, 0.0f), 1.0f);
             }
         }
 
@@ -38,9 +38,14 @@ namespace Barotrauma.Networking
         public CharacterInfo CharacterInfo;
         public NetConnection Connection { get; set; }
         public bool InGame;
-        
+
+        //Client Slots - I know its a lazy implementation
+        public Boolean TrustedSlot = false;
+        public Boolean AdministratorSlot = false;
+        public Boolean OwnerSlot = false;
+
         public UInt16 LastRecvGeneralUpdate = 0;
-        
+
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
 
@@ -49,16 +54,16 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
-        
+
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
 
         //latest chat messages sent by this client
-        public readonly List<string> LastSentChatMessages = new List<string>(); 
+        public readonly List<string> LastSentChatMessages = new List<string>();
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
-        
+
         public double MidRoundSyncTimeOut;
 
         public bool NeedsMidRoundSync;
@@ -73,12 +78,12 @@ namespace Barotrauma.Networking
         public readonly Dictionary<UInt16, float> EntityEventLastSent = new Dictionary<UInt16, float>();
 
         public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
-        
+
         public bool ReadyToStart;
 
         public List<JobPrefab> JobPreferences;
         public JobPrefab AssignedJob;
-        
+
         public float DeleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
@@ -91,7 +96,7 @@ namespace Barotrauma.Networking
         public bool SpectateOnly;
 
         public int PreferredTeam = 0;
-                
+
         private object[] votes;
 
         public void InitClientSync()
@@ -100,7 +105,7 @@ namespace Barotrauma.Networking
             LastRecvChatMsgID = ChatMessage.LastID;
 
             LastRecvGeneralUpdate = 0;
-            
+
             LastRecvEntityEventID = 0;
 
             UnreceivedEntityEventCount = 0;
@@ -111,11 +116,11 @@ namespace Barotrauma.Networking
         {
             get { return kickVoters.Count; }
         }
-        
+
         public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
-            
+
         }
 
         public Client(string name, byte ID)
@@ -141,7 +146,7 @@ namespace Barotrauma.Networking
                 c != '<' &&
                 c != '/'));
         }
-        
+
         public static string SanitizeName(string name)
         {
             name = name.Trim();
@@ -228,6 +233,6 @@ namespace Barotrauma.Networking
                 client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
             }
         }
-        
+
     }
 }

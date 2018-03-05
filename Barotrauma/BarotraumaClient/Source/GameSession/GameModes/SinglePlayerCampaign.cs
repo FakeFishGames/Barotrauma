@@ -194,6 +194,8 @@ namespace Barotrauma
                     Map.MoveToNextLocation();
                 }
 
+                Money += GameMain.NilMod.CampaignSurvivalReward;
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 

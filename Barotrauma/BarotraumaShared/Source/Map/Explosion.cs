@@ -69,6 +69,23 @@ namespace Barotrauma
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
+
+                //Door damage code
+                float displayRangeSqr = displayRange * displayRange;
+                foreach (Item item in Item.ItemList)
+                {
+                    float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
+                    if (distSqr > displayRangeSqr) continue;
+
+                    float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+
+                    //damage doors with some of the structuredamage
+                    var Door = item.GetComponent<Door>();
+                    if (Door != null && item.FixRequirements.Count > 0)
+                    {
+                        item.Condition -= (attack.GetStructureDamage(1.0f) * (distFactor)) / 4;
+                    }
+                }
             }
 
             if (empStrength > 0.0f)

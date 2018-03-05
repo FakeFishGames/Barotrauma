@@ -307,7 +307,7 @@ namespace Barotrauma
             }
             else
             {
-                if (GameMain.NilMod.CampaignSaveName != "")
+                if (GameMain.NilMod.CampaignDefaultSaveName != "")
                 {
                     MultiplayerCampaign.StartCampaignSetup(true);
                 }

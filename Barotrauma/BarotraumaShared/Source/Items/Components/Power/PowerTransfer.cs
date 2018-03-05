@@ -129,21 +129,31 @@ namespace Barotrauma.Items.Components
 
             connectedList.Clear();
 
-            CheckJunctions(deltaTime);
             updateCount = 0;
+            CheckJunctions(deltaTime);
 
             foreach (Powered p in connectedList)
             {
                 PowerTransfer pt = p as PowerTransfer;
-                if (pt == null) continue;
+                if (pt == null || pt.updateCount == 0) continue;
+
+                if (pt is RelayComponent != this is RelayComponent) continue;
 
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                pt.Item.SendSignal(0, "", "power", null, fullPower / Math.Max(fullLoad, 1.0f));
-                pt.Item.SendSignal(0, "", "power_out", null, fullPower / Math.Max(fullLoad, 1.0f));
+
+                float voltage = fullPower / Math.Max(fullLoad, 1.0f);
+                if (this is RelayComponent) voltage = Math.Min(voltage, 1.0f);
+
+                pt.Item.SendSignal(0, "", "power", null, voltage);
+                pt.Item.SendSignal(0, "", "power_out", null, voltage);
 
                 //Nilmod Regenerate the health of a damaged junction over time
                 if (GameMain.NilMod.ElectricalRegenerateCondition && pt.item.Condition > 0f && pt.item.Condition < 100f) pt.item.Condition += deltaTime * GameMain.NilMod.ElectricalRegenAmount;
+
+                //relays don't blow up if the power is higher than load, only if the output is high enough  
+                //(i.e. enough power passing through the relay) 
+                if (this is RelayComponent) continue;
                 if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(GameMain.NilMod.ElectricalOverloadVoltRangeMin, GameMain.NilMod.ElectricalOverloadVoltRangeMax), GameMain.NilMod.ElectricalOverloadMinPower)) continue;
 
                 //damage the item if voltage is too high  
@@ -172,8 +182,9 @@ namespace Barotrauma.Items.Components
                         new FireSource(pt.item.WorldPosition);
                     }
                 }
-
             }
+
+            updateCount = 0;
         }
 
         public override bool Pick(Character picker)
@@ -257,9 +268,12 @@ namespace Barotrauma.Items.Components
 
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime)
+        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, bool inputOnly = false)
         {
-            updateCount = 1;
+            if (increaseUpdateCount)
+            {
+                updateCount = 1;
+            }
 
             connectedList.Add(this);
 
@@ -285,8 +299,17 @@ namespace Barotrauma.Items.Components
                         PowerTransfer powerTransfer = powered as PowerTransfer;
                         if (powerTransfer != null)
                         {
-                            if (!powerTransfer.CanTransfer) continue;
-                            powerTransfer.CheckJunctions(deltaTime);
+                            if (this is RelayComponent == powerTransfer is RelayComponent)
+                            {
+                                if (!powerTransfer.CanTransfer) continue;
+                                powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, inputOnly);
+                            }
+                            else
+                            {
+                                if (!powerTransfer.CanTransfer) continue;
+                                powerTransfer.CheckJunctions(deltaTime, false, !c.IsOutput || inputOnly);
+                            }
+
                             continue;
                         }
 
@@ -295,7 +318,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (recipient.Name == "power_in")
                             {
-                                fullLoad += powerContainer.CurrPowerConsumption;
+                                if (!inputOnly) fullLoad += powerContainer.CurrPowerConsumption;
                             }
                             else
                             {
@@ -308,7 +331,7 @@ namespace Barotrauma.Items.Components
                             //positive power consumption = the construction requires power -> increase load
                             if (powered.CurrPowerConsumption > 0.0f)
                             {
-                                fullLoad += powered.CurrPowerConsumption;
+                                if (!inputOnly) fullLoad += powered.CurrPowerConsumption;
                             }
                             else if (powered.CurrPowerConsumption < 0.0f)
                             //negative power consumption = the construction is a  
@@ -320,7 +343,7 @@ namespace Barotrauma.Items.Components
                     }
 
                 }
-            }            
+            }
         }
 
         public void SetAllConnectionsDirty()
@@ -354,6 +377,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
+            if (connection.IsPower) return;
+
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 
             if (!connectedRecipients.ContainsKey(connection)) return;

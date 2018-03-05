@@ -142,7 +142,10 @@ namespace Barotrauma
             if (amount <= 0.0f) return;
 
             var enemy = attacker as Character;
-            if (enemy == null || enemy == Character) return;
+            if (enemy == null || enemy == Character
+                || (enemy.SelectedCharacter == base.Character && enemy.AnimController.Anim == AnimController.Animation.CPR)) return;
+
+            
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
 

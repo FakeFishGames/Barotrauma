@@ -920,7 +920,12 @@ namespace Barotrauma
             Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
-            
+            if (targetTorso == null)
+            {
+                Anim = Animation.None;
+                return;
+            }
+
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
 
             targetMovement = new Vector2(diff.X, 0.0f);
@@ -934,7 +939,7 @@ namespace Barotrauma
 
             Vector2 colliderPos = GetColliderBottom();
 
-            if (GameMain.Client == null) //Serverside code
+            if (GameMain.Client == null && !target.IsDead) //Serverside code
             {
                 if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
                 {
@@ -947,12 +952,15 @@ namespace Barotrauma
             if (cprAnimState % 17 > 15.0f)
             {
                 float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
-                head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
-                head.pullJoint.Enabled = true;
+                if (targetHead != null && head != null)
+                {
+                    head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
+                    head.pullJoint.Enabled = true;
+                }
                 torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.2f));
                 torso.pullJoint.Enabled = true;
 
-                if (GameMain.Client == null) //Serverside code
+                if (GameMain.Client == null && !target.IsDead) //Serverside code
                 {
                     float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
                     character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
@@ -964,8 +972,11 @@ namespace Barotrauma
             }
             else
             {
-                head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
-                head.pullJoint.Enabled = true;
+                if (targetHead != null && head != null)
+                {
+                    head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
+                    head.pullJoint.Enabled = true;
+                }
                 torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.1f));
                 torso.pullJoint.Enabled = true;
                 if (cprPump >= 1)

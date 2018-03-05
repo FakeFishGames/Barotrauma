@@ -247,7 +247,7 @@ namespace Barotrauma
 
             defaultModeContainer = new GUIFrame(new Rectangle(0, 10, 0, 0), null, infoFrame);
 
-            campaignContainer = new GUIFrame(new Rectangle(0, 20, 0, 0), null, infoFrame);
+            campaignContainer = new GUIFrame(new Rectangle(0, 0, 0, 0), null, infoFrame);
             campaignContainer.Visible = false;
 
             //submarine list ------------------------------------------------------------------
@@ -518,7 +518,15 @@ namespace Barotrauma
             }
 
             GameMain.NetworkMember.EndVoteCount = 0;
-            GameMain.NetworkMember.EndVoteMax = 1;
+
+            if (GameMain.Server != null)
+            {
+                GameMain.NetworkMember.EndVoteMax = GameMain.Server.maxPlayers;
+            }
+            else
+            {
+                GameMain.NetworkMember.EndVoteMax = 1;
+            }
 
             base.Select();
         }
@@ -1507,7 +1515,7 @@ namespace Barotrauma
             GUIComponent existing = myPlayerFrame.FindChild("playerhead");
             if (existing != null) myPlayerFrame.RemoveChild(existing);
 
-            GUIImage image = new GUIImage(new Rectangle(20, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
+            GUIImage image = new GUIImage(new Rectangle(19, 53, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
             image.UserData = "playerhead";
         }
 
@@ -1673,6 +1681,7 @@ namespace Barotrauma
         {
             campaignContainer.Visible = enabled;
             defaultModeContainer.Visible = !enabled;
+            
         }
 
         public void ToggleCampaignMode(bool enabled)
@@ -1695,14 +1704,16 @@ namespace Barotrauma
                     campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
                     campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
 
-                    var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), TextManager.Get("Back"), "", campaignContainer);
-                    backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
+                    var backButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("Back"), "", campaignContainer);
+                    backButton.OnClicked += (btn, obj) => {
+                        ToggleCampaignView(false);
+                        return true; };
 
                     int buttonX = backButton.Rect.Width + 50;
                     List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
-                        var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
+                        var tabButton = new GUIButton(new Rectangle(buttonX, 10, 100, 20), tab.ToString(), "", campaignContainer);
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
@@ -1915,8 +1926,18 @@ namespace Barotrauma
             }
             else if (GameMain.NilMod.DefaultGamemode.ToLowerInvariant() == "campaign")
             {
-                modeList.Select(2);
-                SelectMode(2);
+                GameMain.NetLobbyScreen.SelectedModeIndex = 2;
+                modeList.Select(2, true);
+                missionTypeBlock.Visible = false;
+                if(GameMain.NilMod.CampaignDefaultSaveName != "")
+                {
+                    MultiplayerCampaign.StartCampaignSetup(true);
+                }
+                else
+                {
+                    MultiplayerCampaign.StartCampaignSetup(false);
+                    DebugConsole.NewMessage("Nilmod campaign autosetup error: Savefile name not set ( ServerModDefaultServerSettings -> CampaignSaveName).", Color.Cyan);
+                }
             }
             else
             {
@@ -1958,7 +1979,7 @@ namespace Barotrauma
         {
             List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
-            if (GameMain.NilMod.DefaultSubmarine != "")
+            if (GameMain.NilMod.DefaultSubmarine != "" && subList.CountChildren >= 0)
             {
                 int DefaultSub = subsToShow.FindIndex(s => s.Name.ToLowerInvariant() == GameMain.NilMod.DefaultSubmarine.ToLowerInvariant());
 
@@ -1966,15 +1987,33 @@ namespace Barotrauma
                 {
                     subList.Select(Math.Max(0, DefaultSub));
                 }
+                else
+                {
+                    subList.Select(0);
+                    DebugConsole.NewMessage("Submarine " + GameMain.NilMod.DefaultSubmarine + " does not exist, unable to set default submarine.", Color.Red);
+                }
             }
 
-            if (GameMain.NilMod.DefaultRespawnShuttle != "")
+            if (GameMain.NilMod.DefaultRespawnShuttle != "" && shuttleList.CountChildren >= 0)
             {
                 int DefaultShuttle = subsToShow.FindIndex(s => s.Name.ToLowerInvariant() == GameMain.NilMod.DefaultRespawnShuttle.ToLowerInvariant());
 
                 if (DefaultShuttle != -1)
                 {
                     shuttleList.Select(Math.Max(0, DefaultShuttle));
+                }
+                else
+                {
+                    DefaultShuttle = subsToShow.FindIndex(s => s.HasTag(SubmarineTag.Shuttle));
+                    if (DefaultShuttle != -1)
+                    {
+                        DebugConsole.NewMessage("Shuttle " + GameMain.NilMod.DefaultRespawnShuttle + " does not exist, Setting to next available shuttle.", Color.Red);
+                        shuttleList.Select(Math.Max(0, DefaultShuttle));
+                    }
+                    else
+                    {
+                        DebugConsole.NewMessage("No shuttles exist on server and shuttle " + GameMain.NilMod.DefaultRespawnShuttle + "does not exist.", Color.Red);
+                    }
                 }
             }
         }

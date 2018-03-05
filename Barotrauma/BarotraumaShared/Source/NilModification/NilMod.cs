@@ -16,6 +16,19 @@ namespace Barotrauma
         public int Updatestildisable;
     }
 
+    class CampaignPurchase
+    {
+        public string itemprefab;
+        public int count;
+        public Boolean isvalid = true;
+
+        public CampaignPurchase(string itemprefab, int count)
+        {
+            this.itemprefab = itemprefab;
+            this.count = count;
+        }
+    }
+
     class DisconnectedCharacter
     {
         public string clientname;
@@ -40,12 +53,14 @@ namespace Barotrauma
         public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
 
         const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "28/02/2018-1";
+        public const string NilModVersionDate = "04/03/2018-1";
         public Version NilModNetworkingVersion = new Version(0,0,0,0);
 
+        public int Owners;
         public int Admins;
-        public int Moderators;
+        public int Trusted;
         public int Spectators;
+        public int CurrentPlayers;
 
         public string ExternalIP = "?.?.?.?";
         System.Net.WebClient ExternalIPWebClient;
@@ -115,6 +130,11 @@ namespace Barotrauma
         public String TraitorTarget;
         public int HostTeamPreference = 0;
 
+        //Campaign variables
+        public int CampaignFails = 0;
+        public Boolean RoundEnded;
+        public Boolean CampaignStart;
+
         //Character Lists - Could be better used to keep track of things at a later date
         //public static List<Character> NetPlayerCharacterList = new List<Character>();
         //public static List<Character> InactivePlayerCharacterList = new List<Character>();
@@ -135,9 +155,11 @@ namespace Barotrauma
         public string ServerMD5A;
         public string ServerMD5B;
 
+        public int MaxTrustedSlots;
         public int MaxAdminSlots;
-        public int MaxModeratorSlots;
+        public int MaxOwnerSlots;
         public int MaxSpectatorSlots;
+        public Boolean OtherSlotsExcludeSpectators;
 
         public Boolean DebugConsoleTimeStamp;
 
@@ -229,7 +251,6 @@ namespace Barotrauma
         public string DefaultRespawnShuttle;
         public string DefaultSubmarine;
         public string DefaultLevelSeed;
-        public string CampaignSaveName;
         public Boolean SetDefaultsAlways;
         public Boolean UseAlternativeNetworking;
         public float CharacterDisabledistance;
@@ -250,6 +271,19 @@ namespace Barotrauma
         public Boolean AllowReconnect;
         public float ReconnectAddStun;
         public float ReconnectTimeAllowed;
+
+        //Campaign Settings
+        public string CampaignDefaultSaveName;
+        public Boolean CampaignUseRandomSubmarine;
+        public int CampaignMaxFails;
+        public int CampaignSuccessFailReduction;
+        public int CampaignInitialMoney;
+        public int CampaignSurvivalReward;
+        public int CampaignBonusMissionReward;
+        public float CampaignBaseRewardMultiplier;
+        public Boolean CampaignAutoPurchase;
+        public List<CampaignPurchase> ServerNewCampaignAutobuy;
+        public List<CampaignPurchase> ServerExistingCampaignAutobuy;
 
         //Respawn Shuttle Stuff
         public Boolean LimitCharacterRespawns;
@@ -391,6 +425,7 @@ namespace Barotrauma
         public float ElectricalOverloadFiresChance;
         public float ElectricalFailMaxVoltage;
         public float ElectricalFailStunTime;
+        public float ElectricalRelayMaxPowerMultiplier;
         public Boolean CanDamageSubBody;
         public Boolean CanRewireMainSubs;
         //70000 = top of the map
@@ -694,7 +729,9 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("BypassMD5 = " + BypassMD5.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ServerMD5 A = " + ServerMD5A.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ServerMD5 B = " + ServerMD5B.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxOwnerSlots = " + MaxOwnerSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxAdminSlots = " + MaxAdminSlots.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxTrustedSlots = " + MaxTrustedSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxSpectatorSlots = " + MaxSpectatorSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DebugConsoleTimeStamp = " + DebugConsoleTimeStamp.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxLogMessages = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
@@ -741,7 +778,6 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("DefaultRespawnShuttle = " + DefaultRespawnShuttle.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DefaultSubmarine = " + DefaultSubmarine.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DefaultLevelSeed = " + DefaultLevelSeed.ToString(), ServerLog.MessageType.NilMod);
-            GameMain.Server.ServerLog.WriteLine("CampaignSaveName = " + CampaignSaveName.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("SetDefaultsAlways = " + (SetDefaultsAlways ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("UseAlternativeNetworking = " + (UseAlternativeNetworking ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("CharacterDisabledistance = " + CharacterDisabledistance.ToString(), ServerLog.MessageType.NilMod);
@@ -767,6 +803,18 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("MaxParticles = " + MaxParticles.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ParticleSpawnPercent = " + ParticleSpawnPercent.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ParticleLifeMultiplier = " + ParticleLifeMultiplier.ToString(), ServerLog.MessageType.NilMod);
+
+            GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
+
+            //Campaign related settings
+            GameMain.Server.ServerLog.WriteLine("CampaignDefaultSaveName = " + CampaignDefaultSaveName.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignUseRandomSubmarine = " + CampaignUseRandomSubmarine.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignMaxFails = " + CampaignMaxFails.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignSuccessFailReduction = " + CampaignSuccessFailReduction.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignInitialMoney = " + CampaignInitialMoney.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignSurvivalReward = " + CampaignSurvivalReward.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignBonusMissionReward = " + CampaignBonusMissionReward.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignBaseRewardMultiplier = " + CampaignBaseRewardMultiplier.ToString(), ServerLog.MessageType.NilMod);
 
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
 
@@ -993,8 +1041,9 @@ namespace Barotrauma
                     BypassMD5 = ServerModGeneralSettings.GetAttributeBool("BypassMD5", false); //Implemented
                     ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
                     ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
-                    MaxAdminSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxAdminSlots", 0), 0, 16);
-                    MaxModeratorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxModeratorSlots", 0), 0, 16);
+                    MaxOwnerSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxOwnerSlots", 0), 0, 8);
+                    MaxAdminSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxAdminSlots", 0), 0, 8);
+                    MaxTrustedSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxTrustedSlots", 0), 0, 8);
                     MaxSpectatorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxSpectatorSlots", 0), 0, 16);
                     DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
                     MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10, 16000); //Implemented
@@ -1085,7 +1134,6 @@ namespace Barotrauma
                     DefaultRespawnShuttle = ServerModDefaultServerSettings.GetAttributeString("DefaultRespawnShuttle", "");
                     DefaultSubmarine = ServerModDefaultServerSettings.GetAttributeString("DefaultSubmarine", "");
                     DefaultLevelSeed = ServerModDefaultServerSettings.GetAttributeString("DefaultLevelSeed", "");
-                    CampaignSaveName = ServerModDefaultServerSettings.GetAttributeString("CampaignSaveName", "");
                     SetDefaultsAlways = ServerModDefaultServerSettings.GetAttributeBool("SetDefaultsAlways", false);
                     UseAlternativeNetworking = ServerModDefaultServerSettings.GetAttributeBool("UseAlternativeNetworking", false);
                     CharacterDisabledistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("CharacterDisabledistance", 20000.0f), 10000.00f, 100000.00f);
@@ -1133,6 +1181,69 @@ namespace Barotrauma
                         GameMain.ParticleManager.ResetParticleManager();
                     }
 #endif
+                    //Campaign Settings
+                    XElement ServerModCampaignSettings = doc.Root.Element("ServerModCampaignSettings");
+
+                    if (ServerModCampaignSettings != null)
+                    {
+                        CampaignDefaultSaveName = ServerModCampaignSettings.GetAttributeString("CampaignDefaultSaveName", "");
+                        CampaignUseRandomSubmarine = ServerModCampaignSettings.GetAttributeBool("CampaignUseRandomSubmarine", true);
+                        CampaignMaxFails = ServerModCampaignSettings.GetAttributeInt("CampaignMaxFails", 2);
+                        CampaignSuccessFailReduction = ServerModCampaignSettings.GetAttributeInt("CampaignSuccessFailReduction", 2);
+                        CampaignInitialMoney = ServerModCampaignSettings.GetAttributeInt("CampaignInitialMoney", 10000);
+                        CampaignSurvivalReward = ServerModCampaignSettings.GetAttributeInt("CampaignSurvivalReward", 0);
+                        CampaignBonusMissionReward = ServerModCampaignSettings.GetAttributeInt("CampaignBonusMissionReward", 0);
+                        CampaignBaseRewardMultiplier = ServerModCampaignSettings.GetAttributeFloat("CampaignBaseRewardMultiplier", 1f);
+                        CampaignAutoPurchase = ServerModCampaignSettings.GetAttributeBool("CampaignAutoPurchase", true);
+
+                        XElement ServerNewCampaignAutobuySettings = ServerModCampaignSettings.Element("ServerNewCampaignAutobuy");
+
+                        ServerNewCampaignAutobuy = new List<CampaignPurchase>();
+
+                        if (ServerNewCampaignAutobuySettings != null)
+                        {
+                            foreach (XElement e in ServerNewCampaignAutobuySettings.Elements())
+                            {
+                                string name = e.GetAttributeString("name", "");
+                                if (name == "")
+                                {
+                                    DebugConsole.NewMessage("ServerNewCampaignAutobuy Error - All items require a name!", Color.Red);
+                                    continue;
+                                }
+                                int count = e.GetAttributeInt("count", 1);
+
+                                ServerNewCampaignAutobuy.Add(new CampaignPurchase(name, count));
+                            }
+                        }
+                        else
+                        {
+                            DefaultNewCampaignPurchases();
+                        }
+
+                        XElement ServerExistingCampaignAutobuySettings = ServerModCampaignSettings.Element("ServerExistingCampaignAutobuy");
+
+                        ServerExistingCampaignAutobuy = new List<CampaignPurchase>();
+
+                        if (ServerExistingCampaignAutobuySettings != null)
+                        {
+                            foreach (XElement e in ServerExistingCampaignAutobuySettings.Elements())
+                            {
+                                string name = e.GetAttributeString("name", "");
+                                if (name == "")
+                                {
+                                    DebugConsole.NewMessage("ServerNewCampaignAutobuy Error - All items require a name!", Color.Red);
+                                    continue;
+                                }
+                                int count = e.GetAttributeInt("count", 1);
+
+                                ServerExistingCampaignAutobuy.Add(new CampaignPurchase(name, count));
+                            }
+                        }
+                        else
+                        {
+                            DefaultExistingCampaignPurchases();
+                        }
+                    }
 
                     //Respawn Settings
                     XElement ServerModRespawnSettings = doc.Root.Element("ServerModRespawnSettings");
@@ -1210,6 +1321,7 @@ namespace Barotrauma
                     ElectricalOverloadFiresChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
                     ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
                     ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
+                    ElectricalRelayMaxPowerMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalRelayMaxPowerMultiplier", 1f), 0.01f, 1000f);
                     DoorStun = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("DoorStun", 0.2f), 0f, 60f);
 
                     //All Character Settings
@@ -1406,8 +1518,9 @@ namespace Barotrauma
                 @"    BypassMD5=""" + BypassMD5 + @"""",
                 @"    ServerMD5A=""" + ServerMD5A + @"""",
                 @"    ServerMD5B=""" + ServerMD5B + @"""",
+                @"    MaxOwnerSlots=""" + MaxOwnerSlots + @"""",
                 @"    MaxAdminSlots=""" + MaxAdminSlots + @"""",
-                @"    MaxModeratorSlots=""" + MaxModeratorSlots + @"""",
+                @"    MaxTrustedSlots=""" + MaxTrustedSlots + @"""",
                 @"    MaxSpectatorSlots=""" + MaxSpectatorSlots + @"""",
                 @"    DebugConsoleTimeStamp=""" + DebugConsoleTimeStamp + @"""",
                 @"    MaxLogMessages=""" + MaxLogMessages + @"""",
@@ -1480,7 +1593,6 @@ namespace Barotrauma
                 @"    DefaultRespawnShuttle=""" + DefaultRespawnShuttle + @"""",
                 @"    DefaultSubmarine=""" + DefaultSubmarine + @"""",
                 @"    DefaultLevelSeed=""" + DefaultLevelSeed + @"""",
-                @"    CampaignSaveName=""" + CampaignSaveName + @"""",
                 //@"    SetDefaultsAlways=""" + SetDefaultsAlways + @"""",
                 @"    UseAlternativeNetworking=""" + UseAlternativeNetworking + @"""",
                 @"    CharacterDisabledistance=""" + CharacterDisabledistance + @"""",
@@ -1520,6 +1632,46 @@ namespace Barotrauma
                 @"    ParticleSpawnPercent=""" + ParticleSpawnPercent + @"""",
                 @"    ParticleLifeMultiplier=""" + ParticleLifeMultiplier + @"""",
                 "  />",
+
+                "",
+
+                "  <!--These Settings are related to Campaign-->",
+                "  <ServerModCampaignSettings",
+                @"    CampaignDefaultSaveName=""" + CampaignDefaultSaveName + @"""",
+                @"    CampaignUseRandomSubmarine=""" + CampaignUseRandomSubmarine + @"""",
+                @"    CampaignMaxFails=""" + CampaignMaxFails + @"""",
+                @"    CampaignSuccessFailReduction=""" + CampaignSuccessFailReduction + @"""",
+                @"    CampaignInitialMoney=""" + CampaignInitialMoney + @"""",
+                @"    CampaignSurvivalReward=""" + CampaignSurvivalReward + @"""",
+                @"    CampaignBonusMissionReward=""" + CampaignBonusMissionReward + @"""",
+                @"    CampaignBaseRewardMultiplier=""" + CampaignBaseRewardMultiplier + @"""",
+                @"    CampaignAutoPurchase=""" + CampaignAutoPurchase + @""">",
+                "    <ServerNewCampaignAutobuy>",
+            };
+
+            foreach (CampaignPurchase cp in ServerNewCampaignAutobuy)
+            {
+                string purchase = @"      <Purchase name=""" + cp.itemprefab + @"""";
+                if (cp.count > 1) purchase += @" count=""" + cp.count + @"""";
+                purchase += "/>";
+                lines.Add(purchase);
+            }
+
+            lines.Add("    </ServerNewCampaignAutobuy>");
+            lines.Add("    <ServerExistingCampaignAutobuy>");
+
+            foreach (CampaignPurchase cp in ServerExistingCampaignAutobuy)
+            {
+                string purchase = @"      <Purchase name=""" + cp.itemprefab + @"""";
+                if (cp.count > 1) purchase += @" count=""" + cp.count + @"""";
+                purchase += "/>";
+                lines.Add(purchase);
+            }
+
+            lines.AddRange(
+                new List<string>{
+                "    </ServerExistingCampaignAutobuy>",
+                "  </ServerModCampaignSettings>",
 
                 "",
 
@@ -1595,6 +1747,7 @@ namespace Barotrauma
                 @"    ElectricalOverloadFiresChance=""" + ElectricalOverloadFiresChance + @"""",
                 @"    ElectricalFailMaxVoltage=""" + ElectricalFailMaxVoltage + @"""",
                 @"    ElectricalFailStunTime=""" + ElectricalFailStunTime + @"""",
+                @"    ElectricalRelayMaxPowerMultiplier=""" + ElectricalRelayMaxPowerMultiplier + @"""",
                 @"    DoorStun=""" + DoorStun + @"""",
                 "  />",
 
@@ -1847,7 +2000,7 @@ namespace Barotrauma
 
                 "",
                 "</NilMod>"
-            };
+            });
             using (System.IO.StreamWriter file =
             new System.IO.StreamWriter(SettingsSavePath, false, Encoding.UTF8))
             {
@@ -1864,8 +2017,9 @@ namespace Barotrauma
             BypassMD5 = false;
             ServerMD5A = GameMain.SelectedPackage.MD5hash.Hash;
             ServerMD5B = "";
+            MaxOwnerSlots = 0;
             MaxAdminSlots = 0;
-            MaxModeratorSlots = 0;
+            MaxTrustedSlots = 0;
             MaxSpectatorSlots = 0;
             if (!ClientMode) DebugConsoleTimeStamp = false;
             MaxLogMessages = 800;
@@ -1938,7 +2092,6 @@ namespace Barotrauma
             DefaultRespawnShuttle = "";
             DefaultSubmarine = "";
             DefaultLevelSeed = "";
-            CampaignSaveName = "";
             SetDefaultsAlways = false;
             UseAlternativeNetworking = false;
             CharacterDisabledistance = 20000.0f;
@@ -2000,6 +2153,20 @@ namespace Barotrauma
             DesyncPreventionPassPlayerStatusCount = 1;
             DesyncPreventionHullStatusTimer = 1f;
             DesyncPreventionPassHullCount = 1;
+
+            //Campaign Settings
+            CampaignDefaultSaveName = "";
+            CampaignUseRandomSubmarine = true;
+            CampaignMaxFails = 2;
+            CampaignSuccessFailReduction = 2;
+            CampaignInitialMoney = 10000;
+            CampaignSurvivalReward = 0;
+            CampaignBonusMissionReward = 0;
+            CampaignBaseRewardMultiplier = 1f;
+            CampaignAutoPurchase = true;
+
+            DefaultNewCampaignPurchases();
+            DefaultExistingCampaignPurchases();
 
             //Respawn Settings
             LimitCharacterRespawns = false;
@@ -2278,6 +2445,64 @@ namespace Barotrauma
         {
             if (InitialLaunch)
             {
+                //Examine campaign buy items now that the prefabs are actually loaded
+                for (int i = ServerNewCampaignAutobuy.Count - 1; i >= 0; i--)
+                {
+                    MapEntityPrefab PrefabCheck = ItemPrefab.Find(ServerNewCampaignAutobuy[i].itemprefab);
+                    if (PrefabCheck == null)
+                    {
+                        DebugConsole.NewMessage("ServerNewCampaignAutobuy Error - Prefab does not exist! (" + ServerNewCampaignAutobuy[i].itemprefab + ").", Color.Red);
+                        ServerNewCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                    ItemPrefab itemPrefab = null;
+                    if (!(PrefabCheck is ItemPrefab))
+                    {
+                        DebugConsole.NewMessage("ServerNewCampaignAutobuy Error - Can only purchase items! (" + PrefabCheck.Name + ").", Color.Red);
+                        ServerNewCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                    else
+                    {
+                        itemPrefab = PrefabCheck as ItemPrefab;
+                    }
+                    if (itemPrefab.Price <= 0)
+                    {
+                        DebugConsole.NewMessage("ServerNewCampaignAutobuy Error - Cannot purchase items that cost nothing (" + itemPrefab.Name + ").", Color.Red);
+                        ServerNewCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                }
+
+                for (int i = ServerExistingCampaignAutobuy.Count - 1; i >= 0; i--)
+                {
+                    MapEntityPrefab PrefabCheck = ItemPrefab.Find(ServerExistingCampaignAutobuy[i].itemprefab);
+                    if (PrefabCheck == null)
+                    {
+                        DebugConsole.NewMessage("ServerExistingCampaignAutobuy Error - Prefab does not exist! (" + ServerExistingCampaignAutobuy[i].itemprefab + ").", Color.Red);
+                        ServerExistingCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                    ItemPrefab itemPrefab = null;
+                    if (!(PrefabCheck is ItemPrefab))
+                    {
+                        DebugConsole.NewMessage("ServerExistingCampaignAutobuy Error - Can only purchase items! (" + PrefabCheck.Name + ").", Color.Red);
+                        ServerExistingCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                    else
+                    {
+                        itemPrefab = PrefabCheck as ItemPrefab;
+                    }
+                    if (itemPrefab.Price <= 0)
+                    {
+                        DebugConsole.NewMessage("ServerExistingCampaignAutobuy Error - Cannot purchase items that cost nothing (" + itemPrefab.Name + ").", Color.Red);
+                        ServerExistingCampaignAutobuy[i].isvalid = false;
+                        continue;
+                    }
+                }
+
+
                 if (GameMain.Server != null)
                 {
                     GameMain.Server.AutoRestart = AutoRestart;
@@ -2556,6 +2781,117 @@ namespace Barotrauma
             }
 
             return randList;
+        }
+
+        public void DefaultNewCampaignPurchases()
+        {
+            ServerNewCampaignAutobuy = new List<CampaignPurchase>();
+
+            //New Campaign default items
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Fuel Rod", 3));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Syringe Gun", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Welding Tool", 3));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Welding Fuel Tank", 3));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Oxygen Tank", 4));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Plasma Cutter", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 6));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Oxygen Tank", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Diving Suit", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Oxygen Tank", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Diving Suit", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Battery Cell", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Stabilozine", 4));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Chloral Hydrate", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Chlorine", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Ethanol", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Stabilozine", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Iron Powder", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Corrigodone", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Fibrinozine", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Bandage", 4));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Underwater Scooter", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Battery Cell", 4));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Chloromydride", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Erythrozine", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Auxiliorizine", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Corrigodone", 2));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Underwater Scooter", 1));
+            ServerNewCampaignAutobuy.Add(new CampaignPurchase("Flare", 6));
+        }
+
+        public void DefaultExistingCampaignPurchases()
+        {
+            ServerExistingCampaignAutobuy = new List<CampaignPurchase>();
+
+            //Existing Campaign Default Items
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Fuel Rod", 2));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Uranium Bar", 3));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 3));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Wire", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Welding Fuel Tank", 2));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Welding Tool", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Oxygen Tank", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Diving Suit", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Oxygen Tank", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Diving Suit", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 2));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Steel Bar", 6));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Polycarbonate Bar", 2));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Handheld Sonar", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Uranium Bar", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Copper Bar", 1));
+            ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 2));
+        }
+
+        public void RecheckPlayerCounts()
+        {
+            Owners = 0;
+            Admins = 0;
+            Trusted = 0;
+            Spectators = 0;
+            CurrentPlayers = 0;
+            
+            foreach(Client c in GameMain.Server.ConnectedClients)
+            {
+                //Slots will use the types before them if multiple are to be used.
+                if(c.OwnerSlot && Owners < MaxOwnerSlots)
+                {
+                    Owners += 1;
+                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                }
+                else if(c.AdministratorSlot && Admins < MaxOwnerSlots)
+                {
+                    Admins += 1;
+                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                }
+                else if(c.TrustedSlot && Trusted < MaxTrustedSlots)
+                {
+                    Trusted += 1;
+                    if(!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                }
+                else if(c.SpectateOnly && Spectators < MaxSpectatorSlots && OtherSlotsExcludeSpectators)
+                {
+                    Spectators += 1;
+                }
+                else
+                {
+                    CurrentPlayers += 1;
+                }
+            }
+
+            if (CurrentPlayers < GameMain.Server.maxPlayers)
+            {
+                if (CurrentPlayers + Owners + Admins + Trusted <= GameMain.Server.maxPlayers)
+                {
+                    CurrentPlayers = CurrentPlayers + Owners + Admins + Trusted;
+                }
+                else
+                {
+                    CurrentPlayers = Math.Max(GameMain.Server.maxPlayers - 1, 0);
+                }
+            }
         }
     }
 }

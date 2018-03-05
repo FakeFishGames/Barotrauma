@@ -35,8 +35,8 @@ namespace Barotrauma
         public CampaignMode(GameModePreset preset, object param)
             : base(preset, param)
         {
-            Money = InitialMoney;
-            CargoManager = new CargoManager(this);            
+            Money = GameMain.NilMod.CampaignInitialMoney;
+            CargoManager = new CargoManager(this);
         }
 
         public void GenerateMap(string seed)

@@ -245,7 +245,7 @@ namespace Barotrauma
                 GameMain.SubEditorScreen.Select();
             }));
 
-            commands.Add(new Command("editcharacter", CommandType.Generic, "", (string[] args) =>
+            commands.Add(new Command("editcharacter", CommandType.Debug, "", (string[] args) =>
             {
                 GameMain.CharacterEditorScreen.Select();
             }));
@@ -537,9 +537,9 @@ namespace Barotrauma
                     NewMessage("Deleted server settings", Color.Green);
                 }
 
-                if (System.IO.File.Exists(GameServer.ClientPermissionsFile))
+                if (System.IO.File.Exists(GameServer.VanillaClientPermissionsFile))
                 {
-                    System.IO.File.Delete(GameServer.ClientPermissionsFile);
+                    System.IO.File.Delete(GameServer.VanillaClientPermissionsFile);
                     NewMessage("Deleted client permission file", Color.Green);
                 }
 

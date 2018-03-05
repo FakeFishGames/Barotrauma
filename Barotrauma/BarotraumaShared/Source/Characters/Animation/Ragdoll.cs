@@ -922,7 +922,8 @@ namespace Barotrauma
                 else
                 {
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - GetFloorY() > HeadPosition * 0.95f)
+                    floorY = GetFloorY();
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
                     {
                         inWater = true;
                     }
@@ -1209,7 +1210,7 @@ namespace Barotrauma
         {
             Vector2 movePos = simPosition;
 
-            if (original != simPosition)
+            if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
                 //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
@@ -1570,6 +1571,7 @@ namespace Barotrauma
             {
                 list[i].Remove();
             }
+            if (list.Count > 0) DebugConsole.ThrowError("Some ragdolls were not removed in Ragdoll.RemoveAll");
         }
     }
 }

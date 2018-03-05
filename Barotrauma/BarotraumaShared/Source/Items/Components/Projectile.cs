@@ -275,6 +275,8 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
         {
+            if (User != null && User.Removed) User = null;
+
             if (IgnoredBodies.Contains(target.Body)) return false;
 
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))

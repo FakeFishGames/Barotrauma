@@ -49,10 +49,10 @@ namespace Barotrauma
         public HitDetection HitDetectionType { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float Range { get; private set; }
+        public float Range { get; set; }
 
         [Serialize(0.0f, false)]
-        public float DamageRange { get; private set; }
+        public float DamageRange { get; set; }
 
         [Serialize(0.0f, false)]
         public float Duration { get; private set; }
