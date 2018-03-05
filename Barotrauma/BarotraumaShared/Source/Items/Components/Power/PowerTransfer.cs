@@ -110,7 +110,7 @@ namespace Barotrauma.Items.Components
                 SetAllConnectionsDirty();
                 isBroken = false;
             }
-
+            
             if (updateCount > 0)
             {
                 //this junction box has already been updated this frame
@@ -125,20 +125,24 @@ namespace Barotrauma.Items.Components
 
             connectedList.Clear();
 
-            CheckJunctions(deltaTime);
             updateCount = 0;
+            CheckJunctions(deltaTime);
 
             foreach (Powered p in connectedList)
             {
                 PowerTransfer pt = p as PowerTransfer;
-                if (pt == null) continue;
+                if (pt == null || pt.updateCount == 0) continue;
 
                 if (pt is RelayComponent != this is RelayComponent) continue;
 
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-                pt.Item.SendSignal(0, "", "power", null, fullPower / Math.Max(fullLoad, 1.0f));
-                pt.Item.SendSignal(0, "", "power_out", null, fullPower / Math.Max(fullLoad, 1.0f));
+
+                float voltage = fullPower / Math.Max(fullLoad, 1.0f);
+                if (this is RelayComponent) voltage = Math.Min(voltage, 1.0f);
+
+                pt.Item.SendSignal(0, "", "power", null, voltage);
+                pt.Item.SendSignal(0, "", "power_out", null, voltage);
 
                 //damage the item if voltage is too high 
                 //(except if running as a client)
@@ -177,6 +181,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            updateCount = 0;
         }
 
         public override bool Pick(Character picker)
@@ -299,7 +305,7 @@ namespace Barotrauma.Items.Components
                             else
                             {
                                 if (!powerTransfer.CanTransfer) continue;
-                                powerTransfer.CheckJunctions(deltaTime, false, !c.IsOutput);
+                                powerTransfer.CheckJunctions(deltaTime, false, !c.IsOutput || inputOnly);
                             }
 
                             continue;
@@ -368,6 +374,8 @@ namespace Barotrauma.Items.Components
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
+            if (connection.IsPower) return;
+
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 
             if (!connectedRecipients.ContainsKey(connection)) return;

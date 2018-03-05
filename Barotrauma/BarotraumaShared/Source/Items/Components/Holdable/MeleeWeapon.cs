@@ -290,6 +290,11 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
             }
 
+            if (DeleteOnUse)
+            {
+                Entity.Spawner.AddToRemoveQueue(item);
+            }
+
             return true;
         }
     }

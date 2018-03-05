@@ -1210,7 +1210,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public void SecondaryUse(float deltaTime, Character character = null)
@@ -1902,7 +1905,16 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
-            
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.SelectedConstruction == this) character.SelectedConstruction = null;
+                for (int i = 0; i < character.SelectedItems.Length; i++)
+                {
+                    if (character.SelectedItems[i] == this) character.SelectedItems[i] = null;
+                }
+            }
+
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);
