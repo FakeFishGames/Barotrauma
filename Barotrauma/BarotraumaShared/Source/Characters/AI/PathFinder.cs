@@ -168,7 +168,7 @@ namespace Barotrauma
                 float xDiff = System.Math.Abs(start.X - nodePos.X);
                 float yDiff = System.Math.Abs(start.Y - nodePos.Y);
 
-                if (yDiff > 1.0f && node.Waypoint.Ladders == null)
+                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
                 {
                     yDiff += 10.0f;
                 }
@@ -176,7 +176,7 @@ namespace Barotrauma
                 float dist = xDiff + yDiff * 10.0f; //higher cost for vertical movement
 
                 //prefer nodes that are closer to the end position
-                dist += Vector2.Distance(end, nodePos) / 10.0f;
+                dist += Vector2.DistanceSquared(end, nodePos);
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
                 if (dist < closestDist || startNode == null)

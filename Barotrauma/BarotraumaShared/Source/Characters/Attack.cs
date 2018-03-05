@@ -62,7 +62,10 @@ namespace Barotrauma
         
         [Serialize(0.0f, false)]
         public float StructureDamage { get; private set; }
-        
+
+        [Serialize(0.0f, false)]
+        public float ItemDamage { get; private set; }
+
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
@@ -105,6 +108,11 @@ namespace Barotrauma
         public float GetStructureDamage(float deltaTime)
         {
             return (Duration == 0.0f) ? StructureDamage : StructureDamage * deltaTime;
+        }
+
+        public float GetItemDamage(float deltaTime)
+        {
+            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
         }
 
         public float GetTotalDamage(bool includeStructureDamage = false)

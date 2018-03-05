@@ -28,8 +28,8 @@ namespace Barotrauma
 
             GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
 
-            GUI.Font.DrawString(spriteBatch, "updatetargets: " + updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
-            GUI.Font.DrawString(spriteBatch, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
+            GUI.Font.DrawString(spriteBatch, "updatetargets: " + MathUtils.Round(updateTargetsTimer, 0.1f), pos - Vector2.UnitY * 100.0f, Color.Red);
+            GUI.Font.DrawString(spriteBatch, "cooldown: " + MathUtils.Round(coolDownTimer, 0.1f), pos - Vector2.UnitY * 120.0f, Color.Red);
 
             if (latchOntoAI != null)
             {
@@ -40,7 +40,6 @@ namespace Barotrauma
                         ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Orange);
                 }
             }
-
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
