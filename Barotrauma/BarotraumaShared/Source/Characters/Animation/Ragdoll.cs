@@ -336,6 +336,7 @@ namespace Barotrauma
                     case "collider":
                         collider.Add(new PhysicsBody(subElement, scale));
 
+                        collider[collider.Count - 1].UserData = character;
                         collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
                         collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
                         collider[collider.Count - 1].FarseerBody.FixedRotation = true;
@@ -350,8 +351,9 @@ namespace Barotrauma
 
             if (collider[0] == null)
             {
-                DebugConsole.ThrowError("No collider configured for \""+character.Name+"\"!");
+                DebugConsole.ThrowError("No collider configured for \"" + character.Name + "\"!");
                 collider[0] = new PhysicsBody(0.0f, 0.0f, 0.5f, 5.0f);
+                collider[0].UserData = character;
                 collider[0].BodyType = BodyType.Dynamic;
                 collider[0].CollisionCategories = Physics.CollisionCharacter;
                 collider[0].FarseerBody.AngularDamping = 5.0f;

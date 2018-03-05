@@ -32,6 +32,11 @@ namespace Barotrauma
 
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
+
+        public float DamageOverLayTimer
+        {
+            get { return damageOverlayTimer; }
+        }
         
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
@@ -133,7 +138,6 @@ namespace Barotrauma
                 SoundPlayer.PlaySound("drown");
             }
         }
-
 
         public void UpdateHUD(float deltaTime)
         {

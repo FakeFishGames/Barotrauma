@@ -1777,10 +1777,10 @@ namespace Barotrauma
             return attackResult;
         }
         
-        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f)
+        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f, Character attacker = null)
         {
             Limb temp = null;
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out temp);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out temp, attacker);
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
