@@ -144,9 +144,10 @@ namespace Barotrauma
                 Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
                 if (attachedSub != null)
                 {
+                    float velocity = attachedSub.Velocity == Vector2.Zero ? 0.0f : attachedSub.Velocity.Length();
                     float velocityFactor = (maxDeattachSpeed - minDeattachSpeed <= 0.0f) ?
-                        Math.Sign(Math.Abs(attachedSub.Velocity.X) - minDeattachSpeed) :
-                        (Math.Abs(attachedSub.Velocity.X) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
+                        Math.Sign(Math.Abs(velocity) - minDeattachSpeed) :
+                        (Math.Abs(velocity) - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
 
                     if (Rand.Range(0.0f, 1.0f) < velocityFactor)
                     {
