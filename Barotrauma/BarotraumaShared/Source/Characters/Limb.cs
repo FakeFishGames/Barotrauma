@@ -95,6 +95,8 @@ namespace Barotrauma
         public float AttackTimer;
 
         public readonly int HealthIndex;
+        
+        public readonly float AttackPriority;
 
         public bool IsSevered
         {
@@ -232,6 +234,7 @@ namespace Barotrauma
             this.scale = scale;
 
             HealthIndex = element.GetAttributeInt("healthindex", 0);
+            AttackPriority = element.GetAttributeFloat("attackpriority", 0);
 
             doesFlip = element.GetAttributeBool("flip", false);
 

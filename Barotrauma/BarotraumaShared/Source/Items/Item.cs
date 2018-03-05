@@ -792,7 +792,7 @@ namespace Barotrauma
         {
             if (prefab.Indestructible) return new AttackResult();
 
-            float damageAmount = attack.GetStructureDamage(deltaTime);
+            float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
             return new AttackResult(damageAmount, null);

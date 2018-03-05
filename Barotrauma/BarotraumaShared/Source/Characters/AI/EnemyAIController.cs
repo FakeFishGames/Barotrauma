@@ -333,7 +333,10 @@ namespace Barotrauma
             else
             {
                 //wander around randomly
-                steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, 1.0f);
+                if (Character.Submarine == null)
+                {
+                    steeringManager.SteeringAvoid(deltaTime, colliderSize * 5.0f, 1.0f);
+                }
                 steeringManager.SteeringWander(0.5f);
             }          
         }
@@ -373,6 +376,12 @@ namespace Barotrauma
             selectedTargetMemory.Priority -= deltaTime;
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
+
+            if (Character.Submarine != null && selectedAiTarget.Entity.Submarine != null && Character.Submarine != selectedAiTarget.Entity.Submarine)
+            {
+                attackSimPosition = ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition - Character.Submarine.Position);
+            }
+
             if (wallAttackPos != Vector2.Zero && targetEntity != null)
             {
                 attackSimPosition = wallAttackPos;
@@ -381,11 +390,11 @@ namespace Barotrauma
             else if (selectedAiTarget.Entity is Character)
             {
                 //target the closest limb if the target is a character
-                float closestDist = Vector2.DistanceSquared(selectedAiTarget.SimPosition, SimPosition);
+                float closestDist = Vector2.DistanceSquared(selectedAiTarget.SimPosition, SimPosition) * 10.0f;
                 foreach (Limb limb in ((Character)selectedAiTarget.Entity).AnimController.Limbs)
                 {
                     if (limb == null) continue;
-                    float dist = Vector2.DistanceSquared(limb.SimPosition, SimPosition);
+                    float dist = Vector2.DistanceSquared(limb.SimPosition, SimPosition) / Math.Max(limb.AttackPriority, 0.1f);
                     if (dist < closestDist)
                     {
                         closestDist = dist;
@@ -434,7 +443,7 @@ namespace Barotrauma
                 {
                     var door = ((Item)selectedAiTarget.Entity).GetComponent<Door>();
                     //steer through the door manually if it's open or broken
-                    if (door != null && door.LinkedGap?.FlowTargetHull != null && (door.IsOpen || door.Item.Condition <= 0.0f))
+                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
                         if (door.LinkedGap.IsHorizontal)
                         {
@@ -622,6 +631,8 @@ namespace Barotrauma
                     targetingPriorities["room"] = new TargetingPriority("room", AIState.Attack, 100.0f);
                 }
             }
+            
+            latchOntoAI?.DeattachFromBody();
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
@@ -632,7 +643,14 @@ namespace Barotrauma
         {
             var damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
 
+            float prevHealth = damageTarget.Health;
             limb.UpdateAttack(deltaTime, attackPosition, damageTarget);
+
+            if (damageTarget.Health < prevHealth)
+            {
+                //managed to do damage to the target -> increase priority
+                selectedTargetMemory.Priority += 10.0f;
+            }
 
             if (limb.AttackTimer >= limb.attack.Duration)
             {
@@ -649,10 +667,11 @@ namespace Barotrauma
 
             float dist = Vector2.Distance(attackPosition, Character.SimPosition);
 
-            if (dist < ConvertUnits.ToSimUnits(500.0f))
+            float desiredDist = colliderSize * 2.0f;
+            if (dist < desiredDist)
             {
-                steeringManager.SteeringSeek(attackPosition, -0.8f);
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
+                //steeringManager.SteeringSeek(attackPosition, -0.8f);
+                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / desiredDist)));
             }
 
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);

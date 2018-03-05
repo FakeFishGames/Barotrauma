@@ -31,6 +31,7 @@ namespace Barotrauma
 
         private ushort ladderId;
         public Ladder Ladders;
+        public Structure Stairs;
 
         private ushort gapId;
         public Gap ConnectedGap
@@ -561,8 +562,17 @@ namespace Barotrauma
             if (ladderId > 0)
             {
                 var ladderItem = FindEntityByID(ladderId) as Item;
-
                 if (ladderItem != null) Ladders = ladderItem.GetComponent<Ladder>();
+            }
+
+            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionWall | Physics.CollisionStairs);
+            if (pickedBody != null && pickedBody.UserData is Structure)
+            {
+                Structure structure = (Structure)pickedBody.UserData;
+                if (structure != null && structure.StairDirection != Direction.None)
+                {
+                    Stairs = structure;
+                }
             }
         }
 
