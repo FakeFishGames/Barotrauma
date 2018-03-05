@@ -54,8 +54,8 @@ namespace Barotrauma
 
         protected float strongestImpact;
 
-        public float headPosition, headAngle;
-        public float torsoPosition, torsoAngle;
+        public float? headPosition, headAngle;
+        public float? torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -210,22 +210,22 @@ namespace Barotrauma
             }
         }
 
-        protected virtual float HeadPosition
+        protected virtual float? HeadPosition
         { 
             get { return headPosition; } 
         }
 
-        protected virtual float HeadAngle
+        protected virtual float? HeadAngle
         { 
             get { return headAngle; } 
         }
 
-        protected virtual float TorsoPosition
+        protected virtual float? TorsoPosition
         { 
             get { return torsoPosition; } 
         }
 
-        protected virtual float TorsoAngle
+        protected virtual float? TorsoAngle
         { 
             get { return torsoAngle; } 
         }
@@ -297,13 +297,22 @@ namespace Barotrauma
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
-            headPosition    = element.GetAttributeFloat("headposition", 50.0f);
-            headPosition    = ConvertUnits.ToSimUnits(headPosition);
-            headAngle       = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
-
-            torsoPosition   = element.GetAttributeFloat("torsoposition", 50.0f);
-            torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
-            torsoAngle      = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            if (element.Attribute("headposition") != null)
+            {
+                headPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("headposition", 50.0f));
+            }
+            if (element.Attribute("headangle") != null)
+            {
+                headAngle = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
+            }
+            if (element.Attribute("torsoposition") != null)
+            {
+                torsoPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("torsoposition", 50.0f));
+            }
+            if (element.Attribute("torsoangle") != null)
+            {
+                torsoAngle = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            }
 
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
 
@@ -1123,7 +1132,11 @@ namespace Barotrauma
         protected float GetFloorY(Vector2 simPosition)
         {
             Vector2 rayStart = simPosition;
-            Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
+            float height = colliderHeightFromFloor;
+            if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
+            if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
+
+            Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
             var lowestLimb = FindLowestLimb();
 

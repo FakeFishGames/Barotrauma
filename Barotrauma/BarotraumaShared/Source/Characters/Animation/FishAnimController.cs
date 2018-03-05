@@ -164,8 +164,21 @@ namespace Barotrauma
             {
                 if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
+                    Limb head = GetLimb(LimbType.Head);
+                    Limb tail = GetLimb(LimbType.Tail);
+                    bool wrongway = false;
+                    if (head != null && tail != null)
+                    {
+                        wrongway = 
+                            (Dir > 0.0f && head.SimPosition.X < MainLimb.SimPosition.X && tail.SimPosition.X > MainLimb.SimPosition.X) ||
+                            (Dir < 0.0f && head.SimPosition.X > MainLimb.SimPosition.X && tail.SimPosition.X < MainLimb.SimPosition.X);
+                    }
+
                     Flip();
-                    if (mirror || !inWater) Mirror();
+                    if ((mirror || !inWater) && !wrongway)
+                    {
+                        Mirror();
+                    }
                     flipTimer = 0.0f;
                 }
             }
@@ -261,8 +274,25 @@ namespace Barotrauma
             }
             else
             {
-                Collider.SmoothRotate(HeadAngle * Dir, 25.0f);
-                MainLimb.body.SmoothRotate(HeadAngle * Dir, steerTorque);
+                if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
+                {
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, 25.0f);
+                }
+                else if (MainLimb.type == LimbType.Head && TorsoAngle.HasValue)
+                {
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, 25.0f);
+                }
+
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, steerTorque);
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, steerTorque);
+                }
             }
 
             Limb tail = GetLimb(LimbType.Tail);
@@ -292,30 +322,51 @@ namespace Barotrauma
         void UpdateWalkAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
-            
-            float mainLimbHeight, mainLimbAngle;
-            if (MainLimb.type == LimbType.Torso)
+
+            float mainLimbHeight = colliderHeightFromFloor;
+
+            Limb torso = GetLimb(LimbType.Torso);
+            if (torso != null)
             {
-                mainLimbHeight = TorsoPosition;
-                mainLimbAngle = torsoAngle;
-            }
-            else
-            {
-                mainLimbHeight = HeadPosition;
-                mainLimbAngle = headAngle;
+                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+                if (TorsoPosition.HasValue)
+                {
+                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * TorsoPosition.Value;
+
+                    if (torso != MainLimb)
+                        pos.X = torso.SimPosition.X;
+                    else
+                        mainLimbHeight = TorsoPosition.Value;
+
+                    torso.MoveToPos(pos, 10.0f);
+                    torso.pullJoint.Enabled = true;
+                    torso.pullJoint.WorldAnchorB = pos;
+                }
             }
 
-            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
-            
+            Limb head = GetLimb(LimbType.Head);
+            if (head != null)
+            {
+                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
+                if (HeadPosition.HasValue)
+                {
+                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * HeadPosition.Value;
+
+                    if (head != MainLimb)
+                        pos.X = head.SimPosition.X;
+                    else
+                        mainLimbHeight = HeadPosition.Value;
+
+                    head.MoveToPos(pos, 10.0f);
+                    head.pullJoint.Enabled = true;
+                    head.pullJoint.WorldAnchorB = pos;
+                }
+            }
+
             Collider.LinearVelocity = new Vector2(
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
-
-            MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             
-            MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
-
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
@@ -379,7 +430,6 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
-
                 limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
             }
         }
