@@ -436,9 +436,12 @@ namespace Barotrauma
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
             
-            campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
-            campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
-            campaignViewButton.Visible = false;
+            if (campaignViewButton == null)
+            {
+                campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
+                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
+                campaignViewButton.Visible = false;
+            }
 
             if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
             {
