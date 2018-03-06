@@ -30,9 +30,18 @@ namespace Barotrauma
             set;
         }
 
+        private static byte currentCampaignID;
+
+        public byte CampaignID
+        {
+            get; private set;
+        }
+
         public MultiplayerCampaign(GameModePreset preset, object param) : 
             base(preset, param)
         {
+            currentCampaignID++;
+            CampaignID = currentCampaignID;
         }
 
 #if CLIENT
@@ -303,6 +312,7 @@ namespace Barotrauma
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
+            msg.Write(CampaignID);
             msg.Write(lastUpdateID);
             msg.Write(lastSaveID);
             msg.Write(map.Seed);
@@ -319,10 +329,10 @@ namespace Barotrauma
         }
         
 #if CLIENT
+        //static because we may need to instantiate the campaign if it hasn't been done yet
         public static void ClientRead(NetBuffer msg)
         {
-            //static because we may need to instantiate the campaign if it hasn't been done yet
-
+            byte campaignID         = msg.ReadByte();
             UInt16 updateID         = msg.ReadUInt16();
             UInt16 saveID           = msg.ReadUInt16();
             string mapSeed          = msg.ReadString();
@@ -333,20 +343,21 @@ namespace Barotrauma
 
             UInt16 purchasedItemCount = msg.ReadUInt16();
             List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
-            for (int i = 0; i<purchasedItemCount; i++)
+            for (int i = 0; i < purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
                 purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
             }
 
             MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
-            if (campaign == null || mapSeed != campaign.Map.Seed)
+            if (campaign == null || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
                 
                 GameMain.GameSession = new GameSession(null, savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
 
                 campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                campaign.CampaignID = campaignID;
                 campaign.GenerateMap(mapSeed);
             }
 
