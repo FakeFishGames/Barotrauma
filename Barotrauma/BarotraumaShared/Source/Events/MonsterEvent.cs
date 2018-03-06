@@ -101,7 +101,17 @@ namespace Barotrauma
 
             var monsters = new Character[amount];
 
-            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
+            if (spawnDeep)
+            {
+                spawnPos.Y -= Level.Loaded.Size.Y;
+                //disable the event if the ocean floor is too high up to spawn the monster deep
+                if (spawnPos.Y < Level.Loaded.GetBottomPosition(spawnPos.X).Y)
+                {
+                    repeat = false;
+                    Finished();
+                    return null;
+                }
+            }
                 
             for (int i = 0; i < amount; i++)
             {
