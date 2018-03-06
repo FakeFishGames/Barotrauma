@@ -13,7 +13,7 @@ namespace Barotrauma
             reader = new VorbisReader(filename);
             if (!stream)
             {
-                int bufferSize = (int)reader.TotalSamples;
+                int bufferSize = (int)reader.TotalSamples*reader.Channels;
 
                 float[] floatBuffer = new float[bufferSize];
                 short[] shortBuffer = new short[bufferSize];
@@ -23,10 +23,6 @@ namespace Barotrauma
 
                 ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
                 SampleRate = reader.SampleRate;
-
-                //Workaround to an error that comes from having an odd number of samples
-                //I have no idea why this is an issue, but whatever
-                readSamples -= readSamples % 2;
                 
                 AL.BufferData(ALBuffer, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, shortBuffer,
                               readSamples * sizeof(short), reader.SampleRate);
