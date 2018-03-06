@@ -1319,6 +1319,7 @@ namespace Barotrauma
                     campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
 
                     var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), TextManager.Get("Back"), "", campaignContainer);
+                    backButton.ClampMouseRectToParent = false;
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
                     int buttonX = backButton.Rect.Width + 50;
@@ -1326,6 +1327,7 @@ namespace Barotrauma
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
                         var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
+                        tabButton.ClampMouseRectToParent = false;
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);

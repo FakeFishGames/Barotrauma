@@ -1086,21 +1086,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (forceSelectKey && ic.CanBeSelected)
-                    {
-                        if (ic.PickKey == InputType.Select) pickHit = true;
-                        if (ic.SelectKey == InputType.Select) selectHit = true;
-                    }
-                    else if (forceActionKey)
-                    {
-                        if (ic.PickKey == InputType.Use) pickHit = true;
-                        if (ic.SelectKey == InputType.Use) selectHit = true;
-                    }
-                    else
-                    {
-                        pickHit = picker.IsKeyHit(ic.PickKey);
-                        selectHit = picker.IsKeyHit(ic.SelectKey);
-                    }
+                    pickHit = (forceActionKey && ic.CanBePicked) || picker.IsKeyHit(ic.PickKey);
+                    selectHit = (forceSelectKey && ic.CanBeSelected)  || picker.IsKeyHit(ic.SelectKey);
                 }
 
                 if (!pickHit && !selectHit) continue;
@@ -1179,7 +1166,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public void SecondaryUse(float deltaTime, Character character = null)
@@ -1642,7 +1632,7 @@ namespace Barotrauma
             if (inventory != null)
             {
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, null, false))
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
                 {
                     return null;
                 }
@@ -1858,7 +1848,16 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
-            
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.SelectedConstruction == this) character.SelectedConstruction = null;
+                for (int i = 0; i < character.SelectedItems.Length; i++)
+                {
+                    if (character.SelectedItems[i] == this) character.SelectedItems[i] = null;
+                }
+            }
+
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);

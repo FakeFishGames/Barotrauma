@@ -108,7 +108,7 @@ namespace Barotrauma
                         }
                         else if (holdable.Picker.SelectedItems[1] == this)
                         {
-                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm);
+                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftHand);
                             depth = holdLimb.sprite.Depth - 0.000001f;
                             foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
                             {

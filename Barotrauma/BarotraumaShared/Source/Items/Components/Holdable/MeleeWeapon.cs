@@ -288,6 +288,11 @@ namespace Barotrauma.Items.Components
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
                 ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
 
+            if (DeleteOnUse)
+            {
+                Entity.Spawner.AddToRemoveQueue(item);
+            }
+
             return true;
         }
     }
