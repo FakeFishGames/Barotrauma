@@ -95,7 +95,7 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, Character user, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             if (Owner == null) return false;
             if (CanBePut(item, i))
@@ -224,7 +224,7 @@ namespace Barotrauma
                     {
                         if (!item.CanClientAccess(c)) continue;
                     }
-                    TryPutItem(item, i, true, c.Character, false);
+                    TryPutItem(item, i, true, true, c.Character, false);
                 }
             }
 
@@ -321,7 +321,7 @@ namespace Barotrauma
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
                     if (item == null) continue;
 
-                    TryPutItem(item, i, true, null, false);
+                    TryPutItem(item, i, true, true, null, false);
                 }
             }
 

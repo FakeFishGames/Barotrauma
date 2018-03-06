@@ -175,6 +175,12 @@ namespace Barotrauma
             lastUpdateID++;
         }
 
+        public override void Select()
+        {
+            base.Select();
+            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+        }
+
         public void RandomizeSettings()
         {
             if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);

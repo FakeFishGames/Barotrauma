@@ -63,9 +63,9 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, Character user, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, user, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
 
             if (wasPut)
             {

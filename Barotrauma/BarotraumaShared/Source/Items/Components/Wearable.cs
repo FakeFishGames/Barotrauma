@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         public readonly bool InheritLimbDepth;
         public readonly LimbType DepthLimb;
 
+        public LightComponent LightComponent;
+
         public readonly Wearable WearableComponent;
         public readonly string Sound;
 
@@ -80,6 +82,14 @@ namespace Barotrauma.Items.Components
                             subElement.GetAttributeBool("inheritlimbdepth", true),
                             (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true), sound);
 
+                        foreach (XElement lightElement in subElement.Elements())
+                        {
+                            if (lightElement.Name.ToString().ToLowerInvariant() != "lightcomponent") continue;
+                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement);
+                            wearableSprites[i].LightComponent.Parent = this;
+                            item.components.Add(wearableSprites[i].LightComponent);
+                        }
+
                         i++;
                         break;
                     case "damagemodifier":
@@ -98,8 +108,11 @@ namespace Barotrauma.Items.Components
                 if (equipLimb == null) continue;
                 
                 item.body.Enabled = false;
-
                 IsActive = true;
+                if (wearableSprites[i].LightComponent != null)
+                {
+                    wearableSprites[i].LightComponent.ParentBody = equipLimb.body;
+                }
 
                 limb[i] = equipLimb;
                 if (!equipLimb.WearingItems.Contains(wearableSprites[i]))
@@ -126,6 +139,11 @@ namespace Barotrauma.Items.Components
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) continue;
+
+                if (wearableSprites[i].LightComponent != null)
+                {
+                    wearableSprites[i].LightComponent.ParentBody = null;
+                }
 
                 equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
 

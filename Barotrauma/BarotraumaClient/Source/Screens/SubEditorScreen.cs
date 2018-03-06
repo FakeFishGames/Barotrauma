@@ -936,7 +936,7 @@ namespace Barotrauma
                 existingWire.Remove();
             }
 
-            dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false, dummyCharacter);
+            dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false, false, dummyCharacter);
 
             return true;
            
