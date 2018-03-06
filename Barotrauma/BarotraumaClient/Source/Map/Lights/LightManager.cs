@@ -309,14 +309,19 @@ namespace Barotrauma.Lights
                         penumbraVerts.AddRange(convexHull.PenumbraVertices);
                     }
 
-                    ConvexHull.shadowEffect.World = shadowTransform;
-                    ConvexHull.shadowEffect.CurrentTechnique.Passes[0].Apply();
-                    graphics.DrawUserPrimitives(PrimitiveType.TriangleList, shadowVerts.ToArray(), 0, shadowVerts.Count / 3, VertexPositionColor.VertexDeclaration);
+                    if (shadowVerts.Count > 0)
+                    {
+                        ConvexHull.shadowEffect.World = shadowTransform;
+                        ConvexHull.shadowEffect.CurrentTechnique.Passes[0].Apply();
+                        graphics.DrawUserPrimitives(PrimitiveType.TriangleList, shadowVerts.ToArray(), 0, shadowVerts.Count / 3, VertexPositionColor.VertexDeclaration);
 
-                    ConvexHull.penumbraEffect.World = shadowTransform;
-                    ConvexHull.penumbraEffect.CurrentTechnique.Passes[0].Apply();
-                    graphics.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVerts.ToArray(), 0, penumbraVerts.Count / 3, VertexPositionTexture.VertexDeclaration);
-
+                        if (penumbraVerts.Count > 0)
+                        {
+                            ConvexHull.penumbraEffect.World = shadowTransform;
+                            ConvexHull.penumbraEffect.CurrentTechnique.Passes[0].Apply();
+                            graphics.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVerts.ToArray(), 0, penumbraVerts.Count / 3, VertexPositionTexture.VertexDeclaration);
+                        }
+                    }
                 }
             }
             graphics.SetRenderTarget(null);            

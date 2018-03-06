@@ -121,6 +121,8 @@ namespace Barotrauma
                 }
             }
 
+            positions.RemoveAll(pos => pos.Y < Level.Loaded.GetBottomPosition(pos.X).Y);
+            
             return positions;
         }
 
