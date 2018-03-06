@@ -57,6 +57,7 @@ namespace Barotrauma
         private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
+        private GUIComponent campaignSetupUI;
 
         private Sprite backgroundSprite;
 
@@ -1111,7 +1112,11 @@ namespace Barotrauma
         {
             base.AddToGUIUpdateList();
 
-            if (jobInfoFrame != null)
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.AddToGUIUpdateList();
+            }
+            else if (jobInfoFrame != null)
             {
                 jobInfoFrame.AddToGUIUpdateList();
             }
@@ -1155,8 +1160,19 @@ namespace Barotrauma
 
             if (campaignContainer.Visible && campaignUI != null)
             {
-                //campaignContainer.Update((float)deltaTime);
                 campaignUI.Update((float)deltaTime);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                if (!campaignSetupUI.Visible)
+                {
+                    campaignSetupUI = null;
+                }
+                else
+                {
+                    campaignSetupUI.Update((float)deltaTime);
+                }
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1184,6 +1200,11 @@ namespace Barotrauma
             if (campaignContainer.Visible && campaignUI != null)
             {
                 campaignUI.Draw(spriteBatch);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.Draw(spriteBatch);
             }
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
@@ -1254,7 +1275,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server != null)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return;
                 }
             }
@@ -1282,7 +1303,7 @@ namespace Barotrauma
                 // -> don't select the mode yet and start campaign setup
                 if (GameMain.Server != null && !campaignContainer.Visible)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return false;
                 }
             }
