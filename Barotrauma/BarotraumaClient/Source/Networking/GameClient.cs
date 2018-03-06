@@ -1073,6 +1073,7 @@ namespace Barotrauma.Networking
             else
             {
                 outmsg.Write(campaign.LastSaveID);
+                outmsg.Write(campaign.CampaignID);
                 outmsg.Write(campaign.LastUpdateID);
             }
 
