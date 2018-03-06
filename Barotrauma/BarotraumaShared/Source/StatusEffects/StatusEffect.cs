@@ -54,7 +54,7 @@ namespace Barotrauma
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
-        public bool Stackable; //Can the same status effect be applied several times to the same targets?
+        public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
 
@@ -328,7 +328,20 @@ namespace Barotrauma
             //remove invalid targets
             if (targetNames != null)
             {
-                targets.RemoveAll(t => !targetNames.Contains(t.Name));
+                targets.RemoveAll(t => 
+                {
+                    Item item = t as Item;
+                    if (item == null)
+                    {
+                        return !targetNames.Contains(t.Name);
+                    }
+                    else
+                    {
+                        if (item.HasTag(targetNames)) return false;
+                        if (item.Prefab.NameMatches(targetNames)) return false;
+                    }
+                    return true;
+                });
                 if (targets.Count == 0) return;
             }
 
@@ -337,7 +350,12 @@ namespace Barotrauma
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                if (DurationList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.SequenceEqual(targets))) return;
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(targets));
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    return;
+                }
             }
 
             Apply(deltaTime, entity, targets);

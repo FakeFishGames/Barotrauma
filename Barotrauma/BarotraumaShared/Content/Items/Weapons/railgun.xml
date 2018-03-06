@@ -6,7 +6,7 @@
     offsetonselected="700"
     linkable="true">
 
-    <Sprite texture="railgunbase.png" depth = "0.01"/>
+    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
 
     <Turret barrelsprite="railgunbarrel.png" canbeselected = "true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
             rotationlimits="180,360"

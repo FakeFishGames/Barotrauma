@@ -43,7 +43,7 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
     
-    <Sprite texture ="DivingMask.png" depth="0.55"/>
+    <Sprite texture ="DivingMask.png" depth="0.55" sourcerect="0,0,37,38"/>
   
     <Body width="26" height="18" density="15"/>
 
@@ -162,7 +162,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
     
-    <Sprite texture ="Scooter.png" depth="0.55"/>
+    <Sprite texture ="Scooter.png" depth="0.55" sourcerect="0,0,64,64"/>
 
     <Body width="55" height="30" density="15"/>
 

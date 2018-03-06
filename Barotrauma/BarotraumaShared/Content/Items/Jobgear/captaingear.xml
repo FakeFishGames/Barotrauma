@@ -6,7 +6,7 @@
     cargocontainername="Metal Crate"
     description="A token of the Captain's unquestionable authority.">
 
-    <Sprite texture ="captainhat.png" depth="0.6"/>
+    <Sprite texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32"/>
 
     <Body width="25" height="15" density="30"/>
 

@@ -264,10 +264,9 @@
    name="Artifact Holder"
    linkable="true"
    category="Alien"
-   Tags="alien"
-   >
+   Tags="alien">
 
-    <Sprite texture="artifactholder.png" depth="0.8"/>
+    <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256"/>
 
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128">
       <Containable name="Alien"/>

@@ -605,7 +605,19 @@ namespace Barotrauma.Networking
                         c.LastRecvCampaignSave      = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
                         {
+                            byte campaignID             = inc.ReadByte();
                             c.LastRecvCampaignUpdate    = inc.ReadUInt16();
+
+                            if (GameMain.GameSession?.GameMode is MultiplayerCampaign)
+                            {
+                                //the client has a campaign save for another campaign 
+                                //(the server started a new campaign and the client isn't aware of it yet?)
+                                if (((MultiplayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
+                                {
+                                    c.LastRecvCampaignSave = 0;
+                                    c.LastRecvCampaignUpdate = 0;
+                                }
+                            }
                         }
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
