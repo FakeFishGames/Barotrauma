@@ -228,6 +228,15 @@ namespace Barotrauma
             }
         }
 
+        public bool NameMatches(IEnumerable<string> allowedNames, bool caseSensitive = false)
+        {
+            foreach (string name in allowedNames)
+            {
+                if (NameMatches(name, caseSensitive)) return true;
+            }
+            return false;
+        }
+
         //a method that allows the GUIListBoxes to check through a delegate if the entityprefab is still selected
         public static object GetSelected()
         {

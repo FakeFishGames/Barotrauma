@@ -694,6 +694,16 @@ namespace Barotrauma
             return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
         }
 
+        public bool HasTag(IEnumerable<string> allowedTags)
+        {
+            if (allowedTags == null) return true;
+
+            foreach (string tag in allowedTags)
+            {
+                if (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant())) return true;
+            }
+            return false;
+        }
 
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
         {
