@@ -24,9 +24,13 @@ namespace Barotrauma
                 ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
                 SampleRate = reader.SampleRate;
 
-                //alSourceId = AL.GenSource();
+                //Workaround to an error that comes from having an odd number of samples
+                //I have no idea why this is an issue, but whatever
+                readSamples -= readSamples % 2;
+                
                 AL.BufferData(ALBuffer, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, shortBuffer,
                               readSamples * sizeof(short), reader.SampleRate);
+
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {

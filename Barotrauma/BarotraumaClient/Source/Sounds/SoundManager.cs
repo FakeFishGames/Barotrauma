@@ -7,7 +7,7 @@ using OpenTK.Audio.OpenAL;
 
 namespace Barotrauma
 {
-    class SoundManager
+    class SoundManager : IDisposable
     {
         const int SOURCE_COUNT = 16;
 
@@ -71,7 +71,9 @@ namespace Barotrauma
 
         public Sound LoadSound(string filename,bool stream)
         {
-            return new OggSound(this, filename, stream);
+            Sound newSound = new OggSound(this, filename, stream);
+            loadedSounds.Add(newSound);
+            return newSound;
         }
 
         public uint GetSourceFromIndex(int ind)
@@ -116,15 +118,21 @@ namespace Barotrauma
 
         void UpdateStreaming()
         {
-            while (true)
+            bool areStreamsPlaying = true;
+            while (areStreamsPlaying)
             {
+                areStreamsPlaying = false;
                 lock (playingChannels)
                 {
                     for (int i=0;i<playingChannels.Count;i++)
                     {
                         if (playingChannels[i].IsStream)
                         {
-                            playingChannels[i].UpdateStream();
+                            if (playingChannels[i].IsPlaying)
+                            {
+                                areStreamsPlaying = true;
+                                playingChannels[i].UpdateStream();
+                            }
                         }
                     }
 
@@ -132,6 +140,11 @@ namespace Barotrauma
                 }
                 Thread.Sleep(30);
             }
+        }
+
+        public void Dispose()
+        {
+
         }
     }
 }

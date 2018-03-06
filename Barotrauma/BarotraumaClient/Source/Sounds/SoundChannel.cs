@@ -29,7 +29,14 @@ namespace Barotrauma
         {
             get
             {
-                return AL.GetSourceState(ALSourceIndex) == ALSourceState.Playing;
+                if (ALSourceIndex < 0) return false;
+                bool playing = AL.GetSourceState(Sound.Owner.GetSourceFromIndex(ALSourceIndex)) == ALSourceState.Playing;
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to determine playing state from source: "+AL.GetErrorString(alError));
+                }
+                return playing;
             }
         }
 
@@ -38,7 +45,6 @@ namespace Barotrauma
             Sound = sound;
 
             IsStream = sound.Stream;
-
             streamSeekPos = 0; reachedEndSample = false;
 
             ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
@@ -48,6 +54,18 @@ namespace Barotrauma
                 if (!IsStream)
                 {
                     AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to bind buffer to source: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.SourcePlay(sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to play source: " + AL.GetErrorString(alError));
+                    }
                 }
             }
         }
@@ -57,6 +75,11 @@ namespace Barotrauma
             if (ALSourceIndex != -1)
             {
                 AL.SourceStop(Sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to stop source: " + AL.GetErrorString(alError));
+                }
                 ALSourceIndex = -1;
             }
         }
@@ -69,6 +92,7 @@ namespace Barotrauma
             {
                 short[] buffer = new short[8192];
                 int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
+                streamSeekPos += readSamples;
                 if (readSamples < 8192)
                 {
                     reachedEndSample = true;
