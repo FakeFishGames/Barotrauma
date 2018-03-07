@@ -83,36 +83,54 @@ namespace Barotrauma
 
         public int AssignFreeSourceToChannel(SoundChannel newChannel)
         {
-            //remove a channel that has stopped
-            for (int i=0;i<playingChannels.Count;i++)
+            lock (playingChannels)
             {
-                if (!playingChannels[i].IsPlaying)
+                //remove a channel that has stopped
+                for (int i = 0; i < playingChannels.Count; i++)
                 {
-                    playingChannels[i].Dispose();
-                    playingChannels[i] = newChannel;
-                    return i;
+                    if (!playingChannels[i].IsPlaying)
+                    {
+                        playingChannels[i].Dispose();
+                        playingChannels[i] = newChannel;
+                        if (newChannel.IsStream) InitStreamThread();
+                        return i;
+                    }
                 }
+                //all of the currently stored channels are playing
+                //add a new channel to the list if we have available sources
+                if (playingChannels.Count < SOURCE_COUNT)
+                {
+                    playingChannels.Add(newChannel);
+                    if (newChannel.IsStream) InitStreamThread();
+                    return playingChannels.Count - 1;
+                }
+                //we couldn't get a free source to assign to this channel!
+                return -1;
             }
-            //all of the currently stored channels are playing
-            //add a new channel to the list if we have available sources
-            if (playingChannels.Count < SOURCE_COUNT)
-            {
-                playingChannels.Add(newChannel);
-                return playingChannels.Count-1;
-            }
-            //we couldn't get a free source to assign to this channel!
-            return -1;
         }
 
         public void KillChannels(Sound sound)
         {
-            for (int i = playingChannels.Count-1; i >= 0; i--)
+            lock (playingChannels)
             {
-                if (playingChannels[i].Sound == sound)
+                for (int i = playingChannels.Count - 1; i >= 0; i--)
                 {
-                    playingChannels[i].Dispose();
-                    playingChannels.RemoveAt(i);
+                    if (playingChannels[i].Sound == sound)
+                    {
+                        playingChannels[i].Dispose();
+                        playingChannels.RemoveAt(i);
+                    }
                 }
+            }
+        }
+
+        void InitStreamThread()
+        {
+            if (streamingThread == null || streamingThread.ThreadState!=ThreadState.Running)
+            {
+                streamingThread = new Thread(UpdateStreaming);
+                streamingThread.IsBackground = true; //this should kill the thread if the game crashes
+                streamingThread.Start();
             }
         }
 
@@ -138,13 +156,24 @@ namespace Barotrauma
 
                     if (playingChannels.Count == 0) break;
                 }
-                Thread.Sleep(30);
+                Thread.Sleep(300);
             }
         }
 
         public void Dispose()
         {
-
+            lock (playingChannels)
+            {
+                for (int i=0;i<playingChannels.Count;i++)
+                {
+                    playingChannels[i].Dispose();
+                }
+                playingChannels.Clear();
+            }
+            if (streamingThread!=null && streamingThread.ThreadState==ThreadState.Running)
+            {
+                streamingThread.Join();
+            }
         }
     }
 }
