@@ -69,13 +69,13 @@ namespace Barotrauma
             body.Dir = Dir;
 
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
+                body.UpdateDrawPosition();
             if (!hideLimb)
             {
-                body.Draw(spriteBatch, sprite, color, null, scale);
+                //body.Draw(spriteBatch, sprite, color, null, scale);
             }
             else
             {
-                body.UpdateDrawPosition();
             }
 
             if (LightSource != null)
