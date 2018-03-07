@@ -10,6 +10,8 @@ namespace Barotrauma
 {
     partial class Ragdoll
     {
+
+
         partial void ImpactProjSpecific(float impact, Body body)
         {
             float volume = Math.Min(impact - 3.0f, 1.0f);
@@ -72,7 +74,13 @@ namespace Barotrauma
             if (simplePhysicsEnabled) return;
 
             Collider.UpdateDrawPosition();
-
+            
+            if (Limbs == null)
+            {
+                DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                return;
+            }
+              
             foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);

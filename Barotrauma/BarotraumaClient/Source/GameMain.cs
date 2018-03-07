@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Spine;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -117,7 +118,13 @@ namespace Barotrauma
         {
             get { return loadingScreenOpen; }
         }
-                                
+
+
+
+        public static Effect spineEffect;
+
+        public static SkeletonRenderer skeletonRenderer;
+
         public GameMain()
         {
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
@@ -218,6 +225,11 @@ namespace Barotrauma
         {
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
+
+            spineEffect = Content.Load<Effect>("SpineEffect");
+            skeletonRenderer = new SkeletonRenderer(GraphicsDevice);
+            skeletonRenderer.PremultipliedAlpha = false;
+            skeletonRenderer.Effect = spineEffect;
 
             Sound.Init();
 

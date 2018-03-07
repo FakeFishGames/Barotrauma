@@ -155,6 +155,63 @@ namespace Barotrauma
 			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
             spriteBatch.End();
+
+            GameMain.spineEffect.Parameters["World"].SetValue(Matrix.Identity);
+            GameMain.spineEffect.Parameters["View"].SetValue(Matrix.Identity);
+            GameMain.spineEffect.Parameters["Projection"].SetValue( cam.Transform *
+            Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height, 0, 1, 0));
+            GameMain.skeletonRenderer.Begin();
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.skeleton == null) continue;
+                c.AnimController.skeleton.X = c.DrawPosition.X;
+                c.AnimController.skeleton.Y = -c.DrawPosition.Y + 120.0f;
+                c.AnimController.skeleton.SetToSetupPose();
+                c.AnimController.skeleton.UpdateWorldTransform();
+                foreach (var bone in c.AnimController.skeleton.Bones)
+                {
+                    PhysicsBody target = null;
+                    //bone.SetToSetupPose();
+                    switch (bone.Data.Name)
+                    {
+                        case "spine1":
+                            target = c.AnimController.GetLimb(LimbType.Waist).body;
+                            break;
+                        case "spine2":
+                            target = c.AnimController.GetLimb(LimbType.Torso).body;
+                            break;
+                        case "head":
+                            //target = c.AnimController.GetLimb(LimbType.Head).body;
+                            break;
+                        case "back-leg-ik-target":
+                            target = c.AnimController.GetLimb(LimbType.LeftFoot).body;
+                            break;
+                        case "front-leg-ik-target":
+                            target = c.AnimController.GetLimb(LimbType.RightFoot).body;
+                            break;
+                        case "back-arm4":
+                            target = c.AnimController.GetLimb(LimbType.LeftHand).body;
+                            break;
+                        case "front-arm4":
+                            target = c.AnimController.GetLimb(LimbType.RightHand).body;
+                            break;
+                    }
+                    
+                    if (target != null)
+                    {
+                        float x, y;
+                        bone.WorldToLocal(target.DrawPosition.X, -target.DrawPosition.Y, out x, out y);
+                        bone.X = x;
+                        bone.Y = y;
+                    }
+                }
+
+                c.AnimController.skeleton.UpdateWorldTransform();
+                GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
+            }
+            GameMain.skeletonRenderer.End();
+
+
 			spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
 
             Submarine.DrawFront(spriteBatch, false, null);

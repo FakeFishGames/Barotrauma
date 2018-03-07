@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Spine;
 
 namespace Barotrauma
 {
@@ -16,6 +17,8 @@ namespace Barotrauma
         public static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
+        
+        public Skeleton skeleton;
 
         public Limb[] Limbs;
         
@@ -378,6 +381,15 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
 
             MainLimb = torso == null ? head : torso;
+
+            if (this is HumanoidAnimController)
+            {
+                Atlas atlas = new Atlas("Content/SpineTest/stretchyman.atlas", new XnaTextureLoader(GameMain.Instance.GraphicsDevice));                
+                SkeletonJson json = new SkeletonJson(atlas);
+                json.Scale = 0.3f;
+                SkeletonData skeletonData = json.ReadSkeletonData("Content/SpineTest/stretchyman-pro.json");               
+                skeleton = new Skeleton(skeletonData);
+            }
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
