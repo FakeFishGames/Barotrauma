@@ -7,7 +7,7 @@
     cargocontainername="Metal Crate"    
     price="10">
 
-    <Sprite texture ="headset.png" depth="0.6"/>
+    <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,16,16"/>
 
     <Body width="12" height="8" density="10"/>
 
@@ -33,7 +33,7 @@
     tags="smallitem"
     description="Praise the honkmother.">
 
-    <Sprite texture ="clownmask.png" depth="0.6"/>
+    <Sprite texture="clownmask.png" depth="0.6" sourcerect="0,0,37,38"/>
 
     <Body width="10" radius="10"  density="10"/>
 
@@ -54,7 +54,7 @@
     tags="smallitem"
     description="Praise the honkmother.">
 
-    <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
+    <Sprite texture="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
 
     <Body width="53" height="18" density="30"/>
 

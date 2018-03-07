@@ -38,8 +38,6 @@ namespace Barotrauma
                         
             if (!singleplayer)
             {
-                //Game over if everyone dead or didn't progress
-                gameOver = gameOver || !progress;
                 SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
             }
 
@@ -50,13 +48,13 @@ namespace Barotrauma
                 .Replace("[sub]", Submarine.MainSub.Name)
                 .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
 
-            var infoText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width-20, 0), summaryText, "", null, true);
+            var infoText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width - 20, 0), summaryText, "", null, true);
             infoText.Rect = new Rectangle(0, 0, infoText.Rect.Width, infoText.Rect.Height + 20);
             listBox.AddChild(infoText);
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
-                var endText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width-20, 0), endMessage, "", null, true);
+                var endText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width - 20, 0), endMessage, "", null, true);
                 endText.Rect = new Rectangle(0, 0, endText.Rect.Width, endText.Rect.Height + 20);
                 listBox.AddChild(endText);
             }

@@ -6,7 +6,7 @@
 	Tags="smallitem"
   cargocontainername="Metal Crate">
 
-	<Sprite texture ="idcard.png" depth="0.8"/>
+	<Sprite texture ="idcard.png" depth="0.8" sourcerect="0,0,16,16"/>
 
 	<Body width="16" height="16" density="20"/>
 
