@@ -10,6 +10,8 @@ namespace Barotrauma
 {
     partial class Explosion
     {
+        private static List<Triplet<Explosion, Vector2, float>> prevExplosions = new List<Triplet<Explosion, Vector2, float>>();
+
         private Attack attack;
         
         private float force;
@@ -53,9 +55,20 @@ namespace Barotrauma
 
             CameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
         }
+
+        public List<Triplet<Explosion, Vector2, float>> GetRecentExplosions(float maxSecondsAgo)
+        {
+            return prevExplosions.FindAll(e => e.Third >= Timing.TotalTime - maxSecondsAgo);
+        }
         
         public void Explode(Vector2 worldPosition)
         {
+            prevExplosions.Add(new Triplet<Explosion, Vector2, float>(this, worldPosition, (float)Timing.TotalTime));
+            if (prevExplosions.Count > 100)
+            {
+                prevExplosions.RemoveAt(0);
+            }
+
             Hull hull = Hull.FindHull(worldPosition);
 
             ExplodeProjSpecific(worldPosition, hull);
