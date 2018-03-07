@@ -299,7 +299,20 @@ namespace Barotrauma
             //remove invalid targets
             if (targetNames != null)
             {
-                targets.RemoveAll(t => !targetNames.Contains(t.Name));
+                targets.RemoveAll(t => 
+                {
+                    Item item = t as Item;
+                    if (item == null)
+                    {
+                        return !targetNames.Contains(t.Name);
+                    }
+                    else
+                    {
+                        if (item.HasTag(targetNames)) return false;
+                        if (item.Prefab.NameMatches(targetNames)) return false;
+                    }
+                    return true;
+                });
                 if (targets.Count == 0) return;
             }
 
