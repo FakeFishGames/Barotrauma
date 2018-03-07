@@ -10,23 +10,20 @@ namespace Barotrauma
     class SoundManager : IDisposable
     {
         const int SOURCE_COUNT = 16;
-
-        private bool working;
+        
         private IntPtr alcDevice;
         private ContextHandle alcContext;
         private uint[] alSources;
 
         private List<Sound> loadedSounds;
-        private List<SoundChannel> playingChannels;
+        private SoundChannel[] playingChannels;
 
         private Thread streamingThread;
 
         public SoundManager()
         {
-            working = false;
-
             loadedSounds = new List<Sound>();
-            playingChannels = new List<SoundChannel>();
+            playingChannels = new SoundChannel[SOURCE_COUNT];
 
             streamingThread = null;
 
@@ -65,8 +62,6 @@ namespace Barotrauma
                     throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
                 }
             }
-
-            working = true;
         }
 
         public Sound LoadSound(string filename,bool stream)
@@ -78,6 +73,7 @@ namespace Barotrauma
 
         public uint GetSourceFromIndex(int ind)
         {
+            if (ind < 0 || ind >= SOURCE_COUNT) return 0;
             return alSources[ind];
         }
 
@@ -86,23 +82,16 @@ namespace Barotrauma
             lock (playingChannels)
             {
                 //remove a channel that has stopped
-                for (int i = 0; i < playingChannels.Count; i++)
+                //or hasn't even been assigned
+                for (int i = 0; i < SOURCE_COUNT; i++)
                 {
-                    if (!playingChannels[i].IsPlaying)
+                    if (playingChannels[i]==null || !playingChannels[i].IsPlaying)
                     {
-                        playingChannels[i].Dispose();
+                        if (playingChannels[i]!=null) playingChannels[i].Dispose();
                         playingChannels[i] = newChannel;
                         if (newChannel.IsStream) InitStreamThread();
                         return i;
                     }
-                }
-                //all of the currently stored channels are playing
-                //add a new channel to the list if we have available sources
-                if (playingChannels.Count < SOURCE_COUNT)
-                {
-                    playingChannels.Add(newChannel);
-                    if (newChannel.IsStream) InitStreamThread();
-                    return playingChannels.Count - 1;
                 }
                 //we couldn't get a free source to assign to this channel!
                 return -1;
@@ -113,13 +102,25 @@ namespace Barotrauma
         {
             lock (playingChannels)
             {
-                for (int i = playingChannels.Count - 1; i >= 0; i--)
+                for (int i = 0; i < SOURCE_COUNT - 1; i++)
                 {
-                    if (playingChannels[i].Sound == sound)
+                    if (playingChannels[i]!=null && playingChannels[i].Sound == sound)
                     {
                         playingChannels[i].Dispose();
-                        playingChannels.RemoveAt(i);
+                        playingChannels[i] = null;
                     }
+                }
+            }
+        }
+
+        public void RemoveSound(Sound sound)
+        {
+            for (int i=0;i<loadedSounds.Count;i++)
+            {
+                if (loadedSounds[i]==sound)
+                {
+                    loadedSounds.RemoveAt(i);
+                    return;
                 }
             }
         }
@@ -142,9 +143,9 @@ namespace Barotrauma
                 areStreamsPlaying = false;
                 lock (playingChannels)
                 {
-                    for (int i=0;i<playingChannels.Count;i++)
+                    for (int i=0;i<SOURCE_COUNT;i++)
                     {
-                        if (playingChannels[i].IsStream)
+                        if (playingChannels[i]!=null && playingChannels[i].IsStream)
                         {
                             if (playingChannels[i].IsPlaying)
                             {
@@ -153,8 +154,6 @@ namespace Barotrauma
                             }
                         }
                     }
-
-                    if (playingChannels.Count == 0) break;
                 }
                 Thread.Sleep(300);
             }
@@ -164,15 +163,39 @@ namespace Barotrauma
         {
             lock (playingChannels)
             {
-                for (int i=0;i<playingChannels.Count;i++)
+                for (int i=0;i<SOURCE_COUNT;i++)
                 {
-                    playingChannels[i].Dispose();
+                    if (playingChannels[i]!=null) playingChannels[i].Dispose();
                 }
-                playingChannels.Clear();
             }
-            if (streamingThread!=null && streamingThread.ThreadState==ThreadState.Running)
+            if (streamingThread != null && streamingThread.ThreadState == ThreadState.Running)
             {
                 streamingThread.Join();
+            }
+            for (int i = loadedSounds.Count - 1; i >= 0; i--)
+            {
+                loadedSounds[i].Dispose();
+            }
+            for (int i = 0; i < SOURCE_COUNT; i++)
+            {
+                AL.DeleteSource(ref alSources[i]);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete alSources[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                }
+            }
+            
+            if (!Alc.MakeContextCurrent(ContextHandle.Zero))
+            {
+                throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
+            }
+
+            Alc.DestroyContext(alcContext);
+            
+            if (!Alc.CloseDevice(alcDevice))
+            {
+                throw new Exception("Failed to close ALC device!");
             }
         }
     }

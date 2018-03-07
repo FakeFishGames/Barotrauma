@@ -44,11 +44,7 @@ namespace Barotrauma
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
             if (!Stream) throw new Exception("Called FillStreamBuffer on a non-streamed sound!");
-
-            //There's some magic multiplying and dividingng by 2 all over
-            //the place. I'm guessing this has to do with the fact that
-            //we're using 16-bit audio, but honestly I have no idea why
-            //NVorbis is so inconsistent with how it represents samples.
+            
             if (samplePos >= reader.TotalSamples * reader.Channels * 2) return 0;
 
             samplePos /= reader.Channels*2;

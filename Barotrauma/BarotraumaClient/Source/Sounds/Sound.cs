@@ -75,12 +75,14 @@ namespace Barotrauma
             if (alBuffer != 0)
             {
                 AL.DeleteBuffer(alBuffer);
+
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
                     throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
+            Owner.RemoveSound(this);
         }
     }
 }
