@@ -65,8 +65,6 @@ namespace Barotrauma
         public virtual void Update(float deltaTime) { }
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
-
-        //protected Structure lastStructurePicked;
-        
+             
     }
 }

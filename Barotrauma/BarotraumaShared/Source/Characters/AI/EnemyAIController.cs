@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
