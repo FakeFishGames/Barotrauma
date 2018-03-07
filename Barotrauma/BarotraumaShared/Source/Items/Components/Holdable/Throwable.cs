@@ -77,13 +77,13 @@ namespace Barotrauma.Items.Components
             {
                 if (picker.IsKeyDown(InputType.Aim))
                 {
-                    throwPos = (float)System.Math.Min(throwPos+deltaTime*5.0f, MathHelper.Pi*0.7f);
+                    throwPos = (float)System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.Pi * 0.7f);
 
                     ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, -0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, false, 0.0f);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
                 }
             }
             else
