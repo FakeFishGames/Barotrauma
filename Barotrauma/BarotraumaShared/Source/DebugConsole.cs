@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -388,8 +389,6 @@ namespace Barotrauma
             
             commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
-                //todo: allow client usage
-
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
@@ -595,6 +594,395 @@ namespace Barotrauma
                 GameMain.Server.UpdateClientPermissions(client);
                 GameMain.Server.SendConsoleMessage("Revoked " + perm + " permissions from " + client.Name + ".", senderClient);
                 NewMessage(senderClient.Name + " revoked " + perm + " permissions from " + client.Name + ".", Color.White);
+            }));
+
+
+            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("giverank [id]: Assigns a specific rank(= a set of administrative permissions) to the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+                
+                NewMessage("Valid ranks are:", Color.White);
+                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                {
+                    NewMessage(" - " + permissionPreset.Name, Color.White);
+                }
+
+                ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
+                {
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                    if (preset == null)
+                    {
+                        ThrowError("Rank \"" + rank + "\" not found.");
+                        return;
+                    }
+
+                    client.SetPermissions(preset.Permissions, preset.PermittedCommands);
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                NewMessage("Valid ranks are:", Color.White);
+                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                {
+                    NewMessage(" - " + permissionPreset.Name, Color.White);
+                }
+                ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
+                {
+                    GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string rank = string.Join("", args.Skip(1));
+                PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                if (preset == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient);
+                    return;
+                }
+
+                client.SetPermissions(preset.Permissions, preset.PermittedCommands);
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", senderClient);
+                NewMessage(senderClient.Name + " granted  the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+            }));
+            
+            commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to grant to \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
+                {
+                    string[] splitCommands = commandsStr.Split(' ');
+                    List<Command> grantedCommands = new List<Command>();
+                    for (int i = 0; i < splitCommands.Length; i++)
+                    {
+                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                        if (matchingCommand == null)
+                        {
+                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                        }
+                        else
+                        {
+                            grantedCommands.Add(matchingCommand);
+                        }
+                    }
+
+                    client.GivePermission(ClientPermissions.ConsoleCommands);
+                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+                
+                ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                {
+                    GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string[] splitCommands = args.Skip(1).ToArray();
+                List<Command> grantedCommands = new List<Command>();
+                for (int i = 0; i < splitCommands.Length; i++)
+                {
+                    splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                    Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                    if (matchingCommand == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                    }
+                    else
+                    {
+                        grantedCommands.Add(matchingCommand);
+                    }
+                }
+
+                client.GivePermission(ClientPermissions.ConsoleCommands);
+                client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", senderClient);
+                NewMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+            }));
+
+
+            commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to revoke from \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
+                {
+                    string[] splitCommands = commandsStr.Split(' ');
+                    List<Command> revokedCommands = new List<Command>();
+                    for (int i = 0; i < splitCommands.Length; i++)
+                    {
+                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                        if (matchingCommand == null)
+                        {
+                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                        }
+                        else
+                        {
+                            revokedCommands.Add(matchingCommand);
+                        }
+                    }
+
+                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                {
+                    GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string[] splitCommands = args.Skip(1).ToArray();
+                List<Command> revokedCommands = new List<Command>();
+                for (int i = 0; i < splitCommands.Length; i++)
+                {
+                    splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                    Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                    if (matchingCommand == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                    }
+                    else
+                    {
+                        revokedCommands.Add(matchingCommand);
+                    }
+                }
+
+                client.GivePermission(ClientPermissions.ConsoleCommands);
+                client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
+                NewMessage(senderClient.Name + " revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+            }));
+
+
+            commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                if (client.Permissions == ClientPermissions.None)
+                {
+                    NewMessage(client.Name + " has no special permissions.", Color.White);
+                    return;
+                }
+
+                NewMessage(client.Name + " has the following permissions:", Color.White);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
+                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    NewMessage("   - " + attributes[0].Description, Color.White);
+                }
+                if (client.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        NewMessage("No permitted console commands:", Color.White);
+                    }
+                    else
+                    {
+                        NewMessage("Permitted console commands:", Color.White);
+                        foreach (Command permittedCommand in client.PermittedConsoleCommands)
+                        {
+                            NewMessage("   - " + permittedCommand.names[0], Color.White);
+                        }
+                    }
+                }
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+                
+                GameMain.Client.SendConsoleCommand("showperm " + id);                
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                if (client.Permissions == ClientPermissions.None)
+                {
+                    GameMain.Server.SendConsoleMessage(client.Name + " has no special permissions.", senderClient);
+                    return;
+                }
+
+                GameMain.Server.SendConsoleMessage(client.Name + " has the following permissions:", senderClient);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
+                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    GameMain.Server.SendConsoleMessage("   - " + attributes[0].Description, senderClient);
+                }
+                if (client.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        GameMain.Server.SendConsoleMessage("No permitted console commands:", senderClient);
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage("Permitted console commands:", senderClient);
+                        foreach (Command permittedCommand in client.PermittedConsoleCommands)
+                        {
+                            GameMain.Server.SendConsoleMessage("   - " + permittedCommand.names[0], senderClient);
+                        }
+                    }
+                }
             }));
 
             commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
