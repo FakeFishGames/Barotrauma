@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 
 namespace Barotrauma
@@ -30,7 +31,13 @@ namespace Barotrauma
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return 0.0f;
-            return currentEffect.MaxVitalityDecrease * (Strength / Prefab.MaxStrength);
+
+            if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinVitalityDecrease, 
+                currentEffect.MaxVitalityDecrease, 
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
