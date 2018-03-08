@@ -13,6 +13,7 @@
     maxstrength="100"
     damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="100"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
   </InternalDamage>
@@ -25,6 +26,7 @@
     maxstrength="100"
     damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="10"
       strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
@@ -38,6 +40,7 @@
     maxstrength="100"
     burnoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="50"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
@@ -50,7 +53,8 @@
     indicatorlimb="Torso"    
     activationthreshold="1"
     maxstrength="200">
-    <Effect minstrength="0" maxstrength="200"
+    <Effect minstrength="50" maxstrength="200"
+      minvitalitydecrease="0"
       maxvitalitydecrease="200"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
   </OxygenLow>
@@ -64,6 +68,7 @@
     activationthreshold="5"
     maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="200"
       strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
@@ -78,6 +83,7 @@
     activationthreshold="1.0"
     maxstrength="30">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="0"
       strengthchange="-1.0"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
@@ -111,6 +117,7 @@
 
     <!-- Low level of drunkenness decreases vitality and speed slightly -->
     <Effect minstrength="20" maxstrength="40"
+      minvitalitydecrease="0"
       maxvitalitydecrease="10"
       strengthchange="-0.1">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
@@ -118,6 +125,7 @@
 
     <!-- Heavier drunkenness decreases vitality and speed more -->
     <Effect minstrength="40" maxstrength="80"
+      minvitalitydecrease="10"
       maxvitalitydecrease="30"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
@@ -125,6 +133,7 @@
 
     <!-- After drinking enough the effect starts to get lethal -->
     <Effect minstrength="80" maxstrength="100"
+      minvitalitydecrease="30"
       maxvitalitydecrease="100"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
@@ -142,6 +151,7 @@
     damageoverlayalpha="1"
     strengthchange="-0.1">
     <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
       maxvitalitydecrease="10"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
   </AfflictionBleeding>

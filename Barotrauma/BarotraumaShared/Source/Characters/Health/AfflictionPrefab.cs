@@ -14,8 +14,9 @@ namespace Barotrauma
             //this effect is applied when the strength is within this range
             public float MinStrength, MaxStrength;
 
+            public readonly float MinVitalityDecrease = 0.0f;
             public readonly float MaxVitalityDecrease = 100.0f;
-
+            
             //how much the strength of the affliction changes per second
             public readonly float StrengthChange = 0.0f;
 
@@ -27,7 +28,10 @@ namespace Barotrauma
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
 
+                MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
+                MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
+
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
                 foreach (XElement subElement in element.Elements())
