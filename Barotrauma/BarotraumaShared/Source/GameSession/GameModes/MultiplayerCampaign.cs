@@ -773,6 +773,7 @@ namespace Barotrauma
 
         private IEnumerable<object> ResetCampaignMode()
         {
+            ushort newsaveid = LastSaveID +=1;
             float waittime = 0f;
             GameMain.NetLobbyScreen.SelectedModeIndex = 0;
 #if Client
@@ -798,8 +799,9 @@ namespace Barotrauma
             StartCampaignSetup(true);
             GameMain.NetLobbyScreen.SelectedModeIndex = 2;
             SetDelegates();
+            LastSaveID = newsaveid;
 
-            if(GameMain.Server.AutoRestart)
+            if (GameMain.Server.AutoRestart)
             {
                 GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
             }

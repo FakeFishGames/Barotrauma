@@ -1788,27 +1788,39 @@ namespace Barotrauma
 #endif
             if (GameMain.Client == null)
             {
-                foreach (Character c in CharacterList)
+                List<Character> enablelist = CharacterList.ToList();
+                for (int i = enablelist.Count - 1; i >= 0; i--)
                 {
-                    if (!(c is AICharacter) && !c.IsRemotePlayer) continue;
+                    if (!(enablelist[i] is AICharacter) && !enablelist[i].IsRemotePlayer) continue;
                     
                     if (GameMain.Server != null)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                            //Enable visibility of far away corpses now (NilMod Edit)
-                            c.Enabled =
-                            c == controlled ||
-                            c.IsRemotePlayer ||
-                            CharacterList.Any(c2 => 
-                                c != c2 &&
-                                (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
-                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr && !c2.IsDead);
+                        //Enable visibility of far away corpses now (NilMod Edit)
+                        enablelist[i].Enabled =
+                            enablelist[i] == controlled ||
+                            enablelist[i] == Spied ||
+                            enablelist[i].IsRemotePlayer ||
+                            CharacterList.Any(c2 =>
+                                enablelist[i] != c2 &&
+                                (c2.IsRemotePlayer || c2 == GameMain.Server.Character || c2 == Character.Spied) && 
+                                Vector2.DistanceSquared(c2.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr
+                                && !c2.IsDead);
                     }
                     else if (Submarine.MainSub != null)
                     {
-                        //disable AI characters that are far away from the sub and the controlled character
-                        c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
-                            (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+                        if(Submarine.MainSubs.Count() > 1)
+                        {
+                            foreach(Submarine mainsub in Submarine.MainSubs)
+                            {
+                                //disable AI characters that are far away from the sub and the controlled character
+                                enablelist[i].Enabled = Vector2.DistanceSquared(mainsub.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
+                                    (Spied != null && Vector2.DistanceSquared(Spied.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr) ||
+                                    (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
+
+                                if(enablelist[i].Enabled) enablelist.RemoveAt(i);
+                            }
+                        }
                     }
                 }
             }

@@ -197,7 +197,10 @@ namespace Barotrauma
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;
                     diffViewCenter = ((mouseInWorld - Position) * Zoom);
-                    Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
+                    if(GUIComponent.MouseOn == null)
+                    {
+                        Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
+                    }
                     if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
                 }
             }

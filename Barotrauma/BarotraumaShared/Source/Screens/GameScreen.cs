@@ -312,6 +312,7 @@ namespace Barotrauma
                         //ARG0 = Character, ARG1 = WorldPosX, ARG2 = WorldPosY
 
                         character = (Character)Arguments[0];
+                        if (!character.Enabled) character.Enabled = true;
                         WorldCoordinate = new Vector2(float.Parse(Arguments[1].ToString()), float.Parse(Arguments[2].ToString()));
 
                         character.AnimController.CurrentHull = null;

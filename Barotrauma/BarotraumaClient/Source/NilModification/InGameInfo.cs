@@ -392,7 +392,7 @@ namespace Barotrauma
                 }
                 if(newcharacter != null)
                 {
-                    InGameInfoCharacter existingingameinfocharacter = characterlist.Find(c => c.character == newcharacter);
+                    InGameInfoCharacter existingingameinfocharacter = characterlist.Find(c => c.character == newcharacter && c.client != inGameInfoClienttochange.client);
                     if(existingingameinfocharacter != null)
                     {
                         if(existingingameinfocharacter.client == null)
