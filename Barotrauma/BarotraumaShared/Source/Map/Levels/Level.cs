@@ -981,9 +981,9 @@ namespace Barotrauma
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater((float)deltaTime);
+                WaterRenderer.Instance.ScrollWater((float)deltaTime);
             }
 
             renderer.Update(deltaTime);
