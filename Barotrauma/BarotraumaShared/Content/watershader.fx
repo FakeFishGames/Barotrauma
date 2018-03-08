@@ -53,8 +53,7 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
     return output;
 }
 
-//float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
-float4 main(VertexShaderOutput input) : COLOR
+float4 mainPS(VertexShaderOutput input) : COLOR
 {	
 	float4 bumpColor = xWaterBumpMap.Sample(WaterBumpSampler, xUvOffset + (input.TexCoords+xBumpPos) * xBumpScale);
 	bumpColor = (bumpColor + xWaterBumpMap.Sample(WaterBumpSampler, xUvOffset + (input.TexCoords-xBumpPos*2) * xBumpScale)) * 0.5f;
@@ -64,16 +63,34 @@ float4 main(VertexShaderOutput input) : COLOR
 	samplePos.x += (bumpColor.r - 0.5f) * xWaveWidth * input.Color.r;	
 	samplePos.y += (bumpColor.g - 0.5f) * xWaveHeight * input.Color.g;	
 
-	float4 sample;
-	sample = xTexture.Sample(TextureSampler, float2(samplePos.x + xBlurDistance, samplePos.y + xBlurDistance));
-	sample += xTexture.Sample(TextureSampler, float2(samplePos.x - xBlurDistance, samplePos.y - xBlurDistance));
-	sample += xTexture.Sample(TextureSampler, float2(samplePos.x + xBlurDistance, samplePos.y - xBlurDistance));
-	sample += xTexture.Sample(TextureSampler, float2(samplePos.x - xBlurDistance, samplePos.y + xBlurDistance));	
-	
-	sample = sample * 0.25;
-	
+	float4 sample = xTexture.Sample(TextureSampler, samplePos);
+		
 	sample.a = input.Color.a;
 	sample = lerp(sample, sample * waterColor, input.Color.b);
+
+    return sample;
+}
+
+float4 mainPSBlurred(VertexShaderOutput input) : COLOR
+{
+    float4 bumpColor = xWaterBumpMap.Sample(WaterBumpSampler, xUvOffset + (input.TexCoords + xBumpPos) * xBumpScale);
+    bumpColor = (bumpColor + xWaterBumpMap.Sample(WaterBumpSampler, xUvOffset + (input.TexCoords - xBumpPos * 2) * xBumpScale)) * 0.5f;
+	
+    float2 samplePos = input.TexCoords;
+	
+    samplePos.x += (bumpColor.r - 0.5f) * xWaveWidth * input.Color.r;
+    samplePos.y += (bumpColor.g - 0.5f) * xWaveHeight * input.Color.g;
+
+    float4 sample;
+    sample = xTexture.Sample(TextureSampler, float2(samplePos.x + xBlurDistance, samplePos.y + xBlurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x - xBlurDistance, samplePos.y - xBlurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x + xBlurDistance, samplePos.y - xBlurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x - xBlurDistance, samplePos.y + xBlurDistance));
+	
+    sample = sample * 0.25;
+	
+    sample.a = input.Color.a;
+    sample = lerp(sample, sample * waterColor, input.Color.b);
 
     return sample;
 }
@@ -83,6 +100,15 @@ technique WaterShader
     pass Pass1
     {
         VertexShader = compile vs_4_0_level_9_1 mainVS();
-        PixelShader = compile ps_4_0_level_9_1 main();
+        PixelShader = compile ps_4_0_level_9_1 mainPS();
+    }
+}
+
+technique WaterShaderBlurred
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
+        PixelShader = compile ps_4_0_level_9_1 mainPSBlurred();
     }
 }
