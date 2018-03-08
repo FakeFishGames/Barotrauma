@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<Items>
+
+  <Item
+    name="Searchlight"
+    category="Machine"
+    focusonselected="true"
+    offsetonselected="350"
+    linkable="false">
+
+    <Sprite texture="Content/Items/SearchLight/SearchLightBase.png" depth="0.01" sourcerect="0,0,128,128"/>
+
+    <Turret barrelsprite="Content/Items/SearchLight/SearchLight.png" canbeselected="true" linkable="false" origin="0.5, 0.55" barrelpos="64,64" reload="999999999"
+      rotationlimits="180,360"
+      powerconsumption="10000.0"
+      showchargeindicator="false"
+      showprojectileindicator="false"
+      hudtint="0.4,0.6,0.7,0.05">
+
+      <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
+      </LightComponent>
+      
+    </Turret>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="power_in"/>
+      <input name="position_in"/>
+      <input name="trigger_in"/>
+    </ConnectionPanel>
+  </Item>
+
+</Items>

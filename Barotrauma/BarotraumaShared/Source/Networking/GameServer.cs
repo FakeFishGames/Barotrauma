@@ -77,9 +77,9 @@ namespace Barotrauma.Networking
             this.isPublic = isPublic;
             this.maxPlayers = maxPlayers;
             this.password = "";
-            if (password.Length>0)
+            if (password.Length > 0)
             {
-                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                SetPassword(password);
             }
 
             config = new NetPeerConfiguration("barotrauma");
@@ -129,6 +129,11 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
                         
             CoroutineManager.StartCoroutine(StartServer(isPublic));
+        }
+
+        public void SetPassword(string password)
+        {
+            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
         }
 
         private IEnumerable<object> StartServer(bool isPublic)

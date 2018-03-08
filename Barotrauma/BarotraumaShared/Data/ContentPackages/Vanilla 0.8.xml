@@ -24,6 +24,7 @@
   <Item file="Content/Items/MiniMap/item.xml" />
   <Item file="Content/Items/OxygenGenerator/oxygengenerator.xml" />
   <Item file="Content/Items/Pump/pump.xml" />
+  <Item file="Content/Items/SearchLight/searchlight.xml" />
   <Item file="Content/Items/Reactor/reactor.xml" />
   <Item file="Content/Items/Tools/tools.xml" />
   <Item file="Content/Items/Weapons/depthcharge.xml" />
