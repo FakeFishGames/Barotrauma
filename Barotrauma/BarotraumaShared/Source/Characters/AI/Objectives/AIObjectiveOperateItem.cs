@@ -113,7 +113,7 @@ namespace Barotrauma
                                     character.Inventory.Items[i].Drop();
                                 }
                             }
-                            if (character.Inventory.TryPutItem(component.Item, i, true, character))
+                            if (character.Inventory.TryPutItem(component.Item, i, true, false, character))
                             {
                                 component.Item.Equip(character);
                                 break;

@@ -137,11 +137,11 @@ namespace Barotrauma.Networking
             {
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
-                
-                if (entityID == 0 && thisEventID == (UInt16)(lastReceivedID + 1))
+
+                if (entityID == 0)
                 {
                     msg.ReadPadBits();
-                    lastReceivedID++;
+                    if (thisEventID == (UInt16)(lastReceivedID + 1)) lastReceivedID++;
                     continue;
                 }
 

@@ -23,12 +23,6 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (powerConnections == null)
-                {
-                    var connections = Item.Connections;
-                    powerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);
-
-                }
                 return powerConnections;
             }
         }
@@ -362,16 +356,15 @@ namespace Barotrauma.Items.Components
             connectionDirty[connection] = true;
         }
 
-        public override void OnMapLoaded()
+        public override void OnItemLoaded()
         {
-            var connections = item.Connections;
+            var connections = Item.Connections;
+            powerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);
             if (connections == null)
             {
                 IsActive = false;
                 return;
             }
-            
-
             SetAllConnectionsDirty();
         }
 

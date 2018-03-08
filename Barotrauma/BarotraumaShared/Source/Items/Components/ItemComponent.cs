@@ -182,6 +182,8 @@ namespace Barotrauma.Items.Components
         {
             this.item = item;
 
+            name = element.Name.ToString();
+
             properties = SerializableProperty.GetProperties(this);
 
             //canBePicked = ToolBox.GetAttributeBool(element, "canbepicked", false);
@@ -575,8 +577,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary> 
+        /// Called when all items have been loaded. Use to initialize connections between items. 
+        /// </summary>
         public virtual void OnMapLoaded() { }
-        
+
+        /// <summary> 
+        /// Called when all the components of the item have been loaded. Use to initialize connections between components and such. 
+        /// </summary> 
+        public virtual void OnItemLoaded() { }
+
         public static ItemComponent Load(XElement element, Item item, string file, bool errorMessages = true)
         {
             Type t;

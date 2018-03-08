@@ -83,6 +83,7 @@
     <Compile Include="Source\Characters\Character.cs" />
     <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\GameMain.cs" />
+	<Compile Include="Source\GameSession\MultiPlayerCampaign.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
@@ -138,9 +139,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Source\GameSession\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

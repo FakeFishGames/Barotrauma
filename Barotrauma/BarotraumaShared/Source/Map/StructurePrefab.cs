@@ -99,6 +99,10 @@ namespace Barotrauma
                 {
                     case "sprite":
                         sp.sprite = new Sprite(subElement);
+                        if (subElement.Attribute("sourcerect") == null)
+                        {
+                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
+                        }
 
                         if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;

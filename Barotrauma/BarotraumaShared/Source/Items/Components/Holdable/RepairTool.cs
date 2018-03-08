@@ -212,6 +212,7 @@ namespace Barotrauma.Items.Components
             pickedPosition = Submarine.LastPickedPosition;
 
             Structure targetStructure;
+            Character targetCharacter;
             Limb targetLimb;
             Item targetItem;
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
@@ -319,6 +320,19 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
                 if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition; 
+                foreach (var emitter in ParticleEmitterHitCharacter)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
+#endif
+            }
+            else if ((targetCharacter = (targetBody.UserData as Character)) != null)
+            {
+                targetCharacter.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+#if CLIENT
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
                 foreach (var emitter in ParticleEmitterHitCharacter)
                 {
                     float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);

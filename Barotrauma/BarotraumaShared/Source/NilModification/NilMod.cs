@@ -10,12 +10,6 @@ using System.IO;
 
 namespace Barotrauma
 {
-    class ConvertingHusk
-    {
-        public Character character;
-        public int Updatestildisable;
-    }
-
     class CampaignPurchase
     {
         public string itemprefab;
@@ -50,10 +44,8 @@ namespace Barotrauma
 
     class NilMod
     {
-        public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
-
         const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "04/03/2018-1";
+        public const string NilModVersionDate = "08/03/2018-1";
         public Version NilModNetworkingVersion = new Version(0,0,0,0);
 
         public int Owners;
@@ -693,26 +685,6 @@ namespace Barotrauma
             //Cycle the outline flash colours
             CharFlashColourTime += deltaTime;
             if (CharFlashColourTime >= CharFlashColourRate) CharFlashColourTime = 0f;
-
-            //Countdown to disable temporarilly removed characters
-
-            if (convertinghusklist.Count() > 0)
-            {
-                for (int i = convertinghusklist.Count() - 1; i > 0; i--)
-                {
-                    if (convertinghusklist[i].Updatestildisable > 0)
-                    {
-                        convertinghusklist[i].Updatestildisable -= 1;
-                        if (convertinghusklist[i].Updatestildisable <= 0)
-                        {
-                            Entity.Spawner.AddToRemoveQueue(convertinghusklist[i].character);
-                            convertinghusklist[i].character.Enabled = false;
-                            //convertinghusklist.RemoveAt(i);
-                        }
-                    }
-                }
-            }
-
         }
 
         public void ReportSettings()
@@ -2521,15 +2493,6 @@ namespace Barotrauma
             if (DisableLOSOnStart) GameMain.LightManager.LosEnabled = false;
 #endif
 
-            if (convertinghusklist != null)
-            {
-                convertinghusklist.Clear();
-            }
-            else
-            {
-                convertinghusklist = new List<ConvertingHusk>();
-            }
-
             if (DisconnectedCharacters != null)
             {
                 DisconnectedCharacters.Clear();
@@ -2576,36 +2539,6 @@ namespace Barotrauma
                 DesyncPreventionItemPassTimerleft = 30f + DesyncPreventionItemPassTimer;
                 DesyncPreventionPlayerStatusTimerleft = 30f + DesyncPreventionPlayerStatusTimer;
                 DesyncPreventionHullStatusTimerleft = 30f + DesyncPreventionHullStatusTimerleft;
-            }
-        }
-
-        public void HideCharacter(Character character)
-        {
-            //Only execute this code for Servers - Use normal removal for single player
-            if (GameMain.Server != null)
-            {
-#if CLIENT
-                GameSession.inGameInfo.RemoveCharacter(character);
-#endif
-
-                ConvertingHusk huskconvert = new ConvertingHusk();
-                huskconvert.character = character;
-                huskconvert.Updatestildisable = 2;
-                //Hide the character completely
-                character.AnimController.CurrentHull = null;
-                character.Submarine = null;
-                character.AnimController.SetPosition(new Vector2(800000, 800000), false);
-                huskconvert.character.HuskInfectionState = 0f;
-                GameMain.NilMod.convertinghusklist.Add(huskconvert);
-            }
-            else if (GameMain.Client == null)
-            {
-#if CLIENT
-                GameSession.inGameInfo.RemoveCharacter(character);
-#endif
-
-                //Just add them to the entity remover if single player
-                Entity.Spawner.AddToRemoveQueue(character);
             }
         }
 

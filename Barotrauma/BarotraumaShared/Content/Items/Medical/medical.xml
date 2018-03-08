@@ -8,6 +8,7 @@
     price="50"
     canuseonself="true"
     cargocontainername="Chemical Crate"
+    usecontainedspritecolor="true"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
 
     <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>

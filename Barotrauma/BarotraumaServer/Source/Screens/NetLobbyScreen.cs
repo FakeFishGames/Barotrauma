@@ -174,6 +174,14 @@ namespace Barotrauma
             lastUpdateID++;
         }
 
+        /*
+        public override void Select()
+        {
+            base.Select();
+            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+        }
+        */
+
         public void RandomizeSettings()
         {
             GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);

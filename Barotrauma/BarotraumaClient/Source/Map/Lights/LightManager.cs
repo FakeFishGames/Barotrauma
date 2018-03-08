@@ -38,7 +38,7 @@ namespace Barotrauma.Lights
 
         BasicEffect lightEffect;
 
-        public Effect losEffect
+        public Effect LosEffect
         {
             get; private set;
         }
@@ -52,10 +52,8 @@ namespace Barotrauma.Lights
         public bool LightingEnabled = true;
 
         public bool ObstructVision;
-        LightSource losSource;
+        private Texture2D visionCircle;
 
-        private Sprite visionCircle;
-        
         private Dictionary<Hull, Color> hullAmbientLights;
         private Dictionary<Hull, Color> smoothedHullAmbientLights;
 
@@ -67,8 +65,8 @@ namespace Barotrauma.Lights
 
             AmbientLight = new Color(20, 20, 20, 255);
 
-            //visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
-            visionCircle = new Sprite("Content/Lights/visioncircle.png", new Vector2(0.2f, 0.5f));
+            visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
+            //visionCircle = new Sprite("Content/Lights/visioncircle.png", new Vector2(0.2f, 0.5f));
 
             var pp = graphics.PresentationParameters;
 
@@ -79,14 +77,11 @@ namespace Barotrauma.Lights
 
             losTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth*lightmapScale), (int)(GameMain.GraphicsHeight*lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
 
-            losSource = new LightSource(Vector2.Zero, GameMain.GraphicsWidth, Color.White, null, false);
-            losSource.texture = new Texture2D(graphics, 1, 1);
-            losSource.texture.SetData(new Color[] { Color.White });// fill the texture with white
 
 #if WINDOWS
-            losEffect = content.Load<Effect>("losshader");
+            LosEffect = content.Load<Effect>("losshader");
 #else
-            losEffect = content.Load<Effect>("losshader_opengl");
+            LosEffect = content.Load<Effect>("losshader_opengl");
 #endif
 
             if (lightEffect == null)
@@ -226,8 +221,11 @@ namespace Barotrauma.Lights
                 Vector2 drawPos = Character.Controlled.DrawPosition;
                 drawPos.Y = -drawPos.Y;
 
+                //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough) 
+                float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
+                Color haloColor = Color.White * (1.0f - ambientBrightness);
                 spriteBatch.Draw(
-                    LightSource.LightTexture, drawPos, null, Color.White * 0.3f, 0.0f,
+                    LightSource.LightTexture, drawPos, null, haloColor * 0.4f, 0.0f,
                     new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
             }
             spriteBatch.End();
@@ -238,42 +236,93 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if (!LosEnabled || ViewTarget == null) return;
+            if (!LosEnabled && !ObstructVision) return;
 
             graphics.SetRenderTarget(losTexture);
 
-            //--------------------------------------
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
 
-            graphics.Clear(Color.Black);
+
             if (ObstructVision)
             {
+                graphics.Clear(Color.Black);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
+                diff.Y = -diff.Y;
                 float rotation = MathUtils.VectorToAngle(diff);
 
-                Vector2 scale = new Vector2(MathHelper.Clamp(diff.Length() / 256.0f, 2.0f, 5.0f), 2.0f) * 0.3f;
+                Vector2 scale = new Vector2(
+                    MathHelper.Clamp(diff.Length() / 256.0f, 2.0f, 5.0f), 2.0f);
 
-                visionCircle.size = new Vector2(visionCircle.SourceRect.Width * scale.X, visionCircle.SourceRect.Height * scale.Y);
-                losSource.overrideLightTexture = visionCircle;
-                losSource.Rotation = rotation;
+                spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
+                    new Vector2(LightSource.LightTexture.Width * 0.2f, LightSource.LightTexture.Height / 2), scale, SpriteEffects.None, 0.0f);
             }
             else
             {
-                losSource.overrideLightTexture = null;
+                graphics.Clear(Color.White);
             }
+            spriteBatch.End();
 
-            graphics.BlendState = BlendState.Additive;
+            //--------------------------------------
 
-            Vector2 pos = ViewTarget.Position;
-            losSource.Position = pos;
-            losSource.NeedsRecalculation = true;
-            losSource.ParentSub = ViewTarget.Submarine;
+            if (LosEnabled && ViewTarget != null)
+            {
+                Vector2 pos = ViewTarget.WorldPosition;
 
-            Matrix transform = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-            
-            losSource.Draw(spriteBatch, lightEffect, transform);
+                Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
 
-            graphics.BlendState = BlendState.AlphaBlend;
+                Matrix shadowTransform = cam.ShaderTransform
+                    * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+
+                var convexHulls = ConvexHull.GetHullsInRange(viewTarget.Position, cam.WorldView.Width * 0.75f, viewTarget.Submarine);
+                if (convexHulls != null)
+                {
+                    List<VertexPositionColor> shadowVerts = new List<VertexPositionColor>();
+                    List<VertexPositionTexture> penumbraVerts = new List<VertexPositionTexture>();
+                    foreach (ConvexHull convexHull in convexHulls)
+                    {
+                        if (!convexHull.Enabled || !convexHull.Intersects(camView)) continue;
+
+                        Vector2 relativeLightPos = pos;
+                        if (convexHull.ParentEntity?.Submarine != null) relativeLightPos -= convexHull.ParentEntity.Submarine.Position;
+
+                        convexHull.CalculateShadowVertices(relativeLightPos, true);
+
+                        //convert triangle strips to a triangle list 
+                        for (int i = 0; i < convexHull.shadowVertexCount * 2 - 2; i++)
+                        {
+                            if (i % 2 == 0)
+                            {
+                                shadowVerts.Add(convexHull.ShadowVertices[i]);
+                                shadowVerts.Add(convexHull.ShadowVertices[i + 1]);
+                                shadowVerts.Add(convexHull.ShadowVertices[i + 2]);
+                            }
+                            else
+                            {
+                                shadowVerts.Add(convexHull.ShadowVertices[i]);
+                                shadowVerts.Add(convexHull.ShadowVertices[i + 2]);
+                                shadowVerts.Add(convexHull.ShadowVertices[i + 1]);
+                            }
+                        }
+
+                        penumbraVerts.AddRange(convexHull.PenumbraVertices);
+                    }
+
+                    if (shadowVerts.Count > 0)
+                    {
+                        ConvexHull.shadowEffect.World = shadowTransform;
+                        ConvexHull.shadowEffect.CurrentTechnique.Passes[0].Apply();
+                        graphics.DrawUserPrimitives(PrimitiveType.TriangleList, shadowVerts.ToArray(), 0, shadowVerts.Count / 3, VertexPositionColor.VertexDeclaration);
+
+                        if (penumbraVerts.Count > 0)
+                        {
+                            ConvexHull.penumbraEffect.World = shadowTransform;
+                            ConvexHull.penumbraEffect.CurrentTechnique.Passes[0].Apply();
+                            graphics.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVerts.ToArray(), 0, penumbraVerts.Count / 3, VertexPositionTexture.VertexDeclaration);
+                        }
+                    }
+
+                }
+            }
 
             graphics.SetRenderTarget(null);            
         }
@@ -357,20 +406,10 @@ namespace Barotrauma.Lights
 
             return hullAmbientLight;
         }
-        
-        public void DrawLightMap(SpriteBatch spriteBatch, Effect effect)
-        {
-            if (!LightingEnabled) return;
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative, null, null, null, null);
-            spriteBatch.Draw(lightMap, new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsHeight), Color.White);            
-            spriteBatch.End();
-        }
 
         public void ClearLights()
         {
             lights.Clear();
-            losSource.Reset();
         }
     }
 
@@ -390,10 +429,16 @@ namespace Barotrauma.Lights
             MultiplyWithAlpha = new BlendState();
             MultiplyWithAlpha.ColorDestinationBlend = MultiplyWithAlpha.AlphaDestinationBlend = Blend.One;
             MultiplyWithAlpha.ColorSourceBlend = MultiplyWithAlpha.AlphaSourceBlend = Blend.DestinationAlpha;
+
+            LOS = new BlendState();
+            LOS.ColorSourceBlend = LOS.AlphaSourceBlend = Blend.Zero;
+            LOS.ColorDestinationBlend = LOS.AlphaDestinationBlend = Blend.InverseSourceColor;
+            LOS.ColorBlendFunction = LOS.AlphaBlendFunction = BlendFunction.Add;
         }
         public static BlendState Multiplicative { get; private set; }
         public static BlendState WriteToAlpha { get; private set; }
         public static BlendState MultiplyWithAlpha { get; private set; }
+        public static BlendState LOS { get; private set; }
     }
 
 }

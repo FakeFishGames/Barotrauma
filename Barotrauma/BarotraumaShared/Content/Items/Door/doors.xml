@@ -4,7 +4,7 @@
     linkable="true"
     >
 
-    <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
+    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
@@ -25,7 +25,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
   
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>

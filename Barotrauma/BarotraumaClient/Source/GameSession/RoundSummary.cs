@@ -38,8 +38,6 @@ namespace Barotrauma
 
             if (!singleplayer)
             {
-                //Game over if everyone dead or didn't progress
-                gameOver = gameOver || !progress;
                 SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
             }
 

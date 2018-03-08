@@ -127,7 +127,6 @@ namespace Barotrauma
             if (doubleClickedItem != null)
             {
                 bool wasPut = false;
-
                 if (doubleClickedItem.ParentInventory != this)
                 {
                     wasPut = TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
@@ -152,13 +151,26 @@ namespace Barotrauma
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            wasPut = TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                if (limbSlots[i] == InvSlotType.Any || !doubleClickedItem.AllowedSlots.Any(a => a.HasFlag(limbSlots[i]))) continue;
+                                wasPut = TryPutItem(doubleClickedItem, i, true, false, Character.Controlled, true);
+                                if (wasPut) break;
+                            }
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
                         {
                             wasPut = TryPutItem(doubleClickedItem, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
                         }
+                    }
+                }
+
+                if (wasPut)
+                {
+                    for (int i = 0; i < capacity; i++)
+                    {
+                        if (Items[i] == doubleClickedItem) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);
                     }
                 }
 

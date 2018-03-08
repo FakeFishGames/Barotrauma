@@ -61,6 +61,7 @@ namespace Barotrauma
         private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
+        private GUIComponent campaignSetupUI;
 
         private Sprite backgroundSprite;
 
@@ -439,10 +440,13 @@ namespace Barotrauma
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
-            
-            campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
-            campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
-            campaignViewButton.Visible = false;
+
+            if (campaignViewButton == null)
+            {
+                campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
+                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
+                campaignViewButton.Visible = false;
+            }
 
             if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
             {
@@ -1406,7 +1410,11 @@ namespace Barotrauma
         {
             base.AddToGUIUpdateList();
 
-            if (jobInfoFrame != null)
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.AddToGUIUpdateList();
+            }
+            else if (jobInfoFrame != null)
             {
                 jobInfoFrame.AddToGUIUpdateList();
             }
@@ -1450,8 +1458,19 @@ namespace Barotrauma
 
             if (campaignContainer.Visible && campaignUI != null)
             {
-                //campaignContainer.Update((float)deltaTime);
                 campaignUI.Update((float)deltaTime);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                if (!campaignSetupUI.Visible)
+                {
+                    campaignSetupUI = null;
+                }
+                else
+                {
+                    campaignSetupUI.Update((float)deltaTime);
+                }
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1479,6 +1498,11 @@ namespace Barotrauma
             if (campaignContainer.Visible && campaignUI != null)
             {
                 campaignUI.Draw(spriteBatch);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.Draw(spriteBatch);
             }
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
@@ -1636,7 +1660,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server != null)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return;
                 }
             }
@@ -1664,7 +1688,7 @@ namespace Barotrauma
                 // -> don't select the mode yet and start campaign setup
                 if (GameMain.Server != null && !campaignContainer.Visible)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return false;
                 }
             }
@@ -1705,6 +1729,7 @@ namespace Barotrauma
                     campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
 
                     var backButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("Back"), "", campaignContainer);
+                    backButton.ClampMouseRectToParent = false;
                     backButton.OnClicked += (btn, obj) => {
                         ToggleCampaignView(false);
                         return true; };
@@ -1714,6 +1739,7 @@ namespace Barotrauma
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
                         var tabButton = new GUIButton(new Rectangle(buttonX, 10, 100, 20), tab.ToString(), "", campaignContainer);
+                        tabButton.ClampMouseRectToParent = false;
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
@@ -1931,11 +1957,12 @@ namespace Barotrauma
                 missionTypeBlock.Visible = false;
                 if(GameMain.NilMod.CampaignDefaultSaveName != "")
                 {
-                    MultiplayerCampaign.StartCampaignSetup(true);
+                    //campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
+                    MultiPlayerCampaign.StartCampaignSetup(true);
                 }
                 else
                 {
-                    MultiplayerCampaign.StartCampaignSetup(false);
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     DebugConsole.NewMessage("Nilmod campaign autosetup error: Savefile name not set ( ServerModDefaultServerSettings -> CampaignSaveName).", Color.Cyan);
                 }
             }

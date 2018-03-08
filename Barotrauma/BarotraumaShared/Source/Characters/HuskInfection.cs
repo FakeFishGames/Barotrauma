@@ -193,7 +193,7 @@ namespace Barotrauma
 
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it 
             //CoroutineManager.StartCoroutine(CreateAIHusk(character));
-            CoroutineManager.StartCoroutine(CreateAIHuskDelayed(character));
+            CoroutineManager.StartCoroutine(CreateAIHusk(character));
         }
 
         private IEnumerable<object> CreateAIHusk(Character character)
@@ -232,57 +232,8 @@ namespace Barotrauma
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
-                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
+                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
             }
-
-            yield return CoroutineStatus.Success;
-        }
-
-        private IEnumerable<object> CreateAIHuskDelayed(Character character)
-        {
-            //character.Enabled = false;
-            //Entity.Spawner.AddToRemoveQueue(character);
-
-            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
-            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
-            var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
-
-            if (string.IsNullOrEmpty(configFile))
-            {
-                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file not found.");
-                yield return CoroutineStatus.Success;
-            }
-
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
-
-
-            foreach (Limb limb in husk.AnimController.Limbs)
-            {
-                if (limb.type == LimbType.None)
-                {
-                    limb.body.SetTransform(character.SimPosition, 0.0f);
-                    continue;
-                }
-
-                var matchingLimb = character.AnimController.GetLimb(limb.type);
-                if (matchingLimb?.body != null)
-                {
-                    limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
-                    limb.body.LinearVelocity = matchingLimb.LinearVelocity;
-                    limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
-                }
-            }
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.Items[i] == null) continue;
-                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
-            }
-
-#if CLIENT
-            if(GameMain.Server != null) GameSession.inGameInfo.AddNoneClientCharacter(husk);
-#endif
-
-            GameMain.NilMod.HideCharacter(character);
 
             yield return CoroutineStatus.Success;
         }

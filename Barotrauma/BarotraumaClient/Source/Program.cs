@@ -169,7 +169,11 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
+#if DEBUG
+            sb.AppendLine("Game version " + GameMain.Version + " NILMOD SERVER MODIFICATION" + " (debug build)");
+#else
             sb.AppendLine("Game version " + GameMain.Version + " NILMOD SERVER MODIFICATION");
+#endif
             sb.AppendLine("Nilmod version stamp: " + NilMod.NilModVersionDate);
             sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
@@ -308,4 +312,4 @@ namespace Barotrauma
         }
     }
 #endif
-}
+        }

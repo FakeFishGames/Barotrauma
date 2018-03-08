@@ -309,12 +309,12 @@ namespace Barotrauma
             {
                 if (GameMain.NilMod.CampaignDefaultSaveName != "")
                 {
-                    MultiplayerCampaign.StartCampaignSetup(true);
+                    MultiPlayerCampaign.StartCampaignSetup(true);
                 }
                 else
                 {
                     DebugConsole.NewMessage("Nilmod default campaign savefile not specified. Please setup the campaign or specify a filename in nilmodsettings.xml", Color.Cyan);
-                    MultiplayerCampaign.StartCampaignSetup(false);
+                    MultiPlayerCampaign.StartCampaignSetup(false);
                 }
                 DebugConsole.NewMessage(" ", Color.Cyan);
             }

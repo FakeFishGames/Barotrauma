@@ -344,8 +344,11 @@ namespace Barotrauma
             if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
-
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+#if DEBUG
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " Nilmod v: " + NilMod.NilModVersionDate + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+#else
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " Nilmod v: " + NilMod.NilModVersionDate, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+#endif
 
             spriteBatch.End();
         }

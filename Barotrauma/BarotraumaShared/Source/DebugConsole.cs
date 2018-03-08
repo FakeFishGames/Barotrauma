@@ -334,6 +334,11 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
             }));
 
+            commands.Add(new Command("setpassword|setserverpassword", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length == 0) return;
+                GameMain.Server.SetPassword(args[0]);
+            }));
 
             commands.Add(new Command("createfilelist", CommandType.Debug, "", (string[] args) =>
             {
@@ -1943,7 +1948,7 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => ((!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName) && GameMain.NilMod.convertinghusklist.Find(ch => ch.character == c) == null);
+            var matchingCharacters = Character.CharacterList.FindAll(c => ((!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName));
 
             if (!matchingCharacters.Any())
             {

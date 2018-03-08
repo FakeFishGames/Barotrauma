@@ -4,10 +4,9 @@
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true"
-    >
+    linkable="true">
 
-    <Sprite texture="railgunbase.png" depth = "0.01"/>
+    <Sprite texture="railgunbase.png" depth="0.01" sourcerect="0,0,256,256"/>
 
     <Turret barrelsprite="railgunbarrel.png" canbeselected = "true" linkable="true" origin="0.5, 0.85" barrelpos="128, 128" 
             rotationlimits="180,360"
@@ -94,9 +93,9 @@
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
-    </Projectile>
 
-    <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>      
+    </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable name="smallitem"/>
@@ -132,9 +131,9 @@
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
-    </Projectile>
 
-    <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+    </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable name="smallitem"/>

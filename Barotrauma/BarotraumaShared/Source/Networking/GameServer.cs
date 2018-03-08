@@ -84,7 +84,7 @@ namespace Barotrauma.Networking
             this.password = "";
             if (password.Length > 0)
             {
-                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                SetPassword(password);
             }
 
             config = new NetPeerConfiguration("barotrauma");
@@ -152,6 +152,11 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
 
             CoroutineManager.StartCoroutine(StartServer(isPublic));
+        }
+
+        public void SetPassword(string password)
+        {
+            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
         }
 
         private IEnumerable<object> StartServer(bool isPublic)
@@ -565,8 +570,6 @@ namespace Barotrauma.Networking
             {
                 for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
                 {
-                    //Don't check status updates of temp removed characters
-                    if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
                     //Character.CharacterList[i].CheckForStatusEvent();
                 }
 
@@ -830,11 +833,23 @@ namespace Barotrauma.Networking
                         //TODO: might want to use a clever class for this
                         c.LastRecvGeneralUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvGeneralUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
-
+                        
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
                         {
+                            byte campaignID = inc.ReadByte();
                             c.LastRecvCampaignUpdate = inc.ReadUInt16();
+
+                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                            {
+                                //the client has a campaign save for another campaign  
+                                //(the server started a new campaign and the client isn't aware of it yet?) 
+                                if (((MultiPlayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
+                                {
+                                    c.LastRecvCampaignSave = 0;
+                                    c.LastRecvCampaignUpdate = 0;
+                                }
+                            }
                         }
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
@@ -1030,7 +1045,7 @@ namespace Barotrauma.Networking
                     var modeList = GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
                     break;
                 case ClientPermissions.ManageCampaign:
-                    MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
+                    MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
                     if (campaign != null)
                     {
                         campaign.ServerRead(inc, sender);
@@ -1086,7 +1101,7 @@ namespace Barotrauma.Networking
 
                 ClientWriteLobby(c);
 
-                MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+                MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
                 if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 {
                     if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
@@ -1270,7 +1285,7 @@ namespace Barotrauma.Networking
                 outmsg.WritePadBits();
             }
 
-            var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign != null)
             {
                 if (NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
@@ -1536,8 +1551,8 @@ namespace Barotrauma.Networking
 
             LoadClientPermissions();
 
-            MultiplayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
-                GameMain.GameSession?.GameMode as MultiplayerCampaign : null;
+            MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
@@ -1811,7 +1826,7 @@ namespace Barotrauma.Networking
 
             msg.Write(selectedMode.Name);
 
-            MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 
             bool missionAllowRespawn = campaign == null &&
                 (!(GameMain.GameSession.GameMode is MissionMode) ||
@@ -2938,13 +2953,11 @@ namespace Barotrauma.Networking
                 {
                     if (RemoveNetPlayers)
                     {
-                        if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
-                        GameMain.NilMod.HideCharacter(Character.CharacterList[i]);
+                        Entity.Spawner.AddToRemoveQueue(Character.CharacterList[i]);
                     }
                     else if (!Character.CharacterList[i].IsRemotePlayer)
                     {
-                        if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
-                        GameMain.NilMod.HideCharacter(Character.CharacterList[i]);
+                        Entity.Spawner.AddToRemoveQueue(Character.CharacterList[i]);
                     }
                 }
             }
@@ -3333,8 +3346,6 @@ namespace Barotrauma.Networking
                             float closestDist = GameMain.NilMod.ClickFindSelectionDistance;
                             foreach (Character c in Character.CharacterList)
                             {
-                                if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == c) != null) continue;
-
                                 if (c.IsDead)
                                 {
                                     float dist = Vector2.Distance(c.WorldPosition, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));

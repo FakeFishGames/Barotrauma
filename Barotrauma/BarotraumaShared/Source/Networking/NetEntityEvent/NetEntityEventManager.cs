@@ -45,7 +45,12 @@ namespace Barotrauma.Networking
                     //no more room in this packet
                     break;
                 }
-                
+
+                if (tempEventBuffer.LengthBytes > 255)
+                {
+                    DebugConsole.ThrowError("Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
+                }
+
                 //the ID has been taken by another entity (the original entity has been removed) -> write an empty event
                 if (Entity.FindEntityByID(e.Entity.ID) != e.Entity)
                 {

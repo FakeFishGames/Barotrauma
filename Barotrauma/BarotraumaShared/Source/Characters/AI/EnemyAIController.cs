@@ -586,10 +586,7 @@ namespace Barotrauma
 
                         if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(Character.Name + " has finished eating " + targetCharacter.Name, Networking.ServerLog.MessageType.Spawns);
 
-                        //Use the hide corpse code for eating too instead of just husks (In a hope to prevent further desync problems)
-                        GameMain.NilMod.HideCharacter(targetCharacter);
-
-                        //Entity.Spawner.AddToRemoveQueue(targetCharacter);
+                        Entity.Spawner.AddToRemoveQueue(targetCharacter);
 
                         selectedAiTarget = null;
                         state = AIState.None;

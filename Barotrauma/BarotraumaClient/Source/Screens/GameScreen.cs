@@ -242,19 +242,31 @@ namespace Barotrauma
 
 			graphics.SetRenderTarget(null);
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
-			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
-			{
-				float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
-				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-				                 Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
-				spriteBatch.End();
-                GameMain.LightManager.losEffect.CurrentTechnique = GameMain.LightManager.losEffect.Techniques["LosShader"];
-                GameMain.LightManager.losEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
-                GameMain.LightManager.losEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, null, GameMain.LightManager.losEffect, null);
-			}
 			spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 			spriteBatch.End();
+
+            if (GameMain.LightManager.LosEnabled && Character.Controlled != null)
+            {
+                GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
+#if LINUX
+                GameMain.LightManager.LosEffect.Parameters["TextureSampler+xTexture"].SetValue(renderTargetBackground); 
+                GameMain.LightManager.LosEffect.Parameters["LosSampler+xLosTexture"].SetValue(GameMain.LightManager.losTexture); 
+#else
+                GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
+                GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
+#endif
+
+                //convert the los color to HLS and make sure the luminance of the color is always the same regardless 
+                //of the ambient light color and the luminance of the damage overlight color 
+                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
+                Vector3 losColorHls = Color.Lerp(GameMain.LightManager.AmbientLight, Color.Red, r).RgbToHLS();
+                losColorHls.Y = 0.1f;
+                Color losColor = ToolBox.HLSToRGB(losColorHls);
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);
+                spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height), losColor);
+                spriteBatch.End();
+            }
         }
     }
 }

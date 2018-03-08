@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -67,7 +68,8 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null)
             {
                 List<string> monsterNames = GameMain.NetworkMember.monsterEnabled.Keys.ToList();
-                string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
+                string characterName = Path.GetFileName(Path.GetDirectoryName(characterFile)).ToLower();
+                string tryKey = monsterNames.Find(s => characterName == s.ToLower());
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
                     if (!GameMain.NetworkMember.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
@@ -82,7 +84,10 @@ namespace Barotrauma
             monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server), false);
             if (GameSettings.VerboseLogging)
             {
-                DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
+                if (monsters != null)
+                {
+                    DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
+                }
             }
         }
 
@@ -102,8 +107,18 @@ namespace Barotrauma
 
             var monsters = new Character[amount];
 
-            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
-                
+            if (spawnDeep)
+            {
+                spawnPos.Y -= Level.Loaded.Size.Y;
+                //disable the event if the ocean floor is too high up to spawn the monster deep 
+                if (spawnPos.Y < Level.Loaded.GetBottomPosition(spawnPos.X).Y)
+                {
+                    repeat = false;
+                    Finished();
+                    return null;
+                }
+            }
+
             for (int i = 0; i < amount; i++)
             {
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);

@@ -161,6 +161,8 @@ namespace Barotrauma
 
         private bool SelectServer(GUIComponent component, object obj)
         {
+            if (obj == null || waitingForRefresh) return false;
+
             ServerInfo serverInfo;
             try
             {

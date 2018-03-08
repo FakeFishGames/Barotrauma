@@ -299,7 +299,7 @@ namespace Barotrauma
                     case "removecorpse":
                         //ARG0 = Character
                         character = (Character)Arguments[0];
-                        GameMain.NilMod.HideCharacter(character);
+                        Entity.Spawner.AddToRemoveQueue(character);
                         break;
 
                     case "teleportsub":

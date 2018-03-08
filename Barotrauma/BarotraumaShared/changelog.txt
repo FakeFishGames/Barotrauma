@@ -1,17 +1,65 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.0.5
+---------------------------------------------------------------------------------------------------------
+
+- Optimized (and less glitchy) line of sight effect.
+- Some lighting optimization.
+- Added a light to diving suits.
+- Attempting to equip an item by double-clicking when another item is already equipped swaps them.
+- Syringes are recolored according to the color of the medical item inside them.
+- Added a console command for changing the server password.
+- Bunch of fixes to relay component logic.
+- Fixed a bug in the entity event system that caused "trying to read past buffer size" errors and desync
+when entities were removed mid-round.
+- Fixed clients getting desynced if the server ends a campaign and starts a new one.
+- Fixed the "campaign view" button staying visible in the server lobby after the campaign has ended.
+- Fixed message boxes appearing behind the campaign setup menu in the server lobby.
+- Fixed round summaries always showing the game over text in multiplayer if the submarine didn't progress 
+to the next location.
+- Fixed missing spark particles when welding/cutting a wall.
+- Fixed plasma cutters not affecting hatches, alien doors or duct blocks.
+- Fixed welders and cutters not doing damage to characters if the flame hits the collider of the character
+instead of a limb.
+- Fixed diving mask, headsets and other headgear being rendered in front of diving suits.
+- Fixed crashing when attempting to perform CPR on a headless character or AS a headless character.
+- Fixed attachable items being deattachable with the select key instead of the use key.
+- Fixed clients being unable to open doors with crowbars.
+- Fixed items attached mid-round by other clients or the host being impossible to interact with 
+and occasionally being attached to an incorrect position.
+- Fixed batteries not getting recharged in charging docks.
+- Fixed monsters being able to spawn under the ocean floor in levels where the floor is high up.
+- Fixed effects of the medical items not being stackable, meaning that successive usages of a medicine
+did not have an effect until the effect of the first dose has worn off.
+- Fixed items in itemcontainers (e.g. shells in railgun loaders, batteries in recharging docks) always 
+being rendered with the default sprite color.
+- Fixed crashing when clicking the "refreshing server list" text in the server list menu.
+- Fixed dedicated servers not resetting votes when a round ends.
+- Fixed interaction areas of some items being incorrect in the dedicated server.
+- Fixed the removal of items that get deleted after being used not being synced.
+- Ladder waypoint generation fix: waypoints are not just placed at the top and bottom of the ladders, 
+but above every platform along the ladders (-> waypoints work correctly on ladders spanning through 
+multiple floors).
+
+---------------------------------------------------------------------------------------------------------
+v0.8.0.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "an item with the same key has already been added" exceptions when trying to start a server.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.3
 ---------------------------------------------------------------------------------------------------------
- 
+
 - Another attempt to fix relay components: it should be now possible to use relays in series and pass
 power to junction boxes through relays.
 - Fixed creature disabling in server settings only taking character config files in the Content/Character
 folder into account.
 - Added ruin structure, particle and decal configuration files to content packages.
- 
+
 ---------------------------------------------------------------------------------------------------------
 v0.8.0.2
 ---------------------------------------------------------------------------------------------------------
- 
+
 - Doors can be opened with crowbars again.
 - Improved fire extinguisher aiming logic which makes it much easier to put out fires.
 - Fixed relays burning out when connected to a power grid that carries more power the relay can transfer.
@@ -22,24 +70,24 @@ v0.8.0.2
 - Fixed "file not found" errors when a character is wearing footwear with no configured footstep sounds.
 - MODDERS PLEASE NOTE: hit sounds on limbs and wearable items must now use tags instead of direct paths
 to the sound file. New sound files and tags can be added by editing the sound configuration files. 
- 
+
 ---------------------------------------------------------------------------------------------------------
-v0.8.0.1 
---------------------------------------------------------------------------------------------------------- 
- 
-- Fixed crashing when creating items with a PowerTransfer component mid-round (e.g. when fabricating  
-a relay component) 
-- Fixed dead/spectator chatting in multiplayer. 
-- Chatboxes can be deselected with the chat hotkey again. 
-- Fixed railgun shells not detonating their contents on impact. 
-- Fixed clients failing to start a new round after downloading a missing submarine file from the server. 
-- Fixed ruin doors and hatches being possible to open with the select key. 
-- Unequipped headsets can't be used and don't consume batteries. 
-- Fixed depth charge tubes launching the depth charges up by default. 
-- Fixed some pre-placed items not appearing in mirrored subs in the combat missions. 
-- Fixed text overflows in round summaries with large amounts of text. 
-- Fixed crashing when attempting to save settings before player name has been set in the server list menu. 
- 
+v0.8.0.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when creating items with a PowerTransfer component mid-round (e.g. when fabricating 
+a relay component)
+- Fixed dead/spectator chatting in multiplayer.
+- Chatboxes can be deselected with the chat hotkey again.
+- Fixed railgun shells not detonating their contents on impact.
+- Fixed clients failing to start a new round after downloading a missing submarine file from the server.
+- Fixed ruin doors and hatches being possible to open with the select key.
+- Unequipped headsets can't be used and don't consume batteries.
+- Fixed depth charge tubes launching the depth charges up by default.
+- Fixed some pre-placed items not appearing in mirrored subs in the combat missions.
+- Fixed text overflows in round summaries with large amounts of text.
+- Fixed crashing when attempting to save settings before player name has been set in the server list menu.
+
 ---------------------------------------------------------------------------------------------------------
 v0.8.0.0
 ---------------------------------------------------------------------------------------------------------
@@ -135,8 +183,8 @@ Multiplayer additions:
 	- Cutting and repairing walls is included in server logs.
 
 Multiplayer bugfixes:
-	- Fixed clients getting disconnected due to desync when a new monster is spawned mid-round by  
-	a repeating  monster event. 
+	- Fixed clients getting disconnected due to desync when a new monster is spawned mid-round by 
+	a repeating	monster event.
 	- Fixed modified clients being able to chat while unconscious due to the lack of server-side checks.
 	- Fixed modified clients being able to disconnect locked wires due to the lack of server-side checks.
 	- Fixed chat messages being assigned to the wrong sender when their bodies have been eaten.
@@ -152,8 +200,8 @@ Multiplayer bugfixes:
 	- Fixed "selected mode" and "mission type" settings not being saved.
 	- Level seed randomization can be toggled on and off via the debug console.
 	- Fixed dedicated server not randomizing the submarine or game mode even if randomization is enabled.
-	- Lighting is forced back on when a client starts a round (-> can't disable lighting by using the  
-	console command before joining a server). 
+	- Lighting is forced back on when a client starts a round (-> can't disable lighting by using the 
+	console command before joining a server).
 
 Bugfixes:
 	- Fixed wire connections being lost when copy-pasting in the submarine editor.
@@ -166,9 +214,9 @@ Bugfixes:
 	- Fixed damage modifiers being applied multiple times when wearing an item that takes up multiple slots.
 	Meaning that items such as the diving suit gave the players an excessive protection against damage.
 	- Messagebox overflow fixes.
-	- Fixed status effects not being able to decrease stun timers. 
-	- Fixed anti-husk medicine being able to reduce husk infection state after the infection has reached 
-	the active state. 
+	- Fixed status effects not being able to decrease stun timers.
+	- Fixed anti-husk medicine being able to reduce husk infection state after the infection has reached
+	the active state.
 	- Fixed monsters being able to spawn right next to the spawnpoint of the sub.
 	- Fixed hulls not being linked to gaps if the center of the gap is exactly at the edge of the adjacent
 	hulls.
