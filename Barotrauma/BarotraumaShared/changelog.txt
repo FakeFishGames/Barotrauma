@@ -1,4 +1,46 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.0.5
+---------------------------------------------------------------------------------------------------------
+
+- Optimized (and less glitchy) line of sight effect.
+- Some lighting optimization.
+- Added a light to diving suits.
+- Attempting to equip an item by double-clicking when another item is already equipped swaps them.
+- Syringes are recolored according to the color of the medical item inside them.
+- Added a console command for changing the server password.
+- Bunch of fixes to relay component logic.
+- Fixed a bug in the entity event system that caused "trying to read past buffer size" errors and desync
+when entities were removed mid-round.
+- Fixed clients getting desynced if the server ends a campaign and starts a new one.
+- Fixed the "campaign view" button staying visible in the server lobby after the campaign has ended.
+- Fixed message boxes appearing behind the campaign setup menu in the server lobby.
+- Fixed round summaries always showing the game over text in multiplayer if the submarine didn't progress 
+to the next location.
+- Fixed missing spark particles when welding/cutting a wall.
+- Fixed plasma cutters not affecting hatches, alien doors or duct blocks.
+- Fixed welders and cutters not doing damage to characters if the flame hits the collider of the character
+instead of a limb.
+- Fixed diving mask, headsets and other headgear being rendered in front of diving suits.
+- Fixed crashing when attempting to perform CPR on a headless character or AS a headless character.
+- Fixed attachable items being deattachable with the select key instead of the use key.
+- Fixed clients being unable to open doors with crowbars.
+- Fixed items attached mid-round by other clients or the host being impossible to interact with 
+and occasionally being attached to an incorrect position.
+- Fixed batteries not getting recharged in charging docks.
+- Fixed monsters being able to spawn under the ocean floor in levels where the floor is high up.
+- Fixed effects of the medical items not being stackable, meaning that successive usages of a medicine
+did not have an effect until the effect of the first dose has worn off.
+- Fixed items in itemcontainers (e.g. shells in railgun loaders, batteries in recharging docks) always 
+being rendered with the default sprite color.
+- Fixed crashing when clicking the "refreshing server list" text in the server list menu.
+- Fixed dedicated servers not resetting votes when a round ends.
+- Fixed interaction areas of some items being incorrect in the dedicated server.
+- Fixed the removal of items that get deleted after being used not being synced.
+- Ladder waypoint generation fix: waypoints are not just placed at the top and bottom of the ladders, 
+but above every platform along the ladders (-> waypoints work correctly on ladders spanning through 
+multiple floors).
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.4
 ---------------------------------------------------------------------------------------------------------
 

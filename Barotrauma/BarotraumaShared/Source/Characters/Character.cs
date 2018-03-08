@@ -1405,6 +1405,34 @@ namespace Barotrauma
             {
                 findFocusedTimer -= deltaTime;
             }
+
+            //climb ladders automatically when pressing up/down inside their trigger area
+            if (selectedConstruction == null && !AnimController.InWater)
+            {
+                bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
+                
+                Ladder nearbyLadder = null;
+                if (Controlled == this || climbInput)
+                {
+                    float minDist = float.PositiveInfinity;
+                    foreach (Ladder ladder in Ladder.List)
+                    {
+                        float dist;
+                        if (CanInteractWith(ladder.Item, out dist) && dist < minDist)
+                        {
+                            minDist = dist;
+                            nearbyLadder = ladder;
+                            if (Controlled == this) ladder.Item.IsHighlighted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (nearbyLadder != null && climbInput)
+                {
+                    if (nearbyLadder.Select(this)) selectedConstruction = nearbyLadder.Item;
+                }
+            }
             
             if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
             {
