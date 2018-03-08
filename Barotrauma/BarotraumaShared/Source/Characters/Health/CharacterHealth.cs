@@ -284,7 +284,7 @@ namespace Barotrauma
                 {
                     AddAffliction(newAffliction);
                 }
-            }
+            }            
         }
 
         public void ApplyDamage(Limb hitLimb, float damage, float bleedingDamage, float burnDamage, float stun)
@@ -298,7 +298,7 @@ namespace Barotrauma
             
             if (damage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.InternalDamage.Instantiate(damage));            
             if (bleedingDamage != 0.0f && DoesBleed) AddLimbAffliction(hitLimb, AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));            
-            if (burnDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Burn.Instantiate(burnDamage));            
+            if (burnDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Burn.Instantiate(burnDamage));
         }
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
@@ -314,6 +314,9 @@ namespace Barotrauma
                 if (bleedingDamageAmount > 0.0f && DoesBleed) limbHealth.Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamageAmount));
                 if (burnDamageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamageAmount));
             }
+
+            CalculateVitality();
+            if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
         }
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
@@ -326,6 +329,8 @@ namespace Barotrauma
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
                     affliction.Merge(newAffliction);
+                    CalculateVitality();
+                    if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
                     return;
                 }
             }
@@ -333,6 +338,9 @@ namespace Barotrauma
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
             limbHealths[limb.HealthIndex].Afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
+
+            CalculateVitality();
+            if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
         }
 
         private void AddAffliction(Affliction newAffliction)
@@ -350,6 +358,9 @@ namespace Barotrauma
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
             afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
+
+            CalculateVitality();
+            if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
         }
 
         
@@ -382,8 +393,7 @@ namespace Barotrauma
                     limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
             }
 
-            CalculateVitality();
-            
+            CalculateVitality();            
             if (vitality <= minVitality) character.Kill(GetCauseOfDeath());            
         }
 
