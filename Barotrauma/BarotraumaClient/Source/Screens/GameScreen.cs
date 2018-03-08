@@ -19,8 +19,9 @@ namespace Barotrauma
         private Texture2D damageStencil;
 
         public float BlurStrength;
-        public float DistortStrength;
-        
+        public float DistortStrength;        
+        private Texture2D distortTexture;
+
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
             cam = new Camera();
@@ -30,8 +31,7 @@ namespace Barotrauma
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
-
-
+            
 #if LINUX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
             damageEffect = content.Load<Effect>("damageshader_opengl");
@@ -39,11 +39,12 @@ namespace Barotrauma
             var blurEffect = content.Load<Effect>("blurshader");
             damageEffect = content.Load<Effect>("damageshader");
 #endif
-
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
+            
+            distortTexture = TextureLoader.FromFile("Content/distortnormals.png");
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
@@ -245,7 +246,7 @@ namespace Barotrauma
                 //convert the los color to HLS and make sure the luminance of the color is always the same regardless
                 //of the ambient light color and the luminance of the damage overlight color
                 float r = Character.Controlled?.CharacterHealth == null ? 
-                    0.0f : Math.Min(Character.Controlled.CharacterHealth.DamageOverLayTimer * 0.5f, 0.5f);
+                    0.0f : Math.Min(Character.Controlled.CharacterHealth.DamageOverlayTimer * 0.5f, 0.5f);
                 Vector3 losColorHls = Color.Lerp(GameMain.LightManager.AmbientLight, Color.Red, r).RgbToHLS();
                 losColorHls.Y = 0.1f;
                 Color losColor = ToolBox.HLSToRGB(losColorHls);
@@ -254,11 +255,23 @@ namespace Barotrauma
                 spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height), losColor);
                 spriteBatch.End();                
             }
-			graphics.SetRenderTarget(null);
+            graphics.SetRenderTarget(null);
+
+            if (Character.Controlled != null)
+            {
+                BlurStrength = Character.Controlled.BlurStrength * 0.005f;
+                DistortStrength = Character.Controlled.DistortStrength * 0.5f;
+            }
+            else
+            {
+                BlurStrength = 0.0f;
+                DistortStrength = 0.0f;
+            }
+
             if (BlurStrength > 0.0f || DistortStrength > 0.0f)
             {
                 WaterRenderer.Instance.WaterEffect.CurrentTechnique = WaterRenderer.Instance.WaterEffect.Techniques["WaterShaderPostProcess"];
-                WaterRenderer.Instance.WaterEffect.Parameters["xUvOffset"].SetValue(Vector2.Zero);
+                WaterRenderer.Instance.WaterEffect.Parameters["xUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
                 WaterRenderer.Instance.WaterEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
                 WaterRenderer.Instance.WaterEffect.Parameters["xWaveWidth"].SetValue(DistortStrength);
                 WaterRenderer.Instance.WaterEffect.Parameters["xWaveHeight"].SetValue(DistortStrength);
@@ -266,7 +279,7 @@ namespace Barotrauma
                 WaterRenderer.Instance.WaterEffect.CurrentTechnique.Passes[0].Apply();
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, WaterRenderer.Instance.WaterEffect, null);
-			    spriteBatch.Draw(WaterRenderer.Instance.WaterTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+			    spriteBatch.Draw(distortTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 			    spriteBatch.End();
             }
             else

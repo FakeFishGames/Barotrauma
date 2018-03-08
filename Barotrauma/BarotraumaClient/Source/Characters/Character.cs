@@ -46,6 +46,20 @@ namespace Barotrauma
             get { return hudProgressBars; }
         }
 
+        private float blurStrength;
+        public float BlurStrength
+        {
+            get { return blurStrength; }
+            set { blurStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+        private float distortStrength;
+        public float DistortStrength
+        {
+            get { return distortStrength; }
+            set { distortStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);

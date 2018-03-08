@@ -33,7 +33,9 @@ namespace Barotrauma
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
 
-        public float DamageOverLayTimer
+        private float distortTimer;
+
+        public float DamageOverlayTimer
         {
             get { return damageOverlayTimer; }
         }
@@ -143,6 +145,34 @@ namespace Barotrauma
         {
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 
+            float noiseStrength = 0.0f;
+            float distortSpeed = 0.0f;
+            
+            if (character.IsUnconscious)
+            {
+                noiseStrength = 1.0f;
+                distortSpeed = 1.0f;
+            }
+            else if (OxygenAmount < 100.0f)
+            {
+                noiseStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - vitality / MaxVitality);
+                distortSpeed = (noiseStrength + 1.0f);
+                distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
+            }
+
+            if (noiseStrength > 0.0f)
+            {
+                distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
+                character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * noiseStrength;
+                character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * noiseStrength;
+            }
+            else
+            {
+                character.BlurStrength = 0.0f;
+                character.DistortStrength = 0.0f;
+                distortTimer = 0.0f;
+            }
+
             if (PlayerInput.KeyHit(Keys.H))
             {
                 OpenHealthWindow = null;
@@ -194,21 +224,15 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
         {
-            float noiseAlpha = character.IsUnconscious ? 1.0f : MathHelper.Clamp(1.0f - OxygenAmount / 100.0f, 0.0f, 0.8f);
-
-            if (noiseAlpha > 0.0f)
+            float damageOverlayAlpha = DamageOverlayTimer;
+            if (vitality < MaxVitality * 0.1f)
             {
-                Vector2 noiseOffset = Rand.Vector(noiseOverlay.size.X);
-                noiseOffset.X = Math.Abs(noiseOffset.X);
-                noiseOffset.Y = Math.Abs(noiseOffset.Y);
-                noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - noiseOffset, 
-                    new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + noiseOffset,
-                    Vector2.Zero, Color.White * noiseAlpha);
+                damageOverlayAlpha = Math.Max(1.0f - (vitality / maxVitality * 10.0f), damageOverlayAlpha);
             }
 
-            if (damageOverlayTimer > 0.0f)
+            if (damageOverlayAlpha > 0.0f)
             {
-                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayTimer, Vector2.Zero, 0.0f,
+                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayAlpha, Vector2.Zero, 0.0f,
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
