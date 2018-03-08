@@ -169,14 +169,40 @@ namespace Barotrauma
 
                     //we can safely skip to the next waypoint if the character is at a safe height above the floor,
                     //or if the next waypoint in the path is also on ladders
-                    if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
-                            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
+                    try
                     {
-                        if (currentPath.NextNode.Ladders == null)
+                        if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
+                                (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
                         {
-                            character.AnimController.Anim = AnimController.Animation.None;
+                            if (currentPath.NextNode.Ladders == null)
+                            {
+                                character.AnimController.Anim = AnimController.Animation.None;
+                            }
+                            currentPath.SkipToNextNode();
                         }
-                        currentPath.SkipToNextNode();
+                    }
+                    catch(Exception e)
+                    {
+                        DebugConsole.ThrowError("NILMOD ERROR in Steeringmanager character: " + character.Name + ", Species: " + character.SpeciesName + ", Removed: " + (character.Removed)
+                            + " \n" + e.Message);
+                        if (collider == null) DebugConsole.ThrowError("Collider was null!");
+                        if (currentPath == null)
+                        {
+                            DebugConsole.NewMessage("currentPath was null!", Color.Red);
+                        }
+                        else
+                        {
+                            if(currentPath.NextNode == null)
+                            {
+                                DebugConsole.NewMessage("currentPath.NextNode was null!", Color.Red);
+                            }
+                            else
+                            {
+                                if (currentPath.NextNode.Ladders == null) DebugConsole.NewMessage("currentPath.NextNode.Ladders was null!", Color.Red);
+                            }
+                        }
+                        if(character.AnimController == null) DebugConsole.NewMessage("character.AnimController was null!", Color.Red);
+                        if (character.AnimController.Limbs == null) DebugConsole.NewMessage("character.AnimController.Limbs was null!", Color.Red);
                     }
                 }
 
