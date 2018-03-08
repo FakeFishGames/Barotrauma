@@ -18,6 +18,8 @@ namespace Barotrauma
 
         private Texture2D damageStencil;
 
+        public float BlurStrength;
+        public float DistortStrength;
         
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -196,16 +198,13 @@ namespace Barotrauma
             graphics.DepthStencilState = DepthStencilState.DepthRead;
             graphics.SetRenderTarget(renderTargetFinal);
             
-            Hull.renderer.ResetBuffers();
+            WaterRenderer.Instance.ResetBuffers();
             foreach (Hull hull in Hull.hullList)
 			{
-				hull.UpdateVertices(graphics, cam);
+				hull.UpdateVertices(graphics, cam, WaterRenderer.Instance);
 			}
-
-            Hull.renderer.RenderWater(spriteBatch, renderTargetWater, cam);
-
-
-			Hull.renderer.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
+            WaterRenderer.Instance.RenderWater(spriteBatch, renderTargetWater, cam);
+            WaterRenderer.Instance.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
             graphics.DepthStencilState = DepthStencilState.None;
 
             spriteBatch.Begin(SpriteSortMode.Immediate,
@@ -237,11 +236,6 @@ namespace Barotrauma
             }
 			spriteBatch.End();
 
-			graphics.SetRenderTarget(null);
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
-			spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-			spriteBatch.End();
-
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
@@ -259,6 +253,27 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);
                 spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height), losColor);
                 spriteBatch.End();                
+            }
+			graphics.SetRenderTarget(null);
+            if (BlurStrength > 0.0f || DistortStrength > 0.0f)
+            {
+                WaterRenderer.Instance.WaterEffect.CurrentTechnique = WaterRenderer.Instance.WaterEffect.Techniques["WaterShaderPostProcess"];
+                WaterRenderer.Instance.WaterEffect.Parameters["xUvOffset"].SetValue(Vector2.Zero);
+                WaterRenderer.Instance.WaterEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+                WaterRenderer.Instance.WaterEffect.Parameters["xWaveWidth"].SetValue(DistortStrength);
+                WaterRenderer.Instance.WaterEffect.Parameters["xWaveHeight"].SetValue(DistortStrength);
+                WaterRenderer.Instance.WaterEffect.Parameters["xBlurDistance"].SetValue(BlurStrength);
+                WaterRenderer.Instance.WaterEffect.CurrentTechnique.Passes[0].Apply();
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, WaterRenderer.Instance.WaterEffect, null);
+			    spriteBatch.Draw(WaterRenderer.Instance.WaterTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+			    spriteBatch.End();
+            }
+            else
+            {
+			    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
+			    spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+			    spriteBatch.End();
             }
         }
     }

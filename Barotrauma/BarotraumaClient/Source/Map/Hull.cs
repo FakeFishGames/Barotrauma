@@ -12,9 +12,7 @@ namespace Barotrauma
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         public const int MaxDecalsPerHull = 10;
-
-        public static WaterRenderer renderer;
-
+        
         private List<Decal> decals = new List<Decal>();
 
         private Sound currentFlowSound;
@@ -298,7 +296,7 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam)
+        public void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, WaterRenderer renderer)
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 

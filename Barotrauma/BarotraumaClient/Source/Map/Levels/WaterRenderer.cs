@@ -29,6 +29,8 @@ namespace Barotrauma
 
     class WaterRenderer : IDisposable
     {
+        public static WaterRenderer Instance;
+
         public const int DefaultBufferSize = 1500;
         public const int DefaultIndoorsBufferSize = 3000;
 
@@ -47,7 +49,7 @@ namespace Barotrauma
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
         public Dictionary<Submarine, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<Submarine, VertexPositionColorTexture[]>();// VertexPositionColorTexture[DefaultBufferSize * 2];
 
-        public Effect waterEffect
+        public Effect WaterEffect
         {
             get;
             private set;
@@ -67,7 +69,7 @@ namespace Barotrauma
         public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
         {
 #if WINDOWS
-            waterEffect = content.Load<Effect>("watershader");
+            WaterEffect = content.Load<Effect>("watershader");
 #endif
 #if LINUX
 
@@ -75,11 +77,8 @@ namespace Barotrauma
 #endif
 
             waterTexture = TextureLoader.FromFile("Content/waterbump.png");
-            waterEffect.Parameters["xWaveWidth"].SetValue(0.5f);
-            waterEffect.Parameters["xWaveHeight"].SetValue(0.5f);
-
-            waterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
-            waterEffect.Parameters["waterColor"].SetValue(waterColor.ToVector4());
+            WaterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
+            WaterEffect.Parameters["waterColor"].SetValue(waterColor.ToVector4());
 
             if (basicEffect == null)
             {
@@ -94,16 +93,17 @@ namespace Barotrauma
         {
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
-            waterEffect.Parameters["xTexture"].SetValue(texture);
-
+            WaterEffect.Parameters["xTexture"].SetValue(texture);
+            WaterEffect.Parameters["xWaveWidth"].SetValue(0.5f);
+            WaterEffect.Parameters["xWaveHeight"].SetValue(0.5f);
             if (blurAmount > 0.0f)
             {
-                waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShaderBlurred"];
-                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+                WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShaderBlurred"];
+                WaterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             }
             else
-            {   waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
-                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+            {   WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
+                WaterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             }
 
             Vector2 offset = WavePos;
@@ -114,27 +114,27 @@ namespace Barotrauma
                 offset.X += cam.WorldView.Width;
             }
             offset.Y = -offset.Y;
-            waterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
-            waterEffect.Parameters["xBumpPos"].SetValue(Vector2.Zero);
+            WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
+            WaterEffect.Parameters["xBumpPos"].SetValue(Vector2.Zero);
 
             if (cam != null)
             {
-                waterEffect.Parameters["xBumpScale"].SetValue(new Vector2(
+                WaterEffect.Parameters["xBumpScale"].SetValue(new Vector2(
                         (float)cam.WorldView.Width / GameMain.GraphicsWidth,
                         (float)cam.WorldView.Height / GameMain.GraphicsHeight));
-                waterEffect.Parameters["xTransform"].SetValue(cam.ShaderTransform
+                WaterEffect.Parameters["xTransform"].SetValue(cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
-                waterEffect.Parameters["xUvTransform"].SetValue(cam.ShaderTransform
+                WaterEffect.Parameters["xUvTransform"].SetValue(cam.ShaderTransform
                     * Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width * 2, spriteBatch.GraphicsDevice.Viewport.Height * 2, 0, 0, 1) * Matrix.CreateTranslation(0.5f, 0.5f, 0.0f));
             }
             else
             {
-                waterEffect.Parameters["xBumpScale"].SetValue(new Vector2(1.0f, 1.0f));
-                waterEffect.Parameters["xTransform"].SetValue(Matrix.Identity * Matrix.CreateTranslation(-1.0f, 1.0f, 0.0f));
-                waterEffect.Parameters["xUvTransform"].SetValue(Matrix.CreateScale(0.5f, -0.5f, 0.0f));
+                WaterEffect.Parameters["xBumpScale"].SetValue(new Vector2(1.0f, 1.0f));
+                WaterEffect.Parameters["xTransform"].SetValue(Matrix.Identity * Matrix.CreateTranslation(-1.0f, 1.0f, 0.0f));
+                WaterEffect.Parameters["xUvTransform"].SetValue(Matrix.CreateScale(0.5f, -0.5f, 0.0f));
             }
 
-            waterEffect.CurrentTechnique.Passes[0].Apply();
+            WaterEffect.CurrentTechnique.Passes[0].Apply();
 
             VertexPositionColorTexture[] verts = new VertexPositionColorTexture[6];
 
@@ -168,9 +168,9 @@ namespace Barotrauma
                     offset.X += cam.WorldView.Width;
                 }
                 offset.Y = -offset.Y;
-                waterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
+                WaterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
 
-                waterEffect.CurrentTechnique.Passes[0].Apply();
+                WaterEffect.CurrentTechnique.Passes[0].Apply();
 
                 spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, subVerts.Value, 0, PositionInIndoorsBuffer[subVerts.Key] / 3);
             }
@@ -213,10 +213,10 @@ namespace Barotrauma
         {
             if (!disposing) return;
 
-            if (waterEffect != null)
+            if (WaterEffect != null)
             {
-                waterEffect.Dispose();
-                waterEffect = null;
+                WaterEffect.Dispose();
+                WaterEffect = null;
             }
 
             if (basicEffect != null)
