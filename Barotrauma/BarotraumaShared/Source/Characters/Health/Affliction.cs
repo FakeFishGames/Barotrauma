@@ -12,7 +12,7 @@ namespace Barotrauma
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
-            Strength = strength;
+            Strength = Math.Min(strength, Prefab.MaxStrength);
         }
 
         public Affliction CreateMultiplied(float multiplier)
