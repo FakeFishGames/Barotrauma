@@ -939,15 +939,11 @@ namespace Barotrauma
             Grab(handPos, handPos);
 
             Vector2 colliderPos = GetColliderBottom();
-
-            //TODO: reimplement
-            /*if (GameMain.Client == null) //Serverside code
+            
+            if (GameMain.Client == null) //Serverside code
             {
-                if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
-                {
-                    target.Oxygen += deltaTime * 0.5f; //Stabilize them
-                }
-            }*/
+                target.Oxygen += deltaTime * 0.5f; //Stabilize them                
+            }
 
             int skill = character.GetSkillLevel("Medical");
             if (cprAnimState % 17 > 15.0f && targetHead != null && head != null)
@@ -961,7 +957,7 @@ namespace Barotrauma
                 if (GameMain.Client == null) //Serverside code
                 {
                     //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                    if (character.Oxygen < -10.0f)
+                    if (target.Oxygen < -10.0f)
                     {
                         float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
                         character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
