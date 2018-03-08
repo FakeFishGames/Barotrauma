@@ -82,6 +82,7 @@
   <Order name="Report Fire" aitag="reportfire" color="1.0,0.0,0.0,1.0" targetallcharacters="true" fadeouttime="20">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,64,64,64"/>
     <ChatMessage msg="Fire in [roomname]!"/>
+    <ChatMessage msg="[roomname] is on fire!"/>
   </Order>
 
   <Order name="Report Breach" aitag="reportbreach" color="0.6,0.85,1.0,1.0" targetallcharacters="true" fadeouttime="20">
@@ -93,6 +94,14 @@
   <Order name="Report Intruders" aitag="reportintruders" color="0.6,0.2,0.1,1.0" targetallcharacters="true" fadeouttime="20">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,128,64,64"/>
     <ChatMessage msg="Intruders in [roomname]!"/>
+    <ChatMessage msg="Hostiles in [roomname]!"/>
+  </Order>
+
+  <Order name="Report Broken Devices" aitag="reportbrokendevices" color="0.6,0.2,0.1,1.0" targetallcharacters="true" 
+         appropriatejobs="Engineer, Mechanic" fadeouttime="20">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,128,64,64"/>
+    <ChatMessage msg="Broken devices in [roomname]!"/>
+    <ChatMessage msg="Need someone to repair devices in [roomname]!"/>
   </Order>
   
   <Order name="Request First Aid" aitag="requestfirstaid" color="1.0,0.0,0.0,1.0" targetallcharacters="true"
