@@ -95,20 +95,27 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
             waterEffect.Parameters["xTexture"].SetValue(texture);
-            waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
+
+            if (blurAmount > 0.0f)
+            {
+                waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShaderBlurred"];
+                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+            }
+            else
+            {   waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
+                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+            }
 
             Vector2 offset = WavePos;
             if (cam != null)
             {
-                offset += cam.WorldView.Location.ToVector2();
+                offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
                 offset.Y += cam.WorldView.Height;
                 offset.X += cam.WorldView.Width;
             }
             offset.Y = -offset.Y;
-            waterEffect.Parameters["xUvOffset"].SetValue(new Vector2(offset.X / GameMain.GraphicsWidth, offset.Y / GameMain.GraphicsHeight));
-
+            waterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
             waterEffect.Parameters["xBumpPos"].SetValue(Vector2.Zero);
-            waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
 
             if (cam != null)
             {
@@ -156,12 +163,12 @@ namespace Barotrauma
                 offset = WavePos - subVerts.Key.WorldPosition;
                 if (cam != null)
                 {
-                    offset += cam.WorldView.Location.ToVector2();
+                    offset += cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f);
                     offset.Y += cam.WorldView.Height;
                     offset.X += cam.WorldView.Width;
                 }
                 offset.Y = -offset.Y;
-                waterEffect.Parameters["xUvOffset"].SetValue(new Vector2(offset.X / GameMain.GraphicsWidth, offset.Y / GameMain.GraphicsHeight));
+                waterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
 
                 waterEffect.CurrentTechnique.Passes[0].Apply();
 
