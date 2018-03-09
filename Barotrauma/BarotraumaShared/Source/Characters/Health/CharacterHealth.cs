@@ -415,7 +415,7 @@ namespace Barotrauma
         
         partial void UpdateOxygenProjSpecific(float prevOxygen);
 
-        private void CalculateVitality()
+        public void CalculateVitality()
         {
             vitality = MaxVitality;
             foreach (LimbHealth limbHealth in limbHealths)
