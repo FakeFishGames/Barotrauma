@@ -759,9 +759,9 @@ namespace Barotrauma
             info.Job.GiveJobItems(this, spawnPoint);
         }
 
-        public int GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillName)
         {
-            return (Info==null || Info.Job==null) ? 0 : Info.Job.GetSkillLevel(skillName);
+            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillName);
         }
 
         float findFocusedTimer;

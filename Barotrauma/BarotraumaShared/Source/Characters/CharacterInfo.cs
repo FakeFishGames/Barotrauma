@@ -46,6 +46,7 @@ namespace Barotrauma
                 return disguiseName;
             }
         }
+
         public Character Character;
 
         public readonly string File;
@@ -56,11 +57,11 @@ namespace Barotrauma
 
         public ushort? HullID = null;
 
-        private Vector2[] headSpriteRange;
-
         private Gender gender;
 
         public int Salary;
+
+        private Vector2[] headSpriteRange;
 
         private int headSpriteId;
         private Sprite headSprite;
@@ -209,6 +210,43 @@ namespace Barotrauma
             Salary = CalculateSalary();
         }
 
+
+        public CharacterInfo(XElement element)
+        {
+            Name = element.GetAttributeString("name", "unnamed");
+
+            string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
+            gender = (genderStr == "m") ? Gender.Male : Gender.Female;
+
+            File = element.GetAttributeString("file", "");
+            Salary = element.GetAttributeInt("salary", 1000);
+            headSpriteId = element.GetAttributeInt("headspriteid", 1);
+            StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
+
+            int hullId = element.GetAttributeInt("hull", -1);
+            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;
+
+            pickedItems = new List<ushort>();
+
+            string pickedItemString = element.GetAttributeString("items", "");
+            if (!string.IsNullOrEmpty(pickedItemString))
+            {
+                string[] itemIds = pickedItemString.Split(',');
+                foreach (string s in itemIds)
+                {
+                    pickedItems.Add((ushort)int.Parse(s));
+                }
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
+
+                Job = new Job(subElement);
+                break;
+            }
+        }
+
         private void LoadHeadSprite()
         {
             XDocument doc = XMLExtensions.TryLoadXml(File);
@@ -261,43 +299,7 @@ namespace Barotrauma
                 pickedItems.Add(item == null ? (ushort)0 : item.ID);
             }
         }
-
-        public CharacterInfo(XElement element)
-        {
-            Name = element.GetAttributeString("name", "unnamed");
-
-            string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
-            gender = (genderStr == "m") ? Gender.Male : Gender.Female;
-
-            File            = element.GetAttributeString("file", "");
-            Salary          = element.GetAttributeInt("salary", 1000);
-            headSpriteId    = element.GetAttributeInt("headspriteid", 1);
-            StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
-            
-            int hullId = element.GetAttributeInt("hull", -1);
-            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;            
-
-            pickedItems = new List<ushort>();
-
-            string pickedItemString = element.GetAttributeString("items", "");
-            if (!string.IsNullOrEmpty(pickedItemString))
-            {
-                string[] itemIds = pickedItemString.Split(',');
-                foreach (string s in itemIds)
-                {
-                    pickedItems.Add((ushort)int.Parse(s));
-                }
-            }
-
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
-
-                Job = new Job(subElement);
-                break;
-            }
-        }
-
+        
         private int CalculateSalary()
         {
             if (Name == null || Job == null) return 0;
@@ -306,10 +308,24 @@ namespace Barotrauma
 
             foreach (Skill skill in Job.Skills)
             {
-                salary += skill.Level * 10;
+                salary += (int)skill.Level * 10;
             }
 
             return salary;
+        }
+
+        public void IncreaseSkillLevel(string skillName, float increase)
+        {
+            if (Job == null) return;
+
+            int prevLevel = (int)Job.GetSkillLevel(skillName);
+            Job.IncreaseSkillLevel(skillName, increase);
+
+            int newLevel = (int)Job.GetSkillLevel(skillName);
+            if (newLevel > prevLevel)
+            {
+                new GUIMessageBox("Skill level increased!", Name + "'s " + skillName + " skill increased to " + newLevel + "!");
+            }
         }
 
         public virtual XElement Save(XElement parentElement)

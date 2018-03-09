@@ -945,7 +945,7 @@ namespace Barotrauma
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them                
             }
 
-            int skill = character.GetSkillLevel("Medical");
+            int skill = (int)character.GetSkillLevel("Medical");
             if (cprAnimState % 17 > 15.0f && targetHead != null && head != null)
             {
                 float yPos = (float)Math.Sin(cprAnimState) * 0.2f;

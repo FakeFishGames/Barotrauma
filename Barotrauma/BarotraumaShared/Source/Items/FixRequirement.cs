@@ -5,9 +5,11 @@ namespace Barotrauma
 {
     partial class FixRequirement
     {
+        public static float SkillIncreaseMultiplier = 1.0f;
+
         private string name;
 
-        private readonly List<Skill> requiredSkills;
+        private readonly List<Skill> RequiredSkills;
         private readonly List<string> requiredItems;
 
         public bool Fixed;
@@ -21,7 +23,7 @@ namespace Barotrauma
         {
             name = element.GetAttributeString("name", "");
 
-            requiredSkills = new List<Skill>();
+            RequiredSkills = new List<Skill>();
             requiredItems = new List<string>();
 
             foreach (XElement subElement in element.Elements())
@@ -32,7 +34,7 @@ namespace Barotrauma
                         string skillName = subElement.GetAttributeString("name", "");
                         int level = subElement.GetAttributeInt("level", 1);
 
-                        requiredSkills.Add(new Skill(skillName, level));
+                        RequiredSkills.Add(new Skill(skillName, level));
                         break;
                     case "item":
                         string itemName = subElement.GetAttributeString("name", "");
@@ -45,7 +47,7 @@ namespace Barotrauma
 
         public bool HasRequiredSkills(Character character)
         {
-            foreach (Skill skill in requiredSkills)
+            foreach (Skill skill in RequiredSkills)
             {
                 if (character.GetSkillLevel(skill.Name) < skill.Level) return false;
             }

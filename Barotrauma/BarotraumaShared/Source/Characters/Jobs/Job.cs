@@ -70,12 +70,21 @@ namespace Barotrauma
             return new Job(prefab);
         }
 
-        public int GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillName)
         {
             Skill skill = null;
             skills.TryGetValue(skillName, out skill);
 
-            return (skill==null) ? 0 : skill.Level;
+            return (skill == null) ? 0.0f : skill.Level;
+        }
+
+        public void IncreaseSkillLevel(string skillName, float increase)
+        {
+            Skill skill = null;
+            if (skills.TryGetValue(skillName, out skill))
+            {
+                skill.Level += increase;
+            }
         }
 
         public void GiveJobItems(Character character, WayPoint spawnPoint)

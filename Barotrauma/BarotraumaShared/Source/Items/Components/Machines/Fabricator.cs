@@ -105,6 +105,8 @@ namespace Barotrauma.Items.Components
 
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
+        public const float SkillIncreaseMultiplier = 0.5f;
+
         private List<FabricableItem> fabricableItems;
 
         private FabricableItem fabricatedItem;
@@ -113,6 +115,8 @@ namespace Barotrauma.Items.Components
         //used for checking if contained items have changed 
         //(in which case we need to recheck which items can be fabricated)
         private Item[] prevContainedItems;
+
+        private Character user;
         
         public Fabricator(Item item, XElement element) 
             : base(item, element)
@@ -148,8 +152,6 @@ namespace Barotrauma.Items.Components
                 SelectItem(itemList.Selected, itemList.Selected.UserData);                
             }
 #endif
-
-
             return base.Select(character);
         }
 
@@ -175,7 +177,6 @@ namespace Barotrauma.Items.Components
 
                 child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
                 child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
-
             }
 #endif
 
@@ -195,12 +196,12 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             itemList.Enabled = false;
-
             activateButton.Text = "Cancel";
 #endif
 
             fabricatedItem = selectedItem;
             IsActive = true;
+            this.user = user;
 
             timeUntilReady = fabricatedItem.RequiredTime;
 
@@ -220,6 +221,7 @@ namespace Barotrauma.Items.Components
 
             IsActive = false;
             fabricatedItem = null;
+            this.user = null;
 
             currPowerConsumption = 0.0f;
 
@@ -293,6 +295,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+            }
+
+            if (GameMain.Client == null && user != null)
+            {
+                foreach (Skill skill in fabricatedItem.RequiredSkills)
+                {
+                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier);
+                }
             }
 
             CancelFabricating(null);
