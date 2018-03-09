@@ -687,8 +687,9 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
-
             if (!MathUtils.IsValid(damage)) return;
+
+            damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
@@ -756,7 +757,7 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
-            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+            if (damageDiff != 0.0f) //otherwise it's possible to infinitely gain karma by welding fixed things
                 AdjustKarma(attacker, damageDiff);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
