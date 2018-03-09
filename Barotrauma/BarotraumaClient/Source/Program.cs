@@ -78,16 +78,22 @@ namespace Barotrauma
                 {
                     Exception e = (Exception)args.ExceptionObject;
                     //DebugConsole.NewMessage("Unhandled Exception Caught (Program has crashed!) : " + e.Message, Microsoft.Xna.Framework.Color.Red);
-                    if(GameMain.Server != null)
+                    if(GameMain.Server != null && GameMain.Server.ServerLog != null)
                     {
                         GameMain.Server.ServerLog.WriteLine("Server Has Suffered a fatal Crash (Autorestarting).", Networking.ServerLog.MessageType.Error);
                         GameMain.Server.ServerLog.Save();
                     }
-                    System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
+
+#if LINUX
+                    System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().CodeBase + "\\Barotrauma NilEdit.exe");
                     //Kind of flipping the table here after the last one or two didnt work.
-                    Application.ExitThread();
-                    Application.Exit();
+                    //inputThread.Abort(); inputThread.Join();
                     Environment.Exit(-1);
+#else
+                    //System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
+                    //Application.ExitThread();
+                    //Application.Exit();
+#endif
                 }
             }
         }
@@ -154,7 +160,7 @@ namespace Barotrauma
         {
 #if WINDOWS
             MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif         
+#endif
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
@@ -296,7 +302,11 @@ namespace Barotrauma
             {
                 if (GameMain.NilMod.CrashRestart)
                 {
-                    System.Diagnostics.Process.Start(Application.StartupPath + "\\blabla.exe");
+#if LINUX
+                    //System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().CodeBase + "\\Barotrauma NilEdit.exe");
+#else
+                    //System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
+#endif
                 }
                 else
                 {
@@ -312,4 +322,4 @@ namespace Barotrauma
         }
     }
 #endif
-        }
+                }
