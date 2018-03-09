@@ -277,11 +277,16 @@ namespace Barotrauma
             if (this.type != type || !HasRequiredItems(entity)) return;
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
-
+            
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                if (DurationList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.Count == 1 && d.Targets[0] == target)) return;
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target));
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    return;
+                }
             }
 
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
