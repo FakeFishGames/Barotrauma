@@ -584,7 +584,7 @@ namespace Barotrauma
                 foreach (Skill skill in info.Job.Skills)
                 {
                     msg.Write(skill.Name);
-                    msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
+                    msg.WriteRangedInteger(0, 100, (int)MathHelper.Clamp(skill.Level, 0, 100));
                 }
             }
             else

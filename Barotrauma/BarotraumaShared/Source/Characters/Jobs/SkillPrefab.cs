@@ -41,7 +41,5 @@ namespace Barotrauma
                 levelRange = new Vector2(skillLevel, skillLevel);
             }
         }
-
-
     }
 }

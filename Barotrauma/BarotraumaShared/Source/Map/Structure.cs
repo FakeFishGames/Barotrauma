@@ -45,6 +45,9 @@ namespace Barotrauma
         public const int WallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
+        //how much mechanic skill increases per damage removed from the wall by welding
+        public const float SkillIncreaseMultiplier = 0.0005f;
+
         const float LeakThreshold = 0.1f;
 
         private StructurePrefab prefab;
@@ -700,8 +703,9 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
-
             if (!MathUtils.IsValid(damage)) return;
+
+            damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
@@ -770,13 +774,20 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
-            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+            //otherwise it's possible to infinitely gain karma by welding fixed things
+            if (attacker != null && damageDiff != 0.0f)
+            {
                 AdjustKarma(attacker, damageDiff);
+                if (damageDiff < 0.0f && GameMain.Client == null)
+                {
+                    attacker.Info.IncreaseSkillLevel("Mechanical Engineering", -damageDiff * SkillIncreaseMultiplier);                                    
+                }
+            }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
-            
+                        
             UpdateSections();
         }
 

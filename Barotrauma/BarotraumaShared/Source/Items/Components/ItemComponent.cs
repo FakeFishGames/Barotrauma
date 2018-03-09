@@ -435,7 +435,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Skill skill in requiredSkills)
             {
-                int characterLevel = character.GetSkillLevel(skill.Name);
+                float characterLevel = character.GetSkillLevel(skill.Name);
                 if (characterLevel < skill.Level)
                 {
                     insufficientSkill = skill;
@@ -458,8 +458,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
-
+                float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
                 skillSuccess[i] = (characterLevel - requiredSkills[i].Level);
             }
 
