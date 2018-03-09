@@ -281,7 +281,7 @@ namespace Barotrauma
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
-                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target));
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target);
                 if (existingEffect != null)
                 {
                     existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
