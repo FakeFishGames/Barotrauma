@@ -172,7 +172,7 @@ namespace Barotrauma
                     if ((heightFromFloor > 0.0f && heightFromFloor < collider.height * 1.5f) ||
                         (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
                     {
-                        if (currentPath.NextNode.Ladders == null)
+                        if (currentPath.NextNode != null && currentPath.NextNode.Ladders == null)
                         {
                             character.AnimController.Anim = AnimController.Animation.None;
                         }
