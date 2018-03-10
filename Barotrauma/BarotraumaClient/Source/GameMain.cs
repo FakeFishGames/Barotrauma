@@ -33,6 +33,8 @@ namespace Barotrauma
         public static ParticleEditorScreen  ParticleEditorScreen;
 
         public static Lights.LightManager LightManager;
+
+        public static Sounds.SoundManager SoundManager;
         
         public static ContentPackage SelectedPackage
         {
@@ -219,7 +221,7 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
-            Sound.Init();
+            SoundManager = new Sounds.SoundManager();
 
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
@@ -337,7 +339,7 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
-            Sound.Dispose();
+            SoundManager.Dispose();
         }
         
         /// <summary>

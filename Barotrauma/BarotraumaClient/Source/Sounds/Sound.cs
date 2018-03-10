@@ -1,9 +1,10 @@
 ﻿using System;
 using OpenTK.Audio.OpenAL;
+using Microsoft.Xna.Framework;
 
-namespace Barotrauma
+namespace Barotrauma.Sounds
 {
-    abstract class Sound : IDisposable
+    public abstract class Sound : IDisposable
     {
         public SoundManager Owner
         {
@@ -62,9 +63,19 @@ namespace Barotrauma
             }
         }
 
+        public SoundChannel Play(Vector3? position, float gain)
+        {
+            return new SoundChannel(this, position, gain);
+        }
+
+        public SoundChannel Play(float gain)
+        {
+            return Play(null, gain);
+        }
+
         public SoundChannel Play()
         {
-            return new SoundChannel(this);
+            return Play(1.0f);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);
