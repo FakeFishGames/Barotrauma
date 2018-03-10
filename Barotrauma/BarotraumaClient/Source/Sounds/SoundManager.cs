@@ -1,24 +1,69 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
-using System.Timers;
-using OpenTK;
 using OpenTK.Audio.OpenAL;
+using Microsoft.Xna.Framework;
 
-namespace Barotrauma
+namespace Barotrauma.Sounds
 {
-    class SoundManager : IDisposable
+    public class SoundManager : IDisposable
     {
         const int SOURCE_COUNT = 16;
         
         private IntPtr alcDevice;
-        private ContextHandle alcContext;
+        private OpenTK.ContextHandle alcContext;
         private uint[] alSources;
 
         private List<Sound> loadedSounds;
         private SoundChannel[] playingChannels;
 
         private Thread streamingThread;
+
+        private Vector3 listenerPosition;
+        public Vector3 ListenerPosition
+        {
+            get { return listenerPosition; }
+            set
+            {
+                listenerPosition = value;
+                AL.Listener(ALListener3f.Position,value.X,value.Y,value.Z);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener position: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        private float[] listenerOrientation;
+        public Vector3 ListenerTargetVector
+        {
+            get { return new Vector3(listenerOrientation[0], listenerOrientation[1], listenerOrientation[2]); }
+            set
+            {
+                listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener target vector: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+        public Vector3 ListenerUpVector
+        {
+            get { return new Vector3(listenerOrientation[3], listenerOrientation[4], listenerOrientation[5]); }
+            set
+            {
+                listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener up vector: " + AL.GetErrorString(alError));
+                }
+            }
+        }
 
         public SoundManager()
         {
@@ -62,10 +107,20 @@ namespace Barotrauma
                     throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
                 }
             }
+
+            listenerOrientation = new float[6];
+            ListenerPosition = Vector3.Zero;
+            ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
+            ListenerUpVector = new Vector3(0.0f, 1.0f, 0.0f);
         }
 
-        public Sound LoadSound(string filename,bool stream)
+        public Sound LoadSound(string filename,bool stream=false)
         {
+            if (!System.IO.File.Exists(filename))
+            {
+                throw new Exception("\"" + filename + "\" doesn't exist!");
+            }
+
             Sound newSound = new OggSound(this, filename, stream);
             loadedSounds.Add(newSound);
             return newSound;
@@ -89,7 +144,6 @@ namespace Barotrauma
                     {
                         if (playingChannels[i]!=null) playingChannels[i].Dispose();
                         playingChannels[i] = newChannel;
-                        if (newChannel.IsStream) InitStreamThread();
                         return i;
                     }
                 }
@@ -125,7 +179,7 @@ namespace Barotrauma
             }
         }
 
-        void InitStreamThread()
+        public void InitStreamThread()
         {
             if (streamingThread == null || streamingThread.ThreadState!=ThreadState.Running)
             {
@@ -186,7 +240,7 @@ namespace Barotrauma
                 }
             }
             
-            if (!Alc.MakeContextCurrent(ContextHandle.Zero))
+            if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
             {
                 throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }

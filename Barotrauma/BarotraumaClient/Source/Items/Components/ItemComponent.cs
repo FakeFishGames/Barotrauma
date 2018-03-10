@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -53,12 +54,16 @@ namespace Barotrauma.Items.Components
         }
 
         private ItemSound loopingSound;
-        private int loopingSoundIndex;
+        private SoundChannel loopingSoundChannel;
         public void PlaySound(ActionType type, Vector2 position)
         {
             if (loopingSound != null)
             {
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));//Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                loopingSoundChannel.Looping = true;
+                //TODO: tweak
+                loopingSoundChannel.Near = loopingSound.Range * 0.7f;
+                loopingSoundChannel.Far = loopingSound.Range * 1.3f;
                 return;
             }
 
@@ -66,7 +71,7 @@ namespace Barotrauma.Items.Components
             if (!sounds.TryGetValue(type, out matchingSounds)) return;
 
             ItemSound itemSound = null;
-            if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            if (!loopingSoundChannel.IsPlaying)
             {
                 int index = Rand.Int(matchingSounds.Count);
                 itemSound = matchingSounds[index];
@@ -78,29 +83,29 @@ namespace Barotrauma.Items.Components
             {
                 loopingSound = itemSound;
 
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));//Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                loopingSoundChannel.Looping = true;
+                //TODO: tweak
+                loopingSoundChannel.Near = loopingSound.Range * 0.7f;
+                loopingSoundChannel.Far = loopingSound.Range * 1.3f;
             }
             else
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume == 0.0f) return;
-                itemSound.Sound.Play(volume, itemSound.Range, position);
+                SoundChannel tempChannel = itemSound.Sound.Play(new Vector3(position.X,position.Y,0.0f), volume);
+                tempChannel.Near = itemSound.Range * 0.7f;
+                tempChannel.Far = itemSound.Range * 1.3f;
             }
         }
 
         public void StopSounds(ActionType type)
         {
-            if (loopingSoundIndex <= 0) return;
-
-            if (loopingSound == null) return;
-
-            if (loopingSound.Type != type) return;
-
-            if (Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
                 loopingSound = null;
-                loopingSoundIndex = -1;
             }
         }
 
@@ -200,7 +205,7 @@ namespace Barotrauma.Items.Components
                         break;
                     }
 
-                    Sound sound = Sound.Load(filePath);
+                    Sound sound = Submarine.LoadRoundSound(filePath);
 
                     float range = subElement.GetAttributeFloat("range", 800.0f);
                     bool loop = subElement.GetAttributeBool("loop", false);

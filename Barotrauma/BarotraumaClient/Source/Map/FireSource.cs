@@ -1,4 +1,5 @@
 using Barotrauma.Lights;
+using Barotrauma.Sounds;
 using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System;

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,6 +13,34 @@ namespace Barotrauma
     partial class Submarine : Entity, IServerSerializable
     {
         public Sprite PreviewImage;
+
+        private static List<Sound> roundSounds = null;
+
+        public static Sound LoadRoundSound(string filename,bool stream=false)
+        {
+            Sound newSound = GameMain.SoundManager.LoadSound(filename, stream);
+            if (roundSounds == null)
+            {
+                roundSounds = new List<Sound>();
+            }
+            roundSounds.Add(newSound);
+            return newSound;
+        }
+
+        public static void RemoveRoundSound(Sound sound)
+        {
+            sound.Dispose();
+            if (roundSounds == null) return;
+            if (roundSounds.Contains(sound)) roundSounds.Remove(sound);
+        }
+
+        public static void RemoveAllRoundSounds()
+        {
+            for (int i=roundSounds.Count-1;i>=0;i--)
+            {
+                RemoveRoundSound(roundSounds[i]);
+            }
+        }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {

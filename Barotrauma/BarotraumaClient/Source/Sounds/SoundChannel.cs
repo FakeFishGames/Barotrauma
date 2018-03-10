@@ -1,11 +1,142 @@
 ﻿using System;
 using OpenTK.Audio.OpenAL;
+using Microsoft.Xna.Framework;
 
-namespace Barotrauma
+namespace Barotrauma.Sounds
 {
-    class SoundChannel : IDisposable
+    public class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 65536;
+
+        private Vector3? position;
+        public Vector3? Position
+        {
+            get { return position; }
+            set
+            {
+                position = value;
+
+                if (ALSourceIndex < 0) return;
+
+                if (position != null)
+                {
+                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    AL.Source(alSource, ALSourceb.SourceRelative, true);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to enable source's relative flag: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.Source(alSource, ALSource3f.Position, position.Value.X, position.Value.Y, position.Value.Z);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to set source's position: " + AL.GetErrorString(alError));
+                    }
+                }
+                else
+                {
+                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    AL.Source(alSource, ALSourceb.SourceRelative, false);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to disable source's relative flag: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.Source(alSource, ALSource3f.Position, 0.0f, 0.0f, 0.0f);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to reset source's position: " + AL.GetErrorString(alError));
+                    }
+                }
+            }
+        }
+
+        private float near;
+        public float Near
+        {
+            get { return near; }
+            set
+            {
+                near = value;
+
+                if (ALSourceIndex < 0) return;
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                AL.Source(alSource, ALSourcef.ReferenceDistance, near);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set source's reference distance: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        private float far;
+        public float Far
+        {
+            get { return far; }
+            set
+            {
+                far = value;
+
+                if (ALSourceIndex < 0) return;
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                AL.Source(alSource, ALSourcef.MaxDistance, far);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set source's max distance: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        private float gain;
+        public float Gain
+        {
+            get { return gain; }
+            set
+            {
+                gain = Math.Max(Math.Min(value,1.0f),0.0f);
+
+                if (ALSourceIndex < 0) return;
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                AL.Source(alSource, ALSourcef.Gain, gain);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set source's gain: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        private bool looping;
+        public bool Looping
+        {
+            get { return looping; }
+            set
+            {
+                looping = value;
+
+                if (ALSourceIndex < 0) return;
+
+                if (!IsStream)
+                {
+                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    AL.Source(alSource, ALSourceb.Looping, looping);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to set source's looping state: " + AL.GetErrorString(alError));
+                    }
+                }
+            }
+        }
 
         public Sound Sound
         {
@@ -25,6 +156,7 @@ namespace Barotrauma
             private set;
         }
         private int streamSeekPos;
+        private bool startedPlaying;
         private bool reachedEndSample;
         private int[] streamBuffers;
 
@@ -44,12 +176,13 @@ namespace Barotrauma
             }
         }
 
-        public SoundChannel(Sound sound)
+        public SoundChannel(Sound sound,Vector3? position,float gain)
         {
             Sound = sound;
 
             IsStream = sound.Stream;
             streamSeekPos = 0; reachedEndSample = false;
+            startedPlaying = true;
 
             ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
 
@@ -84,8 +217,16 @@ namespace Barotrauma
                             throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
                         }
                     }
+
+                    Sound.Owner.InitStreamThread();
                 }
             }
+
+            this.Position = position;
+            this.Gain = gain;
+            this.Looping = false;
+            this.Near = 100.0f;
+            this.Far = 200.0f;
         }
 
         public void Dispose()
@@ -177,7 +318,7 @@ namespace Barotrauma
 
                     int buffersToUnqueue = 0;
                     int[] unqueuedBuffers = null;
-                    if (streamSeekPos > 0)
+                    if (!startedPlaying)
                     {
                         buffersToUnqueue = 0;
                         AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToUnqueue);
@@ -197,6 +338,7 @@ namespace Barotrauma
                     }
                     else
                     {
+                        startedPlaying = false;
                         buffersToUnqueue = 4;
                         unqueuedBuffers = (int[])streamBuffers.Clone();
                     }
@@ -208,7 +350,14 @@ namespace Barotrauma
                         streamSeekPos += readSamples;
                         if (readSamples < STREAM_BUFFER_SIZE)
                         {
-                            reachedEndSample = true;
+                            if (looping)
+                            {
+                                streamSeekPos = 0;
+                            }
+                            else
+                            {
+                                reachedEndSample = true;
+                            }
                         }
                         if (readSamples > 0)
                         {

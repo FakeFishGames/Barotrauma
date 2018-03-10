@@ -2,9 +2,9 @@
 using OpenTK.Audio.OpenAL;
 using NVorbis;
 
-namespace Barotrauma
+namespace Barotrauma.Sounds
 {
-    class OggSound : Sound
+    public class OggSound : Sound
     {
         private VorbisReader reader;
 
