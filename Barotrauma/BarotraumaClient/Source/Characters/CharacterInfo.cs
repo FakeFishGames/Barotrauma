@@ -26,8 +26,17 @@ namespace Barotrauma
             if (Job != null)
             {
                 new GUITextBlock(new Rectangle(x + 60, y, 200, 20), Job.Name, "", frame, font);
-                y += 30;
+                y += 25;
+            }
 
+            if (personalityTrait != null)
+            {
+                new GUITextBlock(new Rectangle(x, y, 200, 20), "Trait: " + personalityTrait.Name, "", frame, font);
+                y += 25;
+            }
+
+            if (Job != null)
+            {
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 

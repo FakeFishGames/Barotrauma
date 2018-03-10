@@ -10,7 +10,7 @@ namespace Barotrauma
     class NPCConversation
     {
         private static List<NPCConversation> list;
-
+        
         public readonly string Line;
 
         public readonly List<JobPrefab> AllowedJobs;
@@ -29,13 +29,9 @@ namespace Barotrauma
 
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
-
-        static NPCConversation()
-        {
-            Load(Path.Combine("Content", "NpcConversations.xml"));
-        }
-
-        private static void Load(string file)
+        private readonly List<string> allowedSpeakerTags;
+        
+        public static void Load(string file)
         {
             list = new List<NPCConversation>();
 
@@ -44,7 +40,15 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                list.Add(new NPCConversation(subElement));
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "conversation":
+                        list.Add(new NPCConversation(subElement));
+                        break;
+                    case "personalitytrait":
+                        new NPCPersonalityTrait(subElement);
+                        break;
+                }
             }
         }
 
@@ -71,6 +75,14 @@ namespace Barotrauma
                 {
                     Flags.Add(parsedFlag);
                 }
+            }
+
+            allowedSpeakerTags = new List<string>();
+            string allowedSpeakerTagsStr = element.GetAttributeString("speakertags", "");
+            foreach (string tag in allowedSpeakerTagsStr.Split(','))
+            {
+                if (string.IsNullOrEmpty(tag)) continue;
+                allowedSpeakerTags.Add(tag.Trim().ToLowerInvariant());                
             }
 
             Responses = new List<NPCConversation>();
@@ -141,6 +153,20 @@ namespace Barotrauma
                         //check if the character has all required flags to say the line
                         var characterFlags = GetCurrentFlags(potentialSpeaker);
                         if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+                        //check if the character has an appropriate personality
+                        if (selectedConversation.allowedSpeakerTags.Count > 0)
+                        {
+                            if (potentialSpeaker.Info?.PersonalityTrait == null) continue;
+                            if (!selectedConversation.allowedSpeakerTags.Any(t => potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Any(t2 => t2 == t))) continue;
+                        }
+                        else
+                        {
+                            if (potentialSpeaker.Info?.PersonalityTrait != null &&
+                                !potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Contains("none"))
+                            {
+                                continue;
+                            }
+                        }
 
                         allowedSpeakers.Add(potentialSpeaker);
                     }
