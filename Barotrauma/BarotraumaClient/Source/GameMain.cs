@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 namespace Barotrauma
@@ -268,6 +269,9 @@ namespace Barotrauma
             {
                 if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
             }
+            //todo: get config file paths from content package
+            NPCConversation.Load(Path.Combine("Content", "Characters", "Human", "NpcConversations.xml"));
+
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;

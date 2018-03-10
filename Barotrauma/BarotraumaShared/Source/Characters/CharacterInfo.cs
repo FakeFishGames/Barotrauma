@@ -69,6 +69,8 @@ namespace Barotrauma
 
         public byte TeamID;
 
+        private NPCPersonalityTrait personalityTrait;
+
         public List<ushort> PickedItemIDs
         {
             get { return pickedItems; }
@@ -87,6 +89,11 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public NPCPersonalityTrait PersonalityTrait
+        {
+            get { return personalityTrait; }
         }
 
         public int HeadSpriteId
@@ -133,13 +140,9 @@ namespace Barotrauma
             this.File = file;
 
             headSpriteRange = new Vector2[2];
-
             pickedItems = new List<ushort>();
-
             SpriteTags = new List<string>();
-
-            //ID = -1;
-
+            
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null) return;
 
@@ -197,6 +200,8 @@ namespace Barotrauma
                     this.Name += ToolBox.GetRandomLine(lastNamePath);
                 }
             }
+
+            personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
         }
@@ -265,6 +270,12 @@ namespace Barotrauma
             Salary          = element.GetAttributeInt("salary", 1000);
             headSpriteId    = element.GetAttributeInt("headspriteid", 1);
             StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
+
+            string personalityName = element.GetAttributeString("personality", "");
+            if (!string.IsNullOrEmpty(personalityName))
+            {
+                personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
+            }
             
             int hullId = element.GetAttributeInt("hull", -1);
             if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;            
@@ -314,7 +325,8 @@ namespace Barotrauma
                 new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
-                new XAttribute("startitemsgiven", StartItemsGiven));
+                new XAttribute("startitemsgiven", StartItemsGiven),
+                new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
             
             if (Character != null)
             {
