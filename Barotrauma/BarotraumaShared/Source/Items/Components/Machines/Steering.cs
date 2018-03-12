@@ -35,6 +35,8 @@ namespace Barotrauma.Items.Components
         private float neutralBallastLevel;
 
         private float steeringAdjustSpeed = 1.0f;
+
+        private Character user;
                 
         public bool AutoPilot
         {
@@ -117,7 +119,15 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific();
-        
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (unsentChanges)
@@ -155,6 +165,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                if (user != null && user.Info != null && user.SelectedConstruction == item)
+                {
+                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime);
+                }
+
                 Vector2 velocityDiff = steeringInput - targetVelocity;
                 if (velocityDiff != Vector2.Zero)
                 {
