@@ -385,6 +385,18 @@ namespace Barotrauma
                 var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
                 return huskAffliction == null ? 0.0f : huskAffliction.Strength;
             }
+            set
+            {
+                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                if (huskAffliction == null)
+                {
+                    health.ApplyAffliction(null, AfflictionPrefab.Husk.Instantiate(value));
+                }
+                else
+                {
+                    huskAffliction.Strength = value;
+                }
+            }
         }
 
         public bool CanSpeak
