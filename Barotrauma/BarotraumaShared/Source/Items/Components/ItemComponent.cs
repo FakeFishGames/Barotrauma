@@ -450,9 +450,9 @@ namespace Barotrauma.Items.Components
         /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
         /// </summary>
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
-        protected float DegreeOfSuccess(Character character)
+        public float DegreeOfSuccess(Character character)
         {
-            if (requiredSkills.Count == 0) return 100.0f;
+            if (requiredSkills.Count == 0) return 1.0f;
 
             float[] skillSuccess = new float[requiredSkills.Count];
 
@@ -464,7 +464,7 @@ namespace Barotrauma.Items.Components
 
             float average = skillSuccess.Average();
 
-            return (average + 100.0f) / 2.0f;
+            return ((average + 100.0f) / 2.0f) / 100.0f;
         }
 
         public virtual void FlipX() { }

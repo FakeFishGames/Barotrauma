@@ -154,6 +154,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
