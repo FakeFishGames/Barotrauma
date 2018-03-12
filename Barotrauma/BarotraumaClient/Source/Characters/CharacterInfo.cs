@@ -46,7 +46,7 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
                     new GUITextBlock(new Rectangle(x, y, 200, 20), skill.Name, Color.Transparent, textColor, Alignment.Left, "", frame).Font = font;
-                    new GUITextBlock(new Rectangle(x, y, 200, 20), skill.Level.ToString(), Color.Transparent, textColor, Alignment.Right, "", frame).Font = font;
+                    new GUITextBlock(new Rectangle(x, y, 200, 20), ((int)skill.Level).ToString(), Color.Transparent, textColor, Alignment.Right, "", frame).Font = font;
                     y += 20;
                 }
             }
