@@ -83,6 +83,7 @@
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
     <Compile Include="Source\Characters\CharacterHealth.cs" />
+    <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />

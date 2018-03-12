@@ -773,7 +773,7 @@ namespace Barotrauma
             float damageDiff = damage - sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
-
+            
             //otherwise it's possible to infinitely gain karma by welding fixed things
             if (attacker != null && damageDiff != 0.0f)
             {
