@@ -34,7 +34,7 @@ namespace Barotrauma
             this.level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y);
         }
 
-        public Skill(string name, int level)
+        public Skill(string name, float level)
         {
             this.name = name;
 

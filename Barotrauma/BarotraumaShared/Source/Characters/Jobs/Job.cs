@@ -59,7 +59,7 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(name)) continue;
                 skills.Add(
                     skillName,
-                    new Skill(skillName, subElement.GetAttributeInt("level", 0)));
+                    new Skill(skillName, subElement.GetAttributeFloat("level", 0)));
             }
         }
         

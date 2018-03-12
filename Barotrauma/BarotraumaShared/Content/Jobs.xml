@@ -4,7 +4,8 @@
        minnumber="1" maxnumber="1" minkarma="0.7" initialcount="1"
        vitalitymodifier="-20">
     <Skills>
-      <Skill name="Weapons" level="50,60"/>
+      <Skill name="Helm" level="60,80"/>
+      <Skill name="Weapons" level="40,50"/>
       <Skill name="Mechanical Engineering" level="20,30"/>
       <Skill name="Electrical Engineering" level="20,30"/>
       <Skill name="Medical" level="10,30"/>

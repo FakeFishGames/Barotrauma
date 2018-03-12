@@ -113,19 +113,29 @@ namespace Barotrauma.Items.Components
                 new Vector2(velRect.Center.X + currVelocity.X, velRect.Center.Y - currVelocity.Y),
                 Color.Gray);
 
-            Vector2 targetVelPos = new Vector2(velRect.Center.X + targetVelocity.X, velRect.Center.Y - targetVelocity.Y);
+            if (!AutoPilot)
+            {
+                Vector2 steeringInputPos = new Vector2(velRect.Center.X + steeringInput.X, velRect.Center.Y - steeringInput.Y);
+
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(velRect.Center.X, velRect.Center.Y),
+                    steeringInputPos,
+                    Color.LightGray);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
+
+                if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
+                }
+            }
+
+            Vector2 steeringPos = new Vector2(velRect.Center.X + targetVelocity.X * 0.9f, velRect.Center.Y - targetVelocity.Y * 0.9f);
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(velRect.Center.X, velRect.Center.Y),
-                targetVelPos,
-                Color.LightGray);
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X - 5, (int)targetVelPos.Y - 5, 10, 10), Color.White);
-
-            if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
-            {
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X - 10, (int)targetVelPos.Y - 10, 20, 20), Color.Red);
-            }
+                steeringPos,
+                Color.CadetBlue, 0, 2);
         }
 
         public override void AddToGUIUpdateList()
@@ -143,8 +153,11 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    TargetVelocity = PlayerInput.MousePosition - new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y);
-                    targetVelocity.Y = -targetVelocity.Y;
+                    SteeringInput = PlayerInput.MousePosition - new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y);
+                    steeringInput.Y = -steeringInput.Y;
+
+                    steeringAdjustSpeed = character == null ? 
+                        0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
 
                     unsentChanges = true;
                 }
@@ -180,8 +193,8 @@ namespace Barotrauma.Items.Components
             if (!autoPilot)
             {
                 //no need to write steering info if autopilot is controlling
-                msg.Write(targetVelocity.X);
-                msg.Write(targetVelocity.Y);
+                msg.Write(steeringInput.X);
+                msg.Write(steeringInput.Y);
             }
             else
             {
@@ -202,11 +215,13 @@ namespace Barotrauma.Items.Components
         {
             long msgStartPos = msg.Position;
 
-            bool autoPilot = msg.ReadBoolean();
-            Vector2 newTargetVelocity = targetVelocity;
-            bool maintainPos = false;
-            Vector2? newPosToMaintain = null;
-            bool headingToStart = false;
+            bool autoPilot                  = msg.ReadBoolean();
+            Vector2 newSteeringInput        = steeringInput;
+            Vector2 newTargetVelocity       = targetVelocity;
+            float newSteeringAdjustSpeed    = steeringAdjustSpeed;
+            bool maintainPos                = false;
+            Vector2? newPosToMaintain       = null;
+            bool headingToStart             = false;
 
             if (autoPilot)
             {
@@ -224,7 +239,9 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
                 newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                newSteeringAdjustSpeed = msg.ReadFloat();
             }
 
             if (correctionTimer > 0.0f)
@@ -239,11 +256,12 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                targetVelocity = newTargetVelocity;
+                SteeringInput = newSteeringInput;
+                TargetVelocity = newTargetVelocity;
+                steeringAdjustSpeed = newSteeringAdjustSpeed;
             }
             else
             {
-
                 MaintainPos = newPosToMaintain != null;
                 posToMaintain = newPosToMaintain;
 
