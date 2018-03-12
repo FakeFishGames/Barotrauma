@@ -146,6 +146,13 @@ namespace Barotrauma
                     selectedConversation = conversations[(conversationIndex + i) % conversations.Count];
                     if (string.IsNullOrEmpty(selectedConversation.Line)) return;
 
+                    //speaker already assigned for this line
+                    if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
+                    {
+                        speaker = assignedSpeakers[selectedConversation.speakerIndex];
+                        break;
+                    }
+
                     foreach (Character potentialSpeaker in availableSpeakers)
                     {
                         //check if the character has an appropriate job to say the line

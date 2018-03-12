@@ -92,11 +92,22 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
-            slider.Rect = new Rectangle(
-                (int)(frame.Rect.X + padding.X),
-                (int)(frame.Rect.Y + padding.Y + (frame.Rect.Height * (1.0f - barSize))),
-                isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
-                isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            if (IsHorizontal)
+            {
+                slider.Rect = new Rectangle(
+                    (int)(frame.Rect.X + padding.X),
+                    (int)(frame.Rect.Y + padding.Y),
+                    (int)((frame.Rect.Width - padding.X - padding.Z) * barSize),
+                    (int)(frame.Rect.Height - padding.Y - padding.W));
+            }
+            else
+            {
+                slider.Rect = new Rectangle(
+                    (int)(frame.Rect.X + padding.X),
+                    (int)(frame.Rect.Y + padding.Y + (frame.Rect.Height * (1.0f - barSize))),
+                    (int)(frame.Rect.Width - padding.X - padding.Z),
+                    (int)(frame.Rect.Height * barSize));
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
