@@ -119,6 +119,11 @@
 
 		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
 		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
 	</Item>
 
   <Item
@@ -203,6 +208,11 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 
   <Item
@@ -227,5 +237,10 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
     <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
+    
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 </Items>

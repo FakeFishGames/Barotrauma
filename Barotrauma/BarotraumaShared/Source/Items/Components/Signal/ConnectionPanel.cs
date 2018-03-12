@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 50.0f) < degreeOfSuccess) return false;
+            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
 
             character.SetStun(5.0f);
 

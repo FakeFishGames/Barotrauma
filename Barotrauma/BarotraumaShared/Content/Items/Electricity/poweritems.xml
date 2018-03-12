@@ -33,9 +33,13 @@
       <output name="signal_0"/>
       <output name="signal_1"/>
       <output name="signal_2"/>
-      <output name="signal_3"/>
+      <output name="signal_3"/>      
     </ConnectionPanel>
 
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 
   <Item

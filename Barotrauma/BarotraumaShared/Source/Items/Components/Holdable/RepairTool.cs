@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             if (character == null || character.Removed) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
             
-            float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
+            float degreeOfSuccess = DegreeOfSuccess(character);
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {

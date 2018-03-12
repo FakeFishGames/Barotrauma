@@ -201,7 +201,9 @@ namespace Barotrauma.Items.Components
             temperatureChange = Temperature - prevTemperature;
             prevTemperature = temperature;
 
-            if (temperature > fireTemp && temperature - deltaTemp < fireTemp)
+            float currentFireTemp = fireTemp;
+            if (item.IsOptimized("mechanical")) currentFireTemp += 1000.0f;
+            if (temperature > currentFireTemp && temperature - deltaTemp < currentFireTemp)
             {
 #if CLIENT
                 Vector2 baseVel = Rand.Vector(300.0f);
@@ -217,7 +219,9 @@ namespace Barotrauma.Items.Components
                 new FireSource(item.WorldPosition);
             }
 
-            if (temperature > meltDownTemp)
+            float currentMeltDownTemp = meltDownTemp;
+            if (item.IsOptimized("mechanical")) currentMeltDownTemp += 500.0f;
+            if (temperature > currentMeltDownTemp)
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
                 meltDownTimer += deltaTime;

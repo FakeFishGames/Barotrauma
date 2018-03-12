@@ -148,10 +148,13 @@ namespace Barotrauma.Items.Components
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
 
+                float maxOverVoltage = 2.0f;
+                if (pt.item.IsOptimized("electrical")) maxOverVoltage *= 2.0f;
+
                 //relays don't blow up if the power is higher than load, only if the output is high enough 
                 //(i.e. enough power passing through the relay)
                 if (this is RelayComponent) continue;
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f, 2.1f), 200.0f)) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * maxOverVoltage, 200.0f)) continue;
 
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;

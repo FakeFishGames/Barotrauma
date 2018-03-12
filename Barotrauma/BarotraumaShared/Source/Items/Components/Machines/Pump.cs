@@ -94,6 +94,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage) return;
 
@@ -104,6 +105,7 @@ namespace Barotrauma.Items.Components
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+            if (item.IsOptimized("mechanical")) currFlow *= 2.0f;
 
             hull1.WaterVolume += currFlow;
             if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;

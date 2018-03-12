@@ -59,6 +59,8 @@ namespace Barotrauma
         private Inventory parentInventory;
         private Inventory ownInventory;
 
+        private Dictionary<string, Optimizable> optimizables;
+
         private Dictionary<string, Connection> connections;
 
         //a dictionary containing lists of the status effects in all the components of the item
@@ -459,6 +461,19 @@ namespace Barotrauma
                 ownInventory = itemContainer.Inventory;
             }
 
+            optimizables = new Dictionary<string, Optimizable>();
+            foreach (Optimizable optimizable in GetComponents<Optimizable>())
+            {
+                if (optimizables.ContainsKey(optimizable.OptimizationType.ToLowerInvariant()))
+                {
+                    DebugConsole.ThrowError("Error in item prefab \"" + itemPrefab.Name + "\" - multiple available optimizations with the same type.");
+                }
+                else
+                {
+                    optimizables.Add(optimizable.OptimizationType.ToLowerInvariant(), optimizable);
+                }
+            }
+
             InsertToList();
             ItemList.Add(this);
 
@@ -702,6 +717,16 @@ namespace Barotrauma
             foreach (string tag in allowedTags)
             {
                 if (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant())) return true;
+            }
+            return false;
+        }
+
+        public bool IsOptimized(string optimizationType)
+        {
+            Optimizable optimizable;
+            if (optimizables.TryGetValue(optimizationType.ToLowerInvariant(),out optimizable))
+            {
+                return optimizable.IsOptimized;
             }
             return false;
         }
