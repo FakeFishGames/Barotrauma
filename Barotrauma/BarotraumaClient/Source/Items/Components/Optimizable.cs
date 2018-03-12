@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -31,6 +33,7 @@ namespace Barotrauma.Items.Components
             optimizeButton.OnClicked = (btn, obj) =>
             {
                 currentOptimizer = Character.Controlled;
+                item.CreateClientEvent(this);
                 return true;
             };
         }
@@ -44,7 +47,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             if (!currentlyOptimizable.Contains(this)) return;
-             GuiFrame.Update(1.0f / 60.0f);
+            GuiFrame.Update(1.0f / 60.0f);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -73,6 +76,14 @@ namespace Barotrauma.Items.Components
             }
             
             GuiFrame.Draw(spriteBatch);
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            msg.Write(
+                currentOptimizer == Character.Controlled && 
+                Character.Controlled != null &&
+                Character.Controlled.SelectedConstruction == item);
         }
     }
 }

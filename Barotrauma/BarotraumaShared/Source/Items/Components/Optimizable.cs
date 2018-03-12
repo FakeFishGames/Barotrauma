@@ -1,13 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Optimizable : ItemComponent
+    partial class Optimizable : ItemComponent, IServerSerializable, IClientSerializable
     {
         private static HashSet<Optimizable> currentlyOptimizable = new HashSet<Optimizable>();
         
@@ -45,6 +47,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(60.0f, false)]
+        public float OptimizableDuration
+        {
+            get;
+            set;
+        }
+
         public bool IsOptimized
         {
             get { return isOptimized; }
@@ -69,7 +78,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            return currentlyOptimizable.Contains(this) && DegreeOfSuccess(character) > 0.5f;
+            return currentlyOptimizable.Contains(this) && DegreeOfSuccess(character) >= 0.5f;
         }
 
         private void Optimize(Character user)
@@ -88,7 +97,12 @@ namespace Barotrauma.Items.Components
             if (isOptimized)
             {
                 optimizedTimer -= deltaTime;
-                if (optimizedTimer <= 0.0f) isOptimized = false;
+                if (optimizedTimer <= 0.0f && GameMain.Client == null)
+                {
+                    //clients don't set the item back to non-optimized until the server says so
+                    isOptimized = false;
+                    item.CreateServerEvent(this);
+                }
             }
             else if (currentlyOptimizable.Contains(this))
             {
@@ -96,23 +110,26 @@ namespace Barotrauma.Items.Components
                 {
                     //this item is now optimizable until the timer runs out
                     optimizableTimer -= deltaTime;
-                    if (optimizableTimer <= 0.0f)
+                    if (optimizableTimer <= 0.0f && GameMain.Client == null)
                     {
                         optimizationProgress = 0.0f;
                         currentlyOptimizable.Remove(this);
                         cooldownTimer = OptimizationCoolDown;
                         isOptimized = false;
+                        item.CreateServerEvent(this);
                     }
                 }
                 else
                 {
                     float degreeOfSuccess = DegreeOfSuccess(currentOptimizer);
                     optimizationProgress = MathHelper.Clamp(optimizationProgress + degreeOfSuccess / 10.0f * deltaTime, 0.0f, 1.0f);
-                    if (optimizationProgress >= 1.0f)
+                    if (optimizationProgress >= 1.0f && GameMain.Client == null)
                     {
                         Optimize(currentOptimizer);
                         currentOptimizer.SelectedConstruction = null;
                         currentOptimizer = null;
+
+                        item.CreateServerEvent(this);
                     }
                 }
             }
@@ -121,17 +138,19 @@ namespace Barotrauma.Items.Components
                 //something already optimizable in the same submarine
                 return;
             }
-            else
+            else if (GameMain.Client == null)
             {
                 //nothing optimizable in this sub, activate the first item whose cooldown timer runs out
                 cooldownTimer -= deltaTime;
                 if (cooldownTimer <= 0.0f)
                 {
                     currentlyOptimizable.Add(this);
-                    optimizableTimer = Rand.Range(30.0f, 60.0f);
+                    optimizableTimer = OptimizableDuration;
                     optimizationProgress = 0.0f;
                     cooldownTimer = OptimizationCoolDown;
                     currentOptimizer = null;
+
+                    item.CreateServerEvent(this);
                 }
             }
         }
@@ -144,6 +163,64 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
             currentlyOptimizable.Clear();
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(IsOptimized);
+            if (IsOptimized)
+            {
+                msg.WriteRangedSingle(MathHelper.Clamp(optimizedTimer, 0.0f, OptimizationDuration), 0.0f, OptimizationDuration, 16);
+            }
+            else
+            {
+                msg.Write(currentlyOptimizable.Contains(this));
+                if (currentlyOptimizable.Contains(this))
+                {
+                    msg.WriteRangedSingle(MathHelper.Clamp(optimizableTimer, 0.0f, OptimizableDuration), 0.0f, OptimizableDuration, 16);
+                    msg.WriteRangedSingle(MathHelper.Clamp(optimizationProgress, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                }
+            }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            isOptimized = msg.ReadBoolean();
+            if (isOptimized)
+            {
+                optimizedTimer = msg.ReadRangedSingle(0.0f, OptimizationDuration, 16);
+            }
+            else
+            {
+                bool isCurrentlyOptimizable = msg.ReadBoolean();
+                if (isCurrentlyOptimizable)
+                {
+                    currentlyOptimizable.Add(this);
+                    optimizableTimer = msg.ReadRangedSingle(0.0f, OptimizableDuration, 16);
+                    optimizationProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                }
+                else
+                {
+                    currentlyOptimizable.Remove(this);
+                }
+            }
+        }
+        
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        {
+            bool isOptimizing = msg.ReadBoolean();
+
+            if (!item.CanClientAccess(c)) return;
+            if (DegreeOfSuccess(c.Character) < 0.5f) return;
+
+            if (isOptimizing)
+            {
+                if (currentlyOptimizable.Contains(this)) currentOptimizer = c.Character;
+            }
+            else
+            {
+                if (currentOptimizer == c.Character) currentOptimizer = null;
+            }
         }
     }
 }
