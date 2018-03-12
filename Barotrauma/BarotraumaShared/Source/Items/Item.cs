@@ -1249,7 +1249,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public List<ColoredText> GetHUDTexts(Character character)

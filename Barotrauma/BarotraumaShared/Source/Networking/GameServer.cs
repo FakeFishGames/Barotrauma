@@ -77,9 +77,9 @@ namespace Barotrauma.Networking
             this.isPublic = isPublic;
             this.maxPlayers = maxPlayers;
             this.password = "";
-            if (password.Length>0)
+            if (password.Length > 0)
             {
-                this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
+                SetPassword(password);
             }
 
             config = new NetPeerConfiguration("barotrauma");
@@ -129,6 +129,11 @@ namespace Barotrauma.Networking
             LoadClientPermissions();
                         
             CoroutineManager.StartCoroutine(StartServer(isPublic));
+        }
+
+        public void SetPassword(string password)
+        {
+            this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
         }
 
         private IEnumerable<object> StartServer(bool isPublic)
@@ -608,11 +613,11 @@ namespace Barotrauma.Networking
                             byte campaignID             = inc.ReadByte();
                             c.LastRecvCampaignUpdate    = inc.ReadUInt16();
 
-                            if (GameMain.GameSession?.GameMode is MultiplayerCampaign)
+                            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
                             {
                                 //the client has a campaign save for another campaign 
                                 //(the server started a new campaign and the client isn't aware of it yet?)
-                                if (((MultiplayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
+                                if (((MultiPlayerCampaign)GameMain.GameSession.GameMode).CampaignID != campaignID)
                                 {
                                     c.LastRecvCampaignSave = 0;
                                     c.LastRecvCampaignUpdate = 0;
@@ -804,7 +809,7 @@ namespace Barotrauma.Networking
                     var modeList = GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
                     break;
                 case ClientPermissions.ManageCampaign:
-                    MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
+                    MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
                     if (campaign != null)
                     {
                         campaign.ServerRead(inc, sender);
@@ -839,7 +844,7 @@ namespace Barotrauma.Networking
 
                 ClientWriteLobby(c);
 
-                MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+                MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
                 if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
                 { 
                     if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
@@ -1013,7 +1018,7 @@ namespace Barotrauma.Networking
                 outmsg.WritePadBits();
             }
 
-            var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign != null)
             {
                 if (NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.LastRecvCampaignUpdate))
@@ -1202,8 +1207,8 @@ namespace Barotrauma.Networking
             int teamCount = 1;
             byte hostTeam = 1;
             
-            MultiplayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ? 
-                GameMain.GameSession?.GameMode as MultiplayerCampaign : null;
+            MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ? 
+                GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
         
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
@@ -1398,7 +1403,7 @@ namespace Barotrauma.Networking
 
             msg.Write(selectedMode.Name);
 
-            MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 
             bool missionAllowRespawn = campaign == null &&
                 (!(GameMain.GameSession.GameMode is MissionMode) ||

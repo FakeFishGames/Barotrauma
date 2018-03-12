@@ -134,7 +134,7 @@ namespace Barotrauma
                         break;
 #endif
                     case "multiplayercampaign":
-                        GameMode = MultiplayerCampaign.LoadNew(subElement);
+                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
 #if CLIENT
                         CrewManager = new CrewManager(false);
 #endif
@@ -308,7 +308,7 @@ namespace Barotrauma
                         break;
 #endif
                     case "multiplayercampaign":
-                        MultiplayerCampaign mpCampaign = GameMode as MultiplayerCampaign;
+                        MultiPlayerCampaign mpCampaign = GameMode as MultiPlayerCampaign;
                         if (mpCampaign == null)
                         {
                             DebugConsole.ThrowError("Error while loading a save file: the save file is for a multiplayer campaign but the current gamemode is "+GameMode.GetType().ToString());
