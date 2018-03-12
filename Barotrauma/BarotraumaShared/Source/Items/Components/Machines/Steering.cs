@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
+        private Vector2 steeringInput;
+
         private bool autoPilot;
 
         private Vector2? posToMaintain;
@@ -31,6 +33,8 @@ namespace Barotrauma.Items.Components
         private Vector2 avoidStrength;
 
         private float neutralBallastLevel;
+
+        private float steeringAdjustSpeed = 1.0f;
                 
         public bool AutoPilot
         {
@@ -88,7 +92,18 @@ namespace Barotrauma.Items.Components
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
-        
+
+        public Vector2 SteeringInput
+        {
+            get { return steeringInput; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
+        }
+
         public SteeringPath SteeringPath
         {
             get { return steeringPath; }
@@ -102,7 +117,7 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific();
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             if (unsentChanges)
@@ -137,6 +152,25 @@ namespace Barotrauma.Items.Components
             if (autoPilot)
             {
                 UpdateAutoPilot(deltaTime);
+            }
+            else
+            {
+                Vector2 velocityDiff = steeringInput - targetVelocity;
+                if (velocityDiff != Vector2.Zero)
+                {
+                    if (steeringAdjustSpeed >= 0.99f)
+                    {
+                        TargetVelocity = steeringInput;
+                    }
+                    else
+                    {
+                        float steeringChange = 1.0f / (1.0f - steeringAdjustSpeed);
+                        steeringChange *= steeringChange * 10.0f;
+
+                        TargetVelocity += Vector2.Normalize(velocityDiff) * 
+                            Math.Min(steeringChange * deltaTime, velocityDiff.Length());
+                    }
+                }
             }
 
             item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", null);
@@ -323,7 +357,7 @@ namespace Barotrauma.Items.Components
             Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
             Vector2 targetSpeed = ((worldPosition - item.Submarine.WorldPosition) - futurePosition);
 
-            if (targetSpeed.Length()>500.0f)
+            if (targetSpeed.Length() > 500.0f)
             {
                 targetSpeed = Vector2.Normalize(targetSpeed);
                 TargetVelocity = targetSpeed * 100.0f;
@@ -349,7 +383,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
-            Vector2 newTargetVelocity   = targetVelocity;
+            Vector2 newSteeringInput    = targetVelocity;
             bool maintainPos            = false;
             Vector2? newPosToMaintain   = null;
             bool headingToStart         = false;
@@ -370,7 +404,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
 
             if (!item.CanClientAccess(c)) return; 
@@ -379,11 +413,11 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                targetVelocity = newTargetVelocity;
+                steeringInput = newSteeringInput;
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("Helm") / 100.0f);
             }
             else
             {
-
                 MaintainPos = newPosToMaintain != null;
                 posToMaintain = newPosToMaintain;
 
@@ -411,8 +445,11 @@ namespace Barotrauma.Items.Components
             if (!autoPilot)
             {
                 //no need to write steering info if autopilot is controlling
+                msg.Write(steeringInput.X);
+                msg.Write(steeringInput.Y);
                 msg.Write(targetVelocity.X);
                 msg.Write(targetVelocity.Y);
+                msg.Write(steeringAdjustSpeed);
             }
             else
             {

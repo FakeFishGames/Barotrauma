@@ -321,11 +321,13 @@ namespace Barotrauma
             int prevLevel = (int)Job.GetSkillLevel(skillName);
             Job.IncreaseSkillLevel(skillName, increase);
 
+#if CLIENT
             int newLevel = (int)Job.GetSkillLevel(skillName);
             if (newLevel > prevLevel)
             {
                 new GUIMessageBox("Skill level increased!", Name + "'s " + skillName + " skill increased to " + newLevel + "!");
             }
+#endif
         }
 
         public virtual XElement Save(XElement parentElement)
