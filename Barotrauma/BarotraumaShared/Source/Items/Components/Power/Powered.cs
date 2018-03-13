@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma.Items.Components
 {
@@ -66,7 +67,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (powerOnSound == null)
             {
-                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg", false);
+                powerOnSound = Submarine.LoadRoundSound("Content/Items/Electricity/powerOn.ogg", false);
             }
 
             if (sparkSounds == null)
@@ -74,7 +75,7 @@ namespace Barotrauma.Items.Components
                 sparkSounds = new Sound[4];
                 for (int i = 0; i < 4; i++)
                 {
-                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
+                    sparkSounds[i] = Submarine.LoadRoundSound("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
                 }
             }
 #endif

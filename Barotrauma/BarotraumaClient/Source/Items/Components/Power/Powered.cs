@@ -1,4 +1,6 @@
-﻿namespace Barotrauma.Items.Components
+﻿using Barotrauma.Sounds;
+
+namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {

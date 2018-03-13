@@ -41,12 +41,20 @@ namespace Barotrauma.Sounds
             get;
             protected set;
         }
+
+        public float BaseGain;
+        public float BaseNear;
+        public float BaseFar;
         
         public Sound(SoundManager owner,string filename,bool stream)
         {
             Owner = owner;
             Filename = filename;
             Stream = stream;
+
+            BaseGain = 1.0f;
+            BaseNear = 100.0f;
+            BaseFar = 200.0f;
             
             if (!stream)
             {
@@ -63,9 +71,24 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public bool IsPlaying()
+        {
+            return Owner.IsPlaying(this);
+        }
+
+        public SoundChannel Play(float gain, float range, Vector2 position)
+        {
+            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.7f, range * 1.3f);
+        }
+
+        public SoundChannel Play(Vector2 position)
+        {
+            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar);
+        }
+
         public SoundChannel Play(Vector3? position, float gain)
         {
-            return new SoundChannel(this, position, gain);
+            return new SoundChannel(this, gain, position, BaseNear, BaseFar);
         }
 
         public SoundChannel Play(float gain)
@@ -75,7 +98,7 @@ namespace Barotrauma.Sounds
 
         public SoundChannel Play()
         {
-            return Play(1.0f);
+            return Play(BaseGain);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

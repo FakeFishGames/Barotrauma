@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -95,14 +96,14 @@ namespace Barotrauma
             if (loadSounds)
             {
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
-                sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
-                sounds[(int)GUISoundType.RadioMessage] = Sound.Load("Content/Sounds/UI/radiomsg.ogg", false);
-                sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
-                sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
+                sounds[(int)GUISoundType.Message] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
+                sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
+                sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);
 
-                sounds[(int)GUISoundType.PickItem] = Sound.Load("Content/Sounds/pickItem.ogg", false);
-                sounds[(int)GUISoundType.PickItemFail] = Sound.Load("Content/Sounds/pickItemFail.ogg", false);
-                sounds[(int)GUISoundType.DropItem] = Sound.Load("Content/Sounds/dropItem.ogg", false);
+                sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItem.ogg", false);
+                sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItemFail.ogg", false);
+                sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/dropItem.ogg", false);
 
             }
 
@@ -458,6 +459,7 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
+                /* TODO: reimplement this
                 for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
                 {
                     Color clr = Color.White;
@@ -483,7 +485,7 @@ namespace Barotrauma
                     }
 
                     GUI.DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
-                }
+                }*/
             }
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
