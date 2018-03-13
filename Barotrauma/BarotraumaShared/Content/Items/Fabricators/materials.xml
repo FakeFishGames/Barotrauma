@@ -5,9 +5,13 @@
     category="Material"
     Tags="smallitem"   
     canbepicked="true"
-    cargocontainername="Metal Crate" 
-    price="50">
+    cargocontainername="Metal Crate">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Deconstruct time="5">
       <Item name="Iron Powder"/>
       <Item name="Iron Powder"/>     
@@ -26,8 +30,11 @@
     Tags="smallitem"
     spritecolor="0.2,0.35,0.06,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="100">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="500"/>
 
     <Deconstruct time="5">
       <Item name="Uranium Powder"/>
@@ -47,9 +54,13 @@
     Tags="smallitem"
     spritecolor="0.78,0.55,0.2,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="50">
+    cargocontainername="Metal Crate">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>
@@ -63,9 +74,13 @@
     Tags="smallitem"   
     spritecolor="0.9,0.9,1.0,0.9"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="50">
+    cargocontainername="Metal Crate">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="20"/>
@@ -80,6 +95,8 @@
    spritecolor="0.5,0.0,0.0,1.0"
    cargocontainername="Metal Crate"
    canbepicked="true">
+
+    <Price locationtype="Research" buyprice="200"/>
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
@@ -102,6 +119,8 @@
    cargocontainername="Metal Crate"
    canbepicked="true">
 
+    <Price locationtype="Research" buyprice="200"/>
+    
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
 
     <Body width="24" height="12" density="50"/>

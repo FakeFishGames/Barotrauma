@@ -1,8 +1,8 @@
 ﻿<Items>
   <Item
-  name="Pump"
-  linkable="true"
-  category="Machine">
+    name="Pump"
+    linkable="true"
+    category="Machine">
 
     <Sprite texture ="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
 
@@ -19,12 +19,22 @@
       <input name="set_speed"/>
       <input name="set_targetlevel"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
   
   <Item
-  name="Small Pump"
-  linkable="true"
-  category="Machine">
+    name="Small Pump"
+    linkable="true"
+    category="Machine">
 
     <Sprite texture ="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
 
@@ -41,5 +51,15 @@
       <input name="set_speed"/>
       <input name="set_targetlevel"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 </Items>

@@ -11,13 +11,13 @@
 
   <ai
     combatstrength="1000"
-    attackpriorityhumans="100.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="0.0"
-    attackprioritystronger="-80.0"
     attackcooldown="15.0"
-    sight="0.5" 
-    hearing="1.0"/>
+    sight="0.5"
+    hearing="1.0">
+    <targetpriority tag="human" state="Attack" priority="100"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="stronger" state="Escape" priority="50"/>
+  </ai>
     
   <ragdoll waveamplitude="0.0" swimspeed="4.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
 
@@ -31,10 +31,12 @@
         <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="392,0,307,778" origin="0.5, 0.45"/>
       </lightsource>
 
-      <damagemodifier armorsector="0.0,180.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="SctructureBlunt" deflectprojectiles="true"/>
-      <damagemodifier armorsector="0.0,360.0" damagesound="SctructureBlunt" deflectprojectiles="true"/>
-      
-      <attack range="400" damagerange="250" duration="0.08" damage="100" stun="5" force="20" damagetype="blunt" targetforce="100"/>
+      <damagemodifier armorsector="0.0,360.0" damagesound="StructureBlunt" deflectprojectiles="true"/>
+
+      <attack range="400" damagerange="250" duration="0.08" force="20" damagetype="blunt" targetforce="100">
+        <affliction name="Internal Damage" strength="100"/>
+        <affliction name="Stun" strength="5"/>
+      </attack>
     </limb>
     
     <limb id = "1" width="50" height="240" flip="true">

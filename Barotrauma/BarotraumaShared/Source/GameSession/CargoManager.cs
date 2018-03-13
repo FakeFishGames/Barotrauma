@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public void PurchaseItem(ItemPrefab item)
         {
-            campaign.Money -= item.Price;
+            campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
             purchasedItems.Add(item);
 
             OnItemsChanged?.Invoke();
@@ -43,7 +43,7 @@ namespace Barotrauma
 
         public void SellItem(ItemPrefab item)
         {
-            campaign.Money += item.Price;
+            campaign.Money += item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
             purchasedItems.Remove(item);
 
             OnItemsChanged?.Invoke();
@@ -51,7 +51,7 @@ namespace Barotrauma
 
         public int GetTotalItemCost()
         {
-            return purchasedItems.Sum(i => i.Price);
+            return purchasedItems.Sum(i => i.GetPrice(campaign.Map.CurrentLocation).BuyPrice);
         }
 
         public void CreateItems()

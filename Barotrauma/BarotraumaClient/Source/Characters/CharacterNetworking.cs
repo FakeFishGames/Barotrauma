@@ -320,11 +320,20 @@ namespace Barotrauma
             bool isDead = msg.ReadBoolean();
             if (isDead)
             {
-                causeOfDeath = (CauseOfDeath)msg.ReadByte();
+                CauseOfDeathType causeOfDeathType = (CauseOfDeathType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
+                AfflictionPrefab causeOfDeathAffliction = null;
+                if (causeOfDeathType == CauseOfDeathType.Affliction)
+                {
+                    int afflictionIndex = msg.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
+                    causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                }
+
+                causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
+
                 byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
-                    if (causeOfDeath == CauseOfDeath.Pressure)
+                    if (causeOfDeathType == CauseOfDeathType.Pressure)
                     {
                         Implode(true);
                     }
@@ -344,52 +353,10 @@ namespace Barotrauma
             {
                 this.isDead = false;
 
-                health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
-
-                bool lowOxygen = msg.ReadBoolean();
-                if (lowOxygen)
-                {
-                    Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
-                }
-                else
-                {
-                    Oxygen = 100.0f;
-                }
-
-                bool isBleeding = msg.ReadBoolean();
-                if (isBleeding)
-                {
-                    bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
-                }
-                else
-                {
-                    bleeding = 0.0f;
-                }
-
-                bool stunned = msg.ReadBoolean();
-                if (stunned)
-                {
-                    float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
-                    SetStun(newStunTimer, true, true);
-                }
-                else
-                {
-                    SetStun(0.0f, true, true);
-                }
-
+                CharacterHealth.ClientRead(msg);
+                
                 bool ragdolled = msg.ReadBoolean();
                 IsRagdolled = ragdolled;
-
-                bool huskInfected = msg.ReadBoolean();
-                if (huskInfected)
-                {
-                    HuskInfectionState = Math.Max(HuskInfectionState, 0.01f);
-                }
-                else
-                {
-                    HuskInfectionState = 0.0f;
-                }
-
             }
         }
 

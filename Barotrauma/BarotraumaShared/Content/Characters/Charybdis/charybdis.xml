@@ -1,17 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="charybdis" humanoid="false" health="1000.0" bleedingdecreasespeed="0.2">
+<Character name="charybdis" humanoid="false" health="1000.0">
   
   <sound file="Content/Characters/Charybdis/charybdisattack.ogg" state="Attack" range="8000" />
 
-  <ai 
+  <ai
     combatstrength="1500"
-    attackpriorityhumans="100.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="50"
-    attackprioritystronger="-30"
-    eatpriority="40"
     sight="0.5"
-    hearing="1.0"/>
+    hearing="1.0">
+    <targetpriority tag="human" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Escape" priority="45"/>
+    <targetpriority tag="dead" state="Eat" priority="40"/>    
+  </ai>
   
   <ragdoll 
     waveamplitude="150.0" 
@@ -31,7 +33,10 @@
     <!-- lower yaw -->
     <limb id = "1" radius="70" height="100">
       <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
-      <attack range="500" damagerange="250" duration="0.5" damage="500" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0"/>
+      <attack range="500" damagerange="250" duration="0.5" structuredamage="500" damagetype="slash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="100"/>
+      </attack>
     </limb>
 
     <!-- front fins -->    

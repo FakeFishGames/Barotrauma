@@ -4,15 +4,14 @@
   <Item
     name="Engine"
     linkable="true"
-    category="Machine"
-    >
+    category="Machine">
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
 
     <trigger x="20" y ="0" width="333" height="113"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="40"/>
+      <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
@@ -28,20 +27,29 @@
       <input name="power_in"/>
       <input name="set_force"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>    
   </Item>
 
   <Item
     name="Shuttle Engine"
     linkable="true"
-    category="Machine"
-    >
+    category="Machine">
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>
 
     <trigger x="15" y ="0" width="194" height="73"/>
     
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="30"/>
+      <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
@@ -56,13 +64,22 @@
       <input name="power_in"/>
       <input name="set_force"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 
   <Item
     name="Navigation Terminal"
     linkable="true"
-    category="Machine"
-    >
+    category="Machine">
 
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
@@ -97,8 +114,7 @@
   <Item
     name="Sonar Monitor"
     linkable="true"
-    category="Machine"
-    >
+    category="Machine">
     
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 

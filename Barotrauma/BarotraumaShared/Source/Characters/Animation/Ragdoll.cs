@@ -54,8 +54,8 @@ namespace Barotrauma
 
         protected float strongestImpact;
 
-        public float headPosition, headAngle;
-        public float torsoPosition, torsoAngle;
+        public float? headPosition, headAngle;
+        public float? torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -210,22 +210,22 @@ namespace Barotrauma
             }
         }
 
-        protected virtual float HeadPosition
+        protected virtual float? HeadPosition
         { 
             get { return headPosition; } 
         }
 
-        protected virtual float HeadAngle
+        protected virtual float? HeadAngle
         { 
             get { return headAngle; } 
         }
 
-        protected virtual float TorsoPosition
+        protected virtual float? TorsoPosition
         { 
             get { return torsoPosition; } 
         }
 
-        protected virtual float TorsoAngle
+        protected virtual float? TorsoAngle
         { 
             get { return torsoAngle; } 
         }
@@ -297,13 +297,22 @@ namespace Barotrauma
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
-            headPosition    = element.GetAttributeFloat("headposition", 50.0f);
-            headPosition    = ConvertUnits.ToSimUnits(headPosition);
-            headAngle       = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
-
-            torsoPosition   = element.GetAttributeFloat("torsoposition", 50.0f);
-            torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
-            torsoAngle      = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            if (element.Attribute("headposition") != null)
+            {
+                headPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("headposition", 50.0f));
+            }
+            if (element.Attribute("headangle") != null)
+            {
+                headAngle = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
+            }
+            if (element.Attribute("torsoposition") != null)
+            {
+                torsoPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("torsoposition", 50.0f));
+            }
+            if (element.Attribute("torsoangle") != null)
+            {
+                torsoAngle = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            }
 
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
 
@@ -558,7 +567,7 @@ namespace Barotrauma
             Vector2 velocity = f1.Body.LinearVelocity;
 
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
-                                    
+
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody)
             {
@@ -566,8 +575,14 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
+                        Vector2 temp;
+                        FarseerPhysics.Common.FixedArray2<Vector2> points;
+                        contact.GetWorldManifold(out temp, out points);
 
+                        Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
+                        if (character.Submarine != null) impactPos += character.Submarine.Position;
+                        
+                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }
                 }
@@ -957,13 +972,9 @@ namespace Barotrauma
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
-                            //1.0 when the limb is parallel to the surface of the water
-                            // = big splash and a large impact
-                            float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));
-                            Vector2 impulse = Vector2.Multiply(limb.LinearVelocity, -parallel * limb.Mass);
-                            //limb.body.ApplyLinearImpulse(impulse);
+                            Vector2 impulse = limb.LinearVelocity * limb.Mass;
                             int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
-                            limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
+                            limbHull.WaveVel[n] += MathHelper.Clamp(impulse.Y, -5.0f, 5.0f);
                         }
                     }
                 }
@@ -1121,7 +1132,11 @@ namespace Barotrauma
         protected float GetFloorY(Vector2 simPosition)
         {
             Vector2 rayStart = simPosition;
-            Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
+            float height = colliderHeightFromFloor;
+            if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
+            if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
+
+            Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
             var lowestLimb = FindLowestLimb();
 

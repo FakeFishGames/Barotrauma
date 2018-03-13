@@ -10,6 +10,20 @@
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
     itemname="Skyholder Artifact">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
@@ -23,6 +37,20 @@
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
     itemname="Thermal Artifact">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
@@ -36,6 +64,20 @@
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
     itemname="Thermal Artifact">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
@@ -49,6 +91,20 @@
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
     itemname="Nasonov Artifact">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
@@ -62,6 +118,20 @@
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
     itemname="Nasonov Artifact">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
@@ -72,7 +142,21 @@
     reward="1000"
     radarlabel="Moloch"
     successmessage="The Moloch has been killed."
-    monsterfile="Content/Characters/Moloch/moloch.xml">
+    monsterfile="Content/Characters/MolochBoss/molochboss.xml">
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Ruins"/>
+    
     <message header="Target terminated" text="The moloch is dead. Navigate the submarine out of the cavern to claim the reward."/>
   </MonsterMission>
 
@@ -83,8 +167,22 @@
     reward="800"
     radarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/Tigerthresher/tigerthresher.xml">
+    monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Ruins"/>
+    
   </MonsterMission>
 
   <MonsterMission
@@ -96,6 +194,12 @@
     successmessage="The End Worm is dead and the passageway is open for transport again."
     monsterfile="Content/Characters/Endworm/endworm.xml">
     <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
+    
+    <LocationType from="City" to="Lair"/>
+    <LocationType from="Military" to="Lair"/>
+    <LocationType from="Outpost" to="Lair"/>
+    <LocationType from="Research" to="Lair"/>
+    
   </MonsterMission>
 
   <MonsterMission
@@ -106,6 +210,20 @@
     radarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
+    
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Ruins"/>
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Ruins"/>
+    
   </MonsterMission>
 
   <MonsterMission
@@ -117,6 +235,16 @@
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/carrier.xml">
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
+
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+  
   </MonsterMission>
   
   <CargoMission
@@ -135,6 +263,20 @@
         </Item>
       </Item>
     </Items>
+
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    
   </CargoMission>
 
   <CargoMission
@@ -156,6 +298,20 @@
         </Item>
       </Item>
     </Items>
+
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+
   </CargoMission>
 
   <CargoMission
@@ -176,6 +332,16 @@
         <Item name="Chloral Hydrate" amount="2"/>
       </Item>
     </Items>
+
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+
   </CargoMission>
 
   <CargoMission
@@ -189,6 +355,16 @@
         <Item name="Velonaceps Calyx Eggs" amount="10"/>
       </Item>
     </Items>
+    
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    
   </CargoMission>
 
   <CargoMission
@@ -205,6 +381,20 @@
         <Item name="Nitroglycerin" amount="10"/>
       </Item>
     </Items>
+    
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    
   </CargoMission>
 
   <CargoMission
@@ -223,6 +413,12 @@
         <Item name="Bike Horn" amount="20"/>
       </Item>
     </Items>
+    
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    
   </CargoMission> 
   
   <CombatMission

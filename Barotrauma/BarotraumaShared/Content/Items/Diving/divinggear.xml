@@ -4,8 +4,12 @@
     name="Oxygen Tank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
-    cargocontainername="Metal Crate"    
-    price="50">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -27,10 +31,14 @@
     name="Diving Mask"
     category="Equipment"
     Tags="smallitem,diving"
-    cargocontainername="Metal Crate"    
-    price="50"
+    cargocontainername="Metal Crate"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
@@ -63,11 +71,15 @@
   <Item
     name="Diving Suit"
     category="Equipment"
-    tags="diving"    
-    price="200"
+    tags="diving"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 
+    <Price locationtype="Research" buyprice="200"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="300"/>
+    
     <Deconstruct time="30">
       <Item name="Steel Bar"/>
       <Item name="Aluminium"/>
@@ -116,9 +128,9 @@
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
 
-      <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.6"/>
-      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
-      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.5" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="damage" damagemultiplier="0.8" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.6" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
 
     <ItemContainer capacity="2" hideitems="true">
@@ -135,9 +147,13 @@
     name="Underwater Scooter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="50"
+    cargocontainername="Metal Crate"
     description="A battery-powered underwater propulsion device.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>

@@ -113,7 +113,7 @@
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500">
-      <Attack damage="10.0" duration="1.0" damagetype="Burn" onlyhumans="true"/>
+      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger>    
     <ParticleEmitter
       particle="hydrosmoke"
@@ -138,7 +138,7 @@
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500">
-      <Attack damage="10.0" duration="1.0" damagetype="Burn" onlyhumans="true"/>
+      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
@@ -163,7 +163,7 @@
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500">
-      <Attack damage="10.0" duration="1.0" damagetype="Burn" onlyhumans="true"/>
+      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"

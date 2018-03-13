@@ -4,9 +4,13 @@
     name="C-4 Block"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"    
-    price="100">
-
+    cargocontainername="Explosive Crate">
+    
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    <Price locationtype="Research" buyprice="200"/>
+    
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
@@ -82,10 +86,14 @@
     name="Detonator"
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
-    Tags="smallitem"    
-    price="50"
+    Tags="smallitem"
     cargocontainername="Explosive Crate">
-
+    
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="0,107,14,12"/>
 
     <Body width="14" height="12"/>

@@ -138,10 +138,10 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(null);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater(deltaTime);
-                Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+                WaterRenderer.Instance.ScrollWater(deltaTime);
+                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
             }
             
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);

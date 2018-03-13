@@ -1,13 +1,15 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma.Networking
 {
     enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox
+        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order
     }
 
     partial class ChatMessage
@@ -26,7 +28,9 @@ namespace Barotrauma.Networking
             new Color(157, 225, 160),   //server
             new Color(238, 208, 0),     //radio
             new Color(64, 240, 89),     //private
-            new Color(255, 255, 255)    //console
+            new Color(255, 255, 255),   //console
+            new Color(255, 255, 255),   //messagebox
+            new Color(255, 128, 0)      //order
         };
         
         public readonly string Text;
@@ -56,7 +60,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        private ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
         {
             Text = text;
             Type = type;
@@ -124,17 +128,70 @@ namespace Barotrauma.Networking
             StringBuilder sb = new StringBuilder(text.Length);
             for (int i = 0; i < text.Length; i++)
             {
-                sb.Append((i>startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : text[i]);
+                sb.Append((i > startIndex && Rand.Range(0.0f, 1.0f) < garbleAmount) ? '-' : text[i]);
             }
 
             return sb.ToString();
         }
 
+        public static string ApplyDistanceEffect(string message, ChatMessageType type, Character sender, Character receiver)
+        {
+            if (sender == null) return "";
+
+            switch (type)
+            {
+                case ChatMessageType.Default:
+                    if (receiver != null && !receiver.IsDead)
+                    {
+                        return ApplyDistanceEffect(receiver, sender, message, SpeakRange, 3.0f);
+                    }
+                    break;
+                case ChatMessageType.Radio:
+                case ChatMessageType.Order:
+                    if (receiver != null && !receiver.IsDead)
+                    {
+                        var receiverItem = receiver.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        //character doesn't have a radio -> don't send
+                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) return "";
+
+                        var senderItem = sender.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) return "";
+
+                        var receiverRadio = receiverItem.GetComponent<WifiComponent>();
+                        var senderRadio = senderItem.GetComponent<WifiComponent>();
+
+                        if (!receiverRadio.CanReceive(senderRadio)) return "";
+
+                        return ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                    }
+
+                    break;
+            }
+
+            return message;
+        }
+
         public static void ServerRead(NetIncomingMessage msg, Client c)
         {
             UInt16 ID = msg.ReadUInt16();
-            string txt = msg.ReadString();
-            if (txt == null) txt = "";
+            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            string txt = "";
+
+            int orderIndex = -1;
+            Character orderTargetCharacter = null;
+            Entity orderTargetEntity = null;
+            int orderOptionIndex = -1;
+            if (type == ChatMessageType.Order)
+            {
+                orderIndex = msg.ReadByte();
+                orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
+                orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
+                orderOptionIndex = msg.ReadByte();
+            }
+            else
+            {
+                txt = msg.ReadString() ?? "";
+            }
 
             if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) return;
 
@@ -172,7 +229,7 @@ namespace Barotrauma.Networking
                 {
                     ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
                     c.ChatSpamTimer = 10.0f;
-                    GameMain.Server.SendChatMessage(denyMsg, c);
+                    GameMain.Server.SendDirectChatMessage(denyMsg, c);
                 }
                 return;
             }
@@ -183,14 +240,46 @@ namespace Barotrauma.Networking
             {
                 ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;
-                GameMain.Server.SendChatMessage(denyMsg, c);
+                GameMain.Server.SendDirectChatMessage(denyMsg, c);
                 return;
             }
-
+            
             //dead characters are allowed to send chat messages, 
             //we'll just switch the message type to dead chat in SendChatMessage
             if (c.Character != null && (!c.Character.CanSpeak && !c.Character.IsDead)) return;
-            GameMain.Server.SendChatMessage(txt, null, c);
+
+            if (type == ChatMessageType.Order)
+            {
+                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
+                {
+                    DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
+                    return;
+                }
+
+                Order order = Order.PrefabList[orderIndex];
+                string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
+                
+                if (order.TargetAllCharacters)
+                {
+#if CLIENT
+                    GameMain.GameSession?.CrewManager?.AddOrder(
+                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
+                        order.Prefab.FadeOutTime);
+#endif
+                }
+                else
+                {
+                    orderTargetCharacter?.SetOrder(
+                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                }
+
+                var orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
+                GameMain.Server.SendOrderChatMessage(orderMsg, c);
+            }
+            else
+            {
+                GameMain.Server.SendChatMessage(txt, null, c);
+            }
         }
 
         public int EstimateLengthBytesClient()
@@ -221,7 +310,7 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public void ServerWrite(NetOutgoingMessage msg, Client c)
+        public virtual void ServerWrite(NetOutgoingMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);

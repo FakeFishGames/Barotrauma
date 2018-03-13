@@ -1,27 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="husk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false" doesbleed="false">
   
-    <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
 
-    <ai
-      combatstrength="100"
-      attackhumans="500"
-      attackrooms="5.0"
-      attackweaker="50"
-      attackstronger="-30"
-      sight="0.5"
-      hearing="1.0"
-      attackcooldown="5.0"/>
+  <ai
+    combatstrength="100"
+    sight="0.5"
+    hearing="1.0"
+    attackcooldown="5.0">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="60"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="stronger" state="Escape" priority="30"/>
+    <targetpriority tag="room" state="Attack" priority="5"/>
+    <targetpriority tag="husk" state="Attack" priority="0"/>
+  </ai>
 
-    <ragdoll headposition="134" torsoposition="108"
-      stepsize="42.0, 12.0"
-      walkanimspeed="4.58"
-      movementlerp="0.4"
-      legtorque="15.0"
-      thightorque="-5.0"
-      walkspeed="1.5" swimspeed="2.5"
-      runspeedmultiplier="2.0" swimspeedmultiplier="1.5"
-      impacttolerance="7.5">
+  <ragdoll headposition="134" torsoposition="108"
+    stepsize="42.0, 12.0"
+    walkanimspeed="4.58"
+    movementlerp="0.4"
+    legtorque="15.0"
+    thightorque="-5.0"
+    walkspeed="1.5" swimspeed="2.5"
+    runspeedmultiplier="2.0" swimspeedmultiplier="1.5"
+    impacttolerance="7.5">
 
     <collider height="80" radius="15"/>
 	  <collider height="40" radius="15"/>
@@ -94,10 +97,12 @@
 
     <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.5" origin="0.5,0.5"/>
-      <attack range="70" damagerange="35" duration="0.1" bleedingdamage="3" damage="10" stun="0.5" damagetype="slash" targetforce="10"
+      <attack range="70" damagerange="35" duration="0.1" targetforce="10"
               force="5" applyforceonlimbs="1" torque="-10">
-        <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
         <StatusEffect type="OnUse" target="This" Health="20.0" disabledeltatime="true"/>
+        <affliction name="Bleeding" strength="10"/>
+        <affliction name="Husk infection" strength="5"/>
+        <affliction name="Stun" strength="0.5"/>
       </attack>
     </limb>
 

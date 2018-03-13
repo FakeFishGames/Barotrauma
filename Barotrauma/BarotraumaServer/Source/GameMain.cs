@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -77,17 +78,19 @@ namespace Barotrauma
 
         public void Init()
         {
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
+            //todo: get config file paths from content package
+            NPCConversation.Load(Path.Combine("Content", "Characters", "Human", "NpcConversations.xml"));
+            
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
 
+            AfflictionPrefab.Init();
             GameModePreset.Init();
-
             LocationType.Init();
 
             Submarine.RefreshSavedSubs();

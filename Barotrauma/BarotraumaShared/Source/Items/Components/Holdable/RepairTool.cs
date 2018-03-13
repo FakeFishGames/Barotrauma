@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 #if CLIENT
@@ -123,7 +124,7 @@ namespace Barotrauma.Items.Components
             if (character == null || character.Removed) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
             
-            float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
+            float degreeOfSuccess = DegreeOfSuccess(character);
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {
@@ -177,7 +178,7 @@ namespace Barotrauma.Items.Components
 
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
                 Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
             if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
@@ -244,10 +245,9 @@ namespace Barotrauma.Items.Components
                     float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                     emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
                 }
-#endif
-
+#endif                
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
-
+                
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
                 for (int i = -1; i < 2; i += 2)
@@ -264,7 +264,11 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetCharacter = (targetBody.UserData as Character)) != null)
             {
-                targetCharacter.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+                Vector2 hitPos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetCharacter.Submarine != null) hitPos += targetCharacter.Submarine.Position;
+
+                targetCharacter.AddDamage(hitPos,
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 #if CLIENT
                 Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
                 if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
@@ -277,7 +281,8 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+                targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
+                    new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 
 #if CLIENT
                 Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
@@ -331,17 +336,24 @@ namespace Barotrauma.Items.Components
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
             if (dist > range * 5.0f) return true;
-            
+
+            Vector2 gapDiff = leak.WorldPosition - item.WorldPosition;
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            {
+                ((HumanoidAnimController)character.AnimController).Crouching = true;
+            }
+
             //steer closer if almost in range
             if (dist > range)
             {
                 Vector2 standPos = leak.IsHorizontal ?
-                    new Vector2(Math.Sign(item.WorldPosition.X - leak.WorldPosition.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign(item.WorldPosition.Y - leak.WorldPosition.Y));
+                    new Vector2(Math.Sign(-gapDiff.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign(-gapDiff.Y) * 0.5f);
 
                 standPos = leak.WorldPosition + standPos * range;
 
-                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);   
+                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);
             }
             else
             {
@@ -354,7 +366,21 @@ namespace Barotrauma.Items.Components
 
             Use(deltaTime, character);
 
-            return leak.Open <= 0.0f;
+            bool leakFixed = leak.Open <= 0.0f || leak.Removed;
+
+            if (leakFixed && leak.FlowTargetHull != null)
+            {
+                if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
+                {
+                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leaksfixed", 10.0f);
+                }
+                else
+                {
+                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leakfixed", 10.0f);
+                }
+            }
+
+            return leakFixed;
         }
 
         private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)

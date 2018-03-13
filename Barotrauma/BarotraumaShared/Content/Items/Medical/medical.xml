@@ -4,21 +4,24 @@
   <Item
     name="Medical Syringe"
     category="Equipment"
-    Tags="smallitem,medical"    
-    price="50"
+    Tags="smallitem,medical"
     canuseonself="true"
     cargocontainername="Chemical Crate"
     usecontainedspritecolor="true"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
-
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="70"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    
     <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
 
     <Body width="25" height="5" density="20"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-
-      <StatusEffect type="OnUse" target="Contained, Character" Condition="-25.0" disabledeltatime="true" >
+      <StatusEffect type="OnUse" target="Contained, Limb" Condition="-25.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem name="chem" type="Contained"/>
         <Use/>
@@ -30,8 +33,8 @@
     </ItemContainer>
 
     <Projectile launchimpulse="20.0" sticktocharacters="true">
-      <Attack damage="5" bleedingdamage="0.2" structuredamage="1" damagetype="Blunt" stun="0.1" targetforce="5"/>
-      <StatusEffect type="OnImpact" target="Contained, Character" Condition="-50.0" disabledeltatime="true" >
+      <Attack bleedingdamage="1" structuredamage="1" stun="0.1" targetforce="5"/>
+      <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-50.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem name="chem" type="Contained"/>
         <Use/>
@@ -44,10 +47,14 @@
     category="Equipment"
     Tags="smallitem,medical"    
     canuseonself="true"
-    price="20"
     cargocontainername="Chemical Crate"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
-
+    
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    
     <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
 
     <Body width="11" height="16" density="20"/>
@@ -55,12 +62,9 @@
     <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect type="OnUse" target="This, Character" bleeding="-0.1" duration="5.0">
+      <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
         <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This, Character" health="0.1" duration="5.0" checkconditionalalways="true">
-        <!-- Only give healing effect if their health is more than 50 -->
-        <Conditional Health="gt 50"/>
+        <ReduceAffliction name="bleeding" reduceamount="3"/>
       </StatusEffect>
     </MeleeWeapon>
   </Item>
@@ -70,9 +74,13 @@
     name="Iron Powder"
     category="Material"
     Tags="smallitem,chem"
-    cargocontainername="Chemical Crate"
-    price="5">
-
+    cargocontainername="Chemical Crate">
+    
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="30"/>
+    <Price locationtype="Outpost" buyprice="30"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
 
     <Body width="8" height="16" density="40"/>
@@ -91,9 +99,12 @@
      Tags="smallitem,chem,medical"  
      cargocontainername="Chemical Crate"   
      description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
-     canuseonself="true"
-     price="10">
-
+     canuseonself="true">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="17" density="20"/>
@@ -115,9 +126,12 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.6"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -135,12 +149,18 @@
     spritecolor="0.0,0.9,0.1,1.0"
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
-    canuseonself="true"    
-    price="20">
-
+    canuseonself="true">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0"/>      
+      <StatusEffect type="OnUse" target="Character" delay="20">
+        <Affliction name="drunk" strength="5"/>
+      </StatusEffect>
     </ItemComponent>
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
@@ -148,8 +168,9 @@
     <Body width="8" height="7" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
+      <StatusEffect type="OnUse" target="Character" delay="5">
         <RequiredItem name="Medical Syringe" type="Container"/>
+        <Affliction name="drunk" strength="10"/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -159,9 +180,12 @@
     category="Material"
     spritecolor="0.7,0.7,0.7,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -178,9 +202,12 @@
     category="Material"
     spritecolor="0.8,0.8,0.8,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -201,9 +228,12 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -222,9 +252,12 @@
      spritecolor="0.7,0.9,1.0,1.0"
      cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
-     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds."
-     price="50">
-
+     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds.">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
@@ -245,16 +278,27 @@
      spritecolor="0.5,0.5,1.0,1.0"
      cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
-     canuseonself="true"
-     description="Most commonly used for treating oxygen deprivation."
-     price="50">
-
+     description="Most commonly used for treating oxygen deprivation.">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
+    <ItemComponent>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
+        <ReduceAffliction name="oxygenlow" reduceamount="1"/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+    </ItemComponent>
+    
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" Health="-0.3" Oxygen="2.0" duration="10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10">
+        <ReduceAffliction name="oxygenlow" reduceamount="2"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -267,20 +311,27 @@
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     canuseonself="true"
-    description="A hemostatic agent that slows down bleeding."
-    price="50">
+    description="A hemostatic agent that slows down bleeding.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
     <ItemComponent>
-      <StatusEffect tags="medical" type="OnUse" target="Character" Bleeding="-0.1" duration="10.0"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
+        <ReduceAffliction name="bleeding" reduceamount="1"/>
+      </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
     </ItemComponent>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" Health="0.3" Bleeding="-0.2" duration="5.0">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
+        <ReduceAffliction name="bleeding" reduceamount="5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -292,22 +343,28 @@
     spritecolor="0.8,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
-    
     canuseonself="true"
-    description="Highly effective at treating various types of physical trauma."
-    price="50">
+    description="Highly effective at treating various types of physical trauma.">
 
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
     
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect tags="medical" type="OnUse" target="Character, This" Health="-0.5" duration="10"/>      
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction name="damage" reduceamount="1"/>
+      </StatusEffect>
     </ItemComponent>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="medical" type="OnUse" target="Character" Health="3.0" duration="5.0">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
+        <ReduceAffliction name="damage" reduceamount="5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -318,11 +375,12 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    
-    description="A highly potent corrigodone-based stimulant."
-    price="150">
+    Tags="smallitem,chem,medical,heal,stopbleeding"
+    description="A highly potent corrigodone-based stimulant.">
 
+    <Price locationtype="Research" buyprice="150"/>
+    <Price locationtype="Military" buyprice="200"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="20"/>
@@ -340,8 +398,10 @@
    spritecolor="0.8,0.3,0.8,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="A potent muscle stimulant."
-   price="50">
+   description="A potent muscle stimulant.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -360,25 +420,31 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
-   price="300">
+   description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.">
 
+    <Price locationtype="Research" buyprice="300"/>
+    <Price locationtype="Military" buyprice="40"/>
+    <Price locationtype="City" buyprice="500"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.2">
+      <StatusEffect type="OnUse" target="Character">
         <Conditional HuskInfectionState="lt 1.0"/>
+        <ReduceAffliction name="Husk infection" reduceamount="-20"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
-      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" Health="-3.0" duration="10.0">
+      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
         <Conditional HuskInfectionState="eq 1.0"/>
+        <Affliction name="Internal damage" strength="3"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
-      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" Health="-5.0" duration="10.0">
+      <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
         <Conditional SpeciesName="husk"/>
+        <Affliction name="Internal damage" strength="4"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -437,9 +503,11 @@
     spritecolor="0.1,0.1,0.1,1.0"
     cargocontainername="Chemical Crate"
     Tags="smallitem,chem,explosive"
-    impacttolerance="8"
-    price="50">
-
+    impacttolerance="8">
+    
+    <Price locationtype="Research" buyprice="30"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -459,9 +527,13 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.8"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="20">
+    Tags="smallitem,chem,medical">
 
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -478,9 +550,11 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
-    price="50">
-
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="30"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
 
     <Body width="8" height="17" density="10"/>
@@ -497,8 +571,10 @@
     category="Material"
     spritecolor="0.2,0.35,0.06,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    price="50">
+    Tags="smallitem,chem,medical">
+    
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
@@ -517,9 +593,10 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
-   price="2000">
+   description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'.">
 
+    <Price locationtype="Research" buyprice="1000"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
@@ -539,9 +616,11 @@
    spritecolor="0.0,0.0,0.0,1.0"
    cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
-   description="A highly potent neurotoxin."
-   price="1000">
-
+   description="A highly potent neurotoxin.">
+    
+    <Price locationtype="Research" buyprice="500"/>
+    <Price locationtype="Military" buyprice="1000"/>
+    
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>

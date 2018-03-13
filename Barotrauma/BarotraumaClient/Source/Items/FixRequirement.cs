@@ -24,7 +24,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Skill skill in requiredSkills)
+            foreach (Skill skill in RequiredSkills)
             {
                 float characterSkill = character.GetSkillLevel(skill.Name);
                 bool sufficientSkill = characterSkill >= skill.Level;
@@ -55,7 +55,7 @@ namespace Barotrauma
             foreach (FixRequirement requirement in item.FixRequirements)
             {
                 GUIFrame reqFrame = new GUIFrame(
-                    new Rectangle(0, y, 0, 20 + Math.Max(requirement.requiredItems.Count, requirement.requiredSkills.Count) * 15),
+                    new Rectangle(0, y, 0, 20 + Math.Max(requirement.requiredItems.Count, requirement.RequiredSkills.Count) * 15),
                     Color.Transparent, null, frame);
                 reqFrame.UserData = requirement;
 
@@ -78,7 +78,7 @@ namespace Barotrauma
                 }
 
                 y2 = 20;
-                foreach (Skill skill in requirement.requiredSkills)
+                foreach (Skill skill in requirement.RequiredSkills)
                 {
                     var skillBlock = new GUITextBlock(new Rectangle(0, y2, 200, 15), skill.Name + " - " + skill.Level, "", Alignment.Right, Alignment.TopLeft, reqFrame);
                     skillBlock.Font = GUI.SmallFont;
@@ -116,6 +116,14 @@ namespace Barotrauma
                 requirement.Fixed = true;
             }
 
+            if (GameMain.Client == null)
+            {
+                foreach (Skill skill in requirement.RequiredSkills)
+                {
+                    Character.Controlled.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier);
+                }
+            }
+
             return true;
         }
 
@@ -138,7 +146,6 @@ namespace Barotrauma
                 {
                     bool canBeFixed = requirement.CanBeFixed(character, child);
                     unfixedFound = true;
-                    //child.GetChild<GUITickBox>().Selected = canBeFixed;
                     GUITickBox tickBox = child.GetChild<GUITickBox>();
                     if (tickBox.Selected)
                     {
@@ -147,7 +154,6 @@ namespace Barotrauma
 
                     }
                     child.Color = Color.Red * 0.2f;
-                    //tickBox.State = GUIComponent.ComponentState.None;
                 }
             }
             if (!unfixedFound)

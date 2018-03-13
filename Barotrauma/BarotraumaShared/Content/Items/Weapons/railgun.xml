@@ -35,8 +35,7 @@
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -58,8 +57,7 @@
   <Item
     name="Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -72,8 +70,12 @@
   
   <Item
     name="Railgun Shell"
-    category="Misc"    
-    price="200">
+    category="Misc"
+    radarsize="5">
+
+    <Price locationtype="Outpost" buyprice="300"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="300"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -88,8 +90,10 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
     <Projectile launchimpulse="80.0">
-      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
-
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="100"/>
+        <affliction name="Bleeding" strength="10"/>
+      </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
@@ -104,9 +108,11 @@
 
   <Item
     name="Nuclear Shell"
-    category="Misc"    
-    price="500">
-
+    category="Misc"
+    radarsize="5">
+    
+    <Price locationtype="Military" buyprice="500"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Steel Bar"/>
@@ -121,8 +127,10 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 
     <Projectile launchimpulse="80.0">
-      <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
-      
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="100"/>
+        <affliction name="Bleeding" strength="10"/>
+      </Attack>
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg"/>
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"/>

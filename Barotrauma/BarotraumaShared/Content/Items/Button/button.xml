@@ -4,9 +4,13 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
-
+    cargocontainername="Metal Crate">
+    
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    
     <Sprite texture ="button.png" sourcerect="0,0,24,27" depth="0.8"/>
 
     <Deconstruct time="10">
@@ -37,8 +41,12 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Sprite texture ="button.png" sourcerect="24,0,12,16" depth="0.79"/>
 

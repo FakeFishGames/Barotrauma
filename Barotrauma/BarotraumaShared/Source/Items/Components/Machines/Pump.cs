@@ -94,6 +94,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage) return;
 
@@ -104,6 +105,7 @@ namespace Barotrauma.Items.Components
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+            if (item.IsOptimized("mechanical")) currFlow *= 2.0f;
 
             hull1.WaterVolume += currFlow;
             if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
@@ -146,6 +148,20 @@ namespace Barotrauma.Items.Components
             }
 
             if (!IsActive) currPowerConsumption = 0.0f;
+        }
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            if (objective.Option.ToLowerInvariant() == "stop pumping")
+            {
+                FlowPercentage = 0.0f;
+            }
+            else
+            {
+                IsActive = true;
+                FlowPercentage = -100.0f;
+            }
+            return true;
         }
 
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)

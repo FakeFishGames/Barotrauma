@@ -20,9 +20,9 @@
 
       <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
       <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,0,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
-
-      <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.7"/>
-      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.9" bleedingdamagemultiplier="0.9"/>
+      
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
 
     <ItemContainer capacity="5">
@@ -52,8 +52,8 @@
       <sprite texture="engigear.png" limb="RightLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.11" hidelimb="true"/>
       <sprite texture="engigear.png" limb="LeftLeg" sourcerect="33,77,20,51" origin="0.5,0.5" depth="0.15" hidelimb="true"/>
 
-      <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.7"/>
-      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.9" bleedingdamagemultiplier="0.9"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
 
     <ItemContainer capacity="5">

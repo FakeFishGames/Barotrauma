@@ -10,16 +10,23 @@
 
   <ai
     combatstrength="250"
-    attackpriorityhumans="500.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="60"
-    attackprioritystronger="-70"
-    eatpriority="45"
     attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
-    attachtowalls="true"
-    fleehealththreshold="20"/>
+    aggressiveboarding="true"
+    fleehealththreshold="20">
+    
+    <latchonto
+      attachtowalls="true"/>
+
+    <targetpriority tag="stronger" state="Escape" priority="100"/> 
+    <targetpriority tag="dead" state="Eat" priority="90"/> 
+    <targetpriority tag="human" state="Attack" priority="80"/>
+    <targetpriority tag="weaker" state="Attack" priority="60"/>
+    <targetpriority tag="door" state="Attack" priority="55"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="50"/>
+  </ai>
   
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
@@ -28,6 +35,7 @@
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
+           impacttolerance="10"
            flip="true">
 
     <collider radius="60"/>
@@ -35,25 +43,29 @@
     <!-- head -->
     <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" mouthpos="30,65">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- middle part -->
     <limb id = "1" width="42" height="61"  mass = "6" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- middle part -->
     <limb id = "2" width="35" height="52"  mass = "6" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- tail -->
     <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>      
 
     <limb id = "4" width="15" height="63" mass = "4" refjoint="3" flip="true">
@@ -66,9 +78,13 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack range="200" damagerange="100" duration="0.25" damage="50" stun="0.1" bleedingdamage="5" structuredamage="20"  damagetype="slash" targetforce="-100" severlimbsprobability="0.8"
-              torque="-20" force="10" applyforceonlimbs="0,1,6"/>
-      <sound tag="footstep_armor"/>
+      <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="20"
+              targetforce="-100" severlimbsprobability="0.8" torque="-20" force="10" applyforceonlimbs="0,6">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="50"/>
+        <affliction name="Stun" strength="0.1"/>
+      </attack>
+	    <sound tag="footstep_armor"/>
     </limb>
 
     <limb id = "7" width="15" height="63" mass = "4" type="LeftLeg" flip="true">

@@ -23,6 +23,8 @@ namespace Barotrauma
         public CrewManager CrewManager;
 #endif
 
+        public double RoundStartTime;
+
         private Mission currentMission;
 
         public Mission Mission
@@ -102,7 +104,7 @@ namespace Barotrauma
             this.savePath = savePath;
 
 #if CLIENT
-            CrewManager = new CrewManager();
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
 
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
@@ -119,9 +121,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
-#if CLIENT
-            CrewManager = new CrewManager();
-#endif
+
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -135,9 +135,13 @@ namespace Barotrauma
 #endif
                     case "multiplayercampaign":
                         GameMode = MultiPlayerCampaign.LoadNew(subElement);
+#if CLIENT
+                        CrewManager = new CrewManager(false);
+#endif
                         break;
                 }
             }
+
         }
 
         private void CreateDummyLocations()
@@ -157,7 +161,7 @@ namespace Barotrauma
             MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
             for (int i = 0; i < 2; i++)
             {
-                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
+                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null);
             }
         }
         
@@ -179,7 +183,6 @@ namespace Barotrauma
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
 #endif
-                        
             this.level = level;
 
             if (submarine == null)
@@ -226,6 +229,8 @@ namespace Barotrauma
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();
 #endif
+
+            RoundStartTime = Timing.TotalTime;
         }
 
         public void EndRound(string endMessage)

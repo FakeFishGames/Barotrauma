@@ -16,7 +16,7 @@
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
       <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
+        <RequiredSkill name="Mechanical Engineering" level="30"/>
       </fabricableitem>
       <fabricableitem name="Spear" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Revolver Round" requireditems="Copper Bar" requiredtime="10">
@@ -24,29 +24,29 @@
       </fabricableitem>
 
       <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
+        <RequiredSkill name="Mechanical Engineering" level="30"/>
       </fabricableitem>
       <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
+        <RequiredSkill name="Mechanical Engineering" level="30"/>
       </fabricableitem>
 
       <fabricableitem name="Railgun Shell" requireditems="Steel Bar, Steel Bar, Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
+        <RequiredSkill name="Mechanical Engineering" level="25"/>
       </fabricableitem>
       <fabricableitem name="Nuclear Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar, Polycarbonate Bar" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
+        <RequiredSkill name="Mechanical Engineering" level="40"/>
       </fabricableitem>
       <fabricableitem name="Depth Charge Shell" requireditems="Steel Bar, Steel Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
+        <RequiredSkill name="Mechanical Engineering" level="25"/>
       </fabricableitem>
       <fabricableitem name="Nuclear Depth Charge" requireditems="Steel Bar, Steel Bar, Uranium Bar" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
+        <RequiredSkill name="Mechanical Engineering" level="40"/>
       </fabricableitem>
       <fabricableitem name="Diving Mask" requireditems="Polycarbonate Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="25"/>
+        <RequiredSkill name="Mechanical Engineering" level="25"/>
       </fabricableitem>
       <fabricableitem name="Diving Suit" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, Aluminium, Aluminium" requiredtime="30">
-        <RequiredSkill name="Construction" level="40"/>
+        <RequiredSkill name="Mechanical Engineering" level="40"/>
       </fabricableitem>
 
       <fabricableitem name="Fire Extinguisher" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="10"/>
@@ -84,13 +84,13 @@
       </fabricableitem>
 
       <fabricableitem name ="Stun Grenade" requireditems="Steel Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="30"/>
+        <RequiredSkill name="Mechanical Engineering" level="30"/>
         <Item name="Flash Powder" mincondition="0.75"/>
         <Item name="Chloral Hydrate" mincondition="0.75"/>
       </fabricableitem>
 
       <fabricableitem name ="Incendium Grenade" requireditems="Steel Bar, Incendium Bar" requiredtime="20">
-        <RequiredSkill name="Construction" level="40"/>
+        <RequiredSkill name="Mechanical Engineering" level="40"/>
         <Item name="Flash Powder" mincondition="0.75"/>
       </fabricableitem>
 
@@ -119,6 +119,11 @@
 
 		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
 		<ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
 	</Item>
 
   <Item
@@ -203,6 +208,11 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.15, 0.7" slotsperrow="1"/>
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.85, 0.7" slotsperrow="1"/>
+
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 
   <Item
@@ -227,5 +237,10 @@
 
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" hudpos="0.5, 0.4" slotsperrow="5"/>
     <ItemContainer capacity="10" canbeselected="true" hideitems="true" hudpos="0.5, 0.8" slotsperrow="5"/>
+    
+    <Optimizable optimizationtype="electrical">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 </Items>

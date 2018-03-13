@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,19 +12,29 @@ namespace Barotrauma
         public T1 First { get; set; }
         public T2 Second { get; set; }
 
-        public static Pair<T1, T2> Create(T1 first, T2 second)
+        public Pair(T1 first, T2 second)
         {
-            Pair<T1, T2> pair = new Pair<T1, T2>();
-            pair.First  = first;
-            pair.Second = second;
+            First  = first;
+            Second = second;
+        }
+    }
 
-            return pair;
+    public class Triplet<T1, T2, T3>
+    {
+        public T1 First { get; set; }
+        public T2 Second { get; set; }
+        public T3 Third { get; set; }
+
+        public Triplet(T1 first, T2 second, T3 third)
+        {
+            First = first;
+            Second = second;
+            Third = third;
         }
     }
 
     public static partial class ToolBox
     {
-
         public static bool IsProperFilenameCase(string filename)
         {
             char[] delimiters = { '/','\\' };
@@ -157,47 +168,38 @@ namespace Barotrauma
             }
         }
 
+        private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();
         public static string GetRandomLine(string filePath)
         {
-            try
+            List<string> lines;
+            if (cachedLines.ContainsKey(filePath))
             {
-                string randomLine = "";
-                StreamReader file = new StreamReader(filePath);                
-
-                var lines = File.ReadLines(filePath).ToList();
-                int lineCount = lines.Count;
-
-                if (lineCount == 0)
+                lines = cachedLines[filePath];
+            }
+            else
+            {
+                try
                 {
-                    DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
-                    file.Close();
+                    using (StreamReader file = new StreamReader(filePath))
+                    {
+                        lines = File.ReadLines(filePath).ToList();
+                        cachedLines.Add(filePath, lines);
+                        if (lines.Count == 0)
+                        {
+                            DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
+                            return "";
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Couldn't open file \"" + filePath + "\"!", e);
                     return "";
                 }
-
-                int lineNumber = Rand.Int(lineCount, Rand.RandSync.Server);
-
-                int i = 0;
-                    
-                foreach (string line in lines)
-                {
-                    if (i == lineNumber)
-                    {
-                        randomLine = line;
-                        break;
-                    }
-                    i++;
-                }
-
-                file.Close();
-                
-                return randomLine;
             }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't open file \"" + filePath + "\"!", e);
 
-                return "";
-            }            
+            if (lines.Count == 0) return "";
+            return lines[Rand.Range(0, lines.Count, Rand.RandSync.Server)];
         }
 
         /// <summary>

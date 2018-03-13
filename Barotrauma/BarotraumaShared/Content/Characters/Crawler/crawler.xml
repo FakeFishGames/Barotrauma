@@ -6,52 +6,70 @@
   <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
-  <ai 
+  <ai
     combatstrength="100"
-    attackpriorityhumans="500"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="50"
-    attackprioritystronger="-60"
-    eatpriority="55"
-    sight="0.5" 
+    sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    attachtowalls="true"
-    attackcooldown="3.0"/>
+    aggressiveboarding="true"
+    attackcooldown="3.0">
+    
+    <latchonto 
+      attachtowalls="true"
+      attachtosub="true"
+      mindeattachspeed="3.0"
+      maxdeattachspeed="10.0"/>
 
-  <ragdoll headposition="50" headangle="-70" 
-           waveamplitude="2.0" wavelength="3000" 
-           swimspeed="2.0" walkspeed="2.0"
-           runspeedmultiplier="2" swimspeedmultiplier="2.0"
-           stepsize ="15.0,20.0"           
-           legtorque="10"
-           flip="true">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="dead" state="Eat" priority="55"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+  </ai>
+
+  <ragdoll 
+    colliderheightfromfloor="40" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
+    waveamplitude="4.0" wavelength="3000"
+    swimspeed="2.0" walkspeed="2.0"
+    runspeedmultiplier="2" swimspeedmultiplier="2.0"
+    stepsize ="15.0,20.0"
+    steertorque="20"
+    legtorque="10"
+    impacttolerance="7"
+    flip="true">
 
     <collider width="45" radius="22"/>
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" mouthpos="17,35">
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
+    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="15.0" mouthpos="17,35">
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" radius="22" height="40" flip="true" >
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
+    <limb id = "1" radius="22" height="40" type="Torso" flip="true" steerforce="0.3">
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>
     </limb>
 
     <!-- tail -->
     <limb id = "2" radius="22" height="45" type="Tail" flip="true">
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
     </limb>
       
     <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
-      <attack range="120" damagerange="60" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="5" 
+      <attack range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10"
               damagetype="slash" targetforce="-30" severlimbsprobability="0.5"
-              force="5" applyforceonlimbs="0" torque="-20" />
+              force="15" applyforceonlimbs="0,1" torque="-20">
+        <affliction name="Bleeding" strength="30"/>
+        <affliction name="Internal Damage" strength="10"/>
+      </attack>
     </limb>
 
     <limb id = "4" width="11" height="34" type="RightLeg" flip="true">

@@ -4,10 +4,14 @@
     name="Welding Tool"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar and a steel bar -->
@@ -47,7 +51,7 @@
       <Fixable name="structure"/>
 
       <!-- construction skill 20 required to use the item -->
-      <RequiredSkill name="Construction" level="20"/>
+      <RequiredSkill name="Mechanical Engineering" level="20"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
@@ -67,10 +71,14 @@
     name="Plasma Cutter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
@@ -100,7 +108,7 @@
 
       <Fixable name="structure"/>
 
-      <RequiredSkill name="Construction" level="30"/>
+      <RequiredSkill name="Mechanical Engineering" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
@@ -119,8 +127,12 @@
     name="Welding Fuel Tank"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="50">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -142,16 +154,20 @@
     name="Fire Extinguisher"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="A handheld carbon dioxide extinguisher.">
+
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="extinguisher.png"  depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
     <Body radius="10" height="45" density="5"/>
 
@@ -172,8 +188,12 @@
     name="Screwdriver"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
        
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
 
@@ -187,8 +207,12 @@
     name="Wrench"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
@@ -196,7 +220,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" structuredamage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -204,8 +228,12 @@
     name="Crowbar"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="15">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="15"/>
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
@@ -213,7 +241,7 @@
 
     <MeleeWeapon slots="RightHand+LeftHand,Any"
           controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack damage="20" structuredamage="10" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -221,8 +249,12 @@
     name="Handheld Sonar"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
@@ -251,8 +283,12 @@
     name="Flashlight"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="40"/>
 
     <Deconstruct time="15">
       <Item name="Copper Bar"/>
@@ -281,10 +317,14 @@
   <Item
     name="Flare"
     category="Equipment"
-    cargocontainername="Metal Crate"    
-    price="5"
+    cargocontainername="Metal Crate"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
       <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
@@ -292,7 +332,6 @@
       <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
       <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
-
 
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>
 

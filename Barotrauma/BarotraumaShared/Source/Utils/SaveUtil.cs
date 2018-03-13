@@ -48,7 +48,7 @@ namespace Barotrauma
                         Submarine.MainSub.FilePath = subPath;
                         Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
                     }
-                    else
+                    else if (Submarine.MainSub.FilePath != subPath)
                     {
                         File.Copy(Submarine.MainSub.FilePath, subPath);
                         Submarine.MainSub.FilePath = subPath;

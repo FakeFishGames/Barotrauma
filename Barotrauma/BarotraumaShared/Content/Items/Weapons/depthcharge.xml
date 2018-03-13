@@ -5,8 +5,7 @@
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
@@ -23,8 +22,7 @@
   <Item
     name="Depth Charge Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
@@ -37,8 +35,7 @@
   <Item
     name="Depth Charge Shell"
     category="Misc"
-    
-    price="200">
+    radarsize="5">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -52,7 +49,9 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile launchimpulse="5.0">
-      <Attack damage="1" structuredamage="1" damagetype="Blunt"/>
+      <Attack structuredamage="1" damagetype="Blunt">
+        <affliction name="Internal Damage" strength="10"/>
+      </Attack>
       <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
     </Projectile>
 
@@ -65,8 +64,7 @@
   <Item
     name="Nuclear Depth Charge"
     category="Misc"
-    
-    price="500">
+    radarsize="5">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -81,6 +79,9 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile launchimpulse="5.0">
+      <Attack structuredamage="1" damagetype="Blunt">
+        <affliction name="Internal Damage" strength="10"/>
+      </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>

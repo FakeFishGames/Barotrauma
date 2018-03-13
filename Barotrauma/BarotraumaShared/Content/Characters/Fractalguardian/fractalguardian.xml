@@ -6,13 +6,15 @@
   <sound file="Content/Characters/Fractalguardian/Die1.ogg" state="Die" range="3000" />
   <sound file="Content/Characters/Fractalguardian/Die2.ogg" state="Die" range="3000" />
 
-  <ai 
+  <ai
     combatstrength="500"
-    attackpriorityrooms="0.0" 
+    attackpriorityrooms="0.0"
     attackpriorityhumans="100"
-    sight="1.0" 
-    hearing="2.0" 
-    attackcooldown="1"/>
+    sight="1.0"
+    hearing="2.0"
+    attackcooldown="1">    
+    <targetpriority tag="human" state="Attack" priority="100"/>
+  </ai>
   
   <ragdoll waveamplitude="50.0" wavelength="500" swimspeed="3.0" walkspeed="0.3" flip="false" canentersubmarine="false">
 
@@ -20,7 +22,10 @@
     <!-- head -->
     <limb id = "0" radius="65" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,0,129,128" depth="0.04"/>
-      <attack type="Hit" range="120" damagerange="70" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="80"/>
+      <attack type="Hit" range="120" damagerange="70" duration="0.2" damage="50" stun="2" force="10" targetforce="80">
+        <affliction name="Internal Damage" strength="50"/>
+        <affliction name="Stun" strength="2"/>
+      </attack>
     </limb>
 
     <!-- body -->
@@ -39,12 +44,20 @@
 
     <limb id = "4" width="30" height="239">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,0,53,238" depth="0.05" origin="0.5,0.5"/>
-      <attack range="150" damagerange="120" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>
+      <attack range="150" damagerange="120" duration="0.5" torque="-150">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="20"/>
+        <affliction name="Stun" strength="1"/>
+      </attack>
     </limb>
 
     <limb id = "5" width="30" height="239">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,0,53,238" size="-1,1" depth="0.05" origin="0.5,0.5"/>
-      <attack range="150" damagerange="120" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>
+      <attack range="150" damagerange="120" duration="0.5" torque="150">
+        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Bleeding" strength="20"/>
+        <affliction name="Stun" strength="1"/>
+      </attack>
     </limb>
         
 

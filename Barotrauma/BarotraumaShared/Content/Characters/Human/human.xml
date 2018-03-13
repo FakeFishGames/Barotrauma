@@ -3,6 +3,51 @@
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
+  <health
+    vitality="100"
+    doesbleed="true">
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" sourcerect="69,0,118,256" highlightarea="112,0,30,36"/>
+      <VitalityMultiplier type="damage" multiplier="2.0"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorTorso.png" sourcerect="69,0,118,256" highlightarea="107,36,40,108"/>
+      <VitalityMultiplier type="bleeding" multiplier="2.0"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorLeftArm.png" sourcerect="69,0,118,256" highlightarea="92,42,17,47"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorLeftHand.png" sourcerect="69,0,118,256" highlightarea="71,89,28,62"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorRightArm.png" sourcerect="69,0,118,256" highlightarea="146,42,17,47"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorRightHand.png" sourcerect="69,0,118,256" highlightarea="155,89,28,62"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorLeftLeg.png" sourcerect="69,0,118,256" highlightarea="103,140,22,49"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorLeftFoot.png" sourcerect="69,0,118,256" highlightarea="104,190,21,66"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorRightLeg.png" sourcerect="69,0,118,256" highlightarea="130,140,22,49"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+    <Limb>
+      <Sprite texture="Content/UI/Health/HealthIndicatorRightFoot.png" sourcerect="69,0,118,256" highlightarea="128,190,21,66"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
+    </Limb>
+  </health>
+  
   <ragdoll headposition="154" torsoposition="115" 
            stepsize="42.0, 12.0"
            walkanimspeed="4.58"
@@ -18,66 +63,66 @@
     <collider height="40" radius="15"/>
     
     <!-- head -->
-    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">
+    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" healthindex="0">
       <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.04" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5"/>
     </limb>
     <!-- body -->
-    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3">
+    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" healthindex="1">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,29,58" depth="0.05" origin="0.5,0.6"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6"/>
     </limb>
-    <limb id = "12" radius="13" mass = "20" type="Waist">
+    <limb id = "12" radius="13" mass = "20" type="Waist" healthindex="1">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,32,29" depth="0.045" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5"/>
     </limb>
     
   
     <!-- left arm -->
-    <limb id = "2" radius="8" height="20" mass="3" type="LeftArm">
+    <limb id = "2" radius="8" height="20" mass="3" type="LeftArm" healthindex="2">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.15" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5"/>
     </limb>
-    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-18.0">
+    <limb id = "3" radius="6" height="26" mass="3" type="LeftHand" pullpos="0.0,-18.0" healthindex="3">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" depth="0.16" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
     </limb>
 
     <!-- right arm -->
-    <limb id = "4" radius="8" height="20" mass="3" type="RightArm">
+    <limb id = "4" radius="8" height="20" mass="3" type="RightArm" healthindex="4">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="30,2,17,39" depth="0.01" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="30,2,17,39" origin="0.5,0.5"/>
     </limb>
-    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-18.0">
+    <limb id = "5" radius="6" height="26" mass ="3" type="RightHand" pullpos="0.0,-18.0" healthindex="5">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="49,2,13,47" origin="0.5,0.5"/>
     </limb>
 
     <!-- left leg -->
-    <limb id = "6" radius="10" height="30" mass = "8" type="LeftThigh">
+    <limb id = "6" radius="10" height="30" mass = "8" type="LeftThigh" healthindex="6">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.15" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,32,26,48" origin="0.5,0.5"/>
     </limb>
-    <limb id = "7" radius="6" height="39" mass = "5" type="LeftLeg">
+    <limb id = "7" radius="6" height="39" mass = "5" type="LeftLeg" healthindex="7">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.16" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="32,0,22,50" origin="0.5,0.5"/>
     </limb>
-    <limb id = "8" radius="5" height="13" mass = "2" type ="LeftFoot" flip="true" pullpos="-5.0,0.0">
+    <limb id = "8" radius="5" height="13" mass = "2" type ="LeftFoot" flip="true" pullpos="-5.0,0.0" healthindex="7">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
       <sound tag="footstep_metal"/>
     </limb>
   
     <!-- right leg -->
-    <limb id = "9" radius="10" height="30" mass = "8" type="RightThigh">
+    <limb id = "9" radius="10" height="30" mass = "8" type="RightThigh" healthindex="8">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" depth="0.11" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,32,26,48" origin="0.5,0.5"/>
     </limb>
-    <limb id = "10" radius="6" height="39" mass = "5" type="RightLeg">
+    <limb id = "10" radius="6" height="39" mass = "5" type="RightLeg" healthindex="8">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" depth="0.12" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="32,0,22,50" origin="0.5,0.5"/>
     </limb>
-    <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0">
+    <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0" healthindex="9">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
       <sound tag="footstep_metal"/>

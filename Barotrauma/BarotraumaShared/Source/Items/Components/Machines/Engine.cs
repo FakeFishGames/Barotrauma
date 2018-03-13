@@ -30,6 +30,11 @@ namespace Barotrauma.Items.Components
             set { force = MathHelper.Clamp(value, -100.0f, 100.0f); }
         }
 
+        public float CurrentVolume
+        {
+            get { return Math.Abs((force / 100.0f) * (voltage / minVoltage)); }
+        }
+
         public Engine(Item item, XElement element)
             : base(item, element)
         {
@@ -53,24 +58,21 @@ namespace Barotrauma.Items.Components
             };
 #endif
         }
-
-        public float CurrentVolume
-        {
-            get { return Math.Abs((force / 100.0f) * (voltage / minVoltage)); }
-        }
-
+    
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
-
+            
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
                 Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
+                if (item.IsOptimized("mechanical")) currForce *= 1.5f;
 
                 item.Submarine.ApplyForce(currForce);
 

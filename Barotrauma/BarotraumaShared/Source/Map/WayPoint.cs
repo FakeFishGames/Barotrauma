@@ -31,12 +31,18 @@ namespace Barotrauma
 
         private ushort ladderId;
         public Ladder Ladders;
+        public Structure Stairs;
 
         private ushort gapId;
         public Gap ConnectedGap
         {
             get;
             private set;
+        }
+
+        public Door ConnectedDoor
+        {
+            get { return ConnectedGap?.ConnectedDoor; }
         }
 
         public Hull CurrentHull
@@ -308,6 +314,7 @@ namespace Barotrauma
                 WayPoint prevPoint = ladderPoints[0];
                 Vector2 prevPos = prevPoint.SimPosition;
                 List<Body> ignoredBodies = new List<Body>();
+
                 for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 100.0f; y += 100.0f)
                 {
                     var pickedBody = Submarine.PickBody(
@@ -344,27 +351,17 @@ namespace Barotrauma
                 }
 
                 ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
-
-                prevPoint.ConnectTo(ladderPoints[ladderPoints.Count - 1]);
-
-                for (int i = 0; i < ladderPoints.Count; i++)
+                
+                prevPoint.ConnectTo(ladderPoints[1]);
+                foreach (WayPoint ladderPoint in ladderPoints)
                 {
-                    ladderPoints[i].Ladders = ladders;
+                    ladderPoint.Ladders = ladders;
+
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-150.0f, 10f));
+                        WayPoint closest = ladderPoint.FindClosest(dir, true, new Vector2(-150.0f, 10f));
                         if (closest == null) continue;
-                        ladderPoints[i].ConnectTo(closest);
-                    }
-
-                    if (i == ladderPoints.Count - 1 && ladderPoints.Count > 2)
-                    {
-                        for (int dir = -1; dir <= 1; dir += 2)
-                        {
-                            WayPoint closest = ladderPoints[i].FindClosest(dir, true, new Vector2(-150.0f, 10f));
-                            if (closest == null) continue;
-                            ladderPoints[i].ConnectTo(closest);
-                        }
+                        ladderPoint.ConnectTo(closest);
                     }
                 }
             }
@@ -565,8 +562,17 @@ namespace Barotrauma
             if (ladderId > 0)
             {
                 var ladderItem = FindEntityByID(ladderId) as Item;
-
                 if (ladderItem != null) Ladders = ladderItem.GetComponent<Ladder>();
+            }
+
+            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionWall | Physics.CollisionStairs);
+            if (pickedBody != null && pickedBody.UserData is Structure)
+            {
+                Structure structure = (Structure)pickedBody.UserData;
+                if (structure != null && structure.StairDirection != Direction.None)
+                {
+                    Stairs = structure;
+                }
             }
         }
 

@@ -769,7 +769,7 @@ namespace Barotrauma
                 {
                     if (c.Submarine == this)
                     {
-                        c.Kill(CauseOfDeath.Pressure);
+                        c.Kill(CauseOfDeathType.Pressure, null);
                         c.Enabled = false;
                     }
                 }
@@ -1110,6 +1110,7 @@ namespace Barotrauma
             subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
 
+
             loaded.Add(this);
 
             if (entityGrid != null)
@@ -1129,7 +1130,13 @@ namespace Barotrauma
 
             MapEntity.MapLoaded(this);
 
-            //WayPoint.GenerateSubWaypoints();
+            foreach (Hull hull in matchingHulls)
+            {
+                if (string.IsNullOrEmpty(hull.RoomName))
+                {
+                    hull.RoomName = hull.CreateRoomName();
+                }
+            }
 
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();
