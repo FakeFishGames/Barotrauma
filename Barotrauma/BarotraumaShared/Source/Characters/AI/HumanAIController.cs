@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -29,7 +31,7 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            steeringManager = new IndoorsSteeringManager(this, true);
+            steeringManager = new IndoorsSteeringManager(this, true, false);
 
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
@@ -45,11 +47,10 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
 
+            (Character.AnimController as HumanoidAnimController).Crouching = false;
             Character.ClearInputs();
-
-            //steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
-
-            if (updateObjectiveTimer>0.0f)
+            
+            if (updateObjectiveTimer > 0.0f)
             {
                 updateObjectiveTimer -= deltaTime;
             }
@@ -57,6 +58,12 @@ namespace Barotrauma
             {
                 objectiveManager.UpdateObjectives();
                 updateObjectiveTimer = UpdateObjectiveInterval;
+            }
+
+            if (Character.CanSpeak)
+            {
+                ReportProblems();
+                UpdateSpeaking();
             }
 
             objectiveManager.DoCurrentObjective(deltaTime);
@@ -84,7 +91,6 @@ namespace Barotrauma
             }
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
-            (Character.AnimController as HumanoidAnimController).Crouching = false;
 
             if (!Character.AnimController.InWater)
             {
@@ -136,20 +142,91 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
-
-        public override void OnAttacked(Character attacker, float amount)
+        
+        private void ReportProblems()
         {
-            if (amount <= 0.0f) return;
+            if (GameMain.Client != null) return;
 
-            var enemy = attacker as Character;
-            if (enemy == null || enemy == Character) return;
+            Order newOrder = null;
+            if (Character.CurrentHull != null)
+            {
+                if (Character.CurrentHull.FireSources.Count > 0)
+                {
+                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                }
 
-            objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
+                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
+                {
+                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
+                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
+                    {
+                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+                    }
+                }
+            }
+
+            if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
+            {
+                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+            }
+
+            if (newOrder != null)
+            {
+#if CLIENT
+                //TODO: move crewmanager to shared project to allow ai crew to report things in dedicated server?
+                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
+                {
+                    Character.Speak(
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order);
+
+                    if (GameMain.Server != null)
+                    {
+                        OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
+                        GameMain.Server.SendOrderChatMessage(msg, null);
+                    }
+                }             
+#endif
+            }
+        }
+
+        private void UpdateSpeaking()
+        {
+            if (Character.Oxygen < 20.0f)
+            {
+                Character.Speak(TextManager.Get("DialogLowOxygen"), null, 0, "lowoxygen", 30.0f);
+            }
+
+            if (Character.Bleeding > 2.0f)
+            {
+                Character.Speak(TextManager.Get("DialogBleeding"), null, 0, "bleeding", 30.0f);
+            }
+
+            if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
+            {
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
+            }
+        }
+        
+        public override void OnAttacked(Character attacker, AttackResult attackResult)
+        {
+            float totalDamage = attackResult.Damage;
+            if (totalDamage <= 0.0f || attacker == null) return;
+
+            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
 
             //the objective in the manager is not necessarily the same as the one we just instantiated,
             //because the objective isn't added if there's already an identical objective in the manager
             var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
-            combatObjective.MaxEnemyDamage = Math.Max(amount, combatObjective.MaxEnemyDamage);
+            combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
         }
 
         public void SetOrder(Order order, string option)
@@ -157,6 +234,7 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
+            Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }

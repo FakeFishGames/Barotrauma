@@ -80,8 +80,12 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Events\EventManager.cs" />
+    <Compile Include="Source\GUI\Graph.cs" />
+    <Compile Include="Source\Characters\CharacterHealth.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
+    <Compile Include="Source\Items\Components\Optimizable.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreaturePrefab.cs" />
@@ -91,7 +95,6 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\Characters\CharacterSound.cs" />
     <Compile Include="Source\Characters\HUDProgressBar.cs" />
-    <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\Limb.cs" />
     <Compile Include="Source\DebugConsole.cs" />
@@ -193,6 +196,7 @@
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />

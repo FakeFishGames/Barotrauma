@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 namespace Barotrauma
@@ -250,7 +251,7 @@ namespace Barotrauma
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
-            Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -258,9 +259,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
+            AfflictionPrefab.Init();
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
@@ -270,6 +272,9 @@ namespace Barotrauma
             {
                 if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
             }
+            //todo: get config file paths from content package
+            NPCConversation.Load(Path.Combine("Content", "Characters", "Human", "NpcConversations.xml"));
+
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;

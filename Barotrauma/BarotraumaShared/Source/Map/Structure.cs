@@ -45,6 +45,9 @@ namespace Barotrauma
         public const int WallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
+        //how much mechanic skill increases per damage removed from the wall by welding
+        public const float SkillIncreaseMultiplier = 0.0005f;
+
         const float LeakThreshold = 0.1f;
 
         private StructurePrefab prefab;
@@ -140,7 +143,7 @@ namespace Barotrauma
             }
         }
 
-        public List<string> Tags
+        public HashSet<string> Tags
         {
             get { return prefab.Tags; }
         }
@@ -652,8 +655,8 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
-            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
+            if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, null);
+            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, null);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -661,26 +664,39 @@ namespace Barotrauma
             float damageAmount = 0.0f;
             for (int i = 0; i < SectionCount; i++)
             {
-                if (Vector2.DistanceSquared(SectionPosition(i, true), worldPosition) <= attack.DamageRange * attack.DamageRange)
+                Vector2 sectionPosition = SectionPosition(i, true);
+                Vector2 diff = Vector2.Zero;
+                if (isHorizontal)
+                {
+                    diff.X = Math.Max(Math.Abs(sectionPosition.X - worldPosition.X) - WallSectionSize / 2, 0.0f);
+                    diff.Y = Math.Max(Math.Abs(sectionPosition.Y - worldPosition.Y) - rect.Height / 2, 0.0f);
+                }
+                else
+                {
+                    diff.X = Math.Max(Math.Abs(sectionPosition.X - worldPosition.X) - rect.Width / 2, 0.0f);
+                    diff.Y = Math.Max(Math.Abs(sectionPosition.Y - worldPosition.Y) - WallSectionSize / 2, 0.0f);
+                }
+
+                if (diff.LengthSquared() <= attack.DamageRange * attack.DamageRange)
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
-
 #if CLIENT
-            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 #endif
                 }
             }
-
+            
 #if CLIENT
-            if (playSound)// && !SectionBodyDisabled(i))
+            if (playSound)
             {
-                string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
+                //TODO: reimplement
+                //string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
+                //SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 
-            return new AttackResult(damageAmount, 0.0f);
+            return new AttackResult(damageAmount, null);
         }
 
         private void SetDamage(int sectionIndex, float damage, Character attacker = null)
@@ -716,7 +732,8 @@ namespace Barotrauma
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 
-                    //remove existing gap if damage is below 50%
+                    //remove existing gap if damage is below leak threshold
+                    sections[sectionIndex].gap.Open = 0.0f;
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
 #if CLIENT
@@ -756,14 +773,21 @@ namespace Barotrauma
             float damageDiff = damage - sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
-
-            if (damageDiff != 0.0f) //otherwise it's possible to infinitely gain karma by welding fixed things
+            
+            //otherwise it's possible to infinitely gain karma by welding fixed things
+            if (attacker != null && damageDiff != 0.0f)
+            {
                 AdjustKarma(attacker, damageDiff);
+                if (damageDiff < 0.0f && GameMain.Client == null)
+                {
+                    attacker.Info.IncreaseSkillLevel("Mechanical Engineering", -damageDiff * SkillIncreaseMultiplier);                                    
+                }
+            }
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
-            
+                        
             UpdateSections();
         }
 

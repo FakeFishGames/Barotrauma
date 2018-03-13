@@ -438,7 +438,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Skill skill in requiredSkills)
             {
-                int characterLevel = character.GetSkillLevel(skill.Name);
+                float characterLevel = character.GetSkillLevel(skill.Name);
                 if (characterLevel < skill.Level)
                 {
                     insufficientSkill = skill;
@@ -453,22 +453,21 @@ namespace Barotrauma.Items.Components
         /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
         /// </summary>
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
-        protected float DegreeOfSuccess(Character character)
+        public float DegreeOfSuccess(Character character)
         {
-            if (requiredSkills.Count == 0) return 100.0f;
+            if (requiredSkills.Count == 0) return 1.0f;
 
             float[] skillSuccess = new float[requiredSkills.Count];
 
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
-
+                float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
                 skillSuccess[i] = (characterLevel - requiredSkills[i].Level);
             }
 
             float average = skillSuccess.Average();
 
-            return (average + 100.0f) / 2.0f;
+            return ((average + 100.0f) / 2.0f) / 100.0f;
         }
 
         public virtual void FlipX() { }
@@ -527,7 +526,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
         
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (statusEffectLists == null) return;
 
@@ -536,7 +535,7 @@ namespace Barotrauma.Items.Components
 
             foreach (StatusEffect effect in statusEffects)
             {
-                item.ApplyStatusEffect(effect, type, deltaTime, character);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb);
             }
         }
         

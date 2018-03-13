@@ -5,18 +5,25 @@ namespace Barotrauma
 {
     partial class FixRequirement
     {
-        string name;
+        public static float SkillIncreaseMultiplier = 1.0f;
 
-        List<Skill> requiredSkills;
-        List<string> requiredItems;
+        private string name;
+
+        private readonly List<Skill> RequiredSkills;
+        private readonly List<string> requiredItems;
 
         public bool Fixed;
+
+        public List<string> RequiredItems
+        {
+            get { return requiredItems; }
+        }
 
         public FixRequirement(XElement element)
         {
             name = element.GetAttributeString("name", "");
 
-            requiredSkills = new List<Skill>();
+            RequiredSkills = new List<Skill>();
             requiredItems = new List<string>();
 
             foreach (XElement subElement in element.Elements())
@@ -27,7 +34,7 @@ namespace Barotrauma
                         string skillName = subElement.GetAttributeString("name", "");
                         int level = subElement.GetAttributeInt("level", 1);
 
-                        requiredSkills.Add(new Skill(skillName, level));
+                        RequiredSkills.Add(new Skill(skillName, level));
                         break;
                     case "item":
                         string itemName = subElement.GetAttributeString("name", "");
@@ -38,28 +45,27 @@ namespace Barotrauma
             }
         }
 
-        public bool CanBeFixed(Character character)
+        public bool HasRequiredSkills(Character character)
         {
-            if (character == null) return false;
+            foreach (Skill skill in RequiredSkills)
+            {
+                if (character.GetSkillLevel(skill.Name) < skill.Level) return false;
+            }
+            return true;
+        }
 
-            bool success = true;
+        public bool HasRequiredItems(Character character)
+        {
             foreach (string itemName in requiredItems)
             {
-                Item item = character.Inventory.FindItem(itemName);
-                bool itemFound = (item != null);
-               
-                if (!itemFound) success = false;
+                if (character.Inventory.FindItem(itemName) == null) return false;
             }
+            return true;
+        }
 
-            foreach (Skill skill in requiredSkills)
-            {
-                float characterSkill = character.GetSkillLevel(skill.Name);
-                bool sufficientSkill = characterSkill >= skill.Level;
-
-                if (!sufficientSkill) success = false;
-            }
-
-            return success;
+        public bool CanBeFixed(Character character)
+        {
+            return character != null && HasRequiredSkills(character) && HasRequiredItems(character);
         }
     }
 }

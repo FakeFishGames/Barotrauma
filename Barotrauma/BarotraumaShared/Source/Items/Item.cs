@@ -59,6 +59,8 @@ namespace Barotrauma
         private Inventory parentInventory;
         private Inventory ownInventory;
 
+        private Dictionary<string, Optimizable> optimizables;
+
         private Dictionary<string, Connection> connections;
 
         //a dictionary containing lists of the status effects in all the components of the item
@@ -227,11 +229,11 @@ namespace Barotrauma
         {
             get { return condition; }
         }
-        
+
         [Editable, Serialize("", true)]
         public string Tags
         {
-            get { return string.Join(",",tags); }
+            get { return string.Join(",", tags); }
             set
             {
                 tags.Clear();
@@ -242,8 +244,7 @@ namespace Barotrauma
                 {
                     string newTag = tag.Trim();
                     if (!tags.Contains(newTag)) tags.Add(newTag);
-                }   
-
+                }
             }
         }
 
@@ -384,11 +385,12 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "price":
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
-                        aiTarget.SightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
-                        aiTarget.SoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
+                        aiTarget.MinSightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
+                        aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
                         FixRequirements.Add(new FixRequirement(subElement));
@@ -457,6 +459,19 @@ namespace Barotrauma
             if (itemContainer != null)
             {
                 ownInventory = itemContainer.Inventory;
+            }
+
+            optimizables = new Dictionary<string, Optimizable>();
+            foreach (Optimizable optimizable in GetComponents<Optimizable>())
+            {
+                if (optimizables.ContainsKey(optimizable.OptimizationType.ToLowerInvariant()))
+                {
+                    DebugConsole.ThrowError("Error in item prefab \"" + itemPrefab.Name + "\" - multiple available optimizations with the same type.");
+                }
+                else
+                {
+                    optimizables.Add(optimizable.OptimizationType.ToLowerInvariant(), optimizable);
+                }
             }
 
             InsertToList();
@@ -691,7 +706,8 @@ namespace Barotrauma
         {
             if (tag == null) return true;
 
-            return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
+            return tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()) || 
+                prefab.Tags.Contains(tag) || prefab.Tags.Contains(tag.ToLowerInvariant());
         }
 
         public bool HasTag(IEnumerable<string> allowedTags)
@@ -705,7 +721,17 @@ namespace Barotrauma
             return false;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public bool IsOptimized(string optimizationType)
+        {
+            Optimizable optimizable;
+            if (optimizables.TryGetValue(optimizationType.ToLowerInvariant(),out optimizable))
+            {
+                return optimizable.IsOptimized;
+            }
+            return false;
+        }
+
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
 
@@ -714,11 +740,11 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, isNetworkEvent);
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (!isNetworkEvent)
             {
@@ -782,6 +808,15 @@ namespace Barotrauma
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
 
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            {
+                targets.Add(limb);
+            }
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            {
+                targets.AddRange(character.AnimController.Limbs.ToList());
+            }
+
             if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -792,10 +827,10 @@ namespace Barotrauma
         {
             if (prefab.Indestructible) return new AttackResult();
 
-            float damageAmount = attack.GetStructureDamage(deltaTime);
+            float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
-            return new AttackResult(damageAmount, 0.0f, null);
+            return new AttackResult(damageAmount, null);
         }
 
         private bool IsInWater()
@@ -814,6 +849,13 @@ namespace Barotrauma
             {
                 Spawner.AddToRemoveQueue(this);
                 return;
+            }
+
+            //aitarget goes silent/invisible if the components don't keep it active
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange -= deltaTime * 1000.0f;
+                aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
@@ -1018,12 +1060,39 @@ namespace Barotrauma
                         connectedComponents.Add(component);
                     }
 
-                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
-
-                    
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
                 }
             }
         }
+
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        {
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+
+            return connectedComponents;
+        }
+
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        {
+            alreadySearched.Add(this);
+                        
+            var recipients = c.Recipients;
+            foreach (Connection recipient in recipients)
+            {
+                if (alreadySearched.Contains(recipient.Item)) continue;
+
+                var component = recipient.Item.GetComponent<T>();                    
+                if (component != null)
+                {
+                    connectedComponents.Add(component);
+                }
+
+                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+            }            
+        }
+
 
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
         {
@@ -1153,7 +1222,7 @@ namespace Barotrauma
         }
 
 
-        public void Use(float deltaTime, Character character = null)
+        public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (condition == 0.0f) return;
 
@@ -1170,7 +1239,7 @@ namespace Barotrauma
                     ic.PlaySound(ActionType.OnUse, WorldPosition);
 #endif
     
-                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) remove = true;
                 }
@@ -1327,9 +1396,14 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)extraData[1];
                     ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
+                    Limb targetLimb = extraData.Length > 3 ? (Limb)extraData[3] : null;
+
+                    Character targetCharacter = FindEntityByID(targetID) as Character;
+                    byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                     msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
                     msg.Write(targetID);
+                    msg.Write(targetLimbIndex);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
@@ -1374,7 +1448,15 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    UInt16 characterID = msg.ReadUInt16();
+                    byte limbIndex = msg.ReadByte();
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+                    if (targetCharacter == null) break;
+                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
+
+                    Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, targetCharacter, targetLimb);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {

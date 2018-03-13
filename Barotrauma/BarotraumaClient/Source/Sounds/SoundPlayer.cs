@@ -400,7 +400,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
-                if (enemyAI == null || (enemyAI.AttackHumans < 0.0f && enemyAI.AttackRooms < 0.0f)) continue;
+                if (enemyAI == null || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
 
                 if (targetSubmarine != null)
                 {
@@ -435,7 +435,7 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
-        public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, List<string> tags = null)
+        public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<string> tags = null)
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.FindAll(s => 

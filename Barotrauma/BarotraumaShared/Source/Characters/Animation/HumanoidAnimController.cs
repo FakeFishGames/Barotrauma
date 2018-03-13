@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -19,13 +20,13 @@ namespace Barotrauma
 
         private float thighTorque;
 
-        private float cprAnimState;
+        private float cprAnimTimer;
         private float cprPump;
 
         private float inWaterTimer;
         private bool swimming;
         
-        protected override float TorsoPosition
+        protected override float? TorsoPosition
         {
             get
             {
@@ -33,7 +34,7 @@ namespace Barotrauma
             }
         }
 
-        protected override float TorsoAngle
+        protected override float? TorsoAngle
         {
             get
             {
@@ -261,7 +262,7 @@ namespace Barotrauma
                 {
                     //full slowdown (1.5f) when water is up to the torso
                     surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / torsoPosition, 0.0f, 1.0f) * 1.5f;
+                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / torsoPosition.Value, 0.0f, 1.0f) * 1.5f;
                 }
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
@@ -336,12 +337,12 @@ namespace Barotrauma
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.25f, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * (Crouching ? 0.6f : 0.25f), getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
@@ -351,11 +352,11 @@ namespace Barotrauma
 
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * 0.2f, colliderPos.Y + TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * 0.2f, colliderPos.Y + TorsoPosition.Value), getUpSpeed);
 
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X) == Math.Sign(Dir) ? 0.6f : 0.2f), colliderPos.Y + HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X) == Math.Sign(Dir) ? 0.6f : 0.2f), colliderPos.Y + HeadPosition.Value), getUpSpeed * 1.2f);
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
@@ -902,6 +903,8 @@ namespace Barotrauma
             }
         }
 
+        private float lastReviveTime;
+
         private void UpdateCPR(float deltaTime)
         {
             if (character.SelectedCharacter == null)
@@ -938,29 +941,30 @@ namespace Barotrauma
 
             Vector2 colliderPos = GetColliderBottom();
 
+            bool wasCritical = target.Vitality < 0.0f;
+            
             if (GameMain.Client == null) //Serverside code
             {
-                if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
-                {
-                    target.Oxygen += deltaTime * 0.5f; //Stabilize them
-                }
+                target.Oxygen += deltaTime * 0.5f; //Stabilize them                
             }
-
-            int skill = character.GetSkillLevel("Medical");
-            if (cprAnimState % 17 > 15.0f && targetHead != null && head != null)
+           
+            int skill = (int)character.GetSkillLevel("Medical");
+            //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
+            if (cprAnimTimer > 15.0f && targetHead != null && head != null)
             {
-                float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
+                float yPos = (float)Math.Sin(cprAnimTimer) * 0.2f;
                 head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
                 head.pullJoint.Enabled = true;
-                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.2f));
+                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f));
                 torso.pullJoint.Enabled = true;
 
-                if (GameMain.Client == null) //Serverside code
+                //Serverside code
+                if (GameMain.Client == null && target.Oxygen < -10.0f)
                 {
+                    //stabilize the oxygen level but don't allow it to go positive and revive the character yet
                     float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
                     character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) //we didn't suffocate yet did we
-                        target.Oxygen += cpr * deltaTime;
+                    if (character.Oxygen > 0.0f) target.Oxygen += cpr * deltaTime; //we didn't suffocate yet did we    
 
                     //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
                 }
@@ -972,7 +976,7 @@ namespace Barotrauma
                     head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
                     head.pullJoint.Enabled = true;
                 }
-                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.1f));
+                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f));
                 torso.pullJoint.Enabled = true;
                 if (cprPump >= 1)
                 {
@@ -980,46 +984,41 @@ namespace Barotrauma
                     targetTorso.body.ApplyForce(new Vector2(0, -1000f));
                     cprPump = 0;
 
-                    if (target.Bleeding <= 0.5f && target.Health <= 0.0f && !target.IsDead) //Have a chance to revive them to 2 HP if they were damaged.
+                    if (skill < 50.0f)
                     {
-                        if (GameMain.Client == null) //Serverside code
-                        {
-                            float reviveChance = (cprAnimState % 17) * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
-                            float rng = Rand.Int(100, Rand.RandSync.Server);
-
-                            //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
-                            if (rng <= reviveChance) //HOLY CRAP YOU SAVED HIM!!!
-                            {
-                                target.Oxygen = Math.Max(target.Oxygen, 10.0f);
-                                target.Health = 2.0f;
-                                Anim = Animation.None;
-                                return;
-                            }
-                        }
+                        //10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        target.DamageLimb(
+                            targetTorso.WorldPosition, targetTorso, 
+                            new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
+                            0.0f, true, 0.0f, character);
                     }
-                    else if (target.Bleeding > 0.5f || skill < 50) //We will hurt them if they're bleeding or we suck
+                    else if (GameMain.Client == null) //Serverside code
                     {
-                        //If not bleeding: 10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
-                        if (target.Bleeding <= 0.5f)
-                            target.AddDamage(CauseOfDeath.Damage, (50 - skill) * 0.02f, character);
-                        else //If bleeding: 2 HP damage per pump. Basically speeds up their death. Don't pump bleeding people!
-                        {
-                            target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
-#if CLIENT
-                            SoundPlayer.PlayDamageSound("LimbBlunt", 25.0f, targetTorso.body);
+                        float reviveChance = cprAnimTimer * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
 
-                            for (int i = 0; i < 4; i++)
-                            {
-                                var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", targetTorso.WorldPosition, Rand.Vector(10.0f), 0.0f, target.AnimController.CurrentHull);
-                            }
-#endif
-                        }
+                        //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
+                        if (Rand.Int(100, Rand.RandSync.Server) <= reviveChance)
+                        {
+                            //increase oxygen and clamp it above zero 
+                            // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
+                            target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
+                        }                        
                     }
                 }
                 cprPump += deltaTime;
             }
 
-            cprAnimState += deltaTime;
+            cprAnimTimer = (cprAnimTimer + deltaTime) % 17;
+
+            //got the character back into a non-critical state, increase medical skill
+            //BUT only if it has been more than 10 seconds since the character revived someone
+            //otherwise it's easy to abuse the system by repeatedly reviving in a low-oxygen room 
+            target.CharacterHealth.CalculateVitality();
+            if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
+            {
+                character.Info.IncreaseSkillLevel("Medical", 0.5f);
+                lastReviveTime = (float)Timing.TotalTime;
+            }
         }
         public override void DragCharacter(Character target)
         {

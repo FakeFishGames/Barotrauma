@@ -354,7 +354,7 @@ namespace Barotrauma
 
                             if (IsUnconscious)
                             {
-                                Kill(lastAttackCauseOfDeath);
+                                Kill(health.GetCauseOfDeath());
                             }
                             break;
                         case 3:
@@ -500,11 +500,15 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Client attempted to write character status to a networked message");
                 return;
             }
-
+            
             msg.Write(isDead);
             if (isDead)
             {
-                msg.Write((byte)causeOfDeath);
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)causeOfDeath.First);
+                if (causeOfDeath.First == CauseOfDeathType.Affliction)
+                {
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(causeOfDeath.Second));
+                }
 
                 if (AnimController?.LimbJoints == null)
                 {
@@ -530,29 +534,8 @@ namespace Barotrauma
             }
             else
             {
-                msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
-
-                msg.Write(oxygen < 100.0f);
-                if (oxygen < 100.0f)
-                {
-                    msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
-                }
-
-                msg.Write(bleeding > 0.0f);
-                if (bleeding > 0.0f)
-                {
-                    msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-                }
-
-                msg.Write(Stun > 0.0f);
-                if (Stun > 0.0f)
-                {
-                    msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
-                }
-
+                health.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
-
-                msg.Write(HuskInfectionState > 0.0f);
             }
         }
 
@@ -601,7 +584,7 @@ namespace Barotrauma
                 foreach (Skill skill in info.Job.Skills)
                 {
                     msg.Write(skill.Name);
-                    msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
+                    msg.WriteRangedInteger(0, 100, (int)MathHelper.Clamp(skill.Level, 0, 100));
                 }
             }
             else

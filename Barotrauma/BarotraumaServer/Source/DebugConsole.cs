@@ -127,7 +127,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Mission.MissionTypes.ToArray()
+                    MissionPrefab.MissionTypes.ToArray()
                 };
             }));
 

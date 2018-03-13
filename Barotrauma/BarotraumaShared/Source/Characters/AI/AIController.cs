@@ -10,7 +10,7 @@ namespace Barotrauma
 
         public readonly Character Character;
         
-        protected AIState state;
+        private AIState state;
 
         protected SteeringManager steeringManager;
 
@@ -43,7 +43,12 @@ namespace Barotrauma
         public AIState State
         {
             get { return state; }
-            set { state = value; }
+            set
+            {
+                if (state == value) return;
+                OnStateChanged(state, value);
+                state = value;
+            }
         }
 
         public AIController (Character c)
@@ -53,13 +58,13 @@ namespace Barotrauma
             Enabled = true;
         }
 
-        public virtual void OnAttacked(Character attacker, float amount) { }
+        public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
 
         public virtual void SelectTarget(AITarget target) { }
 
         public virtual void Update(float deltaTime) { }
 
-        //protected Structure lastStructurePicked;
-        
+        protected virtual void OnStateChanged(AIState from, AIState to) { }
+             
     }
 }

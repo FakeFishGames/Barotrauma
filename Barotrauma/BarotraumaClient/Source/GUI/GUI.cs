@@ -215,9 +215,40 @@ namespace Barotrauma
             GameMain.GameSession = null;
 
             GameMain.MainMenuScreen.Select();
-            //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
+        }
+
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color)
+        {
+            Vector2 diff = worldPosition - cam.WorldViewCenter;
+            float dist = diff.Length();
+
+            if (dist > hideDist)
+            {
+                float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);                
+                float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
+                float angle = MathUtils.VectorToAngle(diff);
+
+                Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);
+
+                Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
+
+                Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
+                sprite.Draw(spriteBatch, iconPos, color * alpha);
+
+                if (unclampedDiff.Length() - 10 > iconDiff.Length())
+                {
+                    Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
+                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
+                    Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+                }
+            }
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
@@ -299,7 +330,7 @@ namespace Barotrauma
         }
 
 
-        public static Texture2D CreateCircle(int radius)
+        public static Texture2D CreateCircle(int radius, bool filled = false)
         {
             int outerRadius = radius * 2 + 2; // So circle doesn't go out of bounds
             Texture2D texture = new Texture2D(graphicsDevice, outerRadius, outerRadius);
@@ -310,17 +341,36 @@ namespace Barotrauma
             for (int i = 0; i < data.Length; i++)
                 data[i] = Color.Transparent;
 
-            // Work out the minimum step necessary using trigonometry + sine approximation.
-            double angleStep = 1f / radius;
-
-            for (double angle = 0; angle < Math.PI * 2; angle += angleStep)
+            if (filled)
             {
-                // Use the parametric definition of a circle: http://en.wikipedia.org/wiki/Circle#Cartesian_coordinates
-                int x = (int)Math.Round(radius + radius * Math.Cos(angle));
-                int y = (int)Math.Round(radius + radius * Math.Sin(angle));
-
-                data[y * outerRadius + x + 1] = Color.White;
+                float diameterSqr = radius * radius;
+                for (int x = 0; x < outerRadius; x++)
+                {
+                    for (int y = 0; y < outerRadius; y++)
+                    {
+                        Vector2 pos = new Vector2(radius - x, radius - y);
+                        if (pos.LengthSquared() <= diameterSqr)
+                        {
+                            data[y * outerRadius + x + 1] = Color.White;
+                        }
+                    }
+                }
             }
+            else
+            {
+                // Work out the minimum step necessary using trigonometry + sine approximation.
+                double angleStep = 1f / radius;
+
+                for (double angle = 0; angle < Math.PI * 2; angle += angleStep)
+                {
+                    // Use the parametric definition of a circle: http://en.wikipedia.org/wiki/Circle#Cartesian_coordinates
+                    int x = (int)Math.Round(radius + radius * Math.Cos(angle));
+                    int y = (int)Math.Round(radius + radius * Math.Sin(angle));
+
+                    data[y * outerRadius + x + 1] = Color.White;
+                }
+            }
+
 
             texture.SetData(data);
             return texture;
@@ -463,11 +513,8 @@ namespace Barotrauma
                 for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
                 {
                     Color clr = Color.White;
-
                     string soundStr = i + ": ";
-
                     var playingSound = Sounds.SoundManager.GetPlayingSound(i);
-
                     if (playingSound == null)
                     {
                         soundStr += "none";
@@ -484,13 +531,18 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }*/
             }
-            
+
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
             DrawMessages(spriteBatch, (float)deltaTime);
+
+            if (GameMain.DebugDraw && GameMain.GameSession?.EventManager != null)
+            {
+                GameMain.GameSession.EventManager.DebugDrawHUD(spriteBatch);
+            }
 
             if (GUIMessageBox.VisibleBox != null)
             {

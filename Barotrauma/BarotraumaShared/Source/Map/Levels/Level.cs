@@ -28,7 +28,7 @@ namespace Barotrauma
             MainPath=1, Cave=2, Ruin=4
         }
         
-        struct InterestingPosition
+        public struct InterestingPosition
         {
             public readonly Vector2 Position;
             public readonly PositionType PositionType;
@@ -120,6 +120,11 @@ namespace Barotrauma
         public List<List<Vector2>> SmallTunnels
         {
             get { return smallTunnels; }
+        }
+
+        public List<InterestingPosition> PositionsOfInterest
+        {
+            get { return positionsOfInterest; }
         }
 
         public string Seed
@@ -898,7 +903,7 @@ namespace Barotrauma
 
         public Vector2 GetRandomItemPos(PositionType spawnPosType, float randomSpread, float minDistFromSubs, float offsetFromWall = 10.0f)
         {
-            if (!positionsOfInterest.Any()) return Size*0.5f;
+            if (!positionsOfInterest.Any()) return Size * 0.5f;
 
             Vector2 position = Vector2.Zero;
 
@@ -911,7 +916,7 @@ namespace Barotrauma
                 Loaded.TryGetInterestingPosition(true, spawnPosType, minDistFromSubs, out startPos);
 
                 startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.Server), Rand.RandSync.Server);
-                
+
                 Vector2 endPos = startPos - Vector2.UnitY * Size.Y;
 
                 if (Submarine.PickBody(
@@ -919,7 +924,7 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(endPos),
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) +  Vector2.Normalize(startPos - endPos)*offsetFromWall;
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
                 }
 
@@ -976,9 +981,9 @@ namespace Barotrauma
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater((float)deltaTime);
+                WaterRenderer.Instance.ScrollWater((float)deltaTime);
             }
 
             renderer.Update(deltaTime);

@@ -1243,9 +1243,9 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
+                    healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
                 }
             },
@@ -1264,9 +1264,9 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
+                    healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
                 }
             },
@@ -1382,6 +1382,23 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             }));
 
+            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            },
+            null, (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            }));
+
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 if (GameMain.Client == null)
@@ -1423,6 +1440,21 @@ namespace Barotrauma
                 if (args.Length > 4) float.TryParse(args[4], out empStrength);
                 new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
             }));
+
+#if DEBUG
+            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            {
+                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
+                if (args.Length > 0) float.TryParse(args[0], out stiffness);
+                if (args.Length > 1) float.TryParse(args[1], out spread);
+                if (args.Length > 2) float.TryParse(args[2], out damp);
+                Hull.WaveStiffness = stiffness;
+                Hull.WaveSpread = spread;
+                Hull.WaveDampening = damp;
+            },
+            null, null));
+#endif
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
@@ -1484,7 +1516,7 @@ namespace Barotrauma
 
                 if (killedCharacter != null)
                 {
-                    killedCharacter.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);
+                    killedCharacter.SetAllDamage(killedCharacter.MaxVitality, 0.0f, 0.0f);
                 }
             }));
 
@@ -1493,7 +1525,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-                    c.AddDamage(CauseOfDeath.Damage, c.MaxHealth * 2, null);
+                    c.SetAllDamage(c.MaxVitality, 0.0f, 0.0f);
                 }
             }, null, null));
 

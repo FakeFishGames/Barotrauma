@@ -250,7 +250,7 @@ namespace Barotrauma.Networking
             {
                 ItemPrefab ip = pf as ItemPrefab;
 
-                if (ip == null || (ip.Price <= 0.0f && !ip.Tags.Contains("smallitem"))) continue;
+                if (ip == null || (!ip.CanBeBought && !ip.Tags.Contains("smallitem"))) continue;
                 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),

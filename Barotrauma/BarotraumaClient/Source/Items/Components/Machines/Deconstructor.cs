@@ -29,6 +29,7 @@ namespace Barotrauma.Items.Components
             SetActive(!IsActive, Character.Controlled);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (GameMain.Server != null)
             {

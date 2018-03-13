@@ -202,7 +202,7 @@ namespace Barotrauma
 
         }
 
-        private void MoveButton(Vector2 moveAmount)
+        public void MoveButton(Vector2 moveAmount)
         {
             if (isHorizontal)
             {

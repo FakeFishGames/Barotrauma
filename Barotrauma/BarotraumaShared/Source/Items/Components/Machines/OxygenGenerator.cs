@@ -43,6 +43,7 @@ namespace Barotrauma.Items.Components
 
             CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (item.CurrentHull == null) return;
 
@@ -60,6 +61,7 @@ namespace Barotrauma.Items.Components
             running = true;
 
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
+            if (item.IsOptimized("mechanical")) CurrFlow *= 2.0f;
             //item.CurrentHull.Oxygen += CurrFlow * deltaTime;
 
             UpdateVents(CurrFlow);

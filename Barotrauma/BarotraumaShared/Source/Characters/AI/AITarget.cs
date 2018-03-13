@@ -20,14 +20,16 @@ namespace Barotrauma
         public float SoundRange
         {
             get { return soundRange; }
-            set { soundRange = Math.Max(value, 0.0f); }
+            set { soundRange = Math.Max(value, MinSoundRange); }
         }
 
         public float SightRange
         {
             get { return sightRange; }
-            set { sightRange = Math.Max(value, 0.0f); }
+            set { sightRange = Math.Max(value, MinSightRange); }
         }
+
+        public float MinSoundRange, MinSightRange;
 
         public Vector2 WorldPosition
         {
