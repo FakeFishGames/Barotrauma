@@ -17,29 +17,42 @@ namespace Barotrauma
         {
             if (hull.FireSources.Any(fs => fs != this && fs.size.X > size.X))
             {
-                if (basicSoundIndex > 0)
+                if (basicSoundChannel != null)
                 {
-                    Sounds.SoundManager.Stop(basicSoundIndex);
-                    basicSoundIndex = -1;
+                    basicSoundChannel.Dispose();
+                    basicSoundChannel = null;
                 }
-                if (largeSoundIndex > 0)
+                if (largeSoundChannel != null)
                 {
-                    Sounds.SoundManager.Stop(largeSoundIndex);
-                    largeSoundIndex = -1;
+                    largeSoundChannel.Dispose();
+                    largeSoundChannel = null;
                 }
             }
             else
             {
                 if (fireSoundBasic != null)
                 {
-                    basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex,
-                        Math.Min(size.X / 100.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
-
+                    float gain = Math.Min(size.X / 100.0f, 1.0f);
+                    Vector2 position = WorldPosition + size / 2.0f;
+                    if (basicSoundChannel==null || !basicSoundChannel.IsPlaying)
+                    {
+                        basicSoundChannel = fireSoundBasic.Play(gain, 1000.0f, position);
+                        basicSoundChannel.Looping = true;
+                    }
+                    basicSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
+                    basicSoundChannel.Gain = gain;
                 }
                 if (fireSoundLarge != null)
                 {
-                    largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex,
-                        MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
+                    float gain = MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f);
+                    Vector2 position = WorldPosition + size / 2.0f;
+                    if (largeSoundChannel == null || !largeSoundChannel.IsPlaying)
+                    {
+                        largeSoundChannel = fireSoundBasic.Play(gain, 1000.0f, position);
+                        largeSoundChannel.Looping = true;
+                    }
+                    basicSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
+                    basicSoundChannel.Gain = gain;
                 }
             }
 

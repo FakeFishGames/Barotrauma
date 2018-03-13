@@ -176,7 +176,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public SoundChannel(Sound sound,Vector3? position,float gain)
+        public SoundChannel(Sound sound,float gain,Vector3? position,float near,float far)
         {
             Sound = sound;
 
@@ -186,7 +186,7 @@ namespace Barotrauma.Sounds
 
             ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
 
-            if (ALSourceIndex!=-1)
+            if (ALSourceIndex>=0)
             {
                 if (!IsStream)
                 {
@@ -225,24 +225,24 @@ namespace Barotrauma.Sounds
             this.Position = position;
             this.Gain = gain;
             this.Looping = false;
-            this.Near = 100.0f;
-            this.Far = 200.0f;
+            this.Near = near;
+            this.Far = far;
         }
 
         public void Dispose()
         {
-            if (ALSourceIndex != -1)
+            lock (streamBuffers)
             {
-                AL.SourceStop(Sound.Owner.GetSourceFromIndex(ALSourceIndex));
-                ALError alError = AL.GetError();
-                if (alError != ALError.NoError)
+                if (ALSourceIndex >= 0)
                 {
-                    throw new Exception("Failed to stop source: " + AL.GetErrorString(alError));
-                }
+                    AL.SourceStop(Sound.Owner.GetSourceFromIndex(ALSourceIndex));
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to stop source: " + AL.GetErrorString(alError));
+                    }
                 
-                if (IsStream)
-                {
-                    lock (streamBuffers)
+                    if (IsStream)
                     {
                         uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
 
@@ -284,18 +284,18 @@ namespace Barotrauma.Sounds
 
                         reachedEndSample = true;
                     }
-                }
-                else
-                {
-                    AL.BindBufferToSource(Sound.Owner.GetSourceFromIndex(ALSourceIndex), 0);
-                    alError = AL.GetError();
-                    if (alError != ALError.NoError)
+                    else
                     {
-                        throw new Exception("Failed to unbind buffer to non-streamed source: " + AL.GetErrorString(alError));
+                        AL.BindBufferToSource(Sound.Owner.GetSourceFromIndex(ALSourceIndex), 0);
+                        alError = AL.GetError();
+                        if (alError != ALError.NoError)
+                        {
+                            throw new Exception("Failed to unbind buffer to non-streamed source: " + AL.GetErrorString(alError));
+                        }
                     }
-                }
 
-                ALSourceIndex = -1;
+                    ALSourceIndex = -1;
+                }
             }
         }
 

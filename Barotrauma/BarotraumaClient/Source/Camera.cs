@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -149,7 +150,7 @@ namespace Barotrauma
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
                 viewMatrix;
             
-            Sound.CameraPos = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
+            GameMain.SoundManager.ListenerPosition = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
 
             if (!interpolate)
             {

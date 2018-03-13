@@ -82,7 +82,7 @@ namespace Barotrauma
             {
                 soundVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                Sounds.SoundManager.MasterVolume = soundVolume;
+                GameMain.SoundManager.ListenerGain = soundVolume;
 #endif
             }
         }

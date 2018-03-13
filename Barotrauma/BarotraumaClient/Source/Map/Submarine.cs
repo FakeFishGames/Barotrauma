@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -24,6 +25,23 @@ namespace Barotrauma
                 roundSounds = new List<Sound>();
             }
             roundSounds.Add(newSound);
+            return newSound;
+        }
+
+        public static Sound LoadRoundSound(XElement element, bool stream=false)
+        {
+            //TODO: maybe make this return an already loaded sound if the filename matches
+            string filePath = element.GetAttributeString("file", "");
+
+            var newSound = LoadRoundSound(filePath, stream);
+            if (newSound != null)
+            {
+                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
+                float range = element.GetAttributeFloat("range", 1000.0f);
+                newSound.BaseNear = range * 0.7f;
+                newSound.BaseFar = range * 1.3f;
+            }
+
             return newSound;
         }
 

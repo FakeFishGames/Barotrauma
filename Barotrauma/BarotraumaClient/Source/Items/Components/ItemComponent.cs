@@ -59,11 +59,14 @@ namespace Barotrauma.Items.Components
         {
             if (loopingSound != null)
             {
-                loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));//Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
-                loopingSoundChannel.Looping = true;
-                //TODO: tweak
-                loopingSoundChannel.Near = loopingSound.Range * 0.7f;
-                loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
+                {
+                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel.Looping = true;
+                    //TODO: tweak
+                    loopingSoundChannel.Near = loopingSound.Range * 0.7f;
+                    loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                }
                 return;
             }
 
@@ -82,12 +85,14 @@ namespace Barotrauma.Items.Components
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
-
-                loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));//Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
-                loopingSoundChannel.Looping = true;
-                //TODO: tweak
-                loopingSoundChannel.Near = loopingSound.Range * 0.7f;
-                loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
+                {
+                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel.Looping = true;
+                    //TODO: tweak
+                    loopingSoundChannel.Near = loopingSound.Range * 0.7f;
+                    loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                }
             }
             else
             {

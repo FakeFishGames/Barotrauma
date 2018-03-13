@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Barotrauma.Networking;
 #if CLIENT
+using Barotrauma.Sounds;
 using Barotrauma.Lights;
 using Barotrauma.Particles;
 #endif
@@ -13,9 +14,7 @@ namespace Barotrauma
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
-
-        private int basicSoundIndex, largeSoundIndex;
-
+        
         private Hull hull;
 
         private Vector2 position;
@@ -24,6 +23,10 @@ namespace Barotrauma
         private Entity Submarine;
 
 #if CLIENT
+        //private int basicSoundIndex, largeSoundIndex;
+        private SoundChannel basicSoundChannel;
+        private SoundChannel largeSoundChannel;
+
         private List<Decal> burnDecals = new List<Decal>();
 #endif
 
@@ -84,8 +87,8 @@ namespace Barotrauma
 #if CLIENT
             if (fireSoundBasic == null)
             {
-                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg", false);
-                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg", false);
+                fireSoundBasic = Barotrauma.Submarine.LoadRoundSound("Content/Sounds/fire.ogg", false);
+                fireSoundLarge = Barotrauma.Submarine.LoadRoundSound("Content/Sounds/firelarge.ogg", false);
             }
 
             lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
@@ -154,7 +157,7 @@ namespace Barotrauma
             DamageCharacters(deltaTime);
             DamageItems(deltaTime);
 
-            if (hull.WaterVolume > 0.0f) HullWaterExtinquish(deltaTime);
+            if (hull.WaterVolume > 0.0f) HullWaterExtinguish(deltaTime);
 
             hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
 
@@ -253,15 +256,15 @@ namespace Barotrauma
             }
         }
 
-        private void HullWaterExtinquish(float deltaTime)
+        private void HullWaterExtinguish(float deltaTime)
         {
             //the higher the surface of the water is relative to the firesource, the faster it puts out the fire 
-            float extinquishAmount = (hull.Surface - (position.Y - size.Y)) * deltaTime;
+            float extinguishAmount = (hull.Surface - (position.Y - size.Y)) * deltaTime;
 
-            if (extinquishAmount < 0.0f) return;
+            if (extinguishAmount < 0.0f) return;
 
 #if CLIENT
-            float steamCount = Rand.Range(-5.0f, Math.Min(extinquishAmount * 100.0f, 10));
+            float steamCount = Rand.Range(-5.0f, Math.Min(extinguishAmount * 100.0f, 10));
             for (int i = 0; i < steamCount; i++)
             {
                 Vector2 spawnPos = new Vector2(
@@ -279,11 +282,11 @@ namespace Barotrauma
             }
 #endif
 
-            position.X += extinquishAmount / 2.0f;
-            size.X -= extinquishAmount;
+            position.X += extinguishAmount / 2.0f;
+            size.X -= extinguishAmount;
 
             //evaporate some of the water
-            hull.WaterVolume -= extinquishAmount;
+            hull.WaterVolume -= extinguishAmount;
 
             if (GameMain.Client != null) return;
 
@@ -292,7 +295,7 @@ namespace Barotrauma
 
         public void Extinguish(float deltaTime, float amount)
         {
-            float extinquishAmount = amount * deltaTime;
+            float extinguishAmount = amount * deltaTime;
 
 #if CLIENT
             float steamCount = Rand.Range(-5.0f, (float)Math.Sqrt(amount));
@@ -311,10 +314,10 @@ namespace Barotrauma
             }
 #endif
 
-            position.X += extinquishAmount / 2.0f;
-            size.X -= extinquishAmount;
+            position.X += extinguishAmount / 2.0f;
+            size.X -= extinguishAmount;
 
-            hull.WaterVolume -= extinquishAmount;
+            hull.WaterVolume -= extinguishAmount;
 
             if (GameMain.Client != null) return;
 
@@ -331,15 +334,13 @@ namespace Barotrauma
 #if CLIENT
             lightSource.Remove();
 
-            if (basicSoundIndex > 0)
+            if (basicSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(basicSoundIndex);
-                basicSoundIndex = -1;
+                basicSoundChannel.Dispose(); basicSoundChannel = null;
             }
-            if (largeSoundIndex > 0)
+            if (largeSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(largeSoundIndex);
-                largeSoundIndex = -1;
+                largeSoundChannel.Dispose(); largeSoundChannel = null;
             }
 
             foreach (Decal d in burnDecals)

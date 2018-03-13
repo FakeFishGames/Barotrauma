@@ -65,6 +65,22 @@ namespace Barotrauma.Sounds
             }
         }
 
+        private float listenerGain;
+        public float ListenerGain
+        {
+            get { return listenerGain; }
+            set
+            {
+                listenerGain = value;
+                AL.Listener(ALListenerf.Gain, listenerGain);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener gain: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
@@ -152,6 +168,21 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public bool IsPlaying(Sound sound)
+        {
+            lock (playingChannels)
+            {
+                for (int i = 0; i < SOURCE_COUNT - 1; i++)
+                {
+                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    {
+                        if (playingChannels[i].IsPlaying) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void KillChannels(Sound sound)
         {
             lock (playingChannels)
@@ -205,6 +236,10 @@ namespace Barotrauma.Sounds
                             {
                                 areStreamsPlaying = true;
                                 playingChannels[i].UpdateStream();
+                            }
+                            else
+                            {
+                                playingChannels[i].Dispose();
                             }
                         }
                     }
