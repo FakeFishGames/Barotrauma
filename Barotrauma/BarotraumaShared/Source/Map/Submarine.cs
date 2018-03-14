@@ -1233,7 +1233,7 @@ namespace Barotrauma
             Unloading = true;
 
 #if CLIENT
-            Sound.OnGameEnd();
+            RemoveAllRoundSounds(); //Sound.OnGameEnd();
 
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
 #endif

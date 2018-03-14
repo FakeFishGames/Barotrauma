@@ -335,10 +335,11 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
+            //TODO: reimplement
+            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
             {
                 Sounds.SoundManager.Pause(i);
-            }
+            }*/
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -364,10 +365,11 @@ namespace Barotrauma
             if (wiringMode) ToggleWiringMode();
 
             SoundPlayer.OverrideMusicType = null;
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
+            //TODO: reimplement
+            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
             {
                 Sounds.SoundManager.Resume(i);
-            }
+            }*/
 
             if (dummyCharacter != null)
             {
