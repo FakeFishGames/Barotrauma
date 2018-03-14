@@ -31,17 +31,12 @@ namespace Barotrauma
         public static Sound LoadRoundSound(XElement element, bool stream=false)
         {
             //TODO: maybe make this return an already loaded sound if the filename matches
-            string filePath = element.GetAttributeString("file", "");
-
-            var newSound = LoadRoundSound(filePath, stream);
-            if (newSound != null)
+            Sound newSound = GameMain.SoundManager.LoadSound(element, stream);
+            if (roundSounds == null)
             {
-                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
-                float range = element.GetAttributeFloat("range", 1000.0f);
-                newSound.BaseNear = range * 0.7f;
-                newSound.BaseFar = range * 1.3f;
+                roundSounds = new List<Sound>();
             }
-
+            roundSounds.Add(newSound);
             return newSound;
         }
 
@@ -54,6 +49,7 @@ namespace Barotrauma
 
         public static void RemoveAllRoundSounds()
         {
+            if (roundSounds == null) return;
             for (int i=roundSounds.Count-1;i>=0;i--)
             {
                 RemoveRoundSound(roundSounds[i]);

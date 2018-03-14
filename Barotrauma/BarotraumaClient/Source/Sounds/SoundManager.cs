@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
 
@@ -138,6 +139,23 @@ namespace Barotrauma.Sounds
             }
 
             Sound newSound = new OggSound(this, filename, stream);
+            loadedSounds.Add(newSound);
+            return newSound;
+        }
+
+        public Sound LoadSound(XElement element,bool stream=false)
+        {
+            string filePath = element.GetAttributeString("file", "");
+
+            var newSound = new OggSound(this, filePath, stream);
+            if (newSound != null)
+            {
+                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
+                float range = element.GetAttributeFloat("range", 1000.0f);
+                newSound.BaseNear = range * 0.7f;
+                newSound.BaseFar = range * 1.3f;
+            }
+
             loadedSounds.Add(newSound);
             return newSound;
         }

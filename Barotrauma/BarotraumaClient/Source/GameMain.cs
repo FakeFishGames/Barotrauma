@@ -223,6 +223,7 @@ namespace Barotrauma
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
             SoundManager = new Sounds.SoundManager();
+            SoundManager.ListenerGain = Config.SoundVolume;
 
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 

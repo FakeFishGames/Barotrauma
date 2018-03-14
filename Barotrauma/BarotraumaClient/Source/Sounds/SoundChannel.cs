@@ -160,6 +160,8 @@ namespace Barotrauma.Sounds
         private bool reachedEndSample;
         private int[] streamBuffers;
 
+        private object mutex;
+
         public bool IsPlaying
         {
             get
@@ -183,6 +185,8 @@ namespace Barotrauma.Sounds
             IsStream = sound.Stream;
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
+
+            mutex = new object();
 
             ALSourceIndex = sound.Owner.AssignFreeSourceToChannel(this);
 
@@ -228,10 +232,10 @@ namespace Barotrauma.Sounds
             this.Near = near;
             this.Far = far;
         }
-
+        
         public void Dispose()
         {
-            lock (streamBuffers)
+            lock (mutex)
             {
                 if (ALSourceIndex >= 0)
                 {
@@ -303,7 +307,7 @@ namespace Barotrauma.Sounds
         {
             if (!IsStream) throw new Exception("Called UpdateStream on a non-streamed sound channel!");
 
-            lock (streamBuffers)
+            lock (mutex)
             {
                 if (!reachedEndSample)
                 {
