@@ -205,7 +205,7 @@ namespace Barotrauma.Sounds
         {
             lock (playingChannels)
             {
-                for (int i = 0; i < SOURCE_COUNT - 1; i++)
+                for (int i = 0; i < SOURCE_COUNT; i++)
                 {
                     if (playingChannels[i]!=null && playingChannels[i].Sound == sound)
                     {
