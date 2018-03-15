@@ -222,9 +222,6 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
-            SoundManager = new Sounds.SoundManager();
-            SoundManager.ListenerGain = Config.SoundVolume;
-
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -243,6 +240,10 @@ namespace Barotrauma
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
             GUI.GraphicsDevice = base.GraphicsDevice;
+
+            SoundManager = new Sounds.SoundManager();
+            SoundManager.ListenerGain = Config.SoundVolume;
+
             GUI.Init(Content);
 
             GUIComponent.Init(Window);
