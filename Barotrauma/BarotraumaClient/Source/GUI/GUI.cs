@@ -509,7 +509,7 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
-                for (int i = 1; i < SoundManager.SOURCE_COUNT; i++)
+                for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                 {
                     Color clr = Color.White;
                     string soundStr = i + ": ";
@@ -522,6 +522,16 @@ namespace Barotrauma
                     else
                     {
                         soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
+
+#if DEBUG
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                        {
+                            if (PlayerInput.MousePosition.Y>=i*15 && PlayerInput.MousePosition.Y<=i*15+12)
+                            {
+                                GameMain.SoundManager.DebugSource(i);
+                            }
+                        }
+#endif
 
                         if (playingSoundChannel.Looping)
                         {

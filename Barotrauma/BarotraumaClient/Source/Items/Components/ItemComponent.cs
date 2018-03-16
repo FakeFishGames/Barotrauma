@@ -59,6 +59,10 @@ namespace Barotrauma.Items.Components
         {
             if (loopingSound != null)
             {
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                {
+                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
@@ -66,6 +70,10 @@ namespace Barotrauma.Items.Components
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.7f;
                     loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                }
+                if (loopingSoundChannel != null)
+                {
+                    loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
                 }
                 return;
             }
@@ -85,6 +93,10 @@ namespace Barotrauma.Items.Components
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                {
+                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
@@ -106,6 +118,10 @@ namespace Barotrauma.Items.Components
 
         public void StopSounds(ActionType type)
         {
+            if (loopingSound == null) return;
+
+            if (loopingSound.Type != type) return;
+
             if (loopingSoundChannel != null)
             {
                 loopingSoundChannel.Dispose();
