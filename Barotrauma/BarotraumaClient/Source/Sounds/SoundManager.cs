@@ -9,7 +9,7 @@ namespace Barotrauma.Sounds
 {
     public class SoundManager : IDisposable
     {
-        const int SOURCE_COUNT = 16;
+        public const int SOURCE_COUNT = 16;
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
@@ -123,12 +123,42 @@ namespace Barotrauma.Sounds
                 {
                     throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
                 }
+
+                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting min gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(alSources[i], ALSourcef.MaxGain, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting max gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(alSources[i], ALSourcef.RolloffFactor, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting rolloff factor: " + AL.GetErrorString(alError));
+                }
+            }
+            
+            AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+            
+            alError = AL.GetError();
+            if (alError != ALError.NoError)
+            {
+                throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
             }
 
             listenerOrientation = new float[6];
             ListenerPosition = Vector3.Zero;
             ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
-            ListenerUpVector = new Vector3(0.0f, 1.0f, 0.0f);
+            ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
         }
 
         public Sound LoadSound(string filename,bool stream=false)
@@ -158,6 +188,12 @@ namespace Barotrauma.Sounds
 
             loadedSounds.Add(newSound);
             return newSound;
+        }
+
+        public SoundChannel GetSoundChannelFromIndex(int ind)
+        {
+            if (ind < 0 || ind >= SOURCE_COUNT) return null;
+            return playingChannels[ind];
         }
 
         public uint GetSourceFromIndex(int ind)

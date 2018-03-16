@@ -21,7 +21,7 @@ namespace Barotrauma.Sounds
                 if (position != null)
                 {
                     uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
-                    AL.Source(alSource, ALSourceb.SourceRelative, true);
+                    //AL.Source(alSource, ALSourceb.SourceRelative, true);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -38,7 +38,7 @@ namespace Barotrauma.Sounds
                 else
                 {
                     uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
-                    AL.Source(alSource, ALSourceb.SourceRelative, false);
+                    //AL.Source(alSource, ALSourceb.SourceRelative, false);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
@@ -67,6 +67,7 @@ namespace Barotrauma.Sounds
 
                 uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
                 AL.Source(alSource, ALSourcef.ReferenceDistance, near);
+                
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {

@@ -509,30 +509,43 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
-                /* TODO: reimplement this
-                for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
+                for (int i = 1; i < SoundManager.SOURCE_COUNT; i++)
                 {
                     Color clr = Color.White;
                     string soundStr = i + ": ";
-                    var playingSound = Sounds.SoundManager.GetPlayingSound(i);
-                    if (playingSound == null)
+                    SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                    if (playingSoundChannel == null)
                     {
                         soundStr += "none";
                         clr *= 0.5f;
                     }
                     else
                     {
-                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSound.FilePath);
+                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
 
-                        if (Sounds.SoundManager.IsLooping(i))
+                        if (playingSoundChannel.Looping)
                         {
                             soundStr += " (looping)";
                             clr = Color.Yellow;
                         }
+
+                        if (playingSoundChannel.IsStream)
+                        {
+                            soundStr += " (streaming)";
+                            clr = Color.Lime;
+                        }
+
+                        if (!playingSoundChannel.IsPlaying)
+                        {
+                            soundStr += " (stopped)";
+                            clr *= 0.5f;
+                        }
+                        
+                        //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
                     }
 
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
-                }*/
+                }
             }
 
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
