@@ -59,6 +59,15 @@ namespace Barotrauma.Items.Components
         {
             if (loopingSound != null)
             {
+                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range)
+                {
+                    if (loopingSoundChannel != null)
+                    {
+                        loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                    }
+                    return;
+                }
+
                 if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
                 {
                     loopingSoundChannel.Dispose(); loopingSoundChannel = null;
