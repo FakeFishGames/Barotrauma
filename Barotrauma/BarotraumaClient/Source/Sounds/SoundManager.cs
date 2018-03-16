@@ -222,6 +222,17 @@ namespace Barotrauma.Sounds
             }
         }
 
+#if DEBUG
+        public void DebugSource(int ind)
+        {
+            for (int i=0;i<SOURCE_COUNT;i++)
+            {
+                AL.Source(alSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
+                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+            }
+        }
+#endif
+
         public bool IsPlaying(Sound sound)
         {
             lock (playingChannels)
