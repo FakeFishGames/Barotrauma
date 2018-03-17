@@ -192,8 +192,8 @@ namespace Barotrauma
                     soundChannel.Looping = true;
                     //TODO: tweak
                     float range = Math.Min(strongestFlow * 5.0f, 2000.0f);
-                    soundChannel.Near = range * 0.7f;
-                    soundChannel.Far = range * 1.3f;
+                    soundChannel.Near = range * 0.4f;
+                    soundChannel.Far = range;
                 }
             }
             else

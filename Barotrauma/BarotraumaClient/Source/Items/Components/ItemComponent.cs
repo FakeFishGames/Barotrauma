@@ -77,8 +77,8 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.7f;
-                    loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                    loopingSoundChannel.Far = loopingSound.Range;
                 }
                 if (loopingSoundChannel != null)
                 {
@@ -99,6 +99,11 @@ namespace Barotrauma.Items.Components
 
             if (itemSound == null) return;
 
+            if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > itemSound.Range * itemSound.Range)
+            {
+                return;
+            }
+
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
@@ -111,8 +116,8 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
-                    loopingSoundChannel.Near = loopingSound.Range * 0.7f;
-                    loopingSoundChannel.Far = loopingSound.Range * 1.3f;
+                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                    loopingSoundChannel.Far = loopingSound.Range;
                 }
             }
             else
@@ -120,8 +125,8 @@ namespace Barotrauma.Items.Components
                 float volume = GetSoundVolume(itemSound);
                 if (volume == 0.0f) return;
                 SoundChannel tempChannel = itemSound.Sound.Play(new Vector3(position.X,position.Y,0.0f), volume);
-                tempChannel.Near = itemSound.Range * 0.7f;
-                tempChannel.Far = itemSound.Range * 1.3f;
+                tempChannel.Near = itemSound.Range * 0.4f;
+                tempChannel.Far = itemSound.Range;
             }
         }
 
