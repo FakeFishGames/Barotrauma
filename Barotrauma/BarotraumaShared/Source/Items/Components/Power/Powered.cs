@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 using Barotrauma.Sounds;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
@@ -106,7 +107,10 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 if (!powerOnSoundPlayed)
                 {
-                    powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
+                    if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition.X, item.WorldPosition.Y, 0.0f)) < 360000.0f)
+                    {
+                        powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
+                    }
                     powerOnSoundPlayed = true;
                 }
             }
