@@ -55,11 +55,11 @@ namespace Barotrauma
         public static float MusicVolume = 1.0f;
         private const float MusicLerpSpeed = 1.0f;
         private const float UpdateMusicInterval = 5.0f;
-
-        private static BackgroundMusic currentMusic;
+        
+        private static Sound currentMusic;
+        private static SoundChannel currentMusicChannel;
         private static BackgroundMusic targetMusic;
         private static List<BackgroundMusic> musicClips;
-        private static float currMusicVolume;
 
         private static float updateMusicTimer;
 
@@ -287,56 +287,70 @@ namespace Barotrauma
 
         private static void UpdateMusic(float deltaTime)
         {
-            //TODO: rewrite this whole thing
-            /*if (musicClips == null) return;
+            if (musicClips == null) return;
 
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
                 List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
-
+                
                 if (suitableMusic.Count == 0)
                 {
                     targetMusic = null;
-                }                
-                else if (!suitableMusic.Contains(currentMusic))
+                }
+                else if (targetMusic==null || currentMusic==null || !suitableMusic.Any(m => m.file == currentMusic.Filename))
                 {
                     int index = Rand.Int(suitableMusic.Count);
 
-                    if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
+                    if (currentMusic == null || suitableMusic[index].file != currentMusic.Filename)
                     {
                         targetMusic = suitableMusic[index];
                     }
                 }
                 updateMusicTimer = UpdateMusicInterval;
             }
-
-            if (targetMusic == null || currentMusic == null || targetMusic.file != currentMusic.file)
+            
+            if (targetMusic == null)
             {
-                currMusicVolume = MathHelper.Lerp(currMusicVolume, 0.0f, MusicLerpSpeed * deltaTime);
-                if (currentMusic != null) Sound.StreamVolume(currMusicVolume);
-
-                if (currMusicVolume < 0.01f)
+                if (currentMusicChannel != null && currentMusicChannel.IsPlaying)
                 {
-                    Sound.StopStream();
+                    currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, 0.0f, MusicLerpSpeed * deltaTime);
 
-                    try
+                    if (currentMusicChannel.Gain < 0.01f)
                     {
-                        if (targetMusic != null) Sound.StartStream(targetMusic.file, currMusicVolume);
+                        currentMusicChannel.Dispose(); currentMusicChannel = null;
+                        currentMusic.Dispose(); currentMusic = null;
                     }
-                    catch (FileNotFoundException e)
+                }
+            }
+            else if (currentMusic == null || targetMusic.file != currentMusic.Filename)
+            {
+                if (currentMusicChannel != null && currentMusicChannel.IsPlaying)
+                {
+                    currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, 0.0f, MusicLerpSpeed * deltaTime);
+                
+                    if (currentMusicChannel.Gain < 0.01f)
                     {
-                        DebugConsole.ThrowError("Music clip " + targetMusic.file + " not found!", e);
+                        currentMusicChannel.Dispose(); currentMusicChannel = null;
+                        currentMusic.Dispose(); currentMusic = null;
                     }
-
-                    currentMusic = targetMusic;
+                }
+                if (currentMusic == null || (currentMusicChannel==null || !currentMusicChannel.IsPlaying))
+                {
+                    currentMusic = GameMain.SoundManager.LoadSound(targetMusic.file, true);
+                    if (currentMusicChannel != null) currentMusicChannel.Dispose();
+                    currentMusicChannel = currentMusic.Play(0.0f);
                 }
             }
             else
             {
-                currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed * deltaTime);
-                Sound.StreamVolume(currMusicVolume);
-            }*/
+                if (currentMusicChannel == null || !currentMusicChannel.IsPlaying)
+                {
+                    currentMusicChannel.Dispose();
+                    currentMusicChannel = currentMusic.Play(0.0f);
+                }
+                currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, MusicVolume, MusicLerpSpeed * deltaTime);
+            }
         }
 
         public static void SwitchMusic()
@@ -345,7 +359,7 @@ namespace Barotrauma
 
             if (suitableMusic.Count > 1)
             {
-                targetMusic = suitableMusic.Find(m => m != currentMusic);
+                targetMusic = suitableMusic.Find(m => m.file != currentMusic.Filename);
             }
         }
 
