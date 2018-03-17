@@ -23,10 +23,6 @@ namespace Barotrauma
         private Entity Submarine;
 
 #if CLIENT
-        //private int basicSoundIndex, largeSoundIndex;
-        private SoundChannel basicSoundChannel;
-        private SoundChannel largeSoundChannel;
-
         private List<Decal> burnDecals = new List<Decal>();
 #endif
 

@@ -78,7 +78,7 @@ namespace Barotrauma.Sounds
 
         public SoundChannel Play(float gain, float range, Vector2 position)
         {
-            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.7f, range * 1.3f);
+            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range);
         }
 
         public SoundChannel Play(Vector2 position)

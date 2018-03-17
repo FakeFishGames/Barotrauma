@@ -182,8 +182,8 @@ namespace Barotrauma.Sounds
             {
                 newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
                 float range = element.GetAttributeFloat("range", 1000.0f);
-                newSound.BaseNear = range * 0.7f;
-                newSound.BaseFar = range * 1.3f;
+                newSound.BaseNear = range * 0.4f;
+                newSound.BaseFar = range;
             }
 
             loadedSounds.Add(newSound);
@@ -237,7 +237,7 @@ namespace Barotrauma.Sounds
         {
             lock (playingChannels)
             {
-                for (int i = 0; i < SOURCE_COUNT - 1; i++)
+                for (int i = 0; i < SOURCE_COUNT; i++)
                 {
                     if (playingChannels[i] != null && playingChannels[i].Sound == sound)
                     {
