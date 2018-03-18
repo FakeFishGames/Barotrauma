@@ -82,12 +82,16 @@ namespace Barotrauma.Sounds
             }
         }
 
+        private Dictionary<string, float> categoryGainMultipliers;
+
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
             playingChannels = new SoundChannel[SOURCE_COUNT];
 
             streamingThread = null;
+
+            categoryGainMultipliers = null;
 
             alcDevice = Alc.OpenDevice(null);
             if (alcDevice == null)
@@ -271,6 +275,46 @@ namespace Barotrauma.Sounds
                 {
                     loadedSounds.RemoveAt(i);
                     return;
+                }
+            }
+        }
+
+        public void SetCategoryGainMultiplier(string category,float gain)
+        {
+            category = category.ToLower();
+            if (categoryGainMultipliers == null) categoryGainMultipliers = new Dictionary<string, float>();
+            if (!categoryGainMultipliers.ContainsKey(category))
+            {
+                categoryGainMultipliers.Add(category, gain);
+            }
+            else
+            {
+                categoryGainMultipliers[category] = gain;
+            }
+            for (int i=0;i<SOURCE_COUNT;i++)
+            {
+                if (playingChannels[i]!=null && playingChannels[i].IsPlaying)
+                {
+                    playingChannels[i].Gain = playingChannels[i].Gain; //force all channels to recalculate their gain
+                }
+            }
+        }
+
+        public float GetCategoryGainMultiplier(string category)
+        {
+            category = category.ToLower();
+            if (categoryGainMultipliers == null || !categoryGainMultipliers.ContainsKey(category)) return 1.0f;
+            return categoryGainMultipliers[category];
+        }
+
+        public void SetCategoryMuffle(string category,bool muffle)
+        {
+            category = category.ToLower();
+            for (int i = 0; i < SOURCE_COUNT; i++)
+            {
+                if (playingChannels[i] != null && playingChannels[i].IsPlaying)
+                {
+                    if (playingChannels[i].Category.ToLower() == category) playingChannels[i].Muffled = muffle;
                 }
             }
         }

@@ -23,9 +23,7 @@ namespace Barotrauma.Sounds
                 short[] shortBuffer = new short[bufferSize];
 
                 int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
-
-                //MuffleBuffer(floatBuffer, reader.Channels);
-
+                
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
                 
                 AL.BufferData(ALBuffer, ALFormat, shortBuffer,
@@ -35,6 +33,19 @@ namespace Barotrauma.Sounds
                 if (alError != ALError.NoError)
                 {
                     throw new Exception("Failed to set buffer data for non-streamed audio! "+AL.GetErrorString(alError));
+                }
+
+                MuffleBuffer(floatBuffer, reader.Channels);
+
+                CastBuffer(floatBuffer, shortBuffer, readSamples);
+
+                AL.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                                readSamples * sizeof(short), SampleRate);
+
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + AL.GetErrorString(alError));
                 }
 
                 reader.Dispose();

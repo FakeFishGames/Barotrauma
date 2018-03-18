@@ -107,7 +107,11 @@ namespace Barotrauma.Sounds
                 if (ALSourceIndex < 0) return;
 
                 uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
-                AL.Source(alSource, ALSourcef.Gain, gain);
+
+                float effectiveGain = gain;
+                if (category != null) effectiveGain *= Sound.Owner.GetCategoryGainMultiplier(category);
+
+                AL.Source(alSource, ALSourcef.Gain, effectiveGain);
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
@@ -136,6 +140,74 @@ namespace Barotrauma.Sounds
                         throw new Exception("Failed to set source's looping state: " + AL.GetErrorString(alError));
                     }
                 }
+            }
+        }
+
+        private bool muffled;
+        public bool Muffled
+        {
+            get { return muffled; }
+            set
+            {
+                if (muffled == value) return;
+
+                muffled = value;
+
+                if (ALSourceIndex < 0) return;
+
+                if (!IsPlaying) return;
+
+                if (!IsStream)
+                {
+                    uint alSource = Sound.Owner.GetSourceFromIndex(ALSourceIndex);
+                    int playbackPos; AL.GetSource(alSource, ALGetSourcei.SampleOffset, out playbackPos);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to get source's playback position: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.SourceStop(alSource);
+
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to stop source: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.BindBufferToSource(alSource,(uint)(muffled ? Sound.ALMuffledBuffer : Sound.ALBuffer));
+
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to bind buffer to source: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.SourcePlay(alSource);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to replay source: " + AL.GetErrorString(alError));
+                    }
+
+                    AL.Source(alSource, ALSourcei.SampleOffset, playbackPos);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to reset playback position: " + AL.GetErrorString(alError));
+                    }
+                }
+            }
+        }
+
+        private string category;
+        public string Category
+        {
+            get { return category; }
+            set
+            {
+                category = value;
+                Gain = gain;
             }
         }
 
@@ -179,7 +251,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public SoundChannel(Sound sound,float gain,Vector3? position,float near,float far)
+        public SoundChannel(Sound sound,float gain,Vector3? position,float near,float far,string category)
         {
             Sound = sound;
 
@@ -211,12 +283,19 @@ namespace Barotrauma.Sounds
                 }
                 else
                 {
+                    AL.Source(sound.Owner.GetSourceFromIndex(ALSourceIndex), ALSourceb.Looping, false);
+                    ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
+                    }
+
                     streamBuffers = new int[4];
                     for (int i=0;i<4;i++)
                     {
                         streamBuffers[i] = AL.GenBuffer();
 
-                        ALError alError = AL.GetError();
+                        alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
                             throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
@@ -232,6 +311,7 @@ namespace Barotrauma.Sounds
             this.Looping = false;
             this.Near = near;
             this.Far = far;
+            this.Category = category;
         }
         
         public void Dispose()

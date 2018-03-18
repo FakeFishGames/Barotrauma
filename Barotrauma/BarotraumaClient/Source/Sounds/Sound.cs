@@ -30,6 +30,12 @@ namespace Barotrauma.Sounds
             get { return !Stream ? alBuffer : 0; }
         }
 
+        private int alMuffledBuffer;
+        public int ALMuffledBuffer
+        {
+            get { return !Stream ? alMuffledBuffer : 0; }
+        }
+
         public ALFormat ALFormat
         {
             get;
@@ -62,7 +68,14 @@ namespace Barotrauma.Sounds
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: "+AL.GetErrorString(alError));
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
+
+                alMuffledBuffer = AL.GenBuffer();
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
             }
             else
@@ -78,17 +91,17 @@ namespace Barotrauma.Sounds
 
         public SoundChannel Play(float gain, float range, Vector2 position)
         {
-            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range);
+            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range, "default");
         }
 
         public SoundChannel Play(Vector2 position)
         {
-            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar);
+            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar, "default");
         }
 
         public SoundChannel Play(Vector3? position, float gain)
         {
-            return new SoundChannel(this, gain, position, BaseNear, BaseFar);
+            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default");
         }
 
         public SoundChannel Play(float gain)
@@ -99,6 +112,11 @@ namespace Barotrauma.Sounds
         public SoundChannel Play()
         {
             return Play(BaseGain);
+        }
+
+        public SoundChannel Play(float gain,string category)
+        {
+            return new SoundChannel(this, gain, null, BaseNear, BaseFar, category);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

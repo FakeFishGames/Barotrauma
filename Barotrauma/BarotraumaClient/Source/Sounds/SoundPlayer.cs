@@ -245,6 +245,7 @@ namespace Barotrauma
                 ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
             }
 
+            GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
             //SoundManager.LowPassHFGain = lowpassHFGain; //TODO: implement muffling through software
             if (waterAmbiences.Count > 1)
             {
@@ -339,7 +340,7 @@ namespace Barotrauma
                 {
                     currentMusic = GameMain.SoundManager.LoadSound(targetMusic.file, true);
                     if (currentMusicChannel != null) currentMusicChannel.Dispose();
-                    currentMusicChannel = currentMusic.Play(0.0f);
+                    currentMusicChannel = currentMusic.Play(0.0f,"music");
                 }
             }
             else
@@ -347,7 +348,7 @@ namespace Barotrauma
                 if (currentMusicChannel == null || !currentMusicChannel.IsPlaying)
                 {
                     currentMusicChannel.Dispose();
-                    currentMusicChannel = currentMusic.Play(0.0f);
+                    currentMusicChannel = currentMusic.Play(0.0f,"music");
                 }
                 currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, MusicVolume, MusicLerpSpeed * deltaTime);
             }
