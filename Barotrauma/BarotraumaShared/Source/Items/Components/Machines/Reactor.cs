@@ -17,9 +17,13 @@ namespace Barotrauma.Items.Components
         private float fissionRate;
 
         //the rate at which the heat is being dissipated
-        private float coolingRate;
+        /*private float coolingRate;*/
 
-        private float temperature;
+        private float turbineOutput;
+
+        private float coolantFlow;
+
+        //private float temperature;
 
         private Client BlameOnBroken;
 
@@ -30,14 +34,13 @@ namespace Barotrauma.Items.Components
 
         //the temperature after which fissionrate is automatically 
         //turned down and cooling increased
-        private float shutDownTemp;
+        //private float shutDownTemp;
 
-        private float fireTemp, meltDownTemp, meltDownDelay;
+        //private float fireTemp, meltDownTemp, meltDownDelay;
 
-        private float meltDownTimer;
-
-        //how much power is provided to the grid per 1 temperature unit
-        private float powerPerTemp;
+        //private float meltDownTimer;
+        
+         float maxPowerOutput;
 
         private float load;
         
@@ -48,7 +51,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        [Editable(ToolTip = "The temperature at which the reactor melts down."), Serialize(9500.0f, true)]
+        /*[Editable(ToolTip = "The temperature at which the reactor melts down."), Serialize(9500.0f, true)]
         public float MeltDownTemp
         {
             get { return meltDownTemp; }
@@ -73,15 +76,32 @@ namespace Barotrauma.Items.Components
             {
                 fireTemp = Math.Max(0.0f, value);
             }
-        }
+        }*/
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates relative to it's operating temperature (kW per one degree Celsius)."), Serialize(1.0f, true)]
-        public float PowerPerTemp
+        private Vector2 optimalCoolantFlow, allowedCoolantFlow;
+
+        private Vector2 optimalFissionRate, allowedFissionRate;
+
+        private Vector2 optimalTurbineOutput, allowedTurbineOutput;
+
+        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates relative to it's operating temperature (kW per one degree Celsius)."), Serialize(10000.0f, true)]
+        public float MaxPowerOutput
         {
-            get { return powerPerTemp; }
+            get { return maxPowerOutput; }
             set
             {
-                powerPerTemp = Math.Max(0.0f, value);
+                maxPowerOutput = Math.Max(0.0f, value);
+            }
+        }
+        
+        [Serialize(0.0f, true)]
+        public float CoolantFlow
+        {
+            get { return coolantFlow; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                coolantFlow = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
 
@@ -97,17 +117,20 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(0.0f, true)]
-        public float CoolingRate
+        public float TurbineOutput
         {
-            get { return coolingRate; }
+            get { return turbineOutput; }
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                coolingRate = MathHelper.Clamp(value, 0.0f, 100.0f); 
+                turbineOutput = MathHelper.Clamp(value, 0.0f, 100.0f); 
             }
         }
 
-        [Serialize(0.0f, true)]
+        private float targetFissionRate;
+        private float targetTurbineOutput;
+
+        /*[Serialize(0.0f, true)]
         public float Temperature
         {
             get { return temperature; }
@@ -116,14 +139,9 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 temperature = MathHelper.Clamp(value, 0.0f, 10000.0f); 
             }
-        }
-
-        public bool IsRunning()
-        {
-            return (temperature > 0.0f);
-        }
-
-        [Serialize(false, true)]
+        }*/
+        
+        /*[Serialize(false, true)]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -136,11 +154,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float ExtraCooling { get; set; }
+        public float ExtraCooling { get; set; }*/
 
         public float AvailableFuel { get; set; }
 
-        private float availableHeat, availableCooling;
+        private float prevAvailableFuel;
+
+        /*private float availableHeat, availableCooling;
         private float prevTemperature, temperatureChange;
         private float prevAvailableFuel;
 
@@ -149,20 +169,86 @@ namespace Barotrauma.Items.Components
         {
             get { return shutDownTemp; }
             set { shutDownTemp = MathHelper.Clamp(value, 0.0f, 10000.0f); }
-        }
+        }*/
 
         public Reactor(Item item, XElement element)
             : base(item, element)
         {
-            shutDownTemp = 500.0f;
-            powerPerTemp = 1.0f;            
+            /*shutDownTemp = 500.0f;
+            maxPowerOutput = 1.0f; */           
             IsActive = true;
             InitProjSpecific();
         }
 
         partial void InitProjSpecific();
+        
+        public override void Update(float deltaTime, Camera cam)
+        {
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            prevAvailableFuel = AvailableFuel;
 
-        public override void Update(float deltaTime, Camera cam) 
+            float coolantFlowDiff = (fissionRate * 2.0f - turbineOutput) - CoolantFlow;
+            CoolantFlow += MathHelper.Clamp(Math.Sign(coolantFlowDiff) * 10.0f * deltaTime, -Math.Abs(coolantFlowDiff), Math.Abs(coolantFlowDiff));
+
+            FissionRate = MathHelper.Lerp(fissionRate, targetFissionRate, deltaTime);
+            TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
+
+            float coolantFlowFactor = Math.Min(coolantFlow / 50.0f, 1.0f);
+            currPowerConsumption = -MaxPowerOutput * Math.Min(turbineOutput / 100.0f, coolantFlowFactor);
+
+            optimalTurbineOutput = new Vector2(0.75f, 1.25f) * load / MaxPowerOutput * 100.0f;
+            allowedTurbineOutput = new Vector2(0.5f, 1.5f) * load / MaxPowerOutput * 100.0f;
+
+            optimalCoolantFlow = new Vector2(30.0f, 70.0f);
+            allowedCoolantFlow = new Vector2(20.0f, 80.0f);
+
+            optimalFissionRate = new Vector2(35.0f, 85.0f);
+            allowedFissionRate = new Vector2(10.0f, 90.0f);
+
+            if (autoTemp)
+            {
+                float desiredTurbineOutput = (optimalTurbineOutput.X + optimalTurbineOutput.Y) / 2.0f;
+                targetTurbineOutput += MathHelper.Clamp(desiredTurbineOutput - targetTurbineOutput, -5.0f, 5.0f) * deltaTime;
+
+                float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
+                targetFissionRate += MathHelper.Clamp(desiredFissionRate - targetFissionRate, -5.0f, 5.0f) * deltaTime;
+
+                if (coolantFlow > optimalCoolantFlow.Y)
+                {
+                    targetFissionRate = Math.Min(targetFissionRate - 10.0f * deltaTime, allowedFissionRate.Y);
+                }
+                else if (-currPowerConsumption < load)
+                {
+                    targetFissionRate = Math.Min(targetFissionRate + 10.0f * deltaTime, allowedFissionRate.Y);
+                }
+            }
+
+            load = 0.0f;
+            List<Connection> connections = item.Connections;
+            if (connections != null && connections.Count > 0)
+            {
+                foreach (Connection connection in connections)
+                {
+                    if (!connection.IsPower) continue;
+                    foreach (Connection recipient in connection.Recipients)
+                    {
+                        Item it = recipient.Item as Item;
+                        if (it == null) continue;
+
+                        PowerTransfer pt = it.GetComponent<PowerTransfer>();
+                        if (pt == null) continue;
+
+                        load = Math.Max(load, pt.PowerLoad);
+                    }
+                }
+            }
+            
+#if CLIENT
+            UpdateGraph(deltaTime);
+#endif
+        }
+
+        /*public override void Update(float deltaTime, Camera cam) 
         {
             if (GameMain.Server != null && nextServerLogWriteTime != null)
             {
@@ -176,7 +262,7 @@ namespace Barotrauma.Items.Components
                             ", Shutdown temp: " + shutDownTemp +
                             (autoTemp ? ", Autotemp ON" : ", Autotemp OFF"),
                             ServerLog.MessageType.ItemInteraction);
-                    
+
                     nextServerLogWriteTime = null;
                     lastServerLogWriteTime = (float)Timing.TotalTime;
                 }
@@ -184,7 +270,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            prevAvailableFuel = AvailableFuel;
+            //prevAvailableFuel = AvailableFuel;
             fissionRate = Math.Min(fissionRate, AvailableFuel);
 
             //the amount of cooling is always non-zero, so that the reactor always needs 
@@ -277,7 +363,7 @@ namespace Barotrauma.Items.Components
             }
             
             //the power generated by the reactor is equal to the temperature
-            currPowerConsumption = -temperature*powerPerTemp;
+            currPowerConsumption = -temperature*maxPowerOutput;
             
             if (item.CurrentHull != null)
             {
@@ -329,7 +415,7 @@ namespace Barotrauma.Items.Components
 #endif
 
             ExtraCooling = 0.0f;
-        }
+        }*/
 
         private void MeltDown()
         {
@@ -378,7 +464,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 //we need more fuel
-                if (temperature < load * 0.5f && temperatureChange <= 0.0f && prevAvailableFuel <= 0.0f)
+                if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
                 {
                     var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
                     containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
@@ -400,7 +486,7 @@ namespace Barotrauma.Items.Components
             }
 
 
-            switch (objective.Option.ToLowerInvariant())
+            /*switch (objective.Option.ToLowerInvariant())
             {
                 case "power up":
                     float tempDiff = load - temperature;
@@ -423,7 +509,7 @@ namespace Barotrauma.Items.Components
                 case "shutdown":
                     shutDownTemp = 0.0f;
                     break;
-            }
+            }*/
 
             return false;
         }
@@ -433,18 +519,18 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "shutdown":
-                    if (shutDownTemp > 0.0f)
+                    /*if (shutDownTemp > 0.0f)
                     {
                         unsentChanges = true;
                         shutDownTemp = 0.0f;
-                    }
+                    }*/
                     break;
             }
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            bool autoTemp       = msg.ReadBoolean();
+            /*bool autoTemp       = msg.ReadBoolean();
             float shutDownTemp  = msg.ReadRangedSingle(0.0f, 10000.0f, 15);
             float coolingRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
@@ -468,18 +554,18 @@ namespace Barotrauma.Items.Components
             }
 
             //need to create a server event to notify all clients of the changed state
-            unsentChanges = true;
+            unsentChanges = true;*/
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
+            /*msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
 
             msg.Write(autoTemp);
             msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 15);
 
             msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);*/
         }
     }
 }
