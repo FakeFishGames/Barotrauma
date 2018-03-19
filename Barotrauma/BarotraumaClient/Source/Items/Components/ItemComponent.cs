@@ -83,6 +83,7 @@ namespace Barotrauma.Items.Components
                 if (loopingSoundChannel != null)
                 {
                     loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
+                    loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
                 }
                 return;
             }
