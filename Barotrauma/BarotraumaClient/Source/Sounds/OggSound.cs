@@ -86,7 +86,7 @@ namespace Barotrauma.Sounds
                     weight = 1.0f - weight;
                     weight *= weight * weight;
                     avgvals[j] = (avgvals[j] * (1.0f - weight) + fval * weight);
-                    fval = avgvals[j];
+                    fval = avgvals[j]*1.7f;
                     buffer[i + j] = fval;
                 }
             }
