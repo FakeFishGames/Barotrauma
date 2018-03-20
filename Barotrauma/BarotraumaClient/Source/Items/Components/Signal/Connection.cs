@@ -52,8 +52,8 @@ namespace Barotrauma.Items.Components
             Vector2 leftWirePos = new Vector2(x + 5, y + 30);
 
             int wireInterval = (height - 20) / Math.Max(totalWireCount, 1);
-            int connectorIntervalLeft = (height - 20) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
-            int connectorIntervalRight = (height - 20) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
+            int connectorIntervalLeft = (height - 100) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
+            int connectorIntervalRight = (height - 100) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
 
             foreach (Connection c in panel.Connections)
             {

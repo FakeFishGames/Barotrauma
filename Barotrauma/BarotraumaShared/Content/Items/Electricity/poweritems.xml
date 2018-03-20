@@ -65,7 +65,7 @@
       <input name="power_in"/>      
     </ConnectionPanel>
 
-    <ItemContainer capacity="3" canbeselected="true" hideitems="true">
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5, 0.6">
       <Containable name="loadable"/>      
     </ItemContainer>
   </Item>
