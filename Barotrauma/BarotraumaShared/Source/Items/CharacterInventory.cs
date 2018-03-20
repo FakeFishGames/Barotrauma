@@ -10,22 +10,25 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32, Face=64, Card=128
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
     };
 
     partial class CharacterInventory : Inventory
     {
         private Character character;
 
-        public static InvSlotType[] limbSlots = new InvSlotType[] { 
-            InvSlotType.Head, InvSlotType.Torso, InvSlotType.Legs, InvSlotType.LeftHand, InvSlotType.RightHand, InvSlotType.Face, InvSlotType.Card,
-            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
-            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any};
-        
+        public static InvSlotType[] SlotTypes = new InvSlotType[] {
+            InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.RightHand,
+            InvSlotType.LeftHand, InvSlotType.Head, InvSlotType.Headset, InvSlotType.Card,
+            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any };
+
+        protected bool[] IsEquipped;
+
         public CharacterInventory(int capacity, Character character)
             : base(character, capacity)
         {
             this.character = character;
+            IsEquipped = new bool[capacity];
 
             InitProjSpecific();
         }
@@ -65,23 +68,23 @@ namespace Barotrauma
         {
             for (int i = 0; i < Items.Length; i++)
             {
-                if (limbSlots[i] == limbSlot) return i;
+                if (SlotTypes[i] == limbSlot) return i;
             }
             return -1;
         }
 
         public bool IsInLimbSlot(Item item, InvSlotType limbSlot)
         {
-            for (int i = 0; i<Items.Length; i++)
+            for (int i = 0; i < Items.Length; i++)
             {
-                if (Items[i] == item && limbSlots[i] == limbSlot) return true;
+                if (Items[i] == item && SlotTypes[i] == limbSlot) return true;
             }
             return false;
         }
 
         public override bool CanBePut(Item item, int i)
         {
-            return base.CanBePut(item, i) && item.AllowedSlots.Contains(limbSlots[i]);
+            return base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]);
         } 
 
         /// <summary>
@@ -91,21 +94,35 @@ namespace Barotrauma
         {
             if (allowedSlots == null || !allowedSlots.Any()) return false;
 
+            bool inSuitableSlot = false;
+            bool inWrongSlot = false;
             for (int i = 0; i < capacity; i++)
             {
-                //already in the inventory and in a suitable slot
-                if (Items[i] == item && allowedSlots.Any(a => a.HasFlag(limbSlots[i])))
+                if (Items[i] == item)
                 {
-                    return true;
+                    if (allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
+                        inSuitableSlot = true;
+                    else if (!allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
+                        inWrongSlot = true;
                 }
             }
+            //all good
+            if (inSuitableSlot && !inWrongSlot) return true;
 
-            //try to place the item in LimBlot.Any slot if that's allowed
+            //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any))
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] != null || limbSlots[i] != InvSlotType.Any) continue;
+                    if (SlotTypes[i] != InvSlotType.Any) continue;
+                    if (inWrongSlot)
+                    {
+                        if (Items[i] != item && Items[i] != null) continue;
+                    }
+                    else
+                    {
+                        if (Items[i] != null) continue;
+                    }
 
                     PutItem(item, i, user, true, createNetworkEvent);
                     item.Unequip(character);
@@ -113,14 +130,14 @@ namespace Barotrauma
                 }
             }
 
-            bool placed = false;
+            int placedInSlot = -1;
             foreach (InvSlotType allowedSlot in allowedSlots)
             {
                 //check if all the required slots are free
                 bool free = true;
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] != null && Items[i] != item)
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)
                     {
                         free = false;
 #if CLIENT
@@ -133,22 +150,45 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] == null)
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] == null)
                     {
-                        PutItem(item, i, user, !placed, createNetworkEvent);
+                        PutItem(item, i, user, placedInSlot == -1 && inWrongSlot, createNetworkEvent);
                         item.Equip(character);
-                        placed = true;
+                        placedInSlot = i;
                     }
                 }
 
-                if (placed)
+                if (placedInSlot > -1)
                 {
+                    if (item.AllowedSlots.Contains(InvSlotType.Any) && hideEmptySlot[placedInSlot])
+                    {
+                        bool isInAnySlot = false;
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (SlotTypes[i] == InvSlotType.Any && Items[i]==item)
+                            {
+                                isInAnySlot = true;
+                                break;
+                            }
+                        }
+                        if (!isInAnySlot)
+                        {
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                if (SlotTypes[i] == InvSlotType.Any && Items[i] == null)
+                                {
+                                    Items[i] = item;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     return true;
                 }
             }
 
 
-            return placed;
+            return placedInSlot > -1;
         }
 
         public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
@@ -174,13 +214,26 @@ namespace Barotrauma
                 //if moving the item between slots in the same inventory
                 else if (item.ParentInventory == this && allowSwapping)
                 {
-                    int currentIndex = Array.IndexOf(Items, item);
-                    
+                    int currentIndex = Array.IndexOf(Items, item);                    
                     Item existingItem = Items[index];
+
+                    if (character.HasEquippedItem(existingItem) && existingItem.AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        for (int i = 0; i < capacity; i++)
+                        {
+                            if (Items[i] == existingItem && SlotTypes[i] != InvSlotType.Any)
+                            {
+                                Items[i] = null;
+                            }
+                        }
+                    }
 
                     for (int i = 0; i < capacity; i++)
                     {
-                        if (Items[i] == item || Items[i] == existingItem) Items[i] = null;
+                        if (Items[i] == item || Items[i] == existingItem)
+                        {
+                            Items[i] = null;
+                        }
                     }
                     
                     //if the item in the slot can be moved to the slot of the moved item
@@ -223,7 +276,7 @@ namespace Barotrauma
                 return combined;
             }
 
-            if (limbSlots[index] == InvSlotType.Any)
+            if (SlotTypes[index] == InvSlotType.Any)
             {
                 if (!item.AllowedSlots.Contains(InvSlotType.Any)) return false;
                 if (Items[index] != null) return Items[index] == item;
@@ -238,11 +291,11 @@ namespace Barotrauma
             List<InvSlotType> allowedSlots = item.AllowedSlots;
             foreach (InvSlotType allowedSlot in allowedSlots)
             {
-                if (!allowedSlot.HasFlag(limbSlots[index])) continue;
+                if (!allowedSlot.HasFlag(SlotTypes[index])) continue;
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] != null && Items[i] != item)
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)
                     {
                         slotsFree = false;
                         break;

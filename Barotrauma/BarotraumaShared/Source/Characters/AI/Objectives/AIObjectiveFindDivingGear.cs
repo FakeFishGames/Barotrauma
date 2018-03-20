@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
-                if (CharacterInventory.limbSlots[i] == InvSlotType.Any || character.Inventory.Items[i] == null) continue;
+                if (CharacterInventory.SlotTypes[i] == InvSlotType.Any || character.Inventory.Items[i] == null) continue;
                 if (character.Inventory.Items[i].Prefab.NameMatches(gearName) || character.Inventory.Items[i].HasTag(gearName))
                 {
                     var containedItems = character.Inventory.Items[i].ContainedItems;

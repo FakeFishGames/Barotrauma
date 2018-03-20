@@ -14,6 +14,7 @@ namespace Barotrauma
         protected int capacity;
 
         public Item[] Items;
+        protected bool[] hideEmptySlot;
 
         private bool isSubInventory;
 
@@ -29,12 +30,21 @@ namespace Barotrauma
 
             this.Owner = owner;
 
-
             Items = new Item[capacity];
+            hideEmptySlot = new bool[capacity];
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
             CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+
+            if (slotSpriteSmall == null)
+            {
+                slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
+                slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
+                slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
+                equipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
+                equipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
+            }
 #endif
         }
 
