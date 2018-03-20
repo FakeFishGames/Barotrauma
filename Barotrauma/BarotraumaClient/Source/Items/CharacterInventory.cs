@@ -17,7 +17,24 @@ namespace Barotrauma
 
         private GUIButton[] useOnSelfButton;
 
+        private Alignment alignment;
+        public Alignment Alignment
+        {
+            get { return alignment; }
+            set
+            {
+                if (alignment == value) return;
+                alignment = value;
+                SetSlotPositions(alignment);
+            }
+        }
+
         private bool hidden;
+        public bool Hidden
+        {
+            get { return hidden; }
+            set { hidden = value; }
+        }
 
         partial void InitProjSpecific()
         {
@@ -34,45 +51,7 @@ namespace Barotrauma
             hidden = true;
 
             SlotPositions = new Vector2[SlotTypes.Length];
-
-            int x = GameMain.GraphicsWidth / 2;
-            int spacing = 10;
-
-            for (int i = 0; i < SlotPositions.Length; i++)
-            {
-                switch (SlotTypes[i])
-                {
-                    case InvSlotType.Headset:
-                        SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * UIScale, 50);
-                        break;
-                    case InvSlotType.Card:
-                        SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * 2 * UIScale, 50);
-                        break;
-                    case InvSlotType.InnerClothes:
-                        SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - ((slotSpriteSmall.size.X + spacing) * 2 + slotSpriteHorizontal.size.X + spacing) * UIScale, 50);
-                        break;
-                    case InvSlotType.Head:
-                        SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 50);
-                        hideEmptySlot[i] = true;
-                        break;
-                    case InvSlotType.OuterClothes:
-                        SlotPositions[i] = new Vector2(100, GameMain.GraphicsHeight - 160 * UIScale);
-                        hideEmptySlot[i] = true;
-                        break;
-                    case InvSlotType.LeftHand:
-                        SlotPositions[i] = new Vector2(180, GameMain.GraphicsHeight - 160 * UIScale);
-                        hideEmptySlot[i] = true;
-                        break;
-                    case InvSlotType.RightHand:
-                        SlotPositions[i] = new Vector2(260, GameMain.GraphicsHeight - 160 * UIScale);
-                        hideEmptySlot[i] = true;
-                        break;
-                    case InvSlotType.Any:
-                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
-                        x += (int)((slotSpriteVertical.size.X + spacing) * UIScale);
-                        break;
-                }
-            }
+            Alignment = Alignment.Center;
         }
 
         private bool UseItemOnSelf(GUIButton button, object obj)
@@ -120,8 +99,8 @@ namespace Barotrauma
                 }
 
                 Rectangle slotRect = new Rectangle(
-                    (int)(SlotPositions[i].X + DrawOffset.X), 
-                    (int)(SlotPositions[i].Y + DrawOffset.Y),
+                    (int)(SlotPositions[i].X), 
+                    (int)(SlotPositions[i].Y),
                     (int)(slotSprite.size.X * UIScale), (int)(slotSprite.size.Y * UIScale));
 
                 slots[i] = new InventorySlot(slotRect);
@@ -140,6 +119,12 @@ namespace Barotrauma
         {
             if (slots[i].Disabled || (hideEmptySlot[i] && Items[i] == null)) return true;
 
+            //no need to draw the right hand slot if the item is in both hands
+            if (Items[i] != null && SlotTypes[i] == InvSlotType.RightHand && IsInLimbSlot(Items[i], InvSlotType.LeftHand))
+            {
+                return true;
+            }
+
             //don't show the equip slot if the item is also in the default inventory
             if (SlotTypes[i] != InvSlotType.Any && Items[i] != null)
             {
@@ -152,31 +137,96 @@ namespace Barotrauma
             return false;
         }
 
+        private void SetSlotPositions(Alignment alignment)
+        {
+            int spacing = 10;
+            int x = (alignment == Alignment.Center) ? GameMain.GraphicsWidth / 2 : 10;
+            if (alignment == Alignment.Right) x = GameMain.GraphicsWidth - 10 - slots[0].Rect.Width; 
+
+            for (int i = 0; i < SlotPositions.Length; i++)
+            {
+                if (alignment == Alignment.Center)
+                {
+                    switch (SlotTypes[i])
+                    {
+                        case InvSlotType.Headset:
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * UIScale, 50);
+                            break;
+                        case InvSlotType.Card:
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * 2 * UIScale, 50);
+                            break;
+                        case InvSlotType.InnerClothes:
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - ((slotSpriteSmall.size.X + spacing) * 2 + slotSpriteHorizontal.size.X + spacing) * UIScale, 50);
+                            break;
+                        case InvSlotType.Head:
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 50);
+                            hideEmptySlot[i] = true;
+                            break;
+                        case InvSlotType.OuterClothes:
+                            SlotPositions[i] = new Vector2(100 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            hideEmptySlot[i] = true;
+                            break;
+                        case InvSlotType.LeftHand:
+                            SlotPositions[i] = new Vector2(180 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            hideEmptySlot[i] = true;
+                            break;
+                        case InvSlotType.RightHand:
+                            SlotPositions[i] = new Vector2(260 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            hideEmptySlot[i] = true;
+                            break;
+                        case InvSlotType.Any:
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
+                            x += (int)((slotSpriteVertical.size.X + spacing) * UIScale);
+                            break;
+                    }
+                }
+                else if (alignment == Alignment.Left)
+                {
+                    if (HideSlot(i)) continue;
+                    SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
+                    x += (int)((slots[i].SlotSprite.size.X + spacing) * UIScale);
+                }
+                else if (alignment == Alignment.Right)
+                {
+                    if (HideSlot(i)) continue;
+                    SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
+                    if (i < slots.Length - 1)
+                    {
+                        x -= (int)((slots[i + 1].SlotSprite.size.X + spacing) * UIScale);
+                    }
+                }
+            }
+
+            CreateSlots();
+        }
+
         public override void Update(float deltaTime, bool isSubInventory = false)
         {
             base.Update(deltaTime);
 
-            Rectangle arrowRect = new Rectangle(
-                (int)(slots[7].Rect.Center.X + slots[7].DrawOffset.X - toggleArrow.size.X / 2),
-                (int)(slots[7].Rect.Y + slots[7].DrawOffset.Y - 50 - toggleArrow.size.Y / 2), 
-                (int)toggleArrow.size.X, (int)toggleArrow.size.Y);
-            arrowRect.Inflate(30, 0);
 
-            if (arrowRect.Contains(PlayerInput.MousePosition))
+            bool hoverOnInventory = highlightedSubInventorySlot != null || draggingItem != null;
+            if (alignment == Alignment.Center)
             {
-                if (PlayerInput.LeftButtonClicked())
+                Rectangle arrowRect = new Rectangle(
+                    (int)(slots[7].Rect.Center.X + slots[7].DrawOffset.X - toggleArrow.size.X / 2),
+                    (int)(slots[7].Rect.Y + slots[7].DrawOffset.Y - 50 - toggleArrow.size.Y / 2), 
+                    (int)toggleArrow.size.X, (int)toggleArrow.size.Y);
+                arrowRect.Inflate(30, 0);
+
+                if (arrowRect.Contains(PlayerInput.MousePosition))
                 {
-                    hidden = !hidden;
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        hidden = !hidden;
+                    }
                 }
-            }
-
-            bool hoverOnInventory = false;
-            if ((slots[7].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
-                slots[7].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[7].EquipButtonRect.Bottom) 
-                && 
-                slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
-            {
-                hoverOnInventory = true;
+                if ((slots[7].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
+                    slots[7].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[7].EquipButtonRect.Bottom) &&
+                    slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
+                {
+                    hoverOnInventory = true;
+                }
             }
 
             for (int i = 0; i < capacity; i++)
@@ -184,7 +234,7 @@ namespace Barotrauma
                 if (SlotTypes[i] == InvSlotType.Any || SlotTypes[i] == InvSlotType.OuterClothes ||
                     SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand)
                 {
-                    if (hidden && !hoverOnInventory)
+                    if (hidden && !hoverOnInventory && alignment == Alignment.Center)
                     {
                         slots[i].DrawOffset.Y = MathHelper.Lerp(slots[i].DrawOffset.Y, HiddenPos * UIScale, 10.0f * deltaTime);
                     }
@@ -198,7 +248,7 @@ namespace Barotrauma
 
             if (doubleClickedItem != null)
             {
-                DoubleClickItem(doubleClickedItem);
+                DoubleClickItem(doubleClickedItem, true, true);
             }
 
             if (highlightedSubInventorySlot != null)
@@ -211,10 +261,18 @@ namespace Barotrauma
                 Rectangle hoverArea = highlightedSubInventorySlot.Slot.Rect;
                 hoverArea.Location += highlightedSubInventorySlot.Slot.DrawOffset.ToPoint();
                 hoverArea = Rectangle.Union(hoverArea, highlightedSubInventorySlot.Slot.EquipButtonRect);
+                if (highlightedSubInventory.slots != null)
+                {
+                    foreach (InventorySlot slot in highlightedSubInventory.slots)
+                    {
+                        Rectangle subSlotRect = slot.InteractRect;
+                        subSlotRect.Location += slot.DrawOffset.ToPoint();
+                        hoverArea = Rectangle.Union(hoverArea, subSlotRect);
+                    }
+                }
                 hoverArea.Inflate(10, 10);
 
-                if (highlightedSubInventory.slots == null || 
-                    (!hoverArea.Contains(PlayerInput.MousePosition) && !highlightedSubInventory.slots.Any(s => s.MouseOn())))
+                if (highlightedSubInventory.slots == null || !hoverArea.Contains(PlayerInput.MousePosition))
                 {
                     highlightedSubInventory = null;
                     highlightedSubInventorySlot = null;
@@ -245,7 +303,7 @@ namespace Barotrauma
                         useOnSelfButton[i - 3].Update(deltaTime);
                     }
 
-                    if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                    if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                     {
                         slots[i].EquipButtonState = slots[i].EquipButtonRect.Contains(PlayerInput.MousePosition) ? 
                             GUIComponent.ComponentState.Hover : GUIComponent.ComponentState.None;
@@ -255,7 +313,7 @@ namespace Barotrauma
                             if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
                             if (PlayerInput.LeftButtonClicked())
                             {
-                                DoubleClickItem(Items[i]);
+                                DoubleClickItem(Items[i], true, false);
                             }
                         }
                     }                    
@@ -286,29 +344,34 @@ namespace Barotrauma
             doubleClickedItem = null;
         }
 
-        private void DoubleClickItem(Item item)
+        private void DoubleClickItem(Item item, bool allowEquip, bool allowInventorySwap)
         {
             bool wasPut = false;
             if (item.ParentInventory != this)
             {
-                wasPut = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                //in another inventory -> attempt to place in the character's inventory
+                if (allowInventorySwap) wasPut = TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
             }
             else
             {
                 var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
-                if (selectedContainer != null && selectedContainer.Inventory != null)
+                if (selectedContainer != null && selectedContainer.Inventory != null && allowInventorySwap)
                 {
+                    //player has selected the inventory of another item -> attempt to move the item there
                     wasPut = selectedContainer.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
                 }
-                else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null && allowInventorySwap)
                 {
+                    //player has selected the inventory of another character -> attempt to move the item there
                     wasPut = character.SelectedCharacter.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
                 }
-                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy && character.SelectedBy.Inventory != null)
+                else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy && 
+                    character.SelectedBy.Inventory != null && allowInventorySwap)
                 {
-                    wasPut = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
+                    //item is in the inventory of another character -> attempt to get the item from there
+                     wasPut = character.SelectedBy.Inventory.TryPutItem(item, Character.Controlled, item.AllowedSlots, true);
                 }
-                else //doubleclicked and no other inventory is selected
+                else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
                     if (!character.HasEquippedItem(item))
@@ -400,7 +463,7 @@ namespace Barotrauma
                 {
                     DrawSubInventory(spriteBatch, i);
                 }
-                if (Items[i] != null && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
+                if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
                     if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
@@ -413,7 +476,11 @@ namespace Barotrauma
                 }
             }
 
-            toggleArrow.Draw(spriteBatch, slots[7].DrawOffset + new Vector2(slots[7].Rect.Center.X, slots[7].Rect.Y - 50), hidden ? 0 : MathHelper.Pi);
+            if (Alignment == Alignment.Center)
+            {
+                toggleArrow.Draw(spriteBatch, slots[7].DrawOffset + new Vector2(slots[7].Rect.Center.X, slots[7].Rect.Y - 50), hidden ? 0 : MathHelper.Pi);
+            }
+        
         }
     }
 }

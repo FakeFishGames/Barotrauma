@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
         private float itemRotation;
 
 
-        [Serialize("0.5,0.9", false)]
+        [Serialize("0.5,0.5", false)]
         public Vector2 HudPos
         {
             get { return hudPos; }

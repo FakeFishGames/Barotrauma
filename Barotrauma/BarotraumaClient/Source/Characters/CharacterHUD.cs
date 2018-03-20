@@ -175,7 +175,6 @@ namespace Barotrauma
 
             if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
             {
-                character.Inventory.DrawOffset = Vector2.Zero;
                 character.Inventory.DrawOwn(spriteBatch);
             }
 
@@ -239,9 +238,14 @@ namespace Barotrauma
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
 
-                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f + 120.0f, 0.0f);
+                    character.Inventory.Alignment = Alignment.Left;
+                    character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
+                }
+                else
+                {
+                    character.Inventory.Alignment = Alignment.Center;
                 }
 
                 if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
