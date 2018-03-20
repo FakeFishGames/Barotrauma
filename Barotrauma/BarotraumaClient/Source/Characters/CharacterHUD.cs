@@ -31,7 +31,7 @@ namespace Barotrauma
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
@@ -67,7 +67,7 @@ namespace Barotrauma
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
@@ -162,7 +162,7 @@ namespace Barotrauma
                 for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                 {
                     var item = character.Inventory.Items[i];
-                    if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                    if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                     foreach (ItemComponent ic in item.components)
                     {

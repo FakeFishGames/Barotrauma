@@ -20,6 +20,8 @@ namespace Barotrauma
 
         public Color BorderHighlightColor;
         private CoroutineHandle BorderHighlightCoroutine;
+        
+        public Sprite SlotSprite;
 
         public bool IsHighlighted
         {
@@ -28,6 +30,9 @@ namespace Barotrauma
                 return State == GUIComponent.ComponentState.Hover;
             }
         }
+
+        public bool ShowEquipButton;
+        public GUIComponent.ComponentState EquipButtonState;
 
         public InventorySlot(Rectangle rect)
         {
@@ -68,6 +73,9 @@ namespace Barotrauma
 
     partial class Inventory
     {
+        protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical;
+        protected static Sprite equipIndicator, equipIndicatorOn;
+
         public class SlotReference
         {
             public readonly Inventory Inventory;
@@ -126,10 +134,7 @@ namespace Barotrauma
 
             set
             {
-                if (value == drawOffset) return;
-
                 drawOffset = value;
-                CreateSlots();
             }
         }
 
@@ -137,7 +142,7 @@ namespace Barotrauma
         {
             get { return selectedSlot; }
         }
-
+        
         protected virtual void CreateSlots()
         {
             slots = new InventorySlot[capacity];
@@ -153,8 +158,8 @@ namespace Barotrauma
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow) + (int)DrawOffset.X;
-                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow)) + (int)DrawOffset.Y;
+                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow);
+                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow));
 
                 slots[i] = new InventorySlot(slotRect);
             }
@@ -163,6 +168,11 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
             }
+        }
+
+        protected virtual bool HideSlot(int i)
+        {
+            return slots[i].Disabled || (hideEmptySlot[i] && Items[i] == null);
         }
 
         public virtual void Update(float deltaTime, bool subInventory = false)
@@ -177,7 +187,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].Disabled) continue;
+                if (HideSlot(i)) continue;
                 UpdateSlot(slots[i], i, Items[i], subInventory);
             }
         }
@@ -272,7 +282,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].Disabled) continue;
+                if (HideSlot(i)) continue;
 
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
@@ -282,7 +292,8 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].InteractRect.Contains(PlayerInput.MousePosition) && !slots[i].Disabled && Items[i] != null)
+                if (HideSlot(i)) continue;
+                if (slots[i].InteractRect.Contains(PlayerInput.MousePosition) && Items[i] != null)
                 {
                     string toolTip = "";
                     if (GameMain.DebugDraw)
@@ -428,7 +439,10 @@ namespace Barotrauma
         {
             Rectangle rect = slot.Rect;
 
-            GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), true);
+            Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
+            slotSprite.Draw(spriteBatch, slot.Rect.Location.ToVector2(), Color.White);
+
+            //GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), true);
 
             if (item != null && drawItem)
             {
@@ -462,7 +476,8 @@ namespace Barotrauma
 
             if (item == null || !drawItem) return;
 
-            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.GetSpriteColor());
+            float scale = Math.Min(Math.Min((rect.Width - 10) / item.Sprite.size.X, (rect.Height - 10) / item.Sprite.size.Y), 2.0f);
+            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.GetSpriteColor(), 0, scale);
         }
     }
 }

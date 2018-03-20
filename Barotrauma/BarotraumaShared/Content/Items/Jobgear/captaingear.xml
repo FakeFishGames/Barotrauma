@@ -25,7 +25,7 @@
 
     <Body width="52" height="17" density="30"/>
 
-    <Wearable slots="Any,Torso">
+    <Wearable slots="Any,InnerClothes">
       <sprite texture="captainTorso.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depthlimb="Head"/>
 
       <sprite texture="captainTorso.png" limb="RightHand" sourcerect="47,0,15,39" origin="0.45,0.65"/>
@@ -46,7 +46,7 @@
 
     <Body width="51" height="13" density="30"/>
 
-    <Wearable slots="Any,Legs">
+    <Wearable slots="Any,InnerClothes">
       <sprite texture="captainLegs.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainLegs.png" limb="RightThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainLegs.png" limb="LeftThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>

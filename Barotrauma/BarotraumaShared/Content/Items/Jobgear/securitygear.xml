@@ -10,7 +10,7 @@
 
     <Body width="52" height="17" density="40"/>
 
-    <Wearable slots="Any,Torso">
+    <Wearable slots="Any,OuterClothes">
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9"/>
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>

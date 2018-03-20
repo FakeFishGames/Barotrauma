@@ -109,7 +109,7 @@ namespace Barotrauma
                         for (int i = 0; i < character.Inventory.Items.Length; i++)
                         {
                             //slot not needed by the item, continue
-                            if (!slots.HasFlag(CharacterInventory.limbSlots[i])) continue;
+                            if (!slots.HasFlag(CharacterInventory.SlotTypes[i])) continue;
 
                             targetSlot = i;
 
@@ -127,7 +127,7 @@ namespace Barotrauma
 
                 targetItem.TryInteract(character, false, true);
 
-                if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
+                if (targetSlot > -1 && !character.HasEquippedItem(targetItem))
                 {
                     character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character);
                 }
