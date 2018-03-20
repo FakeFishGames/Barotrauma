@@ -9,42 +9,36 @@ namespace Barotrauma
 {
     class ScriptedEventPrefab
     {
-        public static List<ScriptedEventPrefab> List
+        /*public static List<ScriptedEventPrefab> List
         {
             get;
             private set;
-        }
+        }*/
 
         public readonly XElement ConfigElement;
 
         public readonly string Name;
-        public readonly string Description;
 
         private readonly Type eventType;
         
         //key = level type, "" means any level type
-        public readonly Dictionary<string, int> MinEventCount;
-        public readonly Dictionary<string, int> MaxEventCount;
+        /*public readonly Dictionary<string, int> MinEventCount;
+        public readonly Dictionary<string, int> MaxEventCount;*/
         
         //used when randomizing which event to create mid-round
-        public readonly Dictionary<string, float> MidRoundCommonness;
-        //0-100
-        public readonly float Difficulty;
-
+        //public readonly Dictionary<string, float> MidRoundCommonness;
+        
         public readonly string MusicType;
 
-        protected ScriptedEventPrefab(XElement element)
+        public ScriptedEventPrefab(XElement element)
         {
             ConfigElement = element;
 
             Name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
             
             MusicType = element.GetAttributeString("musictype", "default");
 
-            Difficulty = element.GetAttributeFloat("difficulty", 0);
-
-            MidRoundCommonness = new Dictionary<string, float>();
+            /*MidRoundCommonness = new Dictionary<string, float>();
             MidRoundCommonness.Add("", 0);
             MinEventCount = new Dictionary<string, int>();
             MinEventCount.Add("", 0);
@@ -86,7 +80,7 @@ namespace Barotrauma
                         }
                         break;
                 }
-            }
+            }*/
             
             try
             {
@@ -118,7 +112,7 @@ namespace Barotrauma
             return (ScriptedEvent)instance;
         }
 
-        public static void LoadPrefabs()
+        /*public static void LoadPrefabs()
         {
             List = new List<ScriptedEventPrefab>();
             var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
@@ -139,12 +133,12 @@ namespace Barotrauma
                     List.Add(new ScriptedEventPrefab(element));
                 }
             }
-        }
+        }*/
         
-        public float GetMidRoundCommonness(Level level)
+        /*public float GetMidRoundCommonness(Level level)
         {
             return MidRoundCommonness.ContainsKey(level.GenerationParams.Name) ?
                     MidRoundCommonness[level.GenerationParams.Name] : MidRoundCommonness[""];
-        }
+        }*/
     }
 }
