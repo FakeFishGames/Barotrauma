@@ -154,21 +154,7 @@ namespace Barotrauma
                 centerPos.Y *= GameMain.GraphicsHeight;
             }
         }
-
-        /*private Vector2 drawOffset;
-        public Vector2 DrawOffset
-        {
-            get
-            {
-                return drawOffset;
-            }
-
-            set
-            {
-                drawOffset = value;
-            }
-        }*/
-
+        
         public static SlotReference SelectedSlot
         {
             get { return selectedSlot; }
@@ -479,8 +465,6 @@ namespace Barotrauma
             Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
             spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slot.IsHighlighted ? Color.White : Color.White * 0.8f);
 
-            //GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), true);
-
             if (item != null && drawItem)
             {
                 if (item.Condition < item.Prefab.Health)
@@ -501,8 +485,6 @@ namespace Barotrauma
                 }
             }
 
-            //GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), false);
-
             if (slot.BorderHighlightColor != Color.Transparent)
             {
                 Rectangle highlightRect = rect;
@@ -517,7 +499,7 @@ namespace Barotrauma
             Vector2 itemPos = rect.Center.ToVector2();
             if (itemPos.Y > GameMain.GraphicsHeight)
             {
-                itemPos.Y -= Math.Min(                    
+                itemPos.Y -= Math.Min(
                     (itemPos.Y + item.Sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
                     (itemPos.Y - item.Sprite.size.Y / 2 * scale) - rect.Y);
             }
