@@ -29,6 +29,10 @@ namespace Barotrauma
 
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
+        private float roundDuration;
+
+        private List<ScriptedEventSet> selectedEventSets;
+
         private EventManagerSettings settings;
         
         public float CurrentIntensity
@@ -43,7 +47,8 @@ namespace Barotrauma
         
         public EventManager(GameSession session)
         {
-            events = new List<ScriptedEvent>();        
+            events = new List<ScriptedEvent>();
+            selectedEventSets = new List<ScriptedEventSet>();
         }
 
         public bool Enabled = true;
@@ -67,25 +72,95 @@ namespace Barotrauma
             }
 
             this.level = level;
-            CreateInitialEvents();
+            var initialEventSet = SelectRandomEvents(ScriptedEventSet.List);
+            if (initialEventSet != null) selectedEventSets.Add(initialEventSet);
+            /*CreateInitialEvents();
             foreach (ScriptedEvent ev in events)
             {
                 ev.Init(false);
-            }
+            }*/
 
+            roundDuration = 0.0f;
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
             eventThreshold = settings.DefaultEventThreshold;
-            eventCoolDown = settings.EventCooldown;
+            eventCoolDown = 0.0f;
         }
 
         public void EndRound()
         {
+            selectedEventSets.Clear();
             events.Clear();
         }
 
-        private void CreateInitialEvents()
+        private ScriptedEventSet SelectRandomEvents(List<ScriptedEventSet> eventSets)
+        {
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+
+            var allowedEventSets = 
+                eventSets.Where(es => level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty);
+
+            float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
+            float randomNumber = (float)rand.NextDouble() * totalCommonness;
+            foreach (ScriptedEventSet eventSet in allowedEventSets)
+            {
+                float commonness = eventSet.GetCommonness(level);
+                if (randomNumber <= commonness)
+                {
+                    return eventSet;
+                }
+                randomNumber -= commonness;
+            }
+
+            return null;
+        }
+
+        private void CreateEvents()
+        {
+            for (int i = selectedEventSets.Count - 1; i >= 0; i--)
+            {
+                ScriptedEventSet eventSet = selectedEventSets[i];
+
+                if ((Submarine.MainSub == null || Submarine.MainSub.WorldPosition.X / level.Size.X < eventSet.MinDistanceTraveled) &&
+                    roundDuration < eventSet.MinMissionTime)
+                {
+                    continue;
+                }
+
+                selectedEventSets.RemoveAt(i);
+
+                if (eventSet.ChooseRandom)
+                {
+                    if (eventSet.EventPrefabs.Count > 0)
+                    {
+                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                        var newEvent = eventSet.EventPrefabs[rand.NextInt32() % eventSet.EventPrefabs.Count].CreateInstance();
+                        newEvent.Init(true);
+                        events.Add(newEvent);
+                    }
+                    if (eventSet.ChildSets.Count > 0)
+                    {
+                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
+                        if (newEventSet != null) selectedEventSets.Add(newEventSet);
+                    }
+                }
+                else
+                {
+                    foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
+                    {
+                        var newEvent = eventPrefab.CreateInstance();
+                        newEvent.Init(true);
+                        events.Add(newEvent);
+                    }
+
+                    selectedEventSets.AddRange(eventSet.ChildSets);
+                }
+            }
+        }
+
+        /*private void CreateInitialEvents()
         {
             if (GameMain.Client != null) return;
 
@@ -99,9 +174,9 @@ namespace Barotrauma
             }
 
             events.AddRange(ScriptedEvent.GenerateInitialEvents(rand, level));
-        }
+        }*/
 
-        private void CreateRandomEvent()
+        /*private void CreateRandomEvent()
         {
             List<ScriptedEventPrefab> allowedEvents = new List<ScriptedEventPrefab>();
 
@@ -154,11 +229,13 @@ namespace Barotrauma
             ScriptedEvent eventInstance = selectedEvent.CreateInstance();
             eventInstance.Init(true);
             events.Add(eventInstance);
-        }
+        }*/
         
         public void Update(float deltaTime)
         {
             if (GameMain.Client != null || !Enabled) return;
+
+            roundDuration += deltaTime;
 
             CalculateCurrentIntensity(deltaTime);
 
@@ -169,7 +246,7 @@ namespace Barotrauma
             }
             else if (currentIntensity < eventThreshold)
             {
-                CreateRandomEvent();
+                CreateEvents();
                 eventThreshold = settings.DefaultEventThreshold;
                 eventCoolDown = settings.EventCooldown;
             }

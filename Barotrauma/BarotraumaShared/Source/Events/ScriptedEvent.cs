@@ -17,10 +17,10 @@ namespace Barotrauma
             get { return prefab.Name; }
         }
 
-        public string Description
+        /*public string Description
         {
             get { return prefab.Description; }
-        }        
+        }*/
 
         public virtual bool IsActive
         {
@@ -76,7 +76,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static List<ScriptedEvent> GenerateInitialEvents(Random random, Level level)
+        /*public static List<ScriptedEvent> GenerateInitialEvents(Random random, Level level)
         {
             if (ScriptedEventPrefab.List == null)
             {
@@ -101,6 +101,6 @@ namespace Barotrauma
             }
 
             return events;
-        }
+        }*/
     }
 }
