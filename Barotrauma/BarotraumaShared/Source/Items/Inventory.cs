@@ -24,7 +24,7 @@ namespace Barotrauma
         private float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
+        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
@@ -35,7 +35,7 @@ namespace Barotrauma
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+            CenterPos = (centerPos == null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
 
             if (slotSpriteSmall == null)
             {
