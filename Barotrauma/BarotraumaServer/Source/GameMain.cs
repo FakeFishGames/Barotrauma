@@ -81,6 +81,7 @@ namespace Barotrauma
             MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
             //todo: get config file paths from content package

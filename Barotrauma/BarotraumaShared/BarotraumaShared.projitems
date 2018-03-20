@@ -1542,6 +1542,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\MalfunctionEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Optimizable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />

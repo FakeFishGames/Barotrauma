@@ -67,6 +67,15 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch,
                 new Vector2(graphRect.Right, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)),
                 new Vector2(graphRect.Right + 5, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)), Color.Orange, 0, 1);
+
+            y = graphRect.Bottom + 20;
+            foreach (ScriptedEventSet eventSet in selectedEventSets)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
+                    "- new event after " + (int)(eventSet.MinDistanceTraveled * 10.0f) + "% or " + (int)(eventSet.MinMissionTime / 60.0f) + "min passed",
+                    Color.White * 0.8f, null, 0, GUI.SmallFont);
+                y += 15;
+            }
         }
     }
 }

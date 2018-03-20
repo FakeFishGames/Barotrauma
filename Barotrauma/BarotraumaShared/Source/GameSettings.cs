@@ -24,6 +24,8 @@ namespace Barotrauma
 
         public bool EnableSplashScreen { get; set; }
 
+        public int ParticleLimit { get; set; }
+
         //public bool FullScreenEnabled { get; set; }
         
         private KeyOrMouse[] keyMapping;
@@ -163,6 +165,9 @@ namespace Barotrauma
             GraphicsWidth = graphicsMode.GetAttributeInt("width", 0);
             GraphicsHeight = graphicsMode.GetAttributeInt("height", 0);
             VSyncEnabled = graphicsMode.GetAttributeBool("vsync", true);
+
+            XElement graphicsSettings = doc.Root.Element("graphicssettings");
+            ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
 
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
@@ -311,6 +316,14 @@ namespace Barotrauma
                     new XAttribute("displaymode", windowMode));
             }
 
+            XElement gSettings = doc.Root.Element("graphicssettings");
+            if (gSettings == null)
+            {
+                gSettings = new XElement("graphicssettings");
+                doc.Root.Add(gSettings);
+            }
+
+            gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
 
             if (SelectedContentPackage != null)
             {

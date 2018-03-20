@@ -33,6 +33,7 @@
   <Windowed>Windowed</Windowed>
   <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
   <EnableVSync>Enable vertical sync</EnableVSync>
+  <ParticleLimit>Particle limit</ParticleLimit>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>

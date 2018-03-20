@@ -1,34 +1,176 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Randomevents>
-  <!-- 
-  Crawler x2-3
-    - common in almost all level types 
-    - can be spawned as mid-round random event
-  -->
-  <MonsterEvent name="Under attack" description=""
-    characterfile="Content/Characters/Crawler/crawler.xml"
-    difficulty="3"    
-    minamount="2" maxamount="3"
-    spawntype="mainpath,ruin"
-    musictype="monster">    
-    <InitialCount min="1" max="3">
-      <Override leveltype="Ridge" min="5" max="6"/>
-      <Override leveltype="Wastes" min="5" max="6"/>
-      <Override leveltype="Open" min="-5" max="1"/>      
-    </InitialCount>
-    <Midround commonness="1.0">
-      <Override leveltype="Ridge" commonness="2.0"/>
-      <Override leveltype="Wastes" commonness="2.0"/>
-      <Override leveltype="Open" commonness="0.5"/>
-    </Midround>
-  </MonsterEvent>
+
+  <!-- easyish basic event set (a bunch of crawlers, mantises and a thresher) -->
+  <EventSet
+    minleveldifficulty="0"
+    maxleveldifficulty="20"
+    chooserandom="false">    
+    <Commonness commonness="5">
+      <Override leveltype="Ridge" commonness="10"/>
+      <Override leveltype="Wastes" commonness="10"/>
+      <Override leveltype="Open" commonness="2"/>      
+    </Commonness>
+
+    <!-- always spawn a couple of artifacts  -->
+    <ArtifactEvent itemname="Skyholder Artifact"/>
+    <ArtifactEvent itemname="Thermal Artifact"/>
+    <ArtifactEvent itemname="Faraday Artifact"/>
+
+    <!-- chance of a couple of fractal guardians inside ruins -->
+    <MonsterEvent
+      characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
+      minamount="0" maxamount="1"
+      spawntype="ruin"
+      musictype="monster">
+    </MonsterEvent>
+
+    <MonsterEvent
+      characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
+      minamount="0" maxamount="1"
+      spawntype="ruin"
+      musictype="monster">
+    </MonsterEvent>
+
+    <!-- 2-3 crawlers or 2 mantises after the sub has passed 10% of the level or 5 minutes have passed -->
+    <EventSet
+      chooserandom="true"
+      mindistancetraveled="0.1"
+      minmissiontime="300">
+      <MonsterEvent
+        characterfile="Content/Characters/Crawler/crawler.xml"
+        minamount="2" maxamount="3"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+      <MonsterEvent
+        characterfile="Content/Characters/Mantis/mantis.xml"
+        minamount="1" maxamount="2"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+
+    <!-- 4-6 crawlers and 1 mantis after 12 minutes or passing 40% -->
+    <EventSet
+      chooserandom="false"
+      mindistancetraveled="0.4"
+      minmissiontime="720">
+      <MonsterEvent
+        characterfile="Content/Characters/Crawler/crawler.xml"
+        minamount="4" maxamount="6"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+      <MonsterEvent
+        characterfile="Content/Characters/Mantis/mantis.xml"
+        minamount="1" maxamount="1"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+
+    <!-- one thresher after 17 minutes or passing 60% -->
+    <EventSet
+      chooserandom="false"
+      mindistancetraveled="0.6"
+      minmissiontime="1020">
+      <MonsterEvent
+        characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
+        spawntype="mainpath"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+  </EventSet>
+
+  <EventSet
+    minleveldifficulty="10"
+    maxleveldifficulty="100"
+    chooserandom="false">
+    <Commonness commonness="5">
+      <Override leveltype="Ridge" commonness="10"/>
+      <Override leveltype="Wastes" commonness="10"/>
+      <Override leveltype="Open" commonness="2"/>
+    </Commonness>
+
+    <!-- always spawn a couple of artifacts  -->
+    <ArtifactEvent itemname="Skyholder Artifact"/>
+    <ArtifactEvent itemname="Thermal Artifact"/>
+    <ArtifactEvent itemname="Faraday Artifact"/>
+
+    <!-- chance of a couple of fractal guardians inside ruins -->
+    <MonsterEvent
+      characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
+      minamount="1" maxamount="2"
+      spawntype="ruin"
+      musictype="monster">
+    </MonsterEvent>
+
+    <MonsterEvent
+      characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
+      minamount="0" maxamount="1"
+      spawntype="ruin"
+      musictype="monster">
+    </MonsterEvent>
+
+    <!-- 4-6 crawlers and 2 mantises after the sub has passed 10% of the level or 5 minutes have passed -->
+    <EventSet
+      chooserandom="true"
+      mindistancetraveled="0.1"
+      minmissiontime="300">
+      <MonsterEvent
+        characterfile="Content/Characters/Crawler/crawler.xml"
+        minamount="2" maxamount="3"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+      <MonsterEvent
+        characterfile="Content/Characters/Mantis/mantis.xml"
+        minamount="1" maxamount="2"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+
+    <!-- one moloch after 12 minutes or passing 40% -->
+    <EventSet
+      chooserandom="false"
+      mindistancetraveled="0.4"
+      minmissiontime="720">
+      <MonsterEvent
+        characterfile="Content/Characters/Moloch/moloch.xml"
+        minamount="1" maxamount="1"
+        spawntype="mainpath"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+
+    <!-- 2 threshers or 3 mantises after 17 minutes or passing 60% -->
+    <EventSet
+      chooserandom="false"
+      mindistancetraveled="0.6"
+      minmissiontime="1020">
+      <MonsterEvent
+        characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
+        minamount="2" maxamount="2"
+        spawntype="mainpath"
+        musictype="monster">
+      </MonsterEvent>
+      <MonsterEvent
+        characterfile="Content/Characters/Mantis/mantis.xml"
+        minamount="3" maxamount="3"
+        spawntype="mainpath,ruin"
+        musictype="monster">
+      </MonsterEvent>
+    </EventSet>
+  </EventSet>
 
   <!-- 
   Crawler x4-6 inside caves
     - common in most level types 
     - can be spawned as mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Crawler/crawler.xml"
     difficulty="5"
     minamount="4" maxamount="6"
@@ -46,7 +188,7 @@
   Crawler x10-12
     - only used as a slightly harder mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Crawler/crawler.xml"
     difficulty="11"
     minamount="10" maxamount="12"
@@ -65,7 +207,7 @@
     - can only appear initially in Ridge levels
     - a fairly common low difficulty mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
     difficulty="8"
     spawntype="mainpath"
@@ -82,7 +224,7 @@
   Tiger thresher x2-3
     - a fairly common mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
     minamount="2" maxamount="3"
     difficulty="16"
@@ -97,7 +239,7 @@
     - a semi-rare random event
     - common random event in Open levels
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Moloch/moloch.xml"
     difficulty="20"
     spawntype="mainpath"
@@ -114,11 +256,10 @@
     - can appear initially in any type of level
     - a common mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Mantis/mantis.xml"
     difficulty="10"
-    minamount="1" maxamount="2"    
-    repeat="true"
+    minamount="1" maxamount="2"
     spawntype="mainpath,ruin"
     musictype="monster">
     <InitialCount min="0" max="2">
@@ -138,7 +279,7 @@
     - can appear initially in any level type
     - somewhat common mid-round random event in all level types
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Mantis/mantis.xml"
     difficulty="12"
     minamount="2" maxamount="3"
@@ -153,7 +294,7 @@
     - can appear initially in most level types
     - somewhat rare mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Coelanth/coelanth.xml"
     difficulty="8"
     minamount="1" maxamount="1"
@@ -169,7 +310,7 @@
     - rare event that can appear initially in most level types
     - somewhat rare mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Charybdis/charybdis.xml"
     difficulty="15"
     minamount="1" maxamount="1"
@@ -187,7 +328,7 @@
     - doesn't appear initially in any level
     - somewhat rare mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Charybdis/charybdis.xml"
     difficulty="15"
     minamount="2" maxamount="2"
@@ -205,7 +346,7 @@
     - can rarely appear initially in all level types except Ridge
     - somewhat rare high-difficulty mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Endworm/endworm.xml"
     difficulty="50"
     minamount="1" maxamount="1"
@@ -223,7 +364,7 @@
     - can rarely appear in Open levels
     - somewhat rare high-difficulty mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Endworm/endworm.xml"
     difficulty="50"
     minamount="1" maxamount="1"
@@ -240,7 +381,7 @@
     - rare initial event that can appear in all levels except Ridge and Wastes
     - a rare low-difficulty mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Watcher/watcher.xml"
     difficulty="3"
     spawntype="mainpath,cave"
@@ -260,11 +401,10 @@
     - can appear initially in any type of level, more common in Wastes
     - a medium-commonness mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Husk/husk.xml"
     difficulty="5"
     minamount="2" maxamount="3"
-    repeat="true"
     spawntype="mainpath,ruin"
     musictype="monster">
     <InitialCount min="-2" max="3">
@@ -281,7 +421,7 @@
     - can rarely appear in all level types
     - a medium-commonness mid-round event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Husk/husk.xml"
     minamount="2" maxamount="6"
     spawntype="cave"
@@ -294,7 +434,7 @@
   Fractalguardian x1 inside ruins
     - appears in all level types
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
     minamount="1" maxamount="1"
     spawntype="ruin"
@@ -306,7 +446,7 @@
   Fractalguardian2 x1 inside ruins
     - appears in all level types
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
     minamount="1" maxamount="1"
     spawntype="ruin"
@@ -318,7 +458,7 @@
   Carrier x1
     - a rare medium-difficulty mid-round random event
   -->
-  <MonsterEvent name="Under attack" description=""
+  <MonsterEvent
     characterfile="Content/Characters/Carrier/carrier.xml"
     difficulty="30"
     spawntype="mainpath"
