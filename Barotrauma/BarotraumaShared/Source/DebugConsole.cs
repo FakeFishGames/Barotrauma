@@ -1480,15 +1480,14 @@ namespace Barotrauma
                 Item reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
                 if (reactorItem == null) return;
 
-                float power = 5000.0f;
+                float power = 1000.0f;
                 if (args.Length > 0) float.TryParse(args[0], out power);
 
                 var reactor = reactorItem.GetComponent<Reactor>();
-                //TODO: reimplement
-                /*reactor.ShutDownTemp = power == 0 ? 0 : 7000.0f;
+                reactor.TurbineOutput = power / reactor.MaxPowerOutput * 100.0f;
+                reactor.FissionRate = power / reactor.MaxPowerOutput * 100.0f;
                 reactor.AutoTemp = true;
-                reactor.Temperature = power;*/
-
+                
                 if (GameMain.Server != null)
                 {
                     reactorItem.CreateServerEvent(reactor);

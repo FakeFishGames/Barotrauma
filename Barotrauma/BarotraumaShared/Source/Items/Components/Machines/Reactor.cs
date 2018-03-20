@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
             }
         }*/
         
-        /*[Serialize(false, true)]
+        [Serialize(false, true)]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -149,12 +149,11 @@ namespace Barotrauma.Items.Components
             { 
                 autoTemp = value;
 #if CLIENT
-                if (autoTempTickBox!=null) autoTempTickBox.Selected = value;
+                if (autoTempTickBox != null) autoTempTickBox.Selected = value;
 #endif
             }
         }
-
-        public float ExtraCooling { get; set; }*/
+        
 
         public float AvailableFuel { get; set; }
 
