@@ -155,7 +155,7 @@ namespace Barotrauma
             }
         }
 
-        private Vector2 drawOffset;
+        /*private Vector2 drawOffset;
         public Vector2 DrawOffset
         {
             get
@@ -167,7 +167,7 @@ namespace Barotrauma
             {
                 drawOffset = value;
             }
-        }
+        }*/
 
         public static SlotReference SelectedSlot
         {
@@ -182,9 +182,10 @@ namespace Barotrauma
             int spacing = (int)(10 * UIScale);
 
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
+            int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)centerPos.X - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
-            int startY = (int)centerPos.Y - rows * (spacing + rectHeight);
+            int startX = (int)centerPos.X - (rectWidth * columns + spacing * (columns - 1)) / 2;
+            int startY = (int)centerPos.Y - (rows * (spacing + rectHeight)) / 2;
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
@@ -279,14 +280,13 @@ namespace Barotrauma
             if (subInventory.slots == null) subInventory.CreateSlots();
 
             int itemCapacity = subInventory.Items.Length;
-
             var slot = slots[slotIndex];
-
             int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
 
             Rectangle subRect = slot.Rect;
             subRect.Y = dir > 0 ? slot.EquipButtonRect.Y : slot.EquipButtonRect.Bottom;
-            subRect.Height = (int)(40 * UIScale);
+            int slotHeight = (int)(60 * UIScale);
+            subRect.Height = slotHeight;
 
             for (int i = 0; i < itemCapacity; i++)
             {
@@ -295,10 +295,12 @@ namespace Barotrauma
                 subInventory.slots[i].InteractRect = subRect;
                 subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
 
-                if (subRect.Y < GameMain.GraphicsHeight * 0.4f)
+                if (subRect.Y - slot.DrawOffset.Y < GameMain.GraphicsHeight * 0.5f)
                 {
                     subRect = slot.Rect;
                     subRect.X = subInventory.slots[i].Rect.Right + (int)(10 * UIScale);
+                    subRect.Y = dir > 0 ? slot.EquipButtonRect.Y : slot.EquipButtonRect.Bottom;
+                    subRect.Height = slotHeight;
                 }
             }
 

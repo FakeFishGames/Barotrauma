@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class ItemInventory : Inventory
+    partial class ItemInventory : Inventory
     {
         ItemContainer container;
 
