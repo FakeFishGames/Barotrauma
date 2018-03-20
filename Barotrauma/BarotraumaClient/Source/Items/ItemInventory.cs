@@ -28,7 +28,7 @@ namespace Barotrauma
                 if (item != null)
                 {
                     GUI.DrawString(spriteBatch, 
-                        new Vector2(backgroundFrame.Center.X - GUI.Font.MeasureString(item.Name).X / 2, backgroundFrame.Y + 5), 
+                        new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(item.Name).X / 2), (int)backgroundFrame.Y + 5), 
                         item.Name, Color.White * 0.9f);
                 }
             }
