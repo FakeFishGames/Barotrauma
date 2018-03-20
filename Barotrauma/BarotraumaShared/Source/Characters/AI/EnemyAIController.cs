@@ -641,6 +641,7 @@ namespace Barotrauma
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
         {
             var damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
+            if (damageTarget == null) return;
 
             if (damageTarget == null) return;
 
