@@ -365,6 +365,8 @@ namespace Barotrauma
             pos.X = (int)(pos.X + 3);
             pos.Y = (int)pos.Y - Math.Max((pos.Y + rectSize.Y) - GameMain.GraphicsHeight, 0);
 
+            if (pos.X + rectSize.X > GameMain.GraphicsWidth) pos.X -= rectSize.X;
+
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
             GUI.Font.DrawString(spriteBatch, toolTip,
                 new Vector2((int)(pos.X + rectSize.X * 0.5f), (int)(pos.Y + rectSize.Y * 0.5f)),
