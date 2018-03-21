@@ -21,7 +21,6 @@ namespace Barotrauma
             selectedMission = gameSession.Mission;
         }
         
-
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
             bool singleplayer = GameMain.NetworkMember == null;
@@ -115,7 +114,14 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.ToString());
+                    statusText = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
+                        characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
+                        TextManager.Get("Self_CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
+
+                    string chatMessage = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
+                        characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
+                        TextManager.Get("Self_CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
+
                     statusColor = Color.DarkRed;
                 }
                 else
