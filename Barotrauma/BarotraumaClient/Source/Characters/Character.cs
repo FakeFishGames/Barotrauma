@@ -192,7 +192,10 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
+                string chatMessage = causeOfDeath.First == CauseOfDeathType.Affliction ?
+                    causeOfDeath.Second.SelfCauseOfDeathDescription :
+                    TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.First.ToString());
+
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);

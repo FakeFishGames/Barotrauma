@@ -1938,7 +1938,14 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
+            if (causeOfDeathType == CauseOfDeathType.Affliction)
+            {
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
+            }
+            else
+            {
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
+            }
 
             this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
             OnDeath?.Invoke(this, causeOfDeathType);
