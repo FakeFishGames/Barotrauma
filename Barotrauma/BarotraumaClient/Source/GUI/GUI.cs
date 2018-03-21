@@ -19,6 +19,10 @@ namespace Barotrauma
     
     public class GUI
     {
+        public static float Scale
+        {
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+        }
 
         public static GUIStyle Style;
 

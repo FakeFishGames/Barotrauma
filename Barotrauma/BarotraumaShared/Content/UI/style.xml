@@ -263,7 +263,8 @@
       hovercolor="1.0,1.0,1.0,1.0"
       selectedcolor="1.0,1.0,1.0,1.0">
 
-      <Sprite texture="Content/UI/UI_Atlas.png" tile="false" sourcerect ="0, 276, 859, 37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" sourcerect ="0, 276, 859, 37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" sourcerect ="0, 276, 859, 37"/>
     </Slider>    
   </GUIProgressBar>
 

@@ -68,8 +68,8 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character)
         {
-            healthBar = new GUIProgressBar(new Rectangle(5, GameMain.GraphicsHeight - 138, 20, 128), Color.White, null, 1.0f, Alignment.TopLeft);
-            healthBar.IsHorizontal = false;
+            int healthBarWidth = (int)(400 * GUI.Scale);
+            healthBar = new GUIProgressBar(new Rectangle((GameMain.GraphicsWidth - healthBarWidth) / 2, 10, healthBarWidth, (int)(30 * GUI.Scale)), Color.White, null, 1.0f, Alignment.TopLeft);
 
             healthWindow = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
             GUIFrame healthFrame = new GUIFrame(new Rectangle(0, 0, (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 500, 800), (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 400, 600)),
@@ -186,7 +186,17 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = (vitality > 0.0f) ? Color.Lerp(Color.Orange, Color.Green, vitality / MaxVitality) : healthBar.Color = Color.Red;
+                healthBar.Color = Color.Red;
+                if (vitality / MaxVitality > 0.5f)
+                {
+                    healthBar.Color = Color.Lerp(Color.Orange, Color.Green * 1.5f, (vitality / MaxVitality - 0.5f) * 2.0f);
+                }
+                else if (vitality > 0.0f)
+                {
+                    healthBar.Color = Color.Lerp(Color.Red, Color.Orange, (vitality / MaxVitality) * 2.0f);
+                }
+
+                healthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
             }
             
@@ -199,6 +209,13 @@ namespace Barotrauma
                 healthWindowHealthBar.Color = healthBar.Color;
                 healthWindowHealthBar.BarSize = healthBar.BarSize;
                 healthWindow.Update(deltaTime);
+
+                if (PlayerInput.RightButtonClicked() ||
+                    (!healthWindow.children[0].Rect.Contains(PlayerInput.MousePosition) && PlayerInput.LeftButtonClicked()))
+                {
+                    OpenHealthWindow = null;
+                    UpdateItemContainer();
+                }
             }
             else
             {
@@ -243,35 +260,63 @@ namespace Barotrauma
 
         public void DrawStatusHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
         {
-            healthBar.Rect = new Rectangle(5 + (int)drawOffset.X, GameMain.GraphicsHeight - 138 + (int)drawOffset.Y, 20, 128);
-
-            Rectangle limbArea = new Rectangle(30 + (int)drawOffset.X, GameMain.GraphicsHeight - 135 + (int)drawOffset.Y, 70, 128);
-            DrawLimbIndicators(spriteBatch, limbArea, false, limbArea.Contains(PlayerInput.MousePosition) && OpenHealthWindow != this);
-            if (limbArea.Contains(PlayerInput.MousePosition) && PlayerInput.LeftButtonClicked())
-            {
-                OpenHealthWindow = this;
-                UpdateItemContainer();
-            }
-
             List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
             if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
 
             var allAfflictions = GetAllAfflictions(true);
             foreach (Affliction affliction in allAfflictions)
             {
-                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
+                if (affliction.Strength < affliction.Prefab.ShowIconThreshold || affliction.Prefab.Icon == null) continue;
                 statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
             }
 
-            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, -55);
+            Rectangle interactArea = healthBar.Rect;
+            Pair<Sprite, string> highlightedIcon = null;
+            Vector2 highlightedIconPos = Vector2.Zero;
+            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, healthBar.Rect.Height + 5);
+
             foreach (Pair<Sprite, string> statusIcon in statusIcons)
             {
-                if (statusIcon.First != null) statusIcon.First.Draw(spriteBatch, pos);
-                GUI.DrawString(spriteBatch, pos + new Vector2(55, 10), statusIcon.Second, Color.White * 0.8f, Color.Black * 0.5f);
-                pos.Y -= 50.0f;
+                Rectangle afflictionIconRect = new Rectangle(pos.ToPoint(), (statusIcon.First.size * GUI.Scale).ToPoint());
+                interactArea = Rectangle.Union(interactArea, afflictionIconRect);
+                if (afflictionIconRect.Contains(PlayerInput.MousePosition))
+                {
+                    highlightedIcon = statusIcon;
+                    highlightedIconPos = afflictionIconRect.Center.ToVector2();
+                }
+                pos.X += 50.0f * GUI.Scale;
+            }
+
+            pos.X = healthBar.Rect.Location.X;
+            foreach (Pair<Sprite, string> statusIcon in statusIcons)
+            {
+                statusIcon.First.Draw(spriteBatch, pos, highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
+                pos.X += 50.0f * GUI.Scale;
+            }
+
+            if (highlightedIcon != null)
+            {
+                GUI.DrawString(spriteBatch, 
+                    highlightedIconPos - GUI.Font.MeasureString(highlightedIcon.Second) / 2 + Vector2.UnitY*30, 
+                    highlightedIcon.Second, 
+                    Color.White * 0.8f, Color.Black * 0.5f);
             }
 
             healthBar.Draw(spriteBatch);
+
+            if (interactArea.Contains(PlayerInput.MousePosition))
+            {
+                healthBar.State = GUIComponent.ComponentState.Hover;
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    OpenHealthWindow = this;
+                    UpdateItemContainer();
+                }
+            }
+            else
+            {
+                healthBar.State = GUIComponent.ComponentState.None;
+            }
 
             if (OpenHealthWindow == this)
             {

@@ -281,7 +281,7 @@ namespace Barotrauma
                 subInventory.slots[i].InteractRect = subRect;
                 subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
 
-                if (subRect.Y - slot.DrawOffset.Y < GameMain.GraphicsHeight * 0.5f)
+                if (Math.Sign((subRect.Y - slot.DrawOffset.Y) - GameMain.GraphicsHeight * 0.5f) != dir)
                 {
                     subRect = slot.Rect;
                     subRect.X = subInventory.slots[i].Rect.Right + (int)(10 * UIScale);
@@ -451,7 +451,7 @@ namespace Barotrauma
                 Rectangle dragRect = new Rectangle(
                     (int)(PlayerInput.MousePosition.X - 10 * UIScale),
                     (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
-                    (int)(40 * UIScale), (int)(40 * UIScale));
+                    (int)(80 * UIScale), (int)(80 * UIScale));
 
                 DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
             }

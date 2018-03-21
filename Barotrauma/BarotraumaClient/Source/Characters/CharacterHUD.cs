@@ -170,9 +170,7 @@ namespace Barotrauma
                     }
                 }
             }
-
-            //DrawStatusIcons(spriteBatch, character);
-
+            
             if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
             {
                 character.Inventory.DrawOwn(spriteBatch);
