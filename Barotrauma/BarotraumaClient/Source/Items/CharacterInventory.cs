@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,8 +11,13 @@ namespace Barotrauma
     {
         const float HiddenPos = 130.0f;
 
+        private static float dropTimer;
+
         private static Texture2D icons;
         private static Sprite toggleArrow;
+        private float arrowAlpha;
+
+        private float hideTimer;
 
         public Vector2[] SlotPositions;
 
@@ -206,6 +212,7 @@ namespace Barotrauma
 
             bool hoverOnInventory = highlightedSubInventorySlot != null || 
                 (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn()));
+
             if (alignment == Alignment.Center)
             {
                 Rectangle arrowRect = new Rectangle(
@@ -216,11 +223,18 @@ namespace Barotrauma
 
                 if (arrowRect.Contains(PlayerInput.MousePosition))
                 {
+                    arrowAlpha = Math.Min(arrowAlpha + deltaTime * 10.0f, 1.0f);
                     if (PlayerInput.LeftButtonClicked())
                     {
                         hidden = !hidden;
+                        hideTimer = 0.0f;
                     }
                 }
+                else
+                {
+                    arrowAlpha = Math.Max(arrowAlpha - deltaTime * 10.0f, 0.5f);
+                }
+
                 if ((slots[7].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
                     slots[7].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[7].EquipButtonRect.Bottom) &&
                     slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
@@ -229,14 +243,17 @@ namespace Barotrauma
                 }
             }
 
+            if (hoverOnInventory) hideTimer = 0.5f;
+            if (hideTimer > 0.0f) hideTimer -= deltaTime;
+
             for (int i = 0; i < capacity; i++)
             {
                 if (SlotTypes[i] == InvSlotType.Any || SlotTypes[i] == InvSlotType.OuterClothes ||
                     SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand)
                 {
-                    if (hidden && !hoverOnInventory && alignment == Alignment.Center)
+                    if (hidden && !hoverOnInventory && alignment == Alignment.Center && hideTimer <= 0.0f)
                     {
-                        slots[i].DrawOffset.Y = MathHelper.Lerp(slots[i].DrawOffset.Y, HiddenPos * UIScale, 10.0f * deltaTime);
+                        slots[i].DrawOffset.Y = MathHelper.Lerp(slots[i].DrawOffset.Y, HiddenPos * UIScale, 10.0f * deltaTime);                        
                     }
                     else
                     {
@@ -478,7 +495,9 @@ namespace Barotrauma
 
             if (Alignment == Alignment.Center)
             {
-                toggleArrow.Draw(spriteBatch, slots[7].DrawOffset + new Vector2(slots[7].Rect.Center.X, slots[7].Rect.Y - 50), hidden ? 0 : MathHelper.Pi);
+                toggleArrow.Draw(spriteBatch, 
+                    slots[7].DrawOffset + new Vector2(slots[7].Rect.Center.X, slots[7].Rect.Y - 50), 
+                    Color.White * arrowAlpha, hidden ? 0 : MathHelper.Pi);
             }
         
         }
