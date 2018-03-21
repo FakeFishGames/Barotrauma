@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         //private float temperature;
 
         private Client BlameOnBroken;
-
+        
         //is automatic temperature control on
         //(adjusts the cooling rate automatically to keep the
         //amount of power generated balanced with the load)
@@ -48,6 +48,17 @@ namespace Barotrauma.Items.Components
         private float sendUpdateTimer;
 
         private Character lastUser;
+        public Character LastUser
+        {
+            get { return lastUser; }
+            set
+            {
+                if (lastUser == value) return;
+                lastUser = value;
+                SetValueTolerances(lastUser);
+            }
+        }
+
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
@@ -79,9 +90,7 @@ namespace Barotrauma.Items.Components
         }*/
 
         private Vector2 optimalCoolantFlow, allowedCoolantFlow;
-
         private Vector2 optimalFissionRate, allowedFissionRate;
-
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
 
         [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates relative to it's operating temperature (kW per one degree Celsius)."), Serialize(10000.0f, true)]
@@ -177,14 +186,33 @@ namespace Barotrauma.Items.Components
             maxPowerOutput = 1.0f; */           
             IsActive = true;
             InitProjSpecific();
+
+            SetValueTolerances(null);
         }
 
         partial void InitProjSpecific();
+
+        private void SetValueTolerances(Character character)
+        {
+            float degreeOfSuccess = character == null ? 0.0f : DegreeOfSuccess(character);
+            
+            float coolantFlowTolerance = MathHelper.Lerp(10.0f, 20.0f, degreeOfSuccess);
+            optimalCoolantFlow = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);            
+            allowedCoolantFlow = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);
+
+            float fissionRateTolerance = MathHelper.Lerp(10.0f, 20.0f, degreeOfSuccess);
+            optimalFissionRate = Vector2.Lerp(new Vector2(40.0f, 70.0f), new Vector2(30.0f, 85.0f), degreeOfSuccess);
+            allowedFissionRate = Vector2.Lerp(new Vector2(30.0f, 85.0f), new Vector2(20.0f, 98.0f), degreeOfSuccess);
+        }
         
         public override void Update(float deltaTime, Camera cam)
         {
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             prevAvailableFuel = AvailableFuel;
+
+            float degreeOfSuccess = lastUser == null ? 0.0f : DegreeOfSuccess(lastUser);
+            optimalTurbineOutput = Vector2.Lerp(new Vector2(0.8f, 1.2f), new Vector2(0.6f, 1.4f), degreeOfSuccess) * load / MaxPowerOutput * 100.0f;
+            allowedTurbineOutput = Vector2.Lerp(new Vector2(0.6f, 1.4f), new Vector2(0.4f, 1.6f), degreeOfSuccess) * load / MaxPowerOutput * 100.0f;
 
             float coolantFlowDiff = (fissionRate * 2.0f - turbineOutput) - CoolantFlow;
             CoolantFlow += MathHelper.Clamp(Math.Sign(coolantFlowDiff) * 10.0f * deltaTime, -Math.Abs(coolantFlowDiff), Math.Abs(coolantFlowDiff));
@@ -194,15 +222,6 @@ namespace Barotrauma.Items.Components
 
             float coolantFlowFactor = Math.Min(coolantFlow / 50.0f, 1.0f);
             currPowerConsumption = -MaxPowerOutput * Math.Min(turbineOutput / 100.0f, coolantFlowFactor);
-
-            optimalTurbineOutput = new Vector2(0.75f, 1.25f) * load / MaxPowerOutput * 100.0f;
-            allowedTurbineOutput = new Vector2(0.5f, 1.5f) * load / MaxPowerOutput * 100.0f;
-
-            optimalCoolantFlow = new Vector2(30.0f, 70.0f);
-            allowedCoolantFlow = new Vector2(20.0f, 80.0f);
-
-            optimalFissionRate = new Vector2(35.0f, 85.0f);
-            allowedFissionRate = new Vector2(10.0f, 90.0f);
 
             if (autoTemp)
             {
@@ -546,7 +565,7 @@ namespace Barotrauma.Items.Components
             CoolingRate = coolingRate;
             FissionRate = fissionRate;
 
-            lastUser = c.Character;
+            LastUser = c.Character;
             if (nextServerLogWriteTime == null)
             {
                 nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
