@@ -96,10 +96,12 @@ namespace Barotrauma
 
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
+            int currentSlot = -1;
             for (int i = 0; i < capacity; i++)
             {
                 if (Items[i] == item)
                 {
+                    currentSlot = i;
                     if (allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
                         inSuitableSlot = true;
                     else if (!allowedSlots.Any(a => a.HasFlag(SlotTypes[i])))
@@ -112,6 +114,16 @@ namespace Barotrauma
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any))
             {
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (SlotTypes[i] != InvSlotType.Any) continue;
+                    if (Items[i] == item)
+                    {
+                        PutItem(item, i, user, true, createNetworkEvent);
+                        item.Unequip(character);
+                        return true;
+                    }
+                }
                 for (int i = 0; i < capacity; i++)
                 {
                     if (SlotTypes[i] != InvSlotType.Any) continue;
@@ -152,7 +164,13 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] == null)
                     {
-                        PutItem(item, i, user, placedInSlot == -1 && inWrongSlot, createNetworkEvent);
+                        bool removeFromOtherSlots = item.ParentInventory != this;
+                        if (placedInSlot == -1 && inWrongSlot)
+                        {
+                            if (!hideEmptySlot[i] || SlotTypes[currentSlot] != InvSlotType.Any) removeFromOtherSlots = true;
+                        }
+
+                        PutItem(item, i, user, removeFromOtherSlots, createNetworkEvent);
                         item.Equip(character);
                         placedInSlot = i;
                     }
