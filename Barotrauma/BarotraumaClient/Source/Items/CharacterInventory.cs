@@ -204,8 +204,8 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-
-            bool hoverOnInventory = highlightedSubInventorySlot != null || draggingItem != null;
+            bool hoverOnInventory = highlightedSubInventorySlot != null || 
+                (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn()));
             if (alignment == Alignment.Center)
             {
                 Rectangle arrowRect = new Rectangle(

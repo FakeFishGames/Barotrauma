@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
             Rectangle panelRect = new Rectangle(x, y, width, height);
 
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White);
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White * 0.85f);
 
             //GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
 
