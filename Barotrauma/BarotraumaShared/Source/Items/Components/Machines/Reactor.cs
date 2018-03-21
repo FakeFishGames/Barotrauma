@@ -32,6 +32,9 @@ namespace Barotrauma.Items.Components
         //amount of power generated balanced with the load)
         private bool autoTemp;
 
+        float autoAdjustAmount;
+
+
         //the temperature after which fissionrate is automatically 
         //turned down and cooling increased
         //private float shutDownTemp;
@@ -39,8 +42,8 @@ namespace Barotrauma.Items.Components
         //private float fireTemp, meltDownTemp, meltDownDelay;
 
         //private float meltDownTimer;
-        
-         float maxPowerOutput;
+
+        float maxPowerOutput;
 
         private float load;
         
@@ -204,7 +207,7 @@ namespace Barotrauma.Items.Components
             optimalFissionRate = Vector2.Lerp(new Vector2(40.0f, 70.0f), new Vector2(30.0f, 85.0f), degreeOfSuccess);
             allowedFissionRate = Vector2.Lerp(new Vector2(30.0f, 85.0f), new Vector2(20.0f, 98.0f), degreeOfSuccess);
         }
-        
+
         public override void Update(float deltaTime, Camera cam)
         {
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -223,6 +226,24 @@ namespace Barotrauma.Items.Components
             float coolantFlowFactor = Math.Min(coolantFlow / 50.0f, 1.0f);
             currPowerConsumption = -MaxPowerOutput * Math.Min(turbineOutput / 100.0f, coolantFlowFactor);
 
+            //if the turbine output and coolant flow are the optimal range, 
+            //make the generated power slightly adjust according to the load
+            //(-> the reactor can automatically handle small changes in load as long as the values are roughly correct)
+            if (turbineOutput > optimalTurbineOutput.X && turbineOutput < optimalTurbineOutput.Y && 
+                coolantFlow > optimalCoolantFlow.X && coolantFlow < optimalCoolantFlow.Y)
+            {
+                float maxAutoAdjust = maxPowerOutput * 0.1f;
+                autoAdjustAmount = MathHelper.Lerp(
+                    autoAdjustAmount, 
+                    MathHelper.Clamp(-load - currPowerConsumption, -maxAutoAdjust, maxAutoAdjust), 
+                    deltaTime * 10.0f);
+            }
+            else
+            {
+                autoAdjustAmount = MathHelper.Lerp(autoAdjustAmount, 0.0f, deltaTime * 10.0f);
+            }
+            currPowerConsumption += autoAdjustAmount;
+
             if (autoTemp)
             {
                 float desiredTurbineOutput = (optimalTurbineOutput.X + optimalTurbineOutput.Y) / 2.0f;
@@ -231,7 +252,7 @@ namespace Barotrauma.Items.Components
                 float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
                 targetFissionRate += MathHelper.Clamp(desiredFissionRate - targetFissionRate, -5.0f, 5.0f) * deltaTime;
 
-                if (coolantFlow > optimalCoolantFlow.Y)
+                if (coolantFlow > (optimalCoolantFlow.X + optimalCoolantFlow.Y) / 2.0f)
                 {
                     targetFissionRate = Math.Min(targetFissionRate - 10.0f * deltaTime, allowedFissionRate.Y);
                 }
