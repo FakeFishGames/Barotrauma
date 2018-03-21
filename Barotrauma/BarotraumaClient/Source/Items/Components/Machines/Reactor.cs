@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar.BarScroll = 1.0f;
             fissionRateScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
              {
-                 lastUser = Character.Controlled;
+                 LastUser = Character.Controlled;
                  if (nextServerLogWriteTime == null)
                  {
                      nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
             turbineOutputScrollBar.BarScroll = 1.0f;
             turbineOutputScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
             /*var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(460, 70, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -143,7 +143,7 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
-                lastUser = Character.Controlled;
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
@@ -324,7 +324,6 @@ namespace Barotrauma.Items.Components
                 {
                     sectorSprite.Draw(spriteBatch, pos + new Vector2(74, 105),
                         Color.Red * 0.8f, new Vector2(0.0f, sectorSprite.size.Y), x - stepRad / 2.0f, 0.2f);
-
                 }
             }
 
@@ -333,7 +332,7 @@ namespace Barotrauma.Items.Components
             GUI.DrawLine(spriteBatch,
                 pos + new Vector2(74, 105),
                 pos + new Vector2(74 + (float)Math.Cos(valueRad) * 60.0f, 105 + (float)Math.Sin(valueRad) * 60.0f),
-                Color.Black, 0, 5);
+                Color.Black, 0, 3);
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)
