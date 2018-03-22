@@ -34,7 +34,7 @@
       </StatusEffect>
     </Reactor>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
       <output name="temperature_out"/>
@@ -42,7 +42,7 @@
       <output name="meltdown_warning"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true">
+    <ItemContainer capacity="5" canbeselected="true" hudpos="0.5,0.15">
       <Containable name="Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>

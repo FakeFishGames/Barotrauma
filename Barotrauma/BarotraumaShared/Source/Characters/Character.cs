@@ -600,7 +600,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(17, this);
+                inventory = new CharacterInventory(CharacterInventory.SlotTypes.Length, this);
             }
             else
             {
@@ -1020,14 +1020,19 @@ namespace Barotrauma
         
         public bool HasEquippedItem(Item item)
         {
-            return !inventory.IsInLimbSlot(item, InvSlotType.Any);
+            for (int i = 0; i < CharacterInventory.SlotTypes.Length; i++)
+            {
+                if (inventory.Items[i] == item && CharacterInventory.SlotTypes[i] != InvSlotType.Any) return true;
+            }
+
+            return false;
         }
 
         public bool HasEquippedItem(string itemName, bool allowBroken = true)
         {
             for (int i = 0; i < inventory.Items.Length; i++)
             {
-                if (CharacterInventory.limbSlots[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
+                if (CharacterInventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
                 if (!allowBroken && inventory.Items[i].Condition <= 0.0f) continue;
                 if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
             }

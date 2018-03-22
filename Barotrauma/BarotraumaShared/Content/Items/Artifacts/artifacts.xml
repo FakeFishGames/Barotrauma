@@ -144,8 +144,7 @@
   <Item
    name="Ancient Weapon"
    category="Alien"
-   Tags="alien,smallitem"
-   >
+   Tags="alien,smallitem">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -203,8 +202,7 @@
     name="Alien Hatch"
     category="Alien"
     Tags="alien"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
@@ -213,7 +211,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -225,8 +223,7 @@
    name="Alien Door"
    category="Alien"
    linkable="true"
-   Tags="alien"
-   >
+   Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
 
@@ -235,7 +232,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -247,14 +244,13 @@
    name="Alien Motion Sensor"
    linkable="true"
    category="Alien"
-   Tags="alien"
-   >
+   Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5"/>
 
     <MotionSensor range="300" output="0"/>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
@@ -282,7 +278,7 @@
 
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0"/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="power_out"/>
     </ConnectionPanel>

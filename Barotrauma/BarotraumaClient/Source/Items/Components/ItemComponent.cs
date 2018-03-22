@@ -52,6 +52,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(0, false)]
+        public int HudPriority
+        {
+            get;
+            private set;
+        }
+        
         private ItemSound loopingSound;
         private int loopingSoundIndex;
         public void PlaySound(ActionType type, Vector2 position)
@@ -129,6 +136,11 @@ namespace Barotrauma.Items.Components
             return 0.0f;
         }
         
+        public virtual bool ShouldDrawHUD(Character character)
+        {
+            return true;
+        }
+
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
         public virtual void AddToGUIUpdateList() { }
