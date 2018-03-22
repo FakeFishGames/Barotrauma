@@ -69,7 +69,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("At the moment the submarine has no power, which means that crucial systems such as the oxygen generator or the engine aren't running. Let's fix this: go to the upper left corner of the submarine, where you'll find a nuclear reactor.");
 
             Reactor reactor = Item.ItemList.Find(i => i.HasTag("tutorialreactor")).GetComponent<Reactor>();
-            reactor.MeltDownTemp = 20000.0f;
+            //reactor.MeltDownTemp = 20000.0f;
 
             while (Vector2.Distance(Controlled.Position, reactor.Item.Position) > 200.0f)
             {
@@ -116,7 +116,8 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("The reactor core has started generating heat, which in turn generates power for the submarine. The power generation is very low at the moment,"
             + " because the reactor is set to shut itself down when the temperature rises above 500 degrees Celsius. You can adjust the temperature limit by changing the \"Shutdown Temperature\" in the control panel.", true);
 
-            while (infoBox != null)
+            //TODO: reimplement
+            /*while (infoBox != null)
             {
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
@@ -142,7 +143,7 @@ namespace Barotrauma.Tutorials
             while (!reactor.AutoTemp)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
-            }
+            }*/
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("That's the basics of operating the reactor! Now that there's power available for the engines, it's time to get the submarine moving. "
@@ -639,8 +640,9 @@ namespace Barotrauma.Tutorials
         {
             do
             {
-                reactor.AutoTemp = true;
-                reactor.ShutDownTemp = 5000.0f;
+                //TODO: reimplement
+                /*reactor.AutoTemp = true;
+                reactor.ShutDownTemp = 5000.0f;*/
 
                 yield return CoroutineStatus.Running;
             } while (Item.ItemList.Contains(reactor.Item));
