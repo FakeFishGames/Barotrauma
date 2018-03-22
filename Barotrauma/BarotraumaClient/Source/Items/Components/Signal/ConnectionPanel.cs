@@ -5,6 +5,11 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
+        public override bool ShouldDrawHUD(Character character)
+        {
+            return character == Character.Controlled && character == user;
+        }
+
         public override void UpdateHUD(Character character)
         {
             if (character != Character.Controlled || character != user) return;

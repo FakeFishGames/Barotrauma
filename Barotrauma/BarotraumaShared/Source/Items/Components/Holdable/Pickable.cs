@@ -36,13 +36,14 @@ namespace Barotrauma.Items.Components
                 InvSlotType allowedSlot = InvSlotType.None;
                 foreach (string slot in slots)                
                 {
-                    if (slot.ToLowerInvariant() == "bothhands")
+                    switch (slot.ToLowerInvariant())
                     {
-                        allowedSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
-                    }
-                    else
-                    {
-                        allowedSlot = allowedSlot | (InvSlotType)Enum.Parse(typeof(InvSlotType), slot.Trim());
+                        case "bothhands":
+                            allowedSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
+                            break;
+                        default:
+                            allowedSlot = allowedSlot | (InvSlotType)Enum.Parse(typeof(InvSlotType), slot.Trim());
+                            break;
                     }
                 }
                 allowedSlots.Add(allowedSlot);

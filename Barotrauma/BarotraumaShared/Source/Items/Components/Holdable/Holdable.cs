@@ -335,17 +335,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 Limb equipLimb = null;
-                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Face) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Headset) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Head);
                 }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Torso))
+                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.InnerClothes) || 
+                    picker.Inventory.IsInLimbSlot(item, InvSlotType.OuterClothes))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
-                }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Legs))
-                {
-                    equipLimb = picker.AnimController.GetLimb(LimbType.Waist);
                 }
 
                 if (equipLimb != null)
