@@ -21,7 +21,7 @@
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
-    <Reactor canbeselected = "true">
+    <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000">
       <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
@@ -44,10 +44,10 @@
 
     <ItemContainer capacity="5" canbeselected="true">
       <Containable name="Fuel Rod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="2000.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
       <Containable name="Incendium Fuel Rod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="5000.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
         <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
       </Containable>
       <Containable name="Heat Absorber"/>
