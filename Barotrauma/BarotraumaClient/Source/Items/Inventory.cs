@@ -41,13 +41,13 @@ namespace Barotrauma
                 int buttonDir = Math.Sign(GameMain.GraphicsHeight / 2 - Rect.Center.Y);
 
                 Vector2 equipIndicatorPos = new Vector2(
-                    Rect.Center.X - Inventory.equipIndicator.size.X / 2 * Inventory.UIScale,
-                    Rect.Center.Y + (Rect.Height / 2 + 20 * Inventory.UIScale) * buttonDir - Inventory.equipIndicator.size.Y / 2 * Inventory.UIScale);
+                    Rect.Center.X - Inventory.EquipIndicator.size.X / 2 * Inventory.UIScale,
+                    Rect.Center.Y + (Rect.Height / 2 + 20 * Inventory.UIScale) * buttonDir - Inventory.EquipIndicator.size.Y / 2 * Inventory.UIScale);
                 equipIndicatorPos += DrawOffset;
 
                 return new Rectangle(
                     (int)(equipIndicatorPos.X), (int)(equipIndicatorPos.Y),
-                    (int)(Inventory.equipIndicator.size.X * Inventory.UIScale), (int)(Inventory.equipIndicator.size.Y * Inventory.UIScale));
+                    (int)(Inventory.EquipIndicator.size.X * Inventory.UIScale), (int)(Inventory.EquipIndicator.size.Y * Inventory.UIScale));
             }
         }
 
@@ -105,7 +105,7 @@ namespace Barotrauma
         }
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical;
-        public static Sprite equipIndicator, equipIndicatorOn;
+        public static Sprite EquipIndicator, EquipIndicatorOn;
 
         public class SlotReference
         {
