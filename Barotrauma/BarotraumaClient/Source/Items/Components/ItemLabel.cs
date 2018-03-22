@@ -82,6 +82,15 @@ namespace Barotrauma.Items.Components
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
+            
+            Rectangle worldRect = item.WorldRect;
+            if (worldRect.X > Screen.Selected.Cam.WorldView.Right || 
+                worldRect.Right < Screen.Selected.Cam.WorldView.X ||
+                worldRect.Y < Screen.Selected.Cam.WorldView.Y - Screen.Selected.Cam.WorldView.Height || 
+                worldRect.Y - worldRect.Height > Screen.Selected.Cam.WorldView.Y)
+            {
+                return;
+            }
 
             textBlock.Draw(spriteBatch, drawPos - textBlock.Rect.Location.ToVector2());
         }
