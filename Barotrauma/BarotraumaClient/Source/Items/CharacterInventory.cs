@@ -10,8 +10,7 @@ namespace Barotrauma
     partial class CharacterInventory : Inventory
     {
         const float HiddenPos = 130.0f;
-
-        private static float dropTimer;
+               private static float dropTimer;
 
         private static Texture2D icons;
         private static Sprite toggleArrow;
@@ -146,8 +145,8 @@ namespace Barotrauma
         private void SetSlotPositions(Alignment alignment)
         {
             int spacing = 10;
-            int x = (alignment == Alignment.Center) ? GameMain.GraphicsWidth / 2 : 10;
-            if (alignment == Alignment.Right) x = GameMain.GraphicsWidth - 10 - slots[0].Rect.Width; 
+            int x = (alignment == Alignment.Center) ? GameMain.GraphicsWidth / 2 : 40;
+            if (alignment == Alignment.Right) x = GameMain.GraphicsWidth - 40 - slots[0].Rect.Width; 
 
             for (int i = 0; i < SlotPositions.Length; i++)
             {
