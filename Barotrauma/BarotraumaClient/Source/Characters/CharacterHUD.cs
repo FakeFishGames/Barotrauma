@@ -109,6 +109,8 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
+            character.CharacterHealth.Alignment = Alignment.Left;
+
             if (GameMain.GameSession?.CrewManager != null)
             {
                 orderIndicatorCount.Clear();
@@ -198,7 +200,7 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -30), new Point(140, 20)), "Perform CPR", "");
+                            new Rectangle(new Point(GameMain.GraphicsWidth - 180, GameMain.GraphicsHeight - 150), new Point(140, 30)), "Perform CPR", "");
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -224,7 +226,7 @@ namespace Barotrauma
                     if (grabHoldButton == null)
                     {
                         grabHoldButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -60), new Point(140, 20)),
+                            new Rectangle(new Point(GameMain.GraphicsWidth - 330, GameMain.GraphicsHeight - 150), new Point(140, 30)),
                                 TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
                         grabHoldButton.OnClicked = (button, userData) =>
@@ -254,6 +256,7 @@ namespace Barotrauma
                     character.Inventory.Alignment = Alignment.Left;
                     character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
                 }
                 else

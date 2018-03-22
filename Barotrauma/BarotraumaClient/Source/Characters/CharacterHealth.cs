@@ -13,10 +13,23 @@ namespace Barotrauma
     partial class CharacterHealth
     {
         private static Sprite noiseOverlay, damageOverlay;
-        
+
         private static Sprite statusIconOxygen;
         private static Sprite statusIconPressure;
         private static Sprite statusIconBloodloss;
+
+        private Alignment alignment = Alignment.Left;
+
+        public Alignment Alignment
+        {
+            get { return alignment; }
+            set
+            {
+                if (alignment == value) return;
+                alignment = value;
+                UpdateAlignment();
+            }
+        }
 
         private GUIButton suicideButton;
 
@@ -68,8 +81,9 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character)
         {
-            int healthBarWidth = (int)(400 * GUI.Scale);
-            healthBar = new GUIProgressBar(new Rectangle((GameMain.GraphicsWidth - healthBarWidth) / 2, 10, healthBarWidth, (int)(30 * GUI.Scale)), Color.White, null, 1.0f, Alignment.TopLeft);
+            int healthBarHeight = (int)(500 * GUI.Scale);
+            healthBar = new GUIProgressBar(new Rectangle(10, GameMain.GraphicsHeight - healthBarHeight - 10, (int)(30 * GUI.Scale), healthBarHeight), Color.White, null, 1.0f, Alignment.TopLeft);
+            healthBar.IsHorizontal = false;
 
             healthWindow = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
             GUIFrame healthFrame = new GUIFrame(new Rectangle(0, 0, (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 500, 800), (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 400, 600)),
@@ -131,6 +145,18 @@ namespace Barotrauma
                 }
                 return true;
             };
+        }
+
+        private void UpdateAlignment()
+        {
+            if (alignment == Alignment.Left)
+            {
+                healthBar.Rect = new Rectangle(10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
+            }
+            else
+            {
+                healthBar.Rect = new Rectangle(GameMain.GraphicsWidth - healthBar.Rect.Width - 10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
+            }
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -273,7 +299,9 @@ namespace Barotrauma
             Rectangle interactArea = healthBar.Rect;
             Pair<Sprite, string> highlightedIcon = null;
             Vector2 highlightedIconPos = Vector2.Zero;
-            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, healthBar.Rect.Height + 5);
+            Vector2 pos = alignment == Alignment.Left ? 
+                healthBar.Rect.Location.ToVector2() + new Vector2(healthBar.Rect.Width + 5, 10) :
+                healthBar.Rect.Location.ToVector2() - new Vector2(5 + 50.0f * GUI.Scale, 10);
 
             foreach (Pair<Sprite, string> statusIcon in statusIcons)
             {
@@ -284,21 +312,21 @@ namespace Barotrauma
                     highlightedIcon = statusIcon;
                     highlightedIconPos = afflictionIconRect.Center.ToVector2();
                 }
-                pos.X += 50.0f * GUI.Scale;
+                pos.Y += 50.0f * GUI.Scale;
             }
 
-            pos.X = healthBar.Rect.Location.X;
+            pos.Y = healthBar.Rect.Location.Y + 10;
             foreach (Pair<Sprite, string> statusIcon in statusIcons)
             {
                 statusIcon.First.Draw(spriteBatch, pos, highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
-                pos.X += 50.0f * GUI.Scale;
+                pos.Y += 50.0f * GUI.Scale;
             }
 
             if (highlightedIcon != null)
             {
-                GUI.DrawString(spriteBatch, 
-                    highlightedIconPos - GUI.Font.MeasureString(highlightedIcon.Second) / 2 + Vector2.UnitY*30, 
-                    highlightedIcon.Second, 
+                GUI.DrawString(spriteBatch,
+                    alignment == Alignment.Left ? highlightedIconPos + new Vector2(60 * GUI.Scale, 5) : highlightedIconPos + new Vector2(-10.0f - GUI.Font.MeasureString(highlightedIcon.Second).X, 5),
+                    highlightedIcon.Second,
                     Color.White * 0.8f, Color.Black * 0.5f);
             }
 
