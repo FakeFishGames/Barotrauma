@@ -10,7 +10,6 @@ namespace Barotrauma
     partial class CharacterInventory : Inventory
     {
         const float HiddenPos = 130.0f;
-               private static float dropTimer;
 
         private static Texture2D icons;
         private static Sprite toggleArrow;
@@ -49,7 +48,7 @@ namespace Barotrauma
 
             if (toggleArrow == null)
             {
-                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585,973,67,23), null);
+                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
                 toggleArrow.Origin = toggleArrow.size / 2;
             }
 
@@ -484,10 +483,10 @@ namespace Barotrauma
                     Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
                     if (slots[i].EquipButtonState == GUIComponent.ComponentState.Pressed) color = Color.Gray;
                     
-                    equipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, equipIndicator.size / 2, 0, UIScale);
+                    EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.size / 2, 0, UIScale);
                     if (character.HasEquippedItem(Items[i]))
                     {
-                        equipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, equipIndicatorOn.size / 2, 0, UIScale * 0.85f);
+                        EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
                     }
                 }
             }

@@ -200,7 +200,7 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(new Point(GameMain.GraphicsWidth - 180, GameMain.GraphicsHeight - 150), new Point(140, 30)), "Perform CPR", "");
+                            new Rectangle(new Point(GameMain.GraphicsWidth - 180, character.SelectedCharacter.Inventory.slots[7].Rect.Y - 40), new Point(140, 30)), "Perform CPR", "");
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -226,7 +226,7 @@ namespace Barotrauma
                     if (grabHoldButton == null)
                     {
                         grabHoldButton = new GUIButton(
-                            new Rectangle(new Point(GameMain.GraphicsWidth - 330, GameMain.GraphicsHeight - 150), new Point(140, 30)),
+                            new Rectangle(new Point(GameMain.GraphicsWidth - 330, character.SelectedCharacter.Inventory.slots[7].Rect.Y - 40), new Point(140, 30)),
                                 TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
                         grabHoldButton.OnClicked = (button, userData) =>
