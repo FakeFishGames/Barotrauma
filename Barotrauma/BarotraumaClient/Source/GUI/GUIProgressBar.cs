@@ -130,6 +130,35 @@ namespace Barotrauma
                     {
                         uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), currColor);
                     }
+                    else if (uiSprite.Slice)
+                    {
+                        Vector2 pos = new Vector2(slider.Rect.X, slider.Rect.Y);
+
+                        int centerWidth = System.Math.Max(slider.Rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width, 0);
+                        int centerHeight = System.Math.Max(slider.Rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
+
+                        Vector2 scale = new Vector2(
+                            MathHelper.Clamp((float)slider.Rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width), 0, 1),
+                            MathHelper.Clamp((float)slider.Rect.Height / (uiSprite.Slices[0].Height + uiSprite.Slices[6].Height), 0, 1));
+
+                        for (int x = 0; x < 3; x++)
+                        {
+                            float width = (x == 1 ? centerWidth : uiSprite.Slices[x].Width) * scale.X;
+                            for (int y = 0; y < 3; y++)
+                            {
+                                float height = (y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height) * scale.Y;
+
+                                spriteBatch.Draw(uiSprite.Sprite.Texture,
+                                    new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
+                                    uiSprite.Slices[x + y * 3],
+                                    currColor * (currColor.A / 255.0f));
+                                
+                                pos.Y += height;
+                            }
+                            pos.X += width;
+                            pos.Y = slider.Rect.Y;
+                        }                        
+                    }
                     else
                     {
                         spriteBatch.Draw(uiSprite.Sprite.Texture,
