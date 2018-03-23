@@ -212,7 +212,7 @@ namespace Barotrauma
             }
             else if (OverflowClip)
             {
-                overflowClipActive = size.X > rect.Width;
+                overflowClipActive = size.X > rect.Width - padding.X - padding.Z;
             }
                      
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
@@ -291,7 +291,8 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
-                spriteBatch.GraphicsDevice.ScissorRectangle = rect;
+                Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
+                spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
             }
 
             if (!string.IsNullOrEmpty(text))

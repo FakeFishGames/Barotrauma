@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -186,7 +187,6 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-
             textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
             
             Font = GUI.Font;
@@ -269,6 +269,15 @@ namespace Barotrauma
 
             textBlock.State = state;
             textBlock.Update(deltaTime);
+
+            //use a fixed list since children can change their order in the main children list
+            //TODO: maybe find a more efficient way of handling changes in list order
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            foreach (GUIComponent c in fixedChildren)
+            {
+                if (!c.Visible || c == textBlock) continue;
+                c.Update(deltaTime);
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
