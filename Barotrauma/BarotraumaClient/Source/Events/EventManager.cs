@@ -72,7 +72,7 @@ namespace Barotrauma
             foreach (ScriptedEventSet eventSet in selectedEventSets)
             {
                 GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
-                    "- new event after " + (int)(eventSet.MinDistanceTraveled * 10.0f) + "% or " + (int)(eventSet.MinMissionTime / 60.0f) + "min passed",
+                    "- new event after " + (int)(eventSet.MinDistanceTraveled * 100.0f) + "% or " + (int)(eventSet.MinMissionTime / 60.0f) + "min passed",
                     Color.White * 0.8f, null, 0, GUI.SmallFont);
                 y += 15;
             }

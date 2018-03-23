@@ -352,7 +352,6 @@ namespace Barotrauma
 
                 ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
                 
-                prevPoint.ConnectTo(ladderPoints[1]);
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
                     ladderPoint.Ladders = ladders;
