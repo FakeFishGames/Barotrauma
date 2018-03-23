@@ -270,13 +270,14 @@ namespace Barotrauma
             int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
 
             Rectangle subRect = slot.Rect;
-            subRect.Y = dir > 0 ? slot.EquipButtonRect.Y : slot.EquipButtonRect.Bottom;
+            subRect.Y = dir > 0 ? slot.EquipButtonRect.Y : slot.EquipButtonRect.Bottom + (int)(25 * UIScale);
             int slotHeight = (int)(60 * UIScale);
             subRect.Height = slotHeight;
 
             for (int i = 0; i < itemCapacity; i++)
             {
-                subRect.Y = subRect.Y - (subRect.Height + (int)(10 * UIScale)) * dir;
+                if (i > 0 || dir > 0) subRect.Y -= subRect.Height;
+                subRect.Y -= (int)(10 * UIScale) * dir;
                 subInventory.slots[i].Rect = subRect;
                 subInventory.slots[i].InteractRect = subRect;
                 subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
@@ -444,18 +445,28 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawDragging(SpriteBatch spriteBatch)
+        public static void DrawFront(SpriteBatch spriteBatch)
         {
-            if (draggingItem == null) return;
-
-            if (draggingSlot == null || (!draggingSlot.MouseOn()))
+            if (draggingItem != null)
             {
-                Rectangle dragRect = new Rectangle(
-                    (int)(PlayerInput.MousePosition.X - 10 * UIScale),
-                    (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
-                    (int)(80 * UIScale), (int)(80 * UIScale));
+                if (draggingSlot == null || (!draggingSlot.MouseOn()))
+                {
+                    Rectangle dragRect = new Rectangle(
+                        (int)(PlayerInput.MousePosition.X - 10 * UIScale),
+                        (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
+                        (int)(80 * UIScale), (int)(80 * UIScale));
 
-                DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
+                    DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
+                }
+            }
+
+            if (highlightedSubInventorySlot != null)
+            {
+                int slotIndex = Array.IndexOf(highlightedSubInventorySlot.Inventory.slots, highlightedSubInventorySlot.Slot);
+                if (slotIndex > 0 && slotIndex < highlightedSubInventorySlot.Inventory.slots.Length)
+                {
+                    highlightedSubInventorySlot.Inventory.DrawSubInventory(spriteBatch, slotIndex);
+                }
             }
         }
 
