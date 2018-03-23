@@ -1383,7 +1383,13 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
 
-            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);            
+            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);       
+            if (PlayerInput.MidButtonHeld())
+            {
+                Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
+                moveSpeed.X = -moveSpeed.X;
+                cam.Position += moveSpeed;
+            }
 
             if (characterMode || wiringMode)
             {

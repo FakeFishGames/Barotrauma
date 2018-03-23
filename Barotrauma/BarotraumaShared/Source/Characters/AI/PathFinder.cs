@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -173,10 +174,10 @@ namespace Barotrauma
                     yDiff += 10.0f;
                 }
 
-                float dist = xDiff + yDiff * 10.0f; //higher cost for vertical movement
+                float dist = xDiff + (insideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
                 //prefer nodes that are closer to the end position
-                dist += Vector2.DistanceSquared(end, nodePos);
+                dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
                 //much higher cost to waypoints that are outside
                 if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
                 if (dist < closestDist || startNode == null)

@@ -48,6 +48,11 @@ namespace Barotrauma
             get { return step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step); }
             set
             {
+                if (float.IsNaN(value))
+                {
+                    return;
+                }
+
                 barScroll = MathHelper.Clamp(value, 0.0f, 1.0f);
                 int newX = bar.Rect.X - frame.Rect.X;
                 int newY = bar.Rect.Y - frame.Rect.Y;

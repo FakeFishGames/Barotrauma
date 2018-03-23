@@ -21,7 +21,7 @@
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
-    <Reactor canbeselected = "true">
+    <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000">
       <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
@@ -34,7 +34,7 @@
       </StatusEffect>
     </Reactor>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
       <output name="temperature_out"/>
@@ -42,12 +42,12 @@
       <output name="meltdown_warning"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true">
+    <ItemContainer capacity="5" canbeselected="true" hudpos="0.5,0.15">
       <Containable name="Fuel Rod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="2000.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
       <Containable name="Incendium Fuel Rod">
-        <StatusEffect type="OnContaining" target="This" AvailableFuel="5000.0" disabledeltatime="true"/>
+        <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
         <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
       </Containable>
       <Containable name="Heat Absorber"/>
