@@ -116,12 +116,8 @@ namespace Barotrauma
                 {
                     statusText = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
                         characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
-                        TextManager.Get("Self_CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
-
-                    string chatMessage = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
-                        characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
-                        TextManager.Get("Self_CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
-
+                        TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
+                    
                     statusColor = Color.DarkRed;
                 }
                 else

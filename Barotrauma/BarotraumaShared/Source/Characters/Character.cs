@@ -1891,9 +1891,9 @@ namespace Barotrauma
                 if (GameMain.Client != null) return; 
             }
 
+            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
             BreakJoints();            
-            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
         }
 
         public void BreakJoints()
