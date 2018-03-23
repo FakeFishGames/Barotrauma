@@ -81,7 +81,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character)
         {
-            int healthBarHeight = (int)(500 * GUI.Scale);
+            int healthBarHeight = (int)(450 * GUI.Scale);
             healthBar = new GUIProgressBar(new Rectangle(10, GameMain.GraphicsHeight - healthBarHeight - 10, (int)(30 * GUI.Scale), healthBarHeight), Color.White, null, 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
 
@@ -332,7 +332,7 @@ namespace Barotrauma
 
             healthBar.Draw(spriteBatch);
 
-            if (interactArea.Contains(PlayerInput.MousePosition))
+            if (interactArea.Contains(PlayerInput.MousePosition) && GUIComponent.MouseOn == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())

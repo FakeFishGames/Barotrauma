@@ -10,8 +10,7 @@ namespace Barotrauma
     partial class CharacterInventory : Inventory
     {
         const float HiddenPos = 130.0f;
-
-        private static Texture2D icons;
+        
         private static Sprite toggleArrow;
         private float arrowAlpha;
 
@@ -43,9 +42,7 @@ namespace Barotrauma
         partial void InitProjSpecific()
         {
             useOnSelfButton = new GUIButton[2];
-
-            if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
-
+            
             if (toggleArrow == null)
             {
                 toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
@@ -208,8 +205,8 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            bool hoverOnInventory = highlightedSubInventorySlot != null || 
-                (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn()));
+            bool hoverOnInventory = GUIComponent.MouseOn == null &&
+                (highlightedSubInventorySlot != null || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
 
             if (alignment == Alignment.Center)
             {
@@ -233,7 +230,8 @@ namespace Barotrauma
                     arrowAlpha = Math.Max(arrowAlpha - deltaTime * 10.0f, 0.5f);
                 }
 
-                if ((slots[7].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
+                if (GUIComponent.MouseOn == null &&
+                    (slots[7].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
                     slots[7].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[7].EquipButtonRect.Bottom) &&
                     slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
                 {
@@ -429,30 +427,7 @@ namespace Barotrauma
             draggingItem = null;
             GUI.PlayUISound(wasPut ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
-
-        /*private void MergeSlots()
-        {
-            for (int i = 0; i < capacity - 1; i++)
-            {
-                slots[i].State = GUIComponent.ComponentState.None;
-                if (slots[i].Disabled || Items[i] == null) continue;
-
-                for (int n = i + 1; n < capacity; n++)
-                {
-                    if (Items[n] == Items[i])
-                    {
-                        slots[i].Rect = Rectangle.Union(slots[i].Rect, slots[n].Rect);
-                        slots[i].InteractRect = Rectangle.Union(slots[i].InteractRect, slots[n].InteractRect);
-                        slots[n].Disabled = true;
-                    }
-                }
-            }
-
-            highlightedSubInventory = null;
-            highlightedSubInventorySlot = null;
-            selectedSlot = null;
-        }*/
-
+        
         public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (slots == null) CreateSlots();
@@ -474,10 +449,6 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
-                if (slots[i].IsHighlighted)
-                {
-                    DrawSubInventory(spriteBatch, i);
-                }
                 if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;

@@ -1,12 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
     abstract partial class NetworkMember
     {
         protected CharacterInfo characterInfo;
-
         protected Character myCharacter;
 
         public CharacterInfo CharacterInfo
@@ -22,36 +23,29 @@ namespace Barotrauma.Networking
         }
 
         protected GUIFrame inGameHUD;
-        protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;
+        protected ChatBox chatBox;
 
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
         }
-        
+
         private void InitProjSpecific()
         {
             inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
             inGameHUD.CanBeFocused = false;
 
-            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
-            chatBox = new GUIListBox(new Rectangle(
-                GameMain.GraphicsWidth - 20 - width,
-                GameMain.GraphicsHeight - 40 - 25 - height,
-                width, height),
-                Color.White * 0.5f, "", inGameHUD);
-            chatBox.Padding = Vector4.Zero;
+            chatBox = new ChatBox(inGameHUD, false);
+            chatBox.OnEnterMessage += EnterChatMessage;
+            chatBox.OnTextChanged += TypingChatMessage;
+        }
 
-            chatMsgBox = new GUITextBox(
-                new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
-            chatMsgBox.Font = GUI.SmallFont;
-            chatMsgBox.MaxTextLength = ChatMessage.MaxLength;
-            chatMsgBox.Padding = Vector4.Zero;
-            chatMsgBox.OnEnterPressed = EnterChatMessage;
-            chatMsgBox.OnTextChanged = TypingChatMessage;
+        protected void SetRadioButtonColor()
+        {
+            var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+            chatBox.RadioButton.GetChild<GUIImage>().Color =
+                (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                Color.White : new Color(60, 60, 60, 255);
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
@@ -85,7 +79,7 @@ namespace Barotrauma.Networking
 
             if (string.IsNullOrWhiteSpace(message))
             {
-                if (textBox == chatMsgBox) textBox.Deselect();
+                if (textBox == chatBox.InputBox) textBox.Deselect();
                 return false;
             }
 
@@ -98,7 +92,7 @@ namespace Barotrauma.Networking
                 GameMain.Client.SendChatMessage(message);
             }
 
-            if (textBox == chatMsgBox) textBox.Deselect();
+            if (textBox == chatBox.InputBox) textBox.Deselect();
 
             return true;
         }
@@ -116,9 +110,8 @@ namespace Barotrauma.Networking
             if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
 
             GameMain.GameSession.CrewManager.Draw(spriteBatch);
-
             inGameHUD.Draw(spriteBatch);
-
+            
             if (EndVoteCount > 0)
             {
                 if (GameMain.NetworkMember.myCharacter == null)

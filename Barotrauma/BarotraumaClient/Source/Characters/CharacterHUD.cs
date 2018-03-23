@@ -28,7 +28,8 @@ namespace Barotrauma
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
             if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsUnconscious && character.Stun <= 0.0f &&
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 if (character.Inventory != null)
                 {
@@ -59,7 +60,8 @@ namespace Barotrauma
                 if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
             }
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsUnconscious && character.Stun <= 0.0f &&
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 if (character.Inventory != null)
                 {
@@ -188,7 +190,8 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+            if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f && 
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 character.Inventory.DrawOwn(spriteBatch);
             }
@@ -263,12 +266,7 @@ namespace Barotrauma
                 {
                     character.Inventory.Alignment = Alignment.Center;
                 }
-
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
-                {
-                    Inventory.DrawDragging(spriteBatch);
-                }
-
+                
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;

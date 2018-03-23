@@ -1701,7 +1701,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, modifiedMessage, ChatMessage.MessageColor[(int)message.MessageType.Value]);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.DisplayName, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
  #endif
