@@ -1,14 +1,14 @@
 
-Texture2D xTexture;
+Texture xTexture;
 sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; };
 
-Texture2D xLosTexture;
+Texture xLosTexture;
 sampler LosSampler = sampler_state { Texture = <xLosTexture>; };
 
 float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-	float4 sampleColor = xTexture.Sample(TextureSampler, texCoord);
-	float4 losColor = xLosTexture.Sample(LosSampler, texCoord);
+	float4 sampleColor = tex2D(TextureSampler, texCoord);
+	float4 losColor = tex2D(LosSampler, texCoord);
 
 	float obscureAmount = 1.0f - losColor.r;
 
