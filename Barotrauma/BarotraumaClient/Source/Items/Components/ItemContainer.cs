@@ -5,6 +5,23 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
+        private Sprite inventoryTopSprite;
+        private Sprite inventoryBackSprite;
+        private Sprite inventoryBottomSprite;
+
+        public Sprite InventoryTopSprite
+        {
+            get { return inventoryTopSprite; }
+        }
+        public Sprite InventoryBackSprite
+        {
+            get { return inventoryBackSprite; }
+        }
+        public Sprite InventoryBottomSprite
+        {
+            get { return inventoryBottomSprite; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) return;

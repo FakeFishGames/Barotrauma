@@ -270,13 +270,13 @@ namespace Barotrauma
             int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
 
             Rectangle subRect = slot.Rect;
-            subRect.Y = dir > 0 ? slot.EquipButtonRect.Y : slot.EquipButtonRect.Bottom + (int)(25 * UIScale);
+            subRect.Y = dir > 0 ? slot.EquipButtonRect.Y - (int)(10 * UIScale) : slot.EquipButtonRect.Bottom + (int)(40 * UIScale);
             int slotHeight = (int)(60 * UIScale);
             subRect.Height = slotHeight;
 
             for (int i = 0; i < itemCapacity; i++)
             {
-                if (i > 0 || dir > 0) subRect.Y -= subRect.Height;
+                if (i > 0 || dir > 0) subRect.Y -= subRect.Height * dir;
                 subRect.Y -= (int)(10 * UIScale) * dir;
                 subInventory.slots[i].Rect = subRect;
                 subInventory.slots[i].InteractRect = subRect;
