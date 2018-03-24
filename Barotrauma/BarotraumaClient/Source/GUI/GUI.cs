@@ -20,6 +20,10 @@ namespace Barotrauma
     
     public class GUI
     {
+        public static float Scale
+        {
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+        }
 
         public static GUIStyle Style;
 
@@ -557,8 +561,16 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
-
+            
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
+
+            if (Character.Controlled?.Inventory != null)
+            {
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f)
+                {
+                    Inventory.DrawFront(spriteBatch);
+                }
+            }
 
             DrawMessages(spriteBatch, (float)deltaTime);
 

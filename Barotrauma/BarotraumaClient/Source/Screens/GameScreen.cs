@@ -240,13 +240,9 @@ namespace Barotrauma
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
-#if LINUX
-                GameMain.LightManager.LosEffect.Parameters["TextureSampler+xTexture"].SetValue(renderTargetBackground);
-                GameMain.LightManager.LosEffect.Parameters["LosSampler+xLosTexture"].SetValue(GameMain.LightManager.losTexture);
-#else
+
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
-#endif
 
 
                 //convert the los color to HLS and make sure the luminance of the color is always the same regardless

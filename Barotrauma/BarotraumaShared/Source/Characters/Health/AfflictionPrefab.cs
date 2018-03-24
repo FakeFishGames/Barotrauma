@@ -69,6 +69,8 @@ namespace Barotrauma
 
         public readonly string Name, Description;
 
+        public readonly string CauseOfDeathDescription, SelfCauseOfDeathDescription;
+
         //how high the strength has to be for the affliction to take affect
         public readonly float ActivationThreshold = 0.0f;
         //how high the strength has to be for the affliction icon to be shown in the UI
@@ -114,6 +116,9 @@ namespace Barotrauma
                     case "stun":
                         List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
                         break;
+                    case "husk":
+                        List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                        break;
                     default:
                         List.Add(new AfflictionPrefab(element));
                         break;
@@ -125,9 +130,9 @@ namespace Barotrauma
         {
             typeName = type == null ? element.Name.ToString() : type.Name;
 
-            AfflictionType = element.GetAttributeString("type", "");
-            Name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
+            AfflictionType  = element.GetAttributeString("type", "");
+            Name            = element.GetAttributeString("name", "");
+            Description     = element.GetAttributeString("description", "");
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
             if (!LimbSpecific)
@@ -140,11 +145,14 @@ namespace Barotrauma
             }
 
             ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
-            ShowIconThreshold = element.GetAttributeFloat("showiconthreshold", ActivationThreshold);
-            MaxStrength = element.GetAttributeFloat("maxstrength", 100.0f);
+            ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", ActivationThreshold);
+            MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
 
-            DamageOverlayAlpha = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
-            BurnOverlayAlpha = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
+            DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
+            BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
+
+            CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
+            SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
 
             foreach (XElement subElement in element.Elements())
             {

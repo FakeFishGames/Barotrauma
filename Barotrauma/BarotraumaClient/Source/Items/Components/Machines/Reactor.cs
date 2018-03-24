@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Reactor : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
+    partial class Reactor : Powered, IServerSerializable, IClientSerializable
     {
         private GUITickBox autoTempTickBox;
         
@@ -15,99 +15,55 @@ namespace Barotrauma.Items.Components
         private float graphTimer;
         private int updateGraphInterval = 500;
 
-        private float[] fissionRateGraph = new float[GraphSize];
-        private float[] coolingRateGraph = new float[GraphSize];
-        private float[] tempGraph = new float[GraphSize];
+        private static Sprite meterSprite;
+        private static Sprite sectorSprite;
+
+        private GUIScrollBar fissionRateScrollBar;
+        private GUIScrollBar turbineOutputScrollBar;
+        
+        private float[] outputGraph = new float[GraphSize];
         private float[] loadGraph = new float[GraphSize];
 
         partial void InitProjSpecific()
         {
-            var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
-            button.OnPressed = () =>
+            if (meterSprite == null)
             {
-                lastUser = Character.Controlled;
+                meterSprite = new Sprite("Content/Items/Reactor/Meter.png", null, null);
+                sectorSprite = new Sprite("Content/Items/Reactor/Sector.png", null, null);
+            }
+
+            fissionRateScrollBar = new GUIScrollBar(new Rectangle(170, 260, 30, 120), "", 0.1f, GuiFrame);
+            fissionRateScrollBar.BarScroll = 1.0f;
+            fissionRateScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
+             {
+                 LastUser = Character.Controlled;
+                 if (nextServerLogWriteTime == null)
+                 {
+                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                 }
+                 unsentChanges = true;
+                 targetFissionRate = (1.0f - scrollAmount) * 100.0f;
+
+                 return false;
+             };
+
+            turbineOutputScrollBar = new GUIScrollBar(new Rectangle(390, 260, 30, 120), "", 0.1f, GuiFrame);
+            turbineOutputScrollBar.BarScroll = 1.0f;
+            turbineOutputScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
+            {
+                LastUser = Character.Controlled;
                 if (nextServerLogWriteTime == null)
                 {
                     nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
                 }
                 unsentChanges = true;
-                ShutDownTemp -= 100.0f;
+                targetTurbineOutput = (1.0f - scrollAmount) * 100.0f;
 
                 return false;
             };
 
-            button = new GUIButton(new Rectangle(460, 70, 40, 40), "+", "", GuiFrame);
-            button.OnPressed = () =>
-            {
-                lastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                ShutDownTemp += 100.0f;
-
-                return false;
-            };
-
-            autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), TextManager.Get("ReactorAutoTemp"), Alignment.TopLeft, GuiFrame);
-            autoTempTickBox.OnSelected = ToggleAutoTemp;
-
-            button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", "", GuiFrame);
-            button.OnPressed = () =>
-            {
-                lastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                FissionRate += 1.0f;
-
-                return false;
-            };
-
-            button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", "", GuiFrame);
-            button.OnPressed = () =>
-            {
-                lastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                FissionRate -= 1.0f;
-
-                return false;
-            };
-
-            button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", "", GuiFrame);
-            button.OnPressed = () =>
-            {
-                lastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                CoolingRate += 1.0f;
-
-                return false;
-            };
-
-            button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", "", GuiFrame);
-            button.OnPressed = () =>
-            {
-                lastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                CoolingRate -= 1.0f;
-
-                return false;
-            };
+            autoTempTickBox = new GUITickBox(new Rectangle(430, 300, 20, 20), TextManager.Get("ReactorAutoTemp"), Alignment.TopLeft, GuiFrame);
+            autoTempTickBox.OnSelected = ToggleAutoTemp;            
         }
 
         private void UpdateGraph(float deltaTime)
@@ -116,28 +72,19 @@ namespace Barotrauma.Items.Components
 
             if (graphTimer > updateGraphInterval)
             {
-                UpdateGraph(fissionRateGraph, fissionRate);
-                UpdateGraph(coolingRateGraph, coolingRate);
-                UpdateGraph(tempGraph, temperature);
-
+                UpdateGraph(outputGraph, -currPowerConsumption);
                 UpdateGraph(loadGraph, load);
 
                 graphTimer = 0.0f;
             }
+
+            if (autoTemp)
+            {
+                fissionRateScrollBar.BarScroll = 1.0f - FissionRate / 100.0f;
+                turbineOutputScrollBar.BarScroll = 1.0f - TurbineOutput / 100.0f;
+            }
         }
-
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
-        {
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(item.Rect.X + item.Rect.Width / 2 - 6, -item.Rect.Y + 29),
-                new Vector2(12, 42), Color.Black);
-
-            if (temperature > 0)
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(item.Rect.X + item.Rect.Width / 2 - 5, -item.Rect.Y + 30 + (40.0f * (1.0f - temperature / 10000.0f))),
-                    new Vector2(10, 40 * (temperature / 10000.0f)), new Color(temperature / 10000.0f, 1.0f - (temperature / 10000.0f), 0.0f, 1.0f), true);
-        }
-
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             IsActive = true;
@@ -149,10 +96,10 @@ namespace Barotrauma.Items.Components
 
             float xOffset = graphTimer / updateGraphInterval;
             
-            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorOutput") + ": " + (int)temperature + " kW",
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorOutput") + ": " + (int)-currPowerConsumption + " kW",
                 new Vector2(x + 450, y + 30), Color.Red);
             GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorGridLoad") + ": " + (int)load + " kW",
-                new Vector2(x + 600, y + 30), Color.Yellow);
+                new Vector2(x + 450, y + 60), Color.Yellow);
 
             float maxLoad = 0.0f;
             foreach (float loadVal in loadGraph)
@@ -160,24 +107,33 @@ namespace Barotrauma.Items.Components
                 maxLoad = Math.Max(maxLoad, loadVal);
             }
 
-            DrawGraph(tempGraph, spriteBatch,
-                new Rectangle(x + 30, y + 30, 400, 250), Math.Max(10000.0f, maxLoad), xOffset, Color.Red);
+            DrawGraph(outputGraph, spriteBatch,
+                new Rectangle(x + 30, y + 30, 360, 200), Math.Max(10000.0f, maxLoad), xOffset, Color.Red);
 
             DrawGraph(loadGraph, spriteBatch,
-                new Rectangle(x + 30, y + 30, 400, 250), Math.Max(10000.0f, maxLoad), xOffset, Color.Yellow);
+                new Rectangle(x + 30, y + 30, 360, 200), Math.Max(10000.0f, maxLoad), xOffset, Color.Yellow);
 
-            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorShutdownTemp") + ": " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x + 450, y + 90), "Temperature", Color.White);
+            DrawMeter(spriteBatch, new Vector2(x + 430, y + 130), temperature, new Vector2(0.0f, 100.0f), optimalTemperature, allowedTemperature);
 
-            y += 300;
+            GUI.DrawString(spriteBatch, new Vector2(x + 40, y + 250), "Fission rate", Color.White);
+            DrawMeter(spriteBatch, new Vector2(x + 40, y + 280), FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
 
-            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorFissionRate") + ": " + (int)fissionRate + " %", new Vector2(x + 30, y), Color.White);
-            DrawGraph(fissionRateGraph, spriteBatch,
-                new Rectangle(x + 30, y + 30, 200, 100), 100.0f, xOffset, Color.Orange);
+            GUI.DrawString(spriteBatch, new Vector2(x + 260, y + 250), "Turbine output", Color.White);
+            DrawMeter(spriteBatch, new Vector2(x + 260, y + 280), TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
 
+            x = x + 580;
+            y = y + 30;
 
-            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorCoolingRate") + ": " + (int)coolingRate + " %", new Vector2(x + 320, y), Color.White);
-            DrawGraph(coolingRateGraph, spriteBatch,
-                new Rectangle(x + 320, y + 30, 200, 100), 100.0f, xOffset, Color.LightBlue);
+            GUI.DrawString(spriteBatch, new Vector2(x, y), "Overheating", temperature > optimalTemperature.Y ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 15), "Temperature critical", temperature > allowedTemperature.Y ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 30), "Insufficient power output", -currPowerConsumption < load * 0.9f ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 45), "High power output", -currPowerConsumption > load * 1.1f ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 60), "SCRAM", Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 75), "Insufficient temperature", temperature < optimalTemperature.X ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 90), "Critically low temperature", temperature < allowedTemperature.X ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 105), "Low fuel", prevAvailableFuel < fissionRate ? Color.Red : Color.White);
+            GUI.DrawString(spriteBatch, new Vector2(x, y + 120), "Critical fuel", prevAvailableFuel < fissionRate * 0.1f ? Color.Red : Color.White);
         }
 
         public override void AddToGUIUpdateList()
@@ -194,8 +150,60 @@ namespace Barotrauma.Items.Components
         {
             unsentChanges = true;
             autoTemp = tickBox.Selected;
+            LastUser = Character.Controlled;
 
             return true;
+        }
+
+        private void DrawMeter(SpriteBatch spriteBatch, Vector2 pos, float value, Vector2 range, Vector2 optimalRange, Vector2 allowedRange)
+        {
+            meterSprite.Draw(spriteBatch, pos);
+
+            Vector2 optimalRangeNormalized = new Vector2(
+                (optimalRange.X - range.X) / (range.Y - range.X), 
+                (optimalRange.Y - range.X) / (range.Y - range.X));
+
+            Vector2 allowedRangeNormalized = new Vector2(
+                (allowedRange.X - range.X) / (range.Y - range.X),
+                (allowedRange.Y - range.X) / (range.Y - range.X));
+
+            Vector2 sectorRad = new Vector2(-0.8f, 0.8f);
+
+            Vector2 optimalSectorRad = new Vector2(
+                MathHelper.Lerp(sectorRad.X, sectorRad.Y, optimalRangeNormalized.X),
+                MathHelper.Lerp(sectorRad.X, sectorRad.Y, optimalRangeNormalized.Y));
+
+            Vector2 allowedSectorRad = new Vector2(
+                MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.X),
+                MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.Y));
+
+
+            float stepRad = MathHelper.ToRadians(5.0f);
+            for (float x = sectorRad.X; x < sectorRad.Y; x += stepRad)
+            {
+                if (x > optimalSectorRad.X && x < optimalSectorRad.Y)
+                {
+                    sectorSprite.Draw(spriteBatch, pos + new Vector2(74, 105),
+                        Color.Green * 0.8f, new Vector2(0.0f, sectorSprite.size.Y), x - stepRad / 2.0f, 0.2f);
+                }
+                else if (x > allowedSectorRad.X && x < allowedSectorRad.Y)
+                {
+                    sectorSprite.Draw(spriteBatch, pos + new Vector2(74, 105),
+                        Color.Orange * 0.8f, new Vector2(0.0f, sectorSprite.size.Y), x - stepRad / 2.0f, 0.2f);
+                }
+                else
+                {
+                    sectorSprite.Draw(spriteBatch, pos + new Vector2(74, 105),
+                        Color.Red * 0.8f, new Vector2(0.0f, sectorSprite.size.Y), x - stepRad / 2.0f, 0.2f);
+                }
+            }
+
+            float normalizedValue = (value - range.X) / (range.Y - range.X);
+            float valueRad = MathHelper.Lerp(sectorRad.X, sectorRad.Y, normalizedValue) - MathHelper.PiOver2;
+            GUI.DrawLine(spriteBatch,
+                pos + new Vector2(74, 105),
+                pos + new Vector2(74 + (float)Math.Cos(valueRad) * 60.0f, 105 + (float)Math.Sin(valueRad) * 60.0f),
+                Color.Black, 0, 3);
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)
@@ -206,7 +214,7 @@ namespace Barotrauma.Items.Components
             }
             graph[0] = newValue;
         }
-
+        
         static void DrawGraph(IList<float> graph, SpriteBatch spriteBatch, Rectangle rect, float maxVal, float xOffset, Color color)
         {
             float lineWidth = (float)rect.Width / (float)(graph.Count - 2);
@@ -238,10 +246,8 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
-            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 15);
-
-            msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
 
             correctionTimer = CorrectionDelay;
         }
@@ -250,17 +256,18 @@ namespace Barotrauma.Items.Components
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(16 + 1 + 15 + 8 + 8), sendingTime);
+                StartDelayedCorrection(type, msg.ExtractBits(1 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 
-            Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
-
             AutoTemp = msg.ReadBoolean();
-            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 15);
+            Temperature = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            targetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
 
-            CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            fissionRateScrollBar.BarScroll = 1.0f - targetFissionRate / 100.0f;
+            turbineOutputScrollBar.BarScroll = 1.0f - targetTurbineOutput / 100.0f;
         }
     }
 }

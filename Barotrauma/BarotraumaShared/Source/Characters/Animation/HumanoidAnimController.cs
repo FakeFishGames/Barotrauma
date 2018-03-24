@@ -753,8 +753,10 @@ namespace Barotrauma
             IgnorePlatforms = true;
 
             Vector2 tempTargetMovement = TargetMovement;
-
             tempTargetMovement.Y = Math.Min(tempTargetMovement.Y, 1.0f);
+
+            bool slide = targetMovement.Y < -1.1f;
+            if (slide) tempTargetMovement.Y *= 1.5f;
 
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
@@ -788,9 +790,7 @@ namespace Barotrauma
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - colliderHeightFromFloor), 10.5f);
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
-
-            bool slide = targetMovement.Y < -1.1f;
-
+            
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
                 Collider.SimPosition.Y + 0.8f + movement.Y * 0.1f - ladderSimPos.Y);
