@@ -71,11 +71,21 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
 
+                if (!AL.IsBuffer(alBuffer))
+                {
+                    throw new Exception("Generated OpenAL buffer is invalid!");
+                }
+
                 alMuffledBuffer = AL.GenBuffer();
                 alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
                     throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
+                
+                if (!AL.IsBuffer(alMuffledBuffer))
+                {
+                    throw new Exception("Generated OpenAL buffer is invalid!");
                 }
             }
             else
