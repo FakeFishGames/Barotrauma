@@ -402,7 +402,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (reactors.All(r => r.Temperature < 1.0f)) return "repair";
+                //if (reactors.All(r => r.Temperature < 1.0f)) return "repair";
 
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;

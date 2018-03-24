@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        List<ItemComponent> activeHUDs = new List<ItemComponent>();
+
         public override Sprite Sprite
         {
             get { return prefab.GetActiveSprite(condition); }
@@ -290,7 +292,7 @@ namespace Barotrauma
 
             return editingHUD;
         }
-
+        
         public virtual void UpdateHUD(Camera cam, Character character)
         {
             if (condition <= 0.0f)
@@ -304,7 +306,32 @@ namespace Barotrauma
                 UpdateEditing(cam);
             }
 
+            activeHUDs.Clear();
+            //the HUD of the component with the highest priority will be drawn
+            //if all components have a priority of 0, all of them are drawn
+            ItemComponent maxPriorityHUD = null;            
             foreach (ItemComponent ic in components)
+            {
+                if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
+                    (maxPriorityHUD == null || ic.HudPriority > maxPriorityHUD.HudPriority))
+                {
+                    maxPriorityHUD = ic;
+                }
+            }
+
+            if (maxPriorityHUD != null)
+            {
+                activeHUDs.Add(maxPriorityHUD);
+            }
+            else
+            {
+                foreach (ItemComponent ic in components)
+                {
+                    if (ic.CanBeSelected && ic.ShouldDrawHUD(character)) activeHUDs.Add(ic);
+                }
+            }
+
+            foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected) ic.UpdateHUD(character);
             }
@@ -322,11 +349,11 @@ namespace Barotrauma
             {
                 DrawEditing(spriteBatch, cam);
             }
-
-            foreach (ItemComponent ic in components)
+            
+            foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
-            }
+            }            
         }
 
         public override void AddToGUIUpdateList()
@@ -351,7 +378,7 @@ namespace Barotrauma
                     return;
                 }
 
-                foreach (ItemComponent ic in components)
+                foreach (ItemComponent ic in activeHUDs)
                 {
                     if (ic.CanBeSelected) ic.AddToGUIUpdateList();
                 }

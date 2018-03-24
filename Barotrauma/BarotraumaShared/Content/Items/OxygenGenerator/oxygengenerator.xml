@@ -17,7 +17,7 @@
       <Containable name="Oxygen Tank"/>
     </ItemContainer>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>

@@ -8,8 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        public const int MaxInventoryCount = 4;
-
         private List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
@@ -73,7 +71,7 @@ namespace Barotrauma.Items.Components
         private float itemRotation;
 
 
-        [Serialize("0.5,0.9", false)]
+        [Serialize("0.5,0.5", false)]
         public Vector2 HudPos
         {
             get { return hudPos; }
@@ -114,6 +112,18 @@ namespace Barotrauma.Items.Components
                         containableItems.Add(containable);
 
                         break;
+
+#if CLIENT
+                    case "topsprite":
+                        inventoryTopSprite = new Sprite(subElement);
+                        break;
+                    case "backsprite":
+                        inventoryTopSprite = new Sprite(subElement);
+                        break;
+                    case "bottomsprite":
+                        inventoryTopSprite = new Sprite(subElement);
+                        break;
+#endif
                 }
             }
 
@@ -221,6 +231,12 @@ namespace Barotrauma.Items.Components
                 if (item == null) continue;
                 item.Remove();
             }
+
+#if CLIENT
+            inventoryTopSprite?.Remove();
+            inventoryBackSprite?.Remove();
+            inventoryBottomSprite?.Remove();
+#endif
         }
 
         public override void Load(XElement componentElement)

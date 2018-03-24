@@ -14,13 +14,12 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
-
-            int width = 400, height = 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = GameMain.GraphicsHeight - height;
+            int width = 400, height = 350;
+            int x = (GameMain.GraphicsWidth - width) / 2, y = (GameMain.GraphicsHeight - height) / 2;
 
             Rectangle panelRect = new Rectangle(x, y, width, height);
 
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 512 - height, width, height), Color.White);
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White * 0.85f);
 
             //GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
 
@@ -46,14 +45,15 @@ namespace Barotrauma.Items.Components
                 if (wireComponent != null) equippedWire = wireComponent;
             }
 
-            Vector2 rightPos = new Vector2(x + width - 130, y + 50);
-            Vector2 leftPos = new Vector2(x + 130, y + 50);
+            Vector2 rightPos = new Vector2(x + width - 130, y + 80);
+            Vector2 leftPos = new Vector2(x + 130, y + 80);
 
             Vector2 rightWirePos = new Vector2(x + width - 5, y + 30);
-
             Vector2 leftWirePos = new Vector2(x + 5, y + 30);
 
             int wireInterval = (height - 20) / Math.Max(totalWireCount, 1);
+            int connectorIntervalLeft = (height - 100) / Math.Max(panel.Connections.Count(c => c.IsOutput), 1);
+            int connectorIntervalRight = (height - 100) / Math.Max(panel.Connections.Count(c => !c.IsOutput), 1);
 
             foreach (Connection c in panel.Connections)
             {
@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
                         mouseInRect, equippedWire,
                         wireInterval);
 
-                    rightPos.Y += 30;
+                    rightPos.Y += connectorIntervalLeft;
                     rightWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
                 }
                 else
@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
                         mouseInRect, equippedWire,
                         wireInterval);
 
-                    leftPos.Y += 30;
+                    leftPos.Y += connectorIntervalRight;
                     leftWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
                     //leftWireX -= wireInterval;
                 }
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             if (mouseInRect) Inventory.draggingItem = null;
 
 
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, width, height), Color.White);
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, 400, 200), Color.White);
 
         }
 
