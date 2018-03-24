@@ -71,6 +71,7 @@ namespace Barotrauma
             {
                 RemoveRoundSound(roundSounds[i]);
             }
+            Items.Components.Powered.ClearSounds();
         }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
