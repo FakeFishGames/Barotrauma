@@ -24,14 +24,14 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
-        private int alBuffer;
-        public int ALBuffer
+        private uint alBuffer;
+        public uint ALBuffer
         {
             get { return !Stream ? alBuffer : 0; }
         }
 
-        private int alMuffledBuffer;
-        public int ALMuffledBuffer
+        private uint alMuffledBuffer;
+        public uint ALMuffledBuffer
         {
             get { return !Stream ? alMuffledBuffer : 0; }
         }
@@ -64,7 +64,7 @@ namespace Barotrauma.Sounds
             
             if (!stream)
             {
-                alBuffer = AL.GenBuffer();
+                AL.GenBuffer(out alBuffer);
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
@@ -76,7 +76,7 @@ namespace Barotrauma.Sounds
                     throw new Exception("Generated OpenAL buffer is invalid!");
                 }
 
-                alMuffledBuffer = AL.GenBuffer();
+                AL.GenBuffer(out alMuffledBuffer);
                 alError = AL.GetError();
                 if (alError != ALError.NoError)
                 {
@@ -136,7 +136,12 @@ namespace Barotrauma.Sounds
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
-                AL.DeleteBuffer(alBuffer);
+                if (!AL.IsBuffer(alBuffer))
+                {
+                    throw new Exception("Buffer to delete is invalid!");
+                }
+            
+                AL.DeleteBuffer(ref alBuffer); alBuffer = 0;
 
                 ALError alError = AL.GetError();
                 if (alError != ALError.NoError)

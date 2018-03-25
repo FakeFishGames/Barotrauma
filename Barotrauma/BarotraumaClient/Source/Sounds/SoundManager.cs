@@ -121,11 +121,22 @@ namespace Barotrauma.Sounds
             for (int i=0;i<SOURCE_COUNT;i++)
             {
                 AL.GenSource(out alSources[i]);
-                AL.SourceStop(alSources[i]);
                 alError = AL.GetError();
                 if (alError!=ALError.NoError)
                 {
                     throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
+                }
+
+                if (!AL.IsSource(alSources[i]))
+                {
+                    throw new Exception("Generated alSource["+i.ToString()+"] is invalid!");
+                }
+                
+                AL.SourceStop(alSources[i]);
+                alError = AL.GetError();
+                if (alError!=ALError.NoError)
+                {
+                    throw new Exception("Error stopping newly generated alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
                 }
 
                 AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
@@ -203,6 +214,12 @@ namespace Barotrauma.Sounds
         public uint GetSourceFromIndex(int ind)
         {
             if (ind < 0 || ind >= SOURCE_COUNT) return 0;
+
+            if (!AL.IsSource(alSources[ind]))
+            {
+                throw new Exception("alSources[" + ind.ToString() + "] is invalid!");
+            }
+
             return alSources[ind];
         }
 
@@ -218,6 +235,12 @@ namespace Barotrauma.Sounds
                     {
                         if (playingChannels[i]!=null) playingChannels[i].Dispose();
                         playingChannels[i] = newChannel;
+
+                        if (!AL.IsSource(alSources[i]))
+                        {
+                            throw new Exception("alSources[" + i.ToString() + "] is invalid!");
+                        }
+                        
                         return i;
                     }
                 }

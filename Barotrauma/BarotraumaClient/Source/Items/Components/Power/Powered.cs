@@ -12,13 +12,17 @@ namespace Barotrauma.Items.Components
 
         public static void ClearSounds()
         {
-            for (int i = 0; i < 4; i++)
+            if (sparkSounds != null)
             {
-                sparkSounds[i].Dispose();
+                for (int i = 0; i < 4; i++)
+                {
+                    sparkSounds[i].Dispose();
+                }
             }
             sparkSounds = null;
 
-            powerOnSound.Dispose(); powerOnSound = null;
+            if (powerOnSound != null) powerOnSound.Dispose();
+            powerOnSound = null;
         }
     }
 }
