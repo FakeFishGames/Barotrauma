@@ -231,7 +231,7 @@ namespace Barotrauma.Sounds
         private int streamSeekPos;
         private bool startedPlaying;
         private bool reachedEndSample;
-        private int[] streamBuffers;
+        private uint[] streamBuffers;
 
         private object mutex;
 
@@ -309,15 +309,20 @@ namespace Barotrauma.Sounds
                         throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
                     }
 
-                    streamBuffers = new int[4];
+                    streamBuffers = new uint[4];
                     for (int i=0;i<4;i++)
                     {
-                        streamBuffers[i] = AL.GenBuffer();
+                        AL.GenBuffer(out streamBuffers[i]);
 
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
                             throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
+                        }
+
+                        if (!AL.IsBuffer(streamBuffers[i]))
+                        {
+                            throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid!");
                         }
                     }
 
@@ -385,7 +390,7 @@ namespace Barotrauma.Sounds
                         
                         for (int i = 0; i < 4; i++)
                         {
-                            AL.DeleteBuffer(streamBuffers[i]);
+                            AL.DeleteBuffer(ref streamBuffers[i]);
                             alError = AL.GetError();
                             if (alError != ALError.NoError)
                             {
