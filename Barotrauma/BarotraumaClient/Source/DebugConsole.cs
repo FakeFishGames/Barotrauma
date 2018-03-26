@@ -489,10 +489,10 @@ namespace Barotrauma
                     NewMessage("Deleted client permission file", Color.Green);
                 }
 
-                if (System.IO.File.Exists("crashreport.txt"))
+                if (System.IO.File.Exists("crashreport.log"))
                 {
-                    System.IO.File.Delete("crashreport.txt");
-                    NewMessage("Deleted crashreport.txt", Color.Green);
+                    System.IO.File.Delete("crashreport.log");
+                    NewMessage("Deleted crashreport.log", Color.Green);
                 }
 
                 if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))

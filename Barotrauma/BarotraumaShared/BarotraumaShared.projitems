@@ -1463,7 +1463,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Vellamo.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
