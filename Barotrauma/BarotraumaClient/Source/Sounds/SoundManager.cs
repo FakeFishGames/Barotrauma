@@ -82,7 +82,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private Dictionary<string, float> categoryGainMultipliers;
+        private Dictionary<string, Pair<float,bool>> categoryModifiers;
 
         public SoundManager()
         {
@@ -91,7 +91,7 @@ namespace Barotrauma.Sounds
 
             streamingThread = null;
 
-            categoryGainMultipliers = null;
+            categoryModifiers = null;
 
             alcDevice = Alc.OpenDevice(null);
             if (alcDevice == null)
@@ -305,14 +305,14 @@ namespace Barotrauma.Sounds
         public void SetCategoryGainMultiplier(string category,float gain)
         {
             category = category.ToLower();
-            if (categoryGainMultipliers == null) categoryGainMultipliers = new Dictionary<string, float>();
-            if (!categoryGainMultipliers.ContainsKey(category))
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float,bool>>();
+            if (!categoryModifiers.ContainsKey(category))
             {
-                categoryGainMultipliers.Add(category, gain);
+                categoryModifiers.Add(category, new Pair<float,bool>(gain, false));
             }
             else
             {
-                categoryGainMultipliers[category] = gain;
+                categoryModifiers[category].First = gain;
             }
             for (int i=0;i<SOURCE_COUNT;i++)
             {
@@ -326,13 +326,24 @@ namespace Barotrauma.Sounds
         public float GetCategoryGainMultiplier(string category)
         {
             category = category.ToLower();
-            if (categoryGainMultipliers == null || !categoryGainMultipliers.ContainsKey(category)) return 1.0f;
-            return categoryGainMultipliers[category];
+            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
+            return categoryModifiers[category].First;
         }
 
         public void SetCategoryMuffle(string category,bool muffle)
         {
             category = category.ToLower();
+
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (!categoryModifiers.ContainsKey(category))
+            {
+                categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+            }
+            else
+            {
+                categoryModifiers[category].Second = muffle;
+            }
+
             for (int i = 0; i < SOURCE_COUNT; i++)
             {
                 if (playingChannels[i] != null && playingChannels[i].IsPlaying)
@@ -340,6 +351,13 @@ namespace Barotrauma.Sounds
                     if (playingChannels[i].Category.ToLower() == category) playingChannels[i].Muffled = muffle;
                 }
             }
+        }
+
+        public bool GetCategoryMuffle(string category)
+        {
+            category = category.ToLower();
+            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
+            return categoryModifiers[category].Second;
         }
 
         public void InitStreamThread()
