@@ -122,7 +122,7 @@ namespace Barotrauma
         {
 #if WINDOWS
             MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif         
+#endif
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
