@@ -26,7 +26,7 @@ namespace Barotrauma.Sounds
                 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
                 
-                AL.BufferData(ALBuffer, ALFormat, shortBuffer,
+                AL.BufferData((int)ALBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 ALError alError = AL.GetError();
@@ -39,7 +39,7 @@ namespace Barotrauma.Sounds
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                AL.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                AL.BufferData((int)ALMuffledBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 alError = AL.GetError();
