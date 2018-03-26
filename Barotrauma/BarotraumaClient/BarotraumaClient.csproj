@@ -260,7 +260,6 @@
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="NVorbis">
