@@ -73,6 +73,10 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateHUD(Character character)
         {
+            //if the item is in the character's inventory, no need to update the item's inventory 
+            //because the player can see it by hovering the cursor over the item
+            if (item.ParentInventory?.Owner == character) return;
+
             Inventory.Update((float)Timing.Step);
         }
 
