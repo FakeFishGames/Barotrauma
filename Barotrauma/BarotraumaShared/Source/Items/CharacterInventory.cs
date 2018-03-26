@@ -10,7 +10,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Pack = 256
     };
 
     partial class CharacterInventory : Inventory
@@ -20,7 +20,8 @@ namespace Barotrauma
         public static InvSlotType[] SlotTypes = new InvSlotType[] {
             InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.RightHand,
             InvSlotType.LeftHand, InvSlotType.Head, InvSlotType.Headset, InvSlotType.Card,
-            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any };
+            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
+            InvSlotType.Pack };
 
         protected bool[] IsEquipped;
 
