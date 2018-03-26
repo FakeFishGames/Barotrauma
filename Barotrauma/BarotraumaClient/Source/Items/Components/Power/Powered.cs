@@ -9,5 +9,20 @@ namespace Barotrauma.Items.Components
         private bool powerOnSoundPlayed;
 
         private static Sound powerOnSound;
+
+        public static void ClearSounds()
+        {
+            if (sparkSounds != null)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    sparkSounds[i].Dispose();
+                }
+            }
+            sparkSounds = null;
+
+            if (powerOnSound != null) powerOnSound.Dispose();
+            powerOnSound = null;
+        }
     }
 }

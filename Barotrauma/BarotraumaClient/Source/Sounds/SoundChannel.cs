@@ -231,7 +231,7 @@ namespace Barotrauma.Sounds
         private int streamSeekPos;
         private bool startedPlaying;
         private bool reachedEndSample;
-        private int[] streamBuffers;
+        private uint[] streamBuffers;
 
         private object mutex;
 
@@ -267,11 +267,23 @@ namespace Barotrauma.Sounds
             {
                 if (!IsStream)
                 {
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), 0);
                     ALError alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
-                        throw new Exception("Failed to bind buffer to source: " + AL.GetErrorString(alError));
+                        throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
+                    }
+
+                    if (!AL.IsBuffer(sound.ALBuffer))
+                    {
+                        throw new Exception(sound.Filename + " has an invalid buffer!");    
+                    }
+                    
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+                    alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to bind buffer to source (" +ALSourceIndex.ToString()+":"+sound.Owner.GetSourceFromIndex(ALSourceIndex)+"," +sound.ALBuffer.ToString()+"): " + AL.GetErrorString(alError));
                     }
 
                     AL.SourcePlay(sound.Owner.GetSourceFromIndex(ALSourceIndex));
@@ -283,22 +295,34 @@ namespace Barotrauma.Sounds
                 }
                 else
                 {
-                    AL.Source(sound.Owner.GetSourceFromIndex(ALSourceIndex), ALSourceb.Looping, false);
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
                     ALError alError = AL.GetError();
+                    if (alError != ALError.NoError)
+                    {
+                        throw new Exception("Failed to reset source buffer: " + AL.GetErrorString(alError));
+                    }
+                
+                    AL.Source(sound.Owner.GetSourceFromIndex(ALSourceIndex), ALSourceb.Looping, false);
+                    alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {
                         throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
                     }
 
-                    streamBuffers = new int[4];
+                    streamBuffers = new uint[4];
                     for (int i=0;i<4;i++)
                     {
-                        streamBuffers[i] = AL.GenBuffer();
+                        AL.GenBuffer(out streamBuffers[i]);
 
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
                             throw new Exception("Failed to generate stream buffers: " + AL.GetErrorString(alError));
+                        }
+
+                        if (!AL.IsBuffer(streamBuffers[i]))
+                        {
+                            throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid!");
                         }
                     }
 
@@ -357,13 +381,20 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
                         }
 
+                        AL.BindBufferToSource(alSource, 0);
+                        alError = AL.GetError();
+                        if (alError != ALError.NoError)
+                        {
+                            throw new Exception("Failed to reset buffer for streamed source: " + AL.GetErrorString(alError));
+                        }
+                        
                         for (int i = 0; i < 4; i++)
                         {
-                            AL.DeleteBuffer(streamBuffers[i]);
+                            AL.DeleteBuffer(ref streamBuffers[i]);
                             alError = AL.GetError();
                             if (alError != ALError.NoError)
                             {
-                                throw new Exception("Failed to delete streamBuffers[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                                throw new Exception("Failed to delete streamBuffers[" + i.ToString() + "] ("+streamBuffers[i].ToString()+"): " + AL.GetErrorString(alError));
                             }
                         }
 
