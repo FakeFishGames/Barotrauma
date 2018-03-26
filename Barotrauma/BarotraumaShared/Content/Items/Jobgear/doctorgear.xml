@@ -10,7 +10,7 @@
 
     <Body width="18" height="6" density="30"/>
 
-    <Wearable limbtype="Head" slots="Any,InnerClothes">
+    <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture ="doctorgear.png" sourcerect="0,120,20,8" limb="Head" origin="0.45,0.9"/>
     </Wearable>
 
