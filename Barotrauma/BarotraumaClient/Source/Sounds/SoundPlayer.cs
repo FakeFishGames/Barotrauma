@@ -246,21 +246,28 @@ namespace Barotrauma
             }
 
             GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
-            //SoundManager.LowPassHFGain = lowpassHFGain; //TODO: implement muffling through software
             if (waterAmbiences.Count > 1)
             {
                 if (waterAmbienceChannels[0] == null || !waterAmbienceChannels[0].IsPlaying)
                 {
-                    waterAmbienceChannels[0] = waterAmbiences[0].Play(ambienceVolume * (1.0f - movementSoundVolume));
+                    waterAmbienceChannels[0] = waterAmbiences[0].Play(ambienceVolume * (1.0f - movementSoundVolume),"waterambience");
                     //waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
                     waterAmbienceChannels[0].Looping = true;
+                }
+                else
+                {
+                    waterAmbienceChannels[0].Gain = ambienceVolume * (1.0f - movementSoundVolume);
                 }
 
                 if (waterAmbienceChannels[1] == null || !waterAmbienceChannels[1].IsPlaying)
                 {
-                    waterAmbienceChannels[1] = waterAmbiences[1].Play(ambienceVolume * movementSoundVolume);
+                    waterAmbienceChannels[1] = waterAmbiences[1].Play(ambienceVolume * movementSoundVolume, "waterambience");
                     //waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
                     waterAmbienceChannels[1].Looping = true;
+                }
+                else
+                {
+                    waterAmbienceChannels[1].Gain = ambienceVolume * movementSoundVolume;
                 }
             }
 
