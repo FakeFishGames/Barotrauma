@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Xml.Linq;
-using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
