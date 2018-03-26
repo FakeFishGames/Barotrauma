@@ -17,38 +17,38 @@ namespace Barotrauma
     {
         public static bool ShowFPS = true;
         public static bool DebugDraw;
-        
+
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        
-        public static GameScreen            GameScreen;
-        public static MainMenuScreen        MainMenuScreen;
-        public static LobbyScreen           LobbyScreen;
 
-        public static NetLobbyScreen        NetLobbyScreen;
-        public static ServerListScreen      ServerListScreen;
+        public static GameScreen GameScreen;
+        public static MainMenuScreen MainMenuScreen;
+        public static LobbyScreen LobbyScreen;
 
-        public static SubEditorScreen         SubEditorScreen;
-        public static CharacterEditorScreen   CharacterEditorScreen;
-        public static ParticleEditorScreen  ParticleEditorScreen;
+        public static NetLobbyScreen NetLobbyScreen;
+        public static ServerListScreen ServerListScreen;
+
+        public static SubEditorScreen SubEditorScreen;
+        public static CharacterEditorScreen CharacterEditorScreen;
+        public static ParticleEditorScreen ParticleEditorScreen;
 
         public static Lights.LightManager LightManager;
 
         public static Sounds.SoundManager SoundManager;
-        
+
         public static ContentPackage SelectedPackage
         {
             get { return Config.SelectedContentPackage; }
         }
-        
+
         public static GameSession GameSession;
 
         public static NetworkMember NetworkMember;
 
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
-        
+
         public static World World;
 
         public static LoadingScreen TitleScreen;
@@ -76,7 +76,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public static WindowMode WindowMode
         {
             get;
@@ -109,7 +109,7 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
-        
+
         public static RasterizerState ScissorTestEnable
         {
             get;
@@ -120,13 +120,13 @@ namespace Barotrauma
         {
             get { return loadingScreenOpen; }
         }
-                                
+
         public GameMain()
         {
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
-            
+
             Instance = this;
 
             Config = new GameSettings("config.xml");
@@ -142,7 +142,7 @@ namespace Barotrauma
             Content.RootDirectory = "Content";
 
             FrameCounter = new FrameCounter();
-            
+
             IsFixedTimeStep = false;
 
             Timing.Accumulator = 0.0f;
@@ -184,7 +184,12 @@ namespace Barotrauma
         public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
+#if !(OSX)
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+#else
+            // Force borderless on macOS.
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed && Config.WindowMode != WindowMode.Fullscreen;
+#endif
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             
             GraphicsDeviceManager.ApplyChanges();
