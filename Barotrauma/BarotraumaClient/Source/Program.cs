@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-#if WINDOWS || LINUX
+#if WINDOWS || LINUX || OSX
     /// <summary>
     /// The main class.
     /// </summary>

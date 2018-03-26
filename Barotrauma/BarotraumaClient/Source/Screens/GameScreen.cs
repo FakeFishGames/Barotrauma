@@ -32,7 +32,7 @@ namespace Barotrauma
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
             
-#if LINUX
+#if LINUX || OSX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
             damageEffect = content.Load<Effect>("damageshader_opengl");
 #else
@@ -128,7 +128,7 @@ namespace Barotrauma
             }
 
 			//draw alpha blended particles that are in water and behind subs
-#if LINUX
+#if LINUX || OSX
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
 #else
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
@@ -172,7 +172,7 @@ namespace Barotrauma
 			spriteBatch.End();
 
 			//draw alpha blended particles that are inside a sub
-#if LINUX
+#if LINUX || OSX
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #else
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
@@ -183,7 +183,7 @@ namespace Barotrauma
 			graphics.SetRenderTarget(renderTarget);
 
 			//draw alpha blended particles that are not in water
-#if LINUX
+#if LINUX || OSX
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #else
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);

@@ -131,7 +131,7 @@ namespace Barotrauma
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-#if LINUX
+#if LINUX || OSX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
 #else
             var blurEffect = content.Load<Effect>("blurshader");
