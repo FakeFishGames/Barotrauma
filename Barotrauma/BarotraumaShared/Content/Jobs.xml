@@ -35,9 +35,13 @@
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>
-      <Item name="Wrench"/>
-      <Item name="Screwdriver"/>
-      <Item name="Red Wire"/>
+      <Item name="Toolbox">
+        <Item name="Wrench"/>
+        <Item name="Screwdriver"/>
+        <Item name="Red Wire"/>
+        <Item name="Blue Wire"/>
+        <Item name="Orange Wire"/>
+      </Item>
       <Item name="Orange Jumpsuit" equip="true"/>
       <Item name="Headset" equip="true">
         <Item name="Battery Cell"/>
@@ -56,11 +60,13 @@
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>
-      <Item name="Welding Tool">
-        <Item name="Welding Fuel Tank"/>
+      <Item name="Toolbox">
+        <Item name="Wrench"/>   
+        <Item name="Welding Tool">
+          <Item name="Welding Fuel Tank"/>
+        </Item>     
       </Item>
       <Item name="Crowbar"/>
-      <Item name="Wrench"/>
       <Item name="Blue Jumpsuit" equip="true"/>
       <Item name="Headset" equip="true">
         <Item name="Battery Cell"/>

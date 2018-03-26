@@ -5,9 +5,9 @@
     tags="smallitem"
     fireproof="true"
     cargocontainername="Metal Crate"
-    description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear an engineer might need.">
+    description="The fire-resistant fabric offers some protection against fires.">
 
-    <Sprite texture = "engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
+    <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 
@@ -24,10 +24,6 @@
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
-
-    <ItemContainer capacity="5">
-      <Containable name="smallitem"/>
-    </ItemContainer>
   </Item>
 
   <Item
@@ -36,9 +32,9 @@
     tags="smallitem"
     fireproof="true"
     cargocontainername="Metal Crate"
-    description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear a mechanic might need.">
+    description="The fire-resistant fabric offers some protection against fires.">
 
-    <Sprite texture = "engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
+    <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
 
     <Body width="50" height="17" density="20"/>
 
@@ -55,8 +51,25 @@
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
+  </Item>
 
-    <ItemContainer capacity="5">
+  <Item
+    name="Toolbox"
+    category="Equipment"
+    tags="smallitem"
+    fireproof="true"
+    description="">
+
+    <Sprite texture="Content/Items/Containers/crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+
+    <Body width="50" height="17" density="20"/>
+
+    <Pickable slots="Pack" />
+
+    <ItemContainer capacity="12">
+      <BackSprite texture="Content/UI/inventoryAtlas.png" sourcerect="475,492,183,450" origin="0.0,0.0"/>
+      <TopSprite texture="Content/UI/inventoryAtlas.png" sourcerect="181,790,252,111" origin="0.5,0.71"/>
+      <BottomSprite texture="Content/UI/inventoryAtlas.png" sourcerect="182,908,245,107" origin="0.5,0.0"/>
       <Containable name="smallitem"/>
     </ItemContainer>
   </Item>

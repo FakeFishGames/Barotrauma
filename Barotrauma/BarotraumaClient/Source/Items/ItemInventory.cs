@@ -7,17 +7,15 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            if (container.InventoryTopSprite != null)
-            {
-
-            }
-
             if (slots != null && slots.Length > 0)
             {
                 Rectangle backgroundFrame = slots[0].Rect;
+                backgroundFrame.Location += slots[0].DrawOffset.ToPoint();
                 for (int i = 1; i < capacity; i++)
                 {
-                    backgroundFrame = Rectangle.Union(backgroundFrame, slots[i].Rect);
+                    Rectangle slotRect = slots[i].Rect;
+                    slotRect.Location += slots[i].DrawOffset.ToPoint();
+                    backgroundFrame = Rectangle.Union(backgroundFrame, slotRect);
                 }
 
                 //if no top sprite the top of the frame simply shows the name of the item -> make some room for that
@@ -41,6 +39,15 @@ namespace Barotrauma
                             backgroundFrame.Height / container.InventoryBackSprite.size.Y));
                 }
 
+                base.Draw(spriteBatch, subInventory);
+
+                if (container.InventoryBottomSprite != null && !subInventory)
+                {
+                    container.InventoryBottomSprite.Draw(spriteBatch, 
+                        new Vector2(backgroundFrame.Center.X, backgroundFrame.Bottom) + slots[0].DrawOffset, 
+                        0.0f, UIScale);
+                }
+
                 if (container.InventoryTopSprite == null)
                 {
                     Item item = Owner as Item;
@@ -51,18 +58,15 @@ namespace Barotrauma
                             item.Name, Color.White * 0.9f);
                     }
                 }
-                else
+                else if (!subInventory)
                 {
                     container.InventoryTopSprite.Draw(spriteBatch, new Vector2(backgroundFrame.Center.X, backgroundFrame.Y), 0.0f, UIScale);
                 }
-
-                if (container.InventoryBottomSprite != null)
-                {
-                    container.InventoryBottomSprite.Draw(spriteBatch, new Vector2(backgroundFrame.Center.X, backgroundFrame.Bottom), 0.0f, UIScale);
-                }
             }
-
-            base.Draw(spriteBatch, subInventory);
+            else
+            {
+                base.Draw(spriteBatch, subInventory);
+            }
         }
     }
 }

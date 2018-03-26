@@ -118,10 +118,10 @@ namespace Barotrauma.Items.Components
                         inventoryTopSprite = new Sprite(subElement);
                         break;
                     case "backsprite":
-                        inventoryTopSprite = new Sprite(subElement);
+                        inventoryBackSprite = new Sprite(subElement);
                         break;
                     case "bottomsprite":
-                        inventoryTopSprite = new Sprite(subElement);
+                        inventoryBottomSprite = new Sprite(subElement);
                         break;
 #endif
                 }

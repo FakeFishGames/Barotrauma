@@ -7,6 +7,10 @@ namespace Barotrauma
     partial class ItemInventory : Inventory
     {
         private ItemContainer container;
+        public ItemContainer Container
+        {
+            get { return container; }
+        }
 
         public ItemInventory(Item owner, ItemContainer container, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
             : base(owner, capacity, centerPos, slotsPerRow)
