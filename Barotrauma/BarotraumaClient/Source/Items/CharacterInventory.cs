@@ -16,7 +16,7 @@ namespace Barotrauma
         
         public Vector2[] SlotPositions;
 
-        private GUIButton[] useOnSelfButton;
+        //private GUIButton[] useOnSelfButton;
 
         private Alignment alignment;
         public Alignment Alignment
@@ -39,7 +39,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            useOnSelfButton = new GUIButton[2];
+            //useOnSelfButton = new GUIButton[2];
             
             if (toggleArrow == null)
             {
@@ -384,16 +384,16 @@ namespace Barotrauma
                 }
             }
 
-            if (character == Character.Controlled)
+            if (character == Character.Controlled && CharacterHealth.OpenHealthWindow == null)
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
+                    /*if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
                         //-3 because selected items are in slots 3 and 4 (hands)
                         useOnSelfButton[i - 3].Update(deltaTime);
-                    }
+                    }*/
 
                     if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                     {
@@ -513,7 +513,7 @@ namespace Barotrauma
             
             base.Draw(spriteBatch);
 
-            if (character == Character.Controlled)
+            /*if (character == Character.Controlled)
             {
                 for (int i = 0; i < capacity; i++)
                 {
@@ -523,11 +523,14 @@ namespace Barotrauma
                         useOnSelfButton[i - 3].Draw(spriteBatch);
                     }
                 }
-            }
+            }*/
+
+            if (CharacterHealth.OpenHealthWindow != null) return;
 
             for (int i = 0; i < capacity; i++)
             {
                 if (HideSlot(i)) continue;
+
                 if (Items[i] != null && Owner == Character.Controlled && Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     Color color = slots[i].EquipButtonState == GUIComponent.ComponentState.Hover ? Color.White : Color.White * 0.8f;
