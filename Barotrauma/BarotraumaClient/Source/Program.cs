@@ -50,7 +50,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            CrashDump(game, "crashreport.txt", e);
+                            CrashDump(game, "crashreport.log", e);
                             attemptRestart = false;
                         }
 
@@ -122,7 +122,7 @@ namespace Barotrauma
         {
 #if WINDOWS
             MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif         
+#endif
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
@@ -197,7 +197,7 @@ namespace Barotrauma
             sw.WriteLine(sb.ToString());
             sw.Close();
 
-            CrashMessageBox( "A crash report (\"crashreport.txt\") was saved in the root folder of the game."+
+            CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
         }
     }
