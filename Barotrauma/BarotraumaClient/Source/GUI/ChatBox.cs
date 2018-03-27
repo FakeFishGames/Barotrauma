@@ -99,8 +99,8 @@ namespace Barotrauma
             if (isSinglePlayer)
             {
                 radioButton = new GUIButton(
-                    new Rectangle((int)-radioIcon.size.X, 0, (int)radioIcon.size.X, (int)radioIcon.size.Y), 
-                    "", Alignment.TopLeft, null, guiFrame);
+                    new Rectangle(0, (int)radioIcon.size.Y - 40, (int)radioIcon.size.X, (int)radioIcon.size.Y), 
+                    "", Alignment.BottomRight, null, guiFrame);
                 radioButton.ClampMouseRectToParent = false;
                 new GUIImage(Rectangle.Empty, radioIcon, Alignment.Center, radioButton);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
@@ -112,7 +112,7 @@ namespace Barotrauma
             else
             {
                 inputBox = new GUITextBox(
-                    new Rectangle(chatBox.Rect.X, 0, 0, 25),
+                    new Rectangle(0, 0, 0, 25),
                     Color.White * 0.5f, Color.Black, Alignment.BottomCenter, Alignment.Left, "ChatTextBox", guiFrame);
                 inputBox.children[0].Padding = new Vector4(30, 0, 10, 0);
                 inputBox.Font = GUI.SmallFont;
@@ -170,10 +170,11 @@ namespace Barotrauma
 
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 15, 0), displayedText,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
+                Alignment.Left, Alignment.TopLeft, "ListBoxElement", null, true, GUI.SmallFont);
             msg.UserData = message.SenderName;
             msg.CanBeFocused = false;
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
+            msg.Flash(Color.Yellow * 0.5f);
 
             float prevSize = chatBox.BarSize;
 
@@ -197,14 +198,18 @@ namespace Barotrauma
             GUI.PlayUISound(soundType);
             hideTimer = HideDelay;
         }
-
+        
         public void Update(float deltaTime)
         {
             if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
 
+            bool hovering = 
+                PlayerInput.MousePosition.X > Math.Min(chatBox.Rect.X, RadioButton.Rect.X) && 
+                PlayerInput.MousePosition.Y > chatBox.Rect.Y && 
+                PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
+
             hideTimer -= deltaTime;
-            if (hideTimer > 0.0f ||
-                (PlayerInput.MousePosition.X > Math.Min(chatBox.Rect.X, RadioButton.Rect.X) && PlayerInput.MousePosition.Y > chatBox.Rect.Y && PlayerInput.MousePosition.Y < chatBox.Rect.Bottom))
+            if ((hideTimer > 0.0f || hovering) && Inventory.draggingItem == null)
             {
                 guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), defaultPos.ToVector2(), deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
             }

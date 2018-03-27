@@ -51,6 +51,7 @@ namespace Barotrauma
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
+            if (Inventory.draggingItem != null) return null;
             for (int i = ComponentsToUpdate.Count - 1; i >= 0; i--)
             {
                 GUIComponent c = ComponentsToUpdate[i];

@@ -56,15 +56,16 @@ namespace Barotrauma
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
             
-            guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
+            guiFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
+            guiFrame.CanBeFocused = false;
 
-            characterListBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
+            characterListBox = new GUIListBox(new Rectangle(45, 80, 150, 450), Color.Transparent, null, guiFrame);
             characterListBox.ScrollBarEnabled = false;
             characterListBox.OnSelected = SelectCharacter;
             characterListBox.Visible = isSinglePlayer;
 
-            orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
+            orderListBox = new GUIListBox(new Rectangle(5, 80, 30, 450), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
             orderListBox.Visible = isSinglePlayer;
