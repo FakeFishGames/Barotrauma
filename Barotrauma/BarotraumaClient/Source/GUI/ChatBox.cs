@@ -2,16 +2,19 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     class ChatBox
     {
+        const float HideDelay = 5.0f;
+
         private static Sprite radioIcon;
+
+        private Point defaultPos;
+
+        private GUIFrame guiFrame;
 
         private GUIListBox chatBox;
         private GUITextBox inputBox;
@@ -19,6 +22,8 @@ namespace Barotrauma
         private GUIButton radioButton;
 
         private bool isSinglePlayer;
+
+        private float hideTimer;
 
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
@@ -82,19 +87,21 @@ namespace Barotrauma
                 radioIcon = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(527, 952, 38, 52), null);
                 radioIcon.Origin = radioIcon.size / 2;
             }
-
+            
             int width = (int)(330 * GUI.Scale);
-            int height = (int)(400 * GUI.Scale);
-            chatBox = new GUIListBox(
-                new Rectangle(GameMain.GraphicsWidth - 10 - width, 60 + (int)(90 * GUI.Scale - parent.Padding.Y - parent.Rect.Y), width, height),
-                Color.White * 0.5f, "ChatBox", parent);
+            int height = (int)(440 * GUI.Scale);
+            guiFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 10 - width, 60 + (int)(90 * GUI.Scale - parent.Padding.Y - parent.Rect.Y), width, height), null, parent);
+            chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 35), Color.White * 0.5f, "ChatBox", guiFrame);
             chatBox.Padding = Vector4.Zero;
+
+            defaultPos = guiFrame.Rect.Location;
 
             if (isSinglePlayer)
             {
                 radioButton = new GUIButton(
-                    new Rectangle(chatBox.Rect.Center.X - (int)(radioIcon.size.Y / 2), chatBox.Rect.Bottom - (int)parent.Padding.Y - parent.Rect.Y, (int)radioIcon.size.X, (int)radioIcon.size.Y), 
-                    "", Alignment.TopLeft, null, parent);
+                    new Rectangle((int)-radioIcon.size.X, 0, (int)radioIcon.size.X, (int)radioIcon.size.Y), 
+                    "", Alignment.TopLeft, null, guiFrame);
+                radioButton.ClampMouseRectToParent = false;
                 new GUIImage(Rectangle.Empty, radioIcon, Alignment.Center, radioButton);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {
@@ -105,8 +112,8 @@ namespace Barotrauma
             else
             {
                 inputBox = new GUITextBox(
-                    new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 10, chatBox.Rect.Width, 25),
-                    Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "ChatTextBox", parent);
+                    new Rectangle(chatBox.Rect.X, 0, 0, 25),
+                    Color.White * 0.5f, Color.Black, Alignment.BottomCenter, Alignment.Left, "ChatTextBox", guiFrame);
                 inputBox.children[0].Padding = new Vector4(30, 0, 10, 0);
                 inputBox.Font = GUI.SmallFont;
                 inputBox.MaxTextLength = ChatMessage.MaxLength;
@@ -135,7 +142,6 @@ namespace Barotrauma
                     return true;
                 };
             }
-
         }
 
         public void AddMessage(ChatMessage message)
@@ -189,6 +195,23 @@ namespace Barotrauma
             }
 
             GUI.PlayUISound(soundType);
+            hideTimer = HideDelay;
+        }
+
+        public void Update(float deltaTime)
+        {
+            if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
+
+            hideTimer -= deltaTime;
+            if (hideTimer > 0.0f ||
+                (PlayerInput.MousePosition.X > Math.Min(chatBox.Rect.X, RadioButton.Rect.X) && PlayerInput.MousePosition.Y > chatBox.Rect.Y && PlayerInput.MousePosition.Y < chatBox.Rect.Bottom))
+            {
+                guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), defaultPos.ToVector2(), deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
+            }
+            else
+            {
+                guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), new Vector2(defaultPos.X + chatBox.Rect.Width - 10, defaultPos.Y), deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
+            }
         }
     }
 }

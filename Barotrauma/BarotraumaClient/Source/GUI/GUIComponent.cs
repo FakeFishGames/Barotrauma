@@ -164,8 +164,10 @@ namespace Barotrauma
         public virtual Rectangle Rect
         {
             get { return rect; }
-            set 
+            set
             {
+                if (rect == value) return;
+
                 int prevX = rect.X, prevY = rect.Y;
                 int prevWidth = rect.Width, prevHeight = rect.Height;
 
