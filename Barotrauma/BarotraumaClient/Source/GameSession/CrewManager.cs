@@ -71,9 +71,6 @@ namespace Barotrauma
 
             if (isSinglePlayer)
             {
-                int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-                int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.2f, 150, 250);
-
                 chatBox = new ChatBox(guiFrame, true);
             }
 
@@ -279,6 +276,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
+            if (chatBox != null) chatBox.Update(deltaTime);
 
             if (commander.IsOpen &&
                 (Character.Controlled == null || !characters.Contains(Character.Controlled)))
@@ -483,8 +481,8 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            characterListBox.Visible = !commander.IsOpen;
-            orderListBox.Visible = !commander.IsOpen;
+            characterListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
+            orderListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
             
             guiFrame.Draw(spriteBatch);
             commander.Draw(spriteBatch);
