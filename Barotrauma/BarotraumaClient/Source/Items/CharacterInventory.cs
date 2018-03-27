@@ -248,6 +248,7 @@ namespace Barotrauma
 
             bool hoverOnInventory = GUIComponent.MouseOn == null &&
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
+            if (CharacterHealth.OpenHealthWindow != null) hoverOnInventory = true;
 
             if (alignment == Alignment.Center)
             {

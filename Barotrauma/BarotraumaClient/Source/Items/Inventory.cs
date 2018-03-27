@@ -470,6 +470,13 @@ namespace Barotrauma
         {
             if (draggingItem != null && PlayerInput.LeftButtonReleased())
             {
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem);
+                    draggingItem = null;
+                    return;
+                }
+
                 if (selectedSlot == null)
                 {
                     draggingItem.ParentInventory?.CreateNetworkEvent();

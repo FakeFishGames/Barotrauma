@@ -64,11 +64,13 @@ namespace Barotrauma
             characterListBox.ScrollBarEnabled = false;
             characterListBox.OnSelected = SelectCharacter;
             characterListBox.Visible = isSinglePlayer;
+            characterListBox.CanBeFocused = false;
 
             orderListBox = new GUIListBox(new Rectangle(5, 80, 30, 450), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
             orderListBox.Visible = isSinglePlayer;
+            orderListBox.CanBeFocused = false;
 
             if (isSinglePlayer)
             {
