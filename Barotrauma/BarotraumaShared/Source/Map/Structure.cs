@@ -57,8 +57,6 @@ namespace Barotrauma
 
         private SpriteEffects SpriteEffects = SpriteEffects.None;
 
-        private bool flippedX;
-
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
         {
@@ -904,9 +902,9 @@ namespace Barotrauma
                 SetDamage(i, damage);
             }
         }
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
+            base.FlipX(relativeToSub);
 
             flippedX = !flippedX;
             
@@ -973,6 +971,8 @@ namespace Barotrauma
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     rect.Width + "," + rect.Height));
+
+            if (flippedX) element.Add(new XAttribute("flippedx", true));
 
             for (int i = 0; i < sections.Length; i++)
             {

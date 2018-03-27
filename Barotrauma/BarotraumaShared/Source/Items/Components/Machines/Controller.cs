@@ -303,7 +303,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
             if (dir != Direction.None)
             {

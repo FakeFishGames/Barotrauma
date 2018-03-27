@@ -21,8 +21,7 @@ namespace Barotrauma
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
 
-        //protected float soundRange;
-        //protected float sightRange;
+        protected bool flippedX;
 
         public bool MoveWithLevel
         {
@@ -326,11 +325,17 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam) { }
 
-        public virtual void FlipX()
+        /// <summary>
+        /// Flip the entity around the x-axis
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped around the x-axis of the sub it's inside</param>
+        public virtual void FlipX(bool relativeToSub)
         {
+            if (!relativeToSub) return;
+
             if (Submarine == null)
             {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \""+Name+"\", submarine==null");
+                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine==null");
                 return;
             }
 

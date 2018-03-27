@@ -390,7 +390,7 @@ namespace Barotrauma.Items.Components
             return projectiles;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
             minRotation = (float)Math.PI - minRotation;
             maxRotation = (float)Math.PI - maxRotation;

@@ -467,7 +467,7 @@ namespace Barotrauma.Items.Components
             return ((average + 100.0f) / 2.0f) / 100.0f;
         }
 
-        public virtual void FlipX() { }
+        public virtual void FlipX(bool relativeToSub) { }
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
