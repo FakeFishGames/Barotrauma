@@ -278,8 +278,9 @@ namespace Barotrauma.Sounds
                     {
                         throw new Exception(sound.Filename + " has an invalid buffer!");    
                     }
-                    
-                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), (uint)sound.ALBuffer);
+
+                    uint alBuffer = sound.Owner.GetCategoryMuffle(category) ? sound.ALMuffledBuffer : sound.ALBuffer;
+                    AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), alBuffer);
                     alError = AL.GetError();
                     if (alError != ALError.NoError)
                     {

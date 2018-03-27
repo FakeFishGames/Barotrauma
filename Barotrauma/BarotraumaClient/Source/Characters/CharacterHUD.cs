@@ -65,7 +65,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun >= -0.1f)
+                    if (!character.LockHands && character.Stun < 0.1f)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -190,7 +190,7 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f && 
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && 
                 (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 character.Inventory.DrawOwn(spriteBatch);
@@ -203,7 +203,11 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(new Point(GameMain.GraphicsWidth - 180, character.SelectedCharacter.Inventory.slots[7].Rect.Y - 40), new Point(140, 30)), "Perform CPR", "");
+                            new Rectangle(
+                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)), 
+                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))), 
+                            "Perform CPR", "");
+                        cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -229,8 +233,11 @@ namespace Barotrauma
                     if (grabHoldButton == null)
                     {
                         grabHoldButton = new GUIButton(
-                            new Rectangle(new Point(GameMain.GraphicsWidth - 330, character.SelectedCharacter.Inventory.slots[7].Rect.Y - 40), new Point(140, 30)),
-                                TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
+                            new Rectangle(
+                                new Point((int)(GameMain.GraphicsWidth - 40 - 340 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
+                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
+                            TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
+                        grabHoldButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
 
                         grabHoldButton.OnClicked = (button, userData) =>
                         {

@@ -44,7 +44,7 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
-            //Sounds.SoundManager.LowPassHFGain = 1.0f; //TODO: implement muffling through software
+            GameMain.SoundManager.SetCategoryMuffle("default",false);
 #endif
         }
 
