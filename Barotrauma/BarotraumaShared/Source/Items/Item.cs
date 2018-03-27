@@ -432,6 +432,8 @@ namespace Barotrauma
                 }
             }
 
+            if (element.GetAttributeBool("flippedx", false)) FlipX(false);
+
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -990,10 +992,12 @@ namespace Barotrauma
             return true;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
+            base.FlipX(relativeToSub);
 
+            flippedX = !flippedX;
+            
             if (prefab.CanSpriteFlipX)
             {
                 SpriteEffects ^= SpriteEffects.FlipHorizontally;
@@ -1001,8 +1005,8 @@ namespace Barotrauma
 
             foreach (ItemComponent component in components)
             {
-                component.FlipX();
-            }
+                component.FlipX(relativeToSub);
+            }            
         }
 
         public override bool IsVisible(Rectangle worldView)
@@ -1858,6 +1862,8 @@ namespace Barotrauma
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
+
+            if (flippedX) element.Add(new XAttribute("flippedx", true));
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 

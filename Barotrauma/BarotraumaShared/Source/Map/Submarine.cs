@@ -669,7 +669,7 @@ namespace Barotrauma
             get { return flippedX; }
         }
 
-        public void FlipX(List<Submarine> parents=null)
+        public void FlipX(List<Submarine> parents = null)
         {
             if (parents == null) parents = new List<Submarine>();
             parents.Add(this);
@@ -685,7 +685,7 @@ namespace Barotrauma
             foreach (MapEntity e in subEntities)
             {
                 if (e.MoveWithLevel || e is Item) continue;
-                
+
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -699,7 +699,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    e.FlipX();
+                    e.FlipX(true);
                 }
             }
 
@@ -737,7 +737,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                item.FlipX();
+                item.FlipX(true);
             }
 
             Item.UpdateHulls();

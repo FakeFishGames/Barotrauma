@@ -428,16 +428,6 @@ namespace Barotrauma
         {
             if (highlightedListBox != null) highlightedListBox.Update((float)Timing.Step);
 
-            if (selectedList.Count == 1)
-            {
-                selectedList[0].UpdateEditing(cam);
-
-                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
-                {
-                    selectedList[0].UpdateResizing(cam);
-                }
-            }
-
             if (editingHUD != null)
             {
                 if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
@@ -446,11 +436,41 @@ namespace Barotrauma
                     {
                         var textBox = component as GUITextBox;
                         if (textBox == null) continue;
-
                         textBox.Deselect();
                     }
-
                     editingHUD = null;
+                }
+            }
+
+            if (selectedList.Count == 0) return;
+
+            if (selectedList.Count == 1)
+            {
+                selectedList[0].UpdateEditing(cam);
+                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                {
+                    selectedList[0].UpdateResizing(cam);
+                }
+            }
+
+            if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
+            {
+                //TODO: a UI button for flipping entities
+                if (PlayerInput.KeyHit(Keys.M))
+                {
+                    float minX = selectedList[0].WorldRect.X, maxX = selectedList[0].WorldRect.Right;
+                    for (int i = 0; i < selectedList.Count; i++)
+                    {
+                        minX = Math.Min(minX, selectedList[i].WorldRect.X);
+                        maxX = Math.Max(maxX, selectedList[i].WorldRect.Right);
+                    }
+
+                    float centerX = (minX + maxX) / 2.0f;
+                    foreach (MapEntity me in selectedList)
+                    {
+                        me.FlipX(false);
+                        me.Move(new Vector2((centerX - me.WorldPosition.X) * 2.0f, 0.0f));
+                    }
                 }
             }
         }

@@ -120,10 +120,8 @@ namespace Barotrauma.Items.Components
             list.Add(this);
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
-
             if (dockingTarget != null)
             {
                 if (joint != null)
