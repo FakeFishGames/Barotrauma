@@ -112,9 +112,10 @@ namespace Barotrauma
                     Rectangle rect = wall.Rect;
 
                     FixtureFactory.AttachRectangle(
-                          ConvertUnits.ToSimUnits(rect.Width),
-                          ConvertUnits.ToSimUnits(rect.Height),
+                          ConvertUnits.ToSimUnits(wall.BodyWidth),
+                          ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
+                          MathHelper.ToRadians(-wall.BodyRotation),
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                           farseerBody, this);
                 }
@@ -132,8 +133,6 @@ namespace Barotrauma
                         farseerBody, this);
                 }
             }
-
-
 
             farseerBody.BodyType = BodyType.Dynamic;
             farseerBody.CollisionCategories = Physics.CollisionWall;

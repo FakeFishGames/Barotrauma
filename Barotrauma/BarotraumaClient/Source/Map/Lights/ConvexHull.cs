@@ -206,10 +206,23 @@ namespace Barotrauma.Lights
                     {
                         ignoreEdge[i] = true;
                     }
-                }                    
-            }            
+                }
+            }
         }
-        
+
+        public void Rotate(Vector2 origin, float amount)
+        {
+            Matrix rotationMatrix = Matrix.CreateRotationZ(amount);
+
+            Vector2[] newVerts = new Vector2[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                newVerts[i] = Vector2.Transform(vertices[i].Pos - origin, rotationMatrix) + origin;
+            }
+
+            SetVertices(newVerts);
+        }
+
         private void CalculateDimensions()
         {
             float minX = vertices[0].Pos.X, minY = vertices[0].Pos.Y, maxX = vertices[0].Pos.X, maxY = vertices[0].Pos.Y;
