@@ -92,11 +92,27 @@ namespace Barotrauma.Sounds
             streamingThread = null;
 
             categoryModifiers = null;
-
+            
             alcDevice = Alc.OpenDevice(null);
             if (alcDevice == null)
             {
                 throw new Exception("Failed to open an ALC device!");
+            }
+
+            AlcError alcError = Alc.GetError(alcDevice);
+            if (alcError != AlcError.NoError)
+            {
+                //The audio device probably wasn't ready, this happens quite often
+                //Just wait a while and try again
+                Thread.Sleep(100);
+                
+                alcDevice = Alc.OpenDevice(null);
+
+                alcError = Alc.GetError(alcDevice);
+                if (alcError != AlcError.NoError)
+                {
+                    throw new Exception("Error initializing ALC device: " + alcError.ToString());
+                }
             }
 
             int[] alcContextAttrs = new int[] { };
@@ -105,17 +121,19 @@ namespace Barotrauma.Sounds
             {
                 throw new Exception("Failed to create an ALC context! (error code: "+Alc.GetError(alcDevice).ToString()+")");
             }
-
+            
             if (!Alc.MakeContextCurrent(alcContext))
             {
                 throw new Exception("Failed to assign the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
             }
-
-            ALError alError = AL.GetError();
-            if (alError != ALError.NoError)
+            
+            alcError = Alc.GetError(alcDevice);
+            if (alcError != AlcError.NoError)
             {
-                throw new Exception("OpenAL error after initializing ALC context: " + AL.GetErrorString(alError));
+                throw new Exception("Error after assigning ALC context: " + alcError.ToString());
             }
+
+            ALError alError = ALError.NoError;
 
             alSources = new uint[SOURCE_COUNT];
             for (int i=0;i<SOURCE_COUNT;i++)

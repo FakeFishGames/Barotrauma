@@ -396,7 +396,12 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        throw new Exception("Loading was interrupted due to an error");
+                        string errMsg = "Loading was interrupted due to an error";
+                        if (loadingCoroutine.Exception != null)
+                        {
+                            errMsg += ": " + loadingCoroutine.Exception.Message + "\n" + loadingCoroutine.Exception.StackTrace;
+                        }
+                        throw new Exception(errMsg);
                     }
                 }
                 else if (hasLoaded)
