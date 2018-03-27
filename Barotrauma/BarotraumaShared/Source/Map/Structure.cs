@@ -20,9 +20,7 @@ namespace Barotrauma
         public Gap gap;
 
         public int GapID;
-
-        //public float lastSentDamage;
-
+        
         public WallSection(Rectangle rect)
         {
             System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
@@ -185,6 +183,19 @@ namespace Barotrauma
             }
         }
 
+        public float BodyWidth
+        {
+            get { return prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width; }
+        }
+        public float BodyHeight
+        {
+            get { return prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height; }
+        }
+        public float BodyRotation
+        {
+            get { return prefab.BodyRotation; }
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -236,18 +247,19 @@ namespace Barotrauma
             StairDirection = prefab.StairDirection;
 
             SerializableProperties = SerializableProperty.GetProperties(this);
-
+                      
             if (prefab.Body)
             {
                 bodies = new List<Body>();
                 //gaps = new List<Gap>();
 
                 Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                    ConvertUnits.ToSimUnits(rect.Width),
-                    ConvertUnits.ToSimUnits(rect.Height),
+                    ConvertUnits.ToSimUnits(prefab.BodyWidth <= 0.0f ? rect.Width : prefab.BodyWidth),
+                    ConvertUnits.ToSimUnits(prefab.BodyHeight <= 0.0f ? rect.Height : prefab.BodyHeight),
                     1.5f);
                 newBody.BodyType = BodyType.Static;
                 newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
+                newBody.Rotation = MathHelper.ToRadians(-prefab.BodyRotation);
                 newBody.Friction = 0.5f;
                 newBody.OnCollision += OnWallCollision;
                 newBody.UserData = this;
@@ -854,12 +866,21 @@ namespace Barotrauma
             newBody.BodyType = BodyType.Static;
             newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
-
             newBody.OnCollision += OnWallCollision;
-
             newBody.CollisionCategories = Physics.CollisionWall;
-
             newBody.UserData = this;
+
+            Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
+            Vector2 diff = newBody.Position - structureCenter;
+            if (diff != Vector2.Zero)
+            {
+                float angle = MathUtils.VectorToAngle(diff);
+                newBody.Position = new Vector2(
+                    structureCenter.X + (float)Math.Cos(angle - prefab.BodyRotation),
+                    structureCenter.Y + (float)Math.Sin(angle - prefab.BodyRotation)) * diff.Length();
+            }
+            newBody.Rotation = -prefab.BodyRotation;
+
 
             bodies.Add(newBody);
 

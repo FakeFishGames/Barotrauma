@@ -31,7 +31,13 @@ namespace Barotrauma
             {
                 if (mergedSections.Count > 5)
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
+                        width, height)));
+
                     GenerateMergedHull(mergedSections);
                     continue;
                 }
@@ -43,7 +49,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
+                        width, height)));
                 }
             }
 
@@ -60,6 +71,12 @@ namespace Barotrauma
             Rectangle mergedRect = GenerateMergedRect(mergedSections);
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
+            
+            if (BodyRotation != 0.0f)
+            {
+                h.Rotate(Position, MathHelper.ToRadians(-BodyRotation));
+            }
+
             mergedSections.ForEach(x => x.hull = h);
             convexHulls.Add(h);
             mergedSections.Clear();
@@ -178,6 +195,19 @@ namespace Barotrauma
                         color,
                         textureOffset, depth);
                 }
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                if (prefab.BodyRotation != 0.0f)
+
+                GUI.DrawRectangle(spriteBatch, 
+                    new Vector2(rect.Center.X+ drawOffset.X, -(rect.Y - rect.Height / 2+ drawOffset.Y)), 
+                    prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
+                    prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height, 
+                    prefab.BodyRotation, Color.White);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(0,0,5000,5000), Color.White, true);
             }
 
             prefab.sprite.effects = oldEffects;
