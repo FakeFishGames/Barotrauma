@@ -30,4 +30,5 @@
   MissionType="Random"
   TraitorsEnabled="No"
   autobantime="60"
+  maxautobantime="360"
  />
