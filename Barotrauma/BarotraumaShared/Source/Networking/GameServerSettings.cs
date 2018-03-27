@@ -260,6 +260,14 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+
+        [Serialize(360f, true)]
+        public float MaxAutoBanTime
+        {
+            get;
+            private set;
+        }
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
@@ -369,6 +377,7 @@ namespace Barotrauma.Networking
             extraCargo = new Dictionary<ItemPrefab, int>();
 
             AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
+            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()
