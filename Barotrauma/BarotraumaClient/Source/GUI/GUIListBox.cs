@@ -320,15 +320,7 @@ namespace Barotrauma
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
         }
-
-        public override Rectangle MouseRect
-        {
-            get
-            {
-                return ClampMouseRectToParent ? ClampRect(rect) : rect;
-            }
-        }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
