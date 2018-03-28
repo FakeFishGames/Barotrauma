@@ -47,7 +47,7 @@
   <!-- Curved small pieces -->
 	
   <ExtA_curve-90 description="ExtA Curve-90" body="true"
-    width="256" height="320" bodywidth="405" bodyheight="64" bodyrotation="-50">
+    width="256" height="320" bodywidth="64" bodyheight="405" bodyrotation="40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,0,256,320" depth="0.1"/>
   </ExtA_curve-90>
 	
