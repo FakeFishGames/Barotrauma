@@ -456,7 +456,7 @@ namespace Barotrauma
             if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
             {
                 //TODO: a UI button for flipping entities
-                if (PlayerInput.KeyHit(Keys.M))
+                if (PlayerInput.KeyHit(Keys.N))
                 {
                     float minX = selectedList[0].WorldRect.X, maxX = selectedList[0].WorldRect.Right;
                     for (int i = 0; i < selectedList.Count; i++)
@@ -470,6 +470,22 @@ namespace Barotrauma
                     {
                         me.FlipX(false);
                         me.Move(new Vector2((centerX - me.WorldPosition.X) * 2.0f, 0.0f));
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.M))
+                {
+                    float minY = selectedList[0].WorldRect.Y - selectedList[0].WorldRect.Height, maxY = selectedList[0].WorldRect.Y;
+                    for (int i = 0; i < selectedList.Count; i++)
+                    {
+                        minY = Math.Min(minY, selectedList[i].WorldRect.Y - selectedList[i].WorldRect.Height);
+                        maxY = Math.Max(maxY, selectedList[i].WorldRect.Y);
+                    }
+
+                    float centerY = (minY + maxY) / 2.0f;
+                    foreach (MapEntity me in selectedList)
+                    {
+                        me.FlipY(false);
+                        me.Move(new Vector2(0.0f, (centerY - me.WorldPosition.Y) * 2.0f));
                     }
                 }
             }

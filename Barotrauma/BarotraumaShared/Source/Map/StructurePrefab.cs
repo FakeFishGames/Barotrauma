@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
 
         private float health;
         
@@ -80,6 +80,11 @@ namespace Barotrauma
             get { return canSpriteFlipX; }
         }
 
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
+        }
+
         [Serialize("0,0", true)]
         public Vector2 Size
         {
@@ -139,6 +144,7 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipVertically;
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         break;
                     case "backgroundsprite":

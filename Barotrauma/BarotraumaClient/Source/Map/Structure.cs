@@ -183,9 +183,13 @@ namespace Barotrauma
                         Math.Abs(rect.Location.X - sections[i].rect.Location.X),
                         Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
 
-                    if (flippedX && isHorizontal)
+                    if (FlippedX && isHorizontal)
                     {
                         textureOffset.X = rect.Width - textureOffset.X - sections[i].rect.Width;
+                    }
+                    if (FlippedY && !isHorizontal)
+                    {
+                        textureOffset.Y = rect.Height - textureOffset.Y - sections[i].rect.Height;
                     }
 
                     prefab.sprite.DrawTiled(

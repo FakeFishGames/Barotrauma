@@ -32,7 +32,7 @@ namespace Barotrauma
 
         private float impactTolerance;
 
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
         
         private Dictionary<string, PriceInfo> prices;
 
@@ -169,6 +169,11 @@ namespace Barotrauma
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
+        }
+
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
         }
 
         public Vector2 Size
@@ -325,6 +330,7 @@ namespace Barotrauma
                         }
 
                         canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         if (subElement.Attribute("sourcerect") == null)

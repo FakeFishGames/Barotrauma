@@ -469,6 +469,8 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipX(bool relativeToSub) { }
 
+        public virtual void FlipY(bool relativeToSub) { }
+
         public bool HasRequiredContainedItems(bool addMessage)
         {
             List<RelatedItem> requiredContained = requiredItems.FindAll(ri=> ri.Type == RelatedItem.RelationType.Contained);

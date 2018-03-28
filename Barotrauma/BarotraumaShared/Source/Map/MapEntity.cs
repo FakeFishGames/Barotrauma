@@ -21,7 +21,9 @@ namespace Barotrauma
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
 
-        protected bool flippedX;
+        private bool flippedX, flippedY;
+        public bool FlippedX { get { return flippedX; } }
+        public bool FlippedY { get { return flippedY; } }
 
         public bool MoveWithLevel
         {
@@ -326,25 +328,43 @@ namespace Barotrauma
         public virtual void Update(float deltaTime, Camera cam) { }
 
         /// <summary>
-        /// Flip the entity around the x-axis
+        /// Flip the entity horizontally
         /// </summary>
-        /// <param name="relativeToSub">Should the entity be flipped around the x-axis of the sub it's inside</param>
+        /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
         public virtual void FlipX(bool relativeToSub)
         {
-            if (!relativeToSub) return;
-
-            if (Submarine == null)
+            if (Submarine == null && relativeToSub)
             {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine==null");
+                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
                 return;
             }
+            flippedX = !flippedX;
+            if (!relativeToSub) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
-
             Move(-relative * 2.0f);
         }
-        
+
+        /// <summary>
+        /// Flip the entity vertically
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
+        public virtual void FlipY(bool relativeToSub)
+        {
+            if (Submarine == null)
+            {
+                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
+                return;
+            }
+            flippedY = !flippedY;
+            if (!relativeToSub) return;
+
+            Vector2 relative = WorldPosition - Submarine.WorldPosition;
+            relative.X = 0.0f;
+            Move(-relative * 2.0f);
+        }
+
         /// <summary>
         /// Update the linkedTo-lists of the entities based on the linkedToID-lists
         /// Has to be done after all the entities have been loaded (an entity can't

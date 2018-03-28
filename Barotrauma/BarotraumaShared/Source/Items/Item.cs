@@ -431,9 +431,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
-            if (element.GetAttributeBool("flippedx", false)) FlipX(false);
-
+            
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -995,8 +993,6 @@ namespace Barotrauma
         public override void FlipX(bool relativeToSub)
         {
             base.FlipX(relativeToSub);
-
-            flippedX = !flippedX;
             
             if (prefab.CanSpriteFlipX)
             {
@@ -1007,6 +1003,21 @@ namespace Barotrauma
             {
                 component.FlipX(relativeToSub);
             }            
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            base.FlipY(relativeToSub);
+
+            if (prefab.CanSpriteFlipY)
+            {
+                SpriteEffects ^= SpriteEffects.FlipVertically;
+            }
+
+            foreach (ItemComponent component in components)
+            {
+                component.FlipY(relativeToSub);
+            }
         }
 
         public override bool IsVisible(Rectangle worldView)
@@ -1849,11 +1860,11 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-
-                if (component == null) continue;
-
-                component.Load(subElement);
+                if (component != null) component.Load(subElement);
             }
+
+            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
+            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
         }
 
         public override XElement Save(XElement parentElement)
@@ -1863,7 +1874,8 @@ namespace Barotrauma
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
 
-            if (flippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
