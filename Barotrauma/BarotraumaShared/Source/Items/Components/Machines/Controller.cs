@@ -325,5 +325,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void FlipY(bool relativeToSub)
+        {
+            userPos.Y = -UserPos.Y;
+
+            for (int i = 0; i < limbPositions.Count; i++)
+            {
+                float diff = (item.Rect.Y + limbPositions[i].position.Y) - item.Rect.Center.Y;
+
+                Vector2 flippedPos =
+                    new Vector2(
+                        limbPositions[i].position.X,
+                        item.Rect.Center.Y - diff - item.Rect.Y);
+
+                limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
+            }
+        }
     }
 }

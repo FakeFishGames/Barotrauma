@@ -141,6 +141,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void FlipY(bool relativeToSub)
+        {
+            FlipX(relativeToSub);
+        }
+
         private DockingPort FindAdjacentPort()
         {
             foreach (DockingPort port in list)

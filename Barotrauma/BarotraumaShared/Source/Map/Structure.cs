@@ -333,11 +333,15 @@ namespace Barotrauma
 
             if (!HasBody)
             {          
-                if (flippedX && isHorizontal)
+                if (FlippedX && isHorizontal)
                 {
                     xsections = (int)Math.Ceiling((float)rect.Width / prefab.sprite.SourceRect.Width);
                     width = prefab.sprite.SourceRect.Width;
-
+                }
+                else if (FlippedY && !isHorizontal)
+                {
+                    ysections = (int)Math.Ceiling((float)rect.Height / prefab.sprite.SourceRect.Height);
+                    width = prefab.sprite.SourceRect.Height;
                 }
                 else
                 {
@@ -366,20 +370,38 @@ namespace Barotrauma
             {
                 for (int y = 0; y < ysections; y++)
                 {
-                    if (flippedX)
+                    if (FlippedX || FlippedY)
                     {
-                        Rectangle sectionRect = new Rectangle(rect.Right - (x + 1) * width, rect.Y - y * height, width, height);
+                        Rectangle sectionRect = new Rectangle(
+                            FlippedX ? rect.Right - (x + 1) * width : rect.X + x * width, 
+                            FlippedY ? rect.Y - rect.Height + (y + 1) * height : rect.Y - y * height, 
+                            width, height);
 
-                        int over = Math.Max(rect.X - sectionRect.X, 0);
+                        if (FlippedX)
+                        {
+                            int over = Math.Max(rect.X - sectionRect.X, 0);
+                            sectionRect.X += over;
+                            sectionRect.Width -= over;
+                        }
+                        else
+                        {
+                            sectionRect.Width -= (int)Math.Max(sectionRect.Right - rect.Right, 0.0f);
+                        }
+                        if (FlippedY)
+                        {
+                            int over = Math.Max(sectionRect.Y - rect.Y, 0);
+                            sectionRect.Y -= over;
+                            sectionRect.Height -= over;
+                        }
+                        else
+                        {
+                            sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+                        }
 
-                        sectionRect.X += over;
-                        sectionRect.Width -= over;
-
-                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+                        //sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
 
                         sections[xsections - 1 - x + y] = new WallSection(sectionRect);
                     }
-
                     else
                     {
                         Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
@@ -905,8 +927,6 @@ namespace Barotrauma
         public override void FlipX(bool relativeToSub)
         {
             base.FlipX(relativeToSub);
-
-            flippedX = !flippedX;
             
             if (prefab.CanSpriteFlipX)
             {
@@ -924,7 +944,28 @@ namespace Barotrauma
 
             CreateSections();
         }
-        
+
+        public override void FlipY(bool relativeToSub)
+        {
+            base.FlipY(relativeToSub);
+
+            if (prefab.CanSpriteFlipY)
+            {
+                SpriteEffects ^= SpriteEffects.FlipVertically;
+            }
+
+            if (StairDirection != Direction.None)
+            {
+                StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
+                bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                bodies.Clear();
+
+                CreateStairBodies();
+            }
+
+            CreateSections();
+        }
+
         public static void Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
@@ -958,6 +999,9 @@ namespace Barotrauma
                 }
             }
 
+            if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
+            if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
+
             SerializableProperty.DeserializeProperties(s, element);
         }
 
@@ -972,7 +1016,8 @@ namespace Barotrauma
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     rect.Width + "," + rect.Height));
 
-            if (flippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
             for (int i = 0; i < sections.Length; i++)
             {

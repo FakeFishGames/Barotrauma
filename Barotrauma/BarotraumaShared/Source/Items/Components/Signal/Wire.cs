@@ -459,6 +459,15 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
+        public override void FlipY(bool relativeToSub)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i] = new Vector2(nodes[i].X, -nodes[i].Y);
+            }
+            UpdateSections();
+        }
+
         public override void Load(XElement componentElement)
         {
             base.Load(componentElement);
