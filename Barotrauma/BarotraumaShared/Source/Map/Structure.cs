@@ -198,7 +198,7 @@ namespace Barotrauma
             get
             {
                 float rotation = MathHelper.ToRadians(prefab.BodyRotation);
-                if (FlippedX) rotation = MathHelper.Pi - rotation;
+                if (FlippedX) rotation = -MathHelper.Pi - rotation;
                 if (FlippedY) rotation = -rotation;
                 return rotation;
             }
@@ -409,8 +409,9 @@ namespace Barotrauma
                         }
 
                         //sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
-
-                        sections[xsections - 1 - x + y] = new WallSection(sectionRect);
+                        int xIndex = FlippedX && isHorizontal ? (xsections - 1 - x) : x;
+                        int yIndex = FlippedY && !isHorizontal ? (ysections - 1 - y) : y;
+                        sections[xIndex + yIndex] = new WallSection(sectionRect);
                     }
                     else
                     {
@@ -785,11 +786,33 @@ namespace Barotrauma
             }
             else
             {
-
                 if (sections[sectionIndex].gap == null)
                 {
-
                     Rectangle gapRect = sections[sectionIndex].rect;
+                    float diffFromCenter;
+                    if (isHorizontal)
+                    {
+                        diffFromCenter = (gapRect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
+                        if (BodyWidth > 0.0f) gapRect.Width = (int)(BodyWidth * (gapRect.Width / (float)this.rect.Width));
+                        if (BodyHeight > 0.0f) gapRect.Height = (int)BodyHeight;
+                    }
+                    else
+                    {
+                        diffFromCenter = ((gapRect.Y - gapRect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
+                        if (BodyWidth > 0.0f) gapRect.Width = (int)BodyWidth;
+                        if (BodyHeight > 0.0f) gapRect.Height = (int)(BodyHeight * (gapRect.Height / (float)this.rect.Height));
+                    }
+                    if (FlippedX) diffFromCenter = -diffFromCenter;
+
+                    if (BodyRotation != 0.0f)
+                    {
+                        Vector2 structureCenter = Position;
+                        Vector2 gapPos = structureCenter + new Vector2(
+                            (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                            (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
+                        gapRect = new Rectangle((int)(gapPos.X - gapRect.Width / 2), (int)(gapPos.Y + gapRect.Height / 2), gapRect.Width, gapRect.Height);
+                    }
+
                     gapRect.X -= 10;
                     gapRect.Y += 10;
                     gapRect.Width += 20;
@@ -889,19 +912,16 @@ namespace Barotrauma
 
         private Body CreateRectBody(Rectangle rect)
         {
-            Rectangle transformedRect = rect;
             float diffFromCenter;
             if (isHorizontal)
             {
                 diffFromCenter = (rect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
-
                 if (BodyWidth > 0.0f) rect.Width = (int)(BodyWidth * (rect.Width / (float)this.rect.Width));
                 if (BodyHeight > 0.0f) rect.Height = (int)BodyHeight;
             }
             else
             {
                 diffFromCenter = ((rect.Y - rect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
-
                 if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
                 if (BodyHeight > 0.0f) rect.Height = (int)(BodyHeight * (rect.Height / (float)this.rect.Height));
             }
@@ -916,19 +936,18 @@ namespace Barotrauma
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = Physics.CollisionWall;
             newBody.UserData = this;
-            
+
             /*Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
             Vector2 diff = newBody.Position - structureCenter;*/
             if (BodyRotation != 0.0f)
             {
                 Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
-                newBody.Position =structureCenter + new Vector2(
-                    (float)Math.Cos(-BodyRotation),
-                    (float)Math.Sin(-BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);                
+                newBody.Position = structureCenter + new Vector2(
+                    (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                    (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);
                 newBody.Rotation = -BodyRotation;
             }
-
-
+            
             bodies.Add(newBody);
 
             return newBody;
