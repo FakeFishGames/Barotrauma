@@ -320,7 +320,7 @@ namespace Barotrauma
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
         {
-            Matrix rotate = Matrix.CreateRotationZ(MathHelper.ToRadians(rotation));
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
 
             width *= 0.5f;
             height *= 0.5f;

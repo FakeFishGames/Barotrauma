@@ -189,9 +189,19 @@ namespace Barotrauma
         {
             get { return prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height; }
         }
+
+        /// <summary>
+        /// In radians, takes flipping into account
+        /// </summary>
         public float BodyRotation
         {
-            get { return prefab.BodyRotation; }
+            get
+            {
+                float rotation = MathHelper.ToRadians(prefab.BodyRotation);
+                if (FlippedX) rotation = MathHelper.Pi - rotation;
+                if (FlippedY) rotation = -rotation;
+                return rotation;
+            }
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -879,6 +889,23 @@ namespace Barotrauma
 
         private Body CreateRectBody(Rectangle rect)
         {
+            Rectangle transformedRect = rect;
+            float diffFromCenter;
+            if (isHorizontal)
+            {
+                diffFromCenter = (rect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
+
+                if (BodyWidth > 0.0f) rect.Width = (int)(BodyWidth * (rect.Width / (float)this.rect.Width));
+                if (BodyHeight > 0.0f) rect.Height = (int)BodyHeight;
+            }
+            else
+            {
+                diffFromCenter = ((rect.Y - rect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
+
+                if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
+                if (BodyHeight > 0.0f) rect.Height = (int)(BodyHeight * (rect.Height / (float)this.rect.Height));
+            }
+
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
@@ -889,17 +916,17 @@ namespace Barotrauma
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = Physics.CollisionWall;
             newBody.UserData = this;
-
-            Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
-            Vector2 diff = newBody.Position - structureCenter;
-            if (diff != Vector2.Zero)
+            
+            /*Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
+            Vector2 diff = newBody.Position - structureCenter;*/
+            if (BodyRotation != 0.0f)
             {
-                float angle = MathUtils.VectorToAngle(diff);
-                newBody.Position = new Vector2(
-                    structureCenter.X + (float)Math.Cos(angle - prefab.BodyRotation),
-                    structureCenter.Y + (float)Math.Sin(angle - prefab.BodyRotation)) * diff.Length();
+                Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
+                newBody.Position =structureCenter + new Vector2(
+                    (float)Math.Cos(-BodyRotation),
+                    (float)Math.Sin(-BodyRotation)) * ConvertUnits.ToSimUnits(diffFromCenter);                
+                newBody.Rotation = -BodyRotation;
             }
-            newBody.Rotation = -prefab.BodyRotation;
 
 
             bodies.Add(newBody);
@@ -943,6 +970,7 @@ namespace Barotrauma
             }
 
             CreateSections();
+            if (HasBody) UpdateSections();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -964,6 +992,7 @@ namespace Barotrauma
             }
 
             CreateSections();
+            if (HasBody) UpdateSections();
         }
 
         public static void Load(XElement element, Submarine submarine)
