@@ -150,7 +150,15 @@ namespace Barotrauma
                 {
                     using (var stream = File.OpenRead(file.path))
                     {
-                        hashes.Add(md5.ComputeHash(stream));
+                        byte[] data = new byte[stream.Length];
+                        stream.Read(data, 0, (int)stream.Length);
+                        if (file.path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+                        {
+                            string text = System.Text.Encoding.UTF8.GetString(data);
+                            text = text.Replace("\n", "").Replace("\r", "");
+                            data = System.Text.Encoding.UTF8.GetBytes(text);
+                        }
+                        hashes.Add(md5.ComputeHash(data));
                     }
                 }
 
