@@ -71,10 +71,10 @@ namespace Barotrauma
             Rectangle mergedRect = GenerateMergedRect(mergedSections);
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
-            
+
             if (BodyRotation != 0.0f)
             {
-                h.Rotate(Position, MathHelper.ToRadians(-BodyRotation));
+                h.Rotate(Position, -BodyRotation);
             }
 
             mergedSections.ForEach(x => x.hull = h);
@@ -203,15 +203,30 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (prefab.BodyRotation != 0.0f)
+                /*if (prefab.BodyRotation != 0.0f)
+                    GUI.DrawRectangle(spriteBatch, 
+                        new Vector2(rect.Center.X+ drawOffset.X, -(rect.Y - rect.Height / 2+ drawOffset.Y)), 
+                        prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
+                        prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height, 
+                        prefab.BodyRotation, Color.White);*/
 
-                GUI.DrawRectangle(spriteBatch, 
-                    new Vector2(rect.Center.X+ drawOffset.X, -(rect.Y - rect.Height / 2+ drawOffset.Y)), 
-                    prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
-                    prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height, 
-                    prefab.BodyRotation, Color.White);
+                if (bodies != null && prefab.BodyRotation != 0.0f)
+                {
+                    foreach (FarseerPhysics.Dynamics.Body body in bodies)
+                    {
+                        Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(body.Position);
+                        if (Submarine != null) pos += Submarine.Position;
+                        pos.Y = -pos.Y;
+                        GUI.DrawRectangle(spriteBatch,
+                            pos,
+                            prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
+                            prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height,
+                            -body.Rotation, Color.White);
+                    }
+                }
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle(0,0,5000,5000), Color.White, true);
+
+                //GUI.DrawRectangle(spriteBatch, new Rectangle(0,0,5000,5000), Color.White, true);
             }
 
             prefab.sprite.effects = oldEffects;

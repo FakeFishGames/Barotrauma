@@ -269,7 +269,7 @@ namespace Barotrauma
                     character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
                 }
-                else
+                else if (character.Inventory != null)
                 {
                     character.Inventory.Alignment = Alignment.Center;
                 }
