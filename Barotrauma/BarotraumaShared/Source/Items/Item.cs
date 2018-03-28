@@ -499,6 +499,8 @@ namespace Barotrauma
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
             }
+            if (FlippedX) clone.FlipX(false);
+            if (FlippedY) clone.FlipY(false);
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)

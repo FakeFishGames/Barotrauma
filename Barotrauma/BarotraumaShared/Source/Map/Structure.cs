@@ -308,6 +308,8 @@ namespace Barotrauma
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.SerializableProperties[property.Key].TrySetValue(property.Value.GetValue());
             }
+            if (FlippedX) clone.FlipX(false);
+            if (FlippedY) clone.FlipY(false);
             return clone;
         }
 
