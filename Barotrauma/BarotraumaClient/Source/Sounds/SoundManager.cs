@@ -13,6 +13,7 @@ namespace Barotrauma.Sounds
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
+        private List<string> alcCaptureDeviceNames;
         private uint[] alSources;
 
         private List<Sound> loadedSounds;
@@ -185,6 +186,15 @@ namespace Barotrauma.Sounds
             if (alError != ALError.NoError)
             {
                 throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
+            }
+
+            if (Alc.IsExtensionPresent(IntPtr.Zero, "ALC_EXT_CAPTURE"))
+            {
+                alcCaptureDeviceNames = new List<string>(Alc.GetString(IntPtr.Zero, AlcGetStringList.CaptureDeviceSpecifier));
+            }
+            else
+            {
+                alcCaptureDeviceNames = null;
             }
 
             listenerOrientation = new float[6];
