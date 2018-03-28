@@ -12,8 +12,8 @@ namespace Barotrauma
     {
         const float ChatMessageFadeTime = 10.0f;
 
-        const float ConversationIntervalMin = 60.0f;
-        const float ConversationIntervalMax = 120.0f;
+        const float ConversationIntervalMin = 100.0f;
+        const float ConversationIntervalMax = 180.0f;
         
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
@@ -130,6 +130,11 @@ namespace Barotrauma
 
         private void UpdateConversations(float deltaTime)
         {
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.P))
+            {
+                conversationTimer = 0.0f;
+            }
+
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {
