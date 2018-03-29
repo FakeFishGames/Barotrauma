@@ -610,7 +610,7 @@ namespace Barotrauma
             bool isHorizontal = rect.Height > rect.Width;
 
             var horizontalAttribute = element.Attribute("horizontal");
-            if (horizontalAttribute!=null)
+            if (horizontalAttribute != null)
             {
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
