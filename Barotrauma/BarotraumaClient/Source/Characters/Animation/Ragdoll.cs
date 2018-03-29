@@ -17,10 +17,9 @@ namespace Barotrauma
             if (body.UserData is Limb && character.Stun <= 0f)
             {
                 Limb limb = (Limb)body.UserData;
-
-                if (impact > 3.0f && limb.SoundTimer <= 0.0f)
+                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    limb.SoundTimer = Limb.SoundInterval;
+                    limb.LastImpactSoundTime = (float)Timing.TotalTime;
                     if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
                         SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);

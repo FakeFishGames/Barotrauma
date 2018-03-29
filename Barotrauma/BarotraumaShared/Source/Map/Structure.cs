@@ -759,9 +759,7 @@ namespace Barotrauma
 #if CLIENT
             if (playSound)
             {
-                //TODO: reimplement
-                //string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
-                //SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
+                SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 
