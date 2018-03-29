@@ -843,7 +843,22 @@ namespace Barotrauma
                     gapRect.Y += 10;
                     gapRect.Width += 20;
                     gapRect.Height += 20;
-                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
+                    
+                    bool horizontalGap = !IsHorizontal;
+                    if (prefab.BodyRotation != 0.0f)
+                    {
+                        //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
+                        float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
+                        //diagonal if 30 < angle < 60
+                        bool diagonal = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
+                        if (diagonal)
+                        {
+                            horizontalGap = gapRect.Y - gapRect.Height / 2 < Position.Y;
+                        }
+                    }
+
+                    sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
                     //AdjustKarma(attacker, 300);
 
