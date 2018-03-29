@@ -24,7 +24,10 @@
     <!-- head -->
     <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
-      <attack range="1000" damagerange="520" duration="0.05" damage="200" stun="5" force="20" damagetype="blunt" targetforce="100"/>
+      <attack range="700" damagerange="350" duration="0.05" force="20" targetforce="100" structuresoundtype="StructureBlunt">
+        <affliction name="Internal Damage" strength="250"/>
+        <affliction name="Stun" strength="5"/>
+      </attack>
       <damagemodifier damagetype="Any" armorsector="0.0,180.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
     
