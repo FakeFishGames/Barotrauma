@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,12 +7,72 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Submarine : Entity, IServerSerializable
     {
         public Sprite PreviewImage;
+
+        private static List<Sound> roundSounds = null;
+
+        public static Sound LoadRoundSound(string filename,bool stream=false)
+        {
+            if (roundSounds == null)
+            {
+                roundSounds = new List<Sound>();
+            }
+            else
+            {
+                Sound sound = roundSounds.Find(s => s.Filename == filename && s.Stream == stream);
+
+                if (sound != null) return sound;
+            }
+
+            Sound newSound = GameMain.SoundManager.LoadSound(filename, stream);
+
+            roundSounds.Add(newSound);
+            return newSound;
+        }
+
+        public static Sound LoadRoundSound(XElement element, bool stream=false)
+        {
+            if (roundSounds == null)
+            {
+                roundSounds = new List<Sound>();
+            }
+            else
+            {
+                Sound sound = roundSounds.Find(s =>
+                    s.Filename == element.GetAttributeString("file", "") &&
+                    Math.Abs(s.BaseGain-element.GetAttributeFloat("volume", 1.0f))<0.01f &&
+                    Math.Abs(s.BaseFar-element.GetAttributeFloat("range", 1000.0f))<0.01f &&
+                    s.Stream == stream);
+
+                if (sound != null) return sound;
+            }
+            Sound newSound = GameMain.SoundManager.LoadSound(element, stream);
+            roundSounds.Add(newSound);
+            return newSound;
+        }
+
+        public static void RemoveRoundSound(Sound sound)
+        {
+            sound.Dispose();
+            if (roundSounds == null) return;
+            if (roundSounds.Contains(sound)) roundSounds.Remove(sound);
+        }
+
+        public static void RemoveAllRoundSounds()
+        {
+            if (roundSounds == null) return;
+            for (int i=roundSounds.Count-1;i>=0;i--)
+            {
+                RemoveRoundSound(roundSounds[i]);
+            }
+            Items.Components.Powered.ClearSounds();
+        }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {

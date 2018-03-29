@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 #endif
 
 namespace Barotrauma
@@ -34,6 +35,7 @@ namespace Barotrauma
         private List<ParticleEmitter> particleEmitters;
 
         private Sound sound;
+        private SoundChannel soundChannel;
         private bool loopSound;
 #endif
 
@@ -260,7 +262,7 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        sound = Sound.Load(subElement);
+                        sound = Submarine.LoadRoundSound(subElement);
                         loopSound = subElement.GetAttributeBool("loop", false);
                         break;
 #endif
@@ -371,20 +373,10 @@ namespace Barotrauma
 #if CLIENT
             if (sound != null)
             {
-                if (loopSound)
+                if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    if (!Sounds.SoundManager.IsPlaying(sound))
-                    {
-                        sound.Play(entity.WorldPosition);
-                    }
-                    else
-                    {
-                        sound.UpdatePosition(entity.WorldPosition);
-                    }
-                }
-                else
-                {
-                    sound.Play(entity.WorldPosition);
+                    soundChannel = sound.Play(entity.WorldPosition);
+                    soundChannel.Looping = loopSound;
                 }
             }
 #endif            
