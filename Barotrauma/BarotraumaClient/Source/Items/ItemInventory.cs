@@ -21,8 +21,11 @@ namespace Barotrauma
                 //if no top sprite the top of the frame simply shows the name of the item -> make some room for that
                 if (container.InventoryTopSprite == null)
                 {
-                    backgroundFrame.Inflate(10, 20);
-                    backgroundFrame.Location -= new Point(0, 10);
+                    if (!subInventory)
+                    {
+                        backgroundFrame.Inflate(10, 20);
+                        backgroundFrame.Location -= new Point(0, 10);
+                    }
                 }
 
                 if (container.InventoryBackSprite == null)
@@ -51,7 +54,7 @@ namespace Barotrauma
                 if (container.InventoryTopSprite == null)
                 {
                     Item item = Owner as Item;
-                    if (item != null)
+                    if (item != null && !subInventory)
                     {
                         GUI.DrawString(spriteBatch,
                             new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(item.Name).X / 2), (int)backgroundFrame.Y + 5),
