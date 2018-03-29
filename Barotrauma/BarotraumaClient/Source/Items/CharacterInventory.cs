@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     partial class CharacterInventory : Inventory
     {
-        const float HiddenPos = 130.0f;
+        const float HiddenPos = 190.0f;
         
         private static Sprite toggleArrow;
         private float arrowAlpha;
@@ -182,15 +182,15 @@ namespace Barotrauma
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.OuterClothes:
-                            SlotPositions[i] = new Vector2(100 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.LeftHand:
-                            SlotPositions[i] = new Vector2(180 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 130 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.RightHand:
-                            SlotPositions[i] = new Vector2(260 * UIScale, GameMain.GraphicsHeight - 160 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 60 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Pack:
@@ -198,7 +198,7 @@ namespace Barotrauma
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Any:
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 220 * UIScale);
                             x += (int)((slotSpriteVertical.size.X + spacing) * UIScale);
                             break;
                     }
@@ -208,12 +208,12 @@ namespace Barotrauma
                     if (HideSlot(i)) continue;
                     if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                     {
-                        SlotPositions[i] = new Vector2(x2, GameMain.GraphicsHeight - 280 * UIScale);
+                        SlotPositions[i] = new Vector2(x2, GameMain.GraphicsHeight - 370 * UIScale);
                         x2 += (int)((slots[i].Rect.Width + spacing * UIScale));
                     }
                     else
                     {
-                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 160 * UIScale);
+                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 210 * UIScale);
                         x += (int)((slots[i].Rect.Width + spacing * UIScale));
                     }
                 }
@@ -222,7 +222,7 @@ namespace Barotrauma
                     if (HideSlot(i)) continue;
                     if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                     {
-                        SlotPositions[i] = new Vector2(x2 - slots[i].Rect.Width, GameMain.GraphicsHeight - 240 * UIScale);
+                        SlotPositions[i] = new Vector2(x2 - slots[i].Rect.Width, GameMain.GraphicsHeight - 330 * UIScale);
                         if (i < slots.Length - 1)
                         {
                             x2 -= (int)((slots[i].Rect.Width + spacing * UIScale));
@@ -230,7 +230,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        SlotPositions[i] = new Vector2(x - slots[i].Rect.Width, GameMain.GraphicsHeight - 160 * UIScale);
+                        SlotPositions[i] = new Vector2(x - slots[i].Rect.Width, GameMain.GraphicsHeight - 210 * UIScale);
                         if (i < slots.Length - 1)
                         {
                             x -= (int)((slots[i].Rect.Width + spacing * UIScale));
@@ -345,10 +345,21 @@ namespace Barotrauma
                 }
             }
 
+            //make subinventories with one slot always visible
+            for (int i = 0; i < capacity; i++)
+            {
+                Inventory subInventory = GetSubInventory(i);
+                if (subInventory != null && subInventory.Capacity == 1)
+                {
+                    UpdateSubInventory(deltaTime, i);
+                }
+            }
+
+            //activate the subinventory of the currently selected slot
             if (selectedSlot?.ParentInventory == this)
             {
                 var subInventory = GetSubInventory(selectedSlot.SlotIndex);
-                if (subInventory != null)
+                if (subInventory != null && subInventory.Capacity > 1)
                 {
                     selectedSlot.Inventory = subInventory;
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
@@ -366,12 +377,15 @@ namespace Barotrauma
                 if (!hidden || hoverOnInventory)
                 {
                     var subInventory = GetSubInventory(packSlotIndex);
-                    hideSubInventories.RemoveAll(i => i.SlotIndex == packSlotIndex);
-                    subInventory.HideTimer = 1.0f;
-                    if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
+                    if (subInventory != null && subInventory.Capacity > 1)
                     {
-                        highlightedSubInventorySlots.Add(new SlotReference(this, slots[packSlotIndex], packSlotIndex, false, subInventory));
-                        UpdateSubInventory(deltaTime, packSlotIndex);
+                        hideSubInventories.RemoveAll(i => i.SlotIndex == packSlotIndex);
+                        subInventory.HideTimer = 1.0f;
+                        if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
+                        {
+                            highlightedSubInventorySlots.Add(new SlotReference(this, slots[packSlotIndex], packSlotIndex, false, subInventory));
+                            UpdateSubInventory(deltaTime, packSlotIndex);
+                        }
                     }
                 }
             }
@@ -385,7 +399,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character == Character.Controlled && CharacterHealth.OpenHealthWindow == null)
+            if (character == Character.Controlled)
             {
                 for (int i = 0; i < capacity; i++)
                 {
@@ -526,7 +540,6 @@ namespace Barotrauma
                 }
             }*/
 
-            if (CharacterHealth.OpenHealthWindow != null) return;
 
             for (int i = 0; i < capacity; i++)
             {
@@ -543,7 +556,16 @@ namespace Barotrauma
                         EquipIndicatorOn.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorOn.size / 2, 0, UIScale * 0.85f);
                     }
                 }
+
+                ItemContainer container = Items[i]?.GetComponent<ItemContainer>();
+                if (container != null && container.Capacity == 1 && container.Inventory.slots != null)
+                {
+                    container.Inventory.slots[0].SlotSprite = slotSpriteRound;
+                    DrawSlot(spriteBatch, container.Inventory.slots[0], container.Inventory.Items[0]);
+                }
             }
+
+            if (CharacterHealth.OpenHealthWindow != null) return;
 
             if (Alignment == Alignment.Center)
             {

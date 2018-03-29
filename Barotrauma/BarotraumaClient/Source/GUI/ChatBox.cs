@@ -90,7 +90,7 @@ namespace Barotrauma
             
             int width = (int)(330 * GUI.Scale);
             int height = (int)(440 * GUI.Scale);
-            guiFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 10 - width, 60 + (int)(90 * GUI.Scale - parent.Padding.Y - parent.Rect.Y), width, height), null, parent);
+            guiFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 10 - width, 90 + (int)(120 * GUI.Scale - parent.Padding.Y - parent.Rect.Y), width, height), null, parent);
             chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 35), Color.White * 0.5f, "ChatBox", guiFrame);
             chatBox.Padding = Vector4.Zero;
 

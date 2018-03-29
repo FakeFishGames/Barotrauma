@@ -59,7 +59,10 @@ namespace Barotrauma
         private static CharacterHealth openHealthWindow;
         public static CharacterHealth OpenHealthWindow
         {
-            get { return openHealthWindow; }
+            get
+            {
+                return openHealthWindow;
+            }
             set
             {
                 if (openHealthWindow == value) return;
@@ -154,9 +157,9 @@ namespace Barotrauma
         private void UpdateAlignment()
         {
             int windowWidth = (int)(300 * GUI.Scale);
-            int windowHeight = (int)(600 * GUI.Scale);
+            int windowHeight = (int)(450 * GUI.Scale);
             
-            int y = 60 + (int)(90 * GUI.Scale);
+            int y = 30 + (int)(90 * GUI.Scale);
             if (alignment == Alignment.Left)
             {
                 healthBar.Rect = new Rectangle(10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
@@ -250,6 +253,10 @@ namespace Barotrauma
             }
             else
             {
+                if (openHealthWindow != null && character != Character.Controlled && character != Character.Controlled?.SelectedCharacter)
+                {
+                    openHealthWindow = null;
+                }
                 highlightedLimbIndex = -1;
             }
             
@@ -427,16 +434,21 @@ namespace Barotrauma
             });
         }
 
-        public void OnItemDropped(Item item)
+        public bool OnItemDropped(Item item)
         {
-            if (highlightedLimbIndex < 0 || item == null) return;
+            if (highlightedLimbIndex < 0 || item == null) return false;
+
+            if (!healthWindow.Rect.Contains(PlayerInput.MousePosition) && !afflictionContainer.Rect.Contains(PlayerInput.MousePosition))
+            {
+                return false;
+            }
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
-                return;
+                return true;
             }
 #endif
             if (GameMain.Server != null)
@@ -445,6 +457,7 @@ namespace Barotrauma
             }
 
             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
+            return true;
         }
 
         /*private void UpdateItemContainer()
