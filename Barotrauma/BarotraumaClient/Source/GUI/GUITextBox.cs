@@ -255,12 +255,6 @@ namespace Barotrauma
                     Text = "";
                     OnEnterPressed(this, input);
                 }
-#if LINUX || OSX
-                else if (PlayerInput.KeyHit(Keys.Back) && Text.Length>0)
-                {
-                    Text = Text.Substring(0, Text.Length-1);
-                }
-#endif
             }
             else if (Selected)
             {
