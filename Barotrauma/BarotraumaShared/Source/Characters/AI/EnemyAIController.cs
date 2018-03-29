@@ -643,6 +643,8 @@ namespace Barotrauma
             var damageTarget = (wallAttackPos != Vector2.Zero && targetEntity != null) ? targetEntity : selectedAiTarget.Entity as IDamageable;
             if (damageTarget == null) return;
 
+            if (damageTarget == null) return;
+
             float prevHealth = damageTarget.Health;
             limb.UpdateAttack(deltaTime, attackPosition, damageTarget);
 

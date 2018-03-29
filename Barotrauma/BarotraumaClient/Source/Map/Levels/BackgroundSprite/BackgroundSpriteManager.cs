@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,6 +11,7 @@ namespace Barotrauma
     {
         public List<ParticleEmitter> ParticleEmitters;
         public Sound Sound;
+        public SoundChannel SoundChannel;
     }
 
     partial class BackgroundSpriteManager
@@ -33,15 +35,15 @@ namespace Barotrauma
 
                 if (s.Sound != null)
                 {
-                    int sourceIndex;
                     Vector2 soundPos = s.LocalToWorld(new Vector2(s.Prefab.SoundPosition.X, s.Prefab.SoundPosition.Y));
-                    if (!Sounds.SoundManager.IsPlaying(s.Sound, out sourceIndex))
+                    if (s.SoundChannel == null || !s.SoundChannel.IsPlaying)
                     {
-                        s.Sound.Play(soundPos);
+                        s.SoundChannel = s.Sound.Play(1.0f,1000.0f,soundPos);
                     }
                     else
                     {
-                        s.Sound.UpdatePosition(soundPos);
+                        s.SoundChannel.Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
+                        //s.Sound.UpdatePosition(soundPos);
                     }
                 }
             }

@@ -339,10 +339,10 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
             
@@ -374,13 +374,13 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
-            
+
             if (entityGrids != null)
             {
                 foreach (EntityGrid entityGrid in entityGrids)

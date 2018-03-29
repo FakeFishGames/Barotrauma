@@ -1,265 +1,156 @@
-﻿
-using Barotrauma.Sounds;
+﻿using System;
+using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml.Linq;
 
-namespace Barotrauma
+namespace Barotrauma.Sounds
 {
-    public class Sound
+    public abstract class Sound : IDisposable
     {
-        public static Vector3 CameraPos;
+        public SoundManager Owner
+        {
+            get;
+            protected set;
+        }
 
-        private static List<Sound> loadedSounds = new List<Sound>();
+        public string Filename
+        {
+            get;
+            protected set;
+        }
 
-        private static OggStream stream;
+        public bool Stream
+        {
+            get;
+            protected set;
+        }
 
-        private OggSound oggSound;
+        private uint alBuffer;
+        public uint ALBuffer
+        {
+            get { return !Stream ? alBuffer : 0; }
+        }
 
-        private readonly string filePath;
-        private readonly bool destroyOnGameEnd;
+        private uint alMuffledBuffer;
+        public uint ALMuffledBuffer
+        {
+            get { return !Stream ? alMuffledBuffer : 0; }
+        }
 
-        private float baseVolume;
-        private float range;
+        public ALFormat ALFormat
+        {
+            get;
+            protected set;
+        }
 
-        private int alSourceId;
+        public int SampleRate
+        {
+            get;
+            protected set;
+        }
+
+        public float BaseGain;
+        public float BaseNear;
+        public float BaseFar;
         
-        public bool IsPlaying
+        public Sound(SoundManager owner,string filename,bool stream)
         {
-            get
-            {
-                return SoundManager.IsPlaying(alSourceId);
-            }
-        }
+            Owner = owner;
+            Filename = filename;
+            Stream = stream;
 
-        private Sound(string file, bool destroyOnGameEnd)
-        {
-            filePath = file;
-
-            foreach (Sound loadedSound in loadedSounds)
-            {
-                if (loadedSound.filePath == file) oggSound = loadedSound.oggSound;
-            }
-
-            if (oggSound == null && !SoundManager.Disabled)
-            {
-                try
-                {
-                    DebugConsole.Log("Loading sound " + file);
-                    oggSound = OggSound.Load(file);                    
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to load sound "+file+"!", e);
-                }
-                ALHelper.Check();
-            }
-
-            baseVolume = 1.0f;
-            range = 1000.0f;
-
-            this.destroyOnGameEnd = destroyOnGameEnd;
-                
-            loadedSounds.Add(this);
-        }
-          
-        public string FilePath
-        {
-            get { return filePath; }
-        }
-
-        public int AlBufferId
-        {
-             get { return oggSound==null ? -1 : oggSound.AlBufferId; }
-        }
-
-        public static void Init()
-        {
-            SoundManager.Init();
-        }
-        
-        public static Sound Load(string file, bool destroyOnGameEnd = true)
-        {
-            if (!File.Exists(file))
-            {
-                DebugConsole.ThrowError("File \"" + file + "\" not found!");
-                return null;
-            }
+            BaseGain = 1.0f;
+            BaseNear = 100.0f;
+            BaseFar = 200.0f;
             
-            return new Sound(file, destroyOnGameEnd);
-        }
-
-        public static Sound Load(XElement element, bool destroyOnGameEnd = true)
-        {
-            string filePath = element.GetAttributeString("file", "");           
-
-            var newSound = new Sound(filePath, destroyOnGameEnd);
-            if (newSound != null)
+            if (!stream)
             {
-                newSound.baseVolume = element.GetAttributeFloat("volume", 1.0f);
-                newSound.range = element.GetAttributeFloat("range", 1000.0f);
-            }
-
-            return newSound;
-        }
-
-        public int Play(float volume = 1.0f)
-        {
-            if (volume <= 0.0f) return -1;
-
-            alSourceId = SoundManager.Play(this, volume);
-            return alSourceId;
-        }
-
-        public int Play(Vector2 position)
-        {
-            return Play(baseVolume, range, position);
-        }
-
-        public int Play(float baseVolume, float range, Vector2 position)
-        {          
-            Vector2 relativePos = GetRelativePosition(position);
-            float volume = GetVolume(relativePos, range, baseVolume);
-
-            if (volume <= 0.0f) return -1;
-
-            alSourceId = SoundManager.Play(this, relativePos, volume);
-
-            return alSourceId;
-        }
-
-        public void UpdatePosition(Vector2 position)
-        {
-            int sourceIndex = -1;
-            if (SoundManager.IsPlaying(this, out sourceIndex))
-            {
-                Vector2 relativePos = GetRelativePosition(position);
-                float volume = GetVolume(relativePos, range, baseVolume);
-
-                if (volume <= 0.0f)
+                AL.GenBuffer(out alBuffer);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
                 {
-                    SoundManager.Stop(this);
-                    return;
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
+
+                if (!AL.IsBuffer(alBuffer))
+                {
+                    throw new Exception("Generated OpenAL buffer is invalid!");
+                }
+
+                AL.GenBuffer(out alMuffledBuffer);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
                 }
                 
-                SoundManager.UpdateSoundPosition(sourceIndex, relativePos, volume);
-            }
-        }
-        
-        private float GetVolume(Vector2 relativePosition, float range, float baseVolume)
-        {
-            float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - (relativePosition.Length() * 100.0f)) / range, 0.0f, 1.0f);
-
-            return volume;
-        }
-
-        private Vector2 GetRelativePosition(Vector2 position)
-        {
-            return new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y) / 100.0f;
-        }
-
-        public int Loop(int sourceIndex, float volume)
-        {
-            if (volume <= 0.0f)
-            {
-                if (sourceIndex > 0)
+                if (!AL.IsBuffer(alMuffledBuffer))
                 {
-                    SoundManager.Stop(sourceIndex);
-                    sourceIndex = -1;
+                    throw new Exception("Generated OpenAL buffer is invalid!");
                 }
-
-                return sourceIndex;
             }
-
-            int newIndex = SoundManager.Loop(this, sourceIndex, volume);
-
-            return newIndex;
+            else
+            {
+                alBuffer = 0;
+            }
         }
 
-        public int Loop(int sourceIndex, float baseVolume, Vector2 position, float range)
+        public bool IsPlaying()
         {
-            Vector2 relativePos = GetRelativePosition(position);
-            float volume = GetVolume(relativePos, range, baseVolume);
+            return Owner.IsPlaying(this);
+        }
 
-            if (volume <= 0.0f)
+        public SoundChannel Play(float gain, float range, Vector2 position)
+        {
+            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range, "default");
+        }
+
+        public SoundChannel Play(Vector2 position)
+        {
+            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar, "default");
+        }
+
+        public SoundChannel Play(Vector3? position, float gain)
+        {
+            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default");
+        }
+
+        public SoundChannel Play(float gain)
+        {
+            return Play(null, gain);
+        }
+
+        public SoundChannel Play()
+        {
+            return Play(BaseGain);
+        }
+
+        public SoundChannel Play(float gain,string category)
+        {
+            return new SoundChannel(this, gain, null, BaseNear, BaseFar, category);
+        }
+
+        public abstract int FillStreamBuffer(int samplePos, short[] buffer);
+
+        public virtual void Dispose()
+        {
+            Owner.KillChannels(this);
+            if (alBuffer != 0)
             {
-                if (sourceIndex > 0)
+                if (!AL.IsBuffer(alBuffer))
                 {
-                    SoundManager.Stop(sourceIndex);
-                    sourceIndex = -1;
+                    throw new Exception("Buffer to delete is invalid!");
                 }
+            
+                AL.DeleteBuffer(ref alBuffer); alBuffer = 0;
 
-                return sourceIndex;
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + AL.GetErrorString(alError));
+                }
             }
-
-            alSourceId = SoundManager.Loop(this, sourceIndex, relativePos, volume);
-            return alSourceId;
+            Owner.RemoveSound(this);
         }
-
-        public static void OnGameEnd()
-        {
-            List<Sound> removableSounds = loadedSounds.FindAll(s => s.destroyOnGameEnd);
-
-            foreach (Sound sound in removableSounds)
-            {
-                sound.Remove();
-            }
-        }
-                        
-        public void Remove()
-        {
-            //sound already removed?
-            if (!loadedSounds.Contains(this)) return;
-
-            loadedSounds.Remove(this);
-
-            if (alSourceId > 0 &&
-                (SoundManager.IsPlaying(alSourceId) || SoundManager.IsPaused(alSourceId)))
-            {
-                SoundManager.Stop(alSourceId);
-                ALHelper.Check();
-            }
-
-            foreach (Sound s in loadedSounds)
-            {
-                if (s.oggSound == oggSound) return;
-            }
-
-            SoundManager.ClearAlSource(AlBufferId);
-            ALHelper.Check();
-
-            if (oggSound != null)
-            {
-                oggSound.Dispose();
-                oggSound = null;
-            }
-        }
-
-
-        public static void StartStream(string file, float volume = 1.0f)
-        {
-            if (SoundManager.Disabled) return;
-            stream = SoundManager.StartStream(file, volume);
-        }
-
-        public static void StreamVolume(float volume = 1.0f)
-        {
-            if (SoundManager.Disabled) return;
-            stream.Volume = volume;
-        }
-
-        public static void StopStream()
-        {
-            if (stream != null) SoundManager.StopStream();
-        }
-
-        public static void Dispose()
-        {
-            SoundManager.Dispose();
-        }
-
     }
-
 }
+

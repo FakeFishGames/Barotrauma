@@ -1,4 +1,5 @@
-﻿using Barotrauma.Particles;
+﻿using Barotrauma.Sounds;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
@@ -20,7 +21,7 @@ namespace Barotrauma
             string soundPath = element.GetAttributeString("sound", "");
             if (!string.IsNullOrWhiteSpace(soundPath))
             {
-                sound = Sound.Load(soundPath);
+                sound = Submarine.LoadRoundSound(soundPath);
             }
 
             StructureSoundType = element.GetAttributeString("structuresoundtype", "StructureBlunt");
