@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -386,9 +389,10 @@ namespace Barotrauma.Items.Components
         public void Remove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 
@@ -408,9 +412,10 @@ namespace Barotrauma.Items.Components
         public void ShallowRemove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 

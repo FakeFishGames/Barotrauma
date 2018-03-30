@@ -218,8 +218,18 @@ namespace Barotrauma
         {
             if (affliction.Prefab.LimbSpecific)
             {
-                if (targetLimb == null) return;
-                AddLimbAffliction(targetLimb, affliction);
+                if (targetLimb == null)
+                {
+                    //if a limb-specific affliction is applied to no specific limb, apply to all limbs
+                    foreach (LimbHealth limbHealth in limbHealths)
+                    {
+                        AddLimbAffliction(limbHealth, affliction);
+                    }
+                }
+                else
+                {
+                    AddLimbAffliction(targetLimb, affliction);
+                }
             }
             else
             {
@@ -321,10 +331,15 @@ namespace Barotrauma
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
         {
-            if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!newAffliction.Prefab.LimbSpecific) return;
+            AddLimbAffliction(limbHealths[limb.HealthIndex], newAffliction);
+        }
 
-            foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
+        private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction)
+        {
+            if (!DoesBleed && newAffliction is AfflictionBleeding) return;
+
+            foreach (Affliction affliction in limbHealth.Afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
@@ -337,11 +352,12 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-            limbHealths[limb.HealthIndex].Afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
+            limbHealth.Afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
 
             CalculateVitality();
             if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
         }
+
 
         private void AddAffliction(Affliction newAffliction)
         {

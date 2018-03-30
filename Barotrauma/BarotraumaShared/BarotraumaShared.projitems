@@ -1466,7 +1466,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Vellamo.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1568,7 +1567,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
@@ -1701,5 +1699,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiplayerCampaign.cs" />
   </ItemGroup>
 </Project>

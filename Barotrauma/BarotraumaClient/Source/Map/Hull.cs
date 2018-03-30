@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,7 +17,7 @@ namespace Barotrauma
         private List<Decal> decals = new List<Decal>();
 
         private Sound currentFlowSound;
-        private int soundIndex;
+        private SoundChannel soundChannel;
         private float soundVolume;
 
         public override bool DrawBelowWater
@@ -178,23 +179,29 @@ namespace Barotrauma
                 index = Math.Min(index, SoundPlayer.FlowSounds.Count - 1);
 
                 var flowSound = SoundPlayer.FlowSounds[index];
-                if (flowSound != currentFlowSound && soundIndex > -1)
+                if (flowSound != currentFlowSound && soundChannel != null)
                 {
-                    Sounds.SoundManager.Stop(soundIndex);
+                    soundChannel.Dispose(); soundChannel = null;
                     currentFlowSound = null;
-                    soundIndex = -1;
                 }
 
                 currentFlowSound = flowSound;
-                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, Math.Min(strongestFlow * 5.0f, 2000.0f));
+                if (soundChannel == null || !soundChannel.IsPlaying)
+                {
+                    soundChannel = currentFlowSound.Play(new Vector3(WorldPosition.X, WorldPosition.Y, 0.0f), soundVolume);
+                    soundChannel.Looping = true;
+                    //TODO: tweak
+                    float range = Math.Min(strongestFlow * 5.0f, 2000.0f);
+                    soundChannel.Near = range * 0.4f;
+                    soundChannel.Far = range;
+                }
             }
             else
             {
-                if (soundIndex > -1)
+                if (soundChannel != null)
                 {
-                    Sounds.SoundManager.Stop(soundIndex);
+                    soundChannel.Dispose(); soundChannel = null;
                     currentFlowSound = null;
-                    soundIndex = -1;
                 }
             }
 

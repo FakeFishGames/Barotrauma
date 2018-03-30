@@ -76,10 +76,6 @@ namespace Barotrauma
                 
         public Vector2? MouthPos;
         
-        //a timer for delaying when a hitsound/attacksound can be played again
-        public float SoundTimer;
-        public const float SoundInterval = 0.4f;
-
         public readonly Attack attack;
 
         private Direction dir;
@@ -502,7 +498,6 @@ namespace Barotrauma
             if (character.IsDead) return;
 
             damageOverlayStrength = Math.Max(0.0f, damageOverlayStrength - deltaTime * 0.1f);
-            SoundTimer -= deltaTime;
         }
 
         partial void UpdateProjSpecific();
@@ -582,8 +577,16 @@ namespace Barotrauma
             {
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (SoundTimer <= 0.0f));
-                    SoundTimer = SoundInterval;
+#if CLIENT
+                    bool playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    if (playSound)
+                    {
+                        LastAttackSoundTime = (float)SoundInterval;
+                    }
+#else
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, false);
+#endif
                 }
             }
 
