@@ -431,7 +431,7 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -499,6 +499,8 @@ namespace Barotrauma
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
             }
+            if (FlippedX) clone.FlipX(false);
+            if (FlippedY) clone.FlipY(false);
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
@@ -990,10 +992,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
-
+            base.FlipX(relativeToSub);
+            
             if (prefab.CanSpriteFlipX)
             {
                 SpriteEffects ^= SpriteEffects.FlipHorizontally;
@@ -1001,7 +1003,22 @@ namespace Barotrauma
 
             foreach (ItemComponent component in components)
             {
-                component.FlipX();
+                component.FlipX(relativeToSub);
+            }            
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            base.FlipY(relativeToSub);
+
+            if (prefab.CanSpriteFlipY)
+            {
+                SpriteEffects ^= SpriteEffects.FlipVertically;
+            }
+
+            foreach (ItemComponent component in components)
+            {
+                component.FlipY(relativeToSub);
             }
         }
 
@@ -1789,7 +1806,7 @@ namespace Barotrauma
             lastSentPos = SimPosition;
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Item Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
 
@@ -1797,7 +1814,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
-                return;
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1845,11 +1862,13 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-
-                if (component == null) continue;
-
-                component.Load(subElement);
+                if (component != null) component.Load(subElement);
             }
+
+            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
+            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+
+            return item;
         }
 
         public override XElement Save(XElement parentElement)
@@ -1858,6 +1877,9 @@ namespace Barotrauma
 
             element.Add(new XAttribute("name", prefab.Name),
                 new XAttribute("ID", ID));
+
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 

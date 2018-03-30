@@ -5,7 +5,23 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        //TODO: shouldn't this be overriding the base method?
+        private Sprite inventoryTopSprite;
+        private Sprite inventoryBackSprite;
+        private Sprite inventoryBottomSprite;
+
+        public Sprite InventoryTopSprite
+        {
+            get { return inventoryTopSprite; }
+        }
+        public Sprite InventoryBackSprite
+        {
+            get { return inventoryBackSprite; }
+        }
+        public Sprite InventoryBottomSprite
+        {
+            get { return inventoryBottomSprite; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) return;
@@ -54,15 +70,23 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += transformedItemInterval;
             }
         }
-
+        
         public override void UpdateHUD(Character character)
         {
+            //if the item is in the character's inventory, no need to update the item's inventory 
+            //because the player can see it by hovering the cursor over the item
+            if (item.ParentInventory?.Owner == character) return;
+
             Inventory.Update((float)Timing.Step);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            Inventory.Draw(spriteBatch);
+            //if the item is in the character's inventory, no need to draw the item's inventory 
+            //because the player can see it by hovering the cursor over the item
+            if (item.ParentInventory?.Owner == character) return;
+            
+            Inventory.Draw(spriteBatch);            
         }
     }
 }

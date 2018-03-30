@@ -18,7 +18,26 @@ namespace Barotrauma.Particles
 
         private const int MaxOutOfViewDist = 500;
         
-        private const int MaxParticles = 1500;
+        private int maxParticles;
+        public int MaxParticles
+        {
+            get { return maxParticles; }
+            set
+            {
+                if (maxParticles == value || value < 4) return;
+
+                Particle[] newParticles = new Particle[value];
+
+                for (int i=0;i<Math.Min(maxParticles,value);i++)
+                {
+                    newParticles[i] = particles[i];
+                }
+
+                particleCount = Math.Min(particleCount, value);
+                particles = newParticles;
+                maxParticles = value;
+            }
+        }
         private Particle[] particles;
 
         private Dictionary<string, ParticlePrefab> prefabs;
@@ -29,7 +48,7 @@ namespace Barotrauma.Particles
         {
             this.cam = cam;
 
-            particles = new Particle[MaxParticles];
+            MaxParticles = GameMain.Config.ParticleLimit;
         }
 
         public void LoadPrefabs()
@@ -123,6 +142,8 @@ namespace Barotrauma.Particles
 
         public void Update(float deltaTime)
         {
+            MaxParticles = GameMain.Config.ParticleLimit;
+
             for (int i = 0; i < particleCount; i++)
             {
                 bool remove = false;

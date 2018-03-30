@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class NPCConversation
     {
+        const int MaxPreviousConversations = 20;
+
         private static List<NPCConversation> list;
         
         public readonly string Line;
@@ -106,7 +108,8 @@ namespace Barotrauma
             return currentFlags;
         }
 
-
+        private static List<NPCConversation> previousConversations = new List<NPCConversation>();
+        
         public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
@@ -138,13 +141,14 @@ namespace Barotrauma
             else
             {
                 var allowedSpeakers = new List<Character>();
-                
-                //attempt to find speakers for the line, and if it fails, select the next conversation in the list
-                int i = 0;
-                while (allowedSpeakers.Count == 0 && i < conversations.Count)
+
+                List<NPCConversation> potentialLines = new List<NPCConversation>(conversations);
+                while (potentialLines.Count > 0)
                 {
-                    selectedConversation = conversations[(conversationIndex + i) % conversations.Count];
-                    if (string.IsNullOrEmpty(selectedConversation.Line)) return;
+                    //select a random line and attempt to find a speaker for it
+                    // and if no valid speaker is found, choose another random line
+                    selectedConversation = GetRandomConversation(potentialLines, baseConversation == null);
+                    if (selectedConversation == null || string.IsNullOrEmpty(selectedConversation.Line)) return;
 
                     //speaker already assigned for this line
                     if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
@@ -157,9 +161,11 @@ namespace Barotrauma
                     {
                         //check if the character has an appropriate job to say the line
                         if (selectedConversation.AllowedJobs.Count > 0 && !selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+
                         //check if the character has all required flags to say the line
                         var characterFlags = GetCurrentFlags(potentialSpeaker);
                         if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+
                         //check if the character has an appropriate personality
                         if (selectedConversation.allowedSpeakerTags.Count > 0)
                         {
@@ -177,7 +183,15 @@ namespace Barotrauma
 
                         allowedSpeakers.Add(potentialSpeaker);
                     }
-                    i++;
+
+                    if (allowedSpeakers.Count == 0)
+                    {
+                        potentialLines.Remove(selectedConversation);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (allowedSpeakers.Count == 0) return;
@@ -186,9 +200,47 @@ namespace Barotrauma
                 assignedSpeakers.Add(selectedConversation.speakerIndex, speaker);
             }
 
-
+            if (baseConversation == null)
+            {
+                previousConversations.Insert(0, selectedConversation);
+                if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
+            }
             lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
             CreateConversation(availableSpeakers,assignedSpeakers, selectedConversation, lineList);
         }
+
+        private static NPCConversation GetRandomConversation(List<NPCConversation> conversations, bool avoidPreviouslyUsed)
+        {
+            if (!avoidPreviouslyUsed)
+            {
+                return conversations.Count == 0 ? null : conversations[Rand.Int(conversations.Count)];
+            }
+
+            float probabilitySum = 0.0f;
+            foreach (NPCConversation conversation in conversations)
+            {
+                probabilitySum += GetConversationProbability(conversation);
+            }
+            float randomNum = Rand.Range(0.0f, probabilitySum);
+            foreach (NPCConversation conversation in conversations)
+            {
+                float probability = GetConversationProbability(conversation);
+                if (randomNum <= probability)
+                {
+                    return conversation;
+                }
+                randomNum -= probability;
+            }
+            return null;
+        }
+
+        private static float GetConversationProbability(NPCConversation conversation)
+        {
+            int index = previousConversations.IndexOf(conversation);
+            if (index < 0) return 10.0f;
+
+            return 1.0f - 1.0f / (index + 1);
+        }
     }
+
 }

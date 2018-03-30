@@ -450,11 +450,20 @@ namespace Barotrauma.Items.Components
             return closestIndex;
         }
         
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {            
             for (int i = 0; i < nodes.Count; i++)
             {
                 nodes[i] = new Vector2(-nodes[i].X, nodes[i].Y);
+            }
+            UpdateSections();
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i] = new Vector2(nodes[i].X, -nodes[i].Y);
             }
             UpdateSections();
         }

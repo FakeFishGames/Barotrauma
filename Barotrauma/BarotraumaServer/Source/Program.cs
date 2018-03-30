@@ -33,7 +33,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                CrashDump(game, "servercrashreport.txt", e);
+                CrashDump(game, "servercrashreport.log", e);
                 inputThread.Abort(); inputThread.Join();
             }
         }

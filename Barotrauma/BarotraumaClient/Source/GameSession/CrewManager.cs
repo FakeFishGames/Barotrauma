@@ -12,8 +12,8 @@ namespace Barotrauma
     {
         const float ChatMessageFadeTime = 10.0f;
 
-        const float ConversationIntervalMin = 60.0f;
-        const float ConversationIntervalMax = 120.0f;
+        const float ConversationIntervalMin = 100.0f;
+        const float ConversationIntervalMax = 180.0f;
         
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
@@ -29,7 +29,7 @@ namespace Barotrauma
         private float conversationTimer, conversationLineTimer;
         private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
-        private GUIListBox chatBox;
+        private ChatBox chatBox;
 
         private CrewCommander commander;
 
@@ -56,31 +56,25 @@ namespace Barotrauma
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
             
-            guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
+            guiFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
+            guiFrame.CanBeFocused = false;
 
-            characterListBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
+            characterListBox = new GUIListBox(new Rectangle(45, 80, 150, 450), Color.Transparent, null, guiFrame);
             characterListBox.ScrollBarEnabled = false;
             characterListBox.OnSelected = SelectCharacter;
             characterListBox.Visible = isSinglePlayer;
+            characterListBox.CanBeFocused = false;
 
-            orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
+            orderListBox = new GUIListBox(new Rectangle(5, 80, 30, 450), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
             orderListBox.Visible = isSinglePlayer;
+            orderListBox.CanBeFocused = false;
 
             if (isSinglePlayer)
             {
-                int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-                int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.2f, 150, 250);
-
-                chatBox = new GUIListBox(new Rectangle(
-                    GameMain.GraphicsWidth - width,
-                    GameMain.GraphicsHeight - 40 - 25 - height,
-                    width, height),
-                    Color.White * 0.5f, null, guiFrame);
-                chatBox.Padding = Vector4.Zero;
-                chatBox.ScrollBarEnabled = false;
+                chatBox = new ChatBox(guiFrame, true);
             }
 
             commander = new CrewCommander(this);
@@ -123,7 +117,7 @@ namespace Barotrauma
             return false;
         }
 
-        public void AddSinglePlayerChatMessage(Character sender, string message, Color color)
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
         {
             if (!isSinglePlayer)
             {
@@ -131,28 +125,16 @@ namespace Barotrauma
                 return;
             }
 
-            while (chatBox.CountChildren < 10)
-            {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), "", "", chatBox).UserData = 0.0f;
-            }
-
-            while (chatBox.CountChildren > 10)
-            {
-                chatBox.RemoveChild(chatBox.children[1]);
-            }
-
-            string displayedText = sender.Name + ": " + message;
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0), displayedText,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
-                Alignment.Left, Alignment.CenterRight, "", null, true, GUI.Font);
-            msg.UserData = msg.TextColor.A / 255.0f;
-            
-            chatBox.AddChild(msg);
-            chatBox.BarScroll = 1.0f;
+            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
 
         private void UpdateConversations(float deltaTime)
         {
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.P))
+            {
+                conversationTimer = 0.0f;
+            }
+
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {
@@ -302,6 +284,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
+            if (chatBox != null) chatBox.Update(deltaTime);
 
             if (commander.IsOpen &&
                 (Character.Controlled == null || !characters.Contains(Character.Controlled)))
@@ -334,7 +317,7 @@ namespace Barotrauma
 
             commander.Update(deltaTime);
             
-            if (isSinglePlayer)
+            /*if (isSinglePlayer)
             {
                 for (int i = chatBox.children.Count - 1; i >= 0; i--)
                 {
@@ -345,7 +328,7 @@ namespace Barotrauma
                     textBlock.UserData = alpha;
                     textBlock.TextColor = new Color(textBlock.TextColor, alpha);
                 }
-            }
+            }*/
         }
 
         public void ReviveCharacter(Character revivedCharacter)
@@ -506,18 +489,11 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            characterListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
+            orderListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
+            
+            guiFrame.Draw(spriteBatch);
             commander.Draw(spriteBatch);
-            if (commander.IsOpen)
-            {
-                if (isSinglePlayer)
-                {
-                    chatBox.Draw(spriteBatch);
-                }
-            }
-            else
-            {
-                guiFrame.Draw(spriteBatch);
-            }
         }
 
         public void Save(XElement parentElement)

@@ -27,6 +27,14 @@ namespace Barotrauma
             return keyMapping[(int)inputType];
         }
         
+        private bool ChangeParticleLimit(GUIScrollBar scrollBar, float barScroll)
+        {
+            UnsavedSettings = true;
+            ParticleLimit = 200 + (int)(barScroll * 1300.0f);
+
+            return true;
+        }
+
         private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -110,6 +118,14 @@ namespace Barotrauma
                 return true;
             };
             vsyncTickBox.Selected = VSyncEnabled;
+
+            y += 50;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("ParticleLimit"), "", settingsFrame);
+            GUIScrollBar particleScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), "", 0.1f, settingsFrame);
+            particleScrollBar.BarScroll = ((float)(ParticleLimit-200)) / 1300.0f;
+            particleScrollBar.OnMoved = ChangeParticleLimit;
+            particleScrollBar.Step = 0.1f;
 
             y += 70;
 

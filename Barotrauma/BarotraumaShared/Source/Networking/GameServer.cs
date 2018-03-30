@@ -362,6 +362,9 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
+#if CLIENT
+                SetRadioButtonColor();
+#endif
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 entityEventManager.Update(connectedClients);

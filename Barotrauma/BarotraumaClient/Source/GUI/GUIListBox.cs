@@ -172,7 +172,7 @@ namespace Barotrauma
             scrollBar.IsHorizontal = isHorizontal;            
 
             frame = new GUIFrame(new Rectangle(0, 0, this.rect.Width, this.rect.Height), style, this);
-            if (style != null) GUI.Style.Apply(frame, style, this);
+            if (style != null) GUI.Style.Apply(frame, "", this);
 
             UpdateScrollBarSize();
 
@@ -220,6 +220,7 @@ namespace Barotrauma
         private void UpdateChildrenRect(float deltaTime)
         {
             int x = rect.X, y = rect.Y;
+            if (frame != null) y += (int)frame.Padding.Y;
 
             if (!scrollBarHidden)
             {
@@ -319,15 +320,7 @@ namespace Barotrauma
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
         }
-
-        public override Rectangle MouseRect
-        {
-            get
-            {
-                return ClampMouseRectToParent ? ClampRect(rect) : rect;
-            }
-        }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -378,6 +371,11 @@ namespace Barotrauma
         public void UpdateScrollBarSize()
         {
             totalSize = (int)(padding.Y + padding.W);
+            if (frame != null)
+            {
+                totalSize += (int)(frame.Padding.Y + frame.Padding.W);
+            }
+
             foreach (GUIComponent child in children)
             {
                 if (child == frame) continue;
@@ -438,7 +436,12 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (HideChildrenOutsideFrame)
             {
-                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
+                Rectangle scissorRect = new Rectangle(
+                    (int)(rect.X + frame.Padding.X), 
+                    (int)(rect.Y + frame.Padding.Y), 
+                    (int)(rect.Width - frame.Padding.X - frame.Padding.Z), 
+                    (int)(rect.Height - frame.Padding.Y - frame.Padding.W));
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, scissorRect);
             }
 
             int lastVisible = 0;

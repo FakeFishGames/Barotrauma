@@ -17,36 +17,38 @@ namespace Barotrauma
     {
         public static bool ShowFPS = true;
         public static bool DebugDraw;
-        
+
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        
-        public static GameScreen            GameScreen;
-        public static MainMenuScreen        MainMenuScreen;
-        public static LobbyScreen           LobbyScreen;
 
-        public static NetLobbyScreen        NetLobbyScreen;
-        public static ServerListScreen      ServerListScreen;
+        public static GameScreen GameScreen;
+        public static MainMenuScreen MainMenuScreen;
+        public static LobbyScreen LobbyScreen;
 
-        public static SubEditorScreen         SubEditorScreen;
-        public static CharacterEditorScreen   CharacterEditorScreen;
-        public static ParticleEditorScreen  ParticleEditorScreen;
+        public static NetLobbyScreen NetLobbyScreen;
+        public static ServerListScreen ServerListScreen;
+
+        public static SubEditorScreen SubEditorScreen;
+        public static CharacterEditorScreen CharacterEditorScreen;
+        public static ParticleEditorScreen ParticleEditorScreen;
 
         public static Lights.LightManager LightManager;
-        
+
+        public static Sounds.SoundManager SoundManager;
+
         public static ContentPackage SelectedPackage
         {
             get { return Config.SelectedContentPackage; }
         }
-        
+
         public static GameSession GameSession;
 
         public static NetworkMember NetworkMember;
 
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
-        
+
         public static World World;
 
         public static LoadingScreen TitleScreen;
@@ -74,7 +76,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public static WindowMode WindowMode
         {
             get;
@@ -107,7 +109,7 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
-        
+
         public static RasterizerState ScissorTestEnable
         {
             get;
@@ -118,13 +120,13 @@ namespace Barotrauma
         {
             get { return loadingScreenOpen; }
         }
-                                
+
         public GameMain()
         {
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
-            
+
             Instance = this;
 
             Config = new GameSettings("config.xml");
@@ -140,7 +142,7 @@ namespace Barotrauma
             Content.RootDirectory = "Content";
 
             FrameCounter = new FrameCounter();
-            
+
             IsFixedTimeStep = false;
 
             Timing.Accumulator = 0.0f;
@@ -182,7 +184,12 @@ namespace Barotrauma
         public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
+#if !(OSX)
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+#else
+            // Force borderless on macOS.
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed && Config.WindowMode != WindowMode.Fullscreen;
+#endif
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             
             GraphicsDeviceManager.ApplyChanges();
@@ -220,8 +227,6 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
-            Sound.Init();
-
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -240,6 +245,10 @@ namespace Barotrauma
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
             GUI.GraphicsDevice = base.GraphicsDevice;
+
+            SoundManager = new Sounds.SoundManager();
+            SoundManager.ListenerGain = Config.SoundVolume;
+
             GUI.Init(Content);
 
             GUIComponent.Init(Window);
@@ -260,6 +269,7 @@ namespace Barotrauma
             MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.Init();
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
@@ -279,6 +289,10 @@ namespace Barotrauma
 
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
             TitleScreen.LoadState = 30.0f;
+        yield return CoroutineStatus.Running;
+
+            ItemAssemblyPrefab.LoadAll();
+            TitleScreen.LoadState = 35.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
@@ -342,7 +356,7 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
-            Sound.Dispose();
+            SoundManager.Dispose();
         }
         
         /// <summary>
@@ -386,7 +400,12 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        throw new Exception("Loading was interrupted due to an error");
+                        string errMsg = "Loading was interrupted due to an error";
+                        if (loadingCoroutine.Exception != null)
+                        {
+                            errMsg += ": " + loadingCoroutine.Exception.Message + "\n" + loadingCoroutine.Exception.StackTrace;
+                        }
+                        throw new Exception(errMsg);
                     }
                 }
                 else if (hasLoaded)

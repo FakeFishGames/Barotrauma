@@ -125,7 +125,7 @@ namespace Barotrauma
             wallVertices = MathUtils.GiftWrap(points);
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
 
@@ -133,8 +133,6 @@ namespace Barotrauma
 
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                //string filePath = ToolBox.GetAttributeString(element, "filepath", "");
-                
                 linkedSub = CreateDummy(submarine, element, pos);
                 linkedSub.saveElement = element;
             }
@@ -147,7 +145,7 @@ namespace Barotrauma
                 if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
                 {
                     linkedSub.loadSub = false;
-                    return;
+                    return null;
                 }
 
                 linkedSub.loadSub = true;
@@ -166,7 +164,7 @@ namespace Barotrauma
                     linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
                 }
             }
-
+            return linkedSub;
         }
 
         public override void OnMapLoaded()

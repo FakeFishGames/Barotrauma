@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -19,6 +20,10 @@ namespace Barotrauma
     
     public class GUI
     {
+        public static float Scale
+        {
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+        }
 
         public static GUIStyle Style;
 
@@ -95,14 +100,14 @@ namespace Barotrauma
             if (loadSounds)
             {
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
-                sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
-                sounds[(int)GUISoundType.RadioMessage] = Sound.Load("Content/Sounds/UI/radiomsg.ogg", false);
-                sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
-                sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
+                sounds[(int)GUISoundType.Message] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
+                sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
+                sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);
 
-                sounds[(int)GUISoundType.PickItem] = Sound.Load("Content/Sounds/pickItem.ogg", false);
-                sounds[(int)GUISoundType.PickItemFail] = Sound.Load("Content/Sounds/pickItemFail.ogg", false);
-                sounds[(int)GUISoundType.DropItem] = Sound.Load("Content/Sounds/dropItem.ogg", false);
+                sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItem.ogg", false);
+                sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItemFail.ogg", false);
+                sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/dropItem.ogg", false);
 
             }
 
@@ -314,6 +319,23 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
+
+            width *= 0.5f;
+            height *= 0.5f;
+            Vector2 topLeft = center + Vector2.Transform(new Vector2(-width, -height), rotate);
+            Vector2 topRight = center + Vector2.Transform(new Vector2(width, -height), rotate);
+            Vector2 bottomLeft = center + Vector2.Transform(new Vector2(-width, height), rotate);
+            Vector2 bottomRight = center + Vector2.Transform(new Vector2(width, height), rotate);
+
+            DrawLine(sb, topLeft, topRight, clr, depth, thickness);
+            DrawLine(sb, topRight, bottomRight, clr, depth, thickness);
+            DrawLine(sb, bottomRight, bottomLeft, clr, depth, thickness);
+            DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);
@@ -508,32 +530,64 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
-                for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
+                for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                 {
                     Color clr = Color.White;
                     string soundStr = i + ": ";
-                    var playingSound = Sounds.SoundManager.GetPlayingSound(i);
-                    if (playingSound == null)
+                    SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                    if (playingSoundChannel == null)
                     {
                         soundStr += "none";
                         clr *= 0.5f;
                     }
                     else
                     {
-                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSound.FilePath);
+                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
 
-                        if (Sounds.SoundManager.IsLooping(i))
+#if DEBUG
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                        {
+                            if (PlayerInput.MousePosition.Y>=i*15 && PlayerInput.MousePosition.Y<=i*15+12)
+                            {
+                                GameMain.SoundManager.DebugSource(i);
+                            }
+                        }
+#endif
+
+                        if (playingSoundChannel.Looping)
                         {
                             soundStr += " (looping)";
                             clr = Color.Yellow;
                         }
+
+                        if (playingSoundChannel.IsStream)
+                        {
+                            soundStr += " (streaming)";
+                            clr = Color.Lime;
+                        }
+
+                        if (!playingSoundChannel.IsPlaying)
+                        {
+                            soundStr += " (stopped)";
+                            clr *= 0.5f;
+                        }
+                        
+                        //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
                     }
 
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
-
+            
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
+
+            if (Character.Controlled?.Inventory != null)
+            {
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f)
+                {
+                    Inventory.DrawFront(spriteBatch);
+                }
+            }
 
             DrawMessages(spriteBatch, (float)deltaTime);
 

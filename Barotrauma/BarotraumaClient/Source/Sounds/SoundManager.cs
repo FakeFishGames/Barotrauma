@@ -1,391 +1,469 @@
-﻿using Microsoft.Xna.Framework;
-using OpenTK.Audio;
-using OpenTK.Audio.OpenAL;
-using System;
+﻿using System;
+using System.Threading;
 using System.Collections.Generic;
+using System.Xml.Linq;
+using OpenTK.Audio.OpenAL;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Sounds
 {
-    static class SoundManager
+    public class SoundManager : IDisposable
     {
-        public static bool Disabled
-        {
-            get;
-            private set;
-        }
-
-        public const int DefaultSourceCount = 16;
-
-        private static readonly List<int> alSources = new List<int>();
-        private static readonly int[] alBuffers = new int[DefaultSourceCount];
-        private static int lowpassFilterId;
-
-        private static readonly Sound[] soundsPlaying = new Sound[DefaultSourceCount];
+        public const int SOURCE_COUNT = 16;
         
-        private static AudioContext AC;
+        private IntPtr alcDevice;
+        private OpenTK.ContextHandle alcContext;
+        private List<string> alcCaptureDeviceNames;
+        private uint[] alSources;
 
-        private static OggStreamer oggStreamer;
-        private static OggStream oggStream;
+        private List<Sound> loadedSounds;
+        private SoundChannel[] playingChannels;
 
-        public static float MasterVolume = 1.0f;
+        private Thread streamingThread;
 
-        public static void Init()
+        private Vector3 listenerPosition;
+        public Vector3 ListenerPosition
         {
-            var availableDevices = AudioContext.AvailableDevices;
-            if (availableDevices.Count == 0)
+            get { return listenerPosition; }
+            set
             {
-                DebugConsole.ThrowError("No audio devices found. Disabling audio playback.");
-                Disabled = true;
-                return;
-            }
-
-            try
-            {
-                AC = new AudioContext();                
-                ALHelper.Check();
-            }
-            catch (DllNotFoundException)
-            {
-                Program.CrashMessageBox("OpenAL32.dll not found");
-                throw;
-            }
-
-            for (int i = 0 ; i < DefaultSourceCount; i++)
-            {
-                alSources.Add(OpenTK.Audio.OpenAL.AL.GenSource());
-            }
-            ALHelper.Check();
-            if (ALHelper.Efx.IsInitialized)
-            {
-                lowpassFilterId = ALHelper.Efx.GenFilter();
-                //alFilters.Add(alFilterId);
-                ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilteri.FilterType, (int)OpenTK.Audio.OpenAL.EfxFilterType.Lowpass);
-                                
-                LowPassHFGain = 1.0f;
+                listenerPosition = value;
+                AL.Listener(ALListener3f.Position,value.X,value.Y,value.Z);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener position: " + AL.GetErrorString(alError));
+                }
             }
         }
 
-
-        public static int Play(Sound sound, float volume = 1.0f)
+        private float[] listenerOrientation;
+        public Vector3 ListenerTargetVector
         {
-            if (Disabled) return -1;
-            return Play(sound, Vector2.Zero, volume, 0.0f);
+            get { return new Vector3(listenerOrientation[0], listenerOrientation[1], listenerOrientation[2]); }
+            set
+            {
+                listenerOrientation[0] = value.X; listenerOrientation[1] = value.Y; listenerOrientation[2] = value.Z;
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener target vector: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+        public Vector3 ListenerUpVector
+        {
+            get { return new Vector3(listenerOrientation[3], listenerOrientation[4], listenerOrientation[5]); }
+            set
+            {
+                listenerOrientation[3] = value.X; listenerOrientation[4] = value.Y; listenerOrientation[5] = value.Z;
+                AL.Listener(ALListenerfv.Orientation, ref listenerOrientation);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener up vector: " + AL.GetErrorString(alError));
+                }
+            }
         }
 
-        public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f, bool loop=false)
+        private float listenerGain;
+        public float ListenerGain
         {
-            if (Disabled || sound.AlBufferId == -1) return -1;
-
-            int sourceIndex = FindAudioSource(volume);
-            if (sourceIndex > -1)
+            get { return listenerGain; }
+            set
             {
-                soundsPlaying[sourceIndex] = sound;
-                alBuffers[sourceIndex] = sound.AlBufferId;
-                OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourceb.Looping, loop);
-                OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
+                listenerGain = value;
+                AL.Listener(ALListenerf.Gain, listenerGain);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set listener gain: " + AL.GetErrorString(alError));
+                }
+            }
+        }
+
+        private Dictionary<string, Pair<float,bool>> categoryModifiers;
+
+        public SoundManager()
+        {
+            loadedSounds = new List<Sound>();
+            playingChannels = new SoundChannel[SOURCE_COUNT];
+
+            streamingThread = null;
+
+            categoryModifiers = null;
+            
+            alcDevice = Alc.OpenDevice(null);
+            if (alcDevice == null)
+            {
+                throw new Exception("Failed to open an ALC device!");
+            }
+
+            AlcError alcError = Alc.GetError(alcDevice);
+            if (alcError != AlcError.NoError)
+            {
+                //The audio device probably wasn't ready, this happens quite often
+                //Just wait a while and try again
+                Thread.Sleep(100);
                 
-                UpdateSoundPosition(sourceIndex, position, volume);
+                alcDevice = Alc.OpenDevice(null);
 
-                OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[sourceIndex]);
- 
-            }
-
-            return sourceIndex;
-        }
-
-        private static int FindAudioSource(float volume)
-        {
-            //find a source that's free to use (not playing or paused)
-            for (int i = 1; i < DefaultSourceCount; i++)
-            {
-                if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Initial
-                    || OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Stopped)
+                alcError = Alc.GetError(alcDevice);
+                if (alcError != AlcError.NoError)
                 {
-                    return i;
+                    throw new Exception("Error initializing ALC device: " + alcError.ToString());
                 }
             }
 
-            //not found -> take up the channel that is playing at the lowest volume
-            float lowestVolume = volume;
-            int quietestSourceIndex = -1;
-            for (int i = 1; i < DefaultSourceCount; i++)
+            int[] alcContextAttrs = new int[] { };
+            alcContext = Alc.CreateContext(alcDevice, alcContextAttrs);
+            if (alcContext == null)
             {
-                float vol;
-                OpenTK.Audio.OpenAL.AL.GetSource(alSources[i], ALSourcef.Gain, out vol);
-                if (vol < lowestVolume)
+                throw new Exception("Failed to create an ALC context! (error code: "+Alc.GetError(alcDevice).ToString()+")");
+            }
+            
+            if (!Alc.MakeContextCurrent(alcContext))
+            {
+                throw new Exception("Failed to assign the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
+            }
+            
+            alcError = Alc.GetError(alcDevice);
+            if (alcError != AlcError.NoError)
+            {
+                throw new Exception("Error after assigning ALC context: " + alcError.ToString());
+            }
+
+            ALError alError = ALError.NoError;
+
+            alSources = new uint[SOURCE_COUNT];
+            for (int i=0;i<SOURCE_COUNT;i++)
+            {
+                AL.GenSource(out alSources[i]);
+                alError = AL.GetError();
+                if (alError!=ALError.NoError)
                 {
-                    quietestSourceIndex = i;
-                    lowestVolume = vol;
+                    throw new Exception("Error generating alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
+                }
+
+                if (!AL.IsSource(alSources[i]))
+                {
+                    throw new Exception("Generated alSource["+i.ToString()+"] is invalid!");
+                }
+                
+                AL.SourceStop(alSources[i]);
+                alError = AL.GetError();
+                if (alError!=ALError.NoError)
+                {
+                    throw new Exception("Error stopping newly generated alSource["+i.ToString()+"]: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting min gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(alSources[i], ALSourcef.MaxGain, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting max gain: " + AL.GetErrorString(alError));
+                }
+
+                AL.Source(alSources[i], ALSourcef.RolloffFactor, 1.0f);
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Error setting rolloff factor: " + AL.GetErrorString(alError));
                 }
             }
-
-            if (quietestSourceIndex > -1)
+            
+            AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+            
+            alError = AL.GetError();
+            if (alError != ALError.NoError)
             {
-                Stop(quietestSourceIndex);
+                throw new Exception("Error setting distance model: " + AL.GetErrorString(alError));
             }
 
-            return quietestSourceIndex;
-        }
-
-        public static int Loop(Sound sound, int sourceIndex, float volume = 1.0f)
-        {
-            if (Disabled) return -1;
-
-            return Loop(sound,sourceIndex, Vector2.Zero, volume);
-        }
-
-        public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f)
-        {
-            if (Disabled) return -1;
-
-            if (!MathUtils.IsValid(volume))
+            if (Alc.IsExtensionPresent(IntPtr.Zero, "ALC_EXT_CAPTURE"))
             {
-                volume = 0.0f;
-            }
-
-            if (sourceIndex<1 || soundsPlaying[sourceIndex] != sound)
-            {
-                sourceIndex = Play(sound, position, volume, 0.0f, true);
+                alcCaptureDeviceNames = new List<string>(Alc.GetString(IntPtr.Zero, AlcGetStringList.CaptureDeviceSpecifier));
             }
             else
             {
-                UpdateSoundPosition(sourceIndex, position, volume);
-                AL.Source(alSources[sourceIndex], ALSourceb.Looping, true);
+                alcCaptureDeviceNames = null;
             }
 
-            ALHelper.Check();
-            return sourceIndex;
+            listenerOrientation = new float[6];
+            ListenerPosition = Vector3.Zero;
+            ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
+            ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
         }
 
-        public static void Pause(int sourceIndex)
+        public Sound LoadSound(string filename,bool stream=false)
         {
-            if (Disabled) return;
-
-            if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Playing)
-                return;
-
-            AL.SourcePause(alSources[sourceIndex]);
-            ALHelper.Check();
-        }
-
-        public static void Resume(int sourceIndex)
-        {
-            if (Disabled) return;
-
-            if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Paused)
-                return;
-
-            AL.SourcePlay(alSources[sourceIndex]);
-            ALHelper.Check();
-        }
-        
-        public static void Stop(int sourceIndex)
-        {
-            if (Disabled) return;
-
-            if (sourceIndex < 1) return;
-
-            var state = AL.GetSourceState(alSources[sourceIndex]);
-            if (state == ALSourceState.Playing || state == ALSourceState.Paused)
+            if (!System.IO.File.Exists(filename))
             {
-                AL.SourceStop(alSources[sourceIndex]);
-                AL.Source(alSources[sourceIndex], ALSourceb.Looping, false);
-
-                soundsPlaying[sourceIndex] = null;
+                throw new Exception("\"" + filename + "\" doesn't exist!");
             }
+
+            Sound newSound = new OggSound(this, filename, stream);
+            loadedSounds.Add(newSound);
+            return newSound;
         }
 
-        public static void Stop(Sound sound)
+        public Sound LoadSound(XElement element,bool stream=false)
         {
-            if (Disabled) return;
+            string filePath = element.GetAttributeString("file", "");
 
-            for (int i = 0; i < soundsPlaying.Length; i++)
+            var newSound = new OggSound(this, filePath, stream);
+            if (newSound != null)
             {
-                if (soundsPlaying[i] == sound)
+                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
+                float range = element.GetAttributeFloat("range", 1000.0f);
+                newSound.BaseNear = range * 0.4f;
+                newSound.BaseFar = range;
+            }
+
+            loadedSounds.Add(newSound);
+            return newSound;
+        }
+
+        public SoundChannel GetSoundChannelFromIndex(int ind)
+        {
+            if (ind < 0 || ind >= SOURCE_COUNT) return null;
+            return playingChannels[ind];
+        }
+
+        public uint GetSourceFromIndex(int ind)
+        {
+            if (ind < 0 || ind >= SOURCE_COUNT) return 0;
+
+            if (!AL.IsSource(alSources[ind]))
+            {
+                throw new Exception("alSources[" + ind.ToString() + "] is invalid!");
+            }
+
+            return alSources[ind];
+        }
+
+        public int AssignFreeSourceToChannel(SoundChannel newChannel)
+        {
+            lock (playingChannels)
+            {
+                //remove a channel that has stopped
+                //or hasn't even been assigned
+                for (int i = 0; i < SOURCE_COUNT; i++)
                 {
-                    Stop(i);
+                    if (playingChannels[i]==null || !playingChannels[i].IsPlaying)
+                    {
+                        if (playingChannels[i]!=null) playingChannels[i].Dispose();
+                        playingChannels[i] = newChannel;
+
+                        if (!AL.IsSource(alSources[i]))
+                        {
+                            throw new Exception("alSources[" + i.ToString() + "] is invalid!");
+                        }
+                        
+                        return i;
+                    }
+                }
+                //we couldn't get a free source to assign to this channel!
+                return -1;
+            }
+        }
+
+#if DEBUG
+        public void DebugSource(int ind)
+        {
+            for (int i=0;i<SOURCE_COUNT;i++)
+            {
+                AL.Source(alSources[i], ALSourcef.MaxGain, i == ind ? 1.0f : 0.0f);
+                AL.Source(alSources[i], ALSourcef.MinGain, 0.0f);
+            }
+        }
+#endif
+
+        public bool IsPlaying(Sound sound)
+        {
+            lock (playingChannels)
+            {
+                for (int i = 0; i < SOURCE_COUNT; i++)
+                {
+                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    {
+                        if (playingChannels[i].IsPlaying) return true;
+                    }
                 }
             }
-        }
-
-
-        public static Sound GetPlayingSound(int sourceIndex)
-        {
-            if (Disabled) return null;
-
-            if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return null;
-
-            if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Playing) return null;
-
-            return soundsPlaying[sourceIndex];
-        }
-
-        public static bool IsPlaying(int sourceIndex)
-        {
-            if (Disabled) return false;
-
-            if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return false;
-
-            return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Playing;
-        }
-
-        public static bool IsPlaying(Sound sound)
-        {
-            int temp;
-            return IsPlaying(sound, out temp);
-        }
-
-        public static bool IsPlaying(Sound sound, out int sourceIndex)
-        {
-            sourceIndex = -1;
-            if (Disabled) return false;
-
-            for (int i = 0; i < soundsPlaying.Length; i++)
-            {
-                if (soundsPlaying[i] == sound && AL.GetSourceState(alSources[i]) == ALSourceState.Playing)
-                {
-                    sourceIndex = i;
-                    return true;
-                }
-            }
-
             return false;
         }
 
-        public static bool IsPaused(int sourceIndex)
+        public void KillChannels(Sound sound)
         {
-            if (Disabled) return false;
-
-            if (sourceIndex < 1 || sourceIndex > alSources.Count - 1) return false;
-            
-            return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Paused;
-        }
-
-        public static bool IsLooping(int sourceIndex)
-        {
-            if (Disabled) return false;
-            if (sourceIndex < 1 || sourceIndex > alSources.Count - 1) return false;
-
-            bool isLooping;            
-            
-            OpenTK.Audio.OpenAL.AL.GetSource(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourceb.Looping, out isLooping);
-
-            return isLooping;
-        }
-        
-        static float lowPassHfGain;
-        public static float LowPassHFGain
-        {
-            get { return lowPassHfGain; }
-            set
+            lock (playingChannels)
             {
-                if (Disabled) return;
-                if (ALHelper.Efx.IsInitialized)
+                for (int i = 0; i < SOURCE_COUNT; i++)
                 {
-                    lowPassHfGain = value;
-                    for (int i = 0; i < DefaultSourceCount; i++)
+                    if (playingChannels[i]!=null && playingChannels[i].Sound == sound)
                     {
-                        //find a source that's free to use (not playing or paused)
-                        if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) != OpenTK.Audio.OpenAL.ALSourceState.Playing
-                            && OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i])!= OpenTK.Audio.OpenAL.ALSourceState.Paused) continue;
-
-                        ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassHfGain = value);                        
-                        ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
-                        ALHelper.Check();
+                        playingChannels[i].Dispose();
+                        playingChannels[i] = null;
                     }
                 }
             }
         }
 
-
-        public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f)
+        public void RemoveSound(Sound sound)
         {
-            if (sourceIndex < 1 || Disabled) return;
-
-            if (!MathUtils.IsValid(position))
+            for (int i=0;i<loadedSounds.Count;i++)
             {
-                position = Vector2.Zero;
-            }
-
-            position /= 1000.0f;
-
-            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcef.Gain, baseVolume * MasterVolume);
-            OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSource3f.Position, position.X, position.Y, 0.0f);
-
-            float lowPassGain = lowPassHfGain / Math.Max(position.Length() * 5.0f, 1.0f);
-
-            ALHelper.Efx.Filter(lowpassFilterId, OpenTK.Audio.OpenAL.EfxFilterf.LowpassGainHF, lowPassGain);
-            ALHelper.Efx.BindFilterToSource(alSources[sourceIndex], lowpassFilterId);
-            ALHelper.Check();
-        }
-
-        public static OggStream StartStream(string file, float volume = 1.0f)
-        {
-            if (Disabled) return null;
-
-            if (oggStreamer == null)
-                oggStreamer = new OggStreamer();
-
-            oggStream = new OggStream(file);            
-            oggStreamer.AddStream(oggStream);           
-
-            oggStream.Play(volume);
-
-            ALHelper.Check();
-
-            return oggStream;
-        }
-
-        public static void StopStream()
-        {
-            if (oggStream != null) oggStream.Stop();
-        }
-
-        public static void ClearAlSource(int bufferId)
-        {
-            for (int i = 1; i < DefaultSourceCount; i++)
-            {
-                if (alBuffers[i] != bufferId) continue;
-                
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, false);
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, 0);                
-            }             
-        }
-        
-        public static void Dispose()
-        {
-            if (Disabled) return;
-
-            if (ALHelper.Efx.IsInitialized)
-                ALHelper.Efx.DeleteFilter(lowpassFilterId);
-
-            for (int i = 0; i < DefaultSourceCount; i++)
-            {
-                var state = OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]);
-                if (state == OpenTK.Audio.OpenAL.ALSourceState.Playing || state == OpenTK.Audio.OpenAL.ALSourceState.Paused)
+                if (loadedSounds[i]==sound)
                 {
-                    Stop(i);
+                    loadedSounds.RemoveAt(i);
+                    return;
                 }
-
-                OpenTK.Audio.OpenAL.AL.DeleteSource(alSources[i]);
-                
-                ALHelper.Check();
-            }
-
-            if (oggStream != null)
-            {
-                oggStream.Stop();
-                oggStream.Dispose();
-
-                oggStream = null;
-            }
-
-            if (oggStreamer != null)
-            {
-                oggStreamer.Dispose();
-                oggStreamer = null;
             }
         }
 
+        public void SetCategoryGainMultiplier(string category,float gain)
+        {
+            category = category.ToLower();
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float,bool>>();
+            if (!categoryModifiers.ContainsKey(category))
+            {
+                categoryModifiers.Add(category, new Pair<float,bool>(gain, false));
+            }
+            else
+            {
+                categoryModifiers[category].First = gain;
+            }
+            for (int i=0;i<SOURCE_COUNT;i++)
+            {
+                if (playingChannels[i]!=null && playingChannels[i].IsPlaying)
+                {
+                    playingChannels[i].Gain = playingChannels[i].Gain; //force all channels to recalculate their gain
+                }
+            }
+        }
+
+        public float GetCategoryGainMultiplier(string category)
+        {
+            category = category.ToLower();
+            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
+            return categoryModifiers[category].First;
+        }
+
+        public void SetCategoryMuffle(string category,bool muffle)
+        {
+            category = category.ToLower();
+
+            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, Pair<float, bool>>();
+            if (!categoryModifiers.ContainsKey(category))
+            {
+                categoryModifiers.Add(category, new Pair<float, bool>(1.0f, muffle));
+            }
+            else
+            {
+                categoryModifiers[category].Second = muffle;
+            }
+
+            for (int i = 0; i < SOURCE_COUNT; i++)
+            {
+                if (playingChannels[i] != null && playingChannels[i].IsPlaying)
+                {
+                    if (playingChannels[i].Category.ToLower() == category) playingChannels[i].Muffled = muffle;
+                }
+            }
+        }
+
+        public bool GetCategoryMuffle(string category)
+        {
+            category = category.ToLower();
+            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return false;
+            return categoryModifiers[category].Second;
+        }
+
+        public void InitStreamThread()
+        {
+            if (streamingThread == null || streamingThread.ThreadState!=ThreadState.Running)
+            {
+                streamingThread = new Thread(UpdateStreaming);
+                streamingThread.IsBackground = true; //this should kill the thread if the game crashes
+                streamingThread.Start();
+            }
+        }
+
+        void UpdateStreaming()
+        {
+            bool areStreamsPlaying = true;
+            while (areStreamsPlaying)
+            {
+                areStreamsPlaying = false;
+                lock (playingChannels)
+                {
+                    for (int i=0;i<SOURCE_COUNT;i++)
+                    {
+                        if (playingChannels[i]!=null && playingChannels[i].IsStream)
+                        {
+                            if (playingChannels[i].IsPlaying)
+                            {
+                                areStreamsPlaying = true;
+                                playingChannels[i].UpdateStream();
+                            }
+                            else
+                            {
+                                playingChannels[i].Dispose();
+                            }
+                        }
+                    }
+                }
+                Thread.Sleep(300);
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (playingChannels)
+            {
+                for (int i=0;i<SOURCE_COUNT;i++)
+                {
+                    if (playingChannels[i]!=null) playingChannels[i].Dispose();
+                }
+            }
+            if (streamingThread != null && streamingThread.ThreadState == ThreadState.Running)
+            {
+                streamingThread.Join();
+            }
+            for (int i = loadedSounds.Count - 1; i >= 0; i--)
+            {
+                loadedSounds[i].Dispose();
+            }
+            for (int i = 0; i < SOURCE_COUNT; i++)
+            {
+                AL.DeleteSource(ref alSources[i]);
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to delete alSources[" + i.ToString() + "]: " + AL.GetErrorString(alError));
+                }
+            }
+            
+            if (!Alc.MakeContextCurrent(OpenTK.ContextHandle.Zero))
+            {
+                throw new Exception("Failed to detach the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + ")");
+            }
+
+            Alc.DestroyContext(alcContext);
+            
+            if (!Alc.CloseDevice(alcDevice))
+            {
+                throw new Exception("Failed to close ALC device!");
+            }
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace Barotrauma
         public readonly List<string> Messages;
 
         //the mission can only be received when travelling from Pair.First to Pair.Second
-        public readonly List<Pair<string,string>> AllowedLocationTypes;
+        public readonly List<Pair<string, string>> AllowedLocationTypes;
 
         public readonly XElement XmlConfig;
 

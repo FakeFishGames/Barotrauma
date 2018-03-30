@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
 
         private float health;
         
@@ -18,6 +18,30 @@ namespace Barotrauma
         //does the structure have a physics body
         [Serialize(false, false)]
         public bool Body
+        {
+            get;
+            private set;
+        }
+
+        //rotation of the physics body in degrees
+        [Serialize(0.0f, false)]
+        public float BodyRotation
+        {
+            get;
+            private set;
+        }
+        
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyWidth
+        {
+            get;
+            private set;
+        }
+
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyHeight
         {
             get;
             private set;
@@ -54,6 +78,11 @@ namespace Barotrauma
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
+        }
+
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
         }
 
         [Serialize("0,0", true)]
@@ -115,6 +144,7 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipVertically;
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         break;
                     case "backgroundsprite":
