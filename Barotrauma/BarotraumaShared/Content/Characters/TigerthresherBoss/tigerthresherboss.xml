@@ -37,7 +37,11 @@
     <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-      <attack range="450" damagerange="200" duration="0.5" damage="200" bleedingdamage="10" structuredamage="50" damagetype="slash" force="80" torque="80" targetforce="-50" severlimbsprobability="0.8"/>      
+      <attack range="300" damagerange="150" duration="0.5" structuredamage="30" structuresoundtype="StructureSlash"
+              force="80" torque="80" targetforce="-50" severlimbsprobability="0.8">
+        <affliction name="Internal Damage" strength="15"/>
+        <affliction name="Bleeding" strength="50"/>
+      </attack>
     </limb>
 
     <!-- body front -->

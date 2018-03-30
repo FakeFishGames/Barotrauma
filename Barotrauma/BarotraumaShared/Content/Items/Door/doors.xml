@@ -25,7 +25,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
   
-    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -59,7 +59,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -93,7 +93,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -124,7 +124,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -163,7 +163,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -198,7 +198,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>

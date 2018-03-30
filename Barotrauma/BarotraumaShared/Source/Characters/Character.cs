@@ -600,7 +600,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(17, this);
+                inventory = new CharacterInventory(CharacterInventory.SlotTypes.Length, this);
             }
             else
             {
@@ -1020,14 +1020,19 @@ namespace Barotrauma
         
         public bool HasEquippedItem(Item item)
         {
-            return !inventory.IsInLimbSlot(item, InvSlotType.Any);
+            for (int i = 0; i < CharacterInventory.SlotTypes.Length; i++)
+            {
+                if (inventory.Items[i] == item && CharacterInventory.SlotTypes[i] != InvSlotType.Any) return true;
+            }
+
+            return false;
         }
 
         public bool HasEquippedItem(string itemName, bool allowBroken = true)
         {
             for (int i = 0; i < inventory.Items.Length; i++)
             {
-                if (CharacterInventory.limbSlots[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
+                if (CharacterInventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
                 if (!allowBroken && inventory.Items[i].Condition <= 0.0f) continue;
                 if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
             }
@@ -1641,7 +1646,7 @@ namespace Barotrauma
         {
             if (aiTarget == null) return;
 
-            aiTarget.SightRange = MathHelper.Clamp(Mass * 100.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
+            aiTarget.SightRange = MathHelper.Clamp((float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
         }
 
         public void SetOrder(Order order, string orderOption)
@@ -1696,7 +1701,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, modifiedMessage, ChatMessage.MessageColor[(int)message.MessageType.Value]);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.DisplayName, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
  #endif
@@ -1886,9 +1891,9 @@ namespace Barotrauma
                 if (GameMain.Client != null) return; 
             }
 
+            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
             health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
             BreakJoints();            
-            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
         }
 
         public void BreakJoints()
@@ -1938,7 +1943,14 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
+            if (causeOfDeathType == CauseOfDeathType.Affliction)
+            {
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
+            }
+            else
+            {
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
+            }
 
             this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
             OnDeath?.Invoke(this, causeOfDeathType);

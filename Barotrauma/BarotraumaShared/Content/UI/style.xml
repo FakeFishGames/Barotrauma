@@ -263,7 +263,8 @@
       hovercolor="1.0,1.0,1.0,1.0"
       selectedcolor="1.0,1.0,1.0,1.0">
 
-      <Sprite texture="Content/UI/UI_Atlas.png" tile="false" sourcerect ="0, 276, 859, 37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" tile="false" sourcerect ="0, 276, 859, 37"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" tile="false" sourcerect ="0, 276, 859, 37"/>
     </Slider>    
   </GUIProgressBar>
 
@@ -287,4 +288,27 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
   </SerializableEntityEditor>
 
+  <ChatBox
+    color="1.0,1.0,1.0,1.0"
+    textcolor="1.0,1.0,1.0,1.0"
+    outlinecolor="0.0,0.0,0.0,0.0">
+    <GUIFrame
+      padding="5.0,10.0,5.0,10.0"
+      color="1.0,1.0,1.0,1.0"
+      hovercolor="1.0,1.0,1.0,1.0"
+      selectedcolor="1.0,1.0,1.0,1.0">
+      <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect ="688,490,335,445" slice="714,514,1002,920"/>
+    </GUIFrame>
+  </ChatBox>
+
+  <ChatTextBox
+    color="1.0,1.0,1.0,0.9"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="0.5,0.5,1.0,1.0"
+    textcolor="0.5, 0.55, 0.6, 1.0">
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" sourcerect ="691,959,333,42" slice="706,971,1007,987"/>
+  </ChatTextBox>
+  
 </style>

@@ -1,4 +1,68 @@
 <prefabs>
+  <!-- EXTERIOR ATLAS A -->
+
+  <!-- Straight pieces -->
+   
+  <ExtA_90 description="ExtA Vert" body="true"
+    width="64" height="512" resizevertical="true">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,0,64,512" depth="0.1"/>
+  </ExtA_90>
+  
+  <ExtA_0 description="ExtA Hor" body="true"
+    width="512" height="64" resizehorizontal="true">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,0,512,64" depth="0.1"/>
+  </ExtA_0> 
+  
+  <ExtA_45 description="ExtA Diag" body="true"
+    width="512" height="576" bodywidth="725" bodyheight="64" bodyrotation="-45">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,960,512,576" depth="0.1"/>
+  </ExtA_45>
+	
+  <ExtA_20 description="ExtA Diag-20" body="true"
+    width="512" height="320" bodywidth="571" bodyheight="64" bodyrotation="-26">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,64,512,320" depth="0.1"/>
+  </ExtA_20>
+	
+  <!-- Curved 512 width pieces -->
+  <ExtA_conv-35 description="ExtA convex-35" body="true"
+    width="512" height="448" bodywidth="640" bodyheight="64" bodyrotation="-40">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,64,512,448" depth="0.1"/>
+  </ExtA_conv-35>
+	
+  <ExtA_conc-20 description="ExtA concave-20" body="true"
+    width="512" height="192" bodywidth="528" bodyheight="64" bodyrotation="-15">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,320,512,192" depth="0.1"/>
+  </ExtA_conc-20>
+  
+  <ExtA_conv-25 description="ExtA convex-25" body="true"
+    width="512" height="320" bodywidth="570" bodyheight="64" bodyrotation="-25">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,512,512,320" depth="0.1"/>
+  </ExtA_conv-25>
+  
+  <ExtA_conv-20 description="ExtA convex-20" body="true"
+    width="512" height="192" bodywidth="527" bodyheight="64" bodyrotation="-14">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,512,512,192" depth="0.1"/>
+  </ExtA_conv-20>
+  
+  <!-- Curved small pieces -->
+	
+  <ExtA_curve-90 description="ExtA Curve-90" body="true"
+    width="256" height="320" bodywidth="64" bodyheight="405" bodyrotation="40">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,0,256,320" depth="0.1"/>
+  </ExtA_curve-90>
+	
+  <ExtA_s-10 description="S-curve-10" body="true"
+    width="384" height="192" bodywidth="405" bodyheight="64" bodyrotation="25">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,320,384,192" depth="0.1"/>
+  </ExtA_s-10>
+	
+  <ExtA_conc-35 description="ExtA concave-35" body="true"
+    width="384" height="320" bodywidth="450" bodyheight="64" bodyrotation="-35">
+    <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,0,384,320" depth="0.1"/>
+  </ExtA_conc-35>
+	
+  <!-- TAIL-A ENDS -->
+     
   <largehorizontalback description="A decorative structure with no collision detection"
     width="128" height = "64" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,0,896,64" depth="0.9"/>
@@ -250,7 +314,7 @@
 
   <RuinClaw category="Alien" 
     width="126" height="270">
-    <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth ="0.97"/>
+    <sprite  texture="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"/>
   </RuinClaw>
 
 </prefabs>

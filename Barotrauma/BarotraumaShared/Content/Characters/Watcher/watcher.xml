@@ -34,7 +34,7 @@
     <!-- head -->
     <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
-      <attack range="250" damagerange="170" duration="0.05" force="20" targetforce="100">
+      <attack range="250" damagerange="170" duration="0.05" force="20" targetforce="100" structuresoundtype="StructureBlunt">
         <affliction name="Internal Damage" strength="200"/>
         <affliction name="Stun" strength="5"/>
       </attack>

@@ -339,10 +339,10 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
             
@@ -374,13 +374,13 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
-            
+
             if (entityGrids != null)
             {
                 foreach (EntityGrid entityGrid in entityGrids)
@@ -793,7 +793,7 @@ namespace Barotrauma
             }            
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Hull Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
             if (element.Attribute("rect") != null)
@@ -811,10 +811,9 @@ namespace Barotrauma
             }
 
             Hull h = new Hull(MapEntityPrefab.Find("Hull"), rect, submarine);
-
             h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
-
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
+            return h;
         }
 
         public override XElement Save(XElement parentElement)

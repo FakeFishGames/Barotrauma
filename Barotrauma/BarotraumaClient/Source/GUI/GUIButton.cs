@@ -165,7 +165,7 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, style, this);
             GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
 
-            textBlock = new GUITextBlock(Rectangle.Empty, text,
+            textBlock = new GUITextBlock(new Rectangle(0, 0, rect.Width, rect.Height), text,
                 Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
                 textAlignment, null, this);
             GUI.Style.Apply(textBlock, style, this);

@@ -78,7 +78,7 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="20"
+      <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="20" structuresoundtype="StructureSlash"
               targetforce="-100" severlimbsprobability="0.8" torque="-20" force="10" applyforceonlimbs="0,6">
         <affliction name="Internal Damage" strength="10"/>
         <affliction name="Bleeding" strength="50"/>

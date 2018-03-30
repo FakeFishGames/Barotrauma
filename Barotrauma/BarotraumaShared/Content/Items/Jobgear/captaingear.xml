@@ -16,7 +16,7 @@
   </Item>
 
   <Item
-    name="Captain's Jacket"
+    name="Captain's Uniform"
     category="Equipment"      
     cargocontainername="Metal Crate"  
     tags="smallitem">
@@ -25,7 +25,7 @@
 
     <Body width="52" height="17" density="30"/>
 
-    <Wearable slots="Any,Torso">
+    <Wearable slots="Any,InnerClothes">
       <sprite texture="captainTorso.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depthlimb="Head"/>
 
       <sprite texture="captainTorso.png" limb="RightHand" sourcerect="47,0,15,39" origin="0.45,0.65"/>
@@ -33,20 +33,7 @@
 
       <sprite texture="captainTorso.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainTorso.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
-    </Wearable>
-  </Item>
-
-  <Item
-    name="Captain's Trousers"
-    category="Equipment"
-    cargocontainername="Metal Crate"
-    tags="smallitem">
-
-    <Sprite texture ="captainLegs.png" sourcerect="0,67,51,13" depth="0.6"/>
-
-    <Body width="51" height="13" density="30"/>
-
-    <Wearable slots="Any,Legs">
+      
       <sprite texture="captainLegs.png" limb="Waist" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainLegs.png" limb="RightThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainLegs.png" limb="LeftThigh" sourcerect="52,34,28,46" origin="0.5,0.5" hidelimb="true"/>

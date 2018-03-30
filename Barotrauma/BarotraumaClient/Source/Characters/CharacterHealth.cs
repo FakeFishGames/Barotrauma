@@ -13,10 +13,23 @@ namespace Barotrauma
     partial class CharacterHealth
     {
         private static Sprite noiseOverlay, damageOverlay;
-        
+
         private static Sprite statusIconOxygen;
         private static Sprite statusIconPressure;
         private static Sprite statusIconBloodloss;
+
+        private Alignment alignment = Alignment.Left;
+
+        public Alignment Alignment
+        {
+            get { return alignment; }
+            set
+            {
+                if (alignment == value) return;
+                alignment = value;
+                UpdateAlignment();
+            }
+        }
 
         private GUIButton suicideButton;
 
@@ -24,11 +37,14 @@ namespace Barotrauma
 
         private float damageOverlayTimer;
 
-        private GUIFrame healthWindow;
+        private GUIListBox afflictionContainer;
+
+        /*private GUIFrame healthWindow;
         private GUIProgressBar healthWindowHealthBar;
         private GUIFrame limbIndicatorContainer;
-        private GUIListBox afflictionContainer;
-        private GUIListBox healItemContainer;
+        private GUIListBox healItemContainer;*/
+        
+        private GUIFrame healthWindow;
 
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
@@ -48,11 +64,11 @@ namespace Barotrauma
             {
                 if (openHealthWindow == value) return;
                 openHealthWindow = value;
-                if (openHealthWindow != null)
+                /*if (openHealthWindow != null)
                 {
                     openHealthWindow.UpdateAfflictionContainer(null);
                     openHealthWindow.UpdateItemContainer();
-                }
+                }*/
             }
         }
 
@@ -68,20 +84,22 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character)
         {
-            healthBar = new GUIProgressBar(new Rectangle(5, GameMain.GraphicsHeight - 138, 20, 128), Color.White, null, 1.0f, Alignment.TopLeft);
+            int healthBarHeight = (int)(450 * GUI.Scale);
+            healthBar = new GUIProgressBar(new Rectangle(10, GameMain.GraphicsHeight - healthBarHeight - 10, (int)(30 * GUI.Scale), healthBarHeight), Color.White, null, 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
 
-            healthWindow = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
-            GUIFrame healthFrame = new GUIFrame(new Rectangle(0, 0, (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 500, 800), (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 400, 600)),
-                null, Alignment.Center, "", healthWindow);
-            healthFrame.Color *= 0.8f;
-            limbIndicatorContainer = new GUIFrame(new Rectangle(20, 0, 240, 0), Color.Black * 0.5f, "", healthFrame);
+            afflictionContainer = new GUIListBox(new Rectangle(0, 0, 100, 200), "");
+            healthWindow = new GUIFrame(new Rectangle(0,0,100,200), "");
+
+            UpdateAlignment();
+
+            //healthWindow = new GUIFrame(new Rectangle((int)(GameMain.GraphicsWidth - 500 * GUI.Scale), (int)(GameMain.GraphicsHeight / 2 - 300 * GUI.Scale), (int)(300 * GUI.Scale), (int)(600 * GUI.Scale)), null);
+            /*limbIndicatorContainer = new GUIFrame(new Rectangle(20, 0, 240, 0), Color.Black * 0.5f, "", healthFrame);
             healthWindowHealthBar = new GUIProgressBar(new Rectangle(0, 0, 30, 0), Color.Green, 1.0f, healthFrame);
             healthWindowHealthBar.IsHorizontal = false;
 
             int listBoxWidth = (int)(healthFrame.Rect.Width - limbIndicatorContainer.Rect.Width - healthFrame.Padding.X - healthFrame.Padding.Z) / 2;
-            afflictionContainer = new GUIListBox(new Rectangle(limbIndicatorContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 30, listBoxWidth, 0),
-                "", healthFrame);
+
             new GUITextBlock(new Rectangle(limbIndicatorContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 0, 20, 20), "Afflictions", "", healthFrame);
 
             healItemContainer = new GUIListBox(new Rectangle(afflictionContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 30, listBoxWidth, 0),
@@ -109,7 +127,7 @@ namespace Barotrauma
                 item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
                 UpdateItemContainer();
                 return true;
-            };
+            };*/
 
             suicideButton = new GUIButton(
                         new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
@@ -131,6 +149,26 @@ namespace Barotrauma
                 }
                 return true;
             };
+        }
+
+        private void UpdateAlignment()
+        {
+            int windowWidth = (int)(300 * GUI.Scale);
+            int windowHeight = (int)(600 * GUI.Scale);
+            
+            int y = 60 + (int)(90 * GUI.Scale);
+            if (alignment == Alignment.Left)
+            {
+                healthBar.Rect = new Rectangle(10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
+                healthWindow.Rect = new Rectangle((int)(60 * GUI.Scale), y, windowWidth, windowHeight);
+                afflictionContainer.Rect = new Rectangle(healthWindow.Rect.Right, healthWindow.Rect.Y, windowWidth, windowHeight);
+            }
+            else
+            {
+                healthBar.Rect = new Rectangle(GameMain.GraphicsWidth - healthBar.Rect.Width - 10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
+                healthWindow.Rect = new Rectangle((int)(GameMain.GraphicsWidth - 10 - (330 * GUI.Scale) - windowWidth), y, windowWidth, windowHeight);
+                afflictionContainer.Rect = new Rectangle(healthWindow.Rect.X - windowWidth, healthWindow.Rect.Y, windowWidth, windowHeight);
+            }
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -175,8 +213,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.H))
             {
-                OpenHealthWindow = null;
-                UpdateItemContainer();
+                OpenHealthWindow = openHealthWindow == this ? null : this;
             }
             
             if (character.IsDead)
@@ -186,19 +223,30 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = (vitality > 0.0f) ? Color.Lerp(Color.Orange, Color.Green, vitality / MaxVitality) : healthBar.Color = Color.Red;
+                healthBar.Color = Color.Red;
+                if (vitality / MaxVitality > 0.5f)
+                {
+                    healthBar.Color = Color.Lerp(Color.Orange, Color.Green * 1.5f, (vitality / MaxVitality - 0.5f) * 2.0f);
+                }
+                else if (vitality > 0.0f)
+                {
+                    healthBar.Color = Color.Lerp(Color.Red, Color.Orange, (vitality / MaxVitality) * 2.0f);
+                }
+
+                healthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
             }
             
             healthBar.Update(deltaTime);
             if (OpenHealthWindow == this)
             {
-                UpdateLimbIndicators(limbIndicatorContainer.Rect);
-                UpdateAfflictionContainer(selectedLimbIndex < 0 ? null : limbHealths[selectedLimbIndex]);
-                healItemContainer.Enabled = selectedLimbIndex > -1;
+                UpdateLimbIndicators(healthWindow.Rect);
+                UpdateAfflictionContainer(highlightedLimbIndex < 0 ? (selectedLimbIndex < 0 ? null : limbHealths[selectedLimbIndex]) : limbHealths[highlightedLimbIndex]);
+                afflictionContainer.Update(deltaTime);
+                /*healItemContainer.Enabled = selectedLimbIndex > -1;
                 healthWindowHealthBar.Color = healthBar.Color;
                 healthWindowHealthBar.BarSize = healthBar.BarSize;
-                healthWindow.Update(deltaTime);
+                healthWindow.Update(deltaTime);*/
             }
             else
             {
@@ -218,7 +266,7 @@ namespace Barotrauma
         
         public void AddToGUIUpdateList()
         {
-            if (OpenHealthWindow == this) healthWindow.AddToGUIUpdateList();
+            if (OpenHealthWindow == this) afflictionContainer.AddToGUIUpdateList();
             if (suicideButton.Visible && character == Character.Controlled) suicideButton.AddToGUIUpdateList();
         }
 
@@ -243,40 +291,85 @@ namespace Barotrauma
 
         public void DrawStatusHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
         {
-            healthBar.Rect = new Rectangle(5 + (int)drawOffset.X, GameMain.GraphicsHeight - 138 + (int)drawOffset.Y, 20, 128);
-
-            Rectangle limbArea = new Rectangle(30 + (int)drawOffset.X, GameMain.GraphicsHeight - 135 + (int)drawOffset.Y, 70, 128);
-            DrawLimbIndicators(spriteBatch, limbArea, false, limbArea.Contains(PlayerInput.MousePosition) && OpenHealthWindow != this);
-            if (limbArea.Contains(PlayerInput.MousePosition) && PlayerInput.LeftButtonClicked())
+            Rectangle interactArea = healthBar.Rect;
+            if (openHealthWindow == null)
             {
-                OpenHealthWindow = this;
-                UpdateItemContainer();
-            }
+                List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
+                if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
 
-            List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
-            if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
+                var allAfflictions = GetAllAfflictions(true);
+                foreach (Affliction affliction in allAfflictions)
+                {
+                    if (affliction.Strength < affliction.Prefab.ShowIconThreshold || affliction.Prefab.Icon == null) continue;
+                    statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
+                }
 
-            var allAfflictions = GetAllAfflictions(true);
-            foreach (Affliction affliction in allAfflictions)
-            {
-                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
-                statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
-            }
+                Pair<Sprite, string> highlightedIcon = null;
+                Vector2 highlightedIconPos = Vector2.Zero;
+                Vector2 pos = alignment == Alignment.Left ?
+                    healthBar.Rect.Location.ToVector2() + new Vector2(healthBar.Rect.Width + 5, 10) :
+                    healthBar.Rect.Location.ToVector2() - new Vector2(5 + 50.0f * GUI.Scale, 10);
 
-            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, -55);
-            foreach (Pair<Sprite, string> statusIcon in statusIcons)
-            {
-                if (statusIcon.First != null) statusIcon.First.Draw(spriteBatch, pos);
-                GUI.DrawString(spriteBatch, pos + new Vector2(55, 10), statusIcon.Second, Color.White * 0.8f, Color.Black * 0.5f);
-                pos.Y -= 50.0f;
+                foreach (Pair<Sprite, string> statusIcon in statusIcons)
+                {
+                    Rectangle afflictionIconRect = new Rectangle(pos.ToPoint(), (statusIcon.First.size * GUI.Scale).ToPoint());
+                    interactArea = Rectangle.Union(interactArea, afflictionIconRect);
+                    if (afflictionIconRect.Contains(PlayerInput.MousePosition))
+                    {
+                        highlightedIcon = statusIcon;
+                        highlightedIconPos = afflictionIconRect.Center.ToVector2();
+                    }
+                    pos.Y += 50.0f * GUI.Scale;
+                }
+
+                pos.Y = healthBar.Rect.Location.Y + 10;
+                foreach (Pair<Sprite, string> statusIcon in statusIcons)
+                {
+                    statusIcon.First.Draw(spriteBatch, pos, highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
+                    pos.Y += 50.0f * GUI.Scale;
+                }
+
+                if (highlightedIcon != null)
+                {
+                    GUI.DrawString(spriteBatch,
+                        alignment == Alignment.Left ? highlightedIconPos + new Vector2(60 * GUI.Scale, 5) : highlightedIconPos + new Vector2(-10.0f - GUI.Font.MeasureString(highlightedIcon.Second).X, 5),
+                        highlightedIcon.Second,
+                        Color.White * 0.8f, Color.Black * 0.5f);
+                }
             }
 
             healthBar.Draw(spriteBatch);
+            
+            if (interactArea.Contains(PlayerInput.MousePosition) && GUIComponent.MouseOn == null)
+            {
+                healthBar.State = GUIComponent.ComponentState.Hover;
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    OpenHealthWindow = openHealthWindow == this ? null : this;
+                }
+            }
+            else
+            {
+                healthBar.State = GUIComponent.ComponentState.None;
+            }
 
             if (OpenHealthWindow == this)
             {
                 healthWindow.Draw(spriteBatch);
-                DrawLimbIndicators(spriteBatch, limbIndicatorContainer.Rect, true, false);
+                DrawLimbIndicators(spriteBatch, healthWindow.Rect, true, false);
+
+                int previewLimbIndex = highlightedLimbIndex < 0 ? selectedLimbIndex : highlightedLimbIndex;
+                if (previewLimbIndex > -1)
+                {
+                    afflictionContainer.Draw(spriteBatch);
+                    GUI.DrawLine(spriteBatch, new Vector2(alignment == Alignment.Left ? afflictionContainer.Rect.X : afflictionContainer.Rect.Right, afflictionContainer.Rect.Center.Y), 
+                        GetLimbHighlightArea(limbHealths[previewLimbIndex], healthWindow.Rect).Center.ToVector2(), Color.LightGray, 0, 3);
+                }
+
+                if (Inventory.draggingItem != null && highlightedLimbIndex > -1)
+                {
+                    GUI.DrawString(spriteBatch, PlayerInput.MousePosition + Vector2.UnitY * 40.0f, "Use item \"" + Inventory.draggingItem.Name + "\" on [insert limb name here]", Color.Green, Color.Black * 0.8f);
+                }
             }
         }
 
@@ -321,18 +414,40 @@ namespace Barotrauma
             for (int i = afflictionContainer.CountChildren - 1; i>= 0; i--)
             {
                 if (!currentChildren.Contains(afflictionContainer.children[i]))
-                        afflictionContainer.RemoveChild(afflictionContainer.children[i]);
+                {
+                    afflictionContainer.RemoveChild(afflictionContainer.children[i]);
+                }
             }
 
             afflictionContainer.children.Sort((c1, c2) =>
             {
                 Affliction affliction1 = c1.UserData as Affliction;
                 Affliction affliction2 = c2.UserData as Affliction;
-                return (int)(affliction1.Strength - affliction2.Strength);
+                return (int)(affliction2.Strength - affliction1.Strength);
             });
         }
 
-        private void UpdateItemContainer()
+        public void OnItemDropped(Item item)
+        {
+            if (highlightedLimbIndex < 0 || item == null) return;
+
+            Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
+#if CLIENT
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
+                return;
+            }
+#endif
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
+            }
+
+            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
+        }
+
+        /*private void UpdateItemContainer()
         {
             healItemContainer.ClearChildren();
 
@@ -359,7 +474,7 @@ namespace Barotrauma
                 }
                 new GUITextBlock(new Rectangle(50, 0, 0, 0), itemName, "", child);
             }
-        }
+        }*/
 
         private void UpdateLimbIndicators(Rectangle drawArea)
         {
@@ -370,12 +485,8 @@ namespace Barotrauma
                 if (limbHealth.IndicatorSprite == null) continue;
                 
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
-                
-                Rectangle highlightArea = new Rectangle(
-                    (int)(drawArea.Center.X - (limbHealth.IndicatorSprite.Texture.Width / 2 - limbHealth.HighlightArea.X) * scale),
-                    (int)(drawArea.Center.Y - (limbHealth.IndicatorSprite.Texture.Height / 2 - limbHealth.HighlightArea.Y) * scale),
-                    (int)(limbHealth.HighlightArea.Width * scale),
-                    (int)(limbHealth.HighlightArea.Height * scale));
+
+                Rectangle highlightArea = GetLimbHighlightArea(limbHealth, drawArea);
 
                 if (highlightArea.Contains(PlayerInput.MousePosition))
                 {
@@ -387,6 +498,7 @@ namespace Barotrauma
             if (PlayerInput.LeftButtonClicked() && highlightedLimbIndex > -1)
             {
                 selectedLimbIndex = highlightedLimbIndex;
+                afflictionContainer.ClearChildren();
             }
         }
 
@@ -449,6 +561,16 @@ namespace Barotrauma
                 }
                 i++;
             }
+        }
+
+        private Rectangle GetLimbHighlightArea(LimbHealth limbHealth, Rectangle drawArea)
+        {
+            float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
+            return new Rectangle(
+                (int)(drawArea.Center.X - (limbHealth.IndicatorSprite.Texture.Width / 2 - limbHealth.HighlightArea.X) * scale),
+                (int)(drawArea.Center.Y - (limbHealth.IndicatorSprite.Texture.Height / 2 - limbHealth.HighlightArea.Y) * scale),
+                (int)(limbHealth.HighlightArea.Width * scale),
+                (int)(limbHealth.HighlightArea.Height * scale));
         }
         
         public void ClientRead(NetBuffer inc)

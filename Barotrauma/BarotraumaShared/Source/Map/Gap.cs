@@ -589,7 +589,7 @@ namespace Barotrauma
             FindHulls();
         }
         
-        public static void Load(XElement element, Submarine submarine)
+        public static Gap Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
 
@@ -610,15 +610,15 @@ namespace Barotrauma
             bool isHorizontal = rect.Height > rect.Width;
 
             var horizontalAttribute = element.Attribute("horizontal");
-            if (horizontalAttribute!=null)
+            if (horizontalAttribute != null)
             {
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
 
             Gap g = new Gap(rect, isHorizontal, submarine);
-            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            
+            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);            
             g.linkedToID = new List<ushort>();
+            return g;
         }
 
         public override XElement Save(XElement parentElement)

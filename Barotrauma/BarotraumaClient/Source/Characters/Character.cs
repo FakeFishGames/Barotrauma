@@ -192,7 +192,10 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
+                string chatMessage = causeOfDeath.First == CauseOfDeathType.Affliction ?
+                    causeOfDeath.Second.SelfCauseOfDeathDescription :
+                    TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.First.ToString());
+
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
@@ -312,7 +315,7 @@ namespace Barotrauma
 
             if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f,
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 30,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
                     Math.Min(speechBubbleTimer, 1.0f));
             }

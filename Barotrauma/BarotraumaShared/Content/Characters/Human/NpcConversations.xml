@@ -121,7 +121,7 @@
     <Conversation line="Yes, what about it?" speaker="1">
       <Conversation line="I think we should establish one." speaker="0">
         <Conversation line="We could use some better safety standards, proper wages, retirement benefits..." speaker="0">
-          <Conversation line="You think you're going to live enough to retire?" speaker="1">
+          <Conversation line="You think you're going to live long enough to retire?" speaker="1">
             <Conversation line="Well I sure hope so." speaker="0"/>
             <Conversation line="Fair point." speaker="0"/>
           </Conversation>

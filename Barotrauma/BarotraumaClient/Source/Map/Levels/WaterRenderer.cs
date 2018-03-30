@@ -71,9 +71,9 @@ namespace Barotrauma
 #if WINDOWS
             WaterEffect = content.Load<Effect>("watershader");
 #endif
-#if LINUX
+#if LINUX || OSX
 
-            waterEffect = content.Load<Effect>("watershader_opengl");
+            WaterEffect = content.Load<Effect>("watershader_opengl");
 #endif
 
             waterTexture = TextureLoader.FromFile("Content/waterbump.png");

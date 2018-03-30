@@ -23,7 +23,7 @@
     <Projectile launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="50">
         <affliction name="Bleeding" strength="30"/>
-        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Internal Damage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>
@@ -119,7 +119,7 @@
     <Projectile hitscan="true" removeonhit="true" >
       <Attack structuredamage="100" stun="0.5" targetforce="50">
         <affliction name="Gunshot wound" strength="40"/>
-        <affliction name="Internal Damage" strength="10"/>
+        <affliction name="Internal Damage" strength="30"/>
       </Attack>
     </Projectile>
   </Item>

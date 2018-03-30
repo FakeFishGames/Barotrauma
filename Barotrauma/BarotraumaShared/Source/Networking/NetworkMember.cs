@@ -141,17 +141,15 @@ namespace Barotrauma.Networking
             return radioComponent.HasRequiredContainedItems(false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName="", Character senderCharacter = null)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)
         {
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
         }
-        
+
         public void AddChatMessage(ChatMessage message)
         {
             GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
-
-            string displayedText = message.Text;
-
+            
             if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
@@ -159,42 +157,7 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             GameMain.NetLobbyScreen.NewChatMessage(message);
-
-            while (chatBox.CountChildren > 20)
-            {
-                chatBox.RemoveChild(chatBox.children[1]);
-            }
-
-            if (!string.IsNullOrWhiteSpace(message.SenderName))
-            {
-                displayedText = (message.Type == ChatMessageType.Private ? "[PM] " : "" ) + message.SenderName + ": " + displayedText;
-            }
-            
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 40, 0), displayedText,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
-            msg.UserData = message.SenderName;
-
-            msg.Padding = new Vector4(20.0f, 0, 0, 0);
-
-            float prevSize = chatBox.BarSize;
-
-            msg.Padding = new Vector4(20, 0, 0, 0);
-            chatBox.AddChild(msg);
-
-            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
-
-            GUISoundType soundType = GUISoundType.Message;
-            if (message.Type == ChatMessageType.Radio)
-            {
-                soundType = GUISoundType.RadioMessage;
-            }
-            else if (message.Type == ChatMessageType.Dead)
-            {
-                soundType = GUISoundType.DeadMessage;
-            }
-
-            GUI.PlayUISound(soundType);
+            chatBox.AddMessage(message);
 #endif
         }
 
@@ -205,14 +168,15 @@ namespace Barotrauma.Networking
         public virtual void Update(float deltaTime) 
         {
 #if CLIENT
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatMsgBox : GameMain.NetLobbyScreen.TextBox);
+            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
                 if (!GUI.DisableHUD)
                 {
-                    inGameHUD.Update(deltaTime);
+                    inGameHUD.Update(deltaTime);            
+                    chatBox.Update(deltaTime);
                     GameMain.GameSession.CrewManager.Update(deltaTime);
                 }
                 

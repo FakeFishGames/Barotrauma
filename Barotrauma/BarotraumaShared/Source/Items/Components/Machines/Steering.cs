@@ -245,11 +245,14 @@ namespace Barotrauma.Items.Components
                 SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
             }
 
-            float avoidRadius = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height) * 2.0f;
-            avoidRadius = Math.Max(avoidRadius, 2000.0f);
+            Vector2 avoidDist = new Vector2(
+                Math.Max(1000.0f * Math.Abs(item.Submarine.Velocity.X), item.Submarine.Borders.Width * 1.5f),
+                Math.Max(1000.0f * Math.Abs(item.Submarine.Velocity.Y), item.Submarine.Borders.Height * 1.5f));
+
+            float avoidRadius = avoidDist.Length();
 
             Vector2 newAvoidStrength = Vector2.Zero;
-
+            
             //steer away from nearby walls
             var closeCells = Level.Loaded.GetCells(item.Submarine.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
@@ -260,9 +263,9 @@ namespace Barotrauma.Items.Components
                     if (intersection != null)
                     {
                         Vector2 diff = item.Submarine.WorldPosition - (Vector2)intersection;
-
+                        
                         //far enough -> ignore
-                        if (diff.Length() > avoidRadius) continue;
+                        if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y) continue;
 
                         float dot = item.Submarine.Velocity == Vector2.Zero ?
                             0.0f : Vector2.Dot(item.Submarine.Velocity, -Vector2.Normalize(diff));

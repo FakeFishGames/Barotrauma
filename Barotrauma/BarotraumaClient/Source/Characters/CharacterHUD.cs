@@ -12,6 +12,10 @@ namespace Barotrauma
     {
         private static GUIButton cprButton;        
         private static GUIButton grabHoldButton;
+
+        const float ItemOverlayDelay = 1.0f;
+        private static Item focusedItem;
+        private static float focusedItemOverlayTimer;
                 
         public static void TakeDamage(float amount)
         {
@@ -24,14 +28,15 @@ namespace Barotrauma
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
             if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsUnconscious && character.Stun <= 0.0f &&
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 if (character.Inventory != null)
                 {
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
@@ -55,11 +60,12 @@ namespace Barotrauma
                 if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
             }
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsUnconscious && character.Stun <= 0.0f &&
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun >= -0.1f)
+                    if (!character.LockHands && character.Stun < 0.1f)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -67,7 +73,7 @@ namespace Barotrauma
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
-                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                        if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                         foreach (ItemComponent ic in item.components)
                         {
@@ -84,6 +90,19 @@ namespace Barotrauma
 
                 Inventory.UpdateDragging();
             }
+
+            if (focusedItem != null)
+            {
+                if (character.FocusedItem != null)
+                {
+                    focusedItemOverlayTimer = Math.Min(focusedItemOverlayTimer + deltaTime, ItemOverlayDelay + 1.0f);
+                }
+                else
+                {
+                    focusedItemOverlayTimer = Math.Max(focusedItemOverlayTimer - deltaTime, 0.0f);
+                    if (focusedItemOverlayTimer <= 0.0f) focusedItem = null;
+                }
+            }
         }
 
         private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
@@ -91,6 +110,8 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (GUI.DisableHUD) return;
+
+            character.CharacterHealth.Alignment = Alignment.Left;
 
             if (GameMain.GameSession?.CrewManager != null)
             {
@@ -148,9 +169,7 @@ namespace Barotrauma
                 if (dist < 1000.0f)
                 {
                     Vector2 drawPos = optimizable.Item.DrawPosition;
-                    drawPos.Y = drawPos.Y;
                     //TODO: proper icon
-
                     float alpha = (1000.0f - dist) / 1000.0f * 2.0f;
 
                     GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.Yellow * alpha);
@@ -162,7 +181,7 @@ namespace Barotrauma
                 for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                 {
                     var item = character.Inventory.Items[i];
-                    if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+                    if (item == null || CharacterInventory.SlotTypes[i] == InvSlotType.Any) continue;
 
                     foreach (ItemComponent ic in item.components)
                     {
@@ -170,12 +189,10 @@ namespace Barotrauma
                     }
                 }
             }
-
-            //DrawStatusIcons(spriteBatch, character);
-
-            if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+            
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && 
+                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
-                character.Inventory.DrawOffset = Vector2.Zero;
                 character.Inventory.DrawOwn(spriteBatch);
             }
 
@@ -186,7 +203,11 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -30), new Point(140, 20)), "Perform CPR", "");
+                            new Rectangle(
+                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)), 
+                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))), 
+                            "Perform CPR", "");
+                        cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -212,8 +233,11 @@ namespace Barotrauma
                     if (grabHoldButton == null)
                     {
                         grabHoldButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -60), new Point(140, 20)),
-                                TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
+                            new Rectangle(
+                                new Point((int)(GameMain.GraphicsWidth - 40 - 340 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
+                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
+                            TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
+                        grabHoldButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
 
                         grabHoldButton.OnClicked = (button, userData) =>
                         {
@@ -239,16 +263,17 @@ namespace Barotrauma
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
 
-                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f + 120.0f, 0.0f);
+                    character.Inventory.Alignment = Alignment.Left;
+                    character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
                 }
-
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                else if (character.Inventory != null)
                 {
-                    Inventory.DrawDragging(spriteBatch);
+                    character.Inventory.Alignment = Alignment.Center;
                 }
-
+                
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
@@ -266,24 +291,34 @@ namespace Barotrauma
                 }
                 else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
-                    var hudTexts = character.FocusedItem.GetHUDTexts(character);
+                    focusedItem = character.FocusedItem;
+                }
 
-                    Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), GameMain.GraphicsHeight);
-                    startPos.Y -= 50 + hudTexts.Count * 25;
+                if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
+                {
+                    var hudTexts = focusedItem.GetHUDTexts(character);
+
+                    int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
+                    Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
+                    startPos.Y -= (hudTexts.Count + 1) * 20;
+                    if (focusedItem.Sprite != null)
+                    {
+                        startPos.X += (int)Math.Sqrt(focusedItem.Sprite.size.X / 2) * dir;
+                        startPos.Y -= (int)Math.Sqrt(focusedItem.Sprite.size.Y / 2);
+                    }
 
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2((int)GUI.Font.MeasureString(character.FocusedItem.Name).X / 2, 20);
+                    if (dir == -1) textPos.X -= (int)GUI.Font.MeasureString(focusedItem.Name).X;
 
-                    GUI.DrawString(spriteBatch, textPos, character.FocusedItem.Name, Color.White, Color.Black * 0.7f, 2);
+                    float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
 
-                    textPos.Y += 30.0f;
+                    GUI.DrawString(spriteBatch, textPos, focusedItem.Name, Color.White * alpha, Color.Black * alpha * 0.7f, 2);
+                    textPos.Y += 20.0f;
                     foreach (ColoredText coloredText in hudTexts)
                     {
-                        textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X / 2);
-
-                        GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color, Color.Black * 0.7f, 2, GUI.SmallFont);
-
-                        textPos.Y += 25;
+                        if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
+                        GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
+                        textPos.Y += 20;
                     }
                 }
                 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -21,8 +22,9 @@ namespace Barotrauma
         //observable collection because some entities may need to be notified when the collection is modified
         public ObservableCollection<MapEntity> linkedTo;
 
-        //protected float soundRange;
-        //protected float sightRange;
+        private bool flippedX, flippedY;
+        public bool FlippedX { get { return flippedX; } }
+        public bool FlippedY { get { return flippedY; } }
 
         public bool MoveWithLevel
         {
@@ -326,30 +328,97 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam) { }
 
-        public virtual void FlipX()
+        /// <summary>
+        /// Flip the entity horizontally
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped across the y-axis of the sub it's inside</param>
+        public virtual void FlipX(bool relativeToSub)
         {
-            if (Submarine == null)
+            if (Submarine == null && relativeToSub)
             {
-                DebugConsole.ThrowError("Couldn't flip MapEntity \""+Name+"\", submarine==null");
+                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
                 return;
             }
+            flippedX = !flippedX;
+            if (!relativeToSub) return;
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
-
             Move(-relative * 2.0f);
         }
-        
+
+        /// <summary>
+        /// Flip the entity vertically
+        /// </summary>
+        /// <param name="relativeToSub">Should the entity be flipped across the x-axis of the sub it's inside</param>
+        public virtual void FlipY(bool relativeToSub)
+        {
+            if (Submarine == null)
+            {
+                DebugConsole.ThrowError("Couldn't flip MapEntity \"" + Name + "\", submarine == null");
+                return;
+            }
+            flippedY = !flippedY;
+            if (!relativeToSub) return;
+
+            Vector2 relative = WorldPosition - Submarine.WorldPosition;
+            relative.X = 0.0f;
+            Move(-relative * 2.0f);
+        }
+
+        public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath)
+        {
+            List<MapEntity> entities = new List<MapEntity>();
+            foreach (XElement element in parentElement.Elements())
+            {
+                string typeName = element.Name.ToString();
+
+                Type t;
+                try
+                {
+                    t = Type.GetType("Barotrauma." + typeName, true, true);
+                    if (t == null)
+                    {
+                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
+                    continue;
+                }
+
+                try
+                {
+                    MethodInfo loadMethod = t.GetMethod("Load");
+                    if (!loadMethod.ReturnType.IsSubclassOf(typeof(MapEntity)))
+                    {
+                        DebugConsole.ThrowError("Error loading entity of the type \"" + t.ToString() + "\" - load method does not return a valid map entity.");
+                    }
+                    else
+                    {
+                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine });
+                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
+                }
+            }
+            return entities;
+        }
+
         /// <summary>
         /// Update the linkedTo-lists of the entities based on the linkedToID-lists
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded(Submarine sub)
+        public static void MapLoaded(List<MapEntity> entities)
         {
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity e in entities)
             {
-                if (e.Submarine != sub) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -364,20 +433,17 @@ namespace Barotrauma
             }
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
-            
-            for (int i = 0; i<mapEntityList.Count; i++)
+            for (int i = 0; i < entities.Count; i++)
             {
-                if (mapEntityList[i].Submarine != sub) continue;
-
-                if (mapEntityList[i] is LinkedSubmarine)
+                if (entities[i] is LinkedSubmarine)
                 {
-                    linkedSubs.Add((LinkedSubmarine)mapEntityList[i]);
+                    linkedSubs.Add((LinkedSubmarine)entities[i]);
                     continue;
                 }
 
-                mapEntityList[i].OnMapLoaded();
+                entities[i].OnMapLoaded();
             }
-            
+
             Item.UpdateHulls();
             Gap.UpdateHulls();
 

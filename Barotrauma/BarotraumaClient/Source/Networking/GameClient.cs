@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -456,6 +457,8 @@ namespace Barotrauma.Networking
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif
+
+            if (gameStarted) SetRadioButtonColor();
 
             base.Update(deltaTime);
 
