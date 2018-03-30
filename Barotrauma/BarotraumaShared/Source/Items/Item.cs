@@ -1806,7 +1806,7 @@ namespace Barotrauma
             lastSentPos = SimPosition;
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Item Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
 
@@ -1814,7 +1814,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
-                return;
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1867,6 +1867,8 @@ namespace Barotrauma
 
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+
+            return item;
         }
 
         public override XElement Save(XElement parentElement)
