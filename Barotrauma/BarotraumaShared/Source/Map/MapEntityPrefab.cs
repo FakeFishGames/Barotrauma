@@ -9,7 +9,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
-        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64
+        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64, ItemAssembly = 128
     }
 
     partial class MapEntityPrefab
@@ -33,9 +33,7 @@ namespace Barotrauma
 
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
-
-        private int price;
-
+        
         public string Name
         {
             get { return name; }

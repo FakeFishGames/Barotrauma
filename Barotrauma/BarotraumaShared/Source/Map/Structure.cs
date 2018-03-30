@@ -1016,7 +1016,7 @@ namespace Barotrauma
             if (HasBody) UpdateSections();
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Structure Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
 
@@ -1024,7 +1024,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading structure - structure prefab " + name + " not found.");
-                return;
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1053,6 +1053,7 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
 
             SerializableProperty.DeserializeProperties(s, element);
+            return s;
         }
 
         public override XElement Save(XElement parentElement)
