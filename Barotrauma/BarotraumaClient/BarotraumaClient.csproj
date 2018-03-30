@@ -12,6 +12,9 @@
     <AssemblyName>Barotrauma</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <ReleaseVersion>0.7.0.1</ReleaseVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,9 +29,6 @@
     <ApplicationVersion>0.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <ReleaseVersion>0.7.0.1</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
@@ -48,6 +48,24 @@
     <Optimize>false</Optimize>
     <OutputPath>..\bin\DebugLinux\</OutputPath>
     <DefineConstants>TRACE;LINUX;CLIENT;DEBUG</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseMac|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\ReleaseMac\</OutputPath>
+    <DefineConstants>TRACE;OSX;CLIENT</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMac|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\DebugMac\</OutputPath>
+    <DefineConstants>TRACE;OSX;CLIENT;DEBUG</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
@@ -226,8 +244,8 @@
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Serialization\SerializableEntityEditor.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
-    <Compile Include="Source\Sounds\OggStream.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
+    <Compile Include="Source\Sounds\SoundChannel.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
@@ -242,7 +260,6 @@
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="NVorbis">
@@ -257,11 +274,11 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
+      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Condition="$(DefineConstants.Contains('LINUX'))" Include="MonoGame.Framework.DesktopGL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

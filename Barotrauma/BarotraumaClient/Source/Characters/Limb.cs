@@ -11,6 +11,10 @@ namespace Barotrauma
 {
     partial class Limb
     {
+        //minimum duration between hit/attack sounds
+        public const float SoundInterval = 0.4f;
+        public float LastAttackSoundTime, LastImpactSoundTime;
+
         public LightSource LightSource
         {
             get;

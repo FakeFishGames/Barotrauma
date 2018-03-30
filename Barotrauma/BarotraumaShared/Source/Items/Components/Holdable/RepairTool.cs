@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
             get; set;
         }
         [Serialize(0.0f, false)]
-        public float ExtinquishAmount
+        public float ExtinguishAmount
         {
             get; set;
         }
@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
             Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
                 Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
-            if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
+            if (ExtinguishAmount > 0.0f && item.CurrentHull != null)
             {
                 List<FireSource> fireSourcesInRange = new List<FireSource>();
                 //step along the ray in 10% intervals, collecting all fire sources in the range
@@ -203,7 +203,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (FireSource fs in fireSourcesInRange)
                 {
-                    fs.Extinguish(deltaTime, ExtinquishAmount);
+                    fs.Extinguish(deltaTime, ExtinguishAmount);
                 }
             }
 

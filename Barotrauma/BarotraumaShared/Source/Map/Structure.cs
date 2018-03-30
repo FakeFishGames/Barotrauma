@@ -668,13 +668,37 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return Vector2.Zero;
 
-            Vector2 sectionPos = new Vector2(
-                sections[sectionIndex].rect.X + sections[sectionIndex].rect.Width / 2.0f,
-                sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
+            if (prefab.BodyRotation == 0.0f)
+            {
+                Vector2 sectionPos = new Vector2(
+                    sections[sectionIndex].rect.X + sections[sectionIndex].rect.Width / 2.0f,
+                    sections[sectionIndex].rect.Y - sections[sectionIndex].rect.Height / 2.0f);
+                if (world && Submarine != null) sectionPos += Submarine.Position;
+                return sectionPos;
+            }
+            else
+            {
+                Rectangle sectionRect = sections[sectionIndex].rect;
+                float diffFromCenter;
+                if (isHorizontal)
+                {
+                    diffFromCenter = (sectionRect.Center.X - rect.Center.X) / (float)rect.Width * BodyWidth;
+                }
+                else
+                {
+                    diffFromCenter = ((sectionRect.Y - sectionRect.Height / 2) - (rect.Y - rect.Height / 2)) / (float)rect.Height * BodyHeight;
+                }
+                if (FlippedX) diffFromCenter = -diffFromCenter;
+                
+                Vector2 sectionPos = Position + new Vector2(
+                    (float)Math.Cos(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
+                    (float)Math.Sin(isHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
 
-            if (world && Submarine != null) sectionPos += Submarine.Position;
+                if (world && Submarine != null) sectionPos += Submarine.Position;
+                return sectionPos;
+            }
 
-            return sectionPos;
+
         }
 
         private void AdjustKarma(IDamageable attacker, float amount)
@@ -735,9 +759,7 @@ namespace Barotrauma
 #if CLIENT
             if (playSound)
             {
-                //TODO: reimplement
-                //string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
-                //SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
+                SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 
@@ -819,7 +841,22 @@ namespace Barotrauma
                     gapRect.Y += 10;
                     gapRect.Width += 20;
                     gapRect.Height += 20;
-                    sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
+                    
+                    bool horizontalGap = !IsHorizontal;
+                    if (prefab.BodyRotation != 0.0f)
+                    {
+                        //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
+                        float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
+                        //diagonal if 30 < angle < 60
+                        bool diagonal = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
+                        if (diagonal)
+                        {
+                            horizontalGap = gapRect.Y - gapRect.Height / 2 < Position.Y;
+                        }
+                    }
+
+                    sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
                     //AdjustKarma(attacker, 300);
 
@@ -927,6 +964,7 @@ namespace Barotrauma
                 if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
                 if (BodyHeight > 0.0f) rect.Height = (int)(BodyHeight * (rect.Height / (float)this.rect.Height));
             }
+            if (FlippedX) diffFromCenter = -diffFromCenter;
 
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 ConvertUnits.ToSimUnits(rect.Width),
@@ -938,9 +976,7 @@ namespace Barotrauma
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = Physics.CollisionWall;
             newBody.UserData = this;
-
-            /*Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
-            Vector2 diff = newBody.Position - structureCenter;*/
+            
             if (BodyRotation != 0.0f)
             {
                 Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);

@@ -1,117 +1,117 @@
-﻿using NVorbis;
+﻿using System;
 using OpenTK.Audio.OpenAL;
-using System;
+using NVorbis;
 
 namespace Barotrauma.Sounds
 {
-    class OggSound : IDisposable
+    public class OggSound : Sound
     {
-        //internal VorbisReader Reader { get; private set; }
+        private VorbisReader reader;
 
-        //const int DefaultBufferSize = 44100;
-
-        //private VorbisReader reader; 
-        //private SoundEffect effect; 
-        //SoundEffectInstance instance; 
-
-        public const int DefaultBufferCount = 3;
-
-        private short[] castBuffer;
-
-        private int sampleRate;
-        private ALFormat format;
-
-        private string file;
-
-        int alBufferId;
-
-        public int AlBufferId
+        public OggSound(SoundManager owner,string filename,bool stream) : base(owner,filename,stream)
         {
-            get { return alBufferId; }
-        }
+            reader = new VorbisReader(filename);
 
-        //public bool IsLooped { get; set; }
+            ALFormat = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
+            SampleRate = reader.SampleRate;
 
-        public static OggSound Load(string oggFile, int bufferCount = DefaultBufferCount)
-        {
-            OggSound sound = new OggSound();
-            sound.file = oggFile;
-
-            using (VorbisReader reader = new VorbisReader(oggFile))
+            if (!stream)
             {
-                int bufferSize = (int)reader.TotalSamples;
+                int bufferSize = (int)reader.TotalSamples*reader.Channels;
 
-                float[] buffer = new float[bufferSize];
-                sound.castBuffer = new short[bufferSize];
+                float[] floatBuffer = new float[bufferSize];
+                short[] shortBuffer = new short[bufferSize];
 
-                int readSamples = reader.ReadSamples(buffer, 0, bufferSize);
-                CastBuffer(buffer, sound.castBuffer, readSamples);
+                int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
+                
+                CastBuffer(floatBuffer, shortBuffer, readSamples);
+                
+                AL.BufferData((int)ALBuffer, ALFormat, shortBuffer,
+                                readSamples * sizeof(short), SampleRate);
 
-                sound.alBufferId = AL.GenBuffer();
+                ALError alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set buffer data for non-streamed audio! "+AL.GetErrorString(alError));
+                }
 
-                sound.format = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
-                sound.sampleRate = reader.SampleRate;
+                MuffleBuffer(floatBuffer, reader.Channels);
 
-                //alSourceId = AL.GenSource();
-                AL.BufferData(sound.alBufferId, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, sound.castBuffer,
-                              readSamples * sizeof(short), reader.SampleRate);
+                CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                ALHelper.Check();
+                AL.BufferData((int)ALMuffledBuffer, ALFormat, shortBuffer,
+                                readSamples * sizeof(short), SampleRate);
+
+                alError = AL.GetError();
+                if (alError != ALError.NoError)
+                {
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + AL.GetErrorString(alError));
+                }
+
+                reader.Dispose();
             }
-
-            //AL.Source(alSourceId, ALSourcei.Buffer, alBufferId);
-
-            //if (ALHelper.XRam.IsInitialized)
-            //{
-            //    ALHelper.XRam.SetBufferMode(bufferCount, ref alBufferId, XRamExtension.XRamStorage.Hardware);
-            //    ALHelper.Check();
-            //}
-
-            //Volume = 1;
-
-            //if (ALHelper.Efx.IsInitialized)
-            //{
-            //    alFilterId = ALHelper.Efx.GenFilter();
-            //    ALHelper.Efx.Filter(alFilterId, EfxFilteri.FilterType, (int)EfxFilterType.Lowpass);
-            //    ALHelper.Efx.Filter(alFilterId, EfxFilterf.LowpassGain, 1);
-            //    LowPassHFGain = 1;
-            //}
-            
-            return sound;
-
         }
 
-        public void SetBufferData(int alBufferId)
+        public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
-            AL.BufferData(alBufferId, format, castBuffer,
-                castBuffer.Length * sizeof(short), sampleRate);
+            if (!Stream) throw new Exception("Called FillStreamBuffer on a non-streamed sound!");
+            
+            if (samplePos >= reader.TotalSamples * reader.Channels * 2) return 0;
+
+            samplePos /= reader.Channels*2;
+            reader.DecodedPosition = samplePos;
+
+            float[] floatBuffer = new float[buffer.Length];
+            int readSamples = reader.ReadSamples(floatBuffer, 0, buffer.Length/2);
+            //MuffleBuffer(floatBuffer, reader.Channels);
+            CastBuffer(floatBuffer, buffer, readSamples);
+            
+            return readSamples*2;
+        }
+
+        static void MuffleBuffer(float[] buffer,int channelCount)
+        {
+            //this function will probably have to replace EFX on OSX
+            float[] avgvals = new float[channelCount];
+            for (int j = 0; j < channelCount; j++)
+            {
+                avgvals[j] = buffer[j];
+            }
+            for (int i = 0; i < buffer.Length; i+=channelCount)
+            {
+                for (int j = 0; j < channelCount; j++)
+                {
+                    float fval = buffer[i + j];
+                    float weight = 0.7f;
+                    weight = 1.0f - weight;
+                    weight *= weight * weight;
+                    avgvals[j] = (avgvals[j] * (1.0f - weight) + fval * weight);
+                    fval = avgvals[j]*1.7f;
+                    buffer[i + j] = fval;
+                }
+            }
         }
 
         static void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                int temp = (int)(32767f * inBuffer[i]);
+                float fval = Math.Max(Math.Min(inBuffer[i], 1.0f), -1.0f);
+                int temp = (int)(32767f * fval);
                 if (temp > short.MaxValue) temp = short.MaxValue;
                 else if (temp < short.MinValue) temp = short.MinValue;
                 outBuffer[i] = (short)temp;
             }
         }
- 
-        public void Dispose()
-        {
-            //var state = AL.GetSourceState(alSourceId);
-            //if (state == ALSourceState.Playing || state == ALSourceState.Paused)
-            //    Stop();
-            System.Diagnostics.Debug.WriteLine(alBufferId);
-            //AL.DeleteSource(alSourceId);
-            AL.DeleteBuffer(alBufferId);
-            
-            //if (ALHelper.Efx.IsInitialized)
-            //    ALHelper.Efx.DeleteFilter(alFilterId);
 
-            ALHelper.Check();
+        public override void Dispose()
+        {
+            if (Stream)
+            {
+                reader.Dispose();
+            }
+
+            base.Dispose();
         }
-        
     }
 }

@@ -134,7 +134,7 @@ namespace Barotrauma
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-#if LINUX
+#if LINUX || OSX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
 #else
             var blurEffect = content.Load<Effect>("blurshader");
@@ -375,10 +375,11 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
+            //TODO: reimplement
+            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
             {
                 Sounds.SoundManager.Pause(i);
-            }
+            }*/
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -404,10 +405,11 @@ namespace Barotrauma
             if (wiringMode) ToggleWiringMode();
 
             SoundPlayer.OverrideMusicType = null;
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
+            //TODO: reimplement
+            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
             {
                 Sounds.SoundManager.Resume(i);
-            }
+            }*/
 
             if (dummyCharacter != null)
             {
