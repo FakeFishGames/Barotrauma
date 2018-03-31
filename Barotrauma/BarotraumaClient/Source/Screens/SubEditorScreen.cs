@@ -705,6 +705,7 @@ namespace Barotrauma
 
             var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 80), null, null, Alignment.TopLeft,
                 Alignment.TopLeft, "", saveFrame);
+            descriptionBox.UserData = "description";
             descriptionBox.Wrap = true;
             descriptionBox.Text = "";
                         
@@ -739,8 +740,12 @@ namespace Barotrauma
                 }
             }
 
+            string description = ((GUITextBox)saveFrame.GetChild("description")).Text;
+
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XElement element = new XElement("ItemAssembly", new XAttribute("name", nameBox.Text));
+            XElement element = new XElement("ItemAssembly", 
+                new XAttribute("name", nameBox.Text), 
+                new XAttribute("description", description));
             foreach (MapEntity mapEntity in MapEntity.SelectedList)
             {
                 mapEntity.Submarine = Submarine.MainSub;
@@ -753,7 +758,9 @@ namespace Barotrauma
             }
 
             XDocument doc = new XDocument(element);
-            doc.Save(Path.Combine(saveFolder, nameBox.Text + ".xml"));
+            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
+            doc.Save(filePath);
+            new ItemAssemblyPrefab(filePath);
             UpdateEntityList(MapEntityCategory.ItemAssembly);
             saveFrame = null;
             return false;

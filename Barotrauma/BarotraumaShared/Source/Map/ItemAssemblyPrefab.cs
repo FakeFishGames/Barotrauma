@@ -23,12 +23,15 @@ namespace Barotrauma
 
             Category = MapEntityCategory.ItemAssembly;
 
+            SerializableProperty.DeserializeProperties(this, configElement);
+
             List.Add(this);
         }
 
         protected override void CreateInstance(Rectangle rect)
         {
             List<MapEntity> entities = MapEntity.LoadAll(Submarine.MainSub, configElement, configPath);
+            if (entities.Count == 0) return;
 
             //move the created entities to the center of the ItemAssembly
             float minX = entities[0].WorldRect.X, maxX = entities[0].WorldRect.Right;
