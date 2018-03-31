@@ -347,7 +347,7 @@ namespace Barotrauma
 
                 if (category == MapEntityCategory.ItemAssembly)
                 {
-                    var deleteButton = new GUIButton(new Rectangle(0,0,100,20), TextManager.Get("Delete"), "", textBlock);
+                    var deleteButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Delete"), Alignment.CenterRight, "", textBlock);
                     deleteButton.UserData = ep;
                     deleteButton.OnClicked = (btn, userData) =>
                     {
@@ -1567,7 +1567,7 @@ namespace Barotrauma
                     cam.TargetPos = Vector2.Zero;
                 }
             }
-            else
+            else if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition))
             {
                 MapEntity.UpdateSelecting(cam);
             }
