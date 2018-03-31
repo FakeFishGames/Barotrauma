@@ -344,10 +344,22 @@ namespace Barotrauma
                     img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
                     img.Color = ep.SpriteColor;
                 }
+
+                if (category == MapEntityCategory.ItemAssembly)
+                {
+                    var deleteButton = new GUIButton(new Rectangle(0,0,100,20), TextManager.Get("Delete"), "", textBlock);
+                    deleteButton.UserData = ep;
+                    deleteButton.OnClicked = (btn, userData) =>
+                    {
+                        ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
+                        assemblyPrefab.Delete();
+                        UpdateEntityList(MapEntityCategory.ItemAssembly);
+                        return true;
+                    };
+                }
             }
 
             entityList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
-
         }
 
         public void StartTutorial()

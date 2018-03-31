@@ -52,6 +52,22 @@ namespace Barotrauma
 #endif
         }
 
+        public void Delete()
+        {
+            List.Remove(this);
+            if (File.Exists(configPath))
+            {
+                try
+                {
+                    File.Delete(configPath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Deleting item assembly \"" + name + "\" failed.", e);
+                }
+            }
+        }
+
         public static void LoadAll()
         {
             if (GameSettings.VerboseLogging)
