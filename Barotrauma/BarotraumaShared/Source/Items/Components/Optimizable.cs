@@ -182,29 +182,6 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            isOptimized = msg.ReadBoolean();
-            if (isOptimized)
-            {
-                optimizedTimer = msg.ReadRangedSingle(0.0f, OptimizationDuration, 16);
-            }
-            else
-            {
-                bool isCurrentlyOptimizable = msg.ReadBoolean();
-                if (isCurrentlyOptimizable)
-                {
-                    currentlyOptimizable.Add(this);
-                    optimizableTimer = msg.ReadRangedSingle(0.0f, OptimizableDuration, 16);
-                    optimizationProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                }
-                else
-                {
-                    currentlyOptimizable.Remove(this);
-                }
-            }
-        }
         
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
