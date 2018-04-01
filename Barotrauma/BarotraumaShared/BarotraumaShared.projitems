@@ -1534,6 +1534,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventSet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Optimizable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />

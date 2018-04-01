@@ -1032,40 +1032,10 @@ namespace Barotrauma
             {
                 IdOffset = Math.Max(IdOffset, me.ID);
             }
-
-            foreach (XElement element in submarineElement.Elements())
-            {
-                string typeName = element.Name.ToString();
-
-                Type t;
-                try
-                {
-                    t = Type.GetType("Barotrauma." + typeName, true, true);
-                    if (t == null)
-                    {
-                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
-                        continue;
-                    }
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
-                    continue;
-                }
-
-                try
-                {
-                    MethodInfo loadMethod = t.GetMethod("Load");
-                    loadMethod.Invoke(t, new object[] { element, this });
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
-                }
-            }
+            
+            var newEntities = MapEntity.LoadAll(this, submarineElement, filePath);
 
             Vector2 center = Vector2.Zero;
-
             var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
 
             if (matchingHulls.Any())
@@ -1110,7 +1080,6 @@ namespace Barotrauma
             subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
 
-
             loaded.Add(this);
 
             if (entityGrid != null)
@@ -1128,7 +1097,7 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded(this);
+            MapEntity.MapLoaded(newEntities);
 
             foreach (Hull hull in matchingHulls)
             {
