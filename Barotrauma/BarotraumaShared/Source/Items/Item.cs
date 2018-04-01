@@ -567,7 +567,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to set item transform", e);
                 }
 #endif
-                }
+            }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
 

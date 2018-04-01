@@ -243,29 +243,24 @@ namespace Barotrauma.Items.Components
             {
                 if (stickTarget != null)
                 {
-                    try
+                    if (GameMain.World.BodyList.Contains(stickTarget))
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch
-                    {
-                        //the body that the projectile was stuck to has been removed
-                    }
-
+                    
                     stickTarget = null;
                 }
 
-                try
+                if (stickJoint != null)
                 {
-                    GameMain.World.RemoveJoint(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
+                    if (GameMain.World.JointList.Contains(stickJoint))
+                    {
+                        GameMain.World.RemoveJoint(stickJoint);
+                    }
 
-                stickJoint = null; 
-             
+                    stickJoint = null;
+                }
+                
                 if (!item.body.FarseerBody.IsBullet) IsActive = false; 
             }           
         }
