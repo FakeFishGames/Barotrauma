@@ -178,7 +178,7 @@ namespace Barotrauma.Items.Components
                         GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
 
                     //higher probability for fires if the current intensity is low
-                    if (Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbabilityMax, FireProbabilityMin, currentIntensity))
+                    if (Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbabilityMax, FireProbabilityMin, currentIntensity) && !pt.item.IsOptimized("electrical"))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }

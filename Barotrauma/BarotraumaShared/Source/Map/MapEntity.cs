@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -365,16 +366,59 @@ namespace Barotrauma
             Move(-relative * 2.0f);
         }
 
+        public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath)
+        {
+            List<MapEntity> entities = new List<MapEntity>();
+            foreach (XElement element in parentElement.Elements())
+            {
+                string typeName = element.Name.ToString();
+
+                Type t;
+                try
+                {
+                    t = Type.GetType("Barotrauma." + typeName, true, true);
+                    if (t == null)
+                    {
+                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
+                    continue;
+                }
+
+                try
+                {
+                    MethodInfo loadMethod = t.GetMethod("Load");
+                    if (!loadMethod.ReturnType.IsSubclassOf(typeof(MapEntity)))
+                    {
+                        DebugConsole.ThrowError("Error loading entity of the type \"" + t.ToString() + "\" - load method does not return a valid map entity.");
+                    }
+                    else
+                    {
+                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine });
+                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
+                }
+            }
+            return entities;
+        }
+
         /// <summary>
         /// Update the linkedTo-lists of the entities based on the linkedToID-lists
         /// Has to be done after all the entities have been loaded (an entity can't
         /// be linked to some other entity that hasn't been loaded yet)
         /// </summary>
-        public static void MapLoaded(Submarine sub)
+        public static void MapLoaded(List<MapEntity> entities)
         {
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity e in entities)
             {
-                if (e.Submarine != sub) continue;
                 if (e.linkedToID == null) continue;
                 if (e.linkedToID.Count == 0) continue;
 
@@ -389,20 +433,17 @@ namespace Barotrauma
             }
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
-            
-            for (int i = 0; i<mapEntityList.Count; i++)
+            for (int i = 0; i < entities.Count; i++)
             {
-                if (mapEntityList[i].Submarine != sub) continue;
-
-                if (mapEntityList[i] is LinkedSubmarine)
+                if (entities[i] is LinkedSubmarine)
                 {
-                    linkedSubs.Add((LinkedSubmarine)mapEntityList[i]);
+                    linkedSubs.Add((LinkedSubmarine)entities[i]);
                     continue;
                 }
 
-                mapEntityList[i].OnMapLoaded();
+                entities[i].OnMapLoaded();
             }
-            
+
             Item.UpdateHulls();
             Gap.UpdateHulls();
 

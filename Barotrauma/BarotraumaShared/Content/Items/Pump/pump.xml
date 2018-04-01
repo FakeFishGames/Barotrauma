@@ -20,14 +20,14 @@
       <input name="set_targetlevel"/>
     </ConnectionPanel>
 
-    <Optimizable optimizationtype="mechanical">
+    <Optimizable optimizationtype="mechanical" description="Clean pump intakes to increase the flow rate of the pump.">
       <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
 
-    <Optimizable optimizationtype="electrical">
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the pump.">
       <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
   </Item>
   
@@ -52,14 +52,14 @@
       <input name="set_targetlevel"/>
     </ConnectionPanel>
 
-    <Optimizable optimizationtype="mechanical">
+    <Optimizable optimizationtype="mechanical" description="Clean pump intakes to increase the flow rate of the pump.">
       <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
 
-    <Optimizable optimizationtype="electrical">
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the pump.">
       <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
   </Item>
 </Items>

@@ -293,6 +293,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 30.0f;
         yield return CoroutineStatus.Running;
 
+            ItemAssemblyPrefab.LoadAll();
+            TitleScreen.LoadState = 35.0f;
+        yield return CoroutineStatus.Running;
+
             Debug.WriteLine("sounds");
             CoroutineManager.StartCoroutine(SoundPlayer.Init());
 
