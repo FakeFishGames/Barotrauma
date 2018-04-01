@@ -128,18 +128,8 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 #endif
 
-                picker.AnimController.Anim = AnimController.Animation.UsingConstruction;
-
-                picker.AnimController.TargetMovement = Vector2.Zero;
-
-                leftHand.Disabled = true;
-                leftHand.pullJoint.Enabled = true;
-                leftHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
-
-                rightHand.Disabled = true;
-                rightHand.pullJoint.Enabled = true;
-                rightHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
-
+                picker.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f));
+                
                 pickTimer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;

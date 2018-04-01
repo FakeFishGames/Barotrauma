@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private float inWaterTimer;
         private bool swimming;
+
+        private float useItemTimer;
         
         protected override float? TorsoPosition
         {
@@ -180,6 +182,12 @@ namespace Barotrauma
                     break;
                 case Animation.UsingConstruction:
                 default:
+
+                    if (Anim == Animation.UsingConstruction)
+                    {
+                        useItemTimer -= deltaTime;
+                        if (useItemTimer <= 0.0f) Anim = Animation.None;
+                    }
 
                     if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
 
@@ -1274,6 +1282,33 @@ namespace Barotrauma
 
             arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force);
             hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force);
+        }
+
+        public override void UpdateUseItem(bool allowMovement, Vector2 handPos)
+        {
+            var leftHand = GetLimb(LimbType.LeftHand);
+            var rightHand = GetLimb(LimbType.RightHand);
+
+            useItemTimer = 0.5f;
+            Anim = Animation.UsingConstruction;
+
+            if (!allowMovement)
+            {
+                TargetMovement = Vector2.Zero;
+                TargetDir = handPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
+                if (Vector2.Distance(character.SimPosition, handPos) > 1.0f)
+                {
+                    TargetMovement = Vector2.Normalize(handPos - character.SimPosition);
+                }
+            }
+
+            leftHand.Disabled = true;
+            leftHand.pullJoint.Enabled = true;
+            leftHand.pullJoint.WorldAnchorB = handPos;
+
+            rightHand.Disabled = true;
+            rightHand.pullJoint.Enabled = true;
+            rightHand.pullJoint.WorldAnchorB = handPos;
         }
 
         public override void Flip()

@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +47,13 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (user != null && user.SelectedConstruction != item) user = null;
+            if (user == null || user.SelectedConstruction != item)
+            {
+                user = null;
+                return;
+            }
+
+            user.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override bool Select(Character picker)
@@ -65,7 +72,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character!=user) return false;
+            if (character == null || character != user) return false;
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
