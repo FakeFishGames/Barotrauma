@@ -405,6 +405,13 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ClientRead(type, msg, sendingTime);
                     break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                    {
+                        ushort fixerID = msg.ReadUInt16();
+                        FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
+                    }
+                    break;
                 case NetEntityEvent.Type.Status:
                     condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
 
@@ -413,12 +420,12 @@ namespace Barotrauma
                         if (Condition <= 0.0f)
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = msg.ReadBoolean();
+                                FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                         }
                         else
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = true;
+                                FixRequirements[i].FixProgress = 1.0f;
                         }
                     }
                     break;

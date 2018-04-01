@@ -210,7 +210,7 @@ namespace Barotrauma
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
-                        req.Fixed = false;
+                        req.FixProgress = 0.0f;
                     }
                 }
 
@@ -393,7 +393,7 @@ namespace Barotrauma
                         aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
-                        FixRequirements.Add(new FixRequirement(subElement));
+                        FixRequirements.Add(new FixRequirement(subElement, this));
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
@@ -890,6 +890,21 @@ namespace Barotrauma
                 else
                 {
                     ic.UpdateBroken(deltaTime, cam);
+                }
+            }
+
+            if (condition <= 0.0f && FixRequirements.Count > 0)
+            {
+                bool isFixed = true;
+                foreach (FixRequirement fixRequirement in FixRequirements)
+                {
+                    fixRequirement.Update(deltaTime);
+                    if (!fixRequirement.Fixed) isFixed = false;
+                }
+                if (isFixed)
+                {
+                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                    condition = prefab.Health;
                 }
             }
             
@@ -1399,6 +1414,10 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerWrite(msg, c, extraData);
                     break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                        msg.Write(FixRequirements[i].CurrentFixer == null ? (ushort)0 : FixRequirements[i].CurrentFixer.ID);
+                    break;
                 case NetEntityEvent.Type.Status:
                     //clamp to (MaxHealth / 255.0f) if condition > 0.0f
                     //to prevent condition from being rounded down to 0.0 even if the item is not broken
@@ -1407,7 +1426,7 @@ namespace Barotrauma
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
-                            msg.Write(FixRequirements[i].Fixed);
+                            msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
@@ -1451,14 +1470,9 @@ namespace Barotrauma
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
-                    FixRequirements[requirementIndex].Fixed = true;
-                    if (condition <= 0.0f && FixRequirements.All(f => f.Fixed))
-                    {
-                        Condition = prefab.Health;
-                    }
+                    FixRequirements[requirementIndex].CurrentFixer = c.Character;
 
-                    c.Karma += 0.4f;
-
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Repair });
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;
