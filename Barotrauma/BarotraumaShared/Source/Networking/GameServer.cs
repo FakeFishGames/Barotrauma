@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.IO.Compression;
+using System.IO;
 
 namespace Barotrauma.Networking
 {
@@ -884,6 +886,29 @@ namespace Barotrauma.Networking
             WritePermissions(outmsg, c);
         }
 
+        public void CompressOutgoingMsg(NetOutgoingMessage outmsg)
+        {
+            byte[] data = outmsg.Data;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                stream.Write(data, 0, outmsg.LengthBytes);
+                stream.Position = 0;
+                using (MemoryStream compressed = new MemoryStream())
+                {
+                    using (DeflateStream deflate = new DeflateStream(compressed, CompressionLevel.Fastest, false))
+                    {
+                        stream.CopyTo(deflate);
+                    }
+
+                    byte[] newData = compressed.ToArray();
+                    
+                    outmsg.Data = newData;
+                    outmsg.LengthBytes = newData.Length;
+                    outmsg.Position = outmsg.LengthBits;
+                }
+            }
+        }
+
         private void ClientWriteIngame(Client c)
         {
             //don't send position updates to characters who are still midround syncing
@@ -950,11 +975,13 @@ namespace Barotrauma.Networking
             }
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
+            
             if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
             {
                 DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
             }
+
+            CompressOutgoingMsg(outmsg);
 
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
@@ -1047,6 +1074,8 @@ namespace Barotrauma.Networking
             WriteChatMessages(outmsg, c);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            CompressOutgoingMsg(outmsg);
 
             if (isInitialUpdate)
             {
@@ -1153,6 +1182,8 @@ namespace Barotrauma.Networking
                 msg.Write(selectedShuttle.MD5Hash.Hash);
 
                 connectedClients.ForEach(c => c.ReadyToStart = false);
+
+                CompressOutgoingMsg(msg);
 
                 server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
@@ -1436,6 +1467,8 @@ namespace Barotrauma.Networking
             }
             msg.WritePadBits();
 
+            CompressOutgoingMsg(msg);
+
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
         }
 
@@ -1490,6 +1523,8 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerPacketHeader.ENDGAME);
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
+
+                CompressOutgoingMsg(msg);
                 if (server.ConnectionsCount > 0)
                 {
                     server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
@@ -1933,6 +1968,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
             msg.Write((byte)FileTransferMessageType.Cancel);
             msg.Write((byte)transfer.SequenceChannel);
+            CompressOutgoingMsg(msg);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
         }
 
@@ -1969,6 +2005,8 @@ namespace Barotrauma.Networking
             Voting.ServerWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
+            CompressOutgoingMsg(msg);
+
             server.SendMessage(msg, recipients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
         }
 
@@ -1988,6 +2026,8 @@ namespace Barotrauma.Networking
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             WritePermissions(msg, client);
+
+            CompressOutgoingMsg(msg);
 
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 

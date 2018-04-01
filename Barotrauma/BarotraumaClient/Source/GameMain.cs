@@ -247,7 +247,9 @@ namespace Barotrauma
             GUI.GraphicsDevice = base.GraphicsDevice;
 
             SoundManager = new Sounds.SoundManager();
-            SoundManager.ListenerGain = Config.SoundVolume;
+            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 
             GUI.Init(Content);
 
@@ -364,6 +366,13 @@ namespace Barotrauma
         {
             Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
+            if (Timing.Accumulator > Timing.Step * 6.0)
+            {
+                //if the game's running too slowly then we have no choice
+                //but to skip a bunch of steps
+                //otherwise it snowballs and becomes unplayable
+                Timing.Accumulator = Timing.Step;
+            }
             PlayerInput.UpdateVariable();
 
             bool paused = true;

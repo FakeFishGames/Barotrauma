@@ -103,7 +103,7 @@ namespace Barotrauma
             LastNetworkUpdateID = 0;
             LastProcessedID = 0;
         }
-
+        
         private void UpdateNetInput()
         {
             if (this != Character.Controlled)
