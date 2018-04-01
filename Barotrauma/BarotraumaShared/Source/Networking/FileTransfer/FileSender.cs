@@ -205,6 +205,7 @@ namespace Barotrauma.Networking
                     message.Write((ushort)chunkLen);
                     message.Write((ulong)transfer.Data.Length);
                     message.Write(transfer.FileName);
+                    GameMain.Server.CompressOutgoingMsg(message);
                     transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     transfer.Status = FileTransferStatus.Sending;
@@ -227,6 +228,7 @@ namespace Barotrauma.Networking
 
                 message.Write(sendBytes);
 
+                GameMain.Server.CompressOutgoingMsg(message);
                 transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
                 transfer.SentOffset += sendByteCount;
 

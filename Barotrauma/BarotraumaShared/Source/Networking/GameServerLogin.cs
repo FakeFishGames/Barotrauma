@@ -67,6 +67,7 @@ namespace Barotrauma.Networking
                 nonceMsg.Write(true); //true = password
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
             }
+            CompressOutgoingMsg(nonceMsg);
             server.SendMessage(nonceMsg, conn, NetDeliveryMethod.Unreliable);
         }
 
@@ -115,6 +116,7 @@ namespace Barotrauma.Networking
                         reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.failedAttempts)+" more attempts before you're banned from the server.");
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
+                        CompressOutgoingMsg(reject);
                         server.SendMessage(reject, unauthClient.Connection, NetDeliveryMethod.Unreliable);
                         unauthClient.AuthTimer = 10.0f;
                         return;

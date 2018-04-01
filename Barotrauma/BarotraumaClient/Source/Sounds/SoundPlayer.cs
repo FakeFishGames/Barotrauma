@@ -379,6 +379,8 @@ namespace Barotrauma
 
         private static string GetCurrentMusicType()
         {
+            /*if ((currentMusicChannel==null || !currentMusicChannel.IsPlaying) &&
+                targetMusic != null && targetMusic.type == OverrideMusicType) OverrideMusicType = null;*/
             if (OverrideMusicType != null) return OverrideMusicType;
             
             if (Character.Controlled != null &&
