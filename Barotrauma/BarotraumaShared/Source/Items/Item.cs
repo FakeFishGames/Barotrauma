@@ -548,8 +548,10 @@ namespace Barotrauma
         {
             if (body != null)
             {
+#if DEBUG
                 try
                 {
+#endif
                     if (body.Enabled)
                     {
                         body.SetTransform(simPosition, rotation);
@@ -558,13 +560,13 @@ namespace Barotrauma
                     {
                         body.SetTransformIgnoreContacts(simPosition, rotation);
                     }
+#if DEBUG
                 }
                 catch (Exception e)
                 {
-#if DEBUG
                     DebugConsole.ThrowError("Failed to set item transform", e);
-#endif
                 }
+#endif
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
@@ -673,16 +675,18 @@ namespace Barotrauma
 
                 if (contained.body != null)
                 {
+#if DEBUG
                     try
                     {
+#endif
                         contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+#if DEBUG
                     }
                     catch (Exception e)
                     {
-#if DEBUG
                         DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
                     }
+#endif
                 }
 
                 contained.Rect =

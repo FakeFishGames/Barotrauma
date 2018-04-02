@@ -178,14 +178,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb limb in user.AnimController.Limbs)
                 {
-                    try
+                    if (limb.body.FarseerBody != null)
                     {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                    }
-
-                    catch
-                    {
-                        continue;
+                        if (GameMain.World.BodyList.Contains(limb.body.FarseerBody))
+                        {
+                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                        }
                     }
                 }
             }

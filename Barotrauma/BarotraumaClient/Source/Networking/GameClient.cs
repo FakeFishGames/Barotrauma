@@ -515,24 +515,26 @@ namespace Barotrauma.Networking
         private void DecompressIncomingMessage(NetIncomingMessage inc)
         {
             byte[] data = inc.Data;
-            
-            using (MemoryStream stream = new MemoryStream())
+            if (data[data.Length - 1] == 1)
             {
-                stream.Write(data, 0, inc.LengthBytes);
-                stream.Position = 0;
-                using (MemoryStream decompressed = new MemoryStream())
+                using (MemoryStream stream = new MemoryStream())
                 {
-                    using (DeflateStream deflate = new DeflateStream(stream, CompressionMode.Decompress, false))
+                    stream.Write(data, 0, inc.LengthBytes-1);
+                    stream.Position = 0;
+                    using (MemoryStream decompressed = new MemoryStream())
                     {
-                        deflate.CopyTo(decompressed);
+                        using (DeflateStream deflate = new DeflateStream(stream, CompressionMode.Decompress, false))
+                        {
+                            deflate.CopyTo(decompressed);
+                        }
+                        byte[] newData = decompressed.ToArray();
+
+                        inc.Data = newData;
+                        inc.LengthBytes = newData.Length;
+                        inc.Position = 0;
                     }
-                    byte[] newData = decompressed.ToArray();
-                    
-                    inc.Data = newData;
-                    inc.LengthBytes = newData.Length;
-                    inc.Position = 0;
+
                 }
-                
             }
         }
 
