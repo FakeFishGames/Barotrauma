@@ -287,7 +287,7 @@ namespace Barotrauma
                             return;
                         }
 
-                        closestButton.Item.TryInteract(character, false, true, true);
+                        closestButton.Item.TryInteract(character, false, true, false);
                         break;
                     }
                 }
