@@ -886,26 +886,35 @@ namespace Barotrauma.Networking
             WritePermissions(outmsg, c);
         }
 
-        public void CompressOutgoingMsg(NetOutgoingMessage outmsg)
+        private const int COMPRESSION_THRESHOLD = 500;
+        public void CompressOutgoingMessage(NetOutgoingMessage outmsg)
         {
-            byte[] data = outmsg.Data;
-            using (MemoryStream stream = new MemoryStream())
+            if (outmsg.LengthBytes>COMPRESSION_THRESHOLD)
             {
-                stream.Write(data, 0, outmsg.LengthBytes);
-                stream.Position = 0;
-                using (MemoryStream compressed = new MemoryStream())
+                byte[] data = outmsg.Data;
+                using (MemoryStream stream = new MemoryStream())
                 {
-                    using (DeflateStream deflate = new DeflateStream(compressed, CompressionLevel.Fastest, false))
+                    stream.Write(data, 0, outmsg.LengthBytes);
+                    stream.Position = 0;
+                    using (MemoryStream compressed = new MemoryStream())
                     {
-                        stream.CopyTo(deflate);
-                    }
+                        using (DeflateStream deflate = new DeflateStream(compressed, CompressionLevel.Fastest, false))
+                        {
+                            stream.CopyTo(deflate);
+                        }
 
-                    byte[] newData = compressed.ToArray();
-                    
-                    outmsg.Data = newData;
-                    outmsg.LengthBytes = newData.Length;
-                    outmsg.Position = outmsg.LengthBits;
+                        byte[] newData = compressed.ToArray();
+
+                        outmsg.Data = newData;
+                        outmsg.LengthBytes = newData.Length;
+                        outmsg.Position = outmsg.LengthBits;
+                    }
                 }
+                outmsg.Write((byte)1); //is compressed
+            }
+            else
+            {
+                outmsg.WritePadBits(); outmsg.Write((byte)0); //isn't compressed
             }
         }
 
@@ -981,7 +990,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
             }
 
-            CompressOutgoingMsg(outmsg);
+            CompressOutgoingMessage(outmsg);
 
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
@@ -1075,7 +1084,7 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-            CompressOutgoingMsg(outmsg);
+            CompressOutgoingMessage(outmsg);
 
             if (isInitialUpdate)
             {
@@ -1183,7 +1192,7 @@ namespace Barotrauma.Networking
 
                 connectedClients.ForEach(c => c.ReadyToStart = false);
 
-                CompressOutgoingMsg(msg);
+                CompressOutgoingMessage(msg);
 
                 server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
@@ -1467,7 +1476,7 @@ namespace Barotrauma.Networking
             }
             msg.WritePadBits();
 
-            CompressOutgoingMsg(msg);
+            CompressOutgoingMessage(msg);
 
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
         }
@@ -1524,7 +1533,7 @@ namespace Barotrauma.Networking
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
 
-                CompressOutgoingMsg(msg);
+                CompressOutgoingMessage(msg);
                 if (server.ConnectionsCount > 0)
                 {
                     server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
@@ -1968,7 +1977,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
             msg.Write((byte)FileTransferMessageType.Cancel);
             msg.Write((byte)transfer.SequenceChannel);
-            CompressOutgoingMsg(msg);
+            CompressOutgoingMessage(msg);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
         }
 
@@ -2005,7 +2014,7 @@ namespace Barotrauma.Networking
             Voting.ServerWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-            CompressOutgoingMsg(msg);
+            CompressOutgoingMessage(msg);
 
             server.SendMessage(msg, recipients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
         }
@@ -2027,7 +2036,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             WritePermissions(msg, client);
 
-            CompressOutgoingMsg(msg);
+            CompressOutgoingMessage(msg);
 
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 
