@@ -1197,8 +1197,21 @@ namespace Barotrauma
                 }
                 else
                 {
-                    pickHit = (forceActionKey && ic.CanBePicked) || picker.IsKeyHit(ic.PickKey);
-                    selectHit = (forceSelectKey && ic.CanBeSelected)  || picker.IsKeyHit(ic.SelectKey);
+                    if (forceSelectKey)
+                    {
+                        if (ic.PickKey == InputType.Select) pickHit = true;
+                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                    }
+                    else if (forceActionKey)
+                    {
+                        if (ic.PickKey == InputType.Use) pickHit = true;
+                        if (ic.SelectKey == InputType.Use) selectHit = true;
+                    }
+                    else
+                    {
+                        pickHit = picker.IsKeyHit(ic.PickKey);
+                        selectHit = picker.IsKeyHit(ic.SelectKey);
+                    }
                 }
 
                 if (!pickHit && !selectHit) continue;

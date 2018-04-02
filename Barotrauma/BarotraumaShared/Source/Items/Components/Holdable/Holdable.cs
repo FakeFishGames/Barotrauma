@@ -393,47 +393,48 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            if (!attachable || body == null)
-            {
-                DebugConsole.ThrowError("Sent an attachment event for an item that's not attachable.");
-            }
+            base.ServerWrite(msg, c, extraData);
+            if (!attachable || body == null) return;
 
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
             msg.Write(body.SimPosition.Y);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
+            if (!attachable) return;
+
             bool isAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
-            if (!attachable)
-            {
-                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
-                return;
-            }
-
             if (isAttached)
             {
-                Drop(false, null);
-                item.SetTransform(simPosition, 0.0f);
-                AttachToWall();
+                if (!attached)
+                {
+                    Drop(false, null);
+                    item.SetTransform(simPosition, 0.0f);
+                    AttachToWall();
+                }
             }
             else
             {
-                DropConnectedWires(null);
-
-                if (body != null)
+                if (attached)
                 {
-                    item.body = body;
-                    item.body.Enabled = true;
-                }
-                IsActive = false;
+                    DropConnectedWires(null);
 
-                DeattachFromWall();
+                    if (body != null)
+                    {
+                        item.body = body;
+                        item.body.Enabled = true;
+                    }
+                    IsActive = false;
+
+                    DeattachFromWall();
+                }
             }
         }
     }

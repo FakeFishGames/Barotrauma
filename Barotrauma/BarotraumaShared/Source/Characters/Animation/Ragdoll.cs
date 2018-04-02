@@ -1313,7 +1313,10 @@ namespace Barotrauma
                         var newSelectedConstruction = (Item)character.MemState[0].Interact;
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            newSelectedConstruction.TryInteract(character, true, true);
+                            foreach (var ic in newSelectedConstruction.components)
+                            {
+                                if (ic.CanBeSelected) ic.Select(character);
+                            }
                         }
                         character.SelectedConstruction = newSelectedConstruction;
                     }
