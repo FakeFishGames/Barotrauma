@@ -1612,7 +1612,7 @@ namespace Barotrauma
                     if (item == null) continue;
 
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
-                    item.Update((float)deltaTime, cam);
+                    item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
                 }
 
