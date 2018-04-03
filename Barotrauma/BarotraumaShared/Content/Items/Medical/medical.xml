@@ -66,6 +66,10 @@
         <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
         <ReduceAffliction name="bleeding" reduceamount="30"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </MeleeWeapon>
   </Item>
 
@@ -89,6 +93,10 @@
       <StatusEffect tags="poison,iron" type="OnUse" target="Character" duration="10">
         <Affliction name="Internal damage" amount="2.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -124,6 +132,10 @@
         <ReduceAffliction name="bloodloss" reduceamount="1"/>
         <ReduceAffliction name="oxygenlow" reduceamount="2"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
   
@@ -146,6 +158,10 @@
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
         <Affliction name="Internal damage" strength="0.5"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -179,6 +195,10 @@
         <RequiredItem name="Medical Syringe" type="Container"/>
         <Affliction name="drunk" strength="10"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -201,6 +221,10 @@
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
         <Affliction name="Internal damage" strength="10.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -229,6 +253,10 @@
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="5.0"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -251,6 +279,10 @@
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
         <Affliction name="Internal damage" strength="20.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -281,6 +313,10 @@
         <ReduceAffliction name="bleeding" reduceamount="-0.1"/>
         <ReduceAffliction name="oxygenlow" reduceamount="-1.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -314,6 +350,10 @@
         <ReduceAffliction name="oxygenlow" reduceamount="2"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -340,6 +380,10 @@
         <ReduceAffliction name="bleeding" reduceamount="1"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </ItemComponent>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
@@ -373,6 +417,10 @@
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
         <ReduceAffliction name="damage" reduceamount="1"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </ItemComponent>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
@@ -388,7 +436,7 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical,heal,stopbleeding"
+    Tags="smallitem,chem,medical"    
     description="A highly potent corrigodone-based stimulant.">
 
     <Price locationtype="Research" buyprice="150"/>
@@ -404,6 +452,10 @@
         <ReduceAffliction name="damage" reduceamount="0.5"/>
         <ReduceAffliction name="oxygenlow" reduceamount="0.5"/>
         <ReduceAffliction name="bloodloss" reduceamount="0.5"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -426,6 +478,10 @@
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" SpeedMultiplier="1.5" setvalue="true" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -463,6 +519,10 @@
         <Affliction name="Internal damage" strength="4"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -484,6 +544,10 @@
         <Conditional hasstatustag="morbusine">
           <CancelStatusEffect/>
         </Conditional>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -511,6 +575,10 @@
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="300.0" structuredamage="50" damage="30" stun="5" force="10.0"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -537,6 +605,14 @@
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="500" damage="5" stun="3" force="0.1"/>
       </StatusEffect>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <Sound file="Content/Items/Reactor/explosion.ogg"/>
+        <Explosion range="500" damage="5" stun="3" force="0.1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
   
@@ -562,6 +638,10 @@
         <Affliction name="Stun" amount="10.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -584,6 +664,10 @@
         <Affliction name="Internal damage" amount="1.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
   
@@ -605,6 +689,10 @@
       <StatusEffect tags="poison,uranium" type="OnUse" target="Character" duration="60.0">
         <Affliction name="Bloodloss" amount="0.1"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -629,6 +717,10 @@
         <Conditional HuskInfectionState="lt 0.01"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -651,6 +743,10 @@
       <StatusEffect tags="poison,morbusine" type="OnUse" target="Character" duration="60.0">
         <Affliction name="Internal damage" amount="5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
@@ -675,6 +771,7 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5"/>
+        <Remove/>
       </StatusEffect>
       
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
@@ -705,6 +802,10 @@
         <Affliction name="Oxygen low" amount="5.0"/>
         <Affliction name="Internal Damage" amount="0.5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>

@@ -52,7 +52,9 @@
       <Attack structuredamage="1" damagetype="Blunt">
         <affliction name="Internal Damage" strength="10"/>
       </Attack>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
@@ -86,7 +88,9 @@
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">

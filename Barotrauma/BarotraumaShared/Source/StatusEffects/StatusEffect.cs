@@ -59,6 +59,8 @@ namespace Barotrauma
         public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
+        
+        private readonly bool removeItem;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -222,6 +224,10 @@ namespace Barotrauma
                     case "use":
                     case "useitem":
                         useItemCount++;
+                        break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -399,6 +405,14 @@ namespace Barotrauma
                     item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
                 }
             }                     
+
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
+            }
 
             if (duration > 0.0f)
             {
