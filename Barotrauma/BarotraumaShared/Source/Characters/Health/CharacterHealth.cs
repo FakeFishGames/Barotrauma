@@ -83,7 +83,7 @@ namespace Barotrauma
         private Affliction bloodlossAffliction;
         private Affliction oxygenLowAffliction;
         private Affliction stunAffliction;
-        
+                
         public bool IsUnconscious
         {
             get { return vitality <= 0.0f; }
@@ -401,13 +401,20 @@ namespace Barotrauma
         {
             UpdateOxygen(deltaTime);
 
+            float bleedingAmount = 0.0f;
+
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 limbHealth.Afflictions.RemoveAll(a => a.Strength <= 0.0f);
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    affliction.Update(this, character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i), deltaTime);
+                    Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
+                    affliction.Update(this, targetLimb, deltaTime);
+                    if (affliction is AfflictionBleeding)
+                    {
+                        UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
+                    }
                 }
                 i++;
             }
@@ -425,7 +432,7 @@ namespace Barotrauma
                     100.0f :
                     limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
             }
-
+            
             CalculateVitality();            
             if (vitality <= minVitality) character.Kill(GetCauseOfDeath());            
         }
@@ -449,6 +456,8 @@ namespace Barotrauma
         }
         
         partial void UpdateOxygenProjSpecific(float prevOxygen);
+
+        partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);
 
         public void CalculateVitality()
         {

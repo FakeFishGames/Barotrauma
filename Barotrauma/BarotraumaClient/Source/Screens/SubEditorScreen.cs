@@ -156,7 +156,7 @@ namespace Barotrauma
             GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
-            saveAssemblyFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 150, 26, 170, 30), "InnerFrame", topPanel);
+            saveAssemblyFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 170, 26, 170, 30), "InnerFrame", topPanel);
             saveAssemblyFrame.Visible = false;
             saveAssemblyFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
             var saveAssemblyButton = new GUIButton(new Rectangle(0, 0, 0, 0), "Save as item assembly", Alignment.Center, "", saveAssemblyFrame);
