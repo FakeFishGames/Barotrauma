@@ -30,7 +30,12 @@ namespace Barotrauma
         public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null)
         {
             HitLimb = hitLimb;
-            Afflictions = afflictions;
+            Afflictions = new List<Affliction>();
+
+            foreach (Affliction affliction in afflictions)
+            {
+                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+            }
             AppliedDamageModifiers = appliedDamageModifiers;
             Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
         }

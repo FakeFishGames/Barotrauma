@@ -130,10 +130,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-
-            //TODO: load from content package
-            
         }
 
         public AfflictionPrefab(XElement element, Type type = null)

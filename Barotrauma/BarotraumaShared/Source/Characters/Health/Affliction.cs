@@ -7,7 +7,7 @@ namespace Barotrauma
     class Affliction
     {
         public readonly AfflictionPrefab Prefab;
-
+        
         public float Strength;
 
         public Affliction(AfflictionPrefab prefab, float strength)

@@ -490,8 +490,6 @@ namespace Barotrauma
             //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
             //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
             //but more realistic than bouncing and prevents using characters as "bumpers" that prevent all collision damage
-
-            //TODO: apply impact damage and/or gib the character that got crushed between the sub and the level?
             Vector2 avgContactNormal = Vector2.Zero;
             foreach (Contact levelContact in levelContacts)
             {
