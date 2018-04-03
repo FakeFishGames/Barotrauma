@@ -92,41 +92,48 @@ namespace Barotrauma
 
         private readonly ConstructorInfo constructor;
 
-        public static void Init()
+        public static void LoadAll(List<string> filePaths)
         {
-            //TODO: load from content package
-            XDocument doc = XMLExtensions.TryLoadXml("Content/Afflictions.xml");
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string filePath in filePaths)
             {
-                switch (element.Name.ToString().ToLowerInvariant())
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
                 {
-                    case "internaldamage":
-                        List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "bleeding":
-                        List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
-                        break;
-                    case "burn":
-                        List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "oxygenlow":
-                        List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "bloodloss":
-                        List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "stun":
-                        List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "husk":
-                        List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    default:
-                        List.Add(new AfflictionPrefab(element));
-                        break;
+                    switch (element.Name.ToString().ToLowerInvariant())
+                    {
+                        case "internaldamage":
+                            List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "bleeding":
+                            List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
+                            break;
+                        case "burn":
+                            List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "oxygenlow":
+                            List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "bloodloss":
+                            List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "stun":
+                            List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "husk":
+                            List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        default:
+                            List.Add(new AfflictionPrefab(element));
+                            break;
+                    }
                 }
             }
+
+
+            //TODO: load from content package
+            
         }
 
         public AfflictionPrefab(XElement element, Type type = null)

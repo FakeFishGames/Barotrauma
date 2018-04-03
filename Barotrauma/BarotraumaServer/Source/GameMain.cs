@@ -84,13 +84,11 @@ namespace Barotrauma
             ScriptedEventSet.LoadPrefabs();
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-            //todo: get config file paths from content package
-            NPCConversation.Load(Path.Combine("Content", "Characters", "Human", "NpcConversations.xml"));
-            
+            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
+            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
 
-            AfflictionPrefab.Init();
             GameModePreset.Init();
             LocationType.Init();
 

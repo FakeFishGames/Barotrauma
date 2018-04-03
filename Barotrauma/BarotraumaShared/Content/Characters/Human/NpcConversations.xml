@@ -259,7 +259,7 @@
   <Conversation line="I want some action!" speakertags="tough"/>
 
   <Conversation line="Smooth seas don't make skillful sailors." speakertags="tough">
-    <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish"/>    
+    <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish" speaker="1"/>    
   </Conversation>
   
   <Conversation line="We should get a coffeemaker on board." speakertags="laid-back">
