@@ -272,7 +272,7 @@ namespace Barotrauma
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
-            AfflictionPrefab.Init();
+            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
@@ -282,8 +282,8 @@ namespace Barotrauma
             {
                 if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
             }
-            //todo: get config file paths from content package
-            NPCConversation.Load(Path.Combine("Content", "Characters", "Human", "NpcConversations.xml"));
+
+            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
 
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;

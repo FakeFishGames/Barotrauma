@@ -7,7 +7,7 @@ namespace Barotrauma
     class Affliction
     {
         public readonly AfflictionPrefab Prefab;
-
+        
         public float Strength;
 
         public Affliction(AfflictionPrefab prefab, float strength)
@@ -26,7 +26,7 @@ namespace Barotrauma
             Strength = Math.Min(Strength + affliction.Strength, Prefab.MaxStrength);
         }
 
-        public float GetVitalityDecrease()
+        public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
@@ -34,10 +34,14 @@ namespace Barotrauma
 
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) return 0.0f;
 
-            return MathHelper.Lerp(
+            float currVitalityDecrease = MathHelper.Lerp(
                 currentEffect.MinVitalityDecrease, 
                 currentEffect.MaxVitalityDecrease, 
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+
+            if (currentEffect.MultiplyByMaxVitality) currVitalityDecrease *= characterHealth == null ? 100.0f : characterHealth.MaxVitality;
+
+            return currVitalityDecrease;
         }
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)

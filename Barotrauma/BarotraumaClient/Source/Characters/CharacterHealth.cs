@@ -39,11 +39,13 @@ namespace Barotrauma
 
         private GUIListBox afflictionContainer;
 
+        private float bloodParticleTimer;
+
         /*private GUIFrame healthWindow;
         private GUIProgressBar healthWindowHealthBar;
         private GUIFrame limbIndicatorContainer;
         private GUIListBox healItemContainer;*/
-        
+
         private GUIFrame healthWindow;
 
         private int highlightedLimbIndex = -1;
@@ -176,6 +178,25 @@ namespace Barotrauma
             if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && Character.Controlled == character)
             {
                 SoundPlayer.PlaySound("drown");
+            }
+        }
+
+        partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime)
+        {
+            bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
+            if (bloodParticleTimer <= 0.0f)
+            {
+                float bloodParticleSize = MathHelper.Lerp(0.5f, 1.0f, affliction.Strength / 100.0f);
+                if (!character.AnimController.InWater) bloodParticleSize *= 2.0f;
+                var blood = GameMain.ParticleManager.CreateParticle(
+                    character.AnimController.InWater ? "waterblood" : "blooddrop",
+                    targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, character.AnimController.CurrentHull);
+
+                if (blood != null)
+                {
+                    blood.Size *= bloodParticleSize;
+                }
+                bloodParticleTimer = 1.0f;
             }
         }
 

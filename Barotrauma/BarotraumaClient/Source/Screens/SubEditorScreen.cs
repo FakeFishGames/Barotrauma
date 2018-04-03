@@ -156,7 +156,7 @@ namespace Barotrauma
             GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
-            saveAssemblyFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 150, 26, 170, 30), "InnerFrame", topPanel);
+            saveAssemblyFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 170, 26, 170, 30), "InnerFrame", topPanel);
             saveAssemblyFrame.Visible = false;
             saveAssemblyFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
             var saveAssemblyButton = new GUIButton(new Rectangle(0, 0, 0, 0), "Save as item assembly", Alignment.Center, "", saveAssemblyFrame);
@@ -743,23 +743,10 @@ namespace Barotrauma
             string description = ((GUITextBox)saveFrame.GetChild("description")).Text;
 
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XElement element = new XElement("ItemAssembly", 
-                new XAttribute("name", nameBox.Text), 
-                new XAttribute("description", description));
-            foreach (MapEntity mapEntity in MapEntity.SelectedList)
-            {
-                mapEntity.Submarine = Submarine.MainSub;
-                mapEntity.Save(element);
-            }
-
-            if (!Directory.Exists(saveFolder))
-            {
-                Directory.CreateDirectory(saveFolder);
-            }
-
-            XDocument doc = new XDocument(element);
+            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
             doc.Save(filePath);
+
             new ItemAssemblyPrefab(filePath);
             UpdateEntityList(MapEntityCategory.ItemAssembly);
             saveFrame = null;
@@ -1522,7 +1509,7 @@ namespace Barotrauma
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
-            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 1;
+            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
 
             cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);       
             if (PlayerInput.MidButtonHeld())
@@ -1625,7 +1612,7 @@ namespace Barotrauma
                     if (item == null) continue;
 
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
-                    item.Update((float)deltaTime, cam);
+                    item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
                 }
 

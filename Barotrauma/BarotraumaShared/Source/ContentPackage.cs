@@ -22,7 +22,9 @@ namespace Barotrauma
         Sounds,
         RuinConfig,
         Particles,
-        Decals
+        Decals,
+        NPCConversations,
+        Afflictions
     }
 
     public class ContentPackage
