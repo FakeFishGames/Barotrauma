@@ -340,6 +340,10 @@
       <Project>{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Steamworks.NET\Standalone\Steamworks.NET.csproj">
+      <Project>{B3543600-587C-4FDC-994A-CB0BDC629A7E}</Project>
+      <Name>Steamworks.NET</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace Barotrauma
@@ -224,9 +223,11 @@ namespace Barotrauma
         /// </summary>
         protected override void LoadContent()
         {
+            SteamManager.Initialize();
+
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
-
+            
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -459,6 +460,8 @@ namespace Barotrauma
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
+                SteamManager.Update();
+
                 Timing.Accumulator -= Timing.Step;
             }
 
@@ -505,7 +508,9 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-           
+
+            SteamManager.ShutDown();
+
             base.OnExiting(sender, args);
         }
     }
