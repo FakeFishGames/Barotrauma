@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
         {
             base.Move(amount);
             
-            body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            body?.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();

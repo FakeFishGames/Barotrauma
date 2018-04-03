@@ -583,8 +583,7 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
+                body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -918,29 +917,7 @@ namespace Barotrauma
 
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
                 {
-                    Submarine prevSub = Submarine;
-
-                    FindHull();
-
-                    if (Submarine == null && prevSub != null)
-                    {
-                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                    }
-                    else if (Submarine != null && prevSub == null)
-                    {
-                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                    }
-                    
-                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
-
-                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                    {
-                        body.LinearVelocity = new Vector2(
-                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
-                    }
+                    UpdateTransform();
                 }
 
                 UpdateNetPosition();
@@ -954,6 +931,33 @@ namespace Barotrauma
 
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
+        }
+
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (Submarine == null && prevSub != null)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+            }
+            else if (Submarine != null && prevSub == null)
+            {
+                body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+            }
         }
 
         /// <summary>
@@ -1914,19 +1918,10 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            }
-            else
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
-            }
+            element.Add(new XAttribute("rect",
+                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                rect.Width + "," + rect.Height));
 
             if (linkedTo != null && linkedTo.Count > 0)
             {

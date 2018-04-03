@@ -518,7 +518,7 @@ namespace Barotrauma.Items.Components
 
         protected override void ShallowRemoveComponentSpecific()
         {
-            for (int i = 0; i < 2; i++)
+            /*for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == null) continue;
                 int wireIndex = connections[i].FindWireIndex(item);
@@ -527,7 +527,7 @@ namespace Barotrauma.Items.Components
                 {
                     connections[i].AddLink(wireIndex, null);
                 }
-            }
+            }*/
         }
 
         protected override void RemoveComponentSpecific()

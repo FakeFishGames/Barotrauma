@@ -30,9 +30,14 @@ namespace Barotrauma
         public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null)
         {
             HitLimb = hitLimb;
-            Afflictions = afflictions;
+            Afflictions = new List<Affliction>();
+
+            foreach (Affliction affliction in afflictions)
+            {
+                Afflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
+            }
             AppliedDamageModifiers = appliedDamageModifiers;
-            Damage = Afflictions.Sum(a => a.GetVitalityDecrease());
+            Damage = Afflictions.Sum(a => a.GetVitalityDecrease(null));
         }
 
         public AttackResult(float damage, List<DamageModifier> appliedDamageModifiers = null)
@@ -120,7 +125,7 @@ namespace Barotrauma
             float totalDamage = includeStructureDamage ? StructureDamage : 0.0f;
             foreach (Affliction affliction in Afflictions)
             {
-                totalDamage += affliction.GetVitalityDecrease();
+                totalDamage += affliction.GetVitalityDecrease(null);
             }
             return totalDamage;
         }

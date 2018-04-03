@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         const int MaxPreviousConversations = 20;
 
-        private static List<NPCConversation> list;
+        private static List<NPCConversation> list = new List<NPCConversation>();
         
         public readonly string Line;
 
@@ -32,11 +32,16 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
-        
+        public static void LoadAll(List<string> filePaths)
+        {
+            foreach (string filePath in filePaths)
+            {
+                Load(filePath);
+            }
+        }
+
         public static void Load(string file)
         {
-            list = new List<NPCConversation>();
-
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 

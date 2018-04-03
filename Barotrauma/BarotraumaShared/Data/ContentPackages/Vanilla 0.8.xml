@@ -47,6 +47,7 @@
   <Character file="Content/Characters/Tigerthresher/tigerthresher.xml" />
   <Character file="Content/Characters/TigerthresherBoss/tigerthresherboss.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
+  <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <RuinConfig file="Content/Map/RuinConfig.xml" />
   <BackgroundCreaturePrefabs file="Content/BackgroundSprites/BackgroundCreaturePrefabs.xml"/>
@@ -57,6 +58,7 @@
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
+  <NPCConversations file="Content/Characters/Human/NpcConversations.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Executable file="Barotrauma.exe" />
