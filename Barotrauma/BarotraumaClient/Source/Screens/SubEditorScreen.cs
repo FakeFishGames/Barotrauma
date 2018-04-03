@@ -746,7 +746,9 @@ namespace Barotrauma
             XElement element = new XElement("ItemAssembly", 
                 new XAttribute("name", nameBox.Text), 
                 new XAttribute("description", description));
-            foreach (MapEntity mapEntity in MapEntity.SelectedList)
+
+            var assemblyEntities = MapEntity.CopyEntities(MapEntity.SelectedList);
+            foreach (MapEntity mapEntity in assemblyEntities)
             {
                 mapEntity.Submarine = Submarine.MainSub;
                 mapEntity.Save(element);
@@ -760,6 +762,7 @@ namespace Barotrauma
             XDocument doc = new XDocument(element);
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
             doc.Save(filePath);
+
             new ItemAssemblyPrefab(filePath);
             UpdateEntityList(MapEntityCategory.ItemAssembly);
             saveFrame = null;
@@ -1522,7 +1525,7 @@ namespace Barotrauma
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
-            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 1;
+            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
 
             cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);       
             if (PlayerInput.MidButtonHeld())
