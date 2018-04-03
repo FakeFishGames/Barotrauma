@@ -20,6 +20,8 @@ namespace Barotrauma
             //how much the strength of the affliction changes per second
             public readonly float StrengthChange = 0.0f;
 
+            public readonly bool MultiplyByMaxVitality;
+
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -27,6 +29,8 @@ namespace Barotrauma
             {
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
+
+                MultiplyByMaxVitality = element.GetAttributeBool("multiplybymaxvitality", false);
 
                 MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
@@ -83,7 +87,6 @@ namespace Barotrauma
         public readonly Sprite Icon;
 
         private List<Effect> effects = new List<Effect>();
-
 
         private readonly string typeName;
 

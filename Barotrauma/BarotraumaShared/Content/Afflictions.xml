@@ -14,9 +14,9 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
-      maxvitalitydecrease="100"/>
+      maxvitalitydecrease="1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
   </InternalDamage>
 
@@ -45,9 +45,9 @@
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="50"/>
+      maxvitalitydecrease="1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
 
@@ -61,9 +61,9 @@
     indicatorlimb="Torso"    
     activationthreshold="1"
     maxstrength="200">
-    <Effect minstrength="50" maxstrength="200"
+    <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="200"/>
+      maxvitalitydecrease="2"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
   </OxygenLow>
 
@@ -77,9 +77,9 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="200"
+      maxvitalitydecrease="2"
       strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
   </Bloodloss>
