@@ -58,6 +58,8 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
+        private readonly bool removeItem;
+
         public readonly ActionType type;
 
         private Explosion explosion;
@@ -210,6 +212,10 @@ namespace Barotrauma
                     case "use":
                     case "useitem":
                         useItemCount++;
+                        break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -365,6 +371,14 @@ namespace Barotrauma
                 foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
                     item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                }
+            }
+
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
                 }
             }
 

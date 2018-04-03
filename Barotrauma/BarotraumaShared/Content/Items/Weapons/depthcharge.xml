@@ -5,8 +5,7 @@
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
@@ -23,8 +22,7 @@
   <Item
     name="Depth Charge Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
@@ -53,7 +51,9 @@
 
     <Projectile launchimpulse="5.0">
       <Attack damage="1" structuredamage="1" damagetype="Blunt"/>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
@@ -85,7 +85,9 @@
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
