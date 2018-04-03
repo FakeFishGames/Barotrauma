@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    class Client
+    public class Client
     {
         public string Name;
         public byte ID;
