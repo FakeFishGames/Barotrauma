@@ -743,23 +743,7 @@ namespace Barotrauma
             string description = ((GUITextBox)saveFrame.GetChild("description")).Text;
 
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
-            XElement element = new XElement("ItemAssembly", 
-                new XAttribute("name", nameBox.Text), 
-                new XAttribute("description", description));
-
-            var assemblyEntities = MapEntity.CopyEntities(MapEntity.SelectedList);
-            foreach (MapEntity mapEntity in assemblyEntities)
-            {
-                mapEntity.Submarine = Submarine.MainSub;
-                mapEntity.Save(element);
-            }
-
-            if (!Directory.Exists(saveFolder))
-            {
-                Directory.CreateDirectory(saveFolder);
-            }
-
-            XDocument doc = new XDocument(element);
+            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
             doc.Save(filePath);
 

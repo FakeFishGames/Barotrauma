@@ -583,8 +583,7 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
+                body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -1914,19 +1913,10 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            }
-            else
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
-            }
+            element.Add(new XAttribute("rect",
+                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                rect.Width + "," + rect.Height));
 
             if (linkedTo != null && linkedTo.Count > 0)
             {

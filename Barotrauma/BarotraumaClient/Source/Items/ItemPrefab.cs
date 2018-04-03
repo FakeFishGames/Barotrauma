@@ -52,7 +52,7 @@ namespace Barotrauma
             {
                 if (placeRect.HasValue)
                 {
-                    sprite.Draw(spriteBatch, new Vector2(placeRect.Value.Center.X, -(placeRect.Value.Y + placeRect.Value.Height / 2)), SpriteColor);
+                    sprite.Draw(spriteBatch, new Vector2(placeRect.Value.Center.X, -(placeRect.Value.Y - placeRect.Value.Height / 2)), SpriteColor);
                 }
                 else
                 {
