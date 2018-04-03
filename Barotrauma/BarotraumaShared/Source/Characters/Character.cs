@@ -610,11 +610,11 @@ namespace Barotrauma
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
 
+            needsAir = doc.Root.GetAttributeBool("needsair", false);
+
             XElement healthElement = doc.Root.Element("health") ?? doc.Root.Element("Health");
             health = healthElement == null ? new CharacterHealth(this) : new CharacterHealth(healthElement, this);
-            
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-            
+                        
             if (file == humanConfigFile)
             {
                 if (Info.PickedItemIDs.Any())
