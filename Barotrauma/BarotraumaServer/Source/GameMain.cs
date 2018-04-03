@@ -59,6 +59,8 @@ namespace Barotrauma
         {
             Instance = this;
 
+            SteamManager.Initialize();
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -120,6 +122,7 @@ namespace Barotrauma
 
         public void CloseServer()
         {
+            SteamManager.ShutDown();
             Server.Disconnect();
             Server = null;
         }
