@@ -132,7 +132,18 @@ namespace Barotrauma
                 staticDrawableComponents[i].Draw(spriteBatch, editing);
             }
 
-            if (GameMain.DebugDraw && aiTarget != null) aiTarget.Draw(spriteBatch);
+            if (GameMain.DebugDraw)
+            {
+                aiTarget?.Draw(spriteBatch);
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item item in containedItems)
+                    {
+                        item.AiTarget?.Draw(spriteBatch);
+                    }
+                }
+            }
 
             if (!editing || (body != null && !body.Enabled))
             {
