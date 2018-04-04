@@ -10,6 +10,9 @@ namespace Barotrauma.Networking
 {
     class RespawnManager : Entity, IServerSerializable
     {
+        // TODO: Instead of hard-coding the tags in the code, maybe they should be defined in a config file?
+        private static string respawnItemTag = "respawn";
+
         private readonly float respawnInterval;
         private float maxTransportTime;
         
@@ -364,6 +367,8 @@ namespace Barotrauma.Networking
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != respawnShuttle) continue;
+                // Ignore the respawn items, defined in RespawnCharacters method.
+                if (item.HasTag(respawnItemTag)) continue;
 
                 if (item.body != null && item.body.Enabled && item.ParentInventory == null)
                 {
@@ -502,20 +507,26 @@ namespace Barotrauma.Networking
 
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
+                // Temp list to hold all respawn items. 
+                // TODO: Instead of tags, wouldn't it be better to keep a local reference to the list that we create and simple filter out the items on it, before clearing the items in ResetShuttle method?
+                var respawnItems = new List<Item>();
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(divingSuit, false);
+                    respawnItems.Add(divingSuit);
 
                     var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(oxyTank, false);
-                    divingSuit.Combine(oxyTank);      
-                    
+                    divingSuit.Combine(oxyTank);
+                    respawnItems.Add(oxyTank);
+
                     if (batteryPrefab != null)
                     {
                         var battery = new Item(batteryPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(battery, false);
                         divingSuit.Combine(battery);
+                        respawnItems.Add(battery);
                     }
                 }
 
@@ -528,7 +539,10 @@ namespace Barotrauma.Networking
                     Spawner.CreateNetworkEvent(battery, false);
 
                     scooter.Combine(battery);
+                    respawnItems.Add(scooter);
+                    respawnItems.Add(battery);
                 }
+                respawnItems.ForEach(item => item.AddTag(respawnItemTag));
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub
                 character.GiveJobItems(mainSubSpawnPoints[i]);
