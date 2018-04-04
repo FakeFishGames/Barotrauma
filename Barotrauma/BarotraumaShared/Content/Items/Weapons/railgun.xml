@@ -98,7 +98,9 @@
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
 
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>      
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>  
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">

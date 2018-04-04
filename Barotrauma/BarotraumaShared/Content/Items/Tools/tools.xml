@@ -248,7 +248,7 @@
   <Item
     name="Handheld Sonar"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,sonar"
     cargocontainername="Metal Crate">
 
     <Price locationtype="City" buyprice="50"/>
@@ -259,6 +259,8 @@
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
     <Body width="31" height="6" density="40"/>
+
+    <AiTarget/>
 
     <Holdable slots="Any,RightHand,LeftHand"
               holdangle="30" handle1="-10,0"/>
