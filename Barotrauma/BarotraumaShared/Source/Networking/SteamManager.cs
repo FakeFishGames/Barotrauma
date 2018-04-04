@@ -35,6 +35,16 @@ namespace Barotrauma.Networking
 #endif
         }
 
+        protected Callback<LobbyCreated_t> Callback_lobbyCreated;
+        protected Callback<LobbyMatchList_t> Callback_lobbyList;
+        protected Callback<LobbyEnter_t> Callback_lobbyEnter;
+        protected Callback<LobbyDataUpdate_t> Callback_lobbyInfo;
+
+        private ulong current_lobbyID;
+        private List<CSteamID> lobbyIDS;
+        private List<ServerInfo> lobbyInfos;
+        private Action<List<ServerInfo>> OnLobbyFound;
+
         public static void Initialize()
         {
             instance = new SteamManager();
@@ -97,6 +107,13 @@ namespace Barotrauma.Networking
                 m_SteamAPIWarningMessageHook = new SteamAPIWarningMessageHook_t(SteamAPIDebugTextHook);
                 SteamClient.SetWarningMessageHook(m_SteamAPIWarningMessageHook);
             }
+
+            lobbyIDS = new List<CSteamID>();
+            lobbyInfos = new List<ServerInfo>();
+            Callback_lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
+            Callback_lobbyList = Callback<LobbyMatchList_t>.Create(OnGetLobbiesList);
+            Callback_lobbyEnter = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
+            Callback_lobbyInfo = Callback<LobbyDataUpdate_t>.Create(OnGetLobbyInfo);
         }
         
         public static void UnlockAchievement(string achievementName)
@@ -109,6 +126,99 @@ namespace Barotrauma.Networking
             SteamUserStats.SetAchievement(achievementName);
         }
 
+        public static void CreateLobby()
+        {
+            if (Instance == null || !Instance.isInitialized)
+            {
+                return;
+            }
+
+            SteamAPICall_t try_toHost = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypePublic, 8);
+        }
+
+        public static void GetLobbies(Action<List<ServerInfo>> onLobbyFound)
+        {
+            if (Instance == null || !Instance.isInitialized)
+            {
+                return;
+            }
+
+            instance.OnLobbyFound = onLobbyFound;
+            SteamAPICall_t try_getList = SteamMatchmaking.RequestLobbyList();
+        }
+
+        private void OnLobbyCreated(LobbyCreated_t result)
+        {
+            if (result.m_eResult == EResult.k_EResultOK)
+                DebugConsole.Log("Lobby created -- SUCCESS!");
+            else
+                DebugConsole.Log("Lobby created -- failure ...");
+            
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "servername", GameMain.Server.Name);
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "serverport", GameMain.Server.Port.ToString());
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "currplayers", GameMain.Server.ConnectedClients.Count.ToString());
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "maxplayers", GameMain.Server.MaxPlayers.ToString());
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "password", GameMain.Server.HasPassword.ToString());
+            SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "version", GameMain.Version.ToString());
+            if (GameMain.Config.SelectedContentPackage != null)
+            {
+                SteamMatchmaking.SetLobbyData((CSteamID)result.m_ulSteamIDLobby, "contentpackage", GameMain.Config.SelectedContentPackage.Name);
+            }
+        }
+
+        void OnGetLobbiesList(LobbyMatchList_t result)
+        {
+            DebugConsole.Log("Found " + result.m_nLobbiesMatching + " lobbies!");
+            lobbyIDS.Clear();
+            lobbyInfos.Clear();
+            for (int i = 0; i < result.m_nLobbiesMatching; i++)
+            {
+                CSteamID lobbyID = SteamMatchmaking.GetLobbyByIndex(i);
+                lobbyIDS.Add(lobbyID);
+                lobbyInfos.Add(new ServerInfo());
+                SteamMatchmaking.RequestLobbyData(lobbyID);
+            }
+        }
+
+        void OnGetLobbyInfo(LobbyDataUpdate_t result)
+        {
+            for (int i = 0; i < lobbyIDS.Count; i++)
+            {
+                if (lobbyIDS[i].m_SteamID != result.m_ulSteamIDLobby) continue;
+
+                int playerCount = 0;
+                int.TryParse(SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "currplayers"), out playerCount);
+                int maxPlayers = 0;
+                int.TryParse(SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "maxplayers"), out maxPlayers);
+
+                bool hasPassword = SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "password").ToLowerInvariant() == "true";
+                bool gameStarted = SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "gamestarted").ToLowerInvariant() == "true";
+
+                lobbyInfos[i] = new ServerInfo()
+                {
+                    ServerName = SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "servername"),
+                    Port = SteamMatchmaking.GetLobbyData((CSteamID)lobbyIDS[i].m_SteamID, "serverport"),
+                    GameStarted = gameStarted,
+                    PlayerCount = playerCount,
+                    MaxPlayers = maxPlayers,
+                    HasPassword = hasPassword
+                };
+
+                OnLobbyFound(lobbyInfos);
+                return;
+            }
+        }
+
+        void OnLobbyEntered(LobbyEnter_t result)
+        {
+            current_lobbyID = result.m_ulSteamIDLobby;
+            
+            if (result.m_EChatRoomEnterResponse == 1)
+                DebugConsole.Log("Lobby joined!");
+            else
+                DebugConsole.Log("Failed to join lobby.");
+        }
+
         public static void Update()
         {
             if (Instance == null || !Instance.isInitialized)
@@ -119,16 +229,15 @@ namespace Barotrauma.Networking
             // Run Steam client callbacks
             SteamAPI.RunCallbacks();
         }
-        
+
         public static void ShutDown()
         {
             if (instance == null || !instance.isInitialized)
             {
                 return;
             }
-            
+
             SteamAPI.Shutdown();
         }
-
     }
 }

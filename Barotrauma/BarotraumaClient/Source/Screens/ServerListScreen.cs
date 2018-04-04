@@ -10,17 +10,6 @@ namespace Barotrauma
 {
     class ServerListScreen : Screen
     {
-        struct ServerInfo
-        {
-            public string IP;
-            public string Port;
-            public string ServerName;
-            public bool GameStarted;
-            public int PlayerCount;
-            public int MaxPlayers;
-            public bool HasPassword;           
-        }
-
         //how often the client is allowed to refresh servers
         private TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
 
@@ -195,22 +184,15 @@ namespace Barotrauma
         private void UpdateServerList(string masterServerData)
         {
             serverList.ClearChildren();
-
-            if (string.IsNullOrWhiteSpace(masterServerData))
-            {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoServers"), "", serverList);
-                return;
-            }
-
+            
             if (masterServerData.Substring(0, 5).ToLowerInvariant() == "error")
             {
                 DebugConsole.ThrowError("Error while connecting to master server (" + masterServerData + ")!");
-
                 return;
             }
 
             string[] lines = masterServerData.Split('\n');
-
+            List<ServerInfo> serverInfos = new List<ServerInfo>();
             for (int i = 0; i < lines.Length; i++)
             {
                 string[] arguments = lines[i].Split('|');
@@ -221,7 +203,7 @@ namespace Barotrauma
                 string serverName = arguments[2];
                 bool gameStarted = arguments.Length > 3 && arguments[3] == "1";
                 string currPlayersStr = (arguments.Length > 4) ? arguments[4] : "";
-                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";                
+                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";
                 bool hasPassWord = arguments.Length > 6 && arguments[6] == "1";
 
                 int playerCount = 0, maxPlayers = 1;
@@ -239,20 +221,40 @@ namespace Barotrauma
                     HasPassword = hasPassWord
                 };
 
+                serverInfos.Add(serverInfo);
+            }
+
+            UpdateServerList(serverInfos);
+        }
+
+        private void UpdateServerList(IEnumerable<ServerInfo> serverInfos)
+        {
+            serverList.ClearChildren();
+
+            if (serverInfos.Count() == 0)
+            {
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoServers"), "", serverList);
+                return;
+            }
+
+            int i = 0;
+            foreach (ServerInfo serverInfo in serverInfos)
+            {
                 var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
                 serverFrame.UserData = serverInfo;
 
                 var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
-                passwordBox.Selected = hasPassWord;
+                passwordBox.Selected = serverInfo.HasPassword;
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
 
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
-                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverInfo.ServerName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
 
                 var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2]) / 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
-                gameStartedBox.Selected = gameStarted;
+                gameStartedBox.Selected = serverInfo.GameStarted;
                 gameStartedBox.Enabled = false;
+                i++;
             }
 
             FilterServers();
