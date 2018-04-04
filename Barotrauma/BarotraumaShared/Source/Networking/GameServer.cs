@@ -69,6 +69,11 @@ namespace Barotrauma.Networking
         {
             get { return updateInterval; }
         }
+
+        public bool HasPassword
+        {
+            get { return !string.IsNullOrEmpty(password); }
+        }
         
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {

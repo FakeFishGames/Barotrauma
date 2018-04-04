@@ -254,6 +254,11 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public int MaxPlayers
+        {
+            get { return maxPlayers; }
+        }
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
