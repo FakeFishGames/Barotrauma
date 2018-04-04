@@ -205,7 +205,14 @@ namespace Barotrauma.Networking
 
             if (isPublic)
             {
-                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    SteamManager.CreateServer(this, maxPlayers);
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                }
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
@@ -331,7 +338,7 @@ namespace Barotrauma.Networking
                 Log("Master server responded", ServerLog.MessageType.ServerMessage);
             }
 
-            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+            System.Diagnostics.Debug.WriteLine("took " + sw.ElapsedMilliseconds + " ms");
 
             yield return CoroutineStatus.Success;
         }
@@ -527,7 +534,14 @@ namespace Barotrauma.Networking
 
             if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
 
-            CoroutineManager.StartCoroutine(RefreshMaster());
+            if (GameMain.Config.UseSteamMatchmaking)
+            {
+                SteamManager.UpdateServerDetails();
+            }
+            else
+            {
+                CoroutineManager.StartCoroutine(RefreshMaster());
+            }
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
 
