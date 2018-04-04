@@ -92,6 +92,8 @@ namespace Barotrauma
             }
             Vector2 center = new Vector2((minX + maxX) / 2.0f, (minY + maxY) / 2.0f);
             if (Submarine.MainSub != null) center -= Submarine.MainSub.HiddenSubPosition;
+            center.X -= center.X % Submarine.GridSize.X;
+            center.Y -= center.Y % Submarine.GridSize.Y;
 
             MapEntity.SelectedList.Clear();
             MapEntity.SelectedList.AddRange(assemblyEntities);
