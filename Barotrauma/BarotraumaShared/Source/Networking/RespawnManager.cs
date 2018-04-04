@@ -10,9 +10,6 @@ namespace Barotrauma.Networking
 {
     class RespawnManager : Entity, IServerSerializable
     {
-        // TODO: Instead of hard-coding the tags in the code, maybe they should be defined in a config file?
-        private static string respawnItemTag = "respawn";
-
         private readonly float respawnInterval;
         private float maxTransportTime;
         
@@ -30,7 +27,11 @@ namespace Barotrauma.Networking
         private Submarine respawnShuttle;
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
-        
+
+        //items created during respawn
+        //any respawn items left in the shuttle are removed when the shuttle despawns
+        private List<Item> respawnItems = new List<Item>();
+
         public bool UsingShuttle
         {
             get { return respawnShuttle != null; }
@@ -367,17 +368,16 @@ namespace Barotrauma.Networking
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != respawnShuttle) continue;
-                // Ignore the respawn items, defined in RespawnCharacters method.
-                if (item.HasTag(respawnItemTag)) continue;
-
-                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                
+                //remove respawn items that have been left in the shuttle
+                if (respawnItems.Contains(item))
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
+                    Spawner.AddToRemoveQueue(item);
                     continue;
                 }
 
+                //restore other items to full condition and recharge batteries
                 item.Condition = item.Prefab.Health;
-
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
@@ -506,10 +506,7 @@ namespace Barotrauma.Networking
 #endif
 
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-
-                // Temp list to hold all respawn items. 
-                // TODO: Instead of tags, wouldn't it be better to keep a local reference to the list that we create and simple filter out the items on it, before clearing the items in ResetShuttle method?
-                var respawnItems = new List<Item>();
+                
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
@@ -542,7 +539,6 @@ namespace Barotrauma.Networking
                     respawnItems.Add(scooter);
                     respawnItems.Add(battery);
                 }
-                respawnItems.ForEach(item => item.AddTag(respawnItemTag));
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub
                 character.GiveJobItems(mainSubSpawnPoints[i]);
