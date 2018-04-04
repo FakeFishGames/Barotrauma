@@ -176,6 +176,7 @@
   <NoMatchingServers>No matching servers found.</NoMatchingServers>
   <RefreshingServerList>Refreshing server list...</RefreshingServerList>
   <NoServers>Could not find any servers.</NoServers>
+  <ServerListNoSteamConnection>Could not find any servers (not connected to Steam).</ServerListNoSteamConnection>
   <MasterServerErrorLabel>Connection error</MasterServerErrorLabel>
   <MasterServerTimeOutError>Could not connect to master server (request timed out).</MasterServerTimeOutError>
   <MasterServerErrorException>Error while connecting to master server { [error] }</MasterServerErrorException>

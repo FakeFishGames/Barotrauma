@@ -25,14 +25,14 @@ namespace Barotrauma
         public bool EnableSplashScreen { get; set; }
 
         public int ParticleLimit { get; set; }
-
-        //public bool FullScreenEnabled { get; set; }
-        
+                
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
 
         public List<string> jobNamePreferences;
+        
+        public bool UseSteamMatchmaking { get; set; }
 
         public WindowMode WindowMode
         {
@@ -191,6 +191,8 @@ namespace Barotrauma
 
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
+
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 

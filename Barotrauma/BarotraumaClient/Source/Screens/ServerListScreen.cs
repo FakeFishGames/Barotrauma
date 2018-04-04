@@ -172,7 +172,18 @@ namespace Barotrauma
                 yield return new WaitForSeconds((float)(refreshDisableTimer - DateTime.Now).TotalSeconds);
             }
             
-            CoroutineManager.StartCoroutine(SendMasterServerRequest());
+            if (GameMain.Config.UseSteamMatchmaking)
+            {
+                if (!SteamManager.GetLobbies(UpdateServerList))
+                {
+                    serverList.ClearChildren();                    
+                    new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("ServerListNoSteamConnection"), "", serverList);
+                }
+            }
+            else
+            {
+                CoroutineManager.StartCoroutine(SendMasterServerRequest());
+            }
 
             waitingForRefresh = false;
 

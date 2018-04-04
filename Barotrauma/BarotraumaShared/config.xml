@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" musicvolume="0.5" soundvolume="0.5" verboselogging="false">
+<config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" musicvolume="0.5" soundvolume="0.5" usesteammatchmaking="true" verboselogging="false">
   <graphicsmode fullscreen="true" vsync="true" />
   <contentpackage path="Data/ContentPackages/Vanilla 0.8.xml" />
   <player name=""/>
