@@ -207,7 +207,7 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.Config.UseSteamMatchmaking)
                 {
-                    SteamManager.CreateServer(this, maxPlayers);
+                    registeredToMaster = SteamManager.CreateServer(this, maxPlayers);
                 }
                 else
                 {
@@ -2303,14 +2303,20 @@ namespace Barotrauma.Networking
             banList.Save();
             SaveSettings();
 
-            if (registeredToMaster && restClient != null)
+            if (registeredToMaster)
             {
-                var request = new RestRequest("masterserver2.php", Method.GET);
-                request.AddParameter("action", "removeserver");
-                request.AddParameter("serverport", Port);
-                
-                restClient.Execute(request);
-                restClient = null;
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    SteamManager.CloseServer();
+                }
+                else if (restClient != null)
+                {
+                    var request = new RestRequest("masterserver2.php", Method.GET);
+                    request.AddParameter("action", "removeserver");
+                    request.AddParameter("serverport", Port);                
+                    restClient.Execute(request);
+                    restClient = null;
+                }
             }
 
             if (SaveServerLogs)
