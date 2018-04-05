@@ -807,12 +807,37 @@ namespace Barotrauma
                     targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
                 }
             }
-
-
+            
             targetMovement *= SpeedMultiplier;
+            float maxSpeed = GetCurrentMaxSpeed();
+            targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
+            targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
             SpeedMultiplier = 1.0f;
 
             return targetMovement;
+        }
+
+        public float GetCurrentMaxSpeed()
+        {
+            float currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+
+            currMaxSpeed *= 1.5f;
+
+            var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
+            if (leftFoot != null)
+            {
+                Affliction leftFootAffliction = CharacterHealth.GetAffliction("damage", leftFoot);
+                if (leftFootAffliction != null) currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, leftFootAffliction.Strength / 100.0f);
+            }
+
+            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
+            if (rightFoot != null)
+            {
+                Affliction rightFootAffliction = CharacterHealth.GetAffliction("damage", AnimController.GetLimb(LimbType.RightFoot));
+                if (rightFootAffliction != null) currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, rightFootAffliction.Strength / 100.0f);
+            }
+
+            return currMaxSpeed;
         }
 
         public void Control(float deltaTime, Camera cam)
