@@ -22,6 +22,9 @@ namespace Barotrauma
 
             public readonly bool MultiplyByMaxVitality;
 
+            public float MinScreenBlurStrength, MaxScreenBlurStrength;
+            public float MinScreenDistortStrength, MaxScreenDistortStrength;
+
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -35,6 +38,15 @@ namespace Barotrauma
                 MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
                 MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
+
+                MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
+                MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
+                MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
+
+                MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
+                MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
+                MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
 
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 

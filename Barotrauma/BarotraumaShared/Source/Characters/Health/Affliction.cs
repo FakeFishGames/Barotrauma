@@ -31,7 +31,6 @@ namespace Barotrauma
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return 0.0f;
-
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) return 0.0f;
 
             float currVitalityDecrease = MathHelper.Lerp(
@@ -42,6 +41,32 @@ namespace Barotrauma
             if (currentEffect.MultiplyByMaxVitality) currVitalityDecrease *= characterHealth == null ? 100.0f : characterHealth.MaxVitality;
 
             return currVitalityDecrease;
+        }
+
+        public float GetScreenDistortStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxScreenDistortStrength - currentEffect.MinScreenDistortStrength <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinScreenDistortStrength,
+                currentEffect.MaxScreenDistortStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetScreenBlurStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxScreenBlurStrength - currentEffect.MinScreenBlurStrength <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinScreenBlurStrength,
+                currentEffect.MaxScreenBlurStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
