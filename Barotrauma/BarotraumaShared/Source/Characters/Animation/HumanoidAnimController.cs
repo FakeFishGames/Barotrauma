@@ -189,7 +189,10 @@ namespace Barotrauma
                         if (useItemTimer <= 0.0f) Anim = Animation.None;
                     }
 
-                    if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+                    if (character.SelectedCharacter != null && character.SelectedCharacter.CanInventoryBeAccessed)
+                    {
+                        DragCharacter(character.SelectedCharacter);
+                    }
 
                     //0.5 second delay for switching between swimming and walking
                     //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
@@ -1049,35 +1052,30 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                Limb targetLimb = target.AnimController.GetLimb(GrabLimb);
-
-                //grab hands if GrabLimb is not specified (or torso if the character has no hands)
-                if (GrabLimb == LimbType.None || targetLimb.IsSevered)
+                Limb targetLimb = target.AnimController.GetLimb(LimbType.Torso);
+                if (i == 0)
                 {
-                    targetLimb = target.AnimController.GetLimb(LimbType.Torso);
-                    if (i == 0)
+                    if (!targetLeftHand.IsSevered)
                     {
-                        if (!targetLeftHand.IsSevered)
-                        {
-                            targetLimb = targetLeftHand;
-                        }
-                        else if (!targetRightHand.IsSevered)
-                        {
-                            targetLimb = targetRightHand;
-                        }
+                        targetLimb = targetLeftHand;
                     }
-                    else
+                    else if (!targetRightHand.IsSevered)
                     {
-                        if (!targetRightHand.IsSevered)
-                        {
-                            targetLimb = targetRightHand;
-                        }
-                        else if (!targetLeftHand.IsSevered)
-                        {
-                            targetLimb = targetLeftHand;
-                        }
+                        targetLimb = targetRightHand;
                     }
                 }
+                else
+                {
+                    if (!targetRightHand.IsSevered)
+                    {
+                        targetLimb = targetRightHand;
+                    }
+                    else if (!targetLeftHand.IsSevered)
+                    {
+                        targetLimb = targetLeftHand;
+                    }
+                }
+                
                 Limb pullLimb = i == 0 ? leftHand : rightHand;
 
                 if (i == 1 && inWater)

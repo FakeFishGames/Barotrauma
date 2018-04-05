@@ -464,7 +464,17 @@ namespace Barotrauma
             get { return causeOfDeath; }
         }
 
+        //can other characters select (= grab) this character
         public bool CanBeSelected
+        {
+            get
+            {
+                return !Removed;
+            }
+        }
+
+        //can other characters access the inventory of this character
+        public bool CanInventoryBeAccessed
         {
             get
             {
@@ -1116,7 +1126,7 @@ namespace Barotrauma
                 var owner = (Character)inventory.Owner;
 
                 //can only be accessed if the character is incapacitated and has been selected
-                return SelectedCharacter == owner && (!owner.CanInteract);
+                return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
             }
 
             if (inventory.Owner is Item)
