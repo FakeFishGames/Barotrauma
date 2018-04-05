@@ -1614,6 +1614,10 @@ namespace Barotrauma
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
+
+                    //wires need to be updated for the last node to follow the player during rewiring
+                    Wire wire = item.GetComponent<Wire>();
+                    if (wire != null) wire.Update((float)deltaTime, cam);
                 }
 
                 if (dummyCharacter.SelectedConstruction != null)
