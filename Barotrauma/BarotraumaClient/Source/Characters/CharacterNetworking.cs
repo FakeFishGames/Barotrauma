@@ -27,10 +27,6 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedInteger(0, 3, 2);
                         break;
-                    case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(0, 3, 3);
-                        msg.Write((byte)AnimController.GrabLimb);
-                        break;
                 }
             }
             else
@@ -95,7 +91,6 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
-                            AnimController.GrabLimb = (LimbType)msg.ReadByte();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();

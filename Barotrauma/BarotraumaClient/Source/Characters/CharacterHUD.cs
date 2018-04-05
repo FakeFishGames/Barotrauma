@@ -10,8 +10,7 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static GUIButton cprButton;        
-        private static GUIButton grabHoldButton;
+        private static GUIButton cprButton;
 
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
@@ -26,7 +25,6 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
-            if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
             
             if (!character.IsUnconscious && character.Stun <= 0.0f &&
                 (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
@@ -57,7 +55,6 @@ namespace Barotrauma
             if (Inventory.SelectedSlot == null)
             {
                 if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
-                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
             }
             
             if (!character.IsUnconscious && character.Stun <= 0.0f &&
@@ -84,7 +81,10 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.SelectedCharacter.Inventory.Update(deltaTime);
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    {
+                        character.SelectedCharacter.Inventory.Update(deltaTime);
+                    }
                     character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
                 }
 
@@ -229,43 +229,15 @@ namespace Barotrauma
                             return true;
                         };
                     }
-
-                    if (grabHoldButton == null)
-                    {
-                        grabHoldButton = new GUIButton(
-                            new Rectangle(
-                                new Point((int)(GameMain.GraphicsWidth - 40 - 340 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
-                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
-                            TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
-                        grabHoldButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
-
-                        grabHoldButton.OnClicked = (button, userData) =>
-                        {
-                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
-
-                            Character.Controlled.AnimController.GrabLimb = Character.Controlled.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
-
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
-
-                            if (GameMain.Client != null)
-                            {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
-                            }
-
-                            grabHoldButton.Text = TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString());
-                            return true;
-                        };
-                    }
                     
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
-                    if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
 
                     character.Inventory.Alignment = Alignment.Left;
-                    character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
-                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    {
+                        character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
+                        character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    }
                     character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
                 }

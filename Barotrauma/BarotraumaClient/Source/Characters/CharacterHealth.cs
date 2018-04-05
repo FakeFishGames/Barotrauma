@@ -202,8 +202,16 @@ namespace Barotrauma
 
         public void UpdateHUD(float deltaTime)
         {
-            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+            if (openHealthWindow != null)
+            {
+                if (openHealthWindow != this && openHealthWindow != character.SelectedCharacter?.CharacterHealth)
+                {
+                    openHealthWindow = null;
+                }
+            }
 
+            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+            
             float noiseStrength = 0.0f;
             float distortSpeed = 0.0f;
             
@@ -450,6 +458,8 @@ namespace Barotrauma
 
         public void OnItemDropped(Item item)
         {
+            //can't apply treatment to dead characters
+            if (character.IsDead) return;
             if (highlightedLimbIndex < 0 || item == null) return;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);

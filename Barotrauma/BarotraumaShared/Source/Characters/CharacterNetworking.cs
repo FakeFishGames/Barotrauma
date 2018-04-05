@@ -357,17 +357,6 @@ namespace Barotrauma
                                 Kill(health.GetCauseOfDeath());
                             }
                             break;
-                        case 3:
-                            LimbType grabLimb = (LimbType)msg.ReadByte();
-                            if (c.Character != this)
-                            {
-#if DEBUG
-                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
-#endif
-                                return;
-                            }
-                            AnimController.GrabLimb = grabLimb;
-                            break;
                     }
                     break;
             }
@@ -449,7 +438,6 @@ namespace Barotrauma
                     if (AnimController is HumanoidAnimController)
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
-                        tempBuffer.Write((byte)AnimController.GrabLimb);
                     }
 
                     bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
