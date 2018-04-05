@@ -133,6 +133,8 @@
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
+      minscreendistort="0"
+      maxscreendistort="0.1"
       strengthchange="-0.1">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
@@ -141,6 +143,10 @@
     <Effect minstrength="40" maxstrength="80"
       minvitalitydecrease="10"
       maxvitalitydecrease="30"
+      minscreendistort="0.1"
+      maxscreendistort="1.0"
+      minscreenblur="0.1"
+      maxscreenblur="1.0"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
@@ -149,6 +155,10 @@
     <Effect minstrength="80" maxstrength="100"
       minvitalitydecrease="30"
       maxvitalitydecrease="100"
+      minscreendistort="1.0"
+      maxscreendistort="3.0"
+      minscreenblur="1.0"
+      maxscreenblur="3.0"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>

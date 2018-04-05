@@ -212,26 +212,42 @@ namespace Barotrauma
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
             
-            float noiseStrength = 0.0f;
+            float blurStrength = 0.0f;
+            float distortStrength = 0.0f;
             float distortSpeed = 0.0f;
             
             if (character.IsUnconscious)
             {
-                noiseStrength = 1.0f;
+                blurStrength = 1.0f;
                 distortSpeed = 1.0f;
             }
             else if (OxygenAmount < 100.0f)
             {
-                noiseStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - vitality / MaxVitality);
-                distortSpeed = (noiseStrength + 1.0f);
+                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - vitality / MaxVitality);
+                distortStrength = blurStrength;
+                distortSpeed = (blurStrength + 1.0f);
                 distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
             }
 
-            if (noiseStrength > 0.0f)
+            foreach (Affliction affliction in afflictions)
+            {
+                distortStrength = Math.Max(distortStrength, affliction.GetScreenDistortStrength());
+                blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
+            }
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    distortStrength = Math.Max(distortStrength, affliction.GetScreenDistortStrength());
+                    blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
+                }
+            }
+
+            if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
-                character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * noiseStrength;
-                character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * noiseStrength;
+                character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * blurStrength;
+                character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * distortStrength;
             }
             else
             {
