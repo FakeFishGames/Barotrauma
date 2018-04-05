@@ -395,6 +395,10 @@ namespace Barotrauma
                     Vector2 footPos = stepSize * -i;
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
+                    //make the character limp if the feet are damaged
+                    Affliction footAffliction = character.CharacterHealth.GetAffliction("damage", foot);
+                    if (footAffliction != null) stepSize *= MathHelper.Lerp(1.0f, 0.5f, footAffliction.Strength / 100.0f);
+
                     if (onSlope && Stairs == null)
                     {
                         footPos.Y *= 2.0f;

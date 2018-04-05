@@ -207,6 +207,15 @@ namespace Barotrauma
             return null;
         }
 
+        public Affliction GetAffliction(string afflictionType, Limb limb)
+        {
+            foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
+            {
+                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+            }
+            return null;
+        }
+
         public float GetAfflictionStrength(string afflictionType, bool allowLimbAfflictions = true)
         {
             float strength = 0.0f;
