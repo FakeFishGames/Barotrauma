@@ -1992,6 +1992,7 @@ namespace Barotrauma.Networking
             {
                 SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
                 KickClient(c, "Kicked by vote");
+                BanClient(c, "Kicked by vote (auto ban)", duration: TimeSpan.FromSeconds(AutoBanTime));
             }
 
             GameMain.NetLobbyScreen.LastUpdateID++;
