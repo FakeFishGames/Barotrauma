@@ -1,4 +1,23 @@
-﻿using Microsoft.Xna.Framework;
+﻿// The Steamworks API's are modular, you can use some subsystems without using others
+// When USE_GS_AUTH_API is defined you get the following Steam features:
+// - Strong user authentication and authorization
+// - Game server matchmaking
+// - VAC cheat protection
+// - Access to achievement/community API's
+// - P2P networking capability
+
+// Remove this define to disable using the native Steam authentication and matchmaking system
+// You can use this as a sample of how to integrate your game without replacing an existing matchmaking system
+// When you un-define USE_GS_AUTH_API you get:
+// - Access to achievement/community API's
+// - P2P networking capability
+// You CANNOT use:
+// - VAC cheat protection
+// - Game server matchmaking
+// as these function depend on using Steam authentication
+#define USE_GS_AUTH_API
+
+using Microsoft.Xna.Framework;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -54,9 +73,11 @@ namespace Barotrauma.Networking
 
         // Tells us when we have successfully connected to Steam
         protected Callback<SteamServersConnected_t> m_CallbackSteamServersConnected;
+        // Tells us when there was a failure to connect to Steam
+        protected Callback<SteamServerConnectFailure_t> m_CallbackSteamServersConnectFailure;
 
-        bool m_bInitialized;
-        bool m_bConnectedToSteam;
+        private bool m_bInitialized;
+        private bool m_bConnectedToSteam;
 
         private List<ServerInfo> serverList = new List<ServerInfo>();
         private Action<List<ServerInfo>> onLobbyFound;
@@ -131,7 +152,7 @@ namespace Barotrauma.Networking
             m_PingResponse = new ISteamMatchmakingPingResponse(OnServerResponded, OnServerFailedToRespond);
             m_PlayersResponse = new ISteamMatchmakingPlayersResponse(OnAddPlayerToList, OnPlayersFailedToRespond, OnPlayersRefreshComplete);
             m_CallbackSteamServersConnected = Callback<SteamServersConnected_t>.CreateGameServer(OnSteamServersConnected);
-		    //m_CallbackSteamServersConnectFailure = Callback<SteamServerConnectFailure_t>.CreateGameServer(OnSteamServersConnectFailure);
+		    m_CallbackSteamServersConnectFailure = Callback<SteamServerConnectFailure_t>.CreateGameServer(OnSteamServersConnectFailure);
             //m_RulesResponse = new ISteamMatchmakingRulesResponse(OnRulesResponded, OnRulesFailedToRespond, OnRulesRefreshComplete);
         }
         
@@ -159,11 +180,9 @@ namespace Barotrauma.Networking
             instance.ReleaseRequest();
 
             MatchMakingKeyValuePair_t[] filters = new MatchMakingKeyValuePair_t[0];
-            /*{
-                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = SteamAPI. },
-                new MatchMakingKeyValuePair_t { m_szKey = "gamedir", m_szValue = "tf" },
-                new MatchMakingKeyValuePair_t { m_szKey = "gametagsand", m_szValue = "beta" },
-            };*/
+            {
+                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() };
+            };
 
             instance.m_ServerListRequest =
                 SteamMatchmakingServers.RequestInternetServerList(appID, filters, (uint)filters.Length, instance.m_ServerListResponse);
@@ -193,9 +212,23 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("SteamGameServer_Init call failed");
                 return false;
             }
+
+            // These fields are currently required, but will go away soon.
+            // See their documentation for more info
+            SteamGameServer.SetProduct("Barotrauma");
+            SteamGameServer.SetGameDescription("Barotrauma v" + GameMain.Version);
+#if SERVER
+            SteamGameServer.SetDedicatedServer(true);
+#endif
             
-            SteamGameServer.LogOnAnonymous();            
-		    SteamGameServer.EnableHeartbeats(true);
+            // Initiate Anonymous logon.
+            SteamGameServer.LogOnAnonymous();
+
+            // We want to actively update the master server with our presence so players can
+            // find us via the steam matchmaking/server browser interfaces
+#if USE_GS_AUTH_API
+            SteamGameServer.EnableHeartbeats(true);
+#endif
             UpdateServerDetails();
             
             return true;
@@ -226,8 +259,19 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            throw new NotImplementedException();
+            // Notify Steam master server we are going offline
+#if USE_GS_AUTH_API
+            SteamGameServer.EnableHeartbeats(false);
+#endif
 
+            instance.m_CallbackSteamServersConnected.Dispose();
+            // Disconnect from the steam servers
+            SteamGameServer.LogOff();
+
+            // release our reference to the steam client library
+            Steamworks.GameServer.Shutdown();
+            instance.m_bInitialized = false;
+            
             return true;
         }
 
@@ -259,6 +303,12 @@ namespace Barotrauma.Networking
 
             // Tell Steam about our server details
             UpdateServerDetails();
+        }
+
+        void OnSteamServersConnectFailure(SteamServerConnectFailure_t pConnectFailure)
+        {
+            m_bConnectedToSteam = false;
+            DebugConsole.Log("SpaceWarServer failed to connect to Steam");
         }
 
         private void OnServerFailedToRespond(HServerListRequest hRequest, int iServer)
