@@ -220,7 +220,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
+                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
                     System.Diagnostics.Debug.Assert(Items[i] == null);
