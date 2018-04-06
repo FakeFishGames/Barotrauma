@@ -43,8 +43,8 @@ namespace Barotrauma
             }
         }
 
-        public AnimController(Character character, XElement element)
-            : base(character, element)
+        public AnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             this.character = character;
 

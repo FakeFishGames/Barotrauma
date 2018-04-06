@@ -25,8 +25,8 @@ namespace Barotrauma
 
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, XElement element)
-            : base(character, element)
+        public FishAnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
