@@ -58,7 +58,7 @@ namespace Barotrauma.Tutorials
 
             CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer"));
 
-            character = Character.Create(charInfo, wayPoint.WorldPosition, false, false);
+            character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
             Character.Controlled = character;
             character.GiveJobItems(null);
 

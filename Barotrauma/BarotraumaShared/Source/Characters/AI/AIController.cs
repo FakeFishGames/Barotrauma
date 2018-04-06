@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class AIController : ISteerable
+    abstract partial class AIController : ISteerable
     {
         public enum AIState { None, Attack, GoTo, Escape, Eat }
 

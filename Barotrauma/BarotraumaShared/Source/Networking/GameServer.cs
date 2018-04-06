@@ -1335,7 +1335,7 @@ namespace Barotrauma.Networking
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
-                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
                     spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                     spawnedCharacter.TeamID = (byte)teamID;
@@ -1350,7 +1350,7 @@ namespace Barotrauma.Networking
 #if CLIENT
                 if (characterInfo != null && hostTeam == teamID)
                 {
-                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, characterInfo.Name, false, false);
                     myCharacter.GiveJobItems(assignedWayPoints.Last());
                     myCharacter.TeamID = (byte)teamID;
 

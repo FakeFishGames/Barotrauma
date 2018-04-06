@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -123,20 +124,37 @@ namespace Barotrauma
             get { return combatStrength; }
         }
                         
-        public EnemyAIController(Character c, string file) : base(c)
+        public EnemyAIController(Character c, string file, string seed) : base(c)
         {
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
-            XElement aiElement = doc.Root.Element("ai");
-            if (aiElement == null) return;
+            List<XElement> aiElements = new List<XElement>();
+            List<float> aiCommonness = new List<float>();
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() != "ai") continue;                
+                aiElements.Add(element);
+                aiCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
+            }
             
-            combatStrength = aiElement.GetAttributeFloat("combatstrength", 1.0f);
-            attackCoolDown  = aiElement.GetAttributeFloat("attackcooldown", 5.0f);
-            attackWhenProvoked = aiElement.GetAttributeBool("attackwhenprovoked", false);
-            aggressiveBoarding = aiElement.GetAttributeBool("aggressiveboarding", false);
+            if (aiElements.Count == 0)
+            {
+                DebugConsole.ThrowError("Error in file \"" + file + "\" - no AI element found.");
+                return;
+            }
+            
+            //choose a random ai element
+            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
+            XElement aiElement = aiElements.Count == 1 ? 
+                aiElements[0] : ToolBox.SelectWeightedRandom(aiElements, aiCommonness, random);
+            
+            combatStrength      = aiElement.GetAttributeFloat("combatstrength", 1.0f);
+            attackCoolDown      = aiElement.GetAttributeFloat("attackcooldown", 5.0f);
+            attackWhenProvoked  = aiElement.GetAttributeBool("attackwhenprovoked", false);
+            aggressiveBoarding  = aiElement.GetAttributeBool("aggressiveboarding", false);
 
             sight           = aiElement.GetAttributeFloat("sight", 0.0f);
             hearing         = aiElement.GetAttributeFloat("hearing", 0.0f);
