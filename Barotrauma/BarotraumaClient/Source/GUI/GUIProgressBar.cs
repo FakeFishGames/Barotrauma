@@ -105,7 +105,7 @@ namespace Barotrauma
                 {
                     if (uiSprite.Tile)
                     {
-                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), currColor);
+                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), color: currColor);
                     }
                     else
                     {

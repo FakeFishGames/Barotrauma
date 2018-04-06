@@ -295,8 +295,7 @@ namespace Barotrauma
                 float alpha = character.IsUnconscious ? 1.0f : Math.Min((80.0f - character.Oxygen)/50.0f, 0.8f);
 
                 noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
-                    Vector2.Zero,
-                    Color.White * alpha);
+                    color: Color.White * alpha);
 
             }
             else
