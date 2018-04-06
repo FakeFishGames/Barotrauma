@@ -445,14 +445,17 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    Affliction multipliedAffliction = affliction;
+                    if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+
                     if (target is Character)
                     {
-                        ((Character)target).CharacterHealth.ApplyAffliction(null, affliction);
+                        ((Character)target).CharacterHealth.ApplyAffliction(null, multipliedAffliction);
                     }
                     else if (target is Limb)
                     {
                         Limb limb = (Limb)target;
-                        limb.character.CharacterHealth.ApplyAffliction(limb, affliction);
+                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
                     }
                 }
             }

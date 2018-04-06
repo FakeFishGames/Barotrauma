@@ -15,7 +15,7 @@ namespace Barotrauma
             public float MinStrength, MaxStrength;
 
             public readonly float MinVitalityDecrease = 0.0f;
-            public readonly float MaxVitalityDecrease = 100.0f;
+            public readonly float MaxVitalityDecrease = 0.0f;
             
             //how much the strength of the affliction changes per second
             public readonly float StrengthChange = 0.0f;
@@ -36,7 +36,7 @@ namespace Barotrauma
                 MultiplyByMaxVitality = element.GetAttributeBool("multiplybymaxvitality", false);
 
                 MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
-                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
+                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
 
                 MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
