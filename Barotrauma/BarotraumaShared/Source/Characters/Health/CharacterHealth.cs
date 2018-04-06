@@ -411,12 +411,11 @@ namespace Barotrauma
             UpdateOxygen(deltaTime);
 
             float bleedingAmount = 0.0f;
-
-            int i = 0;
-            foreach (LimbHealth limbHealth in limbHealths)
+            
+            for (int i = 0; i < limbHealths.Count; i++)
             {
-                limbHealth.Afflictions.RemoveAll(a => a.Strength <= 0.0f);
-                foreach (Affliction affliction in limbHealth.Afflictions)
+                limbHealths[i].Afflictions.RemoveAll(a => a.Strength <= 0.0f);
+                foreach (Affliction affliction in limbHealths[i].Afflictions)
                 {
                     Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
@@ -425,13 +424,12 @@ namespace Barotrauma
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
                     }
                 }
-                i++;
             }
 
             afflictions.RemoveAll(a => a.Strength <= 0.0f && a != bloodlossAffliction && a != oxygenLowAffliction && a != stunAffliction);
-            foreach (Affliction affliction in afflictions)
+            for (int i = 0; i < afflictions.Count; i++)
             {
-                affliction.Update(this, null, deltaTime);
+                afflictions[i].Update(this, null, deltaTime);
             }
 
             foreach (Limb limb in character.AnimController.Limbs)
