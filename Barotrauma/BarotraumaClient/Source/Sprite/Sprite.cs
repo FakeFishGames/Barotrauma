@@ -98,18 +98,18 @@ namespace Barotrauma
             //    }
             //}
             if (texture == null) return;
-            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
+            spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth ?? this.depth);
         }
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize,
             Rectangle? sourceRect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null)
         {
+            if (texture == null) return;
             // Init optional values, if not provided
             Rectangle rect = sourceRect ?? this.sourceRect;
             color = color ?? Color.White;
             startOffset = startOffset ?? Point.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
-            depth = depth ?? this.depth;
 
             Rectangle texPerspective = rect;
             texPerspective.Location += startOffset.Value;
@@ -131,7 +131,7 @@ namespace Barotrauma
                 {
                     float movementX = texPerspective.Width * scale.X;
                     texPerspective.Width = Math.Min((int)(targetSize.X - texPerspective.Width * x), texPerspective.Width);
-                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color.Value, rotation, Vector2.Zero, scale, effects, depth.Value);
+                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
                     if (texPerspective.X + movementX >= rect.Right)
                     {
                         texPerspective.X = rect.X;
