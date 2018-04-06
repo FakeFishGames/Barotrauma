@@ -200,8 +200,9 @@ namespace Barotrauma
                 {
                     Directory.CreateDirectory(folder);
                 }
-                catch
+                catch (Exception e)
                 {
+                    DebugConsole.ThrowError("Failed to create directory \"" + folder + "\"", e);
                     return;
                 }
             }
