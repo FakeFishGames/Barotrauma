@@ -218,7 +218,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, false, true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

@@ -210,6 +210,7 @@ namespace Barotrauma
             bool noInfo = inc.ReadBoolean();
             ushort id = inc.ReadUInt16();
             string configPath = inc.ReadString();
+            string seed = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -222,7 +223,7 @@ namespace Barotrauma
             {
                 if (!spawn) return null;
 
-                character = Character.Create(configPath, position, null, true);
+                character = Character.Create(configPath, position, seed, null, true);
                 character.ID = id;
             }
             else
@@ -275,7 +276,7 @@ namespace Barotrauma
                     }
                 }
 
-                character = Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 

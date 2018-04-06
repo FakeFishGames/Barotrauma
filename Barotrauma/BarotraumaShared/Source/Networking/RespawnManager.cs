@@ -482,7 +482,7 @@ namespace Barotrauma.Networking
                 myCharacter = i >= clients.Count;
 #endif
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter, false);
                 
                 character.TeamID = 1;
 

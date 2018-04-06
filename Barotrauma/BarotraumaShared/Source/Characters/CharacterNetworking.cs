@@ -534,6 +534,7 @@ namespace Barotrauma
             msg.Write(Info == null);
             msg.Write(ID);
             msg.Write(ConfigPath);
+            msg.Write(seed);
 
             msg.Write(WorldPosition.X);
             msg.Write(WorldPosition.Y);
