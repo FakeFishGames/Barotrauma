@@ -637,13 +637,13 @@ namespace Barotrauma
 
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, ragdollElement);
+                AnimController = new HumanoidAnimController(this, ragdollElement, seed);
                 AnimController.TargetDir = Direction.Right;
                 inventory = new CharacterInventory(CharacterInventory.SlotTypes.Length, this);
             }
             else
             {
-                AnimController = new FishAnimController(this, ragdollElement);
+                AnimController = new FishAnimController(this, ragdollElement, seed);
                 PressureProtection = 100.0f;
             }
 

@@ -47,10 +47,11 @@
 
   <ragdoll 
     colliderheightfromfloor="40" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
+    minscale="0.8" maxscale="1.2"
     waveamplitude="4.0" wavelength="3000"
     swimspeed="2.0" walkspeed="2.0"
     runspeedmultiplier="2" swimspeedmultiplier="2.0"
-    stepsize ="15.0,20.0"
+    stepsize="15.0,20.0"
     steertorque="20"
     legtorque="10"
     impacttolerance="7"

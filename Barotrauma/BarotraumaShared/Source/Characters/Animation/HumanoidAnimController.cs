@@ -64,8 +64,8 @@ namespace Barotrauma
             }
         }
 
-        public HumanoidAnimController(Character character, XElement element)
-            : base(character, element)
+        public HumanoidAnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             walkAnimSpeed = element.GetAttributeFloat("walkanimspeed", 4.0f);
             walkAnimSpeed = MathHelper.ToRadians(walkAnimSpeed);

@@ -29,15 +29,17 @@
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
   </ai>
   
-  <ragdoll headposition="120" headangle="-90" 
-           waveamplitude="50.0" wavelength="2500" 
-           swimspeed="2.0" walkspeed="2.0"
-           runspeedmultiplier="1.5" swimspeedmultiplier="1.5"
-           stepsize ="20.0,20.0"
-           legtorque="10"
-           footrotation ="180.0"
-           impacttolerance="10"
-           flip="true">
+  <ragdoll 
+    headposition="120" headangle="-90" 
+    minscale="0.8" maxscale="1.2"
+    waveamplitude="50.0" wavelength="2500" 
+    swimspeed="2.0" walkspeed="2.0"
+    runspeedmultiplier="1.5" swimspeedmultiplier="1.5"
+    stepsize ="20.0,20.0"
+    legtorque="10"
+    footrotation ="180.0"
+    impacttolerance="10"
+    flip="true">
 
     <collider radius="60"/>
     

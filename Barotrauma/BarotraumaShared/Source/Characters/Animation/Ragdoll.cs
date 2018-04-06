@@ -283,16 +283,21 @@ namespace Barotrauma
             private set;
         }
         
-        public Ragdoll(Character character, XElement element)
+        public Ragdoll(Character character, XElement element, string seed)
         {
             list.Add(this);
-
             this.character = character;
-
             dir = Direction.Right;
 
+            Random random = new MTRandom(ToolBox.StringToInt(seed));
             float scale = element.GetAttributeFloat("scale", 1.0f);
-            
+            if (element.Attribute("minscale") != null)
+            {
+                float minScale = element.GetAttributeFloat("minscale", 1.0f);
+                float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
+                scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
+            }
+
             limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
