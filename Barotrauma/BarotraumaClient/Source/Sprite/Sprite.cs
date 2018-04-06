@@ -111,41 +111,33 @@ namespace Barotrauma
             Vector2 scale = textureScale ?? Vector2.One;
             depth = depth ?? this.depth;
 
+            Rectangle texPerspective = rect;
+            texPerspective.Location += startOffset.Value;
             targetSize = targetSize / scale;
+
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling(targetSize.X / rect.Width);
             //how many times the texture needs to be drawn on the y-axis
             int yTiles = (int)Math.Ceiling(targetSize.Y / rect.Height);
-
-            Rectangle texPerspective = rect;
-            texPerspective.Location += startOffset.Value;
-            while (texPerspective.X >= rect.Right)
-                texPerspective.X = rect.X + (texPerspective.X - rect.Right);
-            while (texPerspective.Y >= rect.Bottom)
-                texPerspective.Y = rect.Y + (texPerspective.Y - rect.Bottom);
-
             float top = pos.Y;
-            texPerspective.Height = (int)Math.Min(targetSize.Y, rect.Height);
 
             for (int y = 0; y < yTiles; y++)
             {
                 float movementY = texPerspective.Height * scale.Y;
                 texPerspective.Height = Math.Min((int)(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
-
                 float left = pos.X;
                 texPerspective.Width = (int)Math.Min(targetSize.X, rect.Width);
-
                 for (int x = 0; x < xTiles; x++)
                 {
                     float movementX = texPerspective.Width * scale.X;
                     texPerspective.Width = Math.Min((int)(targetSize.X - texPerspective.Width * x), texPerspective.Width);
-
                     spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color.Value, rotation, Vector2.Zero, scale, effects, depth.Value);
-
-                    if (texPerspective.X + movementX >= rect.Right) texPerspective.X = rect.X;
+                    if (texPerspective.X + movementX >= rect.Right)
+                    {
+                        texPerspective.X = rect.X;
+                    }
                     left += movementX;
                 }
-
                 if (texPerspective.Y + movementY >= rect.Bottom)
                 {
                     texPerspective.Y = rect.Y;
