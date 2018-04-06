@@ -89,178 +89,68 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
+            // Creates a silhouette for the sprite (or outline if the sprite is rendered on top of it) -> don't remove
             //for (int x = -1; x <= 1; x += 2)
             //{
             //    for (int y = -1; y <= 1; y += 2)
             //    {
-
             //        spriteBatch.Draw(texture, pos + offset + new Vector2(x, y) * 1.0f, sourceRect, Color.Black, rotation + rotate, origin, scale, spriteEffect, (depth == null ? this.depth : (float)depth) + 0.0001f);
             //    }
             //}
-
             if (texture == null) return;
-
             spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
 
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Color color)
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize,
+            Rectangle? sourceRect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null)
         {
-            DrawTiled(spriteBatch, pos, targetSize, Vector2.Zero, color);
-        }
+            // Init optional values, if not provided
+            Rectangle rect = sourceRect ?? this.sourceRect;
+            color = color ?? Color.White;
+            startOffset = startOffset ?? Point.Zero;
+            Vector2 scale = textureScale ?? Vector2.One;
+            depth = depth ?? this.depth;
 
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Color color, Point offset, float? overrideDepth = null)
-        {
+            targetSize = targetSize / scale;
             //how many times the texture needs to be drawn on the x-axis
-            int xTiles = (int)Math.Ceiling(targetSize.X / sourceRect.Width);
+            int xTiles = (int)Math.Ceiling(targetSize.X / rect.Width);
             //how many times the texture needs to be drawn on the y-axis
-            int yTiles = (int)Math.Ceiling(targetSize.Y / sourceRect.Height);
+            int yTiles = (int)Math.Ceiling(targetSize.Y / rect.Height);
 
-            float depth = overrideDepth == null ? this.depth : (float)overrideDepth;
-
-            Rectangle texPerspective = sourceRect;
-
-            texPerspective.Location += offset;
-            while (texPerspective.X >= sourceRect.Right)
-                texPerspective.X = sourceRect.X + (texPerspective.X - sourceRect.Right);
-            while (texPerspective.Y >= sourceRect.Bottom)
-                texPerspective.Y = sourceRect.Y + (texPerspective.Y - sourceRect.Bottom);
+            Rectangle texPerspective = rect;
+            texPerspective.Location += startOffset.Value;
+            while (texPerspective.X >= rect.Right)
+                texPerspective.X = rect.X + (texPerspective.X - rect.Right);
+            while (texPerspective.Y >= rect.Bottom)
+                texPerspective.Y = rect.Y + (texPerspective.Y - rect.Bottom);
 
             float top = pos.Y;
-            texPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
+            texPerspective.Height = (int)Math.Min(targetSize.Y, rect.Height);
 
             for (int y = 0; y < yTiles; y++)
             {
-                var movementY = texPerspective.Height;
+                float movementY = texPerspective.Height * scale.Y;
                 texPerspective.Height = Math.Min((int)(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
 
                 float left = pos.X;
-                texPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
+                texPerspective.Width = (int)Math.Min(targetSize.X, rect.Width);
 
                 for (int x = 0; x < xTiles; x++)
                 {
-                    var movementX = texPerspective.Width;
+                    float movementX = texPerspective.Width * scale.X;
                     texPerspective.Width = Math.Min((int)(targetSize.X - texPerspective.Width * x), texPerspective.Width);
 
-                    if (texPerspective.Right > sourceRect.Right)
-                    {
-                        int diff = texPerspective.Right - sourceRect.Right;
-                        if (effects.HasFlag(SpriteEffects.FlipHorizontally))
-                        {
-                            spriteBatch.Draw(texture,
-                                new Vector2(left, top),
-                                new Rectangle(sourceRect.X, texPerspective.Y, diff, texPerspective.Height),
-                                color, rotation, Vector2.Zero, 1.0f, effects, depth);
+                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color.Value, rotation, Vector2.Zero, scale, effects, depth.Value);
 
-                            texPerspective.Width -= diff;
-                            left += diff;
-                        }
-                        else
-                        {
-                            texPerspective.Width -= (int)diff;
-                            spriteBatch.Draw(texture,
-                                new Vector2(left + texPerspective.Width, top),
-                                new Rectangle(sourceRect.X, texPerspective.Y, (int)diff, texPerspective.Height),
-                                color, rotation, Vector2.Zero, 1.0f, effects, depth);
-                        }
-                    }
-                    else if (texPerspective.Bottom > sourceRect.Bottom)
-                    {
-                        int diff = texPerspective.Bottom - sourceRect.Bottom;
-                        texPerspective.Height -= diff;
-                        spriteBatch.Draw(texture,
-                            new Vector2(left, top + texPerspective.Height),
-                            new Rectangle(texPerspective.X, sourceRect.Y, texPerspective.Width, diff),
-                            color, rotation, Vector2.Zero, 1.0f, effects, depth);
-                    }
-
-                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color, rotation, Vector2.Zero, 1.0f, effects, depth);
-
-                    if (texPerspective.X + movementX >= sourceRect.Right) texPerspective.X = sourceRect.X;
+                    if (texPerspective.X + movementX >= rect.Right) texPerspective.X = rect.X;
                     left += movementX;
                 }
 
-                if (texPerspective.Y + movementY >= sourceRect.Bottom) texPerspective.Y = sourceRect.Y;
+                if (texPerspective.Y + movementY >= rect.Bottom)
+                {
+                    texPerspective.Y = rect.Y;
+                }
                 top += movementY;
-            }
-        }
-
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
-        {
-            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color, Vector2.One);
-        }
-
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color)
-        {
-            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color, Vector2.One);
-        }
-
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color, Vector2 scale)
-        {
-            //pos.X = (int)pos.X;
-            //pos.Y = (int)pos.Y;
-
-            //how many times the texture needs to be drawn on the x-axis
-            int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / (sourceRect.Width*scale.X));
-            //how many times the texture needs to be drawn on the y-axis
-            int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / (sourceRect.Height*scale.Y));
-
-            Vector2 position = pos - startOffset;
-            Rectangle drawRect = sourceRect;
-
-            position.X = pos.X;
-
-            for (int x = 0; x < xTiles; x++)
-            {
-                drawRect.X = sourceRect.X;
-                drawRect.Height = sourceRect.Height;
-
-                if (x == xTiles - 1)
-                {
-                    drawRect.Width -= (int)((position.X + sourceRect.Width*scale.X) - (pos.X + targetSize.X));
-                }
-                else
-                {
-                    drawRect.Width = (int)(sourceRect.Width*scale.X);
-                }
-
-                if (position.X < pos.X)
-                {
-                    float diff = pos.X - position.X;
-                    position.X += diff;
-                    drawRect.Width -= (int)diff;
-                    drawRect.X += (int)diff;
-                }
-
-                position.Y = pos.Y;
-
-                for (int y = 0; y < yTiles; y++)
-                {
-                    drawRect.Y = sourceRect.Y;
-
-                    if (y == yTiles - 1)
-                    {
-                        drawRect.Height -= (int)((position.Y + sourceRect.Height*scale.Y) - (pos.Y + targetSize.Y));
-                    }
-                    else
-                    {
-                        drawRect.Height = (int)(sourceRect.Height*scale.Y);
-                    }
-
-                    if (position.Y < pos.Y)
-                    {
-                        int diff = (int)(pos.Y - position.Y);
-                        position.Y += diff;
-                        drawRect.Height -= diff;
-                        drawRect.Y += diff;
-                    }
-
-                    spriteBatch.Draw(texture, position,
-                        drawRect, color, rotation, Vector2.Zero, 1.0f, effects, depth);
-
-                    position.Y += sourceRect.Height*scale.Y;
-                }
-
-                position.X += sourceRect.Width*scale.X;
             }
         }
 
