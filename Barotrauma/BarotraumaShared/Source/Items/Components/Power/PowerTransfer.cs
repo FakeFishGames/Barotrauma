@@ -383,9 +383,9 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemComponent ic in recipient.Item.components)
                     {
-                        //powertransfer components don't need to receive the signal because we relay it straight 
-                        //to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer) continue;
+                        //powertransfer components don't need to receive the signal in the pass-through signal connections
+                        //because we relay it straight to the connected items without going through the whole chain of junction boxes
+                        if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
                     }
 
