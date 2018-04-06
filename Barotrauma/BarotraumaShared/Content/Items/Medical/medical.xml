@@ -64,7 +64,8 @@
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
         <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
-        <ReduceAffliction name="bleeding" reduceamount="30"/>
+        <ReduceAffliction name="bleeding" reduceamount="2"/>
+        <ReduceAffliction name="burn" reduceamount="3"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -578,6 +579,206 @@
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
+    name="Morphine"
+    category="Material"
+    spritecolor="0.191, 0.63, 0.21"
+    cargocontainername="Chemical Crate"
+    Tags="smallitem,chem,medical"
+    canuseonself="true"
+    description="A powerful opiate for treating pain associated with internal injuries, but will cause shorness of breath.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction name="damage" reduceamount="1"/>
+        <Affliction name="Oxygen low" amount="2"/>
+        <Affliction name="Morphine addiction" amount="0.15"/>
+        <ReduceAffliction name="Morphine withdrawal" reduceamount="1.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
+        <ReduceAffliction name="damage" reduceamount="5"/>
+        <Affliction name="Oxygen low" amount="2"/>
+        <Affliction name="Morphine addiction" amount="0.3"/>
+        <ReduceAffliction name="Morphine withdrawal" reduceamount="2.0"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
+    name="Fentanyl"
+    category="Material"
+    spritecolor="0.237, 0.151, 0.75"
+    cargocontainername="Chemical Crate"
+    Tags="smallitem,chem,medical"
+    canuseonself="true"
+    description="A powerful opiate for treating pain associated with burns and internal injuries, but will cause significant shortness of breath.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction name="damage" reduceamount="1"/>
+        <ReduceAffliction name="burn" reduceamount="1"/>
+        <Affliction name="Oxygen low" amount="2"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
+        <ReduceAffliction name="damage" reduceamount="5"/>
+        <ReduceAffliction name="burn" reduceamount="5"/>
+        <Affliction name="Oxygen low" amount="5"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
+    name="Hemostop"
+    category="Material"
+    spritecolor="0.255, 0.249, 0.79"
+    cargocontainername="Chemical Crate"
+    Tags="smallitem,chem,medical"
+    canuseonself="true"
+    description="A hemostatic agent that thickens and clots blood rapidly, but will cause internal injuries due to thrombosis.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="15">
+        <Affliction name="Internal damage" amount="1"/>
+        <ReduceAffliction name="bleeding" reduceamount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="20.0">
+        <Affliction name="Internal damage" amount="1"/>
+        <ReduceAffliction name="bleeding" reduceamount="4"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+
+  <Item
+    name="Plasma"
+    category="Material"
+    spritecolor="0.255, 0.79, 0.158"
+    cargocontainername="Chemical Crate"
+    Tags="smallitem,chem,medical"
+    canuseonself="true"
+    description="Plasma for the treatment of bloodloss.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction name="bloodloss" reduceamount="1"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
+        <ReduceAffliction name="bloodloss" reduceamount="4"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
+   name="Naloxone"
+   category="Material"
+   spritecolor="0.064, 0.249, 0.019"
+   cargocontainername="Chemical Crate"
+   Tags="smallitem,chem,medical"
+   canuseonself="true"
+   description="An opiate antagonist for the treatment of opiate based withdrawal and overdose.">
+
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="120"/>
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="20"/>
+
+    <ItemComponent>
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
+      <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
+        <ReduceAffliction name="Morphine withdrawal" reduceamount="1.0"/>
+        <ReduceAffliction name="Morphine addiction" reduceamount="1.0"/>
+      </StatusEffect>
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </ItemComponent>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect tags="medical" type="OnUse" target="Limb" duration="30.0">
+        <ReduceAffliction name="Morphine withdrawal" reduceamount="2.0"/>
+        <ReduceAffliction name="Morphine addiction" reduceamount="2.0"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
   </Item>
