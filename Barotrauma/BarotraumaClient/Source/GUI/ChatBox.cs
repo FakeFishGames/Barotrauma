@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 
@@ -10,7 +11,7 @@ namespace Barotrauma
     {
         const float HideDelay = 5.0f;
 
-        private static Sprite radioIcon;
+        private static Sprite radioIcon, toggleArrow;
 
         private Point defaultPos;
 
@@ -24,6 +25,14 @@ namespace Barotrauma
         private bool isSinglePlayer;
 
         private float hideTimer;
+
+        private bool toggleOpen;
+
+        public float HideTimer
+        {
+            get { return hideTimer; }
+            set { hideTimer = MathHelper.Clamp(value, 0.0f, HideDelay); }
+        }
 
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
@@ -87,15 +96,30 @@ namespace Barotrauma
                 radioIcon = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(527, 952, 38, 52), null);
                 radioIcon.Origin = radioIcon.size / 2;
             }
-            
+
+            if (toggleArrow == null)
+            {
+                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
+                toggleArrow.Origin = toggleArrow.size / 2;
+            }
+
             int width = (int)(330 * GUI.Scale);
             int height = (int)(440 * GUI.Scale);
             guiFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 10 - width, 60 + (int)(90 * GUI.Scale - parent.Padding.Y - parent.Rect.Y), width, height), null, parent);
             chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 35), Color.White * 0.5f, "ChatBox", guiFrame);
             chatBox.Padding = Vector4.Zero;
 
+            var toggleButton = new GUIButton(new Rectangle(-40, 0, 25, 70), "", "GUIButtonHorizontalArrow", guiFrame);
+            toggleButton.ClampMouseRectToParent = false;
+            toggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                toggleOpen = !toggleOpen;
+                foreach (GUIComponent child in btn.children) child.SpriteEffects = toggleOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                return true;
+            };
+            
             defaultPos = guiFrame.Rect.Location;
-
+            
             if (isSinglePlayer)
             {
                 radioButton = new GUIButton(
@@ -209,7 +233,7 @@ namespace Barotrauma
                 PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
 
             hideTimer -= deltaTime;
-            if ((hideTimer > 0.0f || hovering) && Inventory.draggingItem == null)
+            if ((hideTimer > 0.0f || hovering || toggleOpen) && Inventory.draggingItem == null)
             {
                 guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), defaultPos.ToVector2(), deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
             }
