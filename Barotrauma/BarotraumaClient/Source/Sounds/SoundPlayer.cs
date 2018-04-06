@@ -367,7 +367,7 @@ namespace Barotrauma
 
             if (suitableMusic.Count > 1)
             {
-                targetMusic = suitableMusic.Find(m => m.file != currentMusic.Filename);
+                targetMusic = currentMusic == null ? suitableMusic[0] : suitableMusic.Find(m => m.file != currentMusic.Filename);
             }
         }
 
