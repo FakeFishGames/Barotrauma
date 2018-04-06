@@ -133,7 +133,8 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        color: color);
+                        color: color,
+                        textureScale: TextureScale);
                 }
             }
 
@@ -177,7 +178,8 @@ namespace Barotrauma
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
                         color: color,
                         startOffset: textureOffset, 
-                        depth: depth);
+                        depth: depth,
+                        textureScale: TextureScale);
                 }
             }
 
