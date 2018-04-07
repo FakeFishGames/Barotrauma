@@ -1,7 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="husk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false" doesbleed="false">
-  
-  <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+<Character name="husk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false">
+
+  <health
+    vitality="100"
+    doesbleed="false"/>
+
+    <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
 
   <ai
     combatstrength="100"

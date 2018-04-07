@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="charybdis" humanoid="false" health="1000.0">
+<Character name="charybdis" humanoid="false">
+
+  <health
+    vitality="1000"
+    doesbleed="true"/>
   
   <sound file="Content/Characters/Charybdis/charybdisattack.ogg" state="Attack" range="8000" />
 

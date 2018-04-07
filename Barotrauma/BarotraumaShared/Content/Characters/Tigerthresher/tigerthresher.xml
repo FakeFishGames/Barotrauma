@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="tigerthresher" humanoid="false" health="300.0" bleedingdecreasespeed="0.1">
+<Character name="tigerthresher" humanoid="false">
+
+  <health
+    vitality="300"
+    doesbleed="true"/>
 
   <sound file="Content/Characters/Tigerthresher/thresherattack1.ogg" state="Attack" />
   <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="None" />

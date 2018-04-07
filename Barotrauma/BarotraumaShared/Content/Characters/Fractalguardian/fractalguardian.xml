@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="fractalguardian" humanoid="false" health="500.0" doesbleed="false" usebloodparticles="false">
+<Character name="fractalguardian" humanoid="false">
+
+  <health
+    vitality="500"
+    doesbleed="false" 
+    usebloodparticles="false"/>
 
   <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
   <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
