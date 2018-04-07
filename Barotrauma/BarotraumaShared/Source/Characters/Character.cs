@@ -865,15 +865,15 @@ namespace Barotrauma
             var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
             if (leftFoot != null)
             {
-                Affliction leftFootAffliction = CharacterHealth.GetAffliction("damage", leftFoot);
-                if (leftFootAffliction != null) currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, leftFootAffliction.Strength / 100.0f);
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
             if (rightFoot != null)
             {
-                Affliction rightFootAffliction = CharacterHealth.GetAffliction("damage", AnimController.GetLimb(LimbType.RightFoot));
-                if (rightFootAffliction != null) currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, rightFootAffliction.Strength / 100.0f);
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
             }
 
             return currMaxSpeed;

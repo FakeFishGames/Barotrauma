@@ -148,6 +148,9 @@ namespace Barotrauma
             vitality = 100.0f;
             maxVitality = 100.0f;
 
+            DoesBleed = true;
+            UseBloodParticles = true;
+
             afflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
             afflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
 
@@ -182,8 +185,6 @@ namespace Barotrauma
             {
                 limbHealths.Add(new LimbHealth());
             }
-
-            InitProjSpecific(character);
         }
 
         partial void InitProjSpecific(Character character);
@@ -214,6 +215,26 @@ namespace Barotrauma
                 if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Get the total strength of the afflictions of a specific type attached to a specific limb
+        /// </summary>
+        /// <param name="afflictionType">Type of the affliction</param>
+        /// <param name="limb">The limb the affliction is attached to</param>
+        /// <param name="requireLimbSpecific">Does the affliction have to be attached to only the specific limb. 
+        /// Most monsters for example don't have separate healths for different limbs, essentially meaning that every affliction is applied to every limb.</param>
+        public float GetAfflictionStrength(string afflictionType, Limb limb, bool requireLimbSpecific)
+        {
+            if (requireLimbSpecific && limbHealths.Count == 1) return 0.0f;
+
+            float strength = 0.0f;
+            foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
+            {
+                if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                if (affliction.Prefab.AfflictionType == afflictionType) strength += affliction.Strength;
+            }
+            return strength;
         }
 
         public float GetAfflictionStrength(string afflictionType, bool allowLimbAfflictions = true)

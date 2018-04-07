@@ -399,8 +399,8 @@ namespace Barotrauma
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
                     //make the character limp if the feet are damaged
-                    Affliction footAffliction = character.CharacterHealth.GetAffliction("damage", foot);
-                    if (footAffliction != null) stepSize *= MathHelper.Lerp(1.0f, 0.5f, footAffliction.Strength / 100.0f);
+                    float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
+                    stepSize *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
 
                     if (onSlope && Stairs == null)
                     {
