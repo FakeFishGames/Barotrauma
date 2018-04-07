@@ -765,7 +765,7 @@ namespace Barotrauma
             
             if (newHull == currentHull) return;
 
-            if (!CanEnterSubmarine)
+            if (!CanEnterSubmarine || (character.AIController != null && !character.AIController.CanEnterSubmarine))
             {
                 //character is inside the sub even though it shouldn't be able to enter -> teleport it out
 
@@ -1104,7 +1104,7 @@ namespace Barotrauma
                     }
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
+                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + colliderHeightFromFloor;
                     
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {

@@ -40,6 +40,11 @@ namespace Barotrauma
             get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
+        public virtual bool CanEnterSubmarine
+        {
+            get { return true; }
+        }
+
         public AIState State
         {
             get { return state; }
