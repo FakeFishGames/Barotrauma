@@ -33,6 +33,7 @@ namespace Barotrauma
             this.empStrength = empStrength;
             sparks = true;
             shockwave = true;
+            smoke = true;
             flames = true;
         }
 
