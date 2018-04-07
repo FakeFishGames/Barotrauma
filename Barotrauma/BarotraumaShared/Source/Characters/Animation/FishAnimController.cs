@@ -23,6 +23,9 @@ namespace Barotrauma
 
         private float? footRotation;
 
+        //the angle of the collider when standing (i.e. out of water)
+        private float colliderStandAngle;
+
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
         public FishAnimController(Character character, XElement element, string seed)
@@ -30,6 +33,8 @@ namespace Barotrauma
         {
             waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
+
+            colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
 
             steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
             
@@ -106,10 +111,11 @@ namespace Barotrauma
             }
             else if (currentHull != null && CanEnterSubmarine)
             {
-                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
+                //rotate collider back upright
+                float standAngle = dir == Direction.Right ? colliderStandAngle : -colliderStandAngle;
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
-                    //rotate collider back upright
-                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 60.0f;
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
@@ -174,10 +180,17 @@ namespace Barotrauma
                             (Dir < 0.0f && head.SimPosition.X > MainLimb.SimPosition.X && tail.SimPosition.X < MainLimb.SimPosition.X);
                     }
 
-                    Flip();
-                    if ((mirror || !inWater) && !wrongway)
+                    if (wrongway)
                     {
-                        Mirror();
+                        base.Flip();
+                    }
+                    else
+                    {
+                        Flip();
+                        if (mirror || !inWater)
+                        {
+                            Mirror();
+                        }
                     }
                     flipTimer = 0.0f;
                 }

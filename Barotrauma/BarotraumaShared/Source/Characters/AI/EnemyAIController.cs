@@ -123,7 +123,16 @@ namespace Barotrauma
         {
             get { return combatStrength; }
         }
-                        
+
+        public override bool CanEnterSubmarine
+        {
+            get
+            {
+                //can't enter a submarine when attached to something
+                return latchOntoAI == null || !latchOntoAI.IsAttached;
+            }
+        }
+
         public EnemyAIController(Character c, string file, string seed) : base(c)
         {
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
