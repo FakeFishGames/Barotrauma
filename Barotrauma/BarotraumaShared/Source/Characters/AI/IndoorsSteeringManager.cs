@@ -84,7 +84,7 @@ namespace Barotrauma
                     var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
                     if (targetHull != null && targetHull.Submarine != null)
                     {
-                        pos -= targetHull.SimPosition;
+                        pos -= targetHull.Submarine.SimPosition;
                     }
                 }
 
@@ -202,6 +202,13 @@ namespace Barotrauma
 
                 character.AnimController.IgnorePlatforms = false;
                 return diff;
+            }
+            else if (character.AnimController.InWater)
+            {
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < collider.radius * collider.radius)
+                {
+                    currentPath.SkipToNextNode();
+                }
             }
             else
             {

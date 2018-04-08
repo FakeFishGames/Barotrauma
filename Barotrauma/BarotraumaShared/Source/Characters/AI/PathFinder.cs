@@ -191,6 +191,7 @@ namespace Barotrauma
 
                         if (body != null)
                         {
+                            if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
                         }
