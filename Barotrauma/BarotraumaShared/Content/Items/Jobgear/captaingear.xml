@@ -34,6 +34,10 @@
       <sprite texture="captainTorso.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainTorso.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
     </Wearable>
+    
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
   </Item>
 
   <Item
