@@ -2104,7 +2104,7 @@ namespace Barotrauma
 
             if (args[0].ToLowerInvariant() == "human")
             {
-                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
+                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, ToolBox.RandomSeed(8));
 
 #if CLIENT
                 if (GameMain.GameSession != null)
@@ -2127,7 +2127,7 @@ namespace Barotrauma
                 {
                     if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
                     {
-                        Character.Create(characterFile, spawnPosition);
+                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
                         return;
                     }
                 }
@@ -2138,7 +2138,7 @@ namespace Barotrauma
                 string configPath = "Content/Characters/"
                     + args[0].First().ToString().ToUpper() + args[0].Substring(1)
                     + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition);
+                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 

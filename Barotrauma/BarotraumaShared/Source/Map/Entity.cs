@@ -134,6 +134,7 @@ namespace Barotrauma
                 }
             }
             dictionary.Clear();
+            Hull.EntityGrids.Clear();
         }
 
         public virtual void Remove()

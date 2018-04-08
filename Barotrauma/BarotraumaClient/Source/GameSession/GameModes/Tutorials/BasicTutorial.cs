@@ -297,7 +297,7 @@ namespace Barotrauma.Tutorials
 
             var moloch = Character.Create(
                 "Content/Characters/Moloch/moloch.xml", 
-                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
+                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f), "");
 
             moloch.PlaySound(CharacterSound.SoundType.Attack);
 

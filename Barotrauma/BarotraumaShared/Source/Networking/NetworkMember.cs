@@ -194,6 +194,7 @@ namespace Barotrauma.Networking
             {
                 if (msgBox.Selected)
                 {
+                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
                     msgBox.Text = "";
                     msgBox.Deselect();
                 }

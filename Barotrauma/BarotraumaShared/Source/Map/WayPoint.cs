@@ -4,7 +4,6 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-//using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Linq;
@@ -575,7 +574,7 @@ namespace Barotrauma
             }
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static WayPoint Load(XElement element, Submarine submarine)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
@@ -586,7 +585,7 @@ namespace Barotrauma
 
             w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
 
-            Enum.TryParse<SpawnType>(element.GetAttributeString("spawn", "Path"), out w.spawnType);
+            Enum.TryParse(element.GetAttributeString("spawn", "Path"), out w.spawnType);
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
             if (!string.IsNullOrWhiteSpace(idCardDescString))
@@ -615,6 +614,7 @@ namespace Barotrauma
                 w.linkedToID.Add((ushort)int.Parse(element.Attribute("linkedto" + i).Value));
                 i += 1;
             }
+            return w;
         }
 
         public override XElement Save(XElement parentElement)

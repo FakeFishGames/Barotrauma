@@ -51,6 +51,8 @@ namespace Barotrauma.Particles
 
         private float animState;
         private int animFrame;
+
+        private float collisionUpdateTimer;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -154,7 +156,7 @@ namespace Barotrauma.Particles
                 prevRotation = rotation;
             }
         }
-
+        
         public bool Update(float deltaTime)
         {
             prevPosition = position;
@@ -227,7 +229,21 @@ namespace Barotrauma.Particles
             }
 
             if (!prefab.DeleteOnCollision && !prefab.CollidesWithWalls) return true;
+
+            collisionUpdateTimer -= deltaTime;
+            if (collisionUpdateTimer <= 0.0f)
+            {
+                //more frequent collision updates if the particle is moving fast
+                collisionUpdateTimer = 0.5f - Math.Min((Math.Abs(velocity.X) + Math.Abs(velocity.Y)) * 0.001f, 0.4f);
+                return CollisionUpdate();
+            }
             
+            return true;
+        }
+
+        private bool CollisionUpdate()
+        {
+
             if (currentHull == null)
             {
                 Hull collidedHull = Hull.FindHull(position);
@@ -239,23 +255,24 @@ namespace Barotrauma.Particles
             }
             else
             {
+                Rectangle hullRect = currentHull.WorldRect;
                 Vector2 collisionNormal = Vector2.Zero;
-                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
+                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
-                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
+                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
-                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
+                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
-                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
+                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(-1.0f, 0.0f);
@@ -292,7 +309,7 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        Hull newHull = Hull.FindHull(position,currentHull);
+                        Hull newHull = Hull.FindHull(position, currentHull);
                         if (newHull != currentHull)
                         {
                             currentHull = newHull;
@@ -373,28 +390,33 @@ namespace Barotrauma.Particles
         private void OnWallCollisionOutside(Hull collisionHull)
         {
             Rectangle hullRect = collisionHull.WorldRect;
-            
-            if (position.Y < hullRect.Y - hullRect.Height)
+
+            Vector2 center = new Vector2(hullRect.X + hullRect.Width /2, hullRect.Y - hullRect.Height / 2);
+
+            if (position.Y < center.Y)
             {
                 position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
-            else if (position.Y > hullRect.Y)
+            else if (position.Y > center.Y)
             {
                 position.Y = hullRect.Y + prefab.CollisionRadius;
-                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
 
-            if (position.X < hullRect.X)
+            if (position.X < center.X)
             {
                 position.X = hullRect.X - prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
-            else if (position.X > hullRect.X + hullRect.Width)
+            else if (position.X > center.X)
             {
                 position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
 
             velocity *= prefab.Restitution;

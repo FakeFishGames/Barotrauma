@@ -25,15 +25,23 @@ namespace Barotrauma
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
                         Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
                 }
+
+                float particleSpeed = Rand.Range(0.0f, 1.0f);
+                particleSpeed = particleSpeed * particleSpeed * attack.Range;
+
                 if (flames)
                 {
-                    GameMain.ParticleManager.CreateParticle("explosionfire", ClampParticlePos(worldPosition + Rand.Vector(50f), hull),
-                        Rand.Vector(Rand.Range(50.0f, 100.0f)), 0.0f, hull);
+                    float particleScale = MathHelper.Clamp(attack.Range * 0.0025f, 0.5f, 2.0f);
+                    var flameParticle = GameMain.ParticleManager.CreateParticle("explosionfire", 
+                        ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                        Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
+                    if (flameParticle != null) flameParticle.Size *= particleScale;
                 }
                 if (smoke)
                 {
-                    GameMain.ParticleManager.CreateParticle("smoke", ClampParticlePos(worldPosition + Rand.Vector(50f), hull),
-                        Rand.Vector(Rand.Range(1.0f, 10.0f)), 0.0f, hull);
+                    var smokeParticle = GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
+                        ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
+                        Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
                 }
             }
 

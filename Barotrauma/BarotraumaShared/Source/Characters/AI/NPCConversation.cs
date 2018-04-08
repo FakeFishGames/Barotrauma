@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         const int MaxPreviousConversations = 20;
 
-        private static List<NPCConversation> list;
+        private static List<NPCConversation> list = new List<NPCConversation>();
         
         public readonly string Line;
 
@@ -32,11 +32,16 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
-        
+        public static void LoadAll(List<string> filePaths)
+        {
+            foreach (string filePath in filePaths)
+            {
+                Load(filePath);
+            }
+        }
+
         public static void Load(string file)
         {
-            list = new List<NPCConversation>();
-
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
@@ -206,7 +211,7 @@ namespace Barotrauma
                 if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
             }
             lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
-            CreateConversation(availableSpeakers,assignedSpeakers, selectedConversation, lineList);
+            CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList);
         }
 
         private static NPCConversation GetRandomConversation(List<NPCConversation> conversations, bool avoidPreviouslyUsed)
@@ -216,22 +221,12 @@ namespace Barotrauma
                 return conversations.Count == 0 ? null : conversations[Rand.Int(conversations.Count)];
             }
 
-            float probabilitySum = 0.0f;
+            List<float> probabilities = new List<float>();
             foreach (NPCConversation conversation in conversations)
             {
-                probabilitySum += GetConversationProbability(conversation);
+                probabilities.Add(GetConversationProbability(conversation));
             }
-            float randomNum = Rand.Range(0.0f, probabilitySum);
-            foreach (NPCConversation conversation in conversations)
-            {
-                float probability = GetConversationProbability(conversation);
-                if (randomNum <= probability)
-                {
-                    return conversation;
-                }
-                randomNum -= probability;
-            }
-            return null;
+            return ToolBox.SelectWeightedRandom(conversations, probabilities, Rand.RandSync.Unsynced);
         }
 
         private static float GetConversationProbability(NPCConversation conversation)

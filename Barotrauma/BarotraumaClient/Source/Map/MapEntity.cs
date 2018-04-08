@@ -142,7 +142,10 @@ namespace Barotrauma
                     PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
                     PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
                 {
-                    var clones = Clone(copiedList);
+                    List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+                    Clone(copiedList);
+
+                    var clones = mapEntityList.Except(prevEntities).ToList();
 
                     Vector2 center = Vector2.Zero;
                     clones.ForEach(c => center += c.WorldPosition);
@@ -525,7 +528,7 @@ namespace Barotrauma
         /// <summary>
         /// copies a list of entities to the "clipboard" (copiedList)
         /// </summary>
-        private static void CopyEntities(List<MapEntity> entities)
+        public static List<MapEntity> CopyEntities(List<MapEntity> entities)
         {
             List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
 
@@ -537,6 +540,8 @@ namespace Barotrauma
             //do a "shallow remove" (removes the entities from the game without removing links between them)
             //  -> items will stay in their containers
             newEntities.ForEach(e => e.ShallowRemove());
+
+            return newEntities;
         }
 
         public virtual void AddToGUIUpdateList()

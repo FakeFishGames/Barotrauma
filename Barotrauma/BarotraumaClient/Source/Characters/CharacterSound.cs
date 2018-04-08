@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -18,7 +19,7 @@ namespace Barotrauma
 
         public CharacterSound(XElement element)
         {
-            Sound = Sound.Load(element.Attribute("file").Value);
+            Sound = Submarine.LoadRoundSound(element.Attribute("file").Value);
             Range = element.GetAttributeFloat("range", 1000.0f);
 
             Enum.TryParse<SoundType>(element.GetAttributeString("state", "Idle"), true, out Type);

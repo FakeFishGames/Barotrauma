@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class AIController : ISteerable
+    abstract partial class AIController : ISteerable
     {
         public enum AIState { None, Attack, GoTo, Escape, Eat }
 
@@ -38,6 +38,11 @@ namespace Barotrauma
         public Vector2 Velocity
         {
             get { return Character.AnimController.Collider.LinearVelocity; }
+        }
+
+        public virtual bool CanEnterSubmarine
+        {
+            get { return true; }
         }
 
         public AIState State

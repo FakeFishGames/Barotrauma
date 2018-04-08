@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private float inWaterTimer;
         private bool swimming;
+
+        private float useItemTimer;
         
         protected override float? TorsoPosition
         {
@@ -62,8 +64,8 @@ namespace Barotrauma
             }
         }
 
-        public HumanoidAnimController(Character character, XElement element)
-            : base(character, element)
+        public HumanoidAnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             walkAnimSpeed = element.GetAttributeFloat("walkanimspeed", 4.0f);
             walkAnimSpeed = MathHelper.ToRadians(walkAnimSpeed);
@@ -181,7 +183,16 @@ namespace Barotrauma
                 case Animation.UsingConstruction:
                 default:
 
-                    if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+                    if (Anim == Animation.UsingConstruction)
+                    {
+                        useItemTimer -= deltaTime;
+                        if (useItemTimer <= 0.0f) Anim = Animation.None;
+                    }
+
+                    if (character.SelectedCharacter != null && character.SelectedCharacter.CanInventoryBeAccessed)
+                    {
+                        DragCharacter(character.SelectedCharacter);
+                    }
 
                     //0.5 second delay for switching between swimming and walking
                     //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
@@ -386,6 +397,10 @@ namespace Barotrauma
 
                     Vector2 footPos = stepSize * -i;
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
+
+                    //make the character limp if the feet are damaged
+                    float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
+                    stepSize *= MathHelper.Lerp(1.0f, 0.5f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
 
                     if (onSlope && Stairs == null)
                     {
@@ -1037,35 +1052,30 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                Limb targetLimb = target.AnimController.GetLimb(GrabLimb);
-
-                //grab hands if GrabLimb is not specified (or torso if the character has no hands)
-                if (GrabLimb == LimbType.None || targetLimb.IsSevered)
+                Limb targetLimb = target.AnimController.GetLimb(LimbType.Torso);
+                if (i == 0)
                 {
-                    targetLimb = target.AnimController.GetLimb(LimbType.Torso);
-                    if (i == 0)
+                    if (!targetLeftHand.IsSevered)
                     {
-                        if (!targetLeftHand.IsSevered)
-                        {
-                            targetLimb = targetLeftHand;
-                        }
-                        else if (!targetRightHand.IsSevered)
-                        {
-                            targetLimb = targetRightHand;
-                        }
+                        targetLimb = targetLeftHand;
                     }
-                    else
+                    else if (!targetRightHand.IsSevered)
                     {
-                        if (!targetRightHand.IsSevered)
-                        {
-                            targetLimb = targetRightHand;
-                        }
-                        else if (!targetLeftHand.IsSevered)
-                        {
-                            targetLimb = targetLeftHand;
-                        }
+                        targetLimb = targetRightHand;
                     }
                 }
+                else
+                {
+                    if (!targetRightHand.IsSevered)
+                    {
+                        targetLimb = targetRightHand;
+                    }
+                    else if (!targetLeftHand.IsSevered)
+                    {
+                        targetLimb = targetLeftHand;
+                    }
+                }
+                
                 Limb pullLimb = i == 0 ? leftHand : rightHand;
 
                 if (i == 1 && inWater)
@@ -1274,6 +1284,33 @@ namespace Barotrauma
 
             arm.body.SmoothRotate((ang2 - armAngle * Dir), 20.0f * force);
             hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force);
+        }
+
+        public override void UpdateUseItem(bool allowMovement, Vector2 handPos)
+        {
+            var leftHand = GetLimb(LimbType.LeftHand);
+            var rightHand = GetLimb(LimbType.RightHand);
+
+            useItemTimer = 0.5f;
+            Anim = Animation.UsingConstruction;
+
+            if (!allowMovement)
+            {
+                TargetMovement = Vector2.Zero;
+                TargetDir = handPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
+                if (Vector2.Distance(character.SimPosition, handPos) > 1.0f)
+                {
+                    TargetMovement = Vector2.Normalize(handPos - character.SimPosition);
+                }
+            }
+
+            leftHand.Disabled = true;
+            leftHand.pullJoint.Enabled = true;
+            leftHand.pullJoint.WorldAnchorB = handPos;
+
+            rightHand.Disabled = true;
+            rightHand.pullJoint.Enabled = true;
+            rightHand.pullJoint.WorldAnchorB = handPos;
         }
 
         public override void Flip()

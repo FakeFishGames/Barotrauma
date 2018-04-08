@@ -62,7 +62,7 @@ namespace Barotrauma
                 {
                     if (fixRequirement.CanBeFixed(character))
                     {
-                        fixRequirement.Fixed = true;
+                        fixRequirement.CurrentFixer = character;
                         if (item.FixRequirements.All(fr => fr.Fixed))
                         {
                             character.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);

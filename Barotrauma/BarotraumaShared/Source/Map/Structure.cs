@@ -621,7 +621,7 @@ namespace Barotrauma
 #if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
-            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 20);
+            particleAmount = Math.Min(particleAmount + Rand.Range(-5, 1), 5);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
@@ -1052,7 +1052,7 @@ namespace Barotrauma
             if (HasBody) UpdateSections();
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Structure Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
 
@@ -1060,7 +1060,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading structure - structure prefab " + name + " not found.");
-                return;
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1089,6 +1089,7 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
 
             SerializableProperty.DeserializeProperties(s, element);
+            return s;
         }
 
         public override XElement Save(XElement parentElement)

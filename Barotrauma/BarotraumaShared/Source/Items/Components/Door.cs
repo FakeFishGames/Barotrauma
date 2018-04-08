@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
         {
             base.Move(amount);
             
-            body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            body?.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();
@@ -477,14 +477,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
+            base.ServerWrite(msg, c, extraData);
+
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
+
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             
