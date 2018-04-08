@@ -94,10 +94,14 @@ namespace Barotrauma
 
             if (!Character.AnimController.InWater)
             {
-                Character.AnimController.TargetMovement = new Vector2(
+                Vector2 targetMovement = new Vector2(
                     Character.AnimController.TargetMovement.X,
                     MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f)) * Character.SpeedMultiplier;
+                float maxSpeed = Character.GetCurrentMaxSpeed();
+                targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
+                targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
 
+                Character.AnimController.TargetMovement = targetMovement;
                 Character.SpeedMultiplier = 1.0f;
             }
 

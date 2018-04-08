@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Particles;
+using Barotrauma.Sounds;
 #endif
 
 namespace Barotrauma
@@ -34,6 +35,7 @@ namespace Barotrauma
         private List<ParticleEmitter> particleEmitters;
 
         private Sound sound;
+        private SoundChannel soundChannel;
         private bool loopSound;
 #endif
 
@@ -57,6 +59,8 @@ namespace Barotrauma
         public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
+        
+        private readonly bool removeItem;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -221,6 +225,10 @@ namespace Barotrauma
                     case "useitem":
                         useItemCount++;
                         break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -260,7 +268,7 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        sound = Sound.Load(subElement);
+                        sound = Submarine.LoadRoundSound(subElement);
                         loopSound = subElement.GetAttributeBool("loop", false);
                         break;
 #endif
@@ -371,20 +379,10 @@ namespace Barotrauma
 #if CLIENT
             if (sound != null)
             {
-                if (loopSound)
+                if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    if (!Sounds.SoundManager.IsPlaying(sound))
-                    {
-                        sound.Play(entity.WorldPosition);
-                    }
-                    else
-                    {
-                        sound.UpdatePosition(entity.WorldPosition);
-                    }
-                }
-                else
-                {
-                    sound.Play(entity.WorldPosition);
+                    soundChannel = sound.Play(entity.WorldPosition);
+                    soundChannel.Looping = loopSound;
                 }
             }
 #endif            
@@ -407,6 +405,14 @@ namespace Barotrauma
                     item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
                 }
             }                     
+
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
+            }
 
             if (duration > 0.0f)
             {
@@ -439,14 +445,17 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    Affliction multipliedAffliction = affliction;
+                    if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+
                     if (target is Character)
                     {
-                        ((Character)target).CharacterHealth.ApplyAffliction(null, affliction);
+                        ((Character)target).CharacterHealth.ApplyAffliction(null, multipliedAffliction);
                     }
                     else if (target is Limb)
                     {
                         Limb limb = (Limb)target;
-                        limb.character.CharacterHealth.ApplyAffliction(limb, affliction);
+                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
                     }
                 }
             }

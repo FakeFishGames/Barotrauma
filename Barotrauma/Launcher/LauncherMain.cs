@@ -29,7 +29,7 @@ namespace Launcher
         private string latestVersionFileList, latestVersionFolder;
 
         private int updateCheckState;
-        
+
         private List<DisplayMode> supportedModes;
 
         private GUIDropDown resolutionDD, contentPackageDD, displayModeDD;
@@ -40,7 +40,7 @@ namespace Launcher
         private GUIButton downloadButton;
 
         private GUIButton launchButton;
-        
+
         public bool AutoCheckUpdates
         {
             get { return settings.AutoCheckUpdates; }
@@ -64,7 +64,7 @@ namespace Launcher
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = 640;
             graphics.PreferredBackBufferHeight = 400;
-            
+
             scissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
             IsMouseVisible = true;
@@ -168,9 +168,15 @@ namespace Launcher
 
             new GUITextBlock(new Rectangle(x, y + 130, 20, 20), "Display mode", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
             displayModeDD = new GUIDropDown(new Rectangle(x, y + 150, 200, 20), "", "", guiRoot);
+#if !OSX
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
             displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+#else
+            // Force borderless on macOS.
+            displayModeDD.AddItem("Fullscreen", WindowMode.BorderlessWindowed);
+            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
+#endif
 
             displayModeDD.SelectItem(settings.WindowMode);
 

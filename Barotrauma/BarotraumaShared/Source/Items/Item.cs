@@ -210,7 +210,7 @@ namespace Barotrauma
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
-                        req.Fixed = false;
+                        req.FixProgress = 0.0f;
                     }
                 }
 
@@ -393,7 +393,7 @@ namespace Barotrauma
                         aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
-                        FixRequirements.Add(new FixRequirement(subElement));
+                        FixRequirements.Add(new FixRequirement(subElement, this));
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
@@ -548,8 +548,10 @@ namespace Barotrauma
         {
             if (body != null)
             {
+#if DEBUG
                 try
                 {
+#endif
                     if (body.Enabled)
                     {
                         body.SetTransform(simPosition, rotation);
@@ -558,13 +560,13 @@ namespace Barotrauma
                     {
                         body.SetTransformIgnoreContacts(simPosition, rotation);
                     }
+#if DEBUG
                 }
                 catch (Exception e)
                 {
-#if DEBUG
                     DebugConsole.ThrowError("Failed to set item transform", e);
-#endif
                 }
+#endif
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
@@ -581,8 +583,7 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
+                body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -673,16 +674,18 @@ namespace Barotrauma
 
                 if (contained.body != null)
                 {
+#if DEBUG
                     try
                     {
+#endif
                         contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+#if DEBUG
                     }
                     catch (Exception e)
                     {
-#if DEBUG
                         DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
                     }
+#endif
                 }
 
                 contained.Rect =
@@ -892,6 +895,21 @@ namespace Barotrauma
                     ic.UpdateBroken(deltaTime, cam);
                 }
             }
+
+            if (condition <= 0.0f && FixRequirements.Count > 0)
+            {
+                bool isFixed = true;
+                foreach (FixRequirement fixRequirement in FixRequirements)
+                {
+                    fixRequirement.Update(deltaTime);
+                    if (!fixRequirement.Fixed) isFixed = false;
+                }
+                if (isFixed)
+                {
+                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                    condition = prefab.Health;
+                }
+            }
             
             if (body != null && body.Enabled)
             {
@@ -899,29 +917,7 @@ namespace Barotrauma
 
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
                 {
-                    Submarine prevSub = Submarine;
-
-                    FindHull();
-
-                    if (Submarine == null && prevSub != null)
-                    {
-                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                    }
-                    else if (Submarine != null && prevSub == null)
-                    {
-                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                    }
-                    
-                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
-
-                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                    {
-                        body.LinearVelocity = new Vector2(
-                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
-                    }
+                    UpdateTransform();
                 }
 
                 UpdateNetPosition();
@@ -935,6 +931,33 @@ namespace Barotrauma
 
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
+        }
+
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (Submarine == null && prevSub != null)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+            }
+            else if (Submarine != null && prevSub == null)
+            {
+                body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+            }
         }
 
         /// <summary>
@@ -1182,8 +1205,21 @@ namespace Barotrauma
                 }
                 else
                 {
-                    pickHit = (forceActionKey && ic.CanBePicked) || picker.IsKeyHit(ic.PickKey);
-                    selectHit = (forceSelectKey && ic.CanBeSelected)  || picker.IsKeyHit(ic.SelectKey);
+                    if (forceSelectKey)
+                    {
+                        if (ic.PickKey == InputType.Select) pickHit = true;
+                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                    }
+                    else if (forceActionKey)
+                    {
+                        if (ic.PickKey == InputType.Use) pickHit = true;
+                        if (ic.SelectKey == InputType.Use) selectHit = true;
+                    }
+                    else
+                    {
+                        pickHit = picker.IsKeyHit(ic.PickKey);
+                        selectHit = picker.IsKeyHit(ic.SelectKey);
+                    }
                 }
 
                 if (!pickHit && !selectHit) continue;
@@ -1399,6 +1435,10 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerWrite(msg, c, extraData);
                     break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                        msg.Write(FixRequirements[i].CurrentFixer == null ? (ushort)0 : FixRequirements[i].CurrentFixer.ID);
+                    break;
                 case NetEntityEvent.Type.Status:
                     //clamp to (MaxHealth / 255.0f) if condition > 0.0f
                     //to prevent condition from being rounded down to 0.0 even if the item is not broken
@@ -1407,7 +1447,7 @@ namespace Barotrauma
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
-                            msg.Write(FixRequirements[i].Fixed);
+                            msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
@@ -1451,14 +1491,9 @@ namespace Barotrauma
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
-                    FixRequirements[requirementIndex].Fixed = true;
-                    if (condition <= 0.0f && FixRequirements.All(f => f.Fixed))
-                    {
-                        Condition = prefab.Health;
-                    }
+                    FixRequirements[requirementIndex].CurrentFixer = c.Character;
 
-                    c.Karma += 0.4f;
-
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Repair });
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;
@@ -1806,7 +1841,7 @@ namespace Barotrauma
             lastSentPos = SimPosition;
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Item Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
 
@@ -1814,7 +1849,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
-                return;
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1867,6 +1902,8 @@ namespace Barotrauma
 
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+
+            return item;
         }
 
         public override XElement Save(XElement parentElement)
@@ -1881,19 +1918,10 @@ namespace Barotrauma
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            }
-            else
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
-            }
+            element.Add(new XAttribute("rect",
+                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                rect.Width + "," + rect.Height));
 
             if (linkedTo != null && linkedTo.Count > 0)
             {

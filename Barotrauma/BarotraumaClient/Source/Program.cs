@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-#if WINDOWS || LINUX
+#if WINDOWS || LINUX || OSX
     /// <summary>
     /// The main class.
     /// </summary>
@@ -27,36 +27,54 @@ namespace Barotrauma
         [STAThread]
         static void Main()
         {
-            using (var game = new GameMain())
-            {     
+            GameMain game = null;
+            try
+            {
+                game = new GameMain();
+            }
+            catch (Exception e)
+            {
+                if (game != null) game.Dispose();
+                CrashDump(null, "crashreport.log", e);
+                return;
+            }
+            
 #if DEBUG
-                game.Run();
+            game.Run();
 #else
-                bool attemptRestart = false;
+            bool attemptRestart = false;
 
-                do
+            do
+            {
+                try
                 {
-                    try
+                    game.Run();
+                    attemptRestart = false;
+                }
+                catch (Exception e)
+                {                   
+                    if (restartAttempts < 5 && CheckException(game, e))
                     {
-                        game.Run();
+                        attemptRestart = true;
+                        restartAttempts++;
+                    }
+                    else
+                    {
+                        CrashDump(game, "crashreport.log", e);
                         attemptRestart = false;
                     }
-                    catch (Exception e)
-                    {                   
-                        if (restartAttempts < 5 && CheckException(game, e))
-                        {
-                            attemptRestart = true;
-                            restartAttempts++;
-                        }
-                        else
-                        {
-                            CrashDump(game, "crashreport.txt", e);
-                            attemptRestart = false;
-                        }
 
-                    }
-                } while (attemptRestart);
+                }
+            } while (attemptRestart);
 #endif
+
+            try
+            {
+                game.Dispose();
+            }
+            catch (Exception e)
+            {
+                CrashDump(null, "crashreport.log", e);
             }
         }
 
@@ -122,7 +140,7 @@ namespace Barotrauma
         {
 #if WINDOWS
             MessageBox.Show(message, "Oops! Barotrauma just crashed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif         
+#endif
         }
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
@@ -161,23 +179,30 @@ namespace Barotrauma
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
             
-            if (game.GraphicsDevice == null)
+            if (game == null)
             {
-                sb.AppendLine("    Graphics device not set");
+                sb.AppendLine("    Game not initialized");
             }
             else
             {
-                if (game.GraphicsDevice.Adapter == null)
+                if (game.GraphicsDevice == null)
                 {
-                    sb.AppendLine("    Graphics adapter not set");
+                    sb.AppendLine("    Graphics device not set");
                 }
                 else
                 {
-                    sb.AppendLine("    GPU name: " + game.GraphicsDevice.Adapter.Description);
-                    sb.AppendLine("    Display mode: " + game.GraphicsDevice.Adapter.CurrentDisplayMode);
-                }
+                    if (game.GraphicsDevice.Adapter == null)
+                    {
+                        sb.AppendLine("    Graphics adapter not set");
+                    }
+                    else
+                    {
+                        sb.AppendLine("    GPU name: " + game.GraphicsDevice.Adapter.Description);
+                        sb.AppendLine("    Display mode: " + game.GraphicsDevice.Adapter.CurrentDisplayMode);
+                    }
 
-                sb.AppendLine("    GPU status: " + game.GraphicsDevice.GraphicsDeviceStatus);
+                    sb.AppendLine("    GPU status: " + game.GraphicsDevice.GraphicsDeviceStatus);
+                }
             }
 
             sb.AppendLine("\n");
@@ -197,7 +222,7 @@ namespace Barotrauma
             sw.WriteLine(sb.ToString());
             sw.Close();
 
-            CrashMessageBox( "A crash report (\"crashreport.txt\") was saved in the root folder of the game."+
+            CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
         }
     }

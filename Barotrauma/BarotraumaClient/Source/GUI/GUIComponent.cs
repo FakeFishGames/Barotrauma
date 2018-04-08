@@ -206,6 +206,8 @@ namespace Barotrauma
 
         public Dictionary<ComponentState, List<UISprite>> sprites;
 
+        public SpriteEffects SpriteEffects;
+
         public virtual Color OutlineColor { get; set; }
 
         public ComponentState State
@@ -415,11 +417,11 @@ namespace Barotrauma
 
                             spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
                                 new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
-                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects, 0.0f);
                         }
                         else
                         {
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
+                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), 0, Vector2.Zero, SpriteEffects, 0);
                         }
                     }
                 }

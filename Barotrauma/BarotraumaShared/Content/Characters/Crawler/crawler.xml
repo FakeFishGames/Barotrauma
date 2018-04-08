@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="crawler" humanoid="false" health="100">
+<Character name ="crawler" humanoid="false">
+  
+  <health
+    vitality="100"
+    doesbleed="true"/>
+
   <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
 
@@ -18,28 +23,47 @@
       attachtowalls="true"
       attachtosub="true"
       mindeattachspeed="3.0"
-      maxdeattachspeed="10.0"/>
+      maxdeattachspeed="10.0"
+      attachlimb="Head"/>
 
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="100"/>
     <targetpriority tag="stronger" state="Escape" priority="60"/>
     <targetpriority tag="dead" state="Eat" priority="55"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
+    <targetpriority tag="room" state="Attack" priority="50"/>
+    <targetpriority tag="weaker" state="Attack" priority="50"/>
+  </ai>
+
+  <ai
+    combatstrength="100"
+    sight="0.5"
+    hearing="1.0"
+    fleehealththreshold="10"
+    aggressiveboarding="true"
+    attackcooldown="3.0">
+    <targetpriority tag="human" state="Attack" priority="500"/>
+    <targetpriority tag="nasonov" state="Attack" priority="100"/>
+    <targetpriority tag="stronger" state="Escape" priority="60"/>
+    <targetpriority tag="dead" state="Eat" priority="55"/>
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
   </ai>
 
   <ragdoll 
-    colliderheightfromfloor="40" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
+    colliderheightfromfloor="35" colliderstandangle="90" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
+    minscale="0.8" maxscale="1.2"
     waveamplitude="4.0" wavelength="3000"
     swimspeed="2.0" walkspeed="2.0"
     runspeedmultiplier="2" swimspeedmultiplier="2.0"
-    stepsize ="15.0,20.0"
+    stepsize="15.0,20.0"
     steertorque="20"
     legtorque="10"
     impacttolerance="7"
     flip="true">
 
-    <collider width="45" radius="22"/>
+    <collider height="60" radius="22"/>
 
     <!-- head -->
     <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="15.0" mouthpos="17,35">
@@ -49,7 +73,7 @@
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" radius="22" height="40" type="Torso" flip="true" steerforce="0.3">
+    <limb id = "1" radius="22" height="40" type="Torso" flip="true" steerforce="0.1">
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>

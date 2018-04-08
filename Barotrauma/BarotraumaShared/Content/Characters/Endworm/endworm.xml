@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="endworm" humanoid="false" health="10000.0" doesbleed="false">
+<Character name ="endworm" humanoid="false">
+    
+  <health
+    vitality="10000.0"
+    doesbleed="false"/>
 
   <sound file="Content/Characters/Endworm/endwormidle.ogg" state="None" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />

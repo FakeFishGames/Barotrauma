@@ -15,10 +15,15 @@ namespace Barotrauma
             public float MinStrength, MaxStrength;
 
             public readonly float MinVitalityDecrease = 0.0f;
-            public readonly float MaxVitalityDecrease = 100.0f;
+            public readonly float MaxVitalityDecrease = 0.0f;
             
             //how much the strength of the affliction changes per second
             public readonly float StrengthChange = 0.0f;
+
+            public readonly bool MultiplyByMaxVitality;
+
+            public float MinScreenBlurStrength, MaxScreenBlurStrength;
+            public float MinScreenDistortStrength, MaxScreenDistortStrength;
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -28,9 +33,20 @@ namespace Barotrauma
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
 
+                MultiplyByMaxVitality = element.GetAttributeBool("multiplybymaxvitality", false);
+
                 MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
-                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
+                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
+
+                MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
+                MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
+                MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
+
+                MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
+                MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
+                MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
 
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
@@ -84,44 +100,46 @@ namespace Barotrauma
 
         private List<Effect> effects = new List<Effect>();
 
-
         private readonly string typeName;
 
         private readonly ConstructorInfo constructor;
 
-        public static void Init()
+        public static void LoadAll(List<string> filePaths)
         {
-            //TODO: load from content package
-            XDocument doc = XMLExtensions.TryLoadXml("Content/Afflictions.xml");
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string filePath in filePaths)
             {
-                switch (element.Name.ToString().ToLowerInvariant())
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
                 {
-                    case "internaldamage":
-                        List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "bleeding":
-                        List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
-                        break;
-                    case "burn":
-                        List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "oxygenlow":
-                        List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "bloodloss":
-                        List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "stun":
-                        List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    case "husk":
-                        List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
-                        break;
-                    default:
-                        List.Add(new AfflictionPrefab(element));
-                        break;
+                    switch (element.Name.ToString().ToLowerInvariant())
+                    {
+                        case "internaldamage":
+                            List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "bleeding":
+                            List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
+                            break;
+                        case "burn":
+                            List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "oxygenlow":
+                            List.Add(OxygenLow = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "bloodloss":
+                            List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "stun":
+                            List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "husk":
+                            List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        default:
+                            List.Add(new AfflictionPrefab(element));
+                            break;
+                    }
                 }
             }
         }

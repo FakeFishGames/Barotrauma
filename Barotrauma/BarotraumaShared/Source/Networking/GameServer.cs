@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.IO.Compression;
+using System.IO;
 
 namespace Barotrauma.Networking
 {
@@ -884,6 +886,38 @@ namespace Barotrauma.Networking
             WritePermissions(outmsg, c);
         }
 
+        private const int COMPRESSION_THRESHOLD = 500;
+        public void CompressOutgoingMessage(NetOutgoingMessage outmsg)
+        {
+            if (outmsg.LengthBytes>COMPRESSION_THRESHOLD)
+            {
+                byte[] data = outmsg.Data;
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    stream.Write(data, 0, outmsg.LengthBytes);
+                    stream.Position = 0;
+                    using (MemoryStream compressed = new MemoryStream())
+                    {
+                        using (DeflateStream deflate = new DeflateStream(compressed, CompressionLevel.Fastest, false))
+                        {
+                            stream.CopyTo(deflate);
+                        }
+
+                        byte[] newData = compressed.ToArray();
+
+                        outmsg.Data = newData;
+                        outmsg.LengthBytes = newData.Length;
+                        outmsg.Position = outmsg.LengthBits;
+                    }
+                }
+                outmsg.Write((byte)1); //is compressed
+            }
+            else
+            {
+                outmsg.WritePadBits(); outmsg.Write((byte)0); //isn't compressed
+            }
+        }
+
         private void ClientWriteIngame(Client c)
         {
             //don't send position updates to characters who are still midround syncing
@@ -950,11 +984,13 @@ namespace Barotrauma.Networking
             }
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
+            
             if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
             {
                 DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
             }
+
+            CompressOutgoingMessage(outmsg);
 
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
@@ -1047,6 +1083,8 @@ namespace Barotrauma.Networking
             WriteChatMessages(outmsg, c);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            CompressOutgoingMessage(outmsg);
 
             if (isInitialUpdate)
             {
@@ -1153,6 +1191,8 @@ namespace Barotrauma.Networking
                 msg.Write(selectedShuttle.MD5Hash.Hash);
 
                 connectedClients.ForEach(c => c.ReadyToStart = false);
+
+                CompressOutgoingMessage(msg);
 
                 server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
@@ -1295,7 +1335,7 @@ namespace Barotrauma.Networking
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
-                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, assignedWayPoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
                     spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
                     spawnedCharacter.TeamID = (byte)teamID;
@@ -1310,7 +1350,7 @@ namespace Barotrauma.Networking
 #if CLIENT
                 if (characterInfo != null && hostTeam == teamID)
                 {
-                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, characterInfo.Name, false, false);
                     myCharacter.GiveJobItems(assignedWayPoints.Last());
                     myCharacter.TeamID = (byte)teamID;
 
@@ -1436,6 +1476,8 @@ namespace Barotrauma.Networking
             }
             msg.WritePadBits();
 
+            CompressOutgoingMessage(msg);
+
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
         }
 
@@ -1490,6 +1532,8 @@ namespace Barotrauma.Networking
                 msg.Write((byte)ServerPacketHeader.ENDGAME);
                 msg.Write(endMessage);
                 msg.Write(mission != null && mission.Completed);
+
+                CompressOutgoingMessage(msg);
                 if (server.ConnectionsCount > 0)
                 {
                     server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
@@ -1933,6 +1977,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
             msg.Write((byte)FileTransferMessageType.Cancel);
             msg.Write((byte)transfer.SequenceChannel);
+            CompressOutgoingMessage(msg);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
         }
 
@@ -1947,6 +1992,7 @@ namespace Barotrauma.Networking
             {
                 SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
                 KickClient(c, "Kicked by vote");
+                BanClient(c, "Kicked by vote (auto ban)", duration: TimeSpan.FromSeconds(AutoBanTime));
             }
 
             GameMain.NetLobbyScreen.LastUpdateID++;
@@ -1969,6 +2015,8 @@ namespace Barotrauma.Networking
             Voting.ServerWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
+            CompressOutgoingMessage(msg);
+
             server.SendMessage(msg, recipients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
         }
 
@@ -1988,6 +2036,8 @@ namespace Barotrauma.Networking
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             WritePermissions(msg, client);
+
+            CompressOutgoingMessage(msg);
 
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 

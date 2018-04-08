@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="tigerthresherboss" humanoid="false" health="500.0" bleedingdecreasespeed="0.1">
-  
+<Character name ="tigerthresherboss" humanoid="false">
+
+  <health
+    vitality="500"
+    doesbleed="true"/>
+
   <sound file="Content/Characters/Tigerthresher/thresherattack1.ogg" state="Attack" />
   <sound file="Content/Characters/Tigerthresher/thresheridle1.ogg" state="None" />
   <sound file="Content/Characters/Tigerthresher/thresheridle2.ogg" state="None" />
@@ -13,7 +17,8 @@
     <targetpriority tag="human" state="Attack" priority="90"/>
     <targetpriority tag="dead" state="Eat" priority="60"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
-    <targetpriority tag="nasonov" state="Attack" priority="50"/>
+    <targetpriority tag="nasonov" state="Attack" priority="50"/>    
+    <targetpriority tag="sonar" state="Attack" priority="50"/>
     <targetpriority tag="room" state="Attack" priority="40"/>
   </ai>
 

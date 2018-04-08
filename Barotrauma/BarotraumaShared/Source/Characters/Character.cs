@@ -91,8 +91,8 @@ namespace Barotrauma
         protected bool needsAir;
         protected float oxygenAvailable;
 
-        /*private float health, lastSentHealth;
-        protected float minHealth, maxHealth;*/
+        //seed used to generate this character
+        private readonly string seed;
 
         private readonly CharacterHealth health;
 
@@ -464,7 +464,17 @@ namespace Barotrauma
             get { return causeOfDeath; }
         }
 
+        //can other characters select (= grab) this character
         public bool CanBeSelected
+        {
+            get
+            {
+                return !Removed;
+            }
+        }
+
+        //can other characters access the inventory of this character
+        public bool CanInventoryBeAccessed
         {
             get
             {
@@ -493,13 +503,29 @@ namespace Barotrauma
         public delegate void OnAttackedHandler(Character attacker, AttackResult attackResult);
         public OnAttackedHandler OnAttacked;
 
-
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isRemotePlayer = false, bool hasAi=true)
+        /// <summary>
+        /// Create a new character
+        /// </summary>
+        /// <param name="characterInfo">The name, gender, config file, etc of the character.</param>
+        /// <param name="position">Position in display units.</param>
+        /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
+        /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
+        /// <param name="hasAi">Is the character controlled by AI.</param>
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true)
         {
-            return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
+            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi);
         }
-
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true, bool createNetworkEvent = true)
+        /// <summary>
+        /// Create a new character
+        /// </summary>
+        /// <param name="file">The path to the character's config file.</param>
+        /// <param name="position">Position in display units.</param>
+        /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
+        /// <param name="characterInfo">The name, gender, etc of the character. Only used for humans, and if the parameter is not given, a random CharacterInfo is generated.</param>
+        /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
+        /// <param name="hasAi">Is the character controlled by AI.</param>
+        /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
+        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true)
         {
 #if LINUX
             if (!System.IO.File.Exists(file)) 
@@ -524,17 +550,15 @@ namespace Barotrauma
 #else
             if (!System.IO.File.Exists(file))
             {
-                DebugConsole.ThrowError("Spawning a character failed - file \""+file+"\" not found!");
+                DebugConsole.ThrowError("Spawning a character failed - file \"" + file + "\" not found!");
                 return null;
             }
 #endif
-
             Character newCharacter = null;
-
             if (file != humanConfigFile)
             {
-                var aiCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
-                var ai = new EnemyAIController(aiCharacter, file);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
+                var ai = new EnemyAIController(aiCharacter, file, seed);
                 aiCharacter.SetAI(ai);
 
                 //aiCharacter.minVitality = 0.0f;
@@ -543,7 +567,7 @@ namespace Barotrauma
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
@@ -553,7 +577,7 @@ namespace Barotrauma
             }
             else
             {
-                newCharacter = new Character(file, position, characterInfo, isRemotePlayer);
+                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer);
                 //newCharacter.minVitality = -100.0f;
             }
 
@@ -565,11 +589,13 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
+        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
             ConfigPath = file;
-            
+            this.seed = seed;
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
+
             selectedItems = new Item[2];
 
             IsRemotePlayer = isRemotePlayer;
@@ -592,29 +618,42 @@ namespace Barotrauma
 
             InitProjSpecific(doc);
 
-            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
-            
+            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");            
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
+
+            List<XElement> ragdollElements = new List<XElement>();
+            List<float> ragdollCommonness = new List<float>();
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
+                ragdollElements.Add(element);
+                ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
+            }
             
+            //choose a random ragdoll element
+            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
+            XElement ragdollElement = ragdollElements.Count == 1 ?
+                ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
+
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
+                AnimController = new HumanoidAnimController(this, ragdollElement, seed);
                 AnimController.TargetDir = Direction.Right;
                 inventory = new CharacterInventory(CharacterInventory.SlotTypes.Length, this);
             }
             else
             {
-                AnimController = new FishAnimController(this, doc.Root.Element("ragdoll"));
+                AnimController = new FishAnimController(this, ragdollElement, seed);
                 PressureProtection = 100.0f;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
 
+            needsAir = doc.Root.GetAttributeBool("needsair", false);
+
             XElement healthElement = doc.Root.Element("health") ?? doc.Root.Element("Health");
             health = healthElement == null ? new CharacterHealth(this) : new CharacterHealth(healthElement, this);
-            
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-            
+                        
             if (file == humanConfigFile)
             {
                 if (Info.PickedItemIDs.Any())
@@ -807,12 +846,37 @@ namespace Barotrauma
                     targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
                 }
             }
-
-
+            
             targetMovement *= SpeedMultiplier;
+            float maxSpeed = GetCurrentMaxSpeed();
+            targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
+            targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
             SpeedMultiplier = 1.0f;
 
             return targetMovement;
+        }
+
+        public float GetCurrentMaxSpeed()
+        {
+            float currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+
+            currMaxSpeed *= 1.5f;
+
+            var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
+            if (leftFoot != null)
+            {
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+            }
+
+            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
+            if (rightFoot != null)
+            {
+                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
+                currMaxSpeed *= MathHelper.Lerp(1.0f, 0.25f, MathHelper.Clamp(footAfflictionStrength / 100.0f, 0.0f, 1.0f));
+            }
+
+            return currMaxSpeed;
         }
 
         public void Control(float deltaTime, Camera cam)
@@ -1091,7 +1155,7 @@ namespace Barotrauma
                 var owner = (Character)inventory.Owner;
 
                 //can only be accessed if the character is incapacitated and has been selected
-                return SelectedCharacter == owner && (!owner.CanInteract);
+                return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
             }
 
             if (inventory.Owner is Item)

@@ -14,9 +14,9 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
-      maxvitalitydecrease="100"/>
+      maxvitalitydecrease="1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
   </InternalDamage>
 
@@ -45,9 +45,9 @@
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="50"/>
+      maxvitalitydecrease="1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
 
@@ -61,9 +61,9 @@
     indicatorlimb="Torso"    
     activationthreshold="1"
     maxstrength="200">
-    <Effect minstrength="50" maxstrength="200"
+    <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="200"/>
+      maxvitalitydecrease="2"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
   </OxygenLow>
 
@@ -77,9 +77,9 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
-    <Effect minstrength="0" maxstrength="100"
+    <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="200"
+      maxvitalitydecrease="2"
       strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
   </Bloodloss>
@@ -133,6 +133,8 @@
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
+      minscreendistort="0"
+      maxscreendistort="0.1"
       strengthchange="-0.1">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
@@ -141,6 +143,10 @@
     <Effect minstrength="40" maxstrength="80"
       minvitalitydecrease="10"
       maxvitalitydecrease="30"
+      minscreendistort="0.1"
+      maxscreendistort="1.0"
+      minscreenblur="0.1"
+      maxscreenblur="1.0"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
@@ -149,8 +155,88 @@
     <Effect minstrength="80" maxstrength="100"
       minvitalitydecrease="30"
       maxvitalitydecrease="100"
+      minscreendistort="1.0"
+      maxscreendistort="3.0"
+      minscreenblur="1.0"
+      maxscreenblur="3.0"
       strengthchange="-0.2">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+    </Effect>
+    
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Morphine withdrawal"
+    description="Morphine withdrawal"
+    type="poison"
+    causeofdeathdescription="Died of morphine withdrawal"
+    selfcauseofdeathdescription="You have died of morphine withdrawal."
+    limbspecific="false"
+    indicatorlimb="Head"
+    showiconthreshold="20"
+    maxstrength="100">
+
+    <!-- Slow down the character and slightly decrease vitality -->
+    <Effect minstrength="20" maxstrength="40"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="20"
+      strengthchange="-0.05">
+      <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
+    </Effect>
+
+    <!-- Decrease vitality more. The strength of the affliction drops faster, meaning that 
+    the character needs a stronger morphine addiction for the withdrawal symptoms to stay at this level -->
+    <Effect minstrength="40" maxstrength="80"
+      minvitalitydecrease="20"
+      maxvitalitydecrease="50"
+      strengthchange="-0.1">
+      <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
+    </Effect>
+
+    <!-- Withdrawal symptoms start to get lethal at this level -->
+    <Effect minstrength="80" maxstrength="100"
+      minvitalitydecrease="50"
+      maxvitalitydecrease="200"
+      minscreendistort="0.0"
+      maxscreendistort="3.0"
+      strengthchange="-0.2">
+      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+    </Effect>
+
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
+  
+  <!-- Gradually applies the "morphine withdrawal" affliction to the character -->
+  <Affliction
+    name="Morphine addiction"
+    description="Morphine addiction"
+    type="poison"
+    limbspecific="false"
+    indicatorlimb="Head"    
+    showiconthreshold="20"
+    maxstrength="100">
+
+    <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
+    
+    <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
+      <StatusEffect target="Character">
+        <Affliction name="Morphine withdrawal" strength="0.1"/>
+      </StatusEffect>
+    </Effect>
+    
+    <Effect minstrength="40" maxstrength="80" strengthchange="-0.1">
+      <StatusEffect target="Character">
+        <Affliction name="Morphine withdrawal" strength="0.25"/>
+      </StatusEffect>
+    </Effect>
+
+    <Effect minstrength="80" maxstrength="100" strengthchange="-0.1"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="20">
+      <StatusEffect target="Character">
+        <Affliction name="Morphine withdrawal" strength="0.5"/>
+      </StatusEffect>
     </Effect>
     
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>

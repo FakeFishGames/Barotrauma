@@ -339,10 +339,10 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
             
@@ -374,13 +374,13 @@ namespace Barotrauma
             fireSources.Clear();
 
 #if CLIENT
-            if (soundIndex > -1)
+            if (soundChannel != null)
             {
-                Sounds.SoundManager.Stop(soundIndex);
-                soundIndex = -1;
+                soundChannel.Dispose();
+                soundChannel = null;
             }
 #endif
-            
+
             if (entityGrids != null)
             {
                 foreach (EntityGrid entityGrid in entityGrids)
@@ -584,7 +584,7 @@ namespace Barotrauma
             return connectedHulls;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
+        //returns the hull which contains the point (or null if it isn't inside any)
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
             if (entityGrids == null) return null;
@@ -593,16 +593,44 @@ namespace Barotrauma
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
-
-            var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
-            foreach (Hull hull in entities)
+            
+            foreach (EntityGrid entityGrid in entityGrids)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
+                if (entityGrid.Submarine != null && !entityGrid.Submarine.Loading)
+                {
+                    System.Diagnostics.Debug.Assert(!entityGrid.Submarine.Removed);
+                    Rectangle borders = entityGrid.Submarine.Borders;
+                    if (useWorldCoordinates)
+                    {
+                        Vector2 worldPos = entityGrid.Submarine.WorldPosition;
+                        borders.Location += new Point((int)worldPos.X, (int)worldPos.Y);
+                    }
+                    else
+                    {
+                        borders.Location += new Point((int)entityGrid.Submarine.HiddenSubPosition.X, (int)entityGrid.Submarine.HiddenSubPosition.Y);
+
+                    }
+
+                    if (position.X < borders.X || position.X > borders.Right || position.Y > borders.Y || position.Y < borders.Y - borders.Height)
+                    {
+                        continue;
+                    }
+                }
+
+                Vector2 transformedPosition = position;
+                if (useWorldCoordinates) transformedPosition -= entityGrid.Submarine.Position;                
+                
+                var entities = entityGrid.GetEntities(transformedPosition);
+                if (entities == null) continue;
+                foreach (Hull hull in entities)
+                {
+                    if (Submarine.RectContains(hull.rect, transformedPosition)) return hull;
+                }
             }
 
             return null;
         }
-
+        
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
         {
@@ -793,7 +821,7 @@ namespace Barotrauma
             }            
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Hull Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
             if (element.Attribute("rect") != null)
@@ -811,10 +839,9 @@ namespace Barotrauma
             }
 
             Hull h = new Hull(MapEntityPrefab.Find("Hull"), rect, submarine);
-
             h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
-
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
+            return h;
         }
 
         public override XElement Save(XElement parentElement)

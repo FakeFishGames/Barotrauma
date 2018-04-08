@@ -435,11 +435,11 @@ namespace Barotrauma
                 {
                     var hull = Entity.FindEntityByID((ushort)characterInfos[i].HullID) as Hull;
                     if (hull == null) continue;
-                    character = Character.Create(characterInfos[i], hull.WorldPosition);
+                    character = Character.Create(characterInfos[i], hull.WorldPosition, characterInfos[i].Name);
                 }
                 else
                 {
-                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
+                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
                     Character.Controlled = character;
 
                     if (character.Info != null && !character.Info.StartItemsGiven)

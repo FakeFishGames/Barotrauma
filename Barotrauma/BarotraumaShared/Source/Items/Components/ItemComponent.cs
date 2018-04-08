@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -386,9 +389,10 @@ namespace Barotrauma.Items.Components
         public void Remove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 
@@ -408,9 +412,10 @@ namespace Barotrauma.Items.Components
         public void ShallowRemove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 
@@ -454,15 +459,13 @@ namespace Barotrauma.Items.Components
         {
             if (requiredSkills.Count == 0) return 1.0f;
 
-            float[] skillSuccess = new float[requiredSkills.Count];
-
+            float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
-                skillSuccess[i] = (characterLevel - requiredSkills[i].Level);
+                skillSuccessSum += (characterLevel - requiredSkills[i].Level);
             }
-
-            float average = skillSuccess.Average();
+            float average = skillSuccessSum / requiredSkills.Count;
 
             return ((average + 100.0f) / 2.0f) / 100.0f;
         }

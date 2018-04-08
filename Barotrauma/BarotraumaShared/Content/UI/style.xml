@@ -91,6 +91,21 @@
     <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="13, 667, 220, 59" slice="27, 673, 226, 718"/>
   </GUIButtonLarge>
 
+  <GUIButtonHorizontalArrow
+    color="0.8,0.8,0.8,0.8"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="0.8,0.8,0.8,0.8">
+
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="None" tile="false" sourcerect="471,947,24,69"/>
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="Hover" tile="false" sourcerect="471,947,24,69"/>
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="Selected" tile="false" sourcerect="471,947,24,69"/>
+    <Sprite texture="Content/UI/inventoryAtlas.png" state="Pressed" tile="false" sourcerect="471,947,24,69"/>
+
+    <GUITextBlock
+      textcolor="0.6, 0.65, 0.7, 1.0"
+      padding="0.0, 0.0, 0.0, 0.0"/>
+  </GUIButtonHorizontalArrow>
+
   <GUITextBlock
     textcolor="0.5, 0.55, 0.6, 1.0"
     hovercolor="1.0,1.0,1.0,1.0"
@@ -106,7 +121,7 @@
     color="1.0,1.0,1.0,0.85"
     hovercolor="0.3, 0.3, 0.3, 0.5"
     selectedcolor="1.0, 0.6, 0.0, 0.3"
-    padding="10.0, 0.0, 10.0, 0.0">
+    padding="0.0, 0.0, 0.0, 0.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="746, 704, 120, 120" slice="754, 711, 865, 816"/>
   </GUIToolTip>

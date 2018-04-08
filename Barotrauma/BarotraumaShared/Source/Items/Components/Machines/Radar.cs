@@ -117,6 +117,7 @@ namespace Barotrauma.Items.Components
                 if (pingState > 1.0f)
                 {
                     if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
+                    if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
                     item.Use(deltaTime);
                     pingState = 0.0f;
                 }

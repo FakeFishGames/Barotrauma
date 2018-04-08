@@ -28,14 +28,14 @@
       <input name="set_force"/>
     </ConnectionPanel>
 
-    <Optimizable optimizationtype="mechanical">
+    <Optimizable optimizationtype="mechanical" description="Adjust trim values to increase the maximum thrust of the engine.">
       <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
 
-    <Optimizable optimizationtype="electrical">
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the engine.">
       <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>    
   </Item>
 
@@ -65,12 +65,12 @@
       <input name="set_force"/>
     </ConnectionPanel>
 
-    <Optimizable optimizationtype="mechanical">
+    <Optimizable optimizationtype="mechanical" description="Adjust trim values to increase the maximum thrust of the engine.">
       <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
-      <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
     </Optimizable>
 
-    <Optimizable optimizationtype="electrical">
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the engine.">
       <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
       <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
     </Optimizable>

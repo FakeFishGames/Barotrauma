@@ -37,15 +37,15 @@ namespace Barotrauma
     {
         public static bool IsProperFilenameCase(string filename)
         {
-            char[] delimiters = { '/','\\' };
+            char[] delimiters = { '/', '\\' };
             string[] subDirs = filename.Split(delimiters);
             string originalFilename = filename;
             filename = "";
 
-            for (int i=0;i<subDirs.Length-1;i++)
+            for (int i = 0; i < subDirs.Length - 1; i++)
             {
                 filename += subDirs[i] + "/";
-                
+
                 if (i == subDirs.Length - 2)
                 {
                     string[] filePaths = Directory.GetFiles(filename);
@@ -62,7 +62,7 @@ namespace Barotrauma
 
                 string[] dirPaths = Directory.GetDirectories(filename);
 
-                if (!dirPaths.Any(s => s.Equals(filename+subDirs[i+1],StringComparison.Ordinal)))
+                if (!dirPaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.Ordinal)))
                 {
                     if (dirPaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.OrdinalIgnoreCase)))
                     {
@@ -83,8 +83,8 @@ namespace Barotrauma
             if (str == null || maxCharacters < 0) return null;
 
             if (maxCharacters < 4 || str.Length <= maxCharacters) return str;
-            
-            return str.Substring(0, maxCharacters-3) + "...";            
+
+            return str.Substring(0, maxCharacters - 3) + "...";
         }
 
         public static string RandomSeed(int length)
@@ -133,8 +133,8 @@ namespace Barotrauma
 
             if (n == 0 || m == 0) return 0;
 
-            for (int i = 0; i <= n; d[i, 0] = i++);
-            for (int j = 0; j <= m; d[0, j] = j++);
+            for (int i = 0; i <= n; d[i, 0] = i++) ;
+            for (int j = 0; j <= m; d[0, j] = j++) ;
 
             for (int i = 1; i <= n; i++)
             {
@@ -147,7 +147,7 @@ namespace Barotrauma
                         d[i - 1, j - 1] + cost);
                 }
             }
-            
+
             return d[n, m];
         }
 
@@ -214,6 +214,35 @@ namespace Barotrauma
             buffer.Write(data);
 
             return buffer;
+        }
+
+        public static T SelectWeightedRandom<T>(List<T> objects, List<float> weights, Rand.RandSync randSync)
+        {
+            return SelectWeightedRandom(objects, weights, Rand.GetRNG(randSync));
+        }
+
+        public static T SelectWeightedRandom<T>(List<T> objects, List<float> weights, Random random)
+        {
+            if (objects.Count == 0) return default(T);
+
+            if (objects.Count != weights.Count)
+            {
+                DebugConsole.ThrowError("Error in SelectWeightedRandom, number of objects does not match the number of weights.\n" + Environment.StackTrace);
+                return objects[0];
+            }
+
+            float totalWeight = weights.Sum();
+
+            float randomNum = (float)(random.NextDouble() * totalWeight);
+            for (int i = 0; i < objects.Count; i++)
+            {
+                if (randomNum <= weights[i])
+                {
+                    return objects[i];
+                }
+                randomNum -= weights[i];
+            }
+            return default(T);
         }
     }
 }

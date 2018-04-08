@@ -27,7 +27,11 @@ namespace Barotrauma.Networking
         private Submarine respawnShuttle;
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
-        
+
+        //items created during respawn
+        //any respawn items left in the shuttle are removed when the shuttle despawns
+        private List<Item> respawnItems = new List<Item>();
+
         public bool UsingShuttle
         {
             get { return respawnShuttle != null; }
@@ -364,15 +368,16 @@ namespace Barotrauma.Networking
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != respawnShuttle) continue;
-
-                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                
+                //remove respawn items that have been left in the shuttle
+                if (respawnItems.Contains(item))
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
+                    Spawner.AddToRemoveQueue(item);
                     continue;
                 }
 
+                //restore other items to full condition and recharge batteries
                 item.Condition = item.Prefab.Health;
-
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
@@ -477,7 +482,7 @@ namespace Barotrauma.Networking
                 myCharacter = i >= clients.Count;
 #endif
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter, false);
                 
                 character.TeamID = 1;
 
@@ -501,21 +506,24 @@ namespace Barotrauma.Networking
 #endif
 
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-
+                
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(divingSuit, false);
+                    respawnItems.Add(divingSuit);
 
                     var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(oxyTank, false);
-                    divingSuit.Combine(oxyTank);      
-                    
+                    divingSuit.Combine(oxyTank);
+                    respawnItems.Add(oxyTank);
+
                     if (batteryPrefab != null)
                     {
                         var battery = new Item(batteryPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(battery, false);
                         divingSuit.Combine(battery);
+                        respawnItems.Add(battery);
                     }
                 }
 
@@ -528,6 +536,8 @@ namespace Barotrauma.Networking
                     Spawner.CreateNetworkEvent(battery, false);
 
                     scooter.Combine(battery);
+                    respawnItems.Add(scooter);
+                    respawnItems.Add(battery);
                 }
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -287,7 +288,7 @@ namespace Barotrauma.Networking
                 NetIncomingMessage inc;
                 // If new messages arrived
                 if ((inc = client.ReadMessage()) == null) continue;
-                
+
                 string pwMsg = "Password required";
 
                 try
@@ -295,6 +296,8 @@ namespace Barotrauma.Networking
                     switch (inc.MessageType)
                     {
                         case NetIncomingMessageType.Data:
+                            DecompressIncomingMessage(inc);
+
                             ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
                             switch (header)
                             {
@@ -470,18 +473,22 @@ namespace Barotrauma.Networking
                 reconnectBox = null;
             }
 
+#if DEBUG
             try
             {
+#endif
                 CheckServerMessages();
+#if DEBUG
             }
             catch (Exception e)
             {
-#if DEBUG
-                DebugConsole.ThrowError("Error while receiving message from server", e);
-#endif            
+
+                DebugConsole.ThrowError("Error while receiving message from server", e);         
             }
-                                    
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+#endif
+
+
+                if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
 
@@ -505,6 +512,32 @@ namespace Barotrauma.Networking
 
         private CoroutineHandle startGameCoroutine;
 
+        private void DecompressIncomingMessage(NetIncomingMessage inc)
+        {
+            byte[] data = inc.Data;
+            if (data[data.Length - 1] == 1)
+            {
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    stream.Write(data, 0, inc.LengthBytes-1);
+                    stream.Position = 0;
+                    using (MemoryStream decompressed = new MemoryStream())
+                    {
+                        using (DeflateStream deflate = new DeflateStream(stream, CompressionMode.Decompress, false))
+                        {
+                            deflate.CopyTo(decompressed);
+                        }
+                        byte[] newData = decompressed.ToArray();
+
+                        inc.Data = newData;
+                        inc.LengthBytes = newData.Length;
+                        inc.Position = 0;
+                    }
+
+                }
+            }
+        }
+
         /// <summary>
         /// Check for new incoming messages from server
         /// </summary>
@@ -520,6 +553,8 @@ namespace Barotrauma.Networking
                 switch (inc.MessageType)
                 {
                     case NetIncomingMessageType.Data:
+                        DecompressIncomingMessage(inc);
+
                         ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
                         switch (header)
                         {

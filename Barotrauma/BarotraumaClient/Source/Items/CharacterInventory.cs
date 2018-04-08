@@ -483,18 +483,28 @@ namespace Barotrauma
                     //not equipped -> attempt to equip
                     if (!character.HasEquippedItem(item))
                     {
+                        //attempt to put in a free slot first
                         for (int i = 0; i < capacity; i++)
                         {
+                            if (Items[i] != null) continue;
                             if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-
-                            //something else already equipped in the slot, attempt to unequip it
-                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
-                            {
-                                TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
-                            }
-
                             wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
                             if (wasPut) break;
+                        }
+
+                        if (!wasPut)
+                        {
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                                //something else already equipped in the slot, attempt to unequip it
+                                if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                                {
+                                    TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                                }
+                                wasPut = TryPutItem(item, i, true, false, Character.Controlled, true);
+                                if (wasPut) break;
+                            }
                         }
                     }
                     //equipped -> attempt to unequip

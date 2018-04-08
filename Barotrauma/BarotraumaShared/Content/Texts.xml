@@ -252,6 +252,11 @@
   <SaveSubDialogName>Name</SaveSubDialogName>
   <SaveSubDialogDescription>Description</SaveSubDialogDescription>
   <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
+  <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
+  <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
+  <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
+  <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
   <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
   <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>
   <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
@@ -452,6 +457,8 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
+
 
 
 

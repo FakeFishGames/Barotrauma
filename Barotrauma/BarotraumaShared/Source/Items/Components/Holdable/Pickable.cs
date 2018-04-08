@@ -1,17 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class Pickable : ItemComponent
+    class Pickable : ItemComponent, IServerSerializable
     {
         protected Character picker;
 
         protected List<InvSlotType> allowedSlots;
 
         private float pickTimer;
+
+        private Character activePicker;
 
         public List<InvSlotType> AllowedSlots
         {
@@ -62,6 +66,7 @@ namespace Barotrauma.Items.Components
             {
                 if (picker.PickingItem == null)
                 {
+                    item.CreateServerEvent(this);
                     CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
                 }
                 return false;
@@ -106,6 +111,7 @@ namespace Barotrauma.Items.Components
 
         private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
         {
+            activePicker = picker;
             picker.PickingItem = item;
 
             var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
@@ -128,18 +134,8 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 #endif
 
-                picker.AnimController.Anim = AnimController.Animation.UsingConstruction;
-
-                picker.AnimController.TargetMovement = Vector2.Zero;
-
-                leftHand.Disabled = true;
-                leftHand.pullJoint.Enabled = true;
-                leftHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
-
-                rightHand.Disabled = true;
-                rightHand.pullJoint.Enabled = true;
-                rightHand.pullJoint.WorldAnchorB = item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f);
-
+                picker.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * ((pickTimer / 10.0f) % 0.1f));
+                
                 pickTimer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
@@ -154,8 +150,12 @@ namespace Barotrauma.Items.Components
 
         private void StopPicking(Character picker)
         {
-            picker.AnimController.Anim = AnimController.Animation.None;
-            picker.PickingItem = null;
+            if (picker != null)
+            {
+                picker.AnimController.Anim = AnimController.Animation.None;
+                picker.PickingItem = null;
+            }
+            activePicker = null;
             pickTimer = 0.0f;
         }
 
@@ -215,5 +215,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
+        }
+
+        public virtual void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            ushort pickerID = msg.ReadUInt16();
+            if (pickerID == 0)
+            {
+                StopPicking(activePicker);
+            }
+            else
+            {
+                Pick(Entity.FindEntityByID(pickerID) as Character);
+            }
+        }
     }
 }
