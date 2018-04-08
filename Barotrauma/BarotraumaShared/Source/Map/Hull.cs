@@ -593,11 +593,12 @@ namespace Barotrauma
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
             }
-            
+
             foreach (EntityGrid entityGrid in entityGrids)
             {
-                if (entityGrid.Submarine != null)
+                if (entityGrid.Submarine != null && !entityGrid.Submarine.Loading)
                 {
+                    System.Diagnostics.Debug.Assert(!entityGrid.Submarine.Removed);
                     Rectangle borders = entityGrid.Submarine.Borders;
                     if (useWorldCoordinates)
                     {
@@ -617,8 +618,8 @@ namespace Barotrauma
                 }
 
                 Vector2 transformedPosition = position;
-                if (useWorldCoordinates) transformedPosition -= entityGrid.Submarine.Position;                
-                
+                if (useWorldCoordinates) transformedPosition -= entityGrid.Submarine.Position;
+
                 var entities = entityGrid.GetEntities(transformedPosition);
                 if (entities == null) continue;
                 foreach (Hull hull in entities)
@@ -629,7 +630,7 @@ namespace Barotrauma
 
             return null;
         }
-        
+
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
         {
