@@ -402,7 +402,7 @@ namespace Barotrauma
                 pos = afflictionArea.Location;
                 foreach (Pair<Sprite, string> statusIcon in statusIcons)
                 {
-                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
+                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, afflictionArea.Width / statusIcon.First.size.X);
                     pos.Y += afflictionArea.Width + (int)(5 * GUI.Scale);
                 }
 

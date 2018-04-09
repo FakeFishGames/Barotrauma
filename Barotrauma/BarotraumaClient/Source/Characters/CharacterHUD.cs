@@ -176,6 +176,67 @@ namespace Barotrauma
                 }
             }
 
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            {
+                if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
+                {
+                    Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
+                    startPos = cam.WorldToScreen(startPos);
+
+                    string focusName = character.FocusedCharacter.SpeciesName;
+                    if (character.FocusedCharacter.Info != null)
+                    {
+                        focusName = character.FocusedCharacter.Info.DisplayName;
+                    }
+                    Vector2 textPos = startPos;
+                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
+
+                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
+                }
+                else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
+                {
+                    focusedItem = character.FocusedItem;
+                }
+
+                if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
+                {
+                    var hudTexts = focusedItem.GetHUDTexts(character);
+
+                    int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
+                    Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
+                    startPos.Y -= (hudTexts.Count + 1) * 20;
+                    if (focusedItem.Sprite != null)
+                    {
+                        startPos.X += (int)Math.Sqrt(focusedItem.Sprite.size.X / 2) * dir;
+                        startPos.Y -= (int)Math.Sqrt(focusedItem.Sprite.size.Y / 2);
+                    }
+
+                    Vector2 textPos = startPos;
+                    if (dir == -1) textPos.X -= (int)GUI.Font.MeasureString(focusedItem.Name).X;
+
+                    float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
+
+                    GUI.DrawString(spriteBatch, textPos, focusedItem.Name, Color.White * alpha, Color.Black * alpha * 0.7f, 2);
+                    textPos.Y += 20.0f;
+                    foreach (ColoredText coloredText in hudTexts)
+                    {
+                        if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
+                        GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
+                        textPos.Y += 20;
+                    }
+                }
+
+                foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)
+                {
+                    progressBar.Draw(spriteBatch, cam);
+                }
+            }
+
+            if (character.SelectedConstruction != null && character.CanInteractWith(Character.Controlled.SelectedConstruction))
+            {
+                character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
+            }
+
             if (character.Inventory != null)
             {
                 for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -244,59 +305,6 @@ namespace Barotrauma
                 else if (character.Inventory != null)
                 {
                     character.Inventory.Alignment = Alignment.Center;
-                }
-                
-                if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
-                {
-                    Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
-                    startPos = cam.WorldToScreen(startPos);
-
-                    string focusName = character.FocusedCharacter.SpeciesName;
-                    if (character.FocusedCharacter.Info != null)
-                    {
-                        focusName = character.FocusedCharacter.Info.DisplayName;
-                    }
-                    Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
-
-                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
-                }
-                else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
-                {
-                    focusedItem = character.FocusedItem;
-                }
-
-                if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
-                {
-                    var hudTexts = focusedItem.GetHUDTexts(character);
-
-                    int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
-                    Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
-                    startPos.Y -= (hudTexts.Count + 1) * 20;
-                    if (focusedItem.Sprite != null)
-                    {
-                        startPos.X += (int)Math.Sqrt(focusedItem.Sprite.size.X / 2) * dir;
-                        startPos.Y -= (int)Math.Sqrt(focusedItem.Sprite.size.Y / 2);
-                    }
-
-                    Vector2 textPos = startPos;
-                    if (dir == -1) textPos.X -= (int)GUI.Font.MeasureString(focusedItem.Name).X;
-
-                    float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
-
-                    GUI.DrawString(spriteBatch, textPos, focusedItem.Name, Color.White * alpha, Color.Black * alpha * 0.7f, 2);
-                    textPos.Y += 20.0f;
-                    foreach (ColoredText coloredText in hudTexts)
-                    {
-                        if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
-                        GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
-                        textPos.Y += 20;
-                    }
-                }
-                
-                foreach (HUDProgressBar progressBar in character.HUDProgressBars.Values)
-                {
-                    progressBar.Draw(spriteBatch, cam);
                 }
             }
         }
