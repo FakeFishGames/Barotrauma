@@ -4,7 +4,6 @@ namespace Barotrauma
 {
     class BackgroundCreaturePrefab
     {
-
         public readonly Sprite Sprite;
 
         public readonly float Speed;
@@ -18,6 +17,8 @@ namespace Barotrauma
         public readonly float SwarmRadius;
 
         public readonly bool DisableRotation;
+
+        public readonly float Scale;
         
         public BackgroundCreaturePrefab(XElement element)
         {
@@ -33,6 +34,8 @@ namespace Barotrauma
             SwarmRadius = element.GetAttributeFloat("swarmradius", 200.0f);
 
             DisableRotation = element.GetAttributeBool("disablerotation", false);
+
+            Scale = element.GetAttributeFloat("scale", 1.0f);
 
             foreach (XElement subElement in element.Elements())
             {
