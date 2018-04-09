@@ -6,9 +6,9 @@
     linkable="true"
     category="Machine">
 
-    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
+    <Sprite texture ="BTart_EngineDiesel_02.png" depth="0.8" sourcerect="0,0,752,591" canflipx="true"/>
 
-    <trigger x="20" y ="0" width="333" height="113"/>
+    <trigger x="20" y ="0" width="590" height="464"/>
 
     <fixrequirement name="Mechanical repairs">
       <skill name="Mechanical Engineering" level="40"/>
@@ -74,67 +74,5 @@
       <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
       <GuiFrame rect="0,0,400,256" alignment="Center" style="ItemUI"/>
     </Optimizable>
-  </Item>
-
-  <Item
-    name="Navigation Terminal"
-    linkable="true"
-    category="Machine">
-
-    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,0,64,128"/>
-
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-    
-    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
-      <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
-    </Steering>
-
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <sound file="radarPing.ogg" type="OnUse" range="4000.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
-      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Engine/radarBlip.png" origin="0.5,0.5"/>
-    </Radar>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-      <input name="velocity_in"/>
-      <output name="velocity_x_out"/>
-      <output name="velocity_y_out"/>
-    </ConnectionPanel>
-  </Item>
-
-  <Item
-    name="Sonar Monitor"
-    linkable="true"
-    category="Machine">
-    
-    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
-
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
-      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Engine/radarBlip.png" origin="0.5,0.5"/>
-    </Radar>
-
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver" type="Equipped"/>
-      <input name="power_in"/>
-    </ConnectionPanel>
   </Item>
 </Items>

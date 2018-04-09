@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
+
   <Item
     name="Junction Box"
     category="Electrical"
@@ -7,9 +8,9 @@
     
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
-    <Sprite texture="junctionbox.png" sourcerect="0,0,70,84" depth="0.8" canflipx="false"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="140,0,70,84" depth="0.8" maxcondition="0"/>
+    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,70,123" depth="0.8" canflipx="false"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="70,0,70,123" depth="0.8" maxcondition="50" fadein="true"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="140,0,70,123" depth="0.8" maxcondition="0"/>
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>

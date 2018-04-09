@@ -267,11 +267,11 @@
 
     <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
-      <sound file="Content/Items/Engine/radarPing.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Command/radarPing.ogg" type="OnUse" range="1000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
-      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Engine/radarBlip.png" origin="0.5,0.5"/>
+      <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
     </Radar>
 
     <ItemContainer capacity="1" hideitems="true">

@@ -4,7 +4,7 @@
     linkable="true"
     pickdistance ="150">
 
-    <Sprite texture ="locker.png" depth="0.84" sourcerect="0,0,128,128"/>
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
@@ -16,7 +16,7 @@
     linkable="true"
     pickdistance ="150">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
+    <Sprite texture ="ff_medicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
@@ -24,13 +24,13 @@
       <Containable name="medical"/>
     </ItemContainer>
   </Item>
-
+  
   <Item
    name="Toxic Cabinet"
    linkable="true"
    pickdistance ="150">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
+    <Sprite texture ="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>

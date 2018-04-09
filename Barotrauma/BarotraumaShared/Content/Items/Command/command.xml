@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Navigation Terminal"
+    linkable="true"
+    category="Machine">
+
+    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,133,224"/>
+
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+
+    <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
+      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+    </Steering>
+
+    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+      <sound file="radarPing.ogg" type="OnUse" range="4000.0"/>
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
+      <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
+    </Radar>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="velocity_in"/>
+      <output name="velocity_x_out"/>
+      <output name="velocity_y_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Sonar Monitor"
+    linkable="true"
+    category="Machine">
+
+    <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
+
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+
+    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+      <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
+    </Radar>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Status Monitor"
+    aliases="MiniMap"
+    category="Machine"
+    linkable="true">
+
+    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+
+    <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
+      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+    </MiniMap>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="water_data_in"/>
+      <input name="oxygen_data_in"/>
+    </ConnectionPanel>
+  </Item>
+</Items>

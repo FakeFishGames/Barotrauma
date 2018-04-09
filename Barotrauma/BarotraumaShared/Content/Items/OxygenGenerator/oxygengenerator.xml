@@ -3,8 +3,8 @@
     name="Oxygen Generator"
     category="Machine"
     linkable="true">
-    
-    <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,128,128"/>
+
+    <Sprite texture ="FF_oxygengenerator.png" depth="0.8" sourcerect="0,0,214,192"/>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="0.5"/>
