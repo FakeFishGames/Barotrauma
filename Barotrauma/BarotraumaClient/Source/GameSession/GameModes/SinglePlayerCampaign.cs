@@ -27,8 +27,12 @@ namespace Barotrauma
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+        {
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+            endRoundButton = new GUIButton(
+                new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), 
+                TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+
             endRoundButton.Font = GUI.SmallFont;
             endRoundButton.OnClicked = TryEndRound;
 

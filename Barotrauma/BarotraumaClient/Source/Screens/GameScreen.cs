@@ -69,12 +69,7 @@ namespace Barotrauma
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
-            {
-                Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
-            }
-
+            
             if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);

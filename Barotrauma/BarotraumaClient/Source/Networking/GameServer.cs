@@ -17,10 +17,12 @@ namespace Barotrauma.Networking
         {
             //----------------------------------------
 
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Center.Y * 0.6f);
+
+            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
 
-            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
+            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "Server Log", Alignment.TopLeft, "", inGameHUD);
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
                 if (log.LogFrame == null)

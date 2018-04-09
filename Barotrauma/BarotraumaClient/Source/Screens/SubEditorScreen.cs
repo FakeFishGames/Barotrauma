@@ -1689,23 +1689,16 @@ namespace Barotrauma
 
             leftPanel.Draw(spriteBatch);
             topPanel.Draw(spriteBatch);
-
-            //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
             if ((characterMode || wiringMode) && dummyCharacter != null)                     
             {
-                if (dummyCharacter.SelectedConstruction != null)
-                {
-                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, cam, dummyCharacter);
-                }
-                
                 dummyCharacter.DrawHUD(spriteBatch, cam);
                 
                 if (wiringMode) wiringToolPanel.Draw(spriteBatch);
             }
             else
             {
-                if (loadFrame!=null)
+                if (loadFrame != null)
                 {
                     loadFrame.Draw(spriteBatch);
                 }
