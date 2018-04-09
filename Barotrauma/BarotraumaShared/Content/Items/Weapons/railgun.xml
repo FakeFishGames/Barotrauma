@@ -16,7 +16,7 @@
             hudtint="0.4,0.6,0.7,0.05">
       <StatusEffect type="OnUse" target="This">
         <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
-        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0"/>
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false"/>
       </StatusEffect>
       <Crosshair texture="crosshair.png"/>
       <DisabledCrosshair texture="disabledCrosshair.png"/>
