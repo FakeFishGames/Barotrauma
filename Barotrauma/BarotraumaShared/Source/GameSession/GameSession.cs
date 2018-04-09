@@ -106,7 +106,8 @@ namespace Barotrauma
 #if CLIENT
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
 
-            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+            infoButton = new GUIButton(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
 

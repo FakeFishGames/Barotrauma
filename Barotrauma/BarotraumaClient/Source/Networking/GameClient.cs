@@ -66,11 +66,13 @@ namespace Barotrauma.Networking
         
         public GameClient(string newName)
         {
-            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+
+            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 20, buttonHeight), "End round", Alignment.TopLeft, inGameHUD);
             endVoteTickBox.OnSelected = ToggleEndRoundVote;
             endVoteTickBox.Visible = false;
 
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => 
             {
                 if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;

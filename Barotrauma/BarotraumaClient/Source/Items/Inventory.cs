@@ -102,7 +102,7 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 1.75f; }
+            get { return GameMain.GraphicsHeight / 1080.0f; }
         }
 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;

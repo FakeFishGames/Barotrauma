@@ -8,9 +8,7 @@ using System.Linq;
 namespace Barotrauma
 {
     partial class CharacterInventory : Inventory
-    {
-        const float HiddenPos = 190.0f;
-        
+    {        
         private static Sprite toggleArrow;
         private float arrowAlpha;
         
@@ -89,13 +87,13 @@ namespace Barotrauma
                     case InvSlotType.InnerClothes:
                         slotSprite = slotSpriteHorizontal;
                         break;
-                    case InvSlotType.OuterClothes:
+                    /*case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
                     case InvSlotType.Any:
                     case InvSlotType.Pack:
                         slotSprite = slotSpriteVertical;
-                        break;
+                        break;*/
                 }
 
                 Rectangle slotRect = new Rectangle(
@@ -158,9 +156,14 @@ namespace Barotrauma
         private void SetSlotPositions(Alignment alignment)
         {
             int spacing = 10;
-            int x = (alignment == Alignment.Center) ? GameMain.GraphicsWidth / 2 : 40;
-            if (alignment == Alignment.Right) x = GameMain.GraphicsWidth - 40;
+            int x = GameMain.GraphicsWidth / 2;
+            if (alignment == Alignment.Right)
+                x = HUDLayoutSettings.InventoryAreaLower.Right;
+            else if (alignment == Alignment.Left)
+                x = HUDLayoutSettings.InventoryAreaLower.X;
             int x2 = x;
+
+            int offsetFromBottom = (int)((slotSpriteRound.size.Y + spacing + slotSpriteSmall.size.Y) * UIScale);
 
             for (int i = 0; i < SlotPositions.Length; i++)
             {
@@ -169,28 +172,36 @@ namespace Barotrauma
                     switch (SlotTypes[i])
                     {
                         case InvSlotType.Headset:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * UIScale, 50);
+                            SlotPositions[i] = new Vector2(
+                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X + spacing) * UIScale, 
+                                HUDLayoutSettings.InventoryAreaUpper.Y);
                             break;
                         case InvSlotType.Card:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X + spacing) * 2 * UIScale, 50);
+                            SlotPositions[i] = new Vector2(
+                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X + spacing) * 2 * UIScale, 
+                                HUDLayoutSettings.InventoryAreaUpper.Y);
                             break;
                         case InvSlotType.InnerClothes:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - ((slotSpriteSmall.size.X + spacing) * 2 + slotSpriteHorizontal.size.X + spacing) * UIScale, 50);
+                            SlotPositions[i] = new Vector2(
+                                HUDLayoutSettings.InventoryAreaUpper.Right - ((slotSpriteSmall.size.X + spacing) * 2 + slotSpriteHorizontal.size.X + spacing) * UIScale, 
+                                HUDLayoutSettings.InventoryAreaUpper.Y);
                             break;
                         case InvSlotType.Head:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 50);
+                            SlotPositions[i] = new Vector2(
+                                HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 
+                                HUDLayoutSettings.InventoryAreaUpper.Y);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.OuterClothes:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.LeftHand:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 130 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 130 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.RightHand:
-                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 60 * UIScale, GameMain.GraphicsHeight - 220 * UIScale);
+                            SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 60 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Pack:
@@ -198,7 +209,7 @@ namespace Barotrauma
                             hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Any:
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 220 * UIScale);
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - offsetFromBottom);
                             x += (int)((slotSpriteVertical.size.X + spacing) * UIScale);
                             break;
                     }
@@ -208,12 +219,12 @@ namespace Barotrauma
                     if (HideSlot(i)) continue;
                     if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                     {
-                        SlotPositions[i] = new Vector2(x2, GameMain.GraphicsHeight - 370 * UIScale);
+                        SlotPositions[i] = new Vector2(x2, GameMain.GraphicsHeight - offsetFromBottom * 2);
                         x2 += (int)((slots[i].Rect.Width + spacing * UIScale));
                     }
                     else
                     {
-                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 210 * UIScale);
+                        SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - offsetFromBottom);
                         x += (int)((slots[i].Rect.Width + spacing * UIScale));
                     }
                 }
@@ -222,7 +233,7 @@ namespace Barotrauma
                     if (HideSlot(i)) continue;
                     if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                     {
-                        SlotPositions[i] = new Vector2(x2 - slots[i].Rect.Width, GameMain.GraphicsHeight - 330 * UIScale);
+                        SlotPositions[i] = new Vector2(x2 - slots[i].Rect.Width, GameMain.GraphicsHeight - offsetFromBottom * 2);
                         if (i < slots.Length - 1)
                         {
                             x2 -= (int)((slots[i].Rect.Width + spacing * UIScale));
@@ -230,7 +241,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        SlotPositions[i] = new Vector2(x - slots[i].Rect.Width, GameMain.GraphicsHeight - 210 * UIScale);
+                        SlotPositions[i] = new Vector2(x - slots[i].Rect.Width, GameMain.GraphicsHeight - offsetFromBottom);
                         if (i < slots.Length - 1)
                         {
                             x -= (int)((slots[i].Rect.Width + spacing * UIScale));
@@ -298,7 +309,7 @@ namespace Barotrauma
                     if (hidden && !hoverOnInventory && alignment == Alignment.Center && HideTimer <= 0.0f)
                     {
                         slots[i].DrawOffset =
-                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, HiddenPos * UIScale, 10.0f * deltaTime));                        
+                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, 100, 10.0f * deltaTime));                        
                     }
                     else
                     {
