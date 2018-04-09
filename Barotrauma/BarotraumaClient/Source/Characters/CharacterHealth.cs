@@ -89,12 +89,11 @@ namespace Barotrauma
 
         partial void InitProjSpecific(Character character)
         {
-            int healthBarHeight = (int)(450 * GUI.Scale);
-            healthBar = new GUIProgressBar(new Rectangle(10, GameMain.GraphicsHeight - healthBarHeight - 10, (int)(30 * GUI.Scale), healthBarHeight), Color.White, null, 1.0f, Alignment.TopLeft);
+            healthBar = new GUIProgressBar(HUDLayoutSettings.HealthBarAreaLeft, Color.White, null, 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
 
             afflictionContainer = new GUIListBox(new Rectangle(0, 0, 100, 200), "");
-            healthWindow = new GUIFrame(new Rectangle(0,0,100,200), "");
+            healthWindow = new GUIFrame(new Rectangle(0, 0, 100, 200), "");
 
             UpdateAlignment();
 
@@ -158,21 +157,25 @@ namespace Barotrauma
 
         private void UpdateAlignment()
         {
-            int windowWidth = (int)(300 * GUI.Scale);
-            int windowHeight = (int)(450 * GUI.Scale);
-            
-            int y = 30 + (int)(90 * GUI.Scale);
             if (alignment == Alignment.Left)
             {
-                healthBar.Rect = new Rectangle(10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
-                healthWindow.Rect = new Rectangle((int)(60 * GUI.Scale), y, windowWidth, windowHeight);
-                afflictionContainer.Rect = new Rectangle(healthWindow.Rect.Right, healthWindow.Rect.Y, windowWidth, windowHeight);
+                healthBar.Rect = HUDLayoutSettings.HealthBarAreaLeft;
+                healthWindow.Rect = new Rectangle(
+                    HUDLayoutSettings.HealthWindowAreaLeft.X, HUDLayoutSettings.HealthWindowAreaLeft.Y, 
+                    HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height);
+                afflictionContainer.Rect = new Rectangle(
+                    HUDLayoutSettings.HealthWindowAreaLeft.Center.X, HUDLayoutSettings.HealthWindowAreaLeft.Y,
+                    HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height);
             }
             else
             {
-                healthBar.Rect = new Rectangle(GameMain.GraphicsWidth - healthBar.Rect.Width - 10, healthBar.Rect.Y, healthBar.Rect.Width, healthBar.Rect.Height);
-                healthWindow.Rect = new Rectangle((int)(GameMain.GraphicsWidth - 10 - (330 * GUI.Scale) - windowWidth), y, windowWidth, windowHeight);
-                afflictionContainer.Rect = new Rectangle(healthWindow.Rect.X - windowWidth, healthWindow.Rect.Y, windowWidth, windowHeight);
+                healthBar.Rect = HUDLayoutSettings.HealthBarAreaRight;
+                healthWindow.Rect = new Rectangle(
+                    HUDLayoutSettings.HealthWindowAreaRight.Center.X, HUDLayoutSettings.HealthWindowAreaRight.Y,
+                    HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height);
+                afflictionContainer.Rect = new Rectangle(
+                    HUDLayoutSettings.HealthWindowAreaRight.X, HUDLayoutSettings.HealthWindowAreaRight.Y,
+                    HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height);
             }
         }
 
@@ -207,7 +210,7 @@ namespace Barotrauma
         {
             if (openHealthWindow != null)
             {
-                if (openHealthWindow != Character.Controlled?.CharacterHealth && openHealthWindow != character.SelectedCharacter?.CharacterHealth)
+                if (openHealthWindow != Character.Controlled?.CharacterHealth && openHealthWindow != Character.Controlled?.SelectedCharacter?.CharacterHealth)
                 {
                     openHealthWindow = null;
                     return;
@@ -305,7 +308,29 @@ namespace Barotrauma
                 }
                 highlightedLimbIndex = -1;
             }
-            
+
+
+            if ((alignment == Alignment.Left &&
+                HUDLayoutSettings.AfflictionAreaLeft.Contains(PlayerInput.MousePosition) || 
+                HUDLayoutSettings.HealthBarAreaLeft.Contains(PlayerInput.MousePosition)) 
+                ||
+                (alignment == Alignment.Right &&
+                HUDLayoutSettings.AfflictionAreaRight.Contains(PlayerInput.MousePosition) ||
+                HUDLayoutSettings.HealthBarAreaRight.Contains(PlayerInput.MousePosition)))
+            {
+                healthBar.State = GUIComponent.ComponentState.Hover;
+                System.Diagnostics.Debug.WriteLine("hover");
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    OpenHealthWindow = openHealthWindow == this ? null : this;
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("------");
+                healthBar.State = GUIComponent.ComponentState.None;
+            }
+
             if (character == Character.Controlled && character.IsUnconscious && !character.IsDead)
             {
                 suicideButton.Visible = true;
@@ -359,27 +384,26 @@ namespace Barotrauma
 
                 Pair<Sprite, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
-                Vector2 pos = alignment == Alignment.Left ?
-                    healthBar.Rect.Location.ToVector2() + new Vector2(healthBar.Rect.Width + 5, 10) :
-                    healthBar.Rect.Location.ToVector2() - new Vector2(5 + 50.0f * GUI.Scale, 10);
+                Rectangle afflictionArea =  alignment == Alignment.Left ? HUDLayoutSettings.AfflictionAreaLeft : HUDLayoutSettings.AfflictionAreaRight;
+                Point pos = afflictionArea.Location;
 
                 foreach (Pair<Sprite, string> statusIcon in statusIcons)
                 {
-                    Rectangle afflictionIconRect = new Rectangle(pos.ToPoint(), (statusIcon.First.size * GUI.Scale).ToPoint());
+                    Rectangle afflictionIconRect = new Rectangle(pos, new Point(afflictionArea.Width, afflictionArea.Width));
                     interactArea = Rectangle.Union(interactArea, afflictionIconRect);
                     if (afflictionIconRect.Contains(PlayerInput.MousePosition))
                     {
                         highlightedIcon = statusIcon;
                         highlightedIconPos = afflictionIconRect.Center.ToVector2();
                     }
-                    pos.Y += 50.0f * GUI.Scale;
+                    pos.Y += afflictionArea.Width + (int)(5 * GUI.Scale);
                 }
 
-                pos.Y = healthBar.Rect.Location.Y + 10;
+                pos = afflictionArea.Location;
                 foreach (Pair<Sprite, string> statusIcon in statusIcons)
                 {
-                    statusIcon.First.Draw(spriteBatch, pos, highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
-                    pos.Y += 50.0f * GUI.Scale;
+                    statusIcon.First.Draw(spriteBatch, pos.ToVector2(), highlightedIcon == statusIcon ? Color.White : Color.White * 0.8f, 0, GUI.Scale);
+                    pos.Y += afflictionArea.Width + (int)(5 * GUI.Scale);
                 }
 
                 if (highlightedIcon != null)
@@ -392,19 +416,6 @@ namespace Barotrauma
             }
 
             healthBar.Draw(spriteBatch);
-            
-            if (interactArea.Contains(PlayerInput.MousePosition) && GUIComponent.MouseOn == null)
-            {
-                healthBar.State = GUIComponent.ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked())
-                {
-                    OpenHealthWindow = openHealthWindow == this ? null : this;
-                }
-            }
-            else
-            {
-                healthBar.State = GUIComponent.ComponentState.None;
-            }
 
             if (OpenHealthWindow == this)
             {
@@ -482,16 +493,15 @@ namespace Barotrauma
 
         public bool OnItemDropped(Item item)
         {
-            if (highlightedLimbIndex < 0 || item == null) return false;
-
+            //items can be dropped outside the health window
             if (!healthWindow.Rect.Contains(PlayerInput.MousePosition) && !afflictionContainer.Rect.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }
-
+            
             //can't apply treatment to dead characters
-            if (character.IsDead) return false;
-            if (highlightedLimbIndex < 0 || item == null) return false;
+            if (character.IsDead) return true;
+            if (highlightedLimbIndex < 0 || item == null) return true;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
