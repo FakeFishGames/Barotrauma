@@ -179,7 +179,7 @@
 
     <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0">
+    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0" autoorientgap="true">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
       <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
