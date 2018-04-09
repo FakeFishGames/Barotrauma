@@ -370,6 +370,12 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
+            {
+                HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
+                NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.White);
 
             }));
 

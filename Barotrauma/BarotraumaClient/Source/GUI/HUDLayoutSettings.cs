@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     static class HUDLayoutSettings
     {
+        public static bool DebugDraw;
+
         public static Rectangle ButtonAreaTop
         {
             get; private set;
@@ -109,16 +111,16 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.Yellow * 0.5f);
+            GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaUpper, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarAreaRight, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, AfflictionAreaRight, Color.Yellow * 0.5f);
+            GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
+            GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, HealthBarAreaRight, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, AfflictionAreaRight, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthWindowAreaRight, Color.Yellow * 0.5f);
+            GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, HealthWindowAreaRight, Color.Red * 0.5f);
         }
     }
 }

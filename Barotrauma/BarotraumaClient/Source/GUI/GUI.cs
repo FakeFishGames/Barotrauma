@@ -577,9 +577,9 @@ namespace Barotrauma
 
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
-
-                HUDLayoutSettings.Draw(spriteBatch);
             }
+
+            if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
