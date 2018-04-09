@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
                 Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, 60);
                 for (int i = 0; i < projectiles.Count; i++)
                 {
-                    Inventory.DrawSlot(spriteBatch,
+                    Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
                         projectiles[i] == null ? null : projectiles[i].Item, true);
                 }

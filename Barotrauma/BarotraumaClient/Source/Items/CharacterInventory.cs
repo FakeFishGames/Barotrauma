@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,6 +128,8 @@ namespace Barotrauma
                     selectedSlot = new SlotReference(this, slots[i], i, selectedSlot.IsSubSlot, selectedSlot.Inventory);
                 }
             }
+
+            AssignQuickUseNumKeys();
 
             highlightedSubInventorySlots.Clear();
         }
@@ -309,7 +312,7 @@ namespace Barotrauma
                     if (hidden && !hoverOnInventory && alignment == Alignment.Center && HideTimer <= 0.0f)
                     {
                         slots[i].DrawOffset =
-                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, slots[i].Rect.Size.Y / 2 + slotSpriteRound.size.Y * UIScale, 10.0f * deltaTime));                        
+                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, slots[i].Rect.Size.Y / 2 + slotSpriteRound.size.Y * UIScale, 10.0f * deltaTime));
                     }
                     else
                     {
@@ -317,11 +320,16 @@ namespace Barotrauma
                             new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, 0, 10.0f * deltaTime));
                     }
                 }
+                if (Items[i] != null && Character.Controlled?.Inventory == this && 
+                    slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
+                {
+                    QuickUseItem(Items[i], true, false);
+                }
             }
             
             if (doubleClickedItem != null)
             {
-                DoubleClickItem(doubleClickedItem, true, true);
+                QuickUseItem(doubleClickedItem, true, true);
             }
 
             List<SlotReference> hideSubInventories = new List<SlotReference>();
@@ -431,7 +439,7 @@ namespace Barotrauma
                             if (PlayerInput.LeftButtonDown()) slots[i].EquipButtonState = GUIComponent.ComponentState.Pressed;
                             if (PlayerInput.LeftButtonClicked())
                             {
-                                DoubleClickItem(Items[i], true, false);
+                                QuickUseItem(Items[i], true, false);
                             }
                         }
                     }                    
@@ -462,7 +470,38 @@ namespace Barotrauma
             doubleClickedItem = null;
         }
 
-        private void DoubleClickItem(Item item, bool allowEquip, bool allowInventorySwap)
+        private void AssignQuickUseNumKeys()
+        {
+            int num = 1;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (HideSlot(i))
+                {
+                    slots[i].QuickUseKey = Keys.None;
+                    continue;
+                }
+                //assign non-limb specific slots first to make them start from 1
+                if (SlotTypes[i] == InvSlotType.Any)
+                {
+                    slots[i].QuickUseKey = Keys.D0 + num;
+                    num++;
+                }
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (HideSlot(i)) continue;
+                
+                //assign non-limb specific slots first to make them start from 1
+                if (SlotTypes[i] != InvSlotType.Any)
+                {
+                    slots[i].QuickUseKey = Keys.D0 + num;
+                    num++;
+                }
+            }
+        }
+        
+        private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap)
         {
             bool wasPut = false;
             if (item.ParentInventory != this)
@@ -582,7 +621,7 @@ namespace Barotrauma
                 if (container != null && container.Capacity == 1 && container.Inventory.slots != null)
                 {
                     container.Inventory.slots[0].SlotSprite = slotSpriteRound;
-                    DrawSlot(spriteBatch, container.Inventory.slots[0], container.Inventory.Items[0]);
+                    DrawSlot(spriteBatch, this, container.Inventory.slots[0], container.Inventory.Items[0]);
                 }
             }
 
