@@ -1242,7 +1242,7 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World.Clear();            
 
             Unloading = false;
         }
