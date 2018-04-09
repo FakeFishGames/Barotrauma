@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="mantis" humanoid="false">
 
   <health
@@ -26,8 +26,8 @@
     <targetpriority tag="stronger" state="Escape" priority="100"/> 
     <targetpriority tag="dead" state="Eat" priority="90"/> 
     <targetpriority tag="human" state="Attack" priority="80"/>
+    <targetpriority tag="door" state="Attack" priority="65"/>
     <targetpriority tag="weaker" state="Attack" priority="60"/>
-    <targetpriority tag="door" state="Attack" priority="55"/>
     <targetpriority tag="sonar" state="Attack" priority="50"/>
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
@@ -37,8 +37,8 @@
     headposition="120" headangle="-90" 
     minscale="0.8" maxscale="1.2"
     waveamplitude="50.0" wavelength="2500" 
-    swimspeed="2.0" walkspeed="2.0"
-    runspeedmultiplier="1.5" swimspeedmultiplier="1.5"
+    swimspeed="2.5" walkspeed="3.0"
+    runspeedmultiplier="2" swimspeedmultiplier="2.5"
     stepsize ="20.0,20.0"
     legtorque="10"
     footrotation ="180.0"

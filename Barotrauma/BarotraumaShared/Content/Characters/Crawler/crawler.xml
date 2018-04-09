@@ -1,8 +1,8 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="crawler" humanoid="false">
   
   <health
-    vitality="100"
+    vitality="70"
     doesbleed="true"/>
 
   <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
@@ -55,12 +55,12 @@
     colliderheightfromfloor="35" colliderstandangle="90" headposition="50" torsoposition="30" headangle="-70" torsoangle="-90"
     minscale="0.8" maxscale="1.2"
     waveamplitude="4.0" wavelength="3000"
-    swimspeed="2.0" walkspeed="2.0"
-    runspeedmultiplier="2" swimspeedmultiplier="2.0"
+    swimspeed="3.0" walkspeed="2.0"
+    runspeedmultiplier="2" swimspeedmultiplier="3.0"
     stepsize="15.0,20.0"
     steertorque="20"
     legtorque="10"
-    impacttolerance="7"
+    impacttolerance="6"
     flip="true">
 
     <collider height="60" radius="22"/>
