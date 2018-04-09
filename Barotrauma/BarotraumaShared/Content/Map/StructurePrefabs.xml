@@ -83,12 +83,12 @@
   
   <!-- TAIL -->
   <extA_Tail description="Submarine tail temp"
-    width="920" height = "1269" resizehorizontal="false" body="true">
+    width="920" height = "1269" resizehorizontal="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,920,1269" depth="0.01"/>
   </extA_Tail>
 
-  <extA_Front description="Submarine tail temp"
-    width="367" height = "730" resizehorizontal="false" body="true">
+  <extA_Front description="Submarine front temp"
+    width="367" height="730" resizehorizontal="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="1200,290,367,730" depth="0.01"/>
   </extA_Front>
   <!-- TAIL ENDS-->
@@ -152,39 +152,38 @@
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,0,384,320" depth="0.1"/>
   </ExtA_conc-35>
 
-  <!-- !!!!! NEW PIECES - NO COLLISION BOXES YET !!!!! -->
   <ExtA_conc-45 description="ExtA concave-45" body="true"
-    width="320" height="256">
+    width="320" height="256" bodywidth="400" bodyheight="64" bodyrotation="-40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,512,320,256" depth="0.1"/>
   </ExtA_conc-45>
 
   <ExtA_conv-60mini description="ExtA concave-60 mini" body="true"
-    width="127" height="192">
+    width="127" height="192" bodywidth="230" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,832,127,192" depth="0.1"/>
   </ExtA_conv-60mini>
 
   <ExtA_S-vert description="ExtA S Vertical" body="true"
-    width="192" height="384">
+    width="192" height="384" bodywidth="430" bodyheight="64" bodyrotation="-65">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="832,640,192,384" depth="0.1"/>
   </ExtA_S-vert>
 
   <ExtA_conc-45Up description="ExtA concave-45 Up" body="true"
-    width="472" height="384">
+    width="472" height="384"  bodywidth="574" bodyheight="64" bodyrotation="-43">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,640,472,384" depth="0.1"/>
   </ExtA_conc-45Up>
 
   <ExtA_conv-75 description="ExtA concave-75" body="true"
-    width="383" height="576">
+    width="383" height="576" bodywidth="690" bodyheight="64" bodyrotation="-55">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,960,383,576" depth="0.1"/>
   </ExtA_conv-75>
 
   <ExtA_conv-60 description="ExtA concave-60" body="true"
-    width="256" height="448">
+    width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,1088,256,448" depth="0.1"/>
   </ExtA_conv-60>
 
   <ExtA_S-60 description="ExtA S 60" body="true"
-    width="256" height="448">
+    width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="768,1088,256,448" depth="0.1"/>
   </ExtA_S-60>
 
