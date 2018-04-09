@@ -105,9 +105,19 @@ namespace Barotrauma
             
             plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
             plusButton.OnClicked += ChangeIntValue;
+            plusButton.OnPressed += () =>
+            {
+                IntValue++;
+                return true;
+            };
             plusButton.Visible = inputType == NumberType.Int;
             minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
             minusButton.OnClicked += ChangeIntValue;
+            minusButton.OnPressed += () =>
+            {
+                IntValue--;
+                return true;
+            };
             minusButton.Visible = inputType == NumberType.Int;
 
             if (inputType == NumberType.Int)
