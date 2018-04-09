@@ -309,7 +309,7 @@ namespace Barotrauma
                     if (hidden && !hoverOnInventory && alignment == Alignment.Center && HideTimer <= 0.0f)
                     {
                         slots[i].DrawOffset =
-                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, 100, 10.0f * deltaTime));                        
+                            new Vector2(slots[i].DrawOffset.X, MathHelper.Lerp(slots[i].DrawOffset.Y, slots[i].Rect.Size.Y / 2 + slotSpriteRound.size.Y * UIScale, 10.0f * deltaTime));                        
                     }
                     else
                     {

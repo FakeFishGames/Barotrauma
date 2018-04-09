@@ -20,6 +20,8 @@ namespace Barotrauma
         private GUIListBox chatBox;
         private GUITextBox inputBox;
 
+        private GUIButton toggleButton;
+
         private GUIButton radioButton;
 
         private bool isSinglePlayer;
@@ -107,7 +109,7 @@ namespace Barotrauma
             chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 40), Color.White * 0.5f, "ChatBox", guiFrame);
             chatBox.Padding = Vector4.Zero;
 
-            var toggleButton = new GUIButton(new Rectangle(HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? -40 : guiFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", guiFrame);
+            toggleButton = new GUIButton(new Rectangle(HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? -40 : guiFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", guiFrame);
             toggleButton.ClampMouseRectToParent = false;
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
@@ -229,10 +231,10 @@ namespace Barotrauma
         {
             if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
 
-            bool hovering = 
-                PlayerInput.MousePosition.X > Math.Min(chatBox.Rect.X, RadioButton.Rect.X) &&
-                PlayerInput.MousePosition.X < Math.Max(chatBox.Rect.Right, RadioButton.Rect.Right) &&
-                PlayerInput.MousePosition.Y > chatBox.Rect.Y && 
+            bool hovering =
+                PlayerInput.MousePosition.X > Math.Min(Math.Min(chatBox.Rect.X, toggleButton.Rect.X), radioButton.Rect.X) &&
+                PlayerInput.MousePosition.X < Math.Max(Math.Max(chatBox.Rect.Right, radioButton.Rect.Right), toggleButton.Rect.Right) &&
+                PlayerInput.MousePosition.Y > chatBox.Rect.Y &&
                 PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
 
             hideTimer -= deltaTime;

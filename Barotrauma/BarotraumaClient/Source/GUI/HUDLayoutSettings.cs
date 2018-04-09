@@ -76,7 +76,7 @@ namespace Barotrauma
             InventoryAreaUpper = new Rectangle(padding, ButtonAreaTop.Bottom + padding, GameMain.GraphicsWidth - padding * 2, inventoryAreaUpperHeight);
             
             //horizontal slices at the corners of the screen for health bar and affliction icons
-            int healthBarWidth = (int)(20 * GUI.Scale);
+            int healthBarWidth = (int)Math.Max(20 * GUI.Scale, 15);
             int afflictionAreaWidth = (int)(60 * GUI.Scale);
             int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.35f, 280);
             HealthBarAreaLeft = new Rectangle(padding, GameMain.GraphicsHeight - lowerAreaHeight, healthBarWidth, lowerAreaHeight - padding);
