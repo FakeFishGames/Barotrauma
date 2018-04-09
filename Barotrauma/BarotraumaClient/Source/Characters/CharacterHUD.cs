@@ -232,7 +232,8 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedConstruction != null && character.CanInteractWith(Character.Controlled.SelectedConstruction))
+            if (character.SelectedConstruction != null && 
+                (character.CanInteractWith(Character.Controlled.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
             {
                 character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
             }
