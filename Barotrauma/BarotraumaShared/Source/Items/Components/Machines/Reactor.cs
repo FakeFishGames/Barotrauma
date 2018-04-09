@@ -30,6 +30,8 @@ namespace Barotrauma.Items.Components
         //automatical adjustment to the power output when 
         //turbine output and temperature are in the optimal range
         private float autoAdjustAmount;
+        
+        private float fuelConsumptionRate;
 
         private float meltDownTimer, meltDownDelay;
         private float fireTimer, fireDelay;
@@ -118,6 +120,17 @@ namespace Barotrauma.Items.Components
                 turbineOutput = MathHelper.Clamp(value, 0.0f, 100.0f); 
             }
         }
+        
+        [Serialize(0.2f, true), Editable(0.0f, 1000.0f, ToolTip = "How fast the condition of the contained fuel rods deteriorates.")]
+        public float FuelConsumptionRate
+        {
+            get { return fuelConsumptionRate; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                fuelConsumptionRate = Math.Max(value, 0.0f);
+            }
+        }
 
         private float correctTurbineOutput;
 
@@ -187,8 +200,10 @@ namespace Barotrauma.Items.Components
             optimalFissionRate = Vector2.Lerp(new Vector2(40.0f, 70.0f), new Vector2(30.0f, 85.0f), degreeOfSuccess);
             allowedFissionRate = Vector2.Lerp(new Vector2(30.0f, 85.0f), new Vector2(20.0f, 98.0f), degreeOfSuccess);
 
-            float temperatureDiff = (fissionRate * 2.0f - turbineOutput) - Temperature;
+            float heatAmount = fissionRate * (AvailableFuel / 100.0f) * 2.0f;
+            float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
+            if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
 
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(targetFissionRate, AvailableFuel), deltaTime);
             TurbineOutput = MathHelper.Lerp(turbineOutput, targetTurbineOutput, deltaTime);
@@ -236,6 +251,15 @@ namespace Barotrauma.Items.Components
 
                         load = Math.Max(load, pt.PowerLoad);
                     }
+                }
+            }
+
+            if (fissionRate > 0.0f)
+            {
+                foreach (Item item in item.ContainedItems)
+                {
+                    if (!item.HasTag("reactorfuel")) continue;
+                    item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                 }
             }
 
