@@ -1715,6 +1715,11 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(wall);
                 }
             }, null, null));
+
+            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
+            {
+                Submarine.MainSub?.FlipX();
+            }));
 #endif
             InitProjectSpecific();
 
