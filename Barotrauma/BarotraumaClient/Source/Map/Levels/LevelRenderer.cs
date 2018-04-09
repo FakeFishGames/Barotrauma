@@ -175,7 +175,7 @@ namespace Barotrauma
                 while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
 
                 dustParticles.DrawTiled(spriteBatch, origin + offsetS, new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
-                    sourceRect: srcRect, color: Color.White * alpha, textureScale: new Vector2(scale));
+                    rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(scale));
             }
 
             spriteBatch.End();
