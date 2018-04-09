@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,8 @@ namespace Barotrauma
         private CoroutineHandle BorderHighlightCoroutine;
         
         public Sprite SlotSprite;
+
+        public Keys QuickUseKey;
 
         public bool IsHighlighted
         {
@@ -363,7 +366,7 @@ namespace Barotrauma
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
 
-                DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
+                DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
             }
         }
 
@@ -544,7 +547,7 @@ namespace Barotrauma
                         (int)(PlayerInput.MousePosition.Y - 10 * UIScale),
                         (int)(80 * UIScale), (int)(80 * UIScale));
 
-                    DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
+                    DrawSlot(spriteBatch, null, new InventorySlot(dragRect), draggingItem);
                 }
             }
 
@@ -590,7 +593,7 @@ namespace Barotrauma
 
         }
 
-        public static void DrawSlot(SpriteBatch spriteBatch, InventorySlot slot, Item item, bool drawItem = true)
+        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, bool drawItem = true)
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
@@ -642,18 +645,27 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, highlightRect, slot.BorderHighlightColor, false, 0, 5);
             }
 
-            if (item == null || !drawItem) return;
-
-            float scale = Math.Min(Math.Min((rect.Width - 10) / item.Sprite.size.X, (rect.Height - 10) / item.Sprite.size.Y), 2.0f);
-            Vector2 itemPos = rect.Center.ToVector2();
-            if (itemPos.Y > GameMain.GraphicsHeight)
+            if (item != null && drawItem)
             {
-                itemPos.Y -= Math.Min(
-                    (itemPos.Y + item.Sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
-                    (itemPos.Y - item.Sprite.size.Y / 2 * scale) - rect.Y);
+                float scale = Math.Min(Math.Min((rect.Width - 10) / item.Sprite.size.X, (rect.Height - 10) / item.Sprite.size.Y), 2.0f);
+                Vector2 itemPos = rect.Center.ToVector2();
+                if (itemPos.Y > GameMain.GraphicsHeight)
+                {
+                    itemPos.Y -= Math.Min(
+                        (itemPos.Y + item.Sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
+                        (itemPos.Y - item.Sprite.size.Y / 2 * scale) - rect.Y);
+                }
+
+                item.Sprite.Draw(spriteBatch, itemPos, item.GetSpriteColor(), 0, scale);
             }
 
-            item.Sprite.Draw(spriteBatch, itemPos, item.GetSpriteColor(), 0, scale);
+            if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)
+            {
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), 
+                    slot.QuickUseKey.ToString().Substring(1, 1), 
+                    item == null ? Color.Gray : Color.White, 
+                    Color.Black * 0.8f);
+            }
         }
     }
 }

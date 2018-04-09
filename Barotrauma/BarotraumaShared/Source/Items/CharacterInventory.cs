@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public static InvSlotType[] SlotTypes = new InvSlotType[] {
             InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.RightHand,
-            InvSlotType.LeftHand, InvSlotType.Head, InvSlotType.Headset, InvSlotType.Card,
+            InvSlotType.LeftHand, InvSlotType.Head, InvSlotType.Card, InvSlotType.Headset,
             InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
             InvSlotType.Pack };
 
