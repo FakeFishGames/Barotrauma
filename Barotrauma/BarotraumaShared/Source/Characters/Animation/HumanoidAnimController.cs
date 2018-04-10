@@ -1246,14 +1246,27 @@ namespace Barotrauma
             Vector2 currItemPos = (character.SelectedItems[0] == item) ?
                 rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0] :
                 leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
-            item.SetTransform(currItemPos, itemAngle);
             
             if (holdable.Pusher != null)
             {
-                if (!holdable.Pusher.Enabled) holdable.Pusher.Enabled = true;
-                holdable.Pusher.ResetDynamics();
-                holdable.Pusher.SetTransform(currItemPos, itemAngle);
+                if (!holdable.Pusher.Enabled)
+                {
+                    holdable.Pusher.Enabled = true;
+                    holdable.Pusher.ResetDynamics();
+                    holdable.Pusher.SetTransform(currItemPos, itemAngle);
+                }
+                else
+                {
+                    holdable.Pusher.TargetPosition = currItemPos;
+                    holdable.Pusher.TargetRotation = holdAngle * Dir;
+
+                    holdable.Pusher.MoveToTargetPosition(true);
+
+                    currItemPos = holdable.Pusher.SimPosition;
+                    itemAngle = holdable.Pusher.Rotation;
+                }
             }
+            item.SetTransform(currItemPos, itemAngle);
 
             //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
 
