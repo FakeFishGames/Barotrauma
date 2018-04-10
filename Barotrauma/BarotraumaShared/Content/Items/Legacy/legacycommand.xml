@@ -1,12 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Navigation Terminal"    
-    identifier="navterminal"
-    linkable="true"
-    category="Machine">
+    name="Navigation Terminal"
+    category="Legacy"
+    linkable="true">
 
-    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,133,224"/>
+    <Sprite texture="machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>
@@ -20,7 +19,7 @@
     </Steering>
 
     <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
-      <sound file="radarPing.ogg" type="OnUse" range="4000.0"/>
+      <sound file="Content/Items/Command/radarPing.ogg" type="OnUse" range="4000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
@@ -37,12 +36,11 @@
   </Item>
 
   <Item
-    name="Sonar Monitor"    
-    identifier="sonarmonitor"
-    linkable="true"
-    category="Machine">
+    name="Sonar Monitor"
+    category="Legacy"    
+    linkable="true">
 
-    <Sprite texture="Content/Items/Command/navigator.png" depth="0.8" sourcerect="0,0,133,224"/>
+    <Sprite texture="machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>
@@ -65,13 +63,12 @@
   </Item>
 
   <Item
-    name="Status Monitor"    
-    identifier="statusmonitor"
+    name="Status Monitor"
+    category="Legacy"    
     aliases="MiniMap"
-    category="Machine"
     linkable="true">
 
-    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+    <Sprite texture="machines.png" sourcerect="64,0,64,128" depth="0.8"/>
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>

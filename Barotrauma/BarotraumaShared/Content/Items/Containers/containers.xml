@@ -28,10 +28,10 @@
   </Item>
   
   <Item
-   name="Toxic Cabinet"   
-   identifier="toxcabinet"
-   linkable="true"
-   pickdistance ="150">
+    name="Toxic Cabinet"   
+    identifier="toxcabinet"
+    linkable="true"
+    pickdistance ="150">
 
     <Sprite texture ="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
 

@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Items>
+  <Item
+    name="Engine"
+    category="Legacy"
+    linkable="true">
+
+    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
+
+    <trigger x="20" y ="0" width="590" height="464"/>
+
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Mechanical Engineering" level="40"/>
+      <item name="Welding Tool"/>
+      <item name="Wrench"/>
+    </fixrequirement>
+
+    <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected = "true">
+      <StatusEffect type="InWater" target="This" condition="-2.0"/>
+      <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
+      <sound file="Content/Items/Engine/engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume" loop="true"/>
+    </Engine>
+    
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+      <input name="set_force"/>
+    </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical" description="Adjust trim values to increase the maximum thrust of the engine.">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the engine.">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>    
+  </Item>
+</Items>
