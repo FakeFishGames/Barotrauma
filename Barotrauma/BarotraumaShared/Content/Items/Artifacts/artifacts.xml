@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Skyholder Artifact"
+    identifier="skyholderartifact"
     category="Alien"
     Tags="alien"
     radarsize="30">
@@ -24,6 +25,7 @@
 
   <Item
     name="Thermal Artifact"
+    identifier="thermalartifact"
     category="Alien"
     Tags="alien"
     radarsize="30">
@@ -48,6 +50,7 @@
 
   <Item
     name="Faraday Artifact"
+    identifier="faradayartifact"
     category="Alien"
     Tags="alien"
     radarsize="30">
@@ -67,7 +70,8 @@
   </Item>
 
   <Item
-    name="Nasonov Artifact"
+    name="Nasonov Artifact"    
+    identifier="nasonovartifact"
     category="Alien"
     Tags="alien,nasonov"
     pickdistance="150"
@@ -91,7 +95,8 @@
   </Item>
 
   <Item
-    name="Oxygenite Shard"
+    name="Oxygenite Shard"    
+    identifier="oxygeniteshard"
     category="Alien"    
     tags="alien,smallitem,oxygensource"
     impacttolerance="8">
@@ -118,9 +123,9 @@
   </Item>
 
   <Item
-    name="Sulphurite Shard"
+    name="Sulphurite Shard"    
+    identifier="sulphuriteshard"
     category="Alien"
-
     tags="alien,smallitem"
     impacttolerance="8"
     spritecolor="1.0,0.0,0.0,1.0">
@@ -142,7 +147,8 @@
   </Item>
 
   <Item
-   name="Ancient Weapon"
+   name="Ancient Weapon"   
+   identifier="ancientweapon"
    category="Alien"
    Tags="alien,smallitem">
 
@@ -199,7 +205,8 @@
   </Item>
 
   <Item
-    name="Alien Hatch"
+    name="Alien Hatch"    
+    identifier="alienhatch"
     category="Alien"
     Tags="alien"
     linkable="true">
@@ -220,7 +227,8 @@
   </Item>
 
   <Item
-   name="Alien Door"
+   name="Alien Door"   
+   identifier="aliendoor"
    category="Alien"
    linkable="true"
    Tags="alien">
@@ -241,7 +249,8 @@
   </Item>
 
   <Item
-   name="Alien Motion Sensor"
+   name="Alien Motion Sensor"   
+   identifier="alienmotionsensor"
    linkable="true"
    category="Alien"
    Tags="alien">
@@ -257,7 +266,8 @@
   </Item>
 
   <Item
-   name="Artifact Holder"
+   name="Artifact Holder"   
+   identifier="artifactholder"
    linkable="true"
    category="Alien"
    Tags="alien">

@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Nuclear Reactor"
+    identifier="reactor1"
     type ="Reactor"
     linkable="true"
     category="Machine">
@@ -53,6 +54,7 @@
 
   <Item
     name="Fuel Rod"
+    identifier="fuelrod"
     Tags="smallitem,reactorfuel"
     cargocontainername="Metal Crate">
     
@@ -77,6 +79,7 @@
 
   <Item
     name="Incendium Fuel Rod"
+    identifier="incendiumfuelrod"
     Tags="smallitem,reactorfuel"    
     cargocontainername="Metal Crate"
     spritecolor="0.5,0.0,0.0,1.0">

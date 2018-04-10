@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
-
   <Item
     name="Junction Box"
+    identifier="junctionbox"
     category="Electrical"
     linkable="true"
     
@@ -45,9 +45,9 @@
 
   <Item
     name="Battery"
+    identifier="battery"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Generally used for storing backup power in case of a reactor failure.">
 
     <Sprite texture ="battery.png" sourcerect="0,0,58,77" depth="0.8"/>
@@ -73,6 +73,7 @@
 
   <Item
     name="Supercapacitor"
+    identifier="supercapacitor"
     category="Electrical"
     linkable="true"    
     description="Can deliver charge much faster than batteries.">
@@ -95,6 +96,7 @@
 
   <Item
     name="Charging Dock"
+    identifier="chargingdock"
     category="Electrical"
     linkable="true"
     

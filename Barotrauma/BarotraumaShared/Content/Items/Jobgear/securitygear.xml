@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Body Armor"
+    identifier="bodyarmor"
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
@@ -21,6 +22,7 @@
 
   <Item
     name="Ballistic Helmet"
+    identifier="ballistichelmet"
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
@@ -44,6 +46,7 @@
 
   <Item
     name="Handcuffs"
+    identifier="handcuffs"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem" >

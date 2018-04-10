@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Items>
-	
+<Items>	
 	<Item
 		name="Fabricator"
+    identifier="fabricator"
 		linkable="true"		
     category="Machine"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
@@ -123,6 +123,7 @@
 
   <Item
     name="Medical Fabricator"
+    identifier="medicalfabricator"
     linkable="true"    
     category="Machine"
     description="A machine that can be used to manufacture various medicines.">
@@ -206,6 +207,7 @@
 
   <Item
     name="Deconstructor"
+    identifier="deconstructor"
     linkable="true"    
     category="Machine"
     description="Disassembles and breaks down items to reusable components and material bars.">

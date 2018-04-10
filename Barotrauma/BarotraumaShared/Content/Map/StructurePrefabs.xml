@@ -1,18 +1,18 @@
 <prefabs>
 
   <!-- INTERIOR WALLS FF -->
-  <ff_x_wall description="A vertical wall with collision detection"
+  <ff_x_wall identifier="ff_x_wall" description="A vertical wall with collision detection"
     width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/FF_inWall_X.png" depth ="0.05" sourcerect="0,0,512,48" />
   </ff_x_wall>
 
-  <ff_x_wall_cables description="A vertical wall with collision detection"
+  <ff_x_wall_cables identifier="ff_x_wall_cables" description="A vertical wall with collision detection"
     width="512" height="73" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/FF_inWall_X_cables.png" depth ="0.05" sourcerect="0,0,512,73"/>
   </ff_x_wall_cables>
 
 
-  <ff_y_wall description="A horizontal wall with collision detection"
+  <ff_y_wall identifier="ff_y_wall" description="A horizontal wall with collision detection"
     width = "48" height ="512" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/FF_inWall_Y.png"  depth ="0.06" sourcerect="0,0,48,512"/>
   </ff_y_wall>
@@ -20,169 +20,169 @@
 
   <!-- BACK WALLS START -->
 
-  <FF_Wall_B description="Ballast back wall"
+  <FF_Wall_B identifier="FF_Wall_B" description="Ballast back wall"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast.png" sourcerect="0,0,512,256" depth="1.0"/>
   </FF_Wall_B>
 
-  <FF_Wall_BP description="Ballast back wall with pipe"
+  <FF_Wall_BP identifier="FF_Wall_BP" description="Ballast back wall with pipe"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_Ballast_Pipe.png" sourcerect="0,0,512,256" depth="1.0"/>
   </FF_Wall_BP>
 
-  <FF_Wall_C2 description="Mushy grey wall"
+  <FF_Wall_C2 identifier="FF_Wall_C2" description="Mushy grey wall"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,256,512,256" depth="1.0"/>
   </FF_Wall_C2>
 
-  <FF_Wall_C3 description="Mushy grey Greeble wall"
+  <FF_Wall_C3 identifier="FF_Wall_C3" description="Mushy grey Greeble wall"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="0,0,512,512" depth="1.0"/>
   </FF_Wall_C3>
 
-  <FF_Wall_D1 description="Metal wall 1"
+  <FF_Wall_D1 identifier="FF_Wall_D1" description="Metal wall 1"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,0,688,240" depth="1.0"/>
   </FF_Wall_D1>
 
-  <FF_Wall_D2 description="Metal wall 2"
+  <FF_Wall_D2 identifier="FF_Wall_D2" description="Metal wall 2"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,224,688,240" depth="1.0"/>
   </FF_Wall_D2>
-  
-  <FF_Wall_D3 description="Metal wall 3"
+
+  <FF_Wall_D3 identifier="FF_Wall_D3" description="Metal wall 3"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_D.png" sourcerect="0,464,688,224" depth="1.0"/>
   </FF_Wall_D3>
 
-  <FF_Wall_E description="Block wall lit"
+  <FF_Wall_E identifier="FF_Wall_E" description="Block wall lit"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_E.png" sourcerect="0,0,512,256" depth="1.0"/>
   </FF_Wall_E>
 
-  <FF_Wall_F description="Machinery back wall"
+  <FF_Wall_F identifier="FF_Wall_F" description="Machinery back wall"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="1.0"/>
   </FF_Wall_F>
 
-  <FF_Wall_G1 description="General grey back wall 1"
+  <FF_Wall_G1 identifier="FF_Wall_G1" description="General grey back wall 1"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,0,334,240" depth="1.0"/>
   </FF_Wall_G1>
-  
-  <FF_Wall_G2 description="General grey back wall 2"
+
+  <FF_Wall_G2 identifier="FF_Wall_G2" description="General grey back wall 2"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,222,334,240" depth="1.0"/>
   </FF_Wall_G2>
-  
-  <FF_Wall_G3 description="General grey back wall 3"
+
+  <FF_Wall_G3 identifier="FF_Wall_G3" description="General grey back wall 3"
     width="16" height = "16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_G.png" sourcerect="0,444,334,224" depth="1.0"/>
   </FF_Wall_G3>
   <!-- BACK WALLS ENDS -->
   
   <!-- TAIL -->
-  <extA_Tail description="Submarine tail temp"
+  <extA_Tail identifier="extA_Tail" description="Submarine tail temp"
     width="920" height = "1269" resizehorizontal="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,920,1269" depth="0.01"/>
   </extA_Tail>
 
-  <extA_Front description="Submarine front temp"
+  <extA_Front identifier="extA_Front" description="Submarine front temp"
     width="367" height="730" resizehorizontal="false">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="1200,290,367,730" depth="0.01"/>
   </extA_Front>
   <!-- TAIL ENDS-->
 
   <!-- Straight pieces -->
-  <ExtA_90 description="ExtA Vert" body="true"
+  <ExtA_90 identifier="ExtA_90" description="ExtA Vert" body="true"
     width="64" height="512" resizevertical="true">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,0,64,512" depth="0.1"/>
   </ExtA_90>
 
-  <ExtA_0 description="ExtA Hor" body="true"
+  <ExtA_0 identifier="ExtA_0" description="ExtA Hor" body="true"
     width="512" height="64" resizehorizontal="true">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,0,512,64" depth="0.1"/>
   </ExtA_0>
 
-  <ExtA_45 description="ExtA Diag" body="true"
+  <ExtA_45 identifier="ExtA_45" description="ExtA Diag" body="true"
     width="512" height="576" bodywidth="725" bodyheight="64" bodyrotation="-45">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,960,512,576" depth="0.1"/>
   </ExtA_45>
 
-  <ExtA_20 description="ExtA Diag-20" body="true"
+  <ExtA_20 identifier="ExtA_20" description="ExtA Diag-20" body="true"
     width="512" height="320" bodywidth="571" bodyheight="64" bodyrotation="-26">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,64,512,320" depth="0.1"/>
   </ExtA_20>
 
   <!-- Curved 512 width pieces -->
-  <ExtA_conv-35 description="ExtA convex-35" body="true"
+  <ExtA_conv-35 identifier="ExtA_conv-35" description="ExtA convex-35" body="true"
     width="512" height="448" bodywidth="640" bodyheight="64" bodyrotation="-40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,64,512,448" depth="0.1"/>
   </ExtA_conv-35>
 
-  <ExtA_conc-20 description="ExtA concave-20" body="true"
+  <ExtA_conc-20 identifier="ExtA_conc-20" description="ExtA concave-20" body="true"
     width="512" height="192" bodywidth="528" bodyheight="64" bodyrotation="-15">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,320,512,192" depth="0.1"/>
   </ExtA_conc-20>
 
-  <ExtA_conv-25 description="ExtA convex-25" body="true"
+  <ExtA_conv-25 identifier="ExtA_conv-25" description="ExtA convex-25" body="true"
     width="512" height="320" bodywidth="570" bodyheight="64" bodyrotation="-25">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,512,512,320" depth="0.1"/>
   </ExtA_conv-25>
 
-  <ExtA_conv-20 description="ExtA convex-20" body="true"
+  <ExtA_conv-20 identifier="ExtA_conv-20" description="ExtA convex-20" body="true"
     width="512" height="192" bodywidth="527" bodyheight="64" bodyrotation="-14">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,512,512,192" depth="0.1"/>
   </ExtA_conv-20>
 
   <!-- Curved small pieces -->
 
-  <ExtA_curve-90 description="ExtA Curve-90" body="true"
+  <ExtA_curve-90 identifier="ExtA_curve-90" description="ExtA Curve-90" body="true"
     width="256" height="320" bodywidth="405" bodyheight="64" bodyrotation="-50">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,0,256,320" depth="0.1"/>
   </ExtA_curve-90>
 
-  <ExtA_s-10 description="S-curve-10" body="true"
+  <ExtA_s-10 identifier="ExtA_s-10" description="S-curve-10" body="true"
     width="384" height="192" bodywidth="405" bodyheight="64" bodyrotation="25">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,320,384,192" depth="0.1"/>
   </ExtA_s-10>
 
-  <ExtA_conc-35 description="ExtA concave-35" body="true"
+  <ExtA_conc-35 identifier="ExtA_conc-35" description="ExtA concave-35" body="true"
     width="384" height="320" bodywidth="450" bodyheight="64" bodyrotation="-35">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,0,384,320" depth="0.1"/>
   </ExtA_conc-35>
 
-  <ExtA_conc-45 description="ExtA concave-45" body="true"
+  <ExtA_conc-45 identifier="ExtA_conc-45" description="ExtA concave-45" body="true"
     width="320" height="256" bodywidth="400" bodyheight="64" bodyrotation="-40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,512,320,256" depth="0.1"/>
   </ExtA_conc-45>
 
-  <ExtA_conv-60mini description="ExtA concave-60 mini" body="true"
+  <ExtA_conv-60mini identifier="ExtA_conv-60mini" description="ExtA concave-60 mini" body="true"
     width="127" height="192" bodywidth="230" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,832,127,192" depth="0.1"/>
   </ExtA_conv-60mini>
 
-  <ExtA_S-vert description="ExtA S Vertical" body="true"
+  <ExtA_S-vert identifier="ExtA_S-vert" description="ExtA S Vertical" body="true"
     width="192" height="384" bodywidth="430" bodyheight="64" bodyrotation="-65">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="832,640,192,384" depth="0.1"/>
   </ExtA_S-vert>
 
-  <ExtA_conc-45Up description="ExtA concave-45 Up" body="true"
+  <ExtA_conc-45Up identifier="ExtA_conc-45Up" description="ExtA concave-45 Up" body="true"
     width="472" height="384"  bodywidth="574" bodyheight="64" bodyrotation="-43">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,640,472,384" depth="0.1"/>
   </ExtA_conc-45Up>
 
-  <ExtA_conv-75 description="ExtA concave-75" body="true"
+  <ExtA_conv-75 identifier="ExtA_conv-75" description="ExtA concave-75" body="true"
     width="383" height="576" bodywidth="690" bodyheight="64" bodyrotation="-55">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,960,383,576" depth="0.1"/>
   </ExtA_conv-75>
 
-  <ExtA_conv-60 description="ExtA concave-60" body="true"
+  <ExtA_conv-60 identifier="ExtA_conv-60" description="ExtA concave-60" body="true"
     width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,1088,256,448" depth="0.1"/>
   </ExtA_conv-60>
 
-  <ExtA_S-60 description="ExtA S 60" body="true"
+  <ExtA_S-60 identifier="ExtA_S-60" description="ExtA S 60" body="true"
     width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="768,1088,256,448" depth="0.1"/>
   </ExtA_S-60>
@@ -190,256 +190,251 @@
 
   <!-- OLD PIECES -->
 
-  <largehorizontalback description="A decorative structure with no collision detection"
+  <largehorizontalback identifier="largehorizontalback" description="A decorative structure with no collision detection"
     width="128" height = "64" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,0,896,64" depth="0.9"/>
   </largehorizontalback>
 
-  <smallhorizontalback description="A decorative structure with no collision detection"
+  <smallhorizontalback identifier="smallhorizontalback" description="A decorative structure with no collision detection"
     width="128" height="32" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,64,896,32" depth="0.9"/>
   </smallhorizontalback>
 
-  <largeverticalback description="A decorative structure with no collision detection"
+  <largeverticalback identifier="largeverticalback" description="A decorative structure with no collision detection"
     width="64" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,96,64,448" depth ="0.9"/>
   </largeverticalback>
 
-  <largeverticalback2 description="A decorative structure with no collision detection"
+  <largeverticalback2 identifier="largeverticalback2" description="A decorative structure with no collision detection"
     width="64" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="64,96,64,448" depth="0.9"/>
   </largeverticalback2>
 
-  <smallverticalback description="A decorative structure with no collision detection"
+  <smallverticalback identifier="smallverticalback" description="A decorative structure with no collision detection"
     width="32" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="128,96,32,352" depth ="0.9"/>
   </smallverticalback>
-  <smallverticalback2 description="A decorative structure with no collision detection"
+  <smallverticalback2 identifier="smallverticalback2" description="A decorative structure with no collision detection"
     width="32" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9"/>
   </smallverticalback2>
 
-  <engineeringLabel width="153" height="16">
+  <engineeringLabel identifier="engineeringLabel" width="153" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.99" canflipx="false"/>
   </engineeringLabel>
 
-  <commandLabel width="128" height="16">
+  <commandLabel identifier="commandLabel" width="128" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.99" canflipx="false"/>
   </commandLabel>
 
-  <airlockLabel width = "99" height ="16">
+  <airlockLabel identifier="airlockLabel" width = "99" height ="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.99" canflipx="false"/>
   </airlockLabel>
 
-  <cabinsLabel width="83" height="16">
+  <cabinsLabel identifier="cabinsLabel" width="83" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.99" canflipx="false"/>
   </cabinsLabel>
 
-  <medicalLabel width="110" height="16">
+  <medicalLabel identifier="medicalLabel" width="110" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.99" canflipx="false"/>
   </medicalLabel>
 
-  <arrowUp width="16" height="16">
+  <arrowUp identifier="arrowUp" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth ="0.99"/>
   </arrowUp>
 
-  <arrowDown width="16" height="16">
+  <arrowDown identifier="arrowDown" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth ="0.99"/>
   </arrowDown>
 
-  <arrowLeft width="16" height="16">
+  <arrowLeft identifier="arrowLeft" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth ="0.99"/>
   </arrowLeft>
 
-  <arrowRight width="16" height="16">
+  <arrowRight identifier="arrowRight" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth ="0.99"/>
   </arrowRight>
 
-  <leftwall description="A vertical wall with collision detection"
+  <leftwall identifier="leftwall" description="A vertical wall with collision detection"
     width = "32" height ="64" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" fliphorizontal="true"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth ="0.85" fliphorizontal="true"/>
   </leftwall>
 
-  <rightwall description="A vertical wall with collision detection"
+  <rightwall identifier="rightwall" description="A vertical wall with collision detection"
     width="32" height="64" resizevertical="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth ="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth ="0.85"/>
   </rightwall>
 
-  <topwall description="A horizontal wall with collision detection"
+  <topwall identifier="topwall" description="A horizontal wall with collision detection"
     width = "64" height ="32" resizehorizontal="true" body="true" castshadow="true" health="500">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,989,576,32" depth ="0.06"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="0,953,576,32" depth ="0.85"/>
   </topwall>
 
-  <TopWallHeavy description="A horizontal wall with collision detection"
+  <TopWallHeavy identifier="TopWallHeavy" description="A horizontal wall with collision detection"
     width = "96" height ="96" resizehorizontal="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="197,347,480,96" depth ="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="197,446,480,96" depth ="0.85" />
   </TopWallHeavy>
 
-  <LeftWallHeavy description="A vertical wall with collision detection"
+  <LeftWallHeavy identifier="LeftWallHeavy" description="A vertical wall with collision detection"
     width = "96" height ="96" resizevertical="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth ="0.06" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth ="0.85" fliphorizontal="true" />
   </LeftWallHeavy>
 
-  <RightWallHeavy description="A vertical wall with collision detection"
+  <RightWallHeavy identifier="RightWallHeavy" description="A vertical wall with collision detection"
     width = "96" height ="96" resizevertical="true" body="true" castshadow="true" health="1000">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth ="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth ="0.85" />
   </RightWallHeavy>
 
-  <CableHolderHorizontal width="32" height="24" resizehorizontal="true">
+  <CableHolderHorizontal identifier="CableHolderHorizontal" width="32" height="24" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="478,902,96,24" depth = "0.85" />
   </CableHolderHorizontal>
 
-  <CableHolderVertical width="24" height="32" resizevertical="true">
+  <CableHolderVertical identifier="CableHolderVertical" width="24" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="550,804,24,96" depth = "0.85" />
   </CableHolderVertical>
 
-  <topwindow width="128" height="49" body="true" health="100" tags="glass">
+  <topwindow identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,80" depth ="0.05"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,80" depth ="0.85"/>
   </topwindow>
 
-  <verticalwindow width="128" height ="224" body="true" health="100" tags="glass">
+  <verticalwindow identifier="verticalwindow" width="128" height ="224" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="368,544,128,224" depth ="0.05"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="239,544,128,224" depth ="0.85"/>
   </verticalwindow>
 
-  <horizontalresizablewindow width="128" height ="64" body="true" health="100" tags="glass" resizehorizontal="true">
+  <horizontalresizablewindow identifier="horizontalresizablewindow" width="128" height ="64" body="true" health="100" tags="glass" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="207,771,128,64" depth ="0.06"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="337,771,128,64" depth ="0.85"/>
   </horizontalresizablewindow>
 
-  <verticalresizablewindow width = "64" height ="128" body="true" health="100" tags="glass" resizevertical="true">
+  <verticalresizablewindow identifier="verticalresizablewindow" width = "64" height ="128" body="true" health="100" tags="glass" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth ="0.06"/>
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth ="0.85"/>
   </verticalresizablewindow>
 
-  <smallhorizontalback description="A decorative structure with no collision detection"
-    width = "128" height ="32" resizehorizontal="true">
-    <sprite texture="Content/Map/testroom.png" sourcerect="0,65,896,32" depth ="0.4" />
-  </smallhorizontalback>
-
-  <largeplatform width = "64" height ="64" resizehorizontal="true" body="true" platform="true">
+  <largeplatform identifier="largeplatform" width="64" height="64" resizehorizontal="true" body="true" platform="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,0,128,64" depth="0.9" />
   </largeplatform>
 
-  <platform width = "64" height ="26" resizehorizontal="true" body="true" platform="true">
+  <platform identifier="platform" width="64" height="26" resizehorizontal="true" body="true" platform="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,53,128,32" depth ="0.9" />
   </platform>
 
-  <roughbgwall width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <roughbgwall identifier="roughbgwall" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth = "1.0" />
   </roughbgwall>
 
-  <cleanbgwall width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <cleanbgwall identifier="cleanbgwall" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth = "1.0"/>
   </cleanbgwall>
 
-  <bgpanels width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanels identifier="bgpanels" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth = "1.0" />
   </bgpanels>
 
-  <bgpanelswindow width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanelswindow identifier="bgpanelswindow" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth = "1.0" />
   </bgpanelswindow>
 
-  <bgorangepanels width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanels identifier="bgorangepanels" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth = "1.0" />
   </bgorangepanels>
 
-  <bgorangepanelwindow width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanelwindow identifier="bgorangepanelwindow" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth = "1.0" />
   </bgorangepanelwindow>
 
-  <PipesBackground width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <PipesBackground identifier="PipesBackground" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth = "1.0" />
   </PipesBackground>
 
-  <SlopeForward width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeForward identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth = "0.95" />
   </SlopeForward>
 
-  <SlopeBack width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeBack identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth = "0.95" />
   </SlopeBack>
 
-  <stairsright width="256" height="320" stairdirection="Right">
+  <stairsright identifier="stairsright" width="256" height="320" stairdirection="Right">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth = "0.1" />
   </stairsright>
 
-  <stairsleft width="256" height="320" stairdirection="Left">
+  <stairsleft identifier="stairsleft" width="256" height="320" stairdirection="Left">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth = "0.1" />
   </stairsleft>
 
-  <bunk width="173" height="129">
+  <bunk identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth = "0.9"/>
   </bunk>
 
 
-  <RuinWallHorizontal category="Alien" castshadow="true"
+  <RuinWallHorizontal identifier="RuinWallHorizontal" category="Alien" castshadow="true"
     width="128" height="128" resizehorizontal="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,896,832,128" depth ="0.06"/>
   </RuinWallHorizontal>
 
-  <RuinWallVertical category="Alien" castshadow="true"
+  <RuinWallVertical identifier="RuinWallVertical" category="Alien" castshadow="true"
     width="128" height="128" resizevertical="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="896,192,128,832" depth ="0.061"/>
   </RuinWallVertical>
 
 
-  <RuinWallHeavyHorizontal category="Alien" castshadow="true"
+  <RuinWallHeavyHorizontal identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true"
     width="128" height="128" resizehorizontal="true" body="true" health="100000">
     <sprite texture="Content/Map/ruins3.png" sourcerect="352,896,672,128" depth ="0.06"/>
   </RuinWallHeavyHorizontal>
 
-  <RuinWallHeavyVertical category="Alien" castshadow="true"
+  <RuinWallHeavyVertical identifier="RuinWallHeavyVertical" category="Alien" castshadow="true"
     width="128" height="128" resizevertical="true" body="true" health="100000">
     <sprite texture="Content/Map/ruins3.png" sourcerect="896,0,128,672" depth ="0.061"/>
   </RuinWallHeavyVertical>
 
 
-  <RuinWallHorizontalSmall category="Alien" castshadow="true"
+  <RuinWallHorizontalSmall identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true"
     width="128" height="54" resizehorizontal="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,842,832,54" depth ="0.062"/>
   </RuinWallHorizontalSmall>
 
-  <RuinWallVerticalSmall category="Alien" castshadow="true"
+  <RuinWallVerticalSmall identifier="RuinWallVerticalSmall" category="Alien" castshadow="true"
     width= "54" height="128" resizevertical="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,832" depth ="0.063"/>
   </RuinWallVerticalSmall>
 
 
-  <RuinBack category="Alien"
+  <RuinBack identifier="RuinBack" category="Alien"
     width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,0,512,512" depth ="0.98"/>
   </RuinBack>
 
-  <RuinBackCarvings category="Alien"
+  <RuinBackCarvings identifier="RuinBackCarvings" category="Alien"
     width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="512,0,233,512" depth ="0.981" />
   </RuinBackCarvings>
 
-  <RuinBackFractal category="Alien"
+  <RuinBackFractal identifier="RuinBackFractal" category="Alien"
     width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/ruins3.png" sourcerect="0,0,640,896" depth ="0.98"/>
   </RuinBackFractal>
 
-  <RuinBlock category="Alien"
+  <RuinBlock identifier="RuinBlock" category="Alien"
     width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth ="0.99" />
   </RuinBlock>
 
-  <RuinFractalBall category="Alien"
+  <RuinFractalBall identifier="RuinFractalBall" category="Alien"
     width="512" height="512">
     <sprite texture="Content/Map/ruins2.png" sourcerect="0,0,512,512" depth ="0.971" />
   </RuinFractalBall>
 
-  <RuinClaw category="Alien"
+  <RuinClaw identifier="RuinClaw" category="Alien"
     width="126" height="270">
     <sprite  texture="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"/>
   </RuinClaw>

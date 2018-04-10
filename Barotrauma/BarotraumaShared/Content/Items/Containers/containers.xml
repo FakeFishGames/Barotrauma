@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
-    name="Steel Cabinet"
+    name="Steel Cabinet"    
+    identifier="steelcabinet"
     linkable="true"
     pickdistance ="150">
 
@@ -12,7 +13,8 @@
   </Item>
 
   <Item
-    name="Medicine Cabinet"
+    name="Medicine Cabinet"    
+    identifier="medcabinet"
     linkable="true"
     pickdistance ="150">
 
@@ -26,7 +28,8 @@
   </Item>
   
   <Item
-   name="Toxic Cabinet"
+   name="Toxic Cabinet"   
+   identifier="toxcabinet"
    linkable="true"
    pickdistance ="150">
 
@@ -40,7 +43,8 @@
   </Item>
 
   <Item
-    name="Metal Crate"
+    name="Metal Crate"    
+    identifier="metalcrate"
     linkable="true"
     pickdistance ="150">
 
@@ -62,7 +66,8 @@
   </Item>
 
   <Item
-   name="Explosive Crate"
+   name="Explosive Crate"   
+   identifier="explosivecrate"
    linkable="true"
    pickdistance ="150">
 
@@ -83,7 +88,8 @@
   </Item>
 
   <Item
-   name="Chemical Crate"
+   name="Chemical Crate"   
+   identifier="chemicalcrate"
    linkable="true"
    pickdistance ="150">
 

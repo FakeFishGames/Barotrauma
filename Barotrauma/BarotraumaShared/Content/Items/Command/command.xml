@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Navigation Terminal"
+    name="Navigation Terminal"    
+    identifier="navterminal"
     linkable="true"
     category="Machine">
 
@@ -36,7 +37,8 @@
   </Item>
 
   <Item
-    name="Sonar Monitor"
+    name="Sonar Monitor"    
+    identifier="sonarmonitor"
     linkable="true"
     category="Machine">
 
@@ -63,7 +65,8 @@
   </Item>
 
   <Item
-    name="Status Monitor"
+    name="Status Monitor"    
+    identifier="statusmonitor"
     aliases="MiniMap"
     category="Machine"
     linkable="true">

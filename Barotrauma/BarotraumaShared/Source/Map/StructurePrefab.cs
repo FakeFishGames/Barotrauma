@@ -119,6 +119,7 @@ namespace Barotrauma
             StructurePrefab sp = new StructurePrefab();
             sp.name = element.GetAttributeString("name", "");
             if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
+            sp.identifier = element.GetAttributeString("identifier", "");
             
             sp.Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");

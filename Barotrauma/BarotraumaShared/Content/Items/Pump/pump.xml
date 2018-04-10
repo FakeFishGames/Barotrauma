@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Pump"
+    identifier="pump"
     linkable="true"
     category="Machine">
 
@@ -33,6 +34,7 @@
   
   <Item
     name="Small Pump"
+    identifier="smallpump"
     linkable="true"
     category="Machine">
 

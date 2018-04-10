@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Welding Tool"
+    identifier="weldingtool"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -69,6 +70,7 @@
 
   <Item
     name="Plasma Cutter"
+    identifier="plasmacutter"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -125,6 +127,7 @@
 
   <Item
     name="Welding Fuel Tank"
+    identifier="weldingfueltank"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -152,6 +155,7 @@
   
   <Item
     name="Fire Extinguisher"
+    identifier="extinguisher"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -186,6 +190,7 @@
 
   <Item
     name="Screwdriver"
+    identifier="screwdriver"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -205,6 +210,7 @@
 
   <Item
     name="Wrench"
+    identifier="wrench"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -226,6 +232,7 @@
 
   <Item
     name="Crowbar"
+    identifier="crowbar"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -247,6 +254,7 @@
 
   <Item
     name="Handheld Sonar"
+    identifier="handheldsonar"
     category="Equipment"
     Tags="smallitem,sonar"
     cargocontainername="Metal Crate">
@@ -283,6 +291,7 @@
 
   <Item
     name="Flashlight"
+    identifier="flashlight"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -318,6 +327,7 @@
 
   <Item
     name="Flare"
+    identifier="flare"
     category="Equipment"
     cargocontainername="Metal Crate"
     spritecolor="1.0,0.0,0.0,1.0"

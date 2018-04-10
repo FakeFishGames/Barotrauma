@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
-
   <Item
     name="Wire"
+    identifier="wire"
     category="Electrical"
     Tags="smallitem,wire"    
     linkable="true"
@@ -30,6 +29,7 @@
 
   <Item
     name="Red Wire"
+    identifier="redwire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
@@ -56,6 +56,7 @@
 
   <Item
     name="Blue Wire"
+    identifier="bluewire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="0.0,0.6,1.0,1.0"    
@@ -82,6 +83,7 @@
 
   <Item
     name="Orange Wire"
+    identifier="orangewire"
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.5,0.0,1.0"    
@@ -108,6 +110,7 @@
 
   <Item
     name="FPGA Circuit"
+    identifier="fpgacircuit"
     category="Electrical"
     Tags="smallitem"    
     linkable="true"    
@@ -133,6 +136,7 @@
 
   <Item
     name="And Component"
+    identifier="andcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -171,6 +175,7 @@
 
   <Item
     name="Or Component"
+    identifier="orcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -208,7 +213,8 @@
   </Item>
   
   <Item
-    name="Not Component"
+    name="Not Component"    
+    identifier="notcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -245,6 +251,7 @@
 
   <Item
     name="Relay Component"
+    identifier="relaycomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -296,6 +303,7 @@
 
   <Item
     name="Delay Component"
+    identifier="delaycomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -332,6 +340,7 @@
   
   <Item
     name="Light Component"
+    identifier="lightcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -370,7 +379,8 @@
   </Item>
 
   <Item
-    name="Oxygen Detector"
+    name="Oxygen Detector"    
+    identifier="oxydetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -406,6 +416,7 @@
 
   <Item
     name="Water Detector"
+    identifier="waterdetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -441,6 +452,7 @@
   
   <Item
     name="Motion Detector"
+    identifier="motiondetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -476,6 +488,7 @@
 
   <Item
     name="Signal Check Component"
+    identifier="signalcheckcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -514,6 +527,7 @@
 
   <Item
     name="RegEx Find Component"
+    identifier="regexcomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -551,6 +565,7 @@
 
   <Item
     name="Oscillator"
+    identifier="oscillator"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -588,6 +603,7 @@
 
   <Item
     name="Wifi Component"
+    identifier="wificomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -624,6 +640,7 @@
 
   <Item
     name="Emergency Siren"
+    identifier="emergencysiren"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -661,6 +678,7 @@
   
   <Item
     name="Alarm Buzzer"
+    identifier="alarmbuzzer"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -698,6 +716,7 @@
 
   <Item
     name="Camera"
+    identifier="camera"
     category="Electrical"
     Tags="smallitem"    
     focusonselected="true"

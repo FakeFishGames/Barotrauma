@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Steel Bar"
+    identifier="steelbar"
     category="Material"
     Tags="smallitem"   
     canbepicked="true"
@@ -26,6 +27,7 @@
 
   <Item
     name="Uranium Bar"
+    identifier="uraniumbar"
     category="Material"
     Tags="smallitem"
     spritecolor="0.2,0.35,0.06,1.0"
@@ -50,6 +52,7 @@
 
   <Item
     name="Copper Bar"
+    identifier="copperbar"
     category="Material"
     Tags="smallitem"
     spritecolor="0.78,0.55,0.2,1.0"
@@ -70,6 +73,7 @@
 
   <Item
     name="Polycarbonate Bar"
+    identifier="polycarbonatebar"
     category="Material"
     Tags="smallitem"   
     spritecolor="0.9,0.9,1.0,0.9"
@@ -89,12 +93,13 @@
   </Item>
   
   <Item
-   name="Incendium Bar"
-   category="Material"
-   Tags="smallitem"
-   spritecolor="0.5,0.0,0.0,1.0"
-   cargocontainername="Metal Crate"
-   canbepicked="true">
+    name="Incendium Bar"
+    identifier="incendiumbar"
+    category="Material"
+    Tags="smallitem"
+    spritecolor="0.5,0.0,0.0,1.0"
+    cargocontainername="Metal Crate"
+    canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>
 
@@ -112,12 +117,13 @@
   </Item>
 
   <Item
-   name="Fulgurium Bar"
-   category="Material"
-   Tags="smallitem"
-   spritecolor="1.0,0.7,0.05,1.0"
-   cargocontainername="Metal Crate"
-   canbepicked="true">
+    name="Fulgurium Bar"
+    identifier="fulguriumbar"
+    category="Material"
+    Tags="smallitem"
+    spritecolor="1.0,0.7,0.05,1.0"
+    cargocontainername="Metal Crate"
+    canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>
     
@@ -127,6 +133,4 @@
 
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
   </Item>
-  
-  
 </Items>

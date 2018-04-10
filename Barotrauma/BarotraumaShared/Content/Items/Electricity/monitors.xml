@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Item
   name="Monitor"
+  identifier="monitor"
   linkable="true">
   
   <Sprite texture ="monitor.png" depth="0.85" sourcerect="0,0,16,16"/>

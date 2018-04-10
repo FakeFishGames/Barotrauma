@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Depth Charge Tube"
+    identifier="depthchargetube"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
@@ -21,6 +22,7 @@
 
   <Item
     name="Depth Charge Loader"
+    identifier="depthchargeloader"
     category="Machine"
     linkable="true">
 
@@ -34,6 +36,7 @@
 
   <Item
     name="Depth Charge Shell"
+    identifier="depthchargeshell"
     category="Misc"
     radarsize="5">
 
@@ -65,6 +68,7 @@
 
   <Item
     name="Nuclear Depth Charge"
+    identifier="nucleardepthcharge"
     category="Misc"
     radarsize="5">
 

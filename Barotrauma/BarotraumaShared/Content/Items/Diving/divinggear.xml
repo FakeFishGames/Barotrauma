@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Oxygen Tank"
+    name="Oxygen Tank"    
+    identifier="oxytank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
     cargocontainername="Metal Crate">
@@ -28,7 +29,8 @@
   </Item>
   
   <Item
-    name="Diving Mask"
+    name="Diving Mask"    
+    identifier="divingmask"
     category="Equipment"
     Tags="smallitem,diving"
     cargocontainername="Metal Crate"
@@ -69,7 +71,8 @@
   </Item>
 
   <Item
-    name="Diving Suit"
+    name="Diving Suit"    
+    identifier="divingsuit"
     category="Equipment"
     tags="diving"
     fireproof="true"
@@ -144,7 +147,8 @@
   </Item>
 
   <Item
-    name="Underwater Scooter"
+    name="Underwater Scooter"    
+    identifier="underwaterscooter"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"

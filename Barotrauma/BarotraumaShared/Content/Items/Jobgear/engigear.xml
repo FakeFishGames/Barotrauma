@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Orange Jumpsuit"
+    identifier="orangejumpsuit"
     category="Equipment"    
     tags="smallitem"
     fireproof="true"
@@ -28,6 +29,7 @@
 
   <Item
     name="Blue Jumpsuit"
+    identifier="bluejumpsuit"
     category="Equipment"
     tags="smallitem"
     fireproof="true"
@@ -55,6 +57,7 @@
 
   <Item
     name="Toolbox"
+    identifier="toolbox"
     category="Equipment"
     tags="smallitem"
     fireproof="true"

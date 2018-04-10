@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
-
   <Item
     name="Engine"
+    identifier="engine"
     linkable="true"
     category="Machine">
 
@@ -41,6 +41,7 @@
 
   <Item
     name="Shuttle Engine"
+    identifier="shuttleengine"
     linkable="true"
     category="Machine">
 
