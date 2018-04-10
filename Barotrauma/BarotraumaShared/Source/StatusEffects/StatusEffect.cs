@@ -169,7 +169,7 @@ namespace Barotrauma
                     case "disabledeltatime":                        
                         disableDeltaTime = attribute.GetAttributeBool(false);
                         break;
-                    case "setvalue":                        
+                    case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
