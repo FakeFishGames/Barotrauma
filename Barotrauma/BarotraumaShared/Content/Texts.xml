@@ -190,6 +190,7 @@
   <MissionType>Mission type</MissionType>
   <Random>Random</Random>
   <LevelSeed>Level seed</LevelSeed>
+  <LevelDifficulty>Level difficulty</LevelDifficulty>
   <Traitors>Traitors</Traitors>
   <AutoRestart>Automatic restart</AutoRestart>
   <ServerLog>Server log</ServerLog>
