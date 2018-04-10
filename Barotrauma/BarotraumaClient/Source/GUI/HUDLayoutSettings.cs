@@ -61,6 +61,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle ReportArea
+        {
+            get; private set;
+        }
+
         static HUDLayoutSettings()
         {
             CreateAreas();
@@ -107,6 +112,10 @@ namespace Barotrauma
             int healthWindowWidth = Math.Min(healthWindowArea.Width / 2 - padding / 2, 450);
             HealthWindowAreaLeft = new Rectangle(healthWindowArea.X, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
             HealthWindowAreaRight = new Rectangle(healthWindowArea.Right - healthWindowWidth, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
+
+            //report buttons (report breach etc) appear center right, not visible when health window is open
+            int reportAreaWidth = (int)Math.Min(150 * GUI.Scale, 200);
+            ReportArea = new Rectangle(HealthWindowAreaRight.Right - reportAreaWidth, HealthWindowAreaRight.Y, reportAreaWidth, HealthWindowAreaRight.Height);
         }
 
         public static void Draw(SpriteBatch spriteBatch)
