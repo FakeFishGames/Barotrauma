@@ -392,7 +392,11 @@ namespace Barotrauma
                 try
                 {
                     MethodInfo loadMethod = t.GetMethod("Load");
-                    if (!loadMethod.ReturnType.IsSubclassOf(typeof(MapEntity)))
+                    if (loadMethod == null)
+                    {
+                        DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
+                    }
+                    else if (!loadMethod.ReturnType.IsSubclassOf(typeof(MapEntity)))
                     {
                         DebugConsole.ThrowError("Error loading entity of the type \"" + t.ToString() + "\" - load method does not return a valid map entity.");
                     }
@@ -402,9 +406,13 @@ namespace Barotrauma
                         if (newEntity != null) entities.Add((MapEntity)newEntity);
                     }
                 }
+                catch (TargetInvocationException e)
+                {
+                    DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+                }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
+                    DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e);
                 }
             }
             return entities;

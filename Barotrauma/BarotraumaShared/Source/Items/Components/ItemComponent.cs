@@ -627,12 +627,19 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Could not find the constructor of the component \"" + type + "\" (" + file + ")", e);
                 return null;
             }
+            ItemComponent ic = null;
+            try
+            {
+                object[] lobject = new object[] { item, element };
+                object component = constructor.Invoke(lobject);
 
-            object[] lobject = new object[] { item, element };
-            object component = constructor.Invoke(lobject);
-
-            ItemComponent ic = (ItemComponent)component;
-            ic.name = element.Name.ToString();
+                ic = (ItemComponent)component;
+                ic.name = element.Name.ToString();
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+            }
 
             return ic;
         }
