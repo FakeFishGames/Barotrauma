@@ -184,6 +184,21 @@ namespace Barotrauma
                 sp.size.Y = element.GetAttributeFloat("height", 0.0f);
             }
 
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(sp.identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
+
             return sp;
         }
 
