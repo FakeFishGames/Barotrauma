@@ -59,5 +59,17 @@
       <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true"/>
     </Wearable>
   </Item>
+
+  <Item
+    name="Riot Shield"
+    category="Equipment"
+    tags="weapon">
+
+    <Sprite texture="riotgear.png" sourcerect="31,56,26,145" origin="0.5,0.5" depth="0.55"/>
+
+    <Body width="26" height="145" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" aimpos="30,-30" holdpos="50,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true"/>
+  </Item>
 </Items>
 

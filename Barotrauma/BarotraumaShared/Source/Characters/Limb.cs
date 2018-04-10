@@ -246,7 +246,7 @@ namespace Barotrauma
             {
                 //limbs don't collide with each other
                 body.CollisionCategories = Physics.CollisionCharacter;
-                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem;
+                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
             }
             
             body.UserData = this;
