@@ -288,6 +288,7 @@ namespace Barotrauma
 
             name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+            identifier = element.GetAttributeString("identifier", "");
 
             DebugConsole.Log("    " + name);
 

@@ -17,6 +17,7 @@ namespace Barotrauma
         public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
 
         protected string name;
+        protected string identifier;
         
         public Sprite sprite;
 
@@ -37,6 +38,13 @@ namespace Barotrauma
         public string Name
         {
             get { return name; }
+        }
+
+        //Used to differentiate between items when saving/loading
+        //Allows changing the name of an item without breaking existing subs or having multiple items with the same name
+        public string Identifier
+        {
+            get { return identifier; }
         }
 
         public HashSet<string> Tags
@@ -90,6 +98,7 @@ namespace Barotrauma
         {
             MapEntityPrefab ep = new MapEntityPrefab();
             ep.name = "Hull";
+            ep.identifier = "Hull";
             ep.Description = "Hulls determine which parts are considered to be \"inside the sub\". Generally every room should be enclosed by a hull.";
             ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.ResizeHorizontal = true;
@@ -98,6 +107,7 @@ namespace Barotrauma
 
             ep = new MapEntityPrefab();
             ep.name = "Gap";
+            ep.identifier = "Gap";
             ep.Description = "Gaps allow water and air to flow between two hulls. ";
             ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.ResizeHorizontal = true;
@@ -106,10 +116,12 @@ namespace Barotrauma
 
             ep = new MapEntityPrefab();
             ep.name = "Waypoint";
+            ep.identifier = "Waypoint";
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             List.Add(ep);
 
             ep = new MapEntityPrefab();
+            ep.name = "Spawnpoint";
             ep.name = "Spawnpoint";
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             List.Add(ep);
@@ -181,20 +193,29 @@ namespace Barotrauma
                 return false;
             }
         }
-
-        public static MapEntityPrefab Find(string name, bool caseSensitive = false)
+        
+        /// <summary>
+        /// Find a matching map entity prefab
+        /// </summary>
+        /// <param name="name">The name of the item (can be omitted when searching based on identifier)</param>
+        /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
+        public static MapEntityPrefab Find(string name, string identifier = null)
         {
-            if (caseSensitive)
+            if (name != null) name = name.ToLowerInvariant();
+            foreach (MapEntityPrefab prefab in List)
             {
-                foreach (MapEntityPrefab prefab in List)
+                if (identifier != null)
                 {
-                    if (prefab.name == name || (prefab.Aliases != null && prefab.Aliases.Contains(name))) return prefab;
+                    if (prefab.identifier != identifier)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(name)) return prefab;
+                    }
                 }
-            }
-            else
-            {
-                name = name.ToLowerInvariant();
-                foreach (MapEntityPrefab prefab in List)
+                if (!string.IsNullOrEmpty(name))
                 {
                     if (prefab.name.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
                 }

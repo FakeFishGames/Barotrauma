@@ -1055,11 +1055,25 @@ namespace Barotrauma
         public static Structure Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
+            string identifier = element.GetAttributeString("identifier", "");
 
-            StructurePrefab prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+            StructurePrefab prefab;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+            }
+
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading structure - structure prefab " + name + " not found.");
+                DebugConsole.ThrowError("Error loading structure - structure prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 
@@ -1096,7 +1110,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Structure");
 
-            element.Add(new XAttribute("name", prefab.Name),
+            element.Add(
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID),
                 new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
