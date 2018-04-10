@@ -382,6 +382,7 @@ namespace Barotrauma
                         body.FarseerBody.LinearDamping  = 0.1f;
                         break;
                     case "trigger":
+                    case "inventoryicon":
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":

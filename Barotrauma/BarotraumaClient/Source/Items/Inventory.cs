@@ -647,16 +647,17 @@ namespace Barotrauma
 
             if (item != null && drawItem)
             {
-                float scale = Math.Min(Math.Min((rect.Width - 10) / item.Sprite.size.X, (rect.Height - 10) / item.Sprite.size.Y), 2.0f);
+                Sprite sprite = item.Prefab.InventoryIcon ?? item.Sprite;
+                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 2.0f);
                 Vector2 itemPos = rect.Center.ToVector2();
                 if (itemPos.Y > GameMain.GraphicsHeight)
                 {
                     itemPos.Y -= Math.Min(
-                        (itemPos.Y + item.Sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
-                        (itemPos.Y - item.Sprite.size.Y / 2 * scale) - rect.Y);
+                        (itemPos.Y + sprite.size.Y / 2 * scale) - GameMain.GraphicsHeight,
+                        (itemPos.Y - sprite.size.Y / 2 * scale) - rect.Y);
                 }
 
-                item.Sprite.Draw(spriteBatch, itemPos, item.GetSpriteColor(), 0, scale);
+                sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, 0, scale);
             }
 
             if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)

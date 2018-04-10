@@ -346,6 +346,14 @@ namespace Barotrauma
                         prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
                         break;
 #if CLIENT
+                    case "inventoryicon":
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+                        InventoryIcon = new Sprite(subElement, iconFolder);
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))

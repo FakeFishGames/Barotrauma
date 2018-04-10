@@ -58,6 +58,7 @@
     <Price locationtype="Outpost" buyprice="50"/>
     
     <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
+    <InventoryIcon texture="Bandages_temp_01.png"/>
 
     <Body width="11" height="16" density="20"/>
 
@@ -617,6 +618,7 @@
     <Price locationtype="Outpost" buyprice="120"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Morphine_1.png"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -661,6 +663,7 @@
     <Price locationtype="Outpost" buyprice="120"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Fentanyl_Temp_01.png"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -744,6 +747,7 @@
     <Price locationtype="Outpost" buyprice="120"/>
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="Saline_temp_01.png"/>
 
     <Body width="8" height="16" density="20"/>
 
@@ -780,8 +784,9 @@
     <Price locationtype="Military" buyprice="80"/>
     <Price locationtype="City" buyprice="100"/>
     <Price locationtype="Outpost" buyprice="120"/>
-
-    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    
+    <Sprite texture="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+    <InventoryIcon texture="AntiNarc_temp_01.png"/>
 
     <Body width="8" height="16" density="20"/>
 

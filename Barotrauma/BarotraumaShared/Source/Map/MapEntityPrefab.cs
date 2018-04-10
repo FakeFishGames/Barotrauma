@@ -85,7 +85,14 @@ namespace Barotrauma
             get;
             protected set;
         }
-        
+
+        [Serialize("1.0,1.0,1.0,1.0", false)]
+        public Color InventoryIconColor
+        {
+            get;
+            protected set;
+        }
+
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
         //(allows changing names while keeping backwards compatibility with older sub files)
         public string[] Aliases
