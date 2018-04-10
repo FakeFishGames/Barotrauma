@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
     {
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
-        
+
         private InputType prevPickKey;
         private string prevMsg;
         private List<RelatedItem> prevRequiredItems;
@@ -25,6 +25,11 @@ namespace Barotrauma.Items.Components
 
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
+        public PhysicsBody Pusher
+        {
+            get;
+            private set;
+        }
 
         //the angle in which the Character holds the item
         protected float holdAngle;
@@ -82,6 +87,18 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             body = item.body;
+
+            Pusher = null;
+            if (element.GetAttributeBool("blocksplayers",false))
+            {
+                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density);
+                Pusher.BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic;
+                Pusher.FarseerBody.FixedRotation = true;
+                Pusher.FarseerBody.GravityScale = 0.0f;
+                Pusher.CollidesWith = Physics.CollisionCharacter;
+                Pusher.CollisionCategories = Physics.CollisionItemBlocking;
+                Pusher.Enabled = false;
+            }
 
             handlePos = new Vector2[2];
 
@@ -145,7 +162,8 @@ namespace Barotrauma.Items.Components
                     item.body = body;
                 }
             }
-
+            
+            if (Pusher != null) Pusher.Enabled = false;
             if (item.body != null) item.body.Enabled = true;
             IsActive = false;
 
@@ -318,6 +336,7 @@ namespace Barotrauma.Items.Components
             if (item.body == null || !item.body.Enabled) return;
             if (picker == null || !picker.HasEquippedItem(item))
             {
+                if (Pusher != null) Pusher.Enabled = false;
                 IsActive = false;
                 return;
             }
