@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma
@@ -22,6 +23,19 @@ namespace Barotrauma
         }
         
         private string levelSeed = "";
+
+        public void SetLevelDifficulty(float difficulty)
+        {
+            difficulty = MathHelper.Clamp(difficulty, 0.0f, 100.0f);
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.SelectedLevelDifficulty = difficulty;
+                lastUpdateID++;
+            }
+#if CLIENT
+            levelDifficultyScrollBar.BarScroll = difficulty / 100.0f;
+#endif
+        }
         
         public void ToggleTraitorsEnabled(int dir)
         {

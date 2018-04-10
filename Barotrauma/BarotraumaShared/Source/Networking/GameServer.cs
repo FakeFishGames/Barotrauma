@@ -1036,6 +1036,7 @@ namespace Barotrauma.Networking
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
+                outmsg.Write(selectedLevelDifficulty);
 
                 outmsg.Write(AutoRestart);
                 if (autoRestart)
@@ -1278,7 +1279,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+                GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, selectedLevelDifficulty, teamCount > 1);
             }
 
             GameServer.Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
@@ -1433,8 +1434,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.STARTGAME);
 
             msg.Write(seed);
-
             msg.Write(GameMain.GameSession.Level.Seed);
+            msg.Write(selectedLevelDifficulty);
 
             msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 

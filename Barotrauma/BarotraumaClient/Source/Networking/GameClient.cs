@@ -720,6 +720,7 @@ namespace Barotrauma.Networking
 
             int seed                = inc.ReadInt32();
             string levelSeed        = inc.ReadString();
+            float levelDifficulty   = inc.ReadFloat();
 
             int missionTypeIndex    = inc.ReadByte();
 
@@ -791,7 +792,7 @@ namespace Barotrauma.Networking
             if (campaign == null)
             {
                 GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.MissionTypes[missionTypeIndex]);
-                GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
+                GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
             {
@@ -927,6 +928,7 @@ namespace Barotrauma.Networking
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
+                            float levelDifficulty       = inc.ReadFloat();
 
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
@@ -969,6 +971,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);                                
 
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
+                                GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
                                 
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 

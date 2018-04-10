@@ -24,6 +24,8 @@ namespace Barotrauma
             }
         }
 
+        private GUIScrollBar levelDifficultyScrollBar;
+
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;
 
@@ -261,8 +263,7 @@ namespace Barotrauma
             voteText.Visible = false;
 
             columnX += columnWidth + 20;
-
-
+            
             //respawn shuttle ------------------------------------------------------------------
 
             shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
@@ -319,48 +320,44 @@ namespace Barotrauma
 
             columnX += columnWidth + 20;
 
-            //gamemode description ------------------------------------------------------------------
-
-            //var modeDescription = new GUITextBlock(
-            //    new Rectangle(columnX, 150, (int)(columnWidth * 1.2f), infoFrame.Rect.Height - 150 - 80), 
-            //    "", "", Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GUI.SmallFont);
-            //modeDescription.Color = Color.Black * 0.3f;
-
-            //modeList.UserData = modeDescription;
-
-            //columnX += modeDescription.Rect.Width + 20;
+            int columnY = 30;
 
             //seed ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 110, 180, 20),
+            new GUITextBlock(new Rectangle(columnX, columnY, 180, 20),
                 TextManager.Get("LevelSeed"), "", Alignment.Left, Alignment.TopLeft, defaultModeContainer);
 
-            seedBox = new GUITextBox(new Rectangle(columnX, 140, columnWidth / 2, 20),
+            seedBox = new GUITextBox(new Rectangle(columnX, columnY + 30, columnWidth / 2, 20),
                 Alignment.TopLeft, "", defaultModeContainer);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
+            //level difficulty ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 60, 20, 20), TextManager.Get("LevelDifficulty"), "", defaultModeContainer);
+
+            levelDifficultyScrollBar = new GUIScrollBar(new Rectangle(columnX, columnY + 90, columnWidth / 2, 20), "", 0.1f, defaultModeContainer);
+
             //traitor probability ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 170, 20, 20), TextManager.Get("Traitors"), "", defaultModeContainer);
+            new GUITextBlock(new Rectangle(columnX, columnY + 110, 20, 20), TextManager.Get("Traitors"), "", defaultModeContainer);
 
             traitorProbabilityButtons = new GUIButton[2];
 
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 195, 20, 20), "<", "", defaultModeContainer);
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 135, 20, 20), "<", "", defaultModeContainer);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, 195, 80, 20), TextManager.Get("No"), null, null, Alignment.Center, "", defaultModeContainer);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 135, 80, 20), TextManager.Get("No"), null, null, Alignment.Center, "", defaultModeContainer);
 
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 195, 20, 20), ">", "", defaultModeContainer);
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 135, 20, 20), ">", "", defaultModeContainer);
             traitorProbabilityButtons[1].UserData = 1;
-
 
             //automatic restart ------------------------------------------------------------------
 
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, 230, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, columnY + 175, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
             autoRestartBox.OnSelected = ToggleAutoRestart;
 
-            var restartText = new GUITextBlock(new Rectangle(columnX, 255, 20, 20), "", "", defaultModeContainer);
+            var restartText = new GUITextBlock(new Rectangle(columnX, columnY + 200, 20, 20), "", "", defaultModeContainer);
             restartText.Font = GUI.SmallFont;
             restartText.TextGetter = AutoRestartText;
 
@@ -423,6 +420,8 @@ namespace Barotrauma
             serverMessage.Enabled = GameMain.Server != null;
             autoRestartBox.Enabled = GameMain.Server != null;
 
+            levelDifficultyScrollBar.Enabled = GameMain.Server != null;
+
             traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
             traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
 
@@ -473,6 +472,12 @@ namespace Barotrauma
                 subList.OnSelected = SelectSub;
 
                 shuttleList.OnSelected = SelectSub;
+
+                levelDifficultyScrollBar.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    SetLevelDifficulty(barScroll * 100.0f);
+                    return true;
+                };
 
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
@@ -710,7 +715,7 @@ namespace Barotrauma
 
             return true;
         }
-
+        
         public bool ToggleTraitorsEnabled(GUIButton button, object userData)
         {
             ToggleTraitorsEnabled((int)userData);
