@@ -398,7 +398,21 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
             List.Add(this);
         }
 
