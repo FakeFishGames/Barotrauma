@@ -85,7 +85,6 @@ namespace Barotrauma
             characterListBox = new GUIListBox(Rectangle.Empty, Color.Transparent, null, characterFrame);
             characterListBox.Spacing = (int)(5 * GUI.Scale);
             characterListBox.ScrollBarEnabled = false;
-            characterListBox.Visible = isSinglePlayer;
             characterListBox.CanBeFocused = false;
             
             if (isSinglePlayer)
@@ -246,17 +245,28 @@ namespace Barotrauma
         
         public void AddCharacter(Character character)
         {
+            if (character.Removed)
+            {
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+            if (character.IsDead)
+            {
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+
             characters.Add(character);
             if (!characterInfos.Contains(character.Info))
             {
                 characterInfos.Add(character.Info);
             }
 
+            commander.UpdateCharacters();
+            CreateCharacterFrame(character, characterListBox);
+
             if (character is AICharacter)
             {
-                commander.UpdateCharacters();
-                CreateCharacterFrame(character, characterListBox);
-
                 var ai = character.AIController as HumanAIController;
                 if (ai == null)
                 {
@@ -269,6 +279,7 @@ namespace Barotrauma
 
         private GUIFrame CreateCharacterFrame(Character character, GUIComponent parent)
         {
+            int correctOrderCount=0, neutralOrderCount=0, wrongOrderCount=0;
             List<Order> orders = new List<Order>();
             foreach (Order order in Order.PrefabList)
             {
@@ -276,17 +287,23 @@ namespace Barotrauma
                 {
                     if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0)
                     {
+                        neutralOrderCount++;
                         orders.Add(order);
                     }
                     else if (order.HasAppropriateJob(character))
                     {
+                        correctOrderCount++;
                         orders.Insert(0, order);
                     }
                 }
             }
             foreach (Order order in Order.PrefabList)
             {
-                if (!order.TargetAllCharacters && !orders.Contains(order)) orders.Add(order);
+                if (!order.TargetAllCharacters && !orders.Contains(order))
+                {
+                    wrongOrderCount++;
+                    orders.Add(order);
+                }
             }
             
             int height =  (int)(60 * GUI.Scale);
@@ -300,6 +317,12 @@ namespace Barotrauma
             frame.UserData = character;
 
             int x = -characterInfoWidth;
+            int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
+            int neutralAreaWidth = neutralOrderCount * iconWidth + (neutralOrderCount - 1) * padding;
+            int wrongAreaWidth = wrongOrderCount * iconWidth + (wrongOrderCount - 1) * padding;
+            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterRight, "InnerFrame", frame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterRight, "InnerFrame", frame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - neutralAreaWidth - padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterRight, "InnerFrame", frame);
             foreach (Order order in orders)
             {
                 if (order.TargetAllCharacters) continue;
@@ -309,8 +332,8 @@ namespace Barotrauma
                 img.Color = order.Color;
                 img.ToolTip = order.Name;
 
-                if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0) img.Color *= 0.8f;
-                if (!order.HasAppropriateJob(character)) img.Color *= 0.6f;
+                /*if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0) img.Color *= 0.8f;
+                if (!order.HasAppropriateJob(character)) img.Color *= 0.6f;*/
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
 
                 btn.OnClicked += (GUIButton button, object userData) =>
@@ -334,9 +357,9 @@ namespace Barotrauma
             var characterArea = new GUIButton(new Rectangle(-height, 0, characterInfoWidth - padding - height, 0), null, Alignment.CenterRight, "GUITextBox", frame)
             {
                 Padding = Vector4.Zero,
-                OnClicked = SetCharacterSelected,
                 UserData = character
             };
+            if (isSinglePlayer) characterArea.OnClicked = SetCharacterSelected;
 
             var characterImage = new GUIImage(new Rectangle(0, 0, 0, 0), character.Info.HeadSprite, Alignment.CenterLeft, characterArea)
             {
