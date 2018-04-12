@@ -324,6 +324,53 @@ namespace Barotrauma
             }
         }
 
+        public void SetOrder(Character character, Order order)
+        {
+            if (order.TargetAllCharacters)
+            {
+                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return;
+                crewManager.AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+
+                if (crewManager.IsSinglePlayer)
+                {
+                    Character.Controlled.Speak(
+                        order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
+                }
+                else
+                {
+                    OrderChatMessage msg = new OrderChatMessage(order, "", Character.Controlled.CurrentHull, null, Character.Controlled);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        GameMain.Server.SendOrderChatMessage(msg, null);
+                    }
+                }
+                return;
+            }
+
+            character.SetOrder(order, "");
+            if (crewManager.IsSinglePlayer)
+            {
+                Character.Controlled?.Speak(
+                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
+            }
+            else
+            {
+                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, Character.Controlled);
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SendChatMessage(msg);
+                }
+                else if (GameMain.Server != null)
+                {
+                    GameMain.Server.SendOrderChatMessage(msg, null);
+                }
+            }            
+        }
+
         private bool SetOrder(GUIButton button, object userData)
         {
             //order targeted to all characters
@@ -423,16 +470,12 @@ namespace Barotrauma
                     optionList.Select(i);
                 }
             }
-            optionList.OnSelected = SelectOrderOption;
+            //optionList.OnSelected = SelectOrderOption;
 
         }
 
-        private bool SelectOrderOption(GUIComponent component, object userData)
+        public bool SetOrderOption(Character character, Order order, string option)
         {
-            string option = userData.ToString();
-            Order order = component.Parent.UserData as Order;
-            Character character = component.Parent.Parent.Parent.UserData as Character;
-
             if (crewManager.IsSinglePlayer)
             {
                 Character.Controlled.Speak(

@@ -10,8 +10,8 @@ namespace Barotrauma
     class ChatBox
     {
         const float HideDelay = 5.0f;
-        
-        private static Sprite radioIcon, toggleArrow;
+
+        private static Sprite radioIcon;//, toggleArrow;
 
         private Point defaultPos;
 
@@ -98,13 +98,7 @@ namespace Barotrauma
                 radioIcon = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(527, 952, 38, 52), null);
                 radioIcon.Origin = radioIcon.size / 2;
             }
-
-            if (toggleArrow == null)
-            {
-                toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
-                toggleArrow.Origin = toggleArrow.size / 2;
-            }
-            
+                        
             guiFrame = new GUIFrame(HUDLayoutSettings.ChatBoxArea, null, parent);
             chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 40), Color.White * 0.5f, "ChatBox", guiFrame);
             chatBox.Padding = Vector4.Zero;

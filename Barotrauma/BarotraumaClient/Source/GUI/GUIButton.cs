@@ -220,7 +220,12 @@ namespace Barotrauma
             {
                 state = Selected ? ComponentState.Selected : ComponentState.None;
             }
-            frame.State = state;
+
+            foreach (GUIComponent child in children)
+            {
+                child.State = state;
+            }
+            //frame.State = state;
         }
     }
 }
