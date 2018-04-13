@@ -121,22 +121,44 @@ namespace Barotrauma
         /// </summary>
         public bool SetCharacterSelected(GUIComponent component, object selection)
         {
-            Character character = selection as Character;
-            if (character == null || character.IsDead || character.IsUnconscious) return false;
-            if (characters.Contains(character))
-            {
-                foreach (GUIComponent child in characterListBox.children)
-                {
-                    GUIButton button = child.children.Find(c => c.UserData is Character) as GUIButton;
-                    if (button == null) continue;
-                    button.Selected = button == component;
-                }
-                Character.Controlled = character;
-                return true;
-            }
-
-            return false;
+            SetCharacterSelected(selection as Character);
+            return true;
         }
+
+        /// <summary>
+        /// Sets which character is selected in the crew UI (highlight effect etc)
+        /// </summary>
+        public void SetCharacterSelected(Character character)
+        {
+            if (character == null || character.IsDead || character.IsUnconscious) return;
+            if (!characters.Contains(character)) return;
+            
+            GUIComponent selectedCharacterFrame = null;
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                GUIButton button = child.children.Find(c => c.UserData is Character) as GUIButton;
+                if (button == null) continue;
+
+                bool isSelectedCharacter = (Character)button.UserData == character;
+
+                button.Selected = isSelectedCharacter;
+                child.GetChild("reportbuttons").Visible = isSelectedCharacter;
+                child.GetChild("orderbuttons").Visible = !isSelectedCharacter;
+
+                if ((Character)button.UserData == character)
+                {
+                    selectedCharacterFrame = child;
+                }
+            }
+            //move the selected character to the top of the list
+            characterListBox.RemoveChild(selectedCharacterFrame);
+            characterListBox.children.Insert(0, selectedCharacterFrame);
+            characterListBox.BarScroll = 0.0f;
+
+            Character.Controlled = character;
+            
+        }
+
 
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
         {
@@ -262,7 +284,7 @@ namespace Barotrauma
                 characterInfos.Add(character.Info);
             }
 
-            commander.UpdateCharacters();
+            //commander.UpdateCharacters();
             CreateCharacterFrame(character, characterListBox);
 
             if (character is AICharacter)
@@ -279,7 +301,7 @@ namespace Barotrauma
 
         private GUIFrame CreateCharacterFrame(Character character, GUIComponent parent)
         {
-            int correctOrderCount=0, neutralOrderCount=0, wrongOrderCount=0;
+            int correctOrderCount = 0, neutralOrderCount = 0, wrongOrderCount = 0;
             List<Order> orders = new List<Order>();
             foreach (Order order in Order.PrefabList)
             {
@@ -305,28 +327,31 @@ namespace Barotrauma
                     orders.Add(order);
                 }
             }
-            
-            int height =  (int)(60 * GUI.Scale);
+
+            int height = (int)(60 * GUI.Scale);
             int iconWidth = (int)(40 * GUI.Scale);
             int padding = (int)(8 * GUI.Scale);
 
-            characterInfoWidth = (int)(170 * GUI.Scale) + height; 
+            characterInfoWidth = (int)(170 * GUI.Scale) + height;
             crewAreaWidth = orders.Count * (iconWidth + padding) + characterInfoWidth;
-            
+
             var frame = new GUIFrame(new Rectangle(0, 0, 0, height), null, Alignment.TopRight, null, parent);
             frame.UserData = character;
 
-            int x = -characterInfoWidth;
+            var orderButtonFrame = new GUIFrame(new Rectangle(0,0,frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            orderButtonFrame.UserData = "orderbuttons";
+
+            int x = 0;// -characterInfoWidth;
             int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
             int neutralAreaWidth = neutralOrderCount * iconWidth + (neutralOrderCount - 1) * padding;
             int wrongAreaWidth = wrongOrderCount * iconWidth + (wrongOrderCount - 1) * padding;
-            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterRight, "InnerFrame", frame);
-            new GUIFrame(new Rectangle(x - correctAreaWidth - padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterRight, "InnerFrame", frame);
-            new GUIFrame(new Rectangle(x - correctAreaWidth - neutralAreaWidth - padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterRight, "InnerFrame", frame);
+            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - neutralAreaWidth - padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
             foreach (Order order in orders)
             {
                 if (order.TargetAllCharacters) continue;
-                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, frame);
+                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, orderButtonFrame);
                 var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
                 img.Scale = iconWidth / (float)img.SourceRect.Width;
                 img.Color = order.Color;
@@ -349,7 +374,32 @@ namespace Barotrauma
                     }
                     return true;
                 };
-                
+
+                btn.ToolTip = order.Name;
+                x -= iconWidth + padding;
+            }
+
+
+            var reportButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            reportButtonFrame.UserData = "reportbuttons";
+            reportButtonFrame.Visible = false;
+            x = 0;
+            foreach (Order order in Order.PrefabList)
+            {
+                if (!order.TargetAllCharacters) continue;
+                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, reportButtonFrame);
+                var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
+                img.Scale = iconWidth / (float)img.SourceRect.Width;
+                img.Color = order.Color;
+                img.ToolTip = order.Name;                
+                img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
+
+                btn.OnClicked += (GUIButton button, object userData) =>
+                {
+                    commander.SetOrder(character, order);                    
+                    return true;
+                };
+
                 btn.ToolTip = order.Name;
                 x -= iconWidth + padding;
             }
@@ -527,7 +577,7 @@ namespace Barotrauma
 
             if (revivedCharacter is AICharacter)
             {
-                commander.UpdateCharacters();
+                //commander.UpdateCharacters();
             }
         }
 
@@ -536,10 +586,10 @@ namespace Barotrauma
             GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
             CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
 
-            if (killedCharacter is AICharacter)
+            /*if (killedCharacter is AICharacter)
             {
                 commander.UpdateCharacters();
-            }          
+            }*/        
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -618,7 +668,7 @@ namespace Barotrauma
             }
         }
 
-        protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
+        protected bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
             if (character == null) return false;
 
@@ -660,6 +710,7 @@ namespace Barotrauma
                 {
                     character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
                     Character.Controlled = character;
+                    SetCharacterSelected(character);
 
                     if (character.Info != null && !character.Info.StartItemsGiven)
                     {

@@ -56,7 +56,7 @@ namespace Barotrauma
 
         public void ToggleGUIFrame()
         {
-            IsOpen = !IsOpen;
+            /*IsOpen = !IsOpen;
 
             if (IsOpen) 
             {
@@ -69,10 +69,10 @@ namespace Barotrauma
                 if (frame == null) CreateGUIFrame();
                 UpdateCharacters();
             }
-            showAllButton.Visible = false;
+            showAllButton.Visible = false;*/
         }
 
-        private void CreateGUIFrame()
+        /*private void CreateGUIFrame()
         {
             frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
@@ -136,8 +136,7 @@ namespace Barotrauma
             
             int ordersPerRow = Math.Min(orders.Count, 5);
             int startX = -(buttonWidth * ordersPerRow + spacing * (ordersPerRow - 1)) / 2;
-
-            int i = 0;
+            
             float angle = startAngle;
 
             float archWidth = frame.Rect.Width * 0.35f * Math.Min(scaleRatio, 1.0f);
@@ -190,7 +189,7 @@ namespace Barotrauma
             component.Rect = new Rectangle(to, component.Rect.Size);
 
             yield return CoroutineStatus.Success;
-        }
+        }*/
 
         private GUIButton CreateOrderButton(Rectangle rect, Order order, GUIComponent parent, bool createSymbol = true)
         {
@@ -211,7 +210,7 @@ namespace Barotrauma
             return orderButton;
         }
 
-        public void UpdateCharacters()
+        /*public void UpdateCharacters()
         {
             CreateGUIFrame();
 
@@ -298,7 +297,7 @@ namespace Barotrauma
             new GUIFrame(new Rectangle(0, 0, characterList.Rect.Width / 2, 0), null, characterList);
 
             characterList.BarScroll = 0.5f;
-        }
+        }*/
 
         private WifiComponent GetHeadset(Character character, bool requireEquipped)
         {
