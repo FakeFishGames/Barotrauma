@@ -72,7 +72,7 @@ namespace Barotrauma
                 body.UpdateDrawPosition();
             if (!hideLimb)
             {
-                //body.Draw(spriteBatch, sprite, color, null, scale);
+                body.Draw(spriteBatch, sprite, color, null, scale);
             }
             else
             {
