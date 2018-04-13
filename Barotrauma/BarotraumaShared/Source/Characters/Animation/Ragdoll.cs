@@ -19,6 +19,8 @@ namespace Barotrauma
         protected Hull currentHull;
         
         public Skeleton skeleton;
+        public AnimationStateData animationStateData;
+        public AnimationState animationState;
 
         public Limb[] Limbs;
         
@@ -389,6 +391,9 @@ namespace Barotrauma
                 json.Scale = 0.3f;
                 SkeletonData skeletonData = json.ReadSkeletonData("Content/SpineTest/stretchyman-pro.json");               
                 skeleton = new Skeleton(skeletonData);
+                animationStateData = new AnimationStateData(skeletonData);
+                animationState = new AnimationState(animationStateData);
+                animationState.SetAnimation(0, "sneak", true);
             }
         }
 
