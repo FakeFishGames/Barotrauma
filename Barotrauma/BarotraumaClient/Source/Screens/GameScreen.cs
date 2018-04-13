@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -65,7 +66,7 @@ namespace Barotrauma
             cam.UpdateTransform(true);
             Submarine.CullEntities(cam);
 
-            DrawMap(graphics, spriteBatch);
+            DrawMap(graphics, spriteBatch, deltaTime);
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
@@ -95,7 +96,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
+        public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch, double deltaTime)
         {
             foreach (Submarine sub in Submarine.Loaded)
             {
@@ -156,11 +157,15 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
             spriteBatch.End();
 
+            //--
+
             GameMain.spineEffect.Parameters["World"].SetValue(Matrix.Identity);
             GameMain.spineEffect.Parameters["View"].SetValue(Matrix.Identity);
-            GameMain.spineEffect.Parameters["Projection"].SetValue( cam.Transform *
+            GameMain.spineEffect.Parameters["Projection"].SetValue(cam.Transform *
             Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height, 0, 1, 0));
             GameMain.skeletonRenderer.Begin();
+            spriteBatch.Begin(SpriteSortMode.BackToFront);
+
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.skeleton == null) continue;
@@ -196,23 +201,65 @@ namespace Barotrauma
                             target = c.AnimController.GetLimb(LimbType.RightHand).body;
                             break;
                     }
-                    
+
                     if (target != null)
                     {
-                        float x, y;
-                        bone.WorldToLocal(target.DrawPosition.X, -target.DrawPosition.Y, out x, out y);
+                        bone.WorldToLocal(target.DrawPosition.X, -target.DrawPosition.Y, out float x, out float y);
                         bone.X = x;
                         bone.Y = y;
+                        bone.Rotation = MathHelper.ToDegrees(target.Rotation) + 45;
+
+                        // Draw forward vectors for ragdoll bones
+                        Vector2 forward = new Vector2((float)Math.Cos(target.Rotation), (float)Math.Sin(target.Rotation));
+                        forward.Normalize();
+                        var start = cam.WorldToScreen(target.DrawPosition);
+                        var end = start + forward;
+                        GUI.DrawLine(spriteBatch, start, end, Color.Red, width: 20);
+
+                        // Draw ragdoll bone positions
+                        var size = new Vector2(4, 4);
+                        GUI.DrawRectangle(spriteBatch, start - size / 2, size, Color.Red, isFilled: true);
+
+                        // Draw forward vector for spine bones (couldn't get to work)
+                        float rot = MathHelper.ToRadians(bone.Rotation);
+                        forward = new Vector2((float)Math.Cos(rot), (float)Math.Sin(rot));
+                        forward.Normalize();
+                        // Not right?
+                        float worldX = bone.WorldX;
+                        float worldY = bone.WorldY;
+                        start = cam.WorldToScreen(new Vector2(worldX, worldY));
+                        end = start + forward;
+                        GUI.DrawLine(spriteBatch, start, end, Color.White, width: 20);
+
+                        // Draw spine bone positions (start pos is wrong?)
+                        size = new Vector2(4, 4);
+                        GUI.DrawRectangle(spriteBatch, start - size / 2, size, Color.White, isFilled: true);
                     }
                 }
-
                 c.AnimController.skeleton.UpdateWorldTransform();
                 GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
             }
+            spriteBatch.End();
             GameMain.skeletonRenderer.End();
 
+            // Test the spine animation
+            //GameMain.skeletonRenderer.Begin();
+            //foreach (Character c in Character.CharacterList)
+            //{
+            //    if (c.AnimController.skeleton == null) continue;
+            //    c.AnimController.skeleton.X = c.DrawPosition.X;
+            //    c.AnimController.skeleton.Y = -c.DrawPosition.Y + 120.0f;
+            //    c.AnimController.skeleton.SetToSetupPose();
+            //    c.AnimController.animationState.Update((float)(deltaTime));
+            //    c.AnimController.animationState.Apply(c.AnimController.skeleton);
+            //    c.AnimController.skeleton.UpdateWorldTransform();
+            //    GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
+            //}
+            //GameMain.skeletonRenderer.End();
 
-			spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
+            //---
+
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
 
             Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
