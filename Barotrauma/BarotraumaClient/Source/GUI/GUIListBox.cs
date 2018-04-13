@@ -355,7 +355,7 @@ namespace Barotrauma
             totalSize = (int)(padding.Y + padding.W);
             foreach (GUIComponent child in children)
             {
-                if (child == frame) continue;
+                if (child == frame || !child.Visible) continue;
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
             }
 

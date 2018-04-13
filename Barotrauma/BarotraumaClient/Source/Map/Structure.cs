@@ -164,8 +164,8 @@ namespace Barotrauma
                     }
 
                     Point textureOffset = new Point(
-                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
+                        (int)(Math.Abs(rect.Location.X - sections[i].rect.Location.X) / textureScale.X),
+                        (int)(Math.Abs(rect.Location.Y - sections[i].rect.Location.Y) / textureScale.Y));
 
                     if (flippedX && isHorizontal)
                     {

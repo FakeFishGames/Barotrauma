@@ -177,8 +177,12 @@ namespace Barotrauma
                 drawPosition -= camOffset * (depth / MaxDepth) * 0.05f;
             }
             
-            prefab.Sprite.Draw(spriteBatch, new Vector2(drawPosition.X, -drawPosition.Y), Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
-                rotation, 1.0f - (depth / MaxDepth) * 0.2f, velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally, (depth / MaxDepth));
+            prefab.Sprite.Draw(spriteBatch, 
+                new Vector2(drawPosition.X, -drawPosition.Y), 
+                Color.Lerp(Color.White, Color.DarkBlue, (depth/MaxDepth)*0.3f),
+                rotation, (1.0f - (depth / MaxDepth) * 0.2f) * prefab.Scale, 
+                velocity.X > 0.0f ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 
+                (depth / MaxDepth));
         }
     }
 

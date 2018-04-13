@@ -116,12 +116,14 @@ namespace Barotrauma
             // Init optional values, if not provided
             if (rect.HasValue)
             {
+                //TODO: this probably shouldn't be modifying the sourceRect of the sprite?
                 sourceRect = rect.Value;
             }
             color = color ?? Color.White;
             startOffset = startOffset ?? Point.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
 
+            //which area of the texture to draw
             Rectangle texPerspective = sourceRect;
             texPerspective.Location += startOffset.Value;
             targetSize = targetSize / scale;
@@ -131,28 +133,30 @@ namespace Barotrauma
             //how many times the texture needs to be drawn on the y-axis
             int yTiles = (int)Math.Ceiling(targetSize.Y / sourceRect.Height);
 
-            // ??
+            //wrap texPerspective inside the source rectangle
             while (texPerspective.X >= sourceRect.Right)
                 texPerspective.X = sourceRect.X + (texPerspective.X - sourceRect.Right);
             while (texPerspective.Y >= sourceRect.Bottom)
                 texPerspective.Y = sourceRect.Y + (texPerspective.Y - sourceRect.Bottom);
 
             float top = pos.Y;
-            texPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
+            texPerspective.Height = (int)Math.Min(Math.Ceiling(targetSize.Y), sourceRect.Height);
 
             for (int y = 0; y < yTiles; y++)
             {
                 float movementY = texPerspective.Height * scale.Y;
-                texPerspective.Height = Math.Min((int)(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
+                texPerspective.Height = Math.Min((int)Math.Ceiling(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
 
                 float left = pos.X;
-                texPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
+                texPerspective.Width = Math.Min((int)Math.Ceiling(targetSize.X), sourceRect.Width);
 
                 for (int x = 0; x < xTiles; x++)
                 {
                     float movementX = texPerspective.Width * scale.X;
-                    texPerspective.Width = Math.Min((int)(targetSize.X - texPerspective.Width * x), texPerspective.Width);
+                    texPerspective.Width = Math.Min((int)Math.Ceiling(targetSize.X - texPerspective.Width * x), texPerspective.Width);
 
+                    //the edge of this tile would go over the right edge of the source rectangle, 
+                    //we need to wrap back and draw a slice from the left side
                     if (texPerspective.Right > sourceRect.Right)
                     {
                         int diff = texPerspective.Right - sourceRect.Right;
@@ -170,28 +174,29 @@ namespace Barotrauma
                         {
                             texPerspective.Width -= diff;
                             spriteBatch.Draw(texture,
-                                new Vector2(left + texPerspective.Width, top),
-                                new Rectangle(sourceRect.X, texPerspective.Y, (int)diff, texPerspective.Height),
+                                new Vector2(left + texPerspective.Width * scale.X, top),
+                                new Rectangle(sourceRect.X, texPerspective.Y, diff, texPerspective.Height),
                                 color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
                         }
                     }
                     else if (texPerspective.Bottom > sourceRect.Bottom)
                     {
+                        //TODO: make this work correctly on vertically flipped sprites
                         int diff = texPerspective.Bottom - sourceRect.Bottom;
                         texPerspective.Height -= diff;
                         spriteBatch.Draw(texture,
-                            new Vector2(left, top + texPerspective.Height),
+                            new Vector2(left, top + texPerspective.Height * scale.Y),
                             new Rectangle(texPerspective.X, sourceRect.Y, texPerspective.Width, diff),
                             color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
                     }
 
-                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective, color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective,
+                        color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
 
-                    if (texPerspective.X + movementX >= sourceRect.Right) texPerspective.X = sourceRect.X;
+                    if (texPerspective.X + movementX >= sourceRect.Right && x < xTiles - 1) texPerspective.X = sourceRect.X;
                     left += movementX;
                 }
-
-                if (texPerspective.Y + movementY >= sourceRect.Bottom) texPerspective.Y = sourceRect.Y;
+                if (texPerspective.Y + movementY >= sourceRect.Bottom && y < yTiles - 1) texPerspective.Y = sourceRect.Y;
                 top += movementY;
             }
         }

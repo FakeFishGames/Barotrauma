@@ -155,8 +155,19 @@ namespace Barotrauma
             set { spriteColor = value; }
         }
 
+        protected Vector2 textureScale = Vector2.One;
         [Editable, Serialize("1.0, 1.0", true)]
-        public Vector2 TextureScale { get; set; }
+        public Vector2 TextureScale
+        {
+            get { return textureScale; }
+            set
+            {
+                var v = value;
+                v.X = MathHelper.Clamp(v.X, 0.01f, 10);
+                v.Y = MathHelper.Clamp(v.Y, 0.01f, 10);
+                textureScale = v;
+            }
+        }
 
         public override Rectangle Rect
         {

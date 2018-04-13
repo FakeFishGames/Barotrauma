@@ -135,6 +135,7 @@ namespace Barotrauma
             {
                 origin = new Vector2(sourceRect.Width * newOrigin.Value.X, sourceRect.Height * newOrigin.Value.Y);
             }
+            size = new Vector2(sourceRect.Width, sourceRect.Height);
             rotation = newRotation;
             if (!list.Contains(this))
             {
