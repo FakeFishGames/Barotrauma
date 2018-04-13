@@ -185,7 +185,7 @@ namespace Barotrauma
             }
 
             //stop submarine ambient sounds if no sub is loaded
-            if (Submarine.MainSub == null)  
+            if (Submarine.MainSub == null || Screen.Selected != GameMain.GameScreen)  
             {
                 for (int i = 0; i < waterAmbienceChannels.Length; i++)
                 {
