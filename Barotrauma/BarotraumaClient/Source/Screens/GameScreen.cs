@@ -162,100 +162,160 @@ namespace Barotrauma
             GameMain.spineEffect.Parameters["World"].SetValue(Matrix.Identity);
             GameMain.spineEffect.Parameters["View"].SetValue(Matrix.Identity);
             GameMain.spineEffect.Parameters["Projection"].SetValue(cam.Transform *
-            Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height, 0, 1, 0));
-            GameMain.skeletonRenderer.Begin();
-            spriteBatch.Begin(SpriteSortMode.BackToFront);
-
-            foreach (Character c in Character.CharacterList)
+                Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height, 0, 1, 0));
+                            
+            if (true)
             {
-                if (c.AnimController.skeleton == null) continue;
-                c.AnimController.skeleton.X = c.DrawPosition.X;
-                c.AnimController.skeleton.Y = -c.DrawPosition.Y + 120.0f;
-                c.AnimController.skeleton.SetToSetupPose();
-                c.AnimController.skeleton.UpdateWorldTransform();
-                foreach (var bone in c.AnimController.skeleton.Bones)
+                GameMain.skeletonRenderer.Begin();
+                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+                //Test rendering spine characters on ragdolls
+                foreach (Character c in Character.CharacterList)
                 {
-                    PhysicsBody target = null;
-                    //bone.SetToSetupPose();
-                    switch (bone.Data.Name)
+                    if (c.AnimController.skeleton == null) continue;
+                    c.AnimController.skeleton.X = c.DrawPosition.X;
+                    c.AnimController.skeleton.Y = -c.DrawPosition.Y + 100;
+                    c.AnimController.skeleton.SetToSetupPose();
+                    c.AnimController.skeleton.UpdateWorldTransform();
+                    foreach (var bone in c.AnimController.skeleton.Bones)
                     {
-                        case "spine1":
-                            target = c.AnimController.GetLimb(LimbType.Waist).body;
-                            break;
-                        case "spine2":
-                            target = c.AnimController.GetLimb(LimbType.Torso).body;
-                            break;
-                        case "head":
-                            //target = c.AnimController.GetLimb(LimbType.Head).body;
-                            break;
-                        case "back-leg-ik-target":
-                            target = c.AnimController.GetLimb(LimbType.LeftFoot).body;
-                            break;
-                        case "front-leg-ik-target":
-                            target = c.AnimController.GetLimb(LimbType.RightFoot).body;
-                            break;
-                        case "back-arm4":
-                            target = c.AnimController.GetLimb(LimbType.LeftHand).body;
-                            break;
-                        case "front-arm4":
-                            target = c.AnimController.GetLimb(LimbType.RightHand).body;
-                            break;
+                        PhysicsBody target = null;
+                        //bone.SetToSetupPose();
+                        switch (bone.Data.Name)
+                        {
+                            case "spine1":
+                                target = c.AnimController.GetLimb(LimbType.Waist).body;
+                                break;
+                            case "spine2":
+                                target = c.AnimController.GetLimb(LimbType.Torso).body;
+                                break;
+                            case "head":
+                                //target = c.AnimController.GetLimb(LimbType.Head).body;
+                                break;
+                            case "back-leg-ik-target":
+                                target = c.AnimController.GetLimb(LimbType.LeftFoot).body;
+                                break;
+                            case "front-leg-ik-target":
+                                target = c.AnimController.GetLimb(LimbType.RightFoot).body;
+                                break;
+                            case "back-arm4":
+                                target = c.AnimController.GetLimb(LimbType.LeftHand).body;
+                                break;
+                            case "front-arm4":
+                                target = c.AnimController.GetLimb(LimbType.RightHand).body;
+                                break;
+                        }
+
+                        if (target != null)
+                        {
+                            bone.WorldToLocal(target.DrawPosition.X, -target.DrawPosition.Y, out float x, out float y);
+                            bone.X = x;
+                            bone.Y = y;
+                            bone.Rotation = MathHelper.ToDegrees(target.Rotation) + 45;
+
+                            // Draw forward vectors for ragdoll bones
+                            Vector2 forward = new Vector2((float)Math.Cos(target.Rotation - MathHelper.PiOver2), (float)Math.Sin(target.Rotation - MathHelper.PiOver2));
+                            var start = target.DrawPosition;
+                            var end = start + forward * 30;
+                            start.Y = -start.Y;
+                            end.Y = -end.Y;
+                            GUI.DrawLine(spriteBatch, start, end, Color.Red, width: 1);
+
+                            // Draw ragdoll bone positions
+                            var size = new Vector2(4, 4);
+                            GUI.DrawRectangle(spriteBatch, start - size / 2, size, Color.Red, isFilled: true);
+                        }
                     }
+                    c.AnimController.skeleton.UpdateWorldTransform();
 
-                    if (target != null)
+                    //ragdoll bone positions/rotations have to be drawn after UpdateWorldTransform
+                    foreach (var bone in c.AnimController.skeleton.Bones)
                     {
-                        bone.WorldToLocal(target.DrawPosition.X, -target.DrawPosition.Y, out float x, out float y);
-                        bone.X = x;
-                        bone.Y = y;
-                        bone.Rotation = MathHelper.ToDegrees(target.Rotation) + 45;
-
-                        // Draw forward vectors for ragdoll bones
-                        Vector2 forward = new Vector2((float)Math.Cos(target.Rotation), (float)Math.Sin(target.Rotation));
-                        forward.Normalize();
-                        var start = cam.WorldToScreen(target.DrawPosition);
-                        var end = start + forward;
-                        GUI.DrawLine(spriteBatch, start, end, Color.Red, width: 20);
-
-                        // Draw ragdoll bone positions
-                        var size = new Vector2(4, 4);
-                        GUI.DrawRectangle(spriteBatch, start - size / 2, size, Color.Red, isFilled: true);
-
-                        // Draw forward vector for spine bones (couldn't get to work)
+                        // Draw forward vector for spine bones
                         float rot = MathHelper.ToRadians(bone.Rotation);
-                        forward = new Vector2((float)Math.Cos(rot), (float)Math.Sin(rot));
-                        forward.Normalize();
-                        // Not right?
-                        float worldX = bone.WorldX;
-                        float worldY = bone.WorldY;
-                        start = cam.WorldToScreen(new Vector2(worldX, worldY));
-                        end = start + forward;
-                        GUI.DrawLine(spriteBatch, start, end, Color.White, width: 20);
+                        Vector2 forward = new Vector2((float)Math.Cos(rot), (float)Math.Sin(rot));
+                        Vector2 start = new Vector2(bone.WorldX, bone.WorldY);
+                        Vector2 end = start + forward * 30;
+                        GUI.DrawLine(spriteBatch, start, end, Color.White, width: 1);
 
-                        // Draw spine bone positions (start pos is wrong?)
-                        size = new Vector2(4, 4);
+                        // Draw spine bone positions
+                        Vector2 size = new Vector2(4, 4);
                         GUI.DrawRectangle(spriteBatch, start - size / 2, size, Color.White, isFilled: true);
                     }
+                    GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
                 }
-                c.AnimController.skeleton.UpdateWorldTransform();
-                GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
+                spriteBatch.End();
+                GameMain.skeletonRenderer.End();
             }
-            spriteBatch.End();
-            GameMain.skeletonRenderer.End();
 
-            // Test the spine animation
-            //GameMain.skeletonRenderer.Begin();
-            //foreach (Character c in Character.CharacterList)
-            //{
-            //    if (c.AnimController.skeleton == null) continue;
-            //    c.AnimController.skeleton.X = c.DrawPosition.X;
-            //    c.AnimController.skeleton.Y = -c.DrawPosition.Y + 120.0f;
-            //    c.AnimController.skeleton.SetToSetupPose();
-            //    c.AnimController.animationState.Update((float)(deltaTime));
-            //    c.AnimController.animationState.Apply(c.AnimController.skeleton);
-            //    c.AnimController.skeleton.UpdateWorldTransform();
-            //    GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
-            //}
-            //GameMain.skeletonRenderer.End();
+            if (false)
+            {
+                //Test controlling ragdolls with spine animations
+                //This should be tested with a spine rig that matches the ragdolls more closely and has no root motion 
+                //using the stretchyman character leads to pretty bizarre results
+                //NOTE: disable AnimController driven animations while trying this (e.g. kill the character or hold space)
+                GameMain.skeletonRenderer.Begin();
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.AnimController.skeleton == null) continue;
+
+                    //Disables root motion I think??
+                    Spine.TranslateTimeline rootTimeline = c.AnimController.animationState.Tracks.Items[0].Animation.Timelines.Items[1] as Spine.TranslateTimeline;
+                    int fc = rootTimeline.FrameCount;
+                    for (int i = 0; i < fc; i++)
+                    {
+                        rootTimeline.SetFrame(i, 0, 0, 0);
+                    }
+
+                    c.AnimController.skeleton.SetToSetupPose();
+                    c.AnimController.animationState.Update((float)(deltaTime));
+                    c.AnimController.animationState.Apply(c.AnimController.skeleton);
+                    c.AnimController.skeleton.UpdateWorldTransform();
+                    GameMain.skeletonRenderer.Draw(c.AnimController.skeleton);
+
+                    foreach (var bone in c.AnimController.skeleton.Bones)
+                    {
+                        PhysicsBody target = null;
+                        switch (bone.Data.Name)
+                        {
+                            case "root":
+                                target = c.AnimController.Collider;
+                                break;
+                            case "spine1":
+                                target = c.AnimController.GetLimb(LimbType.Waist).body;
+                                break;
+                            case "spine2":
+                                target = c.AnimController.GetLimb(LimbType.Torso).body;
+                                break;
+                            case "head":
+                                //target = c.AnimController.GetLimb(LimbType.Head).body;
+                                break;
+                            case "back-leg-ik-target":
+                                target = c.AnimController.GetLimb(LimbType.LeftFoot).body;
+                                break;
+                            case "front-leg-ik-target":
+                                target = c.AnimController.GetLimb(LimbType.RightFoot).body;
+                                break;
+                            case "back-arm4":
+                                target = c.AnimController.GetLimb(LimbType.LeftHand).body;
+                                break;
+                            case "front-arm4":
+                                target = c.AnimController.GetLimb(LimbType.RightHand).body;
+                                break;
+                        }
+
+                        if (target != null)
+                        {
+                            Vector2 targetPos = new Vector2(bone.WorldX, -bone.WorldY);
+                            if (c.Submarine != null) targetPos -= c.Submarine.Position;
+                            targetPos = ConvertUnits.ToSimUnits(targetPos);
+
+                            target.MoveToPos(targetPos, 5.0f);
+                        }
+                    }
+                }
+                GameMain.skeletonRenderer.End();
+            }
+
 
             //---
 
