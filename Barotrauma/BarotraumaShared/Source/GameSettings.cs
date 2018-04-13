@@ -87,6 +87,7 @@ namespace Barotrauma
                 if (GameMain.SoundManager!=null)
                 {
                     GameMain.SoundManager.SetCategoryGainMultiplier("default",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui",soundVolume);
                     GameMain.SoundManager.SetCategoryGainMultiplier("waterambience",soundVolume);
                 }
 #endif
