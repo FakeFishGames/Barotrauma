@@ -709,8 +709,6 @@ namespace Barotrauma
                 else
                 {
                     character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
-                    Character.Controlled = character;
-                    SetCharacterSelected(character);
 
                     if (character.Info != null && !character.Info.StartItemsGiven)
                     {
@@ -720,6 +718,11 @@ namespace Barotrauma
                 }
 
                 AddCharacter(character);
+                if (i == 0)
+                {
+                    Character.Controlled = character;
+                    SetCharacterSelected(character);
+                }
             }
 
             if (characters.Any()) characterListBox.Select(0);

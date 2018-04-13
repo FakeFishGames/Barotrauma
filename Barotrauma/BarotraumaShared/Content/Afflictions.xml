@@ -7,28 +7,34 @@
   
   <InternalDamage
     name="Internal Damage"
-    description="Internal damage"
+    description="Asdsdl kfsldk flsdkf sdasd lasdfk asdlfk give morphine or fentanyl"
     type="damage"
     causeofdeathdescription="Died of internal injuries"
     selfcauseofdeathdescription="You have succumbed to your internal injuries."    
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
+    <SuitableTreatment name="Morphine" suitability="100"/>
+    <SuitableTreatment name="Fentanyl" suitability="80"/>
+    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
-    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>
   </InternalDamage>
 
   <Bleeding
     name="Bleeding"
-    description="Bleeding"
+    description="Causes bloodloss, which may eventually lead to death. Treat with bandages or hemostatic agents."
     type="bleeding"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
+    <SuitableTreatment name="Bandage" suitability="100"/>
+    <SuitableTreatment name="Hemostop" suitability="80"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
@@ -38,13 +44,15 @@
 
   <Burn
     name="Burn"
-    description="Burns"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="burn"
     causeofdeathdescription="Burned to death"
     selfcauseofdeathdescription="You have burned to death."
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
+    <SuitableTreatment name="Fentanyl" suitability="100"/>
+    <SuitableTreatment name="Bandage" suitability="100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -53,7 +61,7 @@
 
   <OxygenLow
     name="Oxygen low"
-    description="Oxygen low"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
@@ -61,6 +69,11 @@
     indicatorlimb="Torso"    
     activationthreshold="1"
     maxstrength="200">
+    <SuitableTreatment name="Erythrozine" suitability="100"/>
+    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
+    <SuitableTreatment name="Liquid Oxygenite" suitability="50"/>
+    <SuitableTreatment name="Fentanyl" suitability="-100"/>
+    <SuitableTreatment name="Morphine" suitability="-100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
@@ -69,7 +82,7 @@
 
   <Bloodloss
     name="Bloodloss"
-    description="Bloodloss"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="bloodloss"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -77,6 +90,8 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
+    <SuitableTreatment name="Plasma" suitability="100"/>
+    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
@@ -86,11 +101,12 @@
 
   <Stun
     name="Stun"
-    description="Stunned"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="stun"
     limbspecific="false"
     indicatorlimb="Head"
     activationthreshold="1.0"
+    showiconthreshold="1000"
     maxstrength="30">
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
@@ -101,7 +117,7 @@
 
   <AfflictionHusk
     name="Husk infection"
-    description="Husk infection"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="huskinfection"
     causeofdeathdescription="Taken over by a husk parasite"
     selfcauseofdeathdescription="You have been taken over by the husk parasite."
@@ -110,6 +126,7 @@
     activationthreshold="0"
     showiconthreshold="100"
     maxstrength="100">
+    <SuitableTreatment name="Calyxanide" suitability="100"/>
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
@@ -120,7 +137,7 @@
 
   <Affliction
     name="Drunk"
-    description="Drunk"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="poison"
     causeofdeathdescription="Alcohol poisoning"
     selfcauseofdeathdescription="You have died of alcohol poisoning."
@@ -168,7 +185,7 @@
 
   <Affliction
     name="Morphine withdrawal"
-    description="Morphine withdrawal"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="poison"
     causeofdeathdescription="Died of morphine withdrawal"
     selfcauseofdeathdescription="You have died of morphine withdrawal."
@@ -176,7 +193,8 @@
     indicatorlimb="Head"
     showiconthreshold="20"
     maxstrength="100">
-
+    <SuitableTreatment name="Morphine" suitability="100"/>
+    <SuitableTreatment name="Naloxone" suitability="100"/>
     <!-- Slow down the character and slightly decrease vitality -->
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
@@ -210,13 +228,13 @@
   <!-- Gradually applies the "morphine withdrawal" affliction to the character -->
   <Affliction
     name="Morphine addiction"
-    description="Morphine addiction"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="poison"
     limbspecific="false"
     indicatorlimb="Head"    
     showiconthreshold="20"
     maxstrength="100">
-
+    <SuitableTreatment name="Naloxone" suitability="100"/>
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
     <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
@@ -244,7 +262,7 @@
 
   <AfflictionBleeding
     name="Gunshot wound"
-    description="Gunshot wound"
+    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
     type="bleeding"
     causeofdeathdescription="Shot to death"
     selfcauseofdeathdescription="You have died of gunshot wounds."
