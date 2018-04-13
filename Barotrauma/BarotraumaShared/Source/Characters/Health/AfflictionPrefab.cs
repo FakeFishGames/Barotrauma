@@ -100,6 +100,8 @@ namespace Barotrauma
 
         private List<Effect> effects = new List<Effect>();
 
+        private Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
+
         private readonly string typeName;
 
         private readonly ConstructorInfo constructor;
@@ -182,6 +184,15 @@ namespace Barotrauma
                     case "effect":
                         effects.Add(new Effect(subElement));
                         break;
+                    case "suitabletreatment":
+                        string treatmentName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                        if (treatmentSuitability.ContainsKey(treatmentName))
+                        {
+                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentName + "\" defined multiple times");
+                            continue;
+                        }
+                        treatmentSuitability.Add(treatmentName, subElement.GetAttributeFloat("suitability", 0.0f));
+                        break;
                 }
             }
 
@@ -228,6 +239,12 @@ namespace Barotrauma
                 if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
             }
             return null;
+        }
+
+        public float GetTreatmentSuitability(Item item)
+        {
+            if (item == null || !treatmentSuitability.ContainsKey(item.Name.ToLowerInvariant())) return 0.0f;
+            return treatmentSuitability[item.Name.ToLowerInvariant()];
         }
     }
 }
