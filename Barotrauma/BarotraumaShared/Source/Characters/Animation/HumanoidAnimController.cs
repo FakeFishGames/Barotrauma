@@ -1263,7 +1263,7 @@ namespace Barotrauma
                 else
                 {
                     holdable.Pusher.TargetPosition = currItemPos;
-                    holdable.Pusher.TargetRotation = holdAngle * Dir;
+                    holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
 
                     holdable.Pusher.MoveToTargetPosition(true);
 
