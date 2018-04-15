@@ -20,6 +20,11 @@
       <StatusEffect type="InWater" target="This" condition="-2.0"/>
       <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
       <sound file="engine.ogg" type="OnActive" range="3000.0" volume="CurrentVolume" loop="true"/>
+      <propellersprite texture="Content/Items/Engine/propeller.png" sourcerect="0,0,512,256" columns="2" rows="1" animspeed="10" origin="0.5,0.5"/>
+      <propellerdamage damagerange="150" targetforce="500" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="50"/>
+        <affliction name="Bleeding" strength="100"/>
+      </propellerdamage>
     </Engine>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
