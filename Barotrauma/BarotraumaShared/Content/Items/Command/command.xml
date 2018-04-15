@@ -17,6 +17,12 @@
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="5" IsOn="true" castshadows="false">
+        <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+      </LightComponent>
+      <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="5" IsOn="true" castshadows="false" blinkfrequency="1">
+        <sprite texture="Content/Items/Command/navigatorLightsBlinking.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
+      </LightComponent>
     </Steering>
 
     <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
