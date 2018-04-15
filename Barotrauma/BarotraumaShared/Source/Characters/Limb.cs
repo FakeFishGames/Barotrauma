@@ -385,6 +385,8 @@ namespace Barotrauma
         public AttackResult AddDamage(Vector2 position, List<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+            //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
+            afflictions = new List<Affliction>(afflictions);
             for (int i = 0; i < afflictions.Count; i++)
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
