@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
         public readonly Sprite Sprite;
         public readonly LimbType Limb;
         public readonly bool HideLimb;
+        public readonly bool HideOtherWearables;
         public readonly bool InheritLimbDepth;
         public readonly LimbType DepthLimb;
 
@@ -20,15 +21,20 @@ namespace Barotrauma.Items.Components
         public readonly Wearable WearableComponent;
         public readonly string Sound;
 
-        public WearableSprite(Wearable item, Sprite sprite, LimbType limb, bool hideLimb, bool inheritLimbDepth = true, LimbType depthLimb = LimbType.None, string sound = null)
+        public WearableSprite(Wearable item, XElement subElement)
         {
             WearableComponent = item;
-            Sprite = sprite;
-            Limb = limb;
-            HideLimb = hideLimb;
-            InheritLimbDepth = inheritLimbDepth;
-            DepthLimb = depthLimb;
-            Sound = sound;
+
+            string spritePath = subElement.Attribute("texture").Value;
+            spritePath = Path.GetDirectoryName(item.Item.Prefab.ConfigFile) + "/" + spritePath;
+            Sprite = new Sprite(subElement, "", spritePath);
+
+            Limb                = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("limb", "Head"), true);
+            HideLimb            = subElement.GetAttributeBool("hidelimb", false);
+            HideOtherWearables  = subElement.GetAttributeBool("hideotherwearables", false);
+            InheritLimbDepth    = subElement.GetAttributeBool("inheritlimbdepth", true);
+            DepthLimb           = (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true);
+            Sound               = subElement.GetAttributeString("sound", "");
         }
     }
 
@@ -69,18 +75,10 @@ namespace Barotrauma.Items.Components
                             return;
                         }
 
-                        string spritePath = subElement.Attribute("texture").Value;
-                        spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "/" + spritePath;
-
-                        var sound = subElement.GetAttributeString("sound", "");
-                        var sprite = new Sprite(subElement, "", spritePath);
                         limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
                             subElement.GetAttributeString("limb", "Head"), true);
 
-                        wearableSprites[i] = new WearableSprite(this, sprite, limbType[i],
-                            subElement.GetAttributeBool("hidelimb", false),
-                            subElement.GetAttributeBool("inheritlimbdepth", true),
-                            (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true), sound);
+                        wearableSprites[i] = new WearableSprite(this, subElement);
 
                         foreach (XElement lightElement in subElement.Elements())
                         {
