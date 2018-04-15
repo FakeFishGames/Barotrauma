@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(10.0f, false), Editable(ToolTip = "How fast the device can be recharged. "+
+        [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
             "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
         {
@@ -87,10 +87,6 @@ namespace Barotrauma.Items.Components
         public PowerContainer(Item item, XElement element)
             : base(item, element)
         {
-            //capacity = ToolBox.GetAttributeFloat(element, "capacity", 10.0f);
-            //maxRechargeSpeed = ToolBox.GetAttributeFloat(element, "maxinput", 10.0f);
-            //maxOutput = ToolBox.GetAttributeFloat(element, "maxoutput", 10.0f);
-            
             IsActive = true;
 
             InitProjSpecific();
@@ -100,11 +96,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-
-            //picker.SelectedConstruction = (picker.SelectedConstruction == item) ? null : item;
-            
-            return true;
+            return picker != null;
         }
 
         public override void Update(float deltaTime, Camera cam) 
