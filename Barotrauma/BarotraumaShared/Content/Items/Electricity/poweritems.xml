@@ -58,7 +58,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="15"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
@@ -84,7 +87,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="30" stun="20" force="5.0" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="5.0" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="30"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
@@ -108,7 +114,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="15"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
