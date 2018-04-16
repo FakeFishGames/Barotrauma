@@ -295,7 +295,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
                     return;
                 }
-                character.SetOrder(ai.CurrentOrder, "");
+                character.SetOrder(ai.CurrentOrder, "", false);
             }
         }
 
@@ -469,9 +469,20 @@ namespace Barotrauma
             }
         }
 
-        public void RemoveCharacter(Character character)
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false)
         {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
+                return;
+            }
             characters.Remove(character);
+            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -576,7 +587,8 @@ namespace Barotrauma
             if (characterBlock != null)
             {
                 CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
-            }       
+            }
+            RemoveCharacter(killedCharacter);
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -721,18 +733,11 @@ namespace Barotrauma
         {
             foreach (Character c in characters)
             {
-                if (!c.IsDead)
-                {
-                    c.Info.UpdateCharacterItems();
-                    continue;
-                }
-
-                characterInfos.Remove(c.Info);
+                c.Info.UpdateCharacterItems();
             }
 
-            //remove characterinfos whose character doesn't exist anymore
-            //(i.e. character was removed during the round)
-            characterInfos.RemoveAll(c => c.Character == null);
+            //remove characterinfos whose characters have been removed or killed
+            characterInfos.RemoveAll(c => c.Character == null || c.Character.Removed || c.CauseOfDeath != null);
             
             characters.Clear();
             characterListBox.ClearChildren();
