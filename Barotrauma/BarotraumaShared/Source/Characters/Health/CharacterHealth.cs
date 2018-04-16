@@ -389,7 +389,7 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    affliction.Merge(newAffliction);
+                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
                     CalculateVitality();
                     if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
                     return;
@@ -398,7 +398,7 @@ namespace Barotrauma
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-            limbHealth.Afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
+            limbHealth.Afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
 
             CalculateVitality();
             if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
@@ -413,14 +413,16 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    affliction.Merge(newAffliction);
+                    affliction.Strength += Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    CalculateVitality();
+                    if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
                     return;
                 }
             }
 
             //create a new instance of the affliction to make sure we don't use the same instance for multiple characters
             //or modify the affliction instance of an Attack or a StatusEffect
-            afflictions.Add(newAffliction.Prefab.Instantiate(newAffliction.Strength));
+            afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
 
             CalculateVitality();
             if (vitality <= minVitality) character.Kill(GetCauseOfDeath());
@@ -430,9 +432,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
-
-            float bleedingAmount = 0.0f;
-            
+                        
             for (int i = 0; i < limbHealths.Count; i++)
             {
                 limbHealths[i].Afflictions.RemoveAll(a => a.Strength <= 0.0f);
@@ -557,7 +557,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        existingAffliction.Merge(affliction);
+                        existingAffliction.Strength += affliction.Strength;
                     }
                 }
 

@@ -4,20 +4,20 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     class CharacterHUD
     {
         private static GUIButton cprButton;
-
+        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
                 
         public static void TakeDamage(float amount)
         {
+            //TODO: some effect
         }
 
         public static void AddToGUIUpdateList(Character character)
@@ -51,12 +51,9 @@ namespace Barotrauma
         }
 
         public static void Update(float deltaTime, Character character)
-        {            
-            if (Inventory.SelectedSlot == null)
-            {
-                if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
-            }
-            
+        {      
+            if (cprButton != null) cprButton.Visible = false;
+
             if (!character.IsUnconscious && character.Stun <= 0.0f &&
                 (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
@@ -83,6 +80,9 @@ namespace Barotrauma
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
+                        if (cprButton == null) CreateCPRButton();
+                        cprButton.Visible = true;
+                        cprButton.Update(deltaTime);
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
                     character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
@@ -105,7 +105,35 @@ namespace Barotrauma
             }
         }
 
-        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
+        private static void CreateCPRButton()
+        {
+            cprButton = new GUIButton(
+                            new Rectangle(
+                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
+                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
+                            "Perform CPR", "");
+            cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
+
+            cprButton.OnClicked = (button, userData) =>
+            {
+                if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
+
+                Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
+                    AnimController.Animation.None : AnimController.Animation.CPR;
+
+                foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                {
+                    limb.pullJoint.Enabled = false;
+                }
+
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                }
+
+                return true;
+            };
+        }
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
@@ -257,42 +285,12 @@ namespace Barotrauma
             {
                 character.Inventory.DrawOwn(spriteBatch);
             }
-
+            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (cprButton == null)
-                    {
-                        cprButton = new GUIButton(
-                            new Rectangle(
-                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)), 
-                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))), 
-                            "Perform CPR", "");
-                        cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
-
-                        cprButton.OnClicked = (button, userData) =>
-                        {
-                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
-
-                            Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
-                                AnimController.Animation.None : AnimController.Animation.CPR;
-
-                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                            {
-                                limb.pullJoint.Enabled = false;
-                            }
-                            
-                            if (GameMain.Client != null)
-                            {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
-                            }
-                            
-                            return true;
-                        };
-                    }
-                    
-                    if (cprButton.Visible) cprButton.Draw(spriteBatch);
+                    if (cprButton != null && cprButton.Visible) cprButton.Draw(spriteBatch);
 
                     character.Inventory.Alignment = Alignment.Left;
                     if (character.SelectedCharacter.CanInventoryBeAccessed)

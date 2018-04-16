@@ -246,7 +246,7 @@ namespace Barotrauma
             {
                 //limbs don't collide with each other
                 body.CollisionCategories = Physics.CollisionCharacter;
-                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem;
+                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
             }
             
             body.UserData = this;
@@ -385,6 +385,8 @@ namespace Barotrauma
         public AttackResult AddDamage(Vector2 position, List<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+            //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
+            afflictions = new List<Affliction>(afflictions);
             for (int i = 0; i < afflictions.Count; i++)
             {
                 foreach (DamageModifier damageModifier in damageModifiers)

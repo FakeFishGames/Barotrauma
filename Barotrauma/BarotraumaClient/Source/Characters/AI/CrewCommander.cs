@@ -40,10 +40,18 @@ namespace Barotrauma
         public CrewCommander(CrewManager crewManager)
         {
             this.crewManager = crewManager;
-            reportButtonContainer = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 180, 200, 180, GameMain.GraphicsHeight), null, Alignment.TopRight, null);
+            //PH: make space for the icon part of the report button
+            Rectangle rect = HUDLayoutSettings.ReportArea;
+            rect = new Rectangle(rect.X, rect.Y + 64, rect.Width, rect.Height);
+            reportButtonContainer = new GUIListBox(rect, null, Alignment.TopRight, null);
             reportButtonContainer.Color = Color.Transparent;
             reportButtonContainer.Spacing = 50;
             reportButtonContainer.HideChildrenOutsideFrame = false;
+        }
+
+        private bool ReportButtonsVisible()
+        {
+            return CharacterHealth.OpenHealthWindow == null;
         }
 
         public void ToggleGUIFrame()
@@ -452,7 +460,7 @@ namespace Barotrauma
         {
             if (IsOpen && frame != null) frame.AddToGUIUpdateList();
 
-            if (reportButtonContainer.CountChildren > 0)
+            if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
             {
                 reportButtonContainer.AddToGUIUpdateList();
             }
@@ -481,7 +489,7 @@ namespace Barotrauma
 
                 ToggleReportButton("reportintruders", hasIntruders);
 
-                if (reportButtonContainer.CountChildren > 0)
+                if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
                 {
                     reportButtonContainer.Update(deltaTime);
                 }
@@ -547,7 +555,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (reportButtonContainer.CountChildren > 0)
+            if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
             {
                 reportButtonContainer.Draw(spriteBatch);
             }

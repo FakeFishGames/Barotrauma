@@ -108,7 +108,6 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItem.ogg", false);
                 sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItemFail.ogg", false);
                 sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/dropItem.ogg", false);
-
             }
 
             // create 1x1 texture for line drawing
@@ -697,7 +696,7 @@ namespace Barotrauma
             int soundIndex = (int)soundType;
             if (soundIndex < 0 || soundIndex >= sounds.Length) return;
 
-            sounds[soundIndex].Play();
+            sounds[soundIndex].Play(null, "ui");
         }
 
         private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)

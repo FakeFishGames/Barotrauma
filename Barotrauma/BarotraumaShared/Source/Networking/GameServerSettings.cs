@@ -58,6 +58,8 @@ namespace Barotrauma.Networking
 
         private SelectionMode subSelectionMode, modeSelectionMode;
 
+        private float selectedLevelDifficulty;
+
         private bool registeredToMaster;
 
         private WhiteList whitelist;
@@ -177,6 +179,12 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public float SelectedLevelDifficulty
+        {
+            get { return selectedLevelDifficulty; }
+            set { selectedLevelDifficulty = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
         public YesNoMaybe TraitorsEnabled
         {
             get;
@@ -284,7 +292,7 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
-
+            doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
 #if SERVER
@@ -334,15 +342,18 @@ namespace Barotrauma.Networking
 #endif
 
             subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
+            selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
+            GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
+
             var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
+            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
 

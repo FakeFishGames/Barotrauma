@@ -710,7 +710,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
+                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

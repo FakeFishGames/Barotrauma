@@ -31,6 +31,7 @@ namespace Barotrauma
             try
             {
                 game = new GameMain();
+                game.GraphicsDevice.PresentationParameters.IsFullScreen = false;
             }
             catch (Exception e)
             {

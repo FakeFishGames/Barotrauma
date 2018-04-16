@@ -185,7 +185,7 @@ namespace Barotrauma
             return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome));
         }
 
-        public static Level CreateRandom(string seed = "")
+        public static Level CreateRandom(string seed = "", float? difficulty = null)
         {
             if (seed == "")
             {
@@ -194,7 +194,10 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            return new Level(seed, Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), LevelGenerationParams.GetRandom(seed));
+            return new Level(
+                seed, 
+                difficulty.HasValue ? difficulty.Value : Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), 
+                LevelGenerationParams.GetRandom(seed));
         }
 
         public void Generate(bool mirror = false)

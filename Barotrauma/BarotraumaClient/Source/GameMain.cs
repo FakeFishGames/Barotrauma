@@ -248,6 +248,7 @@ namespace Barotrauma
 
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 

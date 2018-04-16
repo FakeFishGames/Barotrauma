@@ -61,6 +61,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle ReportArea
+        {
+            get; private set;
+        }
+
         static HUDLayoutSettings()
         {
             CreateAreas();
@@ -100,13 +105,17 @@ namespace Barotrauma
 
             //health windows between upper and lower inventory areas, minus the area taken up by the chatbox on either side
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(ChatBoxArea.Right + 60, InventoryAreaUpper.Bottom + padding, GameMain.GraphicsWidth - ChatBoxArea.Right - 60 - padding, InventoryAreaLower.Y - InventoryAreaUpper.Bottom - padding * 2) :
-                new Rectangle(padding, InventoryAreaUpper.Bottom + padding, GameMain.GraphicsWidth - ChatBoxArea.Width - 60 - padding, InventoryAreaLower.Y - InventoryAreaUpper.Bottom - padding * 2);
+                new Rectangle(ChatBoxArea.Right + 60, InventoryAreaUpper.Y, GameMain.GraphicsWidth - ChatBoxArea.Right - 60 - padding, InventoryAreaLower.Y - InventoryAreaUpper.Y - padding * 2) :
+                new Rectangle(padding, InventoryAreaUpper.Y, GameMain.GraphicsWidth - ChatBoxArea.Width - 60 - padding, InventoryAreaLower.Y - InventoryAreaUpper.Y - padding * 2);
 
             //split the health area vertically, left side for the player's own health and right side for the character they're treating
             int healthWindowWidth = Math.Min(healthWindowArea.Width / 2 - padding / 2, 450);
             HealthWindowAreaLeft = new Rectangle(healthWindowArea.X, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
             HealthWindowAreaRight = new Rectangle(healthWindowArea.Right - healthWindowWidth, healthWindowArea.Y, healthWindowWidth, healthWindowArea.Height);
+
+            //report buttons (report breach etc) appear center right, not visible when health window is open
+            int reportAreaWidth = (int)Math.Min(150 * GUI.Scale, 200);
+            ReportArea = new Rectangle(GameMain.GraphicsWidth - padding - reportAreaWidth, InventoryAreaUpper.Bottom + padding, reportAreaWidth, InventoryAreaLower.Y - InventoryAreaUpper.Bottom - padding * 2);
         }
 
         public static void Draw(SpriteBatch spriteBatch)

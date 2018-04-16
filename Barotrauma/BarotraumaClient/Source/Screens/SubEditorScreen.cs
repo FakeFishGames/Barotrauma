@@ -387,11 +387,8 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
-            //TODO: reimplement
-            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Pause(i);
-            }*/
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -412,16 +409,13 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
 
-            if (characterMode) ToggleCharacterMode();            
+            if (characterMode) ToggleCharacterMode();
 
             if (wiringMode) ToggleWiringMode();
 
             SoundPlayer.OverrideMusicType = null;
-            //TODO: reimplement
-            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Resume(i);
-            }*/
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
 
             if (dummyCharacter != null)
             {

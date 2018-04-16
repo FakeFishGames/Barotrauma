@@ -172,9 +172,9 @@ namespace Barotrauma
             SaveUtil.LoadGame(savePath);
         }
 
-        public void StartRound(string levelSeed, bool loadSecondSub = false)
+        public void StartRound(string levelSeed, float? difficulty = null, bool loadSecondSub = false)
         {
-            Level randomLevel = Level.CreateRandom(levelSeed);
+            Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
 
             StartRound(randomLevel, true, loadSecondSub);
         }
