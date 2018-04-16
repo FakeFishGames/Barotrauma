@@ -85,11 +85,15 @@ namespace Barotrauma
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
 
-
             new GUITextBlock(new Rectangle(0, 0, 0, 40), TextManager.Get("RoundSummaryCrewStatus"), "", listBox, GUI.LargeFont);
 
             GUIListBox characterListBox = new GUIListBox(new Rectangle(0, 0, listBox.Rect.Width - 20, 90), null, Alignment.TopLeft, "", null, true);
             listBox.AddChild(characterListBox);
+
+            foreach (GUIComponent child in listBox.children)
+            {
+                child.CanBeFocused = child == characterListBox;
+            }
 
             int x = 0;
             foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())

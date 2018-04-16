@@ -230,8 +230,7 @@ namespace Barotrauma
             {
                 bool hasOwner = inc.ReadBoolean();
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
-
-
+                
                 string newName = inc.ReadString();
                 byte teamID = inc.ReadByte();
 
@@ -256,8 +255,7 @@ namespace Barotrauma
                 }
 
                 if (!spawn) return null;
-
-
+                
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
                 ch.HeadSpriteId = headSpriteID;
 
@@ -280,8 +278,23 @@ namespace Barotrauma
                 character.ID = id;
                 character.TeamID = teamID;
 
-                if (GameMain.Client.ID == ownerId)
+                if (ownerId == 0)
                 {
+                    if (GameMain.Client.HostCharacter != null)
+                    {
+                        GameMain.GameSession.CrewManager.RemoveCharacter(GameMain.Client.HostCharacter, true);
+                    }
+                    GameMain.Client.HostCharacter = character;
+                }
+                else if (GameMain.Client.ID == ownerId)
+                {
+                    if (GameMain.Client.Character != null)
+                    {
+                        //remove info of the client's previous character from crewmanager 
+                        //(only the latest controlled character will be visible in the round summary)
+                        GameMain.GameSession.CrewManager.RemoveCharacter(GameMain.Client.Character, true);
+                    }
+
                     GameMain.Client.Character = character;
                     Controlled = character;
 
@@ -296,11 +309,14 @@ namespace Barotrauma
                     var ownerClient = GameMain.Client.ConnectedClients.Find(c => c.ID == ownerId);
                     if (ownerClient != null)
                     {
+                        //remove info of the client's previous character from crewmanager 
+                        //(only the latest controlled character will be visible in the round summary)
+                        if (ownerClient.Character != null) GameMain.GameSession.CrewManager.RemoveCharacter(ownerClient.Character, true);
                         ownerClient.Character = character;
                     }
                 }
 
-                if (configPath == Character.HumanConfigFile)
+                if (configPath == HumanConfigFile)
                 {
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
