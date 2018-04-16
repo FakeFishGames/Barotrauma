@@ -268,10 +268,11 @@ namespace Barotrauma
                 distortTimer = 0.0f;
             }
 
-            if (PlayerInput.KeyHit(Keys.H))
+            if (PlayerInput.KeyHit(InputType.Health) && GUIComponent.KeyboardDispatcher.Subscriber == null)
             {
                 OpenHealthWindow = openHealthWindow == this ? null : this;
             }
+            if (PlayerInput.RightButtonClicked() || PlayerInput.KeyHit(InputType.Select)) OpenHealthWindow = null;
             
             if (character.IsDead)
             {
