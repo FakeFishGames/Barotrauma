@@ -314,7 +314,7 @@ namespace Barotrauma
                 Vector2 prevPos = prevPoint.SimPosition;
                 List<Body> ignoredBodies = new List<Body>();
 
-                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 100.0f; y += 100.0f)
+                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 1.0f; y += 100.0f)
                 {
                     var pickedBody = Submarine.PickBody(
                         ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, 
@@ -349,7 +349,12 @@ namespace Barotrauma
                     }
                 }
 
-                ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
+                if (prevPoint.rect.Y < item.Rect.Y - 10.0f)
+                {
+                    WayPoint newPoint = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine);
+                    ladderPoints.Add(newPoint);
+                    newPoint.ConnectTo(prevPoint);
+                }
                 
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {
