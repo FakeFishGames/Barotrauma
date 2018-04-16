@@ -226,8 +226,8 @@ namespace Barotrauma
             if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
 
             bool hovering =
-                PlayerInput.MousePosition.X > Math.Min(Math.Min(chatBox.Rect.X, toggleButton.Rect.X), radioButton.Rect.X) &&
-                PlayerInput.MousePosition.X < Math.Max(Math.Max(chatBox.Rect.Right, radioButton.Rect.Right), toggleButton.Rect.Right) &&
+                (PlayerInput.MousePosition.X > Math.Min(Math.Min(chatBox.Rect.X, toggleButton.Rect.X), radioButton.Rect.X) || HUDLayoutSettings.ChatBoxAlignment == Alignment.Left) &&
+                (PlayerInput.MousePosition.X < Math.Max(Math.Max(chatBox.Rect.Right, radioButton.Rect.Right), toggleButton.Rect.Right) || HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) &&
                 PlayerInput.MousePosition.Y > chatBox.Rect.Y &&
                 PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
 
