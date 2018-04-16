@@ -451,6 +451,8 @@
   <OxygenLow>Signs of oxygen deprivation</OxygenLow>
   <NotBreathing>Not breathing</NotBreathing>
 
+  <NoAvailableMedicalItems>No medical items available</NoAvailableMedicalItems>
+
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>

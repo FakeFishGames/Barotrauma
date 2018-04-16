@@ -278,7 +278,7 @@ namespace Barotrauma
                 return;
             }
 
-            characters.Add(character);
+            if (!characters.Contains(character)) characters.Add(character);
             if (!characterInfos.Contains(character.Info))
             {
                 characterInfos.Add(character.Info);
@@ -295,7 +295,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
                     return;
                 }
-                commander.SetOrder(character, ai.CurrentOrder);
+                character.SetOrder(ai.CurrentOrder, "");
             }
         }
 
@@ -555,41 +555,28 @@ namespace Barotrauma
                     orderTargetFrame.Update(deltaTime);
                 }
             }
-
-            /*if (isSinglePlayer)
-            {
-                for (int i = chatBox.children.Count - 1; i >= 0; i--)
-                {
-                    var textBlock = chatBox.children[i] as GUITextBlock;
-                    if (textBlock == null) continue;
-
-                    float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
-                    textBlock.UserData = alpha;
-                    textBlock.TextColor = new Color(textBlock.TextColor, alpha);
-                }
-            }*/
         }
 
         public void ReviveCharacter(Character revivedCharacter)
         {
             GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
-            if (characterBlock != null) characterBlock.Color = Color.Transparent;
-
-            if (revivedCharacter is AICharacter)
+            if (characterBlock != null)
             {
-                //commander.UpdateCharacters();
+                characterBlock.Color = Color.Transparent;
+            }
+            else
+            {
+                AddCharacter(revivedCharacter);
             }
         }
 
         public void KillCharacter(Character killedCharacter)
         {
             GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
-            CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
-
-            /*if (killedCharacter is AICharacter)
+            if (characterBlock != null)
             {
-                commander.UpdateCharacters();
-            }*/        
+                CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
+            }       
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)

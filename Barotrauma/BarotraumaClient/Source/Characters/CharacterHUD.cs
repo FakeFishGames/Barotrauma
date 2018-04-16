@@ -9,7 +9,6 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static GUIButton cprButton;
         private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
@@ -24,8 +23,6 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
-            
             if (!character.IsUnconscious && character.Stun <= 0.0f &&
                 (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
@@ -51,9 +48,7 @@ namespace Barotrauma
         }
 
         public static void Update(float deltaTime, Character character)
-        {      
-            if (cprButton != null) cprButton.Visible = false;
-
+        {
             if (!character.IsUnconscious && character.Stun <= 0.0f &&
                 (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
             {
@@ -80,9 +75,6 @@ namespace Barotrauma
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
-                        if (cprButton == null) CreateCPRButton();
-                        cprButton.Visible = true;
-                        cprButton.Update(deltaTime);
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
                     character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
@@ -104,37 +96,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        private static void CreateCPRButton()
-        {
-            cprButton = new GUIButton(
-                            new Rectangle(
-                                new Point((int)(GameMain.GraphicsWidth - 40 - 160 * GUI.Scale), (int)(GameMain.GraphicsHeight - 280 * GUI.Scale)),
-                                new Point((int)(160 * GUI.Scale), (int)(30 * GUI.Scale))),
-                            "Perform CPR", "");
-            cprButton.Font = GUI.Scale < 0.8f ? GUI.SmallFont : GUI.Font;
-
-            cprButton.OnClicked = (button, userData) =>
-            {
-                if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
-
-                Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
-                    AnimController.Animation.None : AnimController.Animation.CPR;
-
-                foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
-                {
-                    limb.pullJoint.Enabled = false;
-                }
-
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
-                }
-
-                return true;
-            };
-        }
-
+        
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (GUI.DisableHUD) return;
@@ -152,41 +114,7 @@ namespace Barotrauma
                 if (character.CurrentOrder != null)
                 {
                     DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
-                }
-
-                /*//recreate order list if it doesn't exist, is for some other character, 
-                //if there are new orders, or if the list contains orders that don't exist anymore
-                if (orderList == null || orderList.UserData != character ||
-                    currentOrders.Any(o => orderList.FindChild(o) == null) ||
-                    orderList.children.Any(c => !currentOrders.Contains(c.UserData as Order)))
-                {
-                    orderList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 150, 50, 150, 500), Color.Transparent, null);
-                    orderList.UserData = character;
-
-                    foreach (Order order in currentOrders)
-                    {
-                        var orderFrame = new GUITextBlock(
-                            new Rectangle(0, 0, 0, 50), order.Name, "ListBoxElement", 
-                            Alignment.TopLeft, Alignment.TopRight, orderList, false, GUI.SmallFont);
-                        orderFrame.UserData = order;
-
-                        var dismissButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Dismiss", Alignment.BottomRight, "", orderFrame);
-                        //dismissButton.Font = GUI.SmallFont;
-                        dismissButton.UserData = order;
-                        dismissButton.OnClicked += (btn, userdata) =>
-                        {
-                            Order dismissedOrder = userdata as Order;
-                            GameMain.GameSession.CrewManager.RemoveOrder(dismissedOrder);
-                            if (dismissedOrder == character.CurrentOrder)
-                            {
-                                character.SetOrder(null, "");
-                            }
-                            return true;
-                        };
-                    }
-                }
-
-                orderList.Draw(spriteBatch);*/
+                }                
             }
 
             foreach (Optimizable optimizable in Optimizable.CurrentlyOptimizable)
@@ -290,8 +218,6 @@ namespace Barotrauma
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (cprButton != null && cprButton.Visible) cprButton.Draw(spriteBatch);
-
                     character.Inventory.Alignment = Alignment.Left;
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
@@ -300,6 +226,7 @@ namespace Barotrauma
                     }
                     character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
                     character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
+                    CharacterHealth.OpenHealthWindow = character.SelectedCharacter.CharacterHealth;
                 }
                 else if (character.Inventory != null)
                 {

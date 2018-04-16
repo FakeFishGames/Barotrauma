@@ -18,6 +18,8 @@ namespace Barotrauma
         private static Sprite statusIconPressure;
         private static Sprite statusIconBloodloss;
 
+        private GUIButton cprButton;
+
         private Alignment alignment = Alignment.Left;
 
         public Alignment Alignment
@@ -45,7 +47,7 @@ namespace Barotrauma
         private GUIProgressBar healthWindowHealthBar;
         private GUIFrame limbIndicatorContainer;
         ;*/
-        private GUIFrame healItemContainer;
+        private GUIListBox healItemContainer;
 
         private GUIFrame healthWindow;
 
@@ -90,11 +92,34 @@ namespace Barotrauma
 
             afflictionContainer = new GUIListBox(new Rectangle(0, 0, 100, 200), "");
             healthWindow = new GUIFrame(new Rectangle(0, 0, 100, 200), "");
-            healItemContainer = new GUIFrame(new Rectangle(0, 0, 100, 200), "InnerFrame");
+            healItemContainer = new GUIListBox(new Rectangle(0, 0, 100, 200), null, Alignment.TopLeft, "", null, true);
             healItemContainer.Padding = Vector4.One * 10 * GUI.Scale;
-            
+            healItemContainer.Spacing = (int)(5 * GUI.Scale);
+
+            cprButton = new GUIButton(new Rectangle(0, 0, 80, 80), "", "CPRButton");
+            cprButton.OnClicked = (button, userData) =>
+            {
+                Character selectedCharacter = Character.Controlled?.SelectedCharacter;
+                if (selectedCharacter == null || (!selectedCharacter.IsUnconscious && selectedCharacter.Stun <= 0.0f)) return false;
+
+                Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
+                    AnimController.Animation.None : AnimController.Animation.CPR;
+
+                foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+                {
+                    limb.pullJoint.Enabled = false;
+                }
+
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                }
+
+                return true;
+            };
+
             UpdateAlignment();
-            
+
             suicideButton = new GUIButton(
                         new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
             suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
@@ -133,7 +158,10 @@ namespace Barotrauma
 
                 healItemContainer.Rect = new Rectangle(
                     HUDLayoutSettings.HealthWindowAreaLeft.Center.X, HUDLayoutSettings.HealthWindowAreaLeft.Y,
-                    HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height - afflictionContainerHeight);
+                    HUDLayoutSettings.HealthWindowAreaLeft.Width, (int)(110 * GUI.Scale));
+                
+                int cprButtonSize = Math.Min((int)(80 * GUI.Scale), afflictionContainer.Rect.Y - healItemContainer.Rect.Bottom - 5);
+                cprButton.Rect = new Rectangle(healthWindow.Rect.Right, healItemContainer.Rect.Bottom + 5, cprButtonSize, cprButtonSize);
             }
             else
             {
@@ -148,8 +176,11 @@ namespace Barotrauma
                     HUDLayoutSettings.HealthWindowAreaRight.Width / 2, afflictionContainerHeight);
 
                 healItemContainer.Rect = new Rectangle(
-                    HUDLayoutSettings.HealthWindowAreaRight.X, HUDLayoutSettings.HealthWindowAreaRight.Y,
-                    HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height - afflictionContainerHeight);
+                    HUDLayoutSettings.HealthWindowAreaRight.X - HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Y,
+                    HUDLayoutSettings.HealthWindowAreaRight.Width, (int)(110 * GUI.Scale));
+
+                int cprButtonSize = Math.Min((int)(80 * GUI.Scale), afflictionContainer.Rect.Y - healItemContainer.Rect.Bottom - 5);
+                cprButton.Rect = new Rectangle(healthWindow.Rect.X - cprButtonSize, healItemContainer.Rect.Bottom + 5, cprButtonSize, cprButtonSize);
             }
         }
 
@@ -319,6 +350,16 @@ namespace Barotrauma
             {
                 suicideButton.Visible = false;
             }
+
+            if (character == Character.Controlled?.SelectedCharacter && (character.IsUnconscious || character.Stun > 0.0f))
+            {
+                cprButton.Visible = true;
+                cprButton.Update(deltaTime);
+            }
+            else
+            {
+                cprButton.Visible = false;
+            }
         }
         
         public void AddToGUIUpdateList()
@@ -329,6 +370,7 @@ namespace Barotrauma
                 healItemContainer.AddToGUIUpdateList();
             }
             if (suicideButton.Visible && character == Character.Controlled) suicideButton.AddToGUIUpdateList();
+            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
@@ -421,6 +463,8 @@ namespace Barotrauma
                 {
                     GUI.DrawString(spriteBatch, PlayerInput.MousePosition + Vector2.UnitY * 40.0f, "Use item \"" + Inventory.draggingItem.Name + "\" on [insert limb name here]", Color.Green, Color.Black * 0.8f);
                 }
+
+                if (cprButton.Visible) cprButton.Draw(spriteBatch);
             }
         }
 
@@ -515,55 +559,45 @@ namespace Barotrauma
 
         private List<Item> GetAvailableMedicalItems()
         {
-            List<Item> items = new List<Item>();
-            //get items in this character's inventory
-            foreach (Item item in character.Inventory.Items)
-            {
-                if (item == null) continue;
-                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-                items.Add(item);
-            }
-
-            //get items in the selected character's inventory
+            List<Item> allInventoryItems = new List<Item>();
+            allInventoryItems.AddRange(character.Inventory.Items);
             if (character.SelectedCharacter?.Inventory != null && character.CanAccessInventory(character.SelectedCharacter.Inventory))
             {
-                foreach (Item item in character.SelectedCharacter.Inventory.Items)
-                {
-                    if (item == null) continue;
-                    if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-                    items.Add(item);
-                }
+                allInventoryItems.AddRange(character.SelectedCharacter.Inventory.Items);
             }
-
-            //get items in the selected character's inventory
             if (character.SelectedBy?.Inventory != null)
             {
-                foreach (Item item in character.SelectedBy.Inventory.Items)
-                {
-                    if (item == null) continue;
-                    if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-                    items.Add(item);
-                }
+                allInventoryItems.AddRange(character.SelectedBy.Inventory.Items);
             }
 
-            //get items inside items
-            for (int i = 0; i < items.Count; i++)
+            List<Item> medicalItems = new List<Item>();
+            foreach (Item item in allInventoryItems)
             {
-                var containedItems = items[i].ContainedItems;
-                if (containedItems == null) continue;
-                foreach (Item item in containedItems)
+                if (item == null) continue;
+
+                var containedItems = item.ContainedItems;
+                if (containedItems != null)
                 {
-                    if (item == null) continue;
-                    if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
-                    items.Add(item);
+                    foreach (Item containedItem in containedItems)
+                    {
+                        if (containedItem == null) continue;
+                        if (!containedItem.HasTag("medical") && !containedItem.HasTag("chem")) continue;
+                        medicalItems.Add(containedItem);
+                    }
                 }
+
+                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
+                medicalItems.Add(item);
             }
-            return items;
+
+            return medicalItems;
         }
 
         private bool ItemContainerNeedsRefresh(List<Item> availableItems)
         {
-            if (availableItems.Count != healItemContainer.CountChildren) return true;
+            if (healItemContainer.CountChildren == 0) return true;
+            int childrenCount = healItemContainer.children.Where(c => c.UserData as string != "noavailableitems").Count();
+            if (availableItems.Count != childrenCount) return true;
  
             foreach (Item item in availableItems)
             {
@@ -591,17 +625,20 @@ namespace Barotrauma
             healItemContainer.ClearChildren();
             
             int itemButtonSize = (int)(80 * GUI.Scale);
-            int padding = (int)(5 * GUI.Scale);
-
-            healItemContainer.Rect = new Rectangle(healItemContainer.Rect.X, healItemContainer.Rect.Y, healItemContainer.Rect.Width, itemButtonSize + (int)healItemContainer.Padding.Y + (int)healItemContainer.Padding.W);
-
-            int x = 0, y = 0;
+            
+            if (items.Count == 0)
+            {
+                var noItemsText = new GUITextBlock(Rectangle.Empty, TextManager.Get("NoAvailableMedicalItems"), "", Alignment.Center, Alignment.Center, healItemContainer, true);
+                noItemsText.UserData = "noavailableitems";
+                return;
+            }
+            
             foreach (Item item in items)
             {
                 if (item == null) continue;
                 if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
 
-                var child = new GUIButton(new Rectangle(x, y, itemButtonSize, itemButtonSize), "", "GUIButton", healItemContainer);
+                var child = new GUIButton(new Rectangle(0, 0, itemButtonSize, itemButtonSize), "", "GUIButton", healItemContainer);
                 child.Padding = Vector4.Zero;
                 child.UserData = item;
                 child.OnClicked += OnTreatmentButtonClicked;
@@ -620,16 +657,7 @@ namespace Barotrauma
                 {
                     itemName += " (" + item.ContainedItems[0].Name + ")";
                 }
-                child.ToolTip = itemName+"\n"+item.Description;
-                //new GUITextBlock(new Rectangle(50, 0, 0, 0), itemName, "", child);
-
-                x += itemButtonSize + padding;
-                if (x > healItemContainer.Rect.Width - itemButtonSize)
-                {
-                    x = 0;
-                    y += itemButtonSize + padding;
-                    healItemContainer.SetDimensions(new Point(healItemContainer.Rect.Width, healItemContainer.Rect.Height + itemButtonSize + padding));
-                }
+                child.ToolTip = itemName + "\n" + item.Description;
             }
         }
 
