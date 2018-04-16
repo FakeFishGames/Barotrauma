@@ -1714,6 +1714,38 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage(location.Name + " selected.", senderClient);
             }));
 
+            commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    NewMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    GameMain.Server.SendConsoleMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), client);
+                    NewMessage("Client \""+client.Name+"\" set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", client);
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
+            }));
+
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {

@@ -90,7 +90,11 @@
       </Attack>
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
-        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
+        <Explosion range="1000.0" structuredamage="1000" force="50.0">
+          <affliction name="Burn" strength="500"/>
+          <affliction name="Internal Damage" strength="500"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
         <Use/>

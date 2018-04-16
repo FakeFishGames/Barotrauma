@@ -261,7 +261,10 @@
       </StatusEffect>
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="5.0"/>
+        <Explosion range="250.0" structuredamage="10" force="5.0">
+          <affliction name="Burn" strength="20"/>
+          <affliction name="Stun" strength="3"/>
+        </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -593,7 +596,10 @@
       </StatusEffect>
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="300.0" structuredamage="50" damage="30" stun="5" force="10.0"/>
+        <Explosion range="300.0" structuredamage="50" force="10.0">
+          <affliction name="Burn" strength="30"/>
+          <affliction name="Stun" strength="2"/>
+        </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -833,11 +839,17 @@
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="500" damage="5" stun="3" force="0.1"/>
+        <Explosion range="500" force="0.1">
+          <affliction name="Burn" strength="5"/>
+          <affliction name="Stun" strength="3"/>
+        </Explosion>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="500" damage="5" stun="3" force="0.1"/>
+        <Explosion range="500" force="0.1">
+          <affliction name="Burn" strength="5"/>
+          <affliction name="Stun" strength="3"/>
+        </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -1006,7 +1018,11 @@
       
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
-        <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5"/>
+        <Explosion range="600.0" structuredamage="400" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
+          <affliction name="Burn" strength="100"/>
+          <affliction name="Internal Damage" strength="200"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
         <Remove/>
       </StatusEffect>
       

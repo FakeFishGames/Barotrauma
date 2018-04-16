@@ -148,7 +148,10 @@
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
+        <Explosion range="250.0" structuredamage="15" force="3.0">
+          <affliction name="Burn" strength="25"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
     </Holdable>
   </Item>

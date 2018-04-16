@@ -1172,12 +1172,15 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
-
+            
             Vector2 itemPos = aim ? aimPos : holdPos;
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
 
             float itemAngle;
+
+            Holdable holdable = item.GetComponent<Holdable>();
+
             if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
@@ -1187,8 +1190,7 @@ namespace Barotrauma
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
-
-                Holdable holdable = item.GetComponent<Holdable>();
+                
                 if (holdable.ControlPose)
                 {
                     head.body.SmoothRotate(itemAngle);
@@ -1244,6 +1246,31 @@ namespace Barotrauma
             Vector2 currItemPos = (character.SelectedItems[0] == item) ?
                 rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0] :
                 leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
+            
+            if (holdable.Pusher != null)
+            {
+                if (!holdable.Pusher.Enabled)
+                {
+                    holdable.Pusher.Enabled = true;
+                    holdable.Pusher.ResetDynamics();
+                    holdable.Pusher.SetTransform(currItemPos, itemAngle);
+                    foreach (Character character in  Character.CharacterList)
+                    {
+                        holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
+                    }
+                    holdable.Pusher.FarseerBody.IgnoreCollisionWith(Collider.FarseerBody);
+                }
+                else
+                {
+                    holdable.Pusher.TargetPosition = currItemPos;
+                    holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
+
+                    holdable.Pusher.MoveToTargetPosition(true);
+
+                    currItemPos = holdable.Pusher.SimPosition;
+                    itemAngle = holdable.Pusher.Rotation;
+                }
+            }
             item.SetTransform(currItemPos, itemAngle);
 
             //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);

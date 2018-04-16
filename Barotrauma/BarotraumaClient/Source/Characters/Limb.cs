@@ -93,8 +93,12 @@ namespace Barotrauma
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
 
+            WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
+
             foreach (WearableSprite wearable in wearingItems)
             {
+                if (onlyDrawable != null && onlyDrawable != wearable) continue;
+
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
                 Vector2 origin = wearable.Sprite.Origin;
