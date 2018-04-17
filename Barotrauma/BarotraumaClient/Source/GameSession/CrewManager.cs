@@ -472,6 +472,7 @@ namespace Barotrauma
                     optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
                     optionButton.OnClicked += (btn, userData) =>
                     {
+                        if (Character.Controlled == null) return false;
                         commander.SetOrder(character, userData as Order, orderOption);
                         SetCharacterOrder(character, userData as Order, orderOption);
                         orderTargetFrame = null;

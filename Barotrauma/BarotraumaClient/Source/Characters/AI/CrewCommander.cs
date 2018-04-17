@@ -127,7 +127,7 @@ namespace Barotrauma
         {
             if (crewManager.IsSinglePlayer)
             {
-                Character.Controlled.Speak(
+                Character.Controlled?.Speak(
                     order.GetChatMessage(character == null ? "" : character.Name, Character.Controlled.CurrentHull?.RoomName, option), ChatMessageType.Order);
             }
             else
