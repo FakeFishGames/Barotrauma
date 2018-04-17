@@ -29,7 +29,9 @@ namespace Barotrauma
 
         private float conversationTimer, conversationLineTimer;
         private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
-        
+
+        private GUIButton scrollButtonUp, scrollButtonDown;
+
         private GUIButton toggleCrewButton;
         private Vector2 crewAreaOffset;
         private bool toggleCrewAreaOpen;
@@ -75,6 +77,8 @@ namespace Barotrauma
             guiFrame.Padding = Vector4.One * 5.0f;
             guiFrame.CanBeFocused = false;
 
+            int scrollButtonHeight = (int)(30 * GUI.Scale);
+            
             characterFrame = new GUIFrame(HUDLayoutSettings.CrewArea, null, guiFrame);
             toggleCrewButton = new GUIButton(new Rectangle(characterFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", characterFrame);
             toggleCrewButton.ClampMouseRectToParent = false;
@@ -92,7 +96,13 @@ namespace Barotrauma
             characterListBox.Spacing = (int)(5 * GUI.Scale);
             characterListBox.ScrollBarEnabled = false;
             characterListBox.CanBeFocused = false;
-            
+
+            scrollButtonUp = new GUIButton(new Rectangle(0, (int)(-scrollButtonHeight * 0.66f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonUp.ClampMouseRectToParent = false;
+            scrollButtonDown = new GUIButton(new Rectangle(0, characterListBox.Rect.Height - (int)(scrollButtonHeight * 0.33f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonDown.ClampMouseRectToParent = false;
+            scrollButtonDown.children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+
             if (isSinglePlayer)
             {
                 chatBox = new ChatBox(guiFrame, true);
@@ -161,10 +171,8 @@ namespace Barotrauma
             characterListBox.children.Insert(0, selectedCharacterFrame);
             characterListBox.BarScroll = 0.0f;
 
-            Character.Controlled = character;
-            
+            Character.Controlled = character;            
         }
-
 
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
         {
@@ -344,8 +352,11 @@ namespace Barotrauma
             var frame = new GUIFrame(new Rectangle(0, 0, 0, height), null, Alignment.TopRight, null, parent);
             frame.UserData = character;
 
-            var orderButtonFrame = new GUIFrame(new Rectangle(0,0,frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            var orderButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
             orderButtonFrame.UserData = "orderbuttons";
+
+            scrollButtonUp.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonUp.Rect.Y, crewAreaWidth, scrollButtonUp.Rect.Height);
+            scrollButtonDown.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonDown.Rect.Y, crewAreaWidth, scrollButtonDown.Rect.Height);
 
             int x = 0;// -characterInfoWidth;
             int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
@@ -518,12 +529,23 @@ namespace Barotrauma
             {
                 if (crewAreaOffset.X > -characterFrame.Rect.Width + characterInfoWidth + 50 || PlayerInput.MousePosition.X < 0) crewMenuOpen = true;
             }
-            
+
+            scrollButtonUp.Visible = characterListBox.BarScroll > 0.0f && characterListBox.BarSize < 1.0f;
+            if (GUIComponent.MouseOn == scrollButtonUp || scrollButtonUp.IsParentOf(GUIComponent.MouseOn))
+            {
+                characterListBox.BarScroll -= deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
+            }
+            scrollButtonDown.Visible = characterListBox.BarScroll < 1.0f && characterListBox.BarSize < 1.0f;
+            if (GUIComponent.MouseOn == scrollButtonDown || scrollButtonDown.IsParentOf(GUIComponent.MouseOn))
+            {
+                characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
+            }
+
             crewAreaOffset.X = MathHelper.Lerp(
                 crewAreaOffset.X,
                 crewMenuOpen ? -characterFrame.Rect.Width + crewAreaWidth + 40 : -characterFrame.Rect.Width + characterInfoWidth + 20, 
                 deltaTime * 10.0f);
-            crewAreaOffset.Y = HUDLayoutSettings.CrewArea.Location.Y;
+            crewAreaOffset.Y = characterFrame.Rect.Y;
             characterFrame.Rect = new Rectangle(crewAreaOffset.ToPoint(), characterFrame.Rect.Size);
             
             if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
