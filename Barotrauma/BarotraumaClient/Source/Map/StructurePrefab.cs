@@ -31,7 +31,7 @@ namespace Barotrauma
                 newRect = Submarine.AbsRect(placePosition, placeSize);
             }
 
-            sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), Color.White);
+            sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height));
 
             if (!placeRect.HasValue)
             {
