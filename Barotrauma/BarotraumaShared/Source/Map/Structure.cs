@@ -153,21 +153,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-
-        protected Vector2 textureScale = Vector2.One;
-        [Editable, Serialize("1.0, 1.0", true)]
-        public Vector2 TextureScale
-        {
-            get { return textureScale; }
-            set
-            {
-                var v = value;
-                v.X = MathHelper.Clamp(v.X, 0.01f, 10);
-                v.Y = MathHelper.Clamp(v.Y, 0.01f, 10);
-                textureScale = v;
-            }
-        }
-
+        
         public override Rectangle Rect
         {
             get
@@ -990,7 +976,7 @@ namespace Barotrauma
             newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
-            newBody.CollisionCategories = Physics.CollisionWall;
+            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
             
             if (BodyRotation != 0.0f)
@@ -1042,8 +1028,11 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            CreateSections();
-            if (HasBody) UpdateSections();
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1064,8 +1053,11 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            CreateSections();
-            if (HasBody) UpdateSections();
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public static Structure Load(XElement element, Submarine submarine)
