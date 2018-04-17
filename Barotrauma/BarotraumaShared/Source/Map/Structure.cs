@@ -57,6 +57,7 @@ namespace Barotrauma
         private SpriteEffects SpriteEffects = SpriteEffects.None;
 
         private bool flippedX;
+        private bool flippedY;
 
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
@@ -154,21 +155,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-
-        protected Vector2 textureScale = Vector2.One;
-        [Editable, Serialize("1.0, 1.0", true)]
-        public Vector2 TextureScale
-        {
-            get { return textureScale; }
-            set
-            {
-                var v = value;
-                v.X = MathHelper.Clamp(v.X, 0.01f, 10);
-                v.Y = MathHelper.Clamp(v.Y, 0.01f, 10);
-                textureScale = v;
-            }
-        }
-
+        
         public override Rectangle Rect
         {
             get
@@ -848,9 +835,7 @@ namespace Barotrauma
             newBody.Friction = 0.5f;
 
             newBody.OnCollision += OnWallCollision;
-
-            newBody.CollisionCategories = Physics.CollisionWall;
-
+            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
 
             bodies.Add(newBody);
@@ -894,8 +879,12 @@ namespace Barotrauma
 
                 CreateStairBodies();
             }
-
-            CreateSections();
+            
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
         
         public static void Load(XElement element, Submarine submarine)
