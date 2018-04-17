@@ -24,16 +24,33 @@ namespace Barotrauma
         public int WinningTeam = 1;
         
         private GUIFrame guiFrame;
-        private GUIListBox characterListBox, orderListBox;
+        private GUIFrame characterFrame;
+        private GUIListBox characterListBox;
 
         private float conversationTimer, conversationLineTimer;
         private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
+
+        private GUIButton scrollButtonUp, scrollButtonDown;
+
+        private GUIButton toggleCrewButton;
+        private Vector2 crewAreaOffset;
+        private bool toggleCrewAreaOpen;
+        private int crewAreaWidth;
+        private int characterInfoWidth;
 
         private ChatBox chatBox;
 
         private CrewCommander commander;
 
         private bool isSinglePlayer;
+
+        private GUIComponent orderTargetFrame;
+
+        public bool ToggleCrewAreaOpen
+        {
+            get { return toggleCrewAreaOpen; }
+            set { toggleCrewAreaOpen = value; }
+        }
 
         public CrewCommander CrewCommander
         {
@@ -60,17 +77,31 @@ namespace Barotrauma
             guiFrame.Padding = Vector4.One * 5.0f;
             guiFrame.CanBeFocused = false;
 
-            characterListBox = new GUIListBox(new Rectangle(45, 80, 150, 450), Color.Transparent, null, guiFrame);
+            int scrollButtonHeight = (int)(30 * GUI.Scale);
+            
+            characterFrame = new GUIFrame(HUDLayoutSettings.CrewArea, null, guiFrame);
+            toggleCrewButton = new GUIButton(new Rectangle(characterFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", characterFrame);
+            toggleCrewButton.ClampMouseRectToParent = false;
+            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
+                foreach (GUIComponent child in btn.children)
+                {
+                    child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
+            
+            characterListBox = new GUIListBox(Rectangle.Empty, Color.Transparent, null, characterFrame);
+            characterListBox.Spacing = (int)(5 * GUI.Scale);
             characterListBox.ScrollBarEnabled = false;
-            characterListBox.OnSelected = SelectCharacter;
-            characterListBox.Visible = isSinglePlayer;
             characterListBox.CanBeFocused = false;
 
-            orderListBox = new GUIListBox(new Rectangle(5, 80, 30, 450), Color.Transparent, null, guiFrame);
-            orderListBox.ScrollBarEnabled = false;
-            orderListBox.OnSelected = SelectCharacterOrder;
-            orderListBox.Visible = isSinglePlayer;
-            orderListBox.CanBeFocused = false;
+            scrollButtonUp = new GUIButton(new Rectangle(0, (int)(-scrollButtonHeight * 0.66f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonUp.ClampMouseRectToParent = false;
+            scrollButtonDown = new GUIButton(new Rectangle(0, characterListBox.Rect.Height - (int)(scrollButtonHeight * 0.33f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonDown.ClampMouseRectToParent = false;
+            scrollButtonDown.children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
 
             if (isSinglePlayer)
             {
@@ -101,20 +132,46 @@ namespace Barotrauma
             return new List<CharacterInfo>(characterInfos);
         }
 
-        public bool SelectCharacter(GUIComponent component, object selection)
+        /// <summary>
+        /// Sets which character is selected in the crew UI (highlight effect etc)
+        /// </summary>
+        public bool SetCharacterSelected(GUIComponent component, object selection)
         {
-            //listBox.Select(selection);
-            Character character = selection as Character;
+            SetCharacterSelected(selection as Character);
+            return true;
+        }
 
-            if (character == null || character.IsDead || character.IsUnconscious) return false;
-
-            if (characters.Contains(character))
+        /// <summary>
+        /// Sets which character is selected in the crew UI (highlight effect etc)
+        /// </summary>
+        public void SetCharacterSelected(Character character)
+        {
+            if (character == null || character.IsDead || character.IsUnconscious) return;
+            if (!characters.Contains(character)) return;
+            
+            GUIComponent selectedCharacterFrame = null;
+            foreach (GUIComponent child in characterListBox.children)
             {
-                Character.Controlled = character;
-                return true;
-            }
+                GUIButton button = child.children.Find(c => c.UserData is Character) as GUIButton;
+                if (button == null) continue;
 
-            return false;
+                bool isSelectedCharacter = (Character)button.UserData == character;
+
+                button.Selected = isSelectedCharacter;
+                child.GetChild("reportbuttons").Visible = isSelectedCharacter;
+                child.GetChild("orderbuttons").Visible = !isSelectedCharacter;
+
+                if ((Character)button.UserData == character)
+                {
+                    selectedCharacterFrame = child;
+                }
+            }
+            //move the selected character to the top of the list
+            characterListBox.RemoveChild(selectedCharacterFrame);
+            characterListBox.children.Insert(0, selectedCharacterFrame);
+            characterListBox.BarScroll = 0.0f;
+
+            Character.Controlled = character;            
         }
 
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
@@ -201,67 +258,246 @@ namespace Barotrauma
             activeOrders.RemoveAll(o => o.First == order);
         }
 
-        public void SetCharacterOrder(Character character, Order order)
+        public void SetCharacterOrder(Character character, Order order, string option = null)
         {
-            var characterFrame = characterListBox.FindChild(character);
-            if (characterFrame == null) return;
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                var characterFrame = characterListBox.FindChild(character);
+                if (characterFrame == null) continue;
 
-            int characterIndex = characterListBox.children.IndexOf(characterFrame);
-            orderListBox.children[characterIndex].ClearChildren();
-            
-            if (order == null) return;
+                var currentOrderIcon = characterFrame.FindChild("currentorder");
+                if (currentOrderIcon != null)
+                {
+                    characterFrame.RemoveChild(currentOrderIcon);
+                }
 
-            var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
-            img.Scale = 30.0f / img.SourceRect.Width;
-            img.Color = order.Color;
-            img.CanBeFocused = false;
-
-            orderListBox.children[characterIndex].ToolTip = TextManager.Get("Order") + ": " + order.Name;
+                var img = new GUIImage(new Rectangle(0, 0, characterFrame.Rect.Height, characterFrame.Rect.Height), order.SymbolSprite, Alignment.CenterRight, characterFrame);
+                img.Scale = characterFrame.Rect.Height / (float)img.SourceRect.Width;
+                img.Color = order.Color;
+                img.UserData = "currentorder";
+                img.ToolTip = order.Name;
+            }
         }
-
-        public bool SelectCharacterOrder(GUIComponent component, object selection)
-        {
-            commander.ToggleGUIFrame();
-
-            int orderIndex = orderListBox.children.IndexOf(component);
-            if (orderIndex < 0 || orderIndex >= characterListBox.children.Count) return false;
-
-            var characterFrame = characterListBox.children[orderIndex];
-            if (characterFrame == null) return false;
-
-            commander.SelectCharacter(characterFrame.UserData as Character);
-
-            return false;
-        }
-
+        
         public void AddCharacter(Character character)
         {
-            characters.Add(character);
+            if (character.Removed)
+            {
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+            if (character.IsDead)
+            {
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+
+            if (!characters.Contains(character)) characters.Add(character);
             if (!characterInfos.Contains(character.Info))
             {
                 characterInfos.Add(character.Info);
             }
 
+            //commander.UpdateCharacters();
+            CreateCharacterFrame(character, characterListBox);
+
             if (character is AICharacter)
             {
-                commander.UpdateCharacters();
-                character.Info.CreateCharacterFrame(characterListBox, character.Info.Name.Replace(' ', '\n'), character);
-                GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
-                orderFrame.UserData = character;
-
                 var ai = character.AIController as HumanAIController;
                 if (ai == null)
                 {
                     DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
                     return;
                 }
-                SetCharacterOrder(character, ai.CurrentOrder);
+                character.SetOrder(ai.CurrentOrder, "", false);
             }
         }
 
-        public void RemoveCharacter(Character character)
+        private GUIFrame CreateCharacterFrame(Character character, GUIComponent parent)
         {
+            int correctOrderCount = 0, neutralOrderCount = 0, wrongOrderCount = 0;
+            List<Order> orders = new List<Order>();
+            foreach (Order order in Order.PrefabList)
+            {
+                if (!order.TargetAllCharacters)
+                {
+                    if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0)
+                    {
+                        neutralOrderCount++;
+                        orders.Add(order);
+                    }
+                    else if (order.HasAppropriateJob(character))
+                    {
+                        correctOrderCount++;
+                        orders.Insert(0, order);
+                    }
+                }
+            }
+            foreach (Order order in Order.PrefabList)
+            {
+                if (!order.TargetAllCharacters && !orders.Contains(order))
+                {
+                    wrongOrderCount++;
+                    orders.Add(order);
+                }
+            }
+
+            int height = (int)(60 * GUI.Scale);
+            int iconWidth = (int)(40 * GUI.Scale);
+            int padding = (int)(8 * GUI.Scale);
+
+            characterInfoWidth = (int)(170 * GUI.Scale) + height;
+            crewAreaWidth = orders.Count * (iconWidth + padding) + characterInfoWidth;
+
+            var frame = new GUIFrame(new Rectangle(0, 0, 0, height), null, Alignment.TopRight, null, parent);
+            frame.UserData = character;
+
+            var orderButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            orderButtonFrame.UserData = "orderbuttons";
+
+            scrollButtonUp.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonUp.Rect.Y, crewAreaWidth, scrollButtonUp.Rect.Height);
+            scrollButtonDown.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonDown.Rect.Y, crewAreaWidth, scrollButtonDown.Rect.Height);
+
+            int x = 0;// -characterInfoWidth;
+            int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
+            int neutralAreaWidth = neutralOrderCount * iconWidth + (neutralOrderCount - 1) * padding;
+            int wrongAreaWidth = wrongOrderCount * iconWidth + (wrongOrderCount - 1) * padding;
+            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x - correctAreaWidth - neutralAreaWidth - padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            foreach (Order order in orders)
+            {
+                if (order.TargetAllCharacters) continue;
+                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, orderButtonFrame);
+                var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
+                img.Scale = iconWidth / (float)img.SourceRect.Width;
+                img.Color = order.Color;
+                img.ToolTip = order.Name;
+                
+                img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
+
+                btn.OnClicked += (GUIButton button, object userData) =>
+                {
+                    if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName) || order.Options.Length > 1)
+                    {
+                        CreateOrderTargetFrame(button, character, order);
+                    }
+                    else
+                    {
+                        commander.SetOrder(character, order);
+                        SetCharacterOrder(character, order);
+                    }
+                    return true;
+                };
+
+                btn.ToolTip = order.Name;
+                x -= iconWidth + padding;
+            }
+
+
+            var reportButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            reportButtonFrame.UserData = "reportbuttons";
+            reportButtonFrame.Visible = false;
+            x = 0;
+            foreach (Order order in Order.PrefabList)
+            {
+                if (!order.TargetAllCharacters) continue;
+                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, reportButtonFrame);
+                var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
+                img.Scale = iconWidth / (float)img.SourceRect.Width;
+                img.Color = order.Color;
+                img.ToolTip = order.Name;                
+                img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
+
+                btn.OnClicked += (GUIButton button, object userData) =>
+                {
+                    commander.SetOrder(character, order);                    
+                    return true;
+                };
+
+                btn.ToolTip = order.Name;
+                x -= iconWidth + padding;
+            }
+
+            var characterArea = new GUIButton(new Rectangle(-height, 0, characterInfoWidth - padding - height, 0), null, Alignment.CenterRight, "GUITextBox", frame)
+            {
+                Padding = Vector4.Zero,
+                UserData = character
+            };
+            if (isSinglePlayer) characterArea.OnClicked = SetCharacterSelected;
+
+            var characterImage = new GUIImage(new Rectangle(0, 0, 0, 0), character.Info.HeadSprite, Alignment.CenterLeft, characterArea)
+            {
+                CanBeFocused = false,
+                HoverColor = Color.White,
+                SelectedColor = Color.White
+            };
+
+            var characterName = new GUITextBlock(new Rectangle(0, 0, characterArea.Rect.Width - characterImage.Rect.Width, 0), character.Name, "", Alignment.CenterRight, Alignment.CenterLeft, characterArea, true, GUI.SmallFont)
+            {
+                HoverColor = Color.Transparent,
+                SelectedColor = Color.Transparent,
+                CanBeFocused = false
+            };
+            return frame;
+        }
+
+        private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
+        {
+            List<Item> matchingItems = new List<Item>();
+            if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName))
+            {
+                matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
+                    Item.ItemList.FindAll(it => it.Name == order.ItemName) :
+                    Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+                orderTargetFrame = new GUIFrame(new Rectangle(orderButton.Rect.Center.X, orderButton.Rect.Center.Y, 200, matchingItems.Count * (order.Options.Length + 1) * 30 + 20), "InnerFrame", null);
+            }
+            else
+            {
+                matchingItems.Add(null);
+                orderTargetFrame = new GUIFrame(new Rectangle(orderButton.Rect.Center.X, orderButton.Rect.Center.Y, 200, (order.Options.Length + 1) * 30 + 20), "InnerFrame", null);
+            }
+            orderTargetFrame.Padding = Vector4.One * 10;
+
+            int y = 0;
+            foreach (Item item in matchingItems)
+            {
+                new GUITextBlock(new Rectangle(0, y, 0, 20), item != null ? item.Name : order.Name, "", Alignment.TopLeft, Alignment.CenterLeft, orderTargetFrame);
+                y += 20;
+                
+                foreach (string orderOption in order.Options)
+                {
+                    var optionButton = new GUIButton(new Rectangle(10, y, 0, 30), orderOption, null, Alignment.TopLeft, Alignment.TopLeft, "GUITextBox", orderTargetFrame);
+
+                    optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
+                    optionButton.OnClicked += (btn, userData) =>
+                    {
+                        commander.SetOrder(character, userData as Order, orderOption);
+                        SetCharacterOrder(character, userData as Order, orderOption);
+                        orderTargetFrame = null;
+                        return true;
+                    };
+
+                    orderButton.Padding = Vector4.Zero;
+                    y += 30;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false)
+        {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
+                return;
+            }
             characters.Remove(character);
+            if (removeInfo) characterInfos.Remove(character.Info);
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -279,32 +515,51 @@ namespace Barotrauma
         {
             guiFrame.AddToGUIUpdateList();
             commander.AddToGUIUpdateList();
+            if (orderTargetFrame != null) orderTargetFrame.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
             if (chatBox != null) chatBox.Update(deltaTime);
+            
+            bool crewMenuOpen = toggleCrewAreaOpen || orderTargetFrame != null;
 
-            if (commander.IsOpen &&
-                (Character.Controlled == null || !characters.Contains(Character.Controlled)))
+            if (characterFrame.Rect.Contains(PlayerInput.MousePosition))
             {
-                commander.ToggleGUIFrame();
+                if (crewAreaOffset.X > -characterFrame.Rect.Width + characterInfoWidth + 50 || PlayerInput.MousePosition.X < 0) crewMenuOpen = true;
             }
+
+            scrollButtonUp.Visible = characterListBox.BarScroll > 0.0f && characterListBox.BarSize < 1.0f;
+            if (GUIComponent.MouseOn == scrollButtonUp || scrollButtonUp.IsParentOf(GUIComponent.MouseOn))
+            {
+                characterListBox.BarScroll -= deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
+            }
+            scrollButtonDown.Visible = characterListBox.BarScroll < 1.0f && characterListBox.BarSize < 1.0f;
+            if (GUIComponent.MouseOn == scrollButtonDown || scrollButtonDown.IsParentOf(GUIComponent.MouseOn))
+            {
+                characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
+            }
+
+            crewAreaOffset.X = MathHelper.Lerp(
+                crewAreaOffset.X,
+                crewMenuOpen ? -characterFrame.Rect.Width + crewAreaWidth + 40 : -characterFrame.Rect.Width + characterInfoWidth + 20, 
+                deltaTime * 10.0f);
+            crewAreaOffset.Y = characterFrame.Rect.Y;
+            characterFrame.Rect = new Rectangle(crewAreaOffset.ToPoint(), characterFrame.Rect.Size);
             
             if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
-                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit() &&
+                PlayerInput.KeyHit(InputType.CrewOrders) &&
                 characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
-                if (!commander.IsOpen && Character.Controlled != null && 
+                if (Character.Controlled != null && 
                     Character.Controlled.SelectedConstruction != null && 
                     Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-                
-                commander.ToggleGUIFrame();                
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
             }
 
             UpdateConversations(deltaTime);
@@ -316,41 +571,73 @@ namespace Barotrauma
             activeOrders.RemoveAll(o => o.Second <= 0.0f);
 
             commander.Update(deltaTime);
-            
-            /*if (isSinglePlayer)
-            {
-                for (int i = chatBox.children.Count - 1; i >= 0; i--)
-                {
-                    var textBlock = chatBox.children[i] as GUITextBlock;
-                    if (textBlock == null) continue;
 
-                    float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
-                    textBlock.UserData = alpha;
-                    textBlock.TextColor = new Color(textBlock.TextColor, alpha);
+            if (orderTargetFrame != null)
+            {
+                Rectangle hoverArea = orderTargetFrame.Rect;
+                hoverArea.Inflate(100,100);
+                if (!hoverArea.Contains(PlayerInput.MousePosition))
+                {
+                    orderTargetFrame = null;
                 }
-            }*/
+                else
+                {
+                    orderTargetFrame.Update(deltaTime);
+                }
+            }
         }
 
         public void ReviveCharacter(Character revivedCharacter)
         {
             GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
-            if (characterBlock != null) characterBlock.Color = Color.Transparent;
-
-            if (revivedCharacter is AICharacter)
+            if (characterBlock != null)
             {
-                commander.UpdateCharacters();
+                characterBlock.Color = Color.Transparent;
+            }
+            else
+            {
+                AddCharacter(revivedCharacter);
             }
         }
 
         public void KillCharacter(Character killedCharacter)
         {
             GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
-            if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
-
-            if (killedCharacter is AICharacter)
+            if (characterBlock != null)
             {
-                commander.UpdateCharacters();
-            }          
+                CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
+            }
+            RemoveCharacter(killedCharacter);
+        }
+
+        private IEnumerable<object> KillCharacterAnim(GUIComponent component)
+        {
+            component.Color = Color.DarkRed;
+            List<GUIComponent> components = new List<GUIComponent>();
+            components.Add(component);
+            components.AddRange(component.children);
+
+            foreach (GUIComponent comp in components)
+            {
+                comp.Color = Color.DarkRed;
+            }
+
+            yield return new WaitForSeconds(1.0f);
+
+            float timer = 0.0f;
+            float hideDuration = 1.0f;
+            while (timer < hideDuration)
+            {
+                foreach (GUIComponent comp in components)
+                {
+                    comp.Color = Color.Lerp(Color.DarkRed, Color.Transparent, timer / hideDuration);
+                    comp.Rect = new Rectangle(component.Rect.X, component.Rect.Y, component.Rect.Width, (int)(component.Rect.Height * (1.0f - (timer / hideDuration))));
+                }
+                timer += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+            component.Parent.RemoveChild(component);
+            yield return CoroutineStatus.Success;
         }
 
         public void CreateCrewFrame(List<Character> crew, GUIFrame crewFrame)
@@ -399,7 +686,7 @@ namespace Barotrauma
             }
         }
 
-        protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
+        protected bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
             if (character == null) return false;
 
@@ -440,7 +727,6 @@ namespace Barotrauma
                 else
                 {
                     character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
-                    Character.Controlled = character;
 
                     if (character.Info != null && !character.Info.StartItemsGiven)
                     {
@@ -450,6 +736,11 @@ namespace Barotrauma
                 }
 
                 AddCharacter(character);
+                if (i == 0)
+                {
+                    Character.Controlled = character;
+                    SetCharacterSelected(character);
+                }
             }
 
             if (characters.Any()) characterListBox.Select(0);
@@ -461,22 +752,14 @@ namespace Barotrauma
         {
             foreach (Character c in characters)
             {
-                if (!c.IsDead)
-                {
-                    c.Info.UpdateCharacterItems();
-                    continue;
-                }
-
-                characterInfos.Remove(c.Info);
+                c.Info.UpdateCharacterItems();
             }
 
-            //remove characterinfos whose character doesn't exist anymore
-            //(i.e. character was removed during the round)
-            characterInfos.RemoveAll(c => c.Character == null);
+            //remove characterinfos whose characters have been removed or killed
+            characterInfos.RemoveAll(c => c.Character == null || c.Character.Removed || c.CauseOfDeath != null);
             
             characters.Clear();
             characterListBox.ClearChildren();
-            orderListBox.ClearChildren();
         }
 
         public void Reset()
@@ -484,16 +767,17 @@ namespace Barotrauma
             characters.Clear();
             characterInfos.Clear();
             characterListBox.ClearChildren();
-            orderListBox.ClearChildren();
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            characterListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
-            orderListBox.Visible = !commander.IsOpen && CharacterHealth.OpenHealthWindow == null;
+            characterFrame.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
+            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
             
             guiFrame.Draw(spriteBatch);
             commander.Draw(spriteBatch);
+
+            if (orderTargetFrame != null) orderTargetFrame.Draw(spriteBatch);
         }
 
         public void Save(XElement parentElement)

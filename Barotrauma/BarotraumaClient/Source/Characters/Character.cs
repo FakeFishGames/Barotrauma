@@ -137,15 +137,13 @@ namespace Barotrauma
             }  
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (DebugConsole.IsOpen || GUI.PauseMenuOpen ||
-                (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (GUI.PauseMenuOpen)
             {
                 cam.OffsetAmount = 0.0f;
             }
             else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
-                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+                if (GUI.PauseMenuOpen || IsUnconscious)
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                 }

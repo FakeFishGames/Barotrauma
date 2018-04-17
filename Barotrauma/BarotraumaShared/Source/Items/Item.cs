@@ -743,15 +743,17 @@ namespace Barotrauma
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
-            if (!isNetworkEvent)
+            if (!isNetworkEvent && checkCondition)
             {
                 if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
             }

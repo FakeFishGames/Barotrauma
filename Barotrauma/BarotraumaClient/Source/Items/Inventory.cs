@@ -523,12 +523,6 @@ namespace Barotrauma
 
         public static void DrawFront(SpriteBatch spriteBatch)
         {
-            if (GameMain.GameSession?.CrewManager?.CrewCommander != null &&
-                GameMain.GameSession.CrewManager.CrewCommander.IsOpen)
-            {
-                return;
-            }
-
             foreach (var slot in highlightedSubInventorySlots)
             {
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
