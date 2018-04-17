@@ -9,6 +9,58 @@ namespace Barotrauma
 {
     public abstract class GUIComponent
     {
+        #region Test
+        public static Rectangle ScaleRect(Rectangle rect, Vector2 scale)
+        {
+            return new Rectangle(
+                (int)(rect.X),  // scale?
+                (int)(rect.Y),  // scale?
+                (int)(rect.Width * scale.X),
+                (int)(rect.Height * scale.Y));
+        }
+
+        public static Rectangle ScaleRect(Rectangle rect, float scale)
+        {
+            return new Rectangle(
+                (int)(rect.X),  // scale?
+                (int)(rect.Y),  // scale?
+                (int)(rect.Width * scale),
+                (int)(rect.Height * scale));
+        }
+
+        public Vector2 LocalScale { get; set; } = Vector2.One;
+
+        public Vector2 GlobalScale
+        {
+            get
+            {
+                var parents = GetParents();
+                if (parents.Any())
+                {
+                    return parents.Select(c => c.LocalScale).Aggregate((parent, child) => parent * child) * LocalScale;
+                }
+                else
+                {
+                    return LocalScale;
+                }
+            }
+        }
+
+        public IEnumerable<GUIComponent> GetParents()
+        {
+            var parents = new List<GUIComponent>();
+            if (Parent != null)
+            {
+                parents.Add(Parent);
+                return parents.Concat(Parent.GetParents());
+            }
+            else
+            {
+                return parents;
+            }
+        }
+        #endregion
+
         const float FlashDuration = 1.5f;
         
         public static GUIComponent MouseOn
@@ -387,7 +439,7 @@ namespace Barotrauma
                                     new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
                                     uiSprite.Slices[x + y * 3],
                                     currColor * (currColor.A / 255.0f));
-                                
+
                                 pos.Y += height;
                             }
                             pos.X += width;
@@ -411,7 +463,7 @@ namespace Barotrauma
                             float scale = (float)(rect.Width) / uiSprite.Sprite.SourceRect.Width;
 
                             spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
-                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
+                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)),
                                 currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
                         }
                         else
@@ -478,6 +530,8 @@ namespace Barotrauma
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
+            size = new Point((int)(size.X * GlobalScale.X), (int)(size.Y * GlobalScale.Y));
+
             Point expandAmount = size - rect.Size;
 
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
@@ -499,6 +553,8 @@ namespace Barotrauma
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
+            rect = ScaleRect(rect, GlobalScale);
+
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
             Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
@@ -533,7 +589,7 @@ namespace Barotrauma
             else
             {
                 rect.Y += parentRect.Y + (int)padding.Y;
-            }            
+            }
         }
 
         public virtual void ApplyStyle(GUIComponentStyle style)
