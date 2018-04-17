@@ -2144,9 +2144,7 @@ namespace Barotrauma
                     SinglePlayerCampaign mode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
                     if (mode != null)
                     {
-                        Character.Controlled = spawnedCharacter;
-                        GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
-                        GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
+                        GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
                     }
                 }
 #endif

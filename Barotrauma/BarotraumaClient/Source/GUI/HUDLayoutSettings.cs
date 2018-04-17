@@ -18,6 +18,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle CrewArea
+        {
+            get; private set;
+        }
+
         public static Rectangle ChatBoxArea
         {
             get; private set;
@@ -79,9 +84,12 @@ namespace Barotrauma
             ButtonAreaTop = new Rectangle(padding, padding, GameMain.GraphicsWidth - padding * 2, (int)(50 * GUI.Scale));
 
             //slice for the upper slots of the inventory (clothes, id card, headset)
+            int inventoryAreaUpperWidth = (int)Math.Min(GameMain.GraphicsWidth* 0.2f, 300);
             int inventoryAreaUpperHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.2f, 200);
-            InventoryAreaUpper = new Rectangle(padding, ButtonAreaTop.Bottom + padding, GameMain.GraphicsWidth - padding * 2, inventoryAreaUpperHeight);
-            
+            InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - padding, ButtonAreaTop.Bottom + padding, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
+
+            CrewArea = new Rectangle(padding, ButtonAreaTop.Bottom + padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - padding * 3, InventoryAreaUpper.Height);
+
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int healthBarWidth = (int)Math.Max(20 * GUI.Scale, 15);
             int afflictionAreaWidth = (int)(60 * GUI.Scale);
@@ -122,6 +130,7 @@ namespace Barotrauma
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaUpper, Color.Yellow * 0.5f);
+            GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);

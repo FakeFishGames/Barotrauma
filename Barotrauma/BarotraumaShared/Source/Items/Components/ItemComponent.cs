@@ -535,9 +535,11 @@ namespace Barotrauma.Items.Components
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, false, false);
             }
         }
         

@@ -46,6 +46,9 @@ namespace Barotrauma.Networking
 
         private FileReceiver fileReceiver;
 
+        //the character the server host is controlling
+        public Character HostCharacter;
+
         public byte ID
         {
             get { return myID; }

@@ -19,11 +19,6 @@ namespace Barotrauma
         {
             if (infoFrame == null)
             {
-                if (CrewManager != null && CrewManager.CrewCommander != null && CrewManager.CrewCommander.IsOpen)
-                {
-                    CrewManager.CrewCommander.ToggleGUIFrame();
-                }
-
                 CreateInfoFrame();
                 SelectInfoFrameTab(null, selectedTab);
             }
@@ -127,15 +122,7 @@ namespace Barotrauma
 
             if (GameMode != null) GameMode.Update(deltaTime);
             if (Mission != null) Mission.Update(deltaTime);
-            if (infoFrame != null)
-            {
-                infoFrame.Update(deltaTime);
-
-                if (CrewManager != null && CrewManager.CrewCommander != null && CrewManager.CrewCommander.IsOpen)
-                {
-                    infoFrame = null;
-                }
-            }
+            if (infoFrame != null) infoFrame.Update(deltaTime);            
         }
 
         public void Draw(SpriteBatch spriteBatch)

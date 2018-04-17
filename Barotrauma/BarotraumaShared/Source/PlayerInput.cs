@@ -12,7 +12,7 @@ namespace Barotrauma
         Attack,
         Run, Crouch,
         Chat, RadioChat, CrewOrders,
-        Ragdoll
+        Ragdoll, Health
     }
 
     public class KeyOrMouse

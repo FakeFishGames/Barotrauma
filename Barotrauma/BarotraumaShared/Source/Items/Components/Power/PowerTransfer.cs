@@ -397,13 +397,14 @@ namespace Barotrauma.Items.Components
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
                     }
 
+                    bool broken = recipient.Item.Condition <= 0.0f;
                     foreach (StatusEffect effect in recipient.effects)
                     {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                        if (broken && effect.type != ActionType.OnBroken) continue;
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                     }
                 }
             }
         }
-
     }
 }
