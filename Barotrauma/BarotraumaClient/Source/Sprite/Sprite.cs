@@ -109,95 +109,144 @@ namespace Barotrauma
             }
         }
 
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize,
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
             Rectangle? rect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null)
         {
-            if (texture == null) return;
-            // Init optional values, if not provided
-            if (rect.HasValue)
-            {
-                //TODO: this probably shouldn't be modifying the sourceRect of the sprite?
-                sourceRect = rect.Value;
-            }
-            color = color ?? Color.White;
-            startOffset = startOffset ?? Point.Zero;
+            //Init optional values
+            Vector2 drawOffset = startOffset.HasValue ? new Vector2(startOffset.Value.X, startOffset.Value.Y) : Vector2.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
+            Color drawColor = color ?? Color.White;
 
-            //which area of the texture to draw
-            Rectangle texPerspective = sourceRect;
-            texPerspective.Location += startOffset.Value;
-            targetSize = targetSize / scale;
-
-            //how many times the texture needs to be drawn on the x-axis
-            int xTiles = (int)Math.Ceiling(targetSize.X / sourceRect.Width);
-            //how many times the texture needs to be drawn on the y-axis
-            int yTiles = (int)Math.Ceiling(targetSize.Y / sourceRect.Height);
-
-            //wrap texPerspective inside the source rectangle
-            while (texPerspective.X >= sourceRect.Right)
-                texPerspective.X = sourceRect.X + (texPerspective.X - sourceRect.Right);
-            while (texPerspective.Y >= sourceRect.Bottom)
-                texPerspective.Y = sourceRect.Y + (texPerspective.Y - sourceRect.Bottom);
-
-            float top = pos.Y;
-            texPerspective.Height = (int)Math.Min(Math.Ceiling(targetSize.Y), sourceRect.Height);
-
-            for (int y = 0; y < yTiles; y++)
+            //wrap the drawOffset inside the sourceRect
+            drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
+            drawOffset.Y = (drawOffset.Y / scale.Y) % sourceRect.Height;
+            if (effects.HasFlag(SpriteEffects.FlipHorizontally))
             {
-                float movementY = texPerspective.Height * scale.Y;
-                texPerspective.Height = Math.Min((int)Math.Ceiling(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
+                float diff =  targetSize.X % (sourceRect.Width * scale.X);
+                drawOffset.X += (sourceRect.Width * scale.X - diff) / scale.X;
+            }
+            if (effects.HasFlag(SpriteEffects.FlipVertically))
+            {
+                float diff = targetSize.Y % (sourceRect.Height * scale.Y);
+                drawOffset.Y += (sourceRect.Height * scale.Y - diff) / scale.Y;
+            }
+            
+            //how many times the texture needs to be drawn on the x-axis
+            int xTiles = (int)Math.Ceiling((targetSize.X + drawOffset.X * scale.X) / (sourceRect.Width * scale.X));
+            //how many times the texture needs to be drawn on the y-axis
+            int yTiles = (int)Math.Ceiling((targetSize.Y + drawOffset.Y * scale.Y) / (sourceRect.Height * scale.Y));
 
-                float left = pos.X;
-                texPerspective.Width = Math.Min((int)Math.Ceiling(targetSize.X), sourceRect.Width);
+            //where the current tile is being drawn;
+            Vector2 currDrawPosition = position - drawOffset;
+            //which part of the texture we are currently drawing
+            Rectangle texPerspective = sourceRect;
+            
+            for (int x = 0; x < xTiles; x++)
+            {
+                texPerspective.X = sourceRect.X;
+                texPerspective.Width = sourceRect.Width;
+                texPerspective.Height = sourceRect.Height;
 
-                for (int x = 0; x < xTiles; x++)
+                //offset to the left, draw a partial slice
+                if (currDrawPosition.X < position.X)
                 {
-                    float movementX = texPerspective.Width * scale.X;
-                    texPerspective.Width = Math.Min((int)Math.Ceiling(targetSize.X - texPerspective.Width * x), texPerspective.Width);
-
-                    //the edge of this tile would go over the right edge of the source rectangle, 
-                    //we need to wrap back and draw a slice from the left side
-                    if (texPerspective.Right > sourceRect.Right)
+                    float diff = (position.X - currDrawPosition.X);
+                    currDrawPosition.X += diff;
+                    texPerspective.Width -= (int)diff;
+                    if (!effects.HasFlag(SpriteEffects.FlipHorizontally))
                     {
-                        int diff = texPerspective.Right - sourceRect.Right;
-                        if (effects.HasFlag(SpriteEffects.FlipHorizontally))
-                        {
-                            spriteBatch.Draw(texture,
-                                new Vector2(left, top),
-                                new Rectangle(sourceRect.X, texPerspective.Y, diff, texPerspective.Height),
-                                color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
-
-                            texPerspective.Width -= diff;
-                            left += diff;
-                        }
-                        else
-                        {
-                            texPerspective.Width -= diff;
-                            spriteBatch.Draw(texture,
-                                new Vector2(left + texPerspective.Width * scale.X, top),
-                                new Rectangle(sourceRect.X, texPerspective.Y, diff, texPerspective.Height),
-                                color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
-                        }
+                        texPerspective.X += (int)diff;
                     }
-                    else if (texPerspective.Bottom > sourceRect.Bottom)
-                    {
-                        //TODO: make this work correctly on vertically flipped sprites
-                        int diff = texPerspective.Bottom - sourceRect.Bottom;
-                        texPerspective.Height -= diff;
-                        spriteBatch.Draw(texture,
-                            new Vector2(left, top + texPerspective.Height * scale.Y),
-                            new Rectangle(texPerspective.X, sourceRect.Y, texPerspective.Width, diff),
-                            color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
-                    }
-
-                    spriteBatch.Draw(texture, new Vector2(left, top), texPerspective,
-                        color.Value, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
-
-                    if (texPerspective.X + movementX >= sourceRect.Right && x < xTiles - 1) texPerspective.X = sourceRect.X;
-                    left += movementX;
                 }
-                if (texPerspective.Y + movementY >= sourceRect.Bottom && y < yTiles - 1) texPerspective.Y = sourceRect.Y;
-                top += movementY;
+                //drawing an offset flipped sprite, need to draw an extra slice to the left side
+                if (currDrawPosition.X > position.X && x == 0)
+                {
+                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    {
+                        int sliceWidth = (int)((currDrawPosition.X - position.X) * scale.X);
+
+                        Vector2 slicePos = currDrawPosition;
+                        slicePos.X = position.X;
+                        Rectangle sliceRect = texPerspective;
+                        sliceRect.X = SourceRect.X;
+                        sliceRect.Width = (int)(sliceWidth / scale.X);
+                        
+                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        {
+                            slicePos.Y += size.Y;
+                        }
+                        
+                        spriteBatch.Draw(texture, slicePos, sliceRect, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);                        
+                        currDrawPosition.X = slicePos.X + sliceWidth;
+                    }
+                }
+                //make sure the rightmost tiles don't go over the right side
+                if (x == xTiles - 1)
+                {
+                    int diff = (int)(((currDrawPosition.X + texPerspective.Width * scale.X) - (position.X + targetSize.X)) / scale.X);
+                    texPerspective.Width -= diff;
+                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    {
+                        texPerspective.X += diff;
+                    }
+                }
+                
+                currDrawPosition.Y = position.Y - drawOffset.Y;
+
+                for (int y = 0; y < yTiles; y++)
+                {
+                    texPerspective.Y = sourceRect.Y;
+                    texPerspective.Height = sourceRect.Height;
+
+                    //offset above the top, draw a partial slice
+                    if (currDrawPosition.Y < position.Y)
+                    {
+                        float diff = (position.Y - currDrawPosition.Y);
+                        currDrawPosition.Y += diff;
+                        texPerspective.Height -= (int)diff;
+                        if (!effects.HasFlag(SpriteEffects.FlipVertically))
+                        {
+                            texPerspective.Y += (int)diff;
+                        }
+                    }
+
+                    //drawing an offset flipped sprite, need to draw an extra slice to the top
+                    if (currDrawPosition.Y > position.Y && y == 0)
+                    {
+                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        {
+                            int sliceHeight = (int)((currDrawPosition.Y - position.Y) * scale.Y);
+
+                            Vector2 slicePos = currDrawPosition;
+                            slicePos.Y = position.Y;
+                            Rectangle sliceRect = texPerspective;
+                            sliceRect.Y = SourceRect.Y;
+                            sliceRect.Height = (int)(sliceHeight / scale.Y);
+
+                            spriteBatch.Draw(texture, slicePos, sliceRect, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+
+                            currDrawPosition.Y = slicePos.Y + sliceHeight;
+                        }
+                    }
+
+                    //make sure the bottommost tiles don't go over the bottom
+                    if (y == yTiles - 1)
+                    {
+                        int diff = (int)(((currDrawPosition.Y + texPerspective.Height * scale.Y) - (position.Y + targetSize.Y)) / scale.Y);
+                        texPerspective.Height -= diff;
+                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        {
+                            texPerspective.Y += diff;
+                        }
+                    }
+
+                    spriteBatch.Draw(texture, currDrawPosition,
+                        texPerspective, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+
+                    currDrawPosition.Y += texPerspective.Height * scale.Y;
+                }
+
+                currDrawPosition.X += texPerspective.Width * scale.X;
             }
         }
 
