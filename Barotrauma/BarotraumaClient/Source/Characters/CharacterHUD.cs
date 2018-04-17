@@ -23,8 +23,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f &&
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
@@ -49,8 +48,7 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character)
         {
-            if (!character.IsUnconscious && character.Stun <= 0.0f &&
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
@@ -208,8 +206,7 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && 
-                (GameMain.GameSession?.CrewManager?.CrewCommander == null || !GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
             {
                 character.Inventory.DrawOwn(spriteBatch);
             }
