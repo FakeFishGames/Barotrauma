@@ -44,6 +44,12 @@ namespace Barotrauma
 
         private GUIComponent orderTargetFrame;
 
+        public bool ToggleCrewAreaOpen
+        {
+            get { return toggleCrewAreaOpen; }
+            set { toggleCrewAreaOpen = value; }
+        }
+
         public CrewCommander CrewCommander
         {
             get { return commander; }
@@ -356,9 +362,7 @@ namespace Barotrauma
                 img.Scale = iconWidth / (float)img.SourceRect.Width;
                 img.Color = order.Color;
                 img.ToolTip = order.Name;
-
-                /*if (order.AppropriateJobs == null || order.AppropriateJobs.Length == 0) img.Color *= 0.8f;
-                if (!order.HasAppropriateJob(character)) img.Color *= 0.6f;*/
+                
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
 
                 btn.OnClicked += (GUIButton button, object userData) =>
@@ -457,7 +461,7 @@ namespace Barotrauma
                     optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
                     optionButton.OnClicked += (btn, userData) =>
                     {
-                        commander.SetOrderOption(character, userData as Order, orderOption);
+                        commander.SetOrder(character, userData as Order, orderOption);
                         SetCharacterOrder(character, userData as Order, orderOption);
                         orderTargetFrame = null;
                         return true;
@@ -507,13 +511,7 @@ namespace Barotrauma
         {
             guiFrame.Update(deltaTime);
             if (chatBox != null) chatBox.Update(deltaTime);
-
-            if (commander.IsOpen &&
-                (Character.Controlled == null || !characters.Contains(Character.Controlled)))
-            {
-                commander.ToggleGUIFrame();
-            }
-
+            
             bool crewMenuOpen = toggleCrewAreaOpen || orderTargetFrame != null;
 
             if (characterFrame.Rect.Contains(PlayerInput.MousePosition))
@@ -529,18 +527,17 @@ namespace Barotrauma
             characterFrame.Rect = new Rectangle(crewAreaOffset.ToPoint(), characterFrame.Rect.Size);
             
             if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
-                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit() &&
+                PlayerInput.KeyHit(InputType.CrewOrders) &&
                 characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
-                if (!commander.IsOpen && Character.Controlled != null && 
+                if (Character.Controlled != null && 
                     Character.Controlled.SelectedConstruction != null && 
                     Character.Controlled.SelectedConstruction.GetComponent<Items.Components.Ladder>() == null)
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-                
-                commander.ToggleGUIFrame();                
+                toggleCrewAreaOpen = !toggleCrewAreaOpen;
             }
 
             UpdateConversations(deltaTime);
@@ -752,7 +749,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            characterFrame.Visible = !commander.IsOpen && characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
+            characterFrame.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
             if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
             
             guiFrame.Draw(spriteBatch);

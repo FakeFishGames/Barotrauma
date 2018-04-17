@@ -127,7 +127,7 @@ namespace Barotrauma
                 new GUIImage(Rectangle.Empty, radioIcon, Alignment.Center, radioButton);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {
-                    GameMain.GameSession.CrewManager.CrewCommander.ToggleGUIFrame();
+                    GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = !GameMain.GameSession.CrewManager.ToggleCrewAreaOpen;
                     return true;
                 };
             }
