@@ -72,6 +72,10 @@ namespace Barotrauma
             {
                 if (openHealthWindow == value) return;
                 openHealthWindow = value;
+                if (openHealthWindow != null)
+                {
+                    Character.Controlled.SelectedConstruction = null;
+                }
             }
         }
 
