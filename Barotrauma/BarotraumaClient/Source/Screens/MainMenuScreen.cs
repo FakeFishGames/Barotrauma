@@ -1,8 +1,11 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -23,8 +26,16 @@ namespace Barotrauma
 
         private Tab selectedTab;
 
+        private GUIFrame outerElement;
+        private List<GUIFrame> innerElements = new List<GUIFrame>();
+
         public MainMenuScreen(GameMain game)
         {
+            int width = (int)(GameMain.GraphicsWidth * 0.8f);
+            int height = (int)(GameMain.GraphicsHeight * 0.8f);
+            var rect = new Rectangle((GameMain.GraphicsWidth - width) / 2, (GameMain.GraphicsHeight - height) / 2, width, height);
+            outerElement = new GUIFrame(rect);
+
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
 
             buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
@@ -315,7 +326,25 @@ namespace Barotrauma
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f), 
-                    0.1f);                
+                    0.1f);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.R))
+            {
+                innerElements.Clear();
+                for (int i = 0; i < 5; i++)
+                {
+                    var parent = innerElements.LastOrDefault();
+                    if (parent == null)
+                    {
+                        parent = outerElement;
+                    }
+                    // TODO: for some reason the first element is not scaled
+                    var rect = new Rectangle(0, 0, parent.Rect.Width, parent.Rect.Height);
+                    var element = new GUIFrame(rect, GetRandomColor(), alignment: Alignment.Center, parent: parent);
+                    element.LocalScale = Vector2.One * 0.9f;
+                    innerElements.Add(element);
+                }
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -333,6 +362,9 @@ namespace Barotrauma
             if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
+
+            outerElement.Draw(spriteBatch);
+            outerElement.DrawChildren(spriteBatch);
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -393,6 +425,40 @@ namespace Barotrauma
 
             GameMain.LobbyScreen.Select();
         }
+
+        #region Random
+        private static Random _random;
+        public static Random Random
+        {
+            get
+            {
+                if (_random == null)
+                {
+                    _random = new Random();
+                }
+                return _random;
+            }
+        }
+
+        public static float RandomRange(int min, int max)
+        {
+            return Random.Next(min, max);
+        }
+
+        /// <summary>
+        /// Returns a random value between 0 and 1
+        /// </summary>
+        public static float RandomValue()
+        {
+            float v = Random.Next(0, 100);
+            return v / 100;
+        }
+
+        public static Color GetRandomColor()
+        {
+            return new Color(RandomValue(), RandomValue(), RandomValue());
+        }
+        #endregion
 
     }
 }
