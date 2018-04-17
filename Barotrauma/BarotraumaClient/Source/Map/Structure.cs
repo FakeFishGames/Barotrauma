@@ -150,7 +150,8 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        color, Point.Zero);
+                        color: color,
+                        textureScale: TextureScale);
                 }
             }
 
@@ -180,8 +181,8 @@ namespace Barotrauma
                     }
 
                     Point textureOffset = new Point(
-                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
+                        (int)(Math.Abs(rect.Location.X - sections[i].rect.Location.X) / textureScale.X),
+                        (int)(Math.Abs(rect.Location.Y - sections[i].rect.Location.Y) / textureScale.Y));
 
                     if (FlippedX && isHorizontal)
                     {
@@ -196,8 +197,10 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        color,
-                        textureOffset, depth);
+                        color: color,
+                        startOffset: textureOffset, 
+                        depth: depth,
+                        textureScale: TextureScale);
                 }
             }
 
