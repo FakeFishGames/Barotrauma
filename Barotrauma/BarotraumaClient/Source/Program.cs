@@ -224,7 +224,7 @@ namespace Barotrauma
             sw.Close();
 
             CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
+                " If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");       
         }
     }
 #endif
