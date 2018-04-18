@@ -1687,7 +1687,7 @@ namespace Barotrauma
             
             if ((characterMode || wiringMode) && dummyCharacter != null)                     
             {
-                dummyCharacter.DrawHUD(spriteBatch, cam);
+                dummyCharacter.DrawHUD(spriteBatch, cam, false);
                 
                 if (wiringMode) wiringToolPanel.Draw(spriteBatch);
             }
