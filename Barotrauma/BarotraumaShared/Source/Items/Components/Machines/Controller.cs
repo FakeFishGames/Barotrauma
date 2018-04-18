@@ -39,6 +39,12 @@ namespace Barotrauma.Items.Components
             set { userPos = value; }
         }
 
+        [Serialize(false, true)]
+        public bool RequireAimToUse
+        {
+            get; set;
+        }
+
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -159,6 +165,8 @@ namespace Barotrauma.Items.Components
                 character = null;
                 return false;
             }
+
+            if (RequireAimToUse && !activator.IsKeyDown(InputType.Aim)) return false;
 
             item.SendSignal(0, "1", "trigger_out", character);
             

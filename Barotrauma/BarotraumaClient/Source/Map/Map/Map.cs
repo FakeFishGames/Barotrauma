@@ -84,7 +84,7 @@ namespace Barotrauma
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
 
-            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White * 0.8f);
+            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), color: Color.White * 0.8f);
 
 
             for (int i = 0; i < locations.Count; i++)
