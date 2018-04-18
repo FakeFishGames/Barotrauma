@@ -143,6 +143,7 @@ namespace Barotrauma.Items.Components
                 if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
+            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
             IsActive = true;
             activeTimer = 0.1f;
