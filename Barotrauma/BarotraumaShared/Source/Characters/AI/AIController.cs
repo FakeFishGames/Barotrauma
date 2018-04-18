@@ -9,7 +9,7 @@ namespace Barotrauma
         public bool Enabled;
 
         public readonly Character Character;
-        
+
         private AIState state;
 
         protected SteeringManager steeringManager;
@@ -24,7 +24,7 @@ namespace Barotrauma
             get { return Character.AnimController.TargetMovement; }
             set { Character.AnimController.TargetMovement = value; }
         }
-        
+
         public Vector2 SimPosition
         {
             get { return Character.SimPosition; }
@@ -43,6 +43,11 @@ namespace Barotrauma
         public virtual bool CanEnterSubmarine
         {
             get { return true; }
+        }
+
+        public virtual AIObjectiveManager ObjectiveManager
+        {
+            get { return null; }
         }
 
         public AIState State

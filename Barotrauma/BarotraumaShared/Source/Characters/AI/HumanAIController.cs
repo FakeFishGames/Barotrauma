@@ -17,6 +17,11 @@ namespace Barotrauma
 
         private float updateObjectiveTimer;
 
+        public override AIObjectiveManager ObjectiveManager
+        {
+            get { return objectiveManager; }
+        }
+
         public Order CurrentOrder
         {
             get;
