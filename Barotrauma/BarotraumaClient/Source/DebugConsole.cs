@@ -372,6 +372,12 @@ namespace Barotrauma
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             }));
 
+            commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
+            {
+                GameMain.ShowFPS = !GameMain.ShowFPS;
+                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+
             commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
                 HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
