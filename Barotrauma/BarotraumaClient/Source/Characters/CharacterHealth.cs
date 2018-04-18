@@ -272,7 +272,7 @@ namespace Barotrauma
                 distortTimer = 0.0f;
             }
 
-            if (PlayerInput.KeyHit(InputType.Health) && GUIComponent.KeyboardDispatcher.Subscriber == null)
+            if (PlayerInput.KeyHit(InputType.Health) && GUIComponent.KeyboardDispatcher.Subscriber == null && character.AllowInput)
             {
                 OpenHealthWindow = openHealthWindow == this ? null : this;
             }
@@ -324,17 +324,13 @@ namespace Barotrauma
                 highlightedLimbIndex = -1;
             }
 
+            Rectangle hoverArea = alignment == Alignment.Left ?
+                Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft) :
+                Rectangle.Union(HUDLayoutSettings.AfflictionAreaRight, HUDLayoutSettings.HealthBarAreaRight);
 
-            if ((alignment == Alignment.Left &&
-                HUDLayoutSettings.AfflictionAreaLeft.Contains(PlayerInput.MousePosition) || 
-                HUDLayoutSettings.HealthBarAreaLeft.Contains(PlayerInput.MousePosition)) 
-                ||
-                (alignment == Alignment.Right &&
-                HUDLayoutSettings.AfflictionAreaRight.Contains(PlayerInput.MousePosition) ||
-                HUDLayoutSettings.HealthBarAreaRight.Contains(PlayerInput.MousePosition)))
+            if (character.AllowInput && hoverArea.Contains(PlayerInput.MousePosition))
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
-                System.Diagnostics.Debug.WriteLine("hover");
                 if (PlayerInput.LeftButtonClicked())
                 {
                     OpenHealthWindow = openHealthWindow == this ? null : this;
@@ -342,7 +338,6 @@ namespace Barotrauma
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("------");
                 healthBar.State = GUIComponent.ComponentState.None;
             }
 
