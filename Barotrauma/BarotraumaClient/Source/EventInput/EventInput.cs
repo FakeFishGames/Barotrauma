@@ -147,7 +147,7 @@ namespace EventInput
         static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern int SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+        static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 #endif
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace EventInput
 #if WINDOWS
             hookProcDelegate = HookProc;
 
-            prevWndProc = (IntPtr)SetWindowLongPtr(window.Handle, GWL_WNDPROC,
+            prevWndProc = SetWindowLongPtr(window.Handle, GWL_WNDPROC,
             Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
             hIMC = ImmGetContext(window.Handle);
