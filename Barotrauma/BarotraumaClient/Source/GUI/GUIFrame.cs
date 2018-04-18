@@ -37,6 +37,16 @@ namespace Barotrauma
             //if (style != null) ApplyStyle(style);
         }
 
+        public GUIFrame(GUIComponent parent, Vector2 relativeSize, Alignment alignment = Alignment.TopLeft, string style = "", Color? color = null) : base(style, parent, relativeSize)
+        {
+            this.alignment = alignment;
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            parent.AddChild(this);
+        }
+
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!Visible) return;
