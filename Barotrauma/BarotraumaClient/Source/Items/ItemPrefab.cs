@@ -61,7 +61,7 @@ namespace Barotrauma
             }
             else if (placeRect.HasValue)
             {
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.Value.X, -placeRect.Value.Y), placeRect.Value.Size.ToVector2(), SpriteColor);
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.Value.X, -placeRect.Value.Y), placeRect.Value.Size.ToVector2(), null, SpriteColor);
             }
             else
             {
@@ -80,7 +80,7 @@ namespace Barotrauma
                     position = placePosition;
                 }
 
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, SpriteColor);
+                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
             }
         }
     }

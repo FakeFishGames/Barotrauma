@@ -86,6 +86,8 @@ namespace Barotrauma
             set;
         }
 
+        public static float? OverrideMusicDuration;
+
         public static int SoundCount;
         
         public static IEnumerable<object> Init()
@@ -296,6 +298,16 @@ namespace Barotrauma
         private static void UpdateMusic(float deltaTime)
         {
             if (musicClips == null) return;
+
+            if (OverrideMusicType != null && OverrideMusicDuration.HasValue)
+            {
+                OverrideMusicDuration -= deltaTime;
+                if (OverrideMusicDuration <= 0.0f)
+                {
+                    OverrideMusicType = null;
+                    OverrideMusicDuration = null;
+                }                
+            }
 
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)

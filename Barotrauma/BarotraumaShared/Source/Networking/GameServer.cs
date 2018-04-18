@@ -1562,9 +1562,7 @@ namespace Barotrauma.Networking
             {
                 yield return CoroutineStatus.Running;
             } while (cinematic.Running);
-#if CLIENT
-            SoundPlayer.OverrideMusicType = null;
-#endif
+
             Submarine.Unload();
             entityEventManager.Clear();
 

@@ -56,7 +56,7 @@ namespace Barotrauma
         private bool isHorizontal;
 
         private SpriteEffects SpriteEffects = SpriteEffects.None;
-
+        
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
         {
@@ -144,6 +144,8 @@ namespace Barotrauma
             get { return prefab.Tags; }
         }
 
+        // TODO: encapsulate visuals?
+
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -151,7 +153,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-
+        
         public override Rectangle Rect
         {
             get
@@ -974,9 +976,9 @@ namespace Barotrauma
             newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
-            newBody.CollisionCategories = Physics.CollisionWall;
+            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
-            
+
             if (BodyRotation != 0.0f)
             {
                 Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
@@ -1025,9 +1027,12 @@ namespace Barotrauma
 
                 CreateStairBodies();
             }
-
-            CreateSections();
-            if (HasBody) UpdateSections();
+            
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1048,8 +1053,11 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            CreateSections();
-            if (HasBody) UpdateSections();
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public static Structure Load(XElement element, Submarine submarine)

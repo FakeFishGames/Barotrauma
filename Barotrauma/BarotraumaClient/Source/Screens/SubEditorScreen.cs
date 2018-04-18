@@ -387,6 +387,7 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
+            SoundPlayer.OverrideMusicDuration = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
 
