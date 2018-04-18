@@ -335,6 +335,7 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
+            SoundPlayer.OverrideMusicDuration = null;
             for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
             {
                 Sounds.SoundManager.Pause(i);
