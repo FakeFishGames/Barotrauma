@@ -910,10 +910,13 @@ namespace Barotrauma
                     Vector2 attackPos =
                         attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
 
+                    List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                    ignoredBodies.Add(AnimController.Collider.FarseerBody);
+
                     var body = Submarine.PickBody(
                         attackLimb.SimPosition,
                         attackPos,
-                        AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                        ignoredBodies,
                         Physics.CollisionCharacter | Physics.CollisionWall);
                     
                     IDamageable attackTarget = null;
@@ -928,7 +931,7 @@ namespace Barotrauma
                             body = Submarine.PickBody(
                                 attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
                                 attackPos - ((Submarine)body.UserData).SimPosition,
-                                AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                                ignoredBodies,
                                 Physics.CollisionWall);
 
                             if (body != null)
