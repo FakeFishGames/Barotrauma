@@ -120,8 +120,7 @@ namespace EventInput
 
 #if WINDOWS
         delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-
+        
         static IntPtr prevWndProc;
         static WndProc hookProcDelegate;
         static IntPtr hIMC;
@@ -148,7 +147,7 @@ namespace EventInput
         static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        static extern int SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 #endif
 
         /// <summary>
@@ -165,8 +164,8 @@ namespace EventInput
 #if WINDOWS
             hookProcDelegate = HookProc;
 
-            prevWndProc = (IntPtr)SetWindowLong(window.Handle, GWL_WNDPROC,
-            (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
+            prevWndProc = (IntPtr)SetWindowLongPtr(window.Handle, GWL_WNDPROC,
+            Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
             hIMC = ImmGetContext(window.Handle);
 #else
