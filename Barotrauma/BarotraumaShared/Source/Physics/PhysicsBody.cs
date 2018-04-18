@@ -375,16 +375,8 @@ namespace Barotrauma
         /// </summary>
         public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
         {
-
-            float currSpeed = body.LinearVelocity.Length();      
-            if (currSpeed > 100.0f)
-            {
-                int sdfgsdfg = 1;
-            }
-
-
+            float currSpeed = body.LinearVelocity.Length();
             Vector2 velocityAddition = impulse / Mass;
-
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
             newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
 
