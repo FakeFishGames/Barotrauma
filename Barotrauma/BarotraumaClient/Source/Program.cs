@@ -154,7 +154,7 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
+            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/.");
             sb.AppendLine("\n");
 #if DEBUG
             sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
