@@ -222,7 +222,7 @@ namespace Barotrauma
                         character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     }
                     character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
-                    character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
+                    character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
                     CharacterHealth.OpenHealthWindow = character.SelectedCharacter.CharacterHealth;
                 }
                 else if (character.Inventory != null)

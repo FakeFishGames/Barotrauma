@@ -378,7 +378,7 @@ namespace Barotrauma
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
         }
 
-        public void DrawHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
+        public void DrawHUD(SpriteBatch spriteBatch)
         {
             float damageOverlayAlpha = DamageOverlayTimer;
             if (vitality < MaxVitality * 0.1f)
@@ -392,12 +392,12 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            DrawStatusHUD(spriteBatch, drawOffset);
+            DrawStatusHUD(spriteBatch);
 
             if (suicideButton.Visible) suicideButton.Draw(spriteBatch);
         }
 
-        public void DrawStatusHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
+        public void DrawStatusHUD(SpriteBatch spriteBatch)
         {
             Rectangle interactArea = healthBar.Rect;
             if (openHealthWindow == null)
