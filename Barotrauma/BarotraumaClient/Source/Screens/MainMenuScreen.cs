@@ -338,10 +338,12 @@ namespace Barotrauma
                     {
                         parent = outerElement;
                     }
-                    // TODO: for some reason the first element is not scaled
-                    var rect = new Rectangle(0, 0, parent.Rect.Width, parent.Rect.Height);
-                    var element = new GUIFrame(rect, GetRandomColor(), alignment: Alignment.Center, parent: parent);
-                    element.LocalScale = Vector2.One * 0.9f;
+                    // TODO: for some reason the first element is not scaled when using the absolute size -> global scale is not calculated?
+                    //var rect = new Rectangle(0, 0, parent.Rect.Width, parent.Rect.Height);
+                    //var element = new GUIFrame(rect, GetRandomColor(), alignment: Alignment.Center, parent: parent);
+                    var element = new GUIFrame(parent, new Vector2(0.9f, 0.9f), Alignment.Center, color: GetRandomColor());
+                    element.LocalScale = new Vector2(0.9f, 1);
+
                     innerElements.Add(element);
                 }
             }

@@ -4,30 +4,13 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     public abstract class GUIComponent
     {
-        #region Test
-        public static Rectangle ScaleRect(Rectangle rect, Vector2 scale)
-        {
-            return new Rectangle(
-                (int)(rect.X),  // scale?
-                (int)(rect.Y),  // scale?
-                (int)(rect.Width * scale.X),
-                (int)(rect.Height * scale.Y));
-        }
-
-        public static Rectangle ScaleRect(Rectangle rect, float scale)
-        {
-            return new Rectangle(
-                (int)(rect.X),  // scale?
-                (int)(rect.Y),  // scale?
-                (int)(rect.Width * scale),
-                (int)(rect.Height * scale));
-        }
-
+        #region Scale
         public Vector2 LocalScale { get; set; } = Vector2.One;
 
         public Vector2 GlobalScale
@@ -44,6 +27,38 @@ namespace Barotrauma
                     return LocalScale;
                 }
             }
+        }
+        #endregion
+
+        #region Hierarchy
+        public T GetChild<T>() where T : GUIComponent
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child is T) return (T)(object)child;
+            }
+
+            return default(T);
+        }
+
+        public GUIComponent GetChild(object obj)
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child.UserData == obj) return child;
+            }
+            return null;
+        }
+
+        public bool IsParentOf(GUIComponent component)
+        {
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                if (children[i] == component) return true;
+                if (children[i].IsParentOf(component)) return true;
+            }
+
+            return false;
         }
 
         public IEnumerable<GUIComponent> GetParents()
@@ -321,39 +336,17 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
+        /// <summary>
+        /// Relative constructor
+        /// </summary>
+        protected GUIComponent(string style, GUIComponent parent, Vector2 relativeSize) : this(style)
+        {
+            rect = new Rectangle(0, 0, parent.rect.Width, parent.rect.Height).ScaleSize(relativeSize);
+        }
+
         public static void Init(GameWindow window)
         {
             keyboardDispatcher = new KeyboardDispatcher(window);
-        }
-
-        public T GetChild<T>() where T : GUIComponent
-        {
-            foreach (GUIComponent child in children)
-            {
-                if (child is T) return (T)(object)child;
-            }
-
-            return default(T);
-        }
-        
-        public GUIComponent GetChild(object obj)
-        {
-            foreach (GUIComponent child in children)
-            {
-                if (child.UserData == obj) return child;
-            }
-            return null;
-        }
-
-        public bool IsParentOf(GUIComponent component)
-        {
-            for(int i = children.Count - 1; i >= 0; i--)
-            {
-                if (children[i] == component) return true;
-                if (children[i].IsParentOf(component)) return true;
-            }
-
-            return false;
         }
 
         protected virtual void SetAlpha(float a)
@@ -531,15 +524,13 @@ namespace Barotrauma
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
             size = new Point((int)(size.X * GlobalScale.X), (int)(size.Y * GlobalScale.Y));
-
-            Point expandAmount = size - rect.Size;
-
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
             {
-                //TODO: fix this (or replace with something better in the new GUI system)
+                //TODO: fix this(or replace with something better in the new GUI system)
                 //simply expanding the rects by the same amount as their parent only works correctly in some special cases
+                Point expandAmount = size - rect.Size;
                 foreach (GUIComponent child in children)
                 {
                     child.Rect = new Rectangle(
@@ -553,7 +544,7 @@ namespace Barotrauma
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            rect = ScaleRect(rect, GlobalScale);
+            rect = rect.ScaleSize(GlobalScale);
 
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
