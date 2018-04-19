@@ -181,14 +181,14 @@ namespace Barotrauma
                                     LastNetworkUpdateID = controlled.LastNetworkUpdateID;
                                 }
 
-                                controlled = this;
+                                Controlled = this;
                                 IsRemotePlayer = false;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
                             else if (controlled == this)
                             {
-                                controlled = null;
+                                Controlled = null;
                                 IsRemotePlayer = ownerID > 0;
                             }
                             break;
@@ -277,7 +277,8 @@ namespace Barotrauma
                 character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
-
+                if (configPath == HumanConfigFile) GameMain.GameSession.CrewManager.AddCharacter(character);
+                
                 if (ownerId == 0)
                 {
                     if (GameMain.Client.HostCharacter != null)
@@ -314,11 +315,6 @@ namespace Barotrauma
                         if (ownerClient.Character != null) GameMain.GameSession.CrewManager.RemoveCharacter(ownerClient.Character, true);
                         ownerClient.Character = character;
                     }
-                }
-
-                if (configPath == HumanConfigFile)
-                {
-                    GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
             }
 

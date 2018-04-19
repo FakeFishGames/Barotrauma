@@ -243,7 +243,7 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
-            if (speak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+            if (speak && Character.CanSpeak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }
