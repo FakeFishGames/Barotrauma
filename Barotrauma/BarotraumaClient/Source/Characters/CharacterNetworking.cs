@@ -207,10 +207,10 @@ namespace Barotrauma
 
             if (GameMain.Server != null) return null;
 
-            bool noInfo = inc.ReadBoolean();
-            ushort id = inc.ReadUInt16();
-            string configPath = inc.ReadString();
-            string seed = inc.ReadString();
+            bool noInfo         = inc.ReadBoolean();
+            ushort id           = inc.ReadUInt16();
+            string configPath   = inc.ReadString();
+            string seed         = inc.ReadString();
 
             Vector2 position = new Vector2(inc.ReadFloat(), inc.ReadFloat());
 
@@ -228,16 +228,17 @@ namespace Barotrauma
             }
             else
             {
-                bool hasOwner = inc.ReadBoolean();
-                int ownerId = hasOwner ? inc.ReadByte() : -1;
+                ushort infoID       = inc.ReadUInt16();
+                bool hasOwner       = inc.ReadBoolean();
+                int ownerId         = hasOwner ? inc.ReadByte() : -1;
                 
-                string newName = inc.ReadString();
-                byte teamID = inc.ReadByte();
+                string newName      = inc.ReadString();
+                byte teamID         = inc.ReadByte();
 
-                bool hasAi = inc.ReadBoolean();
-                bool isFemale = inc.ReadBoolean();
-                int headSpriteID = inc.ReadByte();
-                string jobName = inc.ReadString();
+                bool hasAi          = inc.ReadBoolean();
+                bool isFemale       = inc.ReadBoolean();
+                int headSpriteID    = inc.ReadByte();
+                string jobName      = inc.ReadString();
 
                 JobPrefab jobPrefab = null;
                 Dictionary<string, int> skillLevels = new Dictionary<string, int>();
@@ -257,6 +258,7 @@ namespace Barotrauma
                 if (!spawn) return null;
                 
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
+                ch.ID = infoID;
                 ch.HeadSpriteId = headSpriteID;
 
                 System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
@@ -277,25 +279,16 @@ namespace Barotrauma
                 character = Create(configPath, position, seed, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
-                if (configPath == HumanConfigFile) GameMain.GameSession.CrewManager.AddCharacter(character);
-                
-                if (ownerId == 0)
+
+                if (configPath == HumanConfigFile)
                 {
-                    if (GameMain.Client.HostCharacter != null)
-                    {
-                        GameMain.GameSession.CrewManager.RemoveCharacter(GameMain.Client.HostCharacter, true);
-                    }
-                    GameMain.Client.HostCharacter = character;
+                    CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().Find(c => c.ID == infoID);
+                    GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
+                    GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
+                
                 else if (GameMain.Client.ID == ownerId)
                 {
-                    if (GameMain.Client.Character != null)
-                    {
-                        //remove info of the client's previous character from crewmanager 
-                        //(only the latest controlled character will be visible in the round summary)
-                        GameMain.GameSession.CrewManager.RemoveCharacter(GameMain.Client.Character, true);
-                    }
-
                     GameMain.Client.Character = character;
                     Controlled = character;
 
@@ -304,17 +297,6 @@ namespace Barotrauma
                     character.memInput.Clear();
                     character.memState.Clear();
                     character.memLocalState.Clear();
-                }
-                else
-                {
-                    var ownerClient = GameMain.Client.ConnectedClients.Find(c => c.ID == ownerId);
-                    if (ownerClient != null)
-                    {
-                        //remove info of the client's previous character from crewmanager 
-                        //(only the latest controlled character will be visible in the round summary)
-                        if (ownerClient.Character != null) GameMain.GameSession.CrewManager.RemoveCharacter(ownerClient.Character, true);
-                        ownerClient.Character = character;
-                    }
                 }
             }
 
@@ -367,6 +349,5 @@ namespace Barotrauma
                 IsRagdolled = ragdolled;
             }
         }
-
     }
 }

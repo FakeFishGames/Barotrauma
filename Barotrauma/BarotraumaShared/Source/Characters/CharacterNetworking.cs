@@ -544,6 +544,8 @@ namespace Barotrauma
             //character with no characterinfo (e.g. some monster)
             if (Info == null) return;
 
+            msg.Write(info.ID);
+
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
             {
