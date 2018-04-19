@@ -193,23 +193,18 @@ namespace Barotrauma
                             SlotPositions[i] = new Vector2(
                                 HUDLayoutSettings.InventoryAreaUpper.Right - (slotSpriteSmall.size.X * 3 + spacing * 4 + slotSpriteHorizontal.size.X) * UIScale, 
                                 HUDLayoutSettings.InventoryAreaUpper.Y);
-                            hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.OuterClothes:
                             SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.LeftHand:
                             SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 130 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.RightHand:
                             SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 60 * UIScale, GameMain.GraphicsHeight - offsetFromBottom);
-                            hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Pack:
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - 30 * UIScale);
-                            hideEmptySlot[i] = true;
                             break;
                         case InvSlotType.Any:
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - offsetFromBottom);
