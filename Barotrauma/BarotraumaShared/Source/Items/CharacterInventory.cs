@@ -31,6 +31,20 @@ namespace Barotrauma
             this.character = character;
             IsEquipped = new bool[capacity];
 
+            for (int i = 0; i < capacity; i++)
+            {
+                switch (SlotTypes[i])
+                {
+                    case InvSlotType.Head:
+                    case InvSlotType.OuterClothes:
+                    case InvSlotType.LeftHand:
+                    case InvSlotType.RightHand:
+                    case InvSlotType.Pack:
+                        hideEmptySlot[i] = true;
+                        break;
+                }               
+            }
+
             InitProjSpecific();
         }
 
