@@ -691,7 +691,7 @@ namespace Barotrauma
         private bool OnTreatmentButtonClicked(GUIButton button, object userdata)
         {
             Item item = userdata as Item;
-            if (item == null) return false;
+            if (item == null || selectedLimbIndex < 0) return false;
 
             Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
