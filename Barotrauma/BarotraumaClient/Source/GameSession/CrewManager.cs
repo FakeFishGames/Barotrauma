@@ -506,7 +506,7 @@ namespace Barotrauma
             characters.Remove(character);
             if (removeInfo) characterInfos.Remove(character.Info);
         }
-
+        
         public void AddCharacterInfo(CharacterInfo characterInfo)
         {
             if (characterInfos.Contains(characterInfo))
@@ -516,6 +516,11 @@ namespace Barotrauma
             }
 
             characterInfos.Add(characterInfo);
+        }
+
+        public void RemoveCharacterInfo(CharacterInfo characterInfo)
+        {
+            characterInfos.Remove(characterInfo);
         }
 
         public void AddToGUIUpdateList()
