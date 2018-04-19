@@ -1354,10 +1354,8 @@ namespace Barotrauma.Networking
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, characterInfo.Name, false, false);
                     myCharacter.GiveJobItems(assignedWayPoints.Last());
                     myCharacter.TeamID = (byte)teamID;
-
-                    Character.Controlled = myCharacter;
-
                     GameMain.GameSession.CrewManager.AddCharacter(myCharacter);
+                    Character.Controlled = myCharacter;
                 }
 #endif
             }
@@ -1796,8 +1794,16 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderCharacter = myCharacter;
-                        senderName = myCharacter == null ? name : myCharacter.Name;
+                        if (Character.Controlled != null && Character.Controlled.CanSpeak)
+                        {
+                            senderCharacter = Character.Controlled;
+                            senderName = Character.Controlled == null ? name : Character.Controlled.Name;
+                        }
+                        else
+                        {
+                            senderCharacter = myCharacter;
+                            senderName = myCharacter == null ? name : myCharacter.Name;
+                        }
                     }
                     else //msg sent by an AI character
                     {

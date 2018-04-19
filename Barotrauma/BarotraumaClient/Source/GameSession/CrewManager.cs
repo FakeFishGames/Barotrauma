@@ -135,9 +135,11 @@ namespace Barotrauma
         /// <summary>
         /// Sets which character is selected in the crew UI (highlight effect etc)
         /// </summary>
-        public bool SetCharacterSelected(GUIComponent component, object selection)
+        public bool CharacterClicked(GUIComponent component, object selection)
         {
-            SetCharacterSelected(selection as Character);
+            Character character = selection as Character;
+            if (character == null || character.IsDead || character.IsUnconscious) return false;
+            Character.Controlled = character;
             return true;
         }
 
@@ -146,8 +148,7 @@ namespace Barotrauma
         /// </summary>
         public void SetCharacterSelected(Character character)
         {
-            if (character == null || character.IsDead || character.IsUnconscious) return;
-            if (!characters.Contains(character)) return;
+            if (character != null && !characters.Contains(character)) return;
             
             GUIComponent selectedCharacterFrame = null;
             foreach (GUIComponent child in characterListBox.children)
@@ -166,12 +167,14 @@ namespace Barotrauma
                     selectedCharacterFrame = child;
                 }
             }
-            //move the selected character to the top of the list
-            characterListBox.RemoveChild(selectedCharacterFrame);
-            characterListBox.children.Insert(0, selectedCharacterFrame);
-            characterListBox.BarScroll = 0.0f;
 
-            Character.Controlled = character;            
+            if (selectedCharacterFrame != null)
+            {
+                //move the selected character to the top of the list
+                characterListBox.RemoveChild(selectedCharacterFrame);
+                characterListBox.children.Insert(0, selectedCharacterFrame);
+                characterListBox.BarScroll = 0.0f; 
+            }      
         }
 
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
@@ -378,13 +381,15 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
+                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+
                     if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName) || order.Options.Length > 1)
                     {
                         CreateOrderTargetFrame(button, character, order);
                     }
                     else
                     {
-                        commander.SetOrder(character, order);
+                        commander.SetOrder(character, order, Character.Controlled);
                         SetCharacterOrder(character, order);
                     }
                     return true;
@@ -411,7 +416,8 @@ namespace Barotrauma
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
-                    commander.SetOrder(character, order);                    
+                    if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
+                    commander.SetOrder(character, order, Character.Controlled);                    
                     return true;
                 };
 
@@ -424,7 +430,7 @@ namespace Barotrauma
                 Padding = Vector4.Zero,
                 UserData = character
             };
-            if (isSinglePlayer) characterArea.OnClicked = SetCharacterSelected;
+            if (isSinglePlayer) characterArea.OnClicked = CharacterClicked;
 
             var characterImage = new GUIImage(new Rectangle(0, 0, 0, 0), character.Info.HeadSprite, Alignment.CenterLeft, characterArea)
             {
@@ -740,7 +746,6 @@ namespace Barotrauma
                 if (i == 0)
                 {
                     Character.Controlled = character;
-                    SetCharacterSelected(character);
                 }
             }
 

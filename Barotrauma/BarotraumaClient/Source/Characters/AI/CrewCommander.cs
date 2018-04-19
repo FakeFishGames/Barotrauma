@@ -63,21 +63,21 @@ namespace Barotrauma
             return  radioItem.GetComponent<WifiComponent>();
         }
         
-        public void SetOrder(Character character, Order order)
+        public void SetOrder(Character character, Order order, Character orderGiver)
         {
             if (order.TargetAllCharacters)
             {
-                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return;
-                crewManager.AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+                if (orderGiver == null || orderGiver.CurrentHull == null) return;
+                crewManager.AddOrder(new Order(order.Prefab, orderGiver.CurrentHull, null), order.Prefab.FadeOutTime);
 
                 if (crewManager.IsSinglePlayer)
                 {
-                    Character.Controlled.Speak(
-                        order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
+                    orderGiver.Speak(
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
                 }
                 else
                 {
-                    OrderChatMessage msg = new OrderChatMessage(order, "", Character.Controlled.CurrentHull, null, Character.Controlled);
+                    OrderChatMessage msg = new OrderChatMessage(order, "", orderGiver.CurrentHull, null, orderGiver);
                     if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(msg);
@@ -93,12 +93,12 @@ namespace Barotrauma
             character.SetOrder(order, "");
             if (crewManager.IsSinglePlayer)
             {
-                Character.Controlled?.Speak(
-                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
+                orderGiver?.Speak(
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
             }
             else
             {
-                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, Character.Controlled);
+                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, orderGiver);
                 if (GameMain.Client != null)
                 {
                     GameMain.Client.SendChatMessage(msg);

@@ -387,6 +387,7 @@
   <CauseOfDeathDescription.Burn>Burned to death</CauseOfDeathDescription.Burn>
   <CauseOfDeathDescription.Husk>Taken over by a parasite</CauseOfDeathDescription.Husk>
   <CauseOfDeathDescription.Disconnected>Disconnected</CauseOfDeathDescription.Disconnected>
+  <CauseOfDeathDescription.Unknown>Unknown</CauseOfDeathDescription.Unknown>
 
   <Self_CauseOfDeathDescription.Damage>You have succumbed to your injuries.</Self_CauseOfDeathDescription.Damage>
   <Self_CauseOfDeathDescription.Bloodloss>You have bled out.</Self_CauseOfDeathDescription.Bloodloss>

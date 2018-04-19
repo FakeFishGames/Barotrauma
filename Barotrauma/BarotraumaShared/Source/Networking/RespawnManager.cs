@@ -408,22 +408,21 @@ namespace Barotrauma.Networking
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Submarine == respawnShuttle)
+                if (c.Submarine != respawnShuttle) continue;
+                
+                if (Character.Controlled == c) Character.Controlled = null;
+                c.Kill(new Pair<CauseOfDeathType, AfflictionPrefab>(CauseOfDeathType.Unknown, null), true);
+                c.Enabled = false;
+                    
+                Spawner.AddToRemoveQueue(c);
+                if (c.Inventory != null)
                 {
-                    if (Character.Controlled == c) Character.Controlled = null;
-                    c.Enabled = false;
-
-                    if (c.Inventory != null)
+                    foreach (Item item in c.Inventory.Items)
                     {
-                        foreach (Item item in c.Inventory.Items)
-                        {
-                            if (item == null) continue;
-                            Entity.Spawner.AddToRemoveQueue(item);
-                        }
+                        if (item == null) continue;
+                        Spawner.AddToRemoveQueue(item);
                     }
-
-                    c.Kill(new Pair<CauseOfDeathType, AfflictionPrefab>(CauseOfDeathType.Unknown, null), true);
-                }
+                }                
             }
 
             respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));

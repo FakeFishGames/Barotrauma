@@ -399,10 +399,12 @@ namespace Barotrauma
             }
         }
 
+        private bool canSpeak;
         public bool CanSpeak
         {
             get
             {
+                if (!canSpeak) return false;
                 var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
                 if (huskAffliction != null && !huskAffliction.CanSpeak) return false;
                 return !IsUnconscious && Stun <= 0.0f;
@@ -620,6 +622,7 @@ namespace Barotrauma
 
             SpeciesName = doc.Root.GetAttributeString("name", "Unknown");            
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
+            canSpeak = doc.Root.GetAttributeBool("canspeak", false);
 
             List<XElement> ragdollElements = new List<XElement>();
             List<float> ragdollCommonness = new List<float>();
@@ -2101,6 +2104,10 @@ namespace Barotrauma
             base.Remove();
 
             if (info != null) info.Remove();
+
+#if CLIENT
+            GameMain.GameSession?.CrewManager?.RemoveCharacter(this);
+#endif
 
             CharacterList.Remove(this);
 
