@@ -24,7 +24,7 @@ namespace Barotrauma
             {
                 if (limbs == null)
                 {
-                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed);
+                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
                     return new Limb[0];
                 }
                 return limbs;
