@@ -346,6 +346,8 @@ namespace Barotrauma
                     {
                         case 0:
                             element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
+                            // absolute element
+                            //element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
                             break;
                         case 1:
                             element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: GetRandomColor());
