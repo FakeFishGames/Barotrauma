@@ -10,26 +10,6 @@ namespace Barotrauma
 {
     public abstract class GUIComponent
     {
-        #region Scale
-        public Vector2 LocalScale { get; set; } = Vector2.One;
-
-        public Vector2 GlobalScale
-        {
-            get
-            {
-                var parents = GetParents();
-                if (parents.Any())
-                {
-                    return parents.Select(c => c.LocalScale).Aggregate((parent, child) => parent * child) * LocalScale;
-                }
-                else
-                {
-                    return LocalScale;
-                }
-            }
-        }
-        #endregion
-
         #region Hierarchy
         public T GetChild<T>() where T : GUIComponent
         {
@@ -523,7 +503,7 @@ namespace Barotrauma
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
-            size = new Point((int)(size.X * GlobalScale.X), (int)(size.Y * GlobalScale.Y));
+            //size = new Point((int)(size.X * GlobalScale.X), (int)(size.Y * GlobalScale.Y));
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
@@ -544,7 +524,7 @@ namespace Barotrauma
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            rect = rect.ScaleSize(GlobalScale);
+            //rect = rect.ScaleSize(GlobalScale);
 
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
