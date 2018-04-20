@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,6 +16,10 @@ namespace Barotrauma
         public readonly List<JobPrefab> AllowedJobs;
 
         public readonly List<ConversationFlag> Flags;
+
+        //The line can only be selected when eventmanager intensity is between these values
+        //null = no restriction
+        public float? maxIntensity, minIntensity;
 
         public enum ConversationFlag
         {
@@ -92,6 +94,9 @@ namespace Barotrauma
                 allowedSpeakerTags.Add(tag.Trim().ToLowerInvariant());                
             }
 
+            if (element.Attribute("minintensity") != null) minIntensity = element.GetAttributeFloat("minintensity", 0.0f);
+            if (element.Attribute("maxintensity") != null) maxIntensity = element.GetAttributeFloat("maxintensity", 1.0f);
+
             Responses = new List<NPCConversation>();
             foreach (XElement subElement in element.Elements())
             {
@@ -148,13 +153,22 @@ namespace Barotrauma
                 var allowedSpeakers = new List<Character>();
 
                 List<NPCConversation> potentialLines = new List<NPCConversation>(conversations);
+
+                //remove lines that are not appropriate for the intensity of the current situation
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    potentialLines.RemoveAll(l => 
+                        (l.minIntensity.HasValue && GameMain.GameSession.EventManager.CurrentIntensity < l.minIntensity) ||
+                        (l.maxIntensity.HasValue && GameMain.GameSession.EventManager.CurrentIntensity > l.maxIntensity));
+                }
+
                 while (potentialLines.Count > 0)
                 {
                     //select a random line and attempt to find a speaker for it
                     // and if no valid speaker is found, choose another random line
                     selectedConversation = GetRandomConversation(potentialLines, baseConversation == null);
                     if (selectedConversation == null || string.IsNullOrEmpty(selectedConversation.Line)) return;
-
+                    
                     //speaker already assigned for this line
                     if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
                     {
