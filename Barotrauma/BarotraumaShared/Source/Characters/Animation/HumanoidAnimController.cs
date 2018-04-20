@@ -1009,10 +1009,9 @@ namespace Barotrauma
                     }
                     else if (GameMain.Client == null) //Serverside code
                     {
-                        float reviveChance = cprAnimTimer * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
+                        float reviveChance = skill / 100.0f; //5% max chance for 10 skill, 100% max chance for 100 skill
 
-                        //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
-                        if (Rand.Int(100, Rand.RandSync.Server) <= reviveChance)
+                        if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) <= reviveChance)
                         {
                             //increase oxygen and clamp it above zero 
                             // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
