@@ -288,8 +288,17 @@ namespace Barotrauma
         {
             NonScaledSize = newSize;
             RecalculateAnchorPoint(ParentRect);
-            RecalculatePivotOffset(NonScaledSize);
+            RecalculatePivotOffset(ScaledSize);
             RecalculateChildren(true);
+        }
+
+        // TODO: After the scale changes, the children sizes are calculated too small.
+        public void ChangeScale(Vector2 newScale)
+        {
+            LocalScale = newScale;
+            RecalculateAnchorPoint(ParentRect);
+            RecalculatePivotOffset(ScaledSize);
+            RecalculateChildren(false);
         }
 
         /// <summary>

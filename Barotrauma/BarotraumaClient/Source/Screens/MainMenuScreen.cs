@@ -472,15 +472,16 @@ namespace Barotrauma
         {
             var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
             if (element == null) { return; }
-            // Size
+            // Scaling
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(1, 1));
+                element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 1.01f);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(1, 1));
+                element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 0.99f);
             }
+            // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
             {
                 element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(1, 0));
@@ -497,8 +498,7 @@ namespace Barotrauma
             {
                 element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(0, 1));
             }
-
-            // Translation
+            // Translation (absolute offset)
             if (Keyboard.GetState().IsKeyDown(Keys.A))
             {
                 element.RectTransform.Translate(new Point(-1, 0));
@@ -515,8 +515,7 @@ namespace Barotrauma
             {
                 element.RectTransform.Translate(new Point(0, 1));
             }
-
-            // Positioning
+            // Positioning (with matching anchors and pivots)
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad7))
             {
                 element.RectTransform.SetPosition(Anchor.TopLeft);
