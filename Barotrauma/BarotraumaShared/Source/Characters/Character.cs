@@ -1809,7 +1809,7 @@ namespace Barotrauma
 
         private void AdjustKarma(Character attacker, AttackResult attackResult)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null || attacker == null) return;
             
             Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
             if (attackerClient == null) return;
