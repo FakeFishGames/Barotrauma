@@ -2073,8 +2073,7 @@ namespace Barotrauma
 
             aiTarget = new AITarget(this);
             SetAllDamage(0.0f, 0.0f, 0.0f);
-            Oxygen = 100.0f;
-            Bloodloss = 0.0f;
+            health.RemoveAllAfflictions();
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
