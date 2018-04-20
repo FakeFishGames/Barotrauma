@@ -287,7 +287,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
                 
-                else if (GameMain.Client.ID == ownerId)
+                if (GameMain.Client.ID == ownerId)
                 {
                     GameMain.Client.Character = character;
                     Controlled = character;
