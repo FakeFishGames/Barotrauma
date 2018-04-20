@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Afflictions>
 
   <!-- Basic afflictions. 
@@ -44,7 +44,7 @@
 
   <Burn
     name="Burn"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="Thermal, chemical, electrical or radiological damage."
     type="burn"
     causeofdeathdescription="Burned to death"
     selfcauseofdeathdescription="You have burned to death."
@@ -61,7 +61,7 @@
 
   <OxygenLow
     name="Oxygen low"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="Deprivation of oxygen to the brain and other organs. Initially results in unconciousness and then death if the blood supply cannot be reoxygenated by CPR or other means."
     type="oxygenlow"
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
@@ -82,7 +82,7 @@
 
   <Bloodloss
     name="Bloodloss"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="Uncontrolled loss of blood may eventually lead to a drop in blood pressure and oxygen starvation to the brain and other organs."
     type="bloodloss"
     causeofdeathdescription="Bled to death"
     selfcauseofdeathdescription="You have bled to death."
@@ -137,7 +137,7 @@
 
   <Affliction
     name="Drunk"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="Ethanol intoxication leads to a loss of coordination, memory loss, euphoria, loss of conciousness and in extreme cases, death."
     type="poison"
     causeofdeathdescription="Alcohol poisoning"
     selfcauseofdeathdescription="You have died of alcohol poisoning."
@@ -185,7 +185,7 @@
 
   <Affliction
     name="Morphine withdrawal"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="While suffering from a morphine addiction, withdrawal symptoms are possible if opiate use is stopped."
     type="poison"
     causeofdeathdescription="Died of morphine withdrawal"
     selfcauseofdeathdescription="You have died of morphine withdrawal."
@@ -228,7 +228,7 @@
   <!-- Gradually applies the "morphine withdrawal" affliction to the character -->
   <Affliction
     name="Morphine addiction"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="The regular use of opiate based substances such as morphine will eventually lead to a state of addiction."
     type="poison"
     limbspecific="false"
     indicatorlimb="Head"    
@@ -262,7 +262,7 @@
 
   <AfflictionBleeding
     name="Gunshot wound"
-    description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
+    description="A penetrating wound caused by the passage of a projectile through the body. The most obvious and immedate effect will be a loss of blood."
     type="bleeding"
     causeofdeathdescription="Shot to death"
     selfcauseofdeathdescription="You have died of gunshot wounds."
