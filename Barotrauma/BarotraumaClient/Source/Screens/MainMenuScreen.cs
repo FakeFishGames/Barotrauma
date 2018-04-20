@@ -334,20 +334,34 @@ namespace Barotrauma
                 innerElements.Clear();
                 for (int i = 0; i < 5; i++)
                 {
-                    var parent = innerElements.LastOrDefault();
-                    if (parent == null)
+                    //var parent = innerElements.LastOrDefault();
+                    //if (parent == null)
+                    //{
+                    //    parent = outerElement;
+                    //}
+                    var parent = outerElement;
+                    GUIFrame element;
+                    switch (i)
                     {
-                        parent = outerElement;
+                        case 0:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
+                            break;
+                        case 1:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.TopRight), color: GetRandomColor());
+                            break;
+                        case 2:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.BottomLeft), color: GetRandomColor());
+                            break;
+                        case 3:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.BottomRight), color: GetRandomColor());
+                            break;
+                        case 4:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            break;
+                        default:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            break;
                     }
-                    // TODO: for some reason the first element is not scaled when using the absolute size -> global scale is not calculated?
-                    //var rect = new Rectangle(0, 0, parent.Rect.Width, parent.Rect.Height);
-                    //var element = new GUIFrame(rect, GetRandomColor(), alignment: Alignment.Center, parent: parent);
-                    //var element = new GUIFrame(parent, new Vector2(0.9f, 0.9f), Alignment.Center, color: GetRandomColor());
-
-                    var element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
-
-                    //element.LocalScale = new Vector2(0.9f, 1);
-
                     innerElements.Add(element);
                 }
             }
