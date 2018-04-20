@@ -50,7 +50,7 @@ namespace Barotrauma
             set
             {
                 relativeSize = value;
-                RecalculateAbsoluteSize(ParentRect);
+                RecalculateAbsoluteSize();
             }
         }
 
@@ -64,7 +64,7 @@ namespace Barotrauma
             set
             {
                 nonScaledSize = value;
-                RecalculateRelativeSize(ParentRect);
+                RecalculateRelativeSize();
             }
         }
         /// <summary>
@@ -105,7 +105,11 @@ namespace Barotrauma
 
         public Point TopLeft { get { return AnchorPoint + PivotOffset + CorrectedOffset + AbsoluteOffset; } }
         public Rectangle Rect { get { return new Rectangle(TopLeft, ScaledSize); } }
-        public Rectangle ParentRect { get { return Parent != null ? Parent.Rect : new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight); } }
+        public Rectangle ParentRect { get { return Parent != null ? Parent.Rect : ScreenRect; } }
+
+        protected Rectangle NonScaledRect { get { return new Rectangle(TopLeft, NonScaledSize); } }
+        protected Rectangle NonScaledParentRect { get { return parent != null ? Parent.NonScaledRect : ScreenRect; } }
+        protected Rectangle ScreenRect { get { return new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight); } }
 
         /// <summary>
         /// Calculates the offset from the relative offset, so that the offset is always away from the anchor point.
@@ -137,7 +141,7 @@ namespace Barotrauma
             set
             {
                 pivot = value;
-                RecalculatePivotOffset(ScaledSize);
+                RecalculatePivotOffset();
             }
         }
 
@@ -148,7 +152,7 @@ namespace Barotrauma
             set
             {
                 anchor = value;
-                RecalculateAnchorPoint(ParentRect);
+                RecalculateAnchorPoint();
             }
         }
         #endregion
@@ -175,8 +179,8 @@ namespace Barotrauma
         }
         #endregion
 
-        #region Calculations
-        public Point CalculatePivot(Pivot pivot, Point size)
+        #region Calculations and protected methods
+        protected Point CalculatePivot(Pivot pivot, Point size)
         {
             int width = size.X;
             int height = size.Y;
@@ -205,7 +209,7 @@ namespace Barotrauma
             }
         }
 
-        public Point CalculateAnchor(Anchor anchor, Rectangle parent)
+        protected Point CalculateAnchor(Anchor anchor, Rectangle parent)
         {
             switch (anchor)
             {
@@ -232,50 +236,50 @@ namespace Barotrauma
             }
         }
 
-        public void RecalculatePivotOffset(Point size)
+        protected void RecalculatePivotOffset()
         {
-            PivotOffset = CalculatePivot(Pivot, size);
+            PivotOffset = CalculatePivot(Pivot, ScaledSize);
         }
 
-        public void RecalculateAnchorPoint(Rectangle parentRect)
+        protected void RecalculateAnchorPoint()
         {
-            AnchorPoint = CalculateAnchor(Anchor, parentRect);
+            AnchorPoint = CalculateAnchor(Anchor, ParentRect);
         }
 
-        public void RecalculateRelativeSize(Rectangle parentRect)
+        protected void RecalculateRelativeSize()
         {
-            relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(parentRect.Width, parentRect.Height);
+            relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentRect.Width, NonScaledParentRect.Height);
         }
 
-        public void RecalculateAbsoluteSize(Rectangle parentRect)
+        protected void RecalculateAbsoluteSize()
         {
-            nonScaledSize = parentRect.Size.Multiply(relativeSize);
+            nonScaledSize = NonScaledParentRect.Size.Multiply(relativeSize);
         }
-        #endregion
 
-        #region Instance methods
-        public void RecalculateAll(bool resize, bool withChildren = true)
+        protected void RecalculateAll(bool resize, bool withChildren = true)
         {
             if (resize)
             {
-                RecalculateAbsoluteSize(ParentRect);
+                RecalculateAbsoluteSize();
             }
-            RecalculateAnchorPoint(ParentRect);
-            RecalculatePivotOffset(ScaledSize);
+            RecalculateAnchorPoint();
+            RecalculatePivotOffset();
             if (withChildren)
             {
                 RecalculateChildren(resize);
             }
         }
 
-        public void RecalculateChildren(bool resize)
+        protected void RecalculateChildren(bool resize)
         {
             foreach (var child in children)
             {
                 child.RecalculateAll(resize, withChildren: true);
             }
         }
+        #endregion
 
+        #region Public instance methods
         public void SetPosition(Anchor anchor, Pivot? pivot = null)
         {
             Anchor = anchor;
@@ -284,20 +288,19 @@ namespace Barotrauma
             RecalculateChildren(false);
         }
 
-        public void Resize(Point newSize)
+        public void Resize(Point newSize, bool resizeChildren = true)
         {
             NonScaledSize = newSize;
-            RecalculateAnchorPoint(ParentRect);
-            RecalculatePivotOffset(ScaledSize);
-            RecalculateChildren(true);
+            RecalculateAnchorPoint();
+            RecalculatePivotOffset();
+            RecalculateChildren(resizeChildren);
         }
 
-        // TODO: After the scale changes, the children sizes are calculated too small.
         public void ChangeScale(Vector2 newScale)
         {
             LocalScale = newScale;
-            RecalculateAnchorPoint(ParentRect);
-            RecalculatePivotOffset(ScaledSize);
+            RecalculateAnchorPoint();
+            RecalculatePivotOffset();
             RecalculateChildren(false);
         }
 
