@@ -28,6 +28,16 @@ namespace Barotrauma
                  MathHelper.SmoothStep(v1.Y, v2.Y, amount));
         }
 
+        public static Vector2 ClampLength(this Vector2 v, float length)
+        {
+            float currLength = v.Length();
+            if (v.Length() > length)
+            {
+                return v / currLength * length;
+            }
+            return v;
+        }
+
         public static float Round(float value, float div)
         {
             return (value < 0.0f) ? 
