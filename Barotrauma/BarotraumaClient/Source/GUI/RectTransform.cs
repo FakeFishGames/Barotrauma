@@ -301,6 +301,11 @@ namespace Barotrauma
             RecalculateChildren(false);
         }
 
+        public void ResetScale()
+        {
+            ChangeScale(Vector2.One);
+        }
+
         /// <summary>
         /// Manipulates AbsoluteOffset.
         /// </summary>

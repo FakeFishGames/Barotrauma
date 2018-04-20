@@ -331,6 +331,7 @@ namespace Barotrauma
 
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {
+                outerElement.RectTransform.ResetScale();
                 innerElements.Clear();
                 for (int i = 0; i < 5; i++)
                 {
@@ -344,23 +345,27 @@ namespace Barotrauma
                     switch (i)
                     {
                         case 0:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
                             break;
                         case 1:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.TopRight), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: GetRandomColor());
                             break;
                         case 2:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.BottomLeft), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: GetRandomColor());
                             break;
                         case 3:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.BottomRight), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: GetRandomColor());
                             break;
                         case 4:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.25f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
                             break;
                         default:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
                             break;
+                    }
+                    if (i < 4)
+                    {
+                        element.RectTransform.RelativeOffset = new Point(50, 50);
                     }
                     innerElements.Add(element);
                 }
