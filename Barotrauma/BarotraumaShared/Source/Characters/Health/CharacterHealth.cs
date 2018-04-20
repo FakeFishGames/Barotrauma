@@ -381,6 +381,19 @@ namespace Barotrauma
             if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
         }
 
+        public void RemoveAllAfflictions()
+        {
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                limbHealth.Afflictions.Clear();
+            }
+
+            afflictions.RemoveAll(a => a != stunAffliction && a != bloodlossAffliction && a != oxygenLowAffliction);
+            stunAffliction.Strength = 0.0f;
+            bloodlossAffliction.Strength = 0.0f;
+            oxygenLowAffliction.Strength = 0.0f;
+        }
+
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
         {
             if (!newAffliction.Prefab.LimbSpecific) return;
