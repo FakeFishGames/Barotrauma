@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -57,7 +56,7 @@ namespace Barotrauma
         #endregion
 
         const float FlashDuration = 1.5f;
-        
+
         public static GUIComponent MouseOn
         {
             get;
@@ -75,7 +74,7 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-            
+
             List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
             foreach (GUIComponent c in fixedChildren)
             {
@@ -86,7 +85,7 @@ namespace Barotrauma
         public static void ClearUpdateList()
         {
             if (keyboardDispatcher != null &&
-                KeyboardDispatcher.Subscriber is GUIComponent && 
+                KeyboardDispatcher.Subscriber is GUIComponent &&
                 !ComponentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
             {
                 KeyboardDispatcher.Subscriber = null;
@@ -117,7 +116,7 @@ namespace Barotrauma
         protected Alignment alignment;
 
         protected GUIComponentStyle style;
-        
+
         protected object userData;
 
         protected Rectangle rect;
@@ -166,7 +165,7 @@ namespace Barotrauma
         private static GUITextBlock toolTipBlock;
 
         //protected float alpha;
-                
+
         public GUIComponent Parent
         {
             get { return parent; }
@@ -211,7 +210,7 @@ namespace Barotrauma
         public virtual Rectangle Rect
         {
             get { return rect; }
-            set 
+            set
             {
                 int prevX = rect.X, prevY = rect.Y;
                 int prevWidth = rect.Width, prevHeight = rect.Height;
@@ -225,16 +224,16 @@ namespace Barotrauma
                 foreach (GUIComponent child in children)
                 {
                     child.Rect = new Rectangle(
-                        child.rect.X + (rect.X - prevX), 
+                        child.rect.X + (rect.X - prevX),
                         child.rect.Y + (rect.Y - prevY),
-                        Math.Max(child.rect.Width + (rect.Width - prevWidth),0),
-                        Math.Max(child.rect.Height + (rect.Height - prevHeight),0));
-                }    
-                
+                        Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
+                        Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
+                }
+
                 if (parent != null && parent is GUIListBox)
                 {
                     ((GUIListBox)parent).UpdateScrollBarSize();
-                }            
+                }
             }
         }
 
@@ -307,7 +306,7 @@ namespace Barotrauma
             OutlineColor = Color.Transparent;
 
             Font = GUI.Font;
-            
+
             children = new List<GUIComponent>();
 
             CanBeFocused = true;
@@ -316,12 +315,14 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
+        public RectTransform RectTransform { get; private set; }
+
         /// <summary>
-        /// Relative constructor
+        /// This is the new constructor.
         /// </summary>
-        protected GUIComponent(string style, GUIComponent parent, Vector2 relativeSize) : this(style)
+        protected GUIComponent(string style, RectTransform rectT) : this(style)
         {
-            rect = new Rectangle(0, 0, parent.rect.Width, parent.rect.Height).ScaleSize(relativeSize);
+            RectTransform = rectT;
         }
 
         public static void Init(GameWindow window)
@@ -372,6 +373,8 @@ namespace Barotrauma
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
             if (!Visible) return;
+            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+
 
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;

@@ -31,10 +31,11 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
-            int width = (int)(GameMain.GraphicsWidth * 0.8f);
-            int height = (int)(GameMain.GraphicsHeight * 0.8f);
-            var rect = new Rectangle((GameMain.GraphicsWidth - width) / 2, (GameMain.GraphicsHeight - height) / 2, width, height);
-            outerElement = new GUIFrame(rect);
+            int width = (int)(GameMain.GraphicsWidth * 0.9f);
+            int height = (int)(GameMain.GraphicsHeight * 0.9f);
+            //referenceElement = new GUIFrame(new Rectangle((GameMain.GraphicsWidth - width) / 2, (GameMain.GraphicsHeight - height) / 2, width, height));
+
+            outerElement = new GUIFrame(new RectTransform(new Point(width - 100, height - 100), anchor: Anchor.Center));
 
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
 
@@ -122,16 +123,16 @@ namespace Barotrauma
             var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", "", menuTabs[(int)Tab.HostServer]);
             plusPlayersBox.UserData = 1;
             plusPlayersBox.OnClicked = ChangeMaxPlayers;
-            
+
             new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
-            
+
             isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
             isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
-            
+
             useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
             useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
-            
+
             GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
@@ -167,7 +168,7 @@ namespace Barotrauma
             }
 
             if (button != null) button.Selected = true;
-            
+
             foreach (GUIComponent child in buttonsTab.children)
             {
                 GUIButton otherButton = child as GUIButton;
@@ -219,13 +220,13 @@ namespace Barotrauma
         private bool ApplySettings(GUIButton button, object userData)
         {
             GameMain.Config.Save("config.xml");
-            
-            if (userData is Tab) SelectTab((Tab)userData);            
+
+            if (userData is Tab) SelectTab((Tab)userData);
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox(
-                    TextManager.Get("RestartRequiredLabel"), 
+                    TextManager.Get("RestartRequiredLabel"),
                     TextManager.Get("RestartRequiredText"));
             }
 
@@ -250,7 +251,7 @@ namespace Barotrauma
         }
 
         private bool JoinServerClicked(GUIButton button, object obj)
-        {            
+        {
             GameMain.ServerListScreen.Select();
             return true;
         }
@@ -289,7 +290,7 @@ namespace Barotrauma
 
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));                  
+                GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             }
 
             catch (Exception e)
@@ -320,12 +321,12 @@ namespace Barotrauma
         {
             buttonsTab.Update((float)deltaTime);
 
-            if (selectedTab>0) menuTabs[(int)selectedTab].Update((float)deltaTime);
+            if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
-                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f), 
+                    GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
             if (Keyboard.GetState().IsKeyDown(Keys.R))
@@ -341,12 +342,16 @@ namespace Barotrauma
                     // TODO: for some reason the first element is not scaled when using the absolute size -> global scale is not calculated?
                     //var rect = new Rectangle(0, 0, parent.Rect.Width, parent.Rect.Height);
                     //var element = new GUIFrame(rect, GetRandomColor(), alignment: Alignment.Center, parent: parent);
-                    var element = new GUIFrame(parent, new Vector2(0.9f, 0.9f), Alignment.Center, color: GetRandomColor());
+                    //var element = new GUIFrame(parent, new Vector2(0.9f, 0.9f), Alignment.Center, color: GetRandomColor());
+
+                    var element = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+
                     //element.LocalScale = new Vector2(0.9f, 1);
 
                     innerElements.Add(element);
                 }
             }
+            UpdateRects();
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -361,12 +366,13 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             buttonsTab.Draw(spriteBatch);
-            if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
+            if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             outerElement.Draw(spriteBatch);
-            outerElement.DrawChildren(spriteBatch);
+            innerElements.ForEach(e => e.Draw(spriteBatch));
+            //outerElement.DrawChildren(spriteBatch);
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -388,7 +394,7 @@ namespace Barotrauma
                 new GUIMessageBox("Save name already in use", "Please choose another name for the save file");
                 return;
             }
-            
+
             if (selectedSub == null)
             {
                 new GUIMessageBox(TextManager.Get("SubNotSelected"), TextManager.Get("SelectSubRequest"));
@@ -409,18 +415,18 @@ namespace Barotrauma
 
             GameMain.LobbyScreen.Select();
         }
-        
+
         private void LoadGame(string saveFile)
         {
             if (string.IsNullOrWhiteSpace(saveFile)) return;
 
             try
             {
-                SaveUtil.LoadGame(saveFile);                
+                SaveUtil.LoadGame(saveFile);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading save \""+saveFile+"\" failed", e);
+                DebugConsole.ThrowError("Loading save \"" + saveFile + "\" failed", e);
                 return;
             }
 
@@ -462,5 +468,91 @@ namespace Barotrauma
         }
         #endregion
 
+        private void UpdateRects()
+        {
+            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            if (element == null) { return; }
+            // Size
+            if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(1, 1));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(1, 1));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Left))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(1, 0));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Right))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(1, 0));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Up))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(0, 1));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Down))
+            {
+                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(0, 1));
+            }
+
+            // Translation
+            if (Keyboard.GetState().IsKeyDown(Keys.A))
+            {
+                element.RectTransform.Translate(new Point(-1, 0));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D))
+            {
+                element.RectTransform.Translate(new Point(1, 0));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.W))
+            {
+                element.RectTransform.Translate(new Point(0, -1));
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.S))
+            {
+                element.RectTransform.Translate(new Point(0, 1));
+            }
+
+            // Positioning
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad7))
+            {
+                element.RectTransform.SetPosition(Anchor.TopLeft);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad8))
+            {
+                element.RectTransform.SetPosition(Anchor.TopCenter);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad9))
+            {
+                element.RectTransform.SetPosition(Anchor.TopRight);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad4))
+            {
+                element.RectTransform.SetPosition(Anchor.CenterLeft);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad5))
+            {
+                element.RectTransform.SetPosition(Anchor.Center);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad6))
+            {
+                element.RectTransform.SetPosition(Anchor.CenterRight);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad1))
+            {
+                element.RectTransform.SetPosition(Anchor.BottomLeft);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad2))
+            {
+                element.RectTransform.SetPosition(Anchor.BottomCenter);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.NumPad3))
+            {
+                element.RectTransform.SetPosition(Anchor.BottomRight);
+            }
+        }
     }
 }
