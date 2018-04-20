@@ -162,12 +162,14 @@ namespace Barotrauma
         {
             Init(parent, offset, anchor, pivot);
             RelativeSize = relativeSize;
+            RecalculateAll(false, false);
         }
 
         public RectTransform(Point absoluteSize, RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, offset, anchor, pivot);
             NonScaledSize = absoluteSize;
+            RecalculateAll(false, false);
         }
 
         private void Init(RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
