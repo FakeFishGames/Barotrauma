@@ -481,11 +481,12 @@ namespace Barotrauma.Networking
                 myCharacter = i >= clients.Count;
 #endif
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter, false);
-                
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter, false);                
                 character.TeamID = 1;
 
 #if CLIENT
+                GameMain.GameSession.CrewManager.AddCharacter(character);
+
                 if (myCharacter)
                 {
                     server.Character = character;
@@ -497,15 +498,14 @@ namespace Barotrauma.Networking
                 else
                 {
 #endif
-                    clients[i].Character = character;
+                clients[i].Character = character;
                     GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
 
 #if CLIENT
                 }
 #endif
 
-                Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-                
+                Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;                
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
@@ -553,9 +553,6 @@ namespace Barotrauma.Networking
                     if (!string.IsNullOrWhiteSpace(shuttleSpawnPoints[i].IdCardDesc))
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
                 }
-#if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacter(character);
-#endif
             }
             
         }
