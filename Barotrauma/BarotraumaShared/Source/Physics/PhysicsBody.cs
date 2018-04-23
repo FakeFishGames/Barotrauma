@@ -370,6 +370,19 @@ namespace Barotrauma
             body.ApplyLinearImpulse(impulse);
         }
 
+        /// <summary>
+        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// </summary>
+        public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
+        {
+            float currSpeed = body.LinearVelocity.Length();
+            Vector2 velocityAddition = impulse / Mass;
+            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+
+            body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass);
+        }
+
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
             body.ApplyLinearImpulse(impulse, point);
