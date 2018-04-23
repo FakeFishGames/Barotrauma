@@ -307,24 +307,24 @@ namespace Barotrauma
                     switch (i)
                     {
                         case 0:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
                             // absolute element
-                            //element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.TopLeft), color: GetRandomColor());
+                            //element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
                             break;
                         case 1:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
                             break;
                         case 2:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
                             break;
                         case 3:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
                             break;
                         case 4:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.25f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.25f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
                             break;
                         default:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: GetRandomColor());
+                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
                             break;
                     }
                     if (i < 4)
@@ -482,41 +482,6 @@ namespace Barotrauma
                         throw new Exception();
                 }
             }
-        }
-        #endregion
-
-        // ui test, TODO: remove
-        #region Random
-        private static Random _random;
-        public static Random Random
-        {
-            get
-            {
-                if (_random == null)
-                {
-                    _random = new Random();
-                }
-                return _random;
-            }
-        }
-
-        public static float RandomRange(int min, int max)
-        {
-            return Random.Next(min, max);
-        }
-
-        /// <summary>
-        /// Returns a random value between 0 and 1
-        /// </summary>
-        public static float RandomValue()
-        {
-            float v = Random.Next(0, 100);
-            return v / 100;
-        }
-
-        public static Color GetRandomColor()
-        {
-            return new Color(RandomValue(), RandomValue(), RandomValue());
         }
         #endregion
 
