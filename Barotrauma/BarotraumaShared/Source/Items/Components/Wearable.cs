@@ -163,7 +163,7 @@ namespace Barotrauma.Items.Components
             item.SetTransform(picker.SimPosition, 0.0f);
             item.SetContainedItemPositions();
             
-            ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
+            item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT
             PlaySound(ActionType.OnWearing, picker.WorldPosition);
