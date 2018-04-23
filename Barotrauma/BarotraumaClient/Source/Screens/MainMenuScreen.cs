@@ -31,10 +31,9 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
+            // ui test, TODO: remove 
             int width = (int)(GameMain.GraphicsWidth * 0.9f);
             int height = (int)(GameMain.GraphicsHeight * 0.9f);
-            //referenceElement = new GUIFrame(new Rectangle((GameMain.GraphicsWidth - width) / 2, (GameMain.GraphicsHeight - height) / 2, width, height));
-
             outerElement = new GUIFrame(new RectTransform(new Point(width - 100, height - 100), anchor: Anchor.Center));
 
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
@@ -329,6 +328,7 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
+            // ui test, TODO: remove
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {
                 outerElement.RectTransform.ResetScale();
@@ -391,9 +391,9 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            outerElement.Draw(spriteBatch);
-            innerElements.ForEach(e => e.Draw(spriteBatch));
-            //outerElement.DrawChildren(spriteBatch);
+            // ui test, TODO: remove
+            //outerElement.Draw(spriteBatch);
+            //innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -455,6 +455,7 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
+        // ui test, TODO: remove
         #region Random
         private static Random _random;
         public static Random Random
@@ -489,6 +490,7 @@ namespace Barotrauma
         }
         #endregion
 
+        // ui test, TODO: remove
         private void UpdateRects()
         {
             var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
