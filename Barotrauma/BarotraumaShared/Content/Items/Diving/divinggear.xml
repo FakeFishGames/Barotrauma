@@ -127,6 +127,7 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
+      <Containable name="Oxygenite Shard"/>
     </ItemContainer>
   </Item>
 
