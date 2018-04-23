@@ -48,111 +48,14 @@ namespace Barotrauma
             //buttonsTab = new GUIFrame(new RectTransform(relativeSize: new Vector2(0.99f, 0.99f), parent: null, anchor: Anchor.Center));
 
             // absolute
-            buttonsTab = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 40), anchor: Anchor.Center), color: Color.Transparent);
-
-            var buttonSize = new Point(200, 30);
-            var offset = new Point(50, (int)(-GameMain.GraphicsHeight * 0.2f));
-            int spacing = 20;
-
-            for (int i = 0; i < 8; i++)
-            {
-                string text = string.Empty;
-                switch (i)
-                {
-                    case 0: text = TextManager.Get("TutorialButton"); break;
-                    case 1: text = TextManager.Get("NewGameButton"); break;
-                    case 2: text = TextManager.Get("LoadGameButton"); break;
-                    case 3: text = TextManager.Get("JoinServerButton"); break;
-                    case 4: text = TextManager.Get("HostServerButton"); break;
-                    case 5: text = TextManager.Get("SubEditorButton"); break;
-                    case 6: text = TextManager.Get("SettingsButton"); break;
-                    case 7: text = TextManager.Get("QuitButton"); break;
-                    default: throw new Exception();
-                }
-                var buttonRect = new RectTransform(buttonSize, buttonsTab.RectTransform)
-                {
-                    Anchor = Anchor.CenterLeft,
-                    AbsoluteOffset = new Point(offset.X, offset.Y + (buttonSize.Y + spacing) * i)
-                };
-                var button = new GUIButton(buttonRect, text, parent: buttonsTab);
-                button.Color = button.Color * 0.8f;
-                switch (i)
-                {
-                    case 0:
-                        button.OnClicked = TutorialButtonClicked;
-                        break;
-                    case 1:
-                        button.UserData = Tab.NewGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 2:
-                        button.UserData = Tab.LoadGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 3:
-                        //button.UserData = (int)Tabs.JoinServer;
-                        button.OnClicked = JoinServerClicked;
-                        break;
-                    case 4:
-                        button.UserData = Tab.HostServer;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 5:
-                        button.OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; };
-                        break;
-                    case 6:
-                        button.UserData = Tab.Settings;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 7:
-                        button.OnClicked = QuitClicked;
-                        break;
-                    default:
-                        throw new Exception();
-                }
-            }
+            //buttonsTab = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 40), anchor: Anchor.Center));
+            
+            buttonsTab = new GUIFrame(new RectTransform(Point.Zero, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
+            SetupButtons(CreateButtons(new Point(200, 30), 10, 20));
 
             int y = (int)(GameMain.GraphicsHeight * 0.3f);
 
             Rectangle panelRect = new Rectangle(290, y, 500, 360);
-
-            //GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-
-            //button.Color = button.Color * 0.8f;
-            //button.OnClicked = TutorialButtonClicked;
-
-            //button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.UserData = Tab.NewGame;
-            //button.OnClicked = SelectTab;
-
-            //button = new GUIButton(new Rectangle(50, y + 100, 200, 30), TextManager.Get("LoadGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.UserData = Tab.LoadGame;
-            //button.OnClicked = SelectTab;
-
-            //button = new GUIButton(new Rectangle(50, y + 160, 200, 30), TextManager.Get("JoinServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            ////button.UserData = (int)Tabs.JoinServer;
-            //button.OnClicked = JoinServerClicked;
-
-            //button = new GUIButton(new Rectangle(50, y + 200, 200, 30), TextManager.Get("HostServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.UserData = Tab.HostServer;
-            //button.OnClicked = SelectTab;
-
-            //button = new GUIButton(new Rectangle(50, y + 260, 200, 30), TextManager.Get("SubEditorButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
-
-            //button = new GUIButton(new Rectangle(50, y + 320, 200, 30), TextManager.Get("SettingsButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.UserData = Tab.Settings;
-            //button.OnClicked = SelectTab;
-
-            //button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
-            //button.Color = button.Color * 0.8f;
-            //button.OnClicked = QuitClicked;
 
             panelRect.Y += 10;
 
@@ -523,6 +426,74 @@ namespace Barotrauma
 
             GameMain.LobbyScreen.Select();
         }
+
+        #region UI Methods
+        private List<GUIButton> CreateButtons(Point buttonSize, int spacing = 0, int extra = 0)
+        {
+            var buttons = new List<GUIButton>();
+            int extraTotal = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                extraTotal += i % 2 == 0 ? 0 : extra;
+                var offset = new Point(0, (buttonSize.Y + spacing) * i + extraTotal);
+                var buttonRect = new RectTransform(buttonSize, buttonsTab.RectTransform, offset, Anchor.BottomLeft);
+                var button = new GUIButton(buttonRect, "Button", parent: buttonsTab);
+                button.Color = button.Color * 0.8f;
+                buttons.Add(button);
+            }
+            return buttons;
+        }
+
+        private void SetupButtons(List<GUIButton> buttons)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                var button = buttons[i];
+                switch (i)
+                {
+                    case 7:
+                        button.Text = TextManager.Get("TutorialButton");
+                        button.OnClicked = TutorialButtonClicked;
+                        break;
+                    case 6:
+                        button.Text = TextManager.Get("NewGameButton");
+                        button.UserData = Tab.NewGame;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 5:
+                        button.Text = TextManager.Get("LoadGameButton");
+                        button.UserData = Tab.LoadGame;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 4:
+                        button.Text = TextManager.Get("JoinServerButton");
+                        //button.UserData = (int)Tabs.JoinServer;
+                        button.OnClicked = JoinServerClicked;
+                        break;
+                    case 3:
+                        button.Text = TextManager.Get("HostServerButton");
+                        button.UserData = Tab.HostServer;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 2:
+                        button.Text = TextManager.Get("SubEditorButton");
+                        button.OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; };
+                        break;
+                    case 1:
+                        button.Text = TextManager.Get("SettingsButton");
+                        button.UserData = Tab.Settings;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 0:
+                        button.Text = TextManager.Get("QuitButton");
+                        button.OnClicked = QuitClicked;
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
+        }
+        #endregion
 
         // ui test, TODO: remove
         #region Random
