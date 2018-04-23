@@ -36,54 +36,123 @@ namespace Barotrauma
             int height = (int)(GameMain.GraphicsHeight * 0.9f);
             outerElement = new GUIFrame(new RectTransform(new Point(width - 100, height - 100), anchor: Anchor.Center));
 
+            // ---
+
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
 
-            buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
-            buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            // old
+            //buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
+            //buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+
+            // relative
+            //buttonsTab = new GUIFrame(new RectTransform(relativeSize: new Vector2(0.99f, 0.99f), parent: null, anchor: Anchor.Center));
+
+            // absolute
+            buttonsTab = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 40), anchor: Anchor.Center), color: Color.Transparent);
+
+            var buttonSize = new Point(200, 30);
+            var offset = new Point(50, (int)(-GameMain.GraphicsHeight * 0.2f));
+            int spacing = 20;
+
+            for (int i = 0; i < 8; i++)
+            {
+                string text = string.Empty;
+                switch (i)
+                {
+                    case 0: text = TextManager.Get("TutorialButton"); break;
+                    case 1: text = TextManager.Get("NewGameButton"); break;
+                    case 2: text = TextManager.Get("LoadGameButton"); break;
+                    case 3: text = TextManager.Get("JoinServerButton"); break;
+                    case 4: text = TextManager.Get("HostServerButton"); break;
+                    case 5: text = TextManager.Get("SubEditorButton"); break;
+                    case 6: text = TextManager.Get("SettingsButton"); break;
+                    case 7: text = TextManager.Get("QuitButton"); break;
+                    default: throw new Exception();
+                }
+                var buttonRect = new RectTransform(buttonSize, buttonsTab.RectTransform)
+                {
+                    Anchor = Anchor.CenterLeft,
+                    AbsoluteOffset = new Point(offset.X, offset.Y + (buttonSize.Y + spacing) * i)
+                };
+                var button = new GUIButton(buttonRect, text, parent: buttonsTab);
+                button.Color = button.Color * 0.8f;
+                switch (i)
+                {
+                    case 0:
+                        button.OnClicked = TutorialButtonClicked;
+                        break;
+                    case 1:
+                        button.UserData = Tab.NewGame;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 2:
+                        button.UserData = Tab.LoadGame;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 3:
+                        //button.UserData = (int)Tabs.JoinServer;
+                        button.OnClicked = JoinServerClicked;
+                        break;
+                    case 4:
+                        button.UserData = Tab.HostServer;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 5:
+                        button.OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; };
+                        break;
+                    case 6:
+                        button.UserData = Tab.Settings;
+                        button.OnClicked = SelectTab;
+                        break;
+                    case 7:
+                        button.OnClicked = QuitClicked;
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
 
             int y = (int)(GameMain.GraphicsHeight * 0.3f);
 
-            Rectangle panelRect = new Rectangle(
-                290, y,
-                500, 360);
+            Rectangle panelRect = new Rectangle(290, y, 500, 360);
 
-            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
 
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = TutorialButtonClicked;
+            //button.Color = button.Color * 0.8f;
+            //button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.NewGame;
-            button.OnClicked = SelectTab;
+            //button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.UserData = Tab.NewGame;
+            //button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), TextManager.Get("LoadGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.LoadGame;
-            button.OnClicked = SelectTab;
+            //button = new GUIButton(new Rectangle(50, y + 100, 200, 30), TextManager.Get("LoadGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.UserData = Tab.LoadGame;
+            //button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), TextManager.Get("JoinServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            //button.UserData = (int)Tabs.JoinServer;
-            button.OnClicked = JoinServerClicked;
+            //button = new GUIButton(new Rectangle(50, y + 160, 200, 30), TextManager.Get("JoinServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            ////button.UserData = (int)Tabs.JoinServer;
+            //button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), TextManager.Get("HostServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.HostServer;
-            button.OnClicked = SelectTab;
+            //button = new GUIButton(new Rectangle(50, y + 200, 200, 30), TextManager.Get("HostServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.UserData = Tab.HostServer;
+            //button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), TextManager.Get("SubEditorButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
+            //button = new GUIButton(new Rectangle(50, y + 260, 200, 30), TextManager.Get("SubEditorButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
 
-            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), TextManager.Get("SettingsButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.UserData = Tab.Settings;
-            button.OnClicked = SelectTab;
+            //button = new GUIButton(new Rectangle(50, y + 320, 200, 30), TextManager.Get("SettingsButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.UserData = Tab.Settings;
+            //button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = QuitClicked;
+            //button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
+            //button.Color = button.Color * 0.8f;
+            //button.OnClicked = QuitClicked;
 
             panelRect.Y += 10;
 
@@ -493,7 +562,8 @@ namespace Barotrauma
         // ui test, TODO: remove
         private void UpdateRects()
         {
-            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            var element = buttonsTab;
             if (element == null) { return; }
             // Scaling
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
