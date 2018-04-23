@@ -40,7 +40,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
+        public GUIFrame(RectTransform rectT, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
         {
             if (color.HasValue)
             {

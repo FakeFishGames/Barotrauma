@@ -320,9 +320,10 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        protected GUIComponent(string style, RectTransform rectT) : this(style)
+        protected GUIComponent(string style, RectTransform rectT, GUIComponent parent = null) : this(style)
         {
             RectTransform = rectT;
+            if (parent != null) { parent.AddChild(this); }
         }
 
         public static void Init(GameWindow window)
