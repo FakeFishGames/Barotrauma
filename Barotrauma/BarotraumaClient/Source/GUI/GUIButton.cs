@@ -190,7 +190,7 @@ namespace Barotrauma
             }
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this, style);
             GUI.Style.Apply(frame, string.IsNullOrEmpty(style) ? "GUIButton" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.Zero, rectT), text, textAlignment: textAlignment, parent: this)
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, parent: this)
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor
             };
