@@ -221,6 +221,8 @@ namespace Barotrauma
         {
             if (text == null) return;
 
+            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+
             overflowClipActive = false;
 
             wrappedText = text;
