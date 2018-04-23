@@ -272,10 +272,10 @@ namespace Barotrauma
                 if (target == null || target.SerializableProperties == null) continue;
                 foreach (PropertyConditional pc in propertyConditionals)
                 {
-                    if (!pc.Matches(target)) return false;
+                    if (pc.Matches(target)) return true;
                 }
             }
-            return true;
+            return false;
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
