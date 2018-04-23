@@ -128,6 +128,10 @@ namespace Barotrauma
         //used for keeping track of the message entered when pressing up/down
         static int selectedIndex;
 
+        private static List<ColoredText> unsavedMessages = new List<ColoredText>();
+        private static int messagesPerFile = 800;
+        public const string SavePath = "ConsoleLogs";
+
         static DebugConsole()
         {
             commands.Add(new Command("help", "", (string[] args) =>
@@ -987,6 +991,7 @@ namespace Barotrauma
 
             commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
             {
+                throw new NotImplementedException();
                 if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
             }));
@@ -2232,18 +2237,28 @@ namespace Barotrauma
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
-            Messages.Add(new ColoredText(msg, color, isCommand));
+            var newMsg = new ColoredText(msg, color, isCommand);
+            Messages.Add(newMsg);
 
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
             Console.WriteLine(msg);
             Console.ForegroundColor = ConsoleColor.White;
 
+            if (GameSettings.SaveDebugConsoleLogs)
+            {
+                unsavedMessages.Add(newMsg);
+                if (unsavedMessages.Count >= messagesPerFile)
+                {
+                    SaveLogs();
+                    unsavedMessages.Clear();
+                }
+            }
+
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }            
-
+            }
 #elif CLIENT
             lock (queuedMessages)
             {
@@ -2337,6 +2352,52 @@ namespace Barotrauma
 #if CLIENT
             isOpen = true;
 #endif
+        }
+
+
+        public static void SaveLogs()
+        {
+            if (unsavedMessages.Count == 0) return;
+            if (!Directory.Exists(SavePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SavePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to create a folder for debug console logs", e);
+                    return;
+                }
+            }
+
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+
+            string filePath = Path.Combine(SavePath, fileName);
+            if (File.Exists(filePath))
+            {
+                int fileNum = 2;
+                while (File.Exists(filePath + " (" + fileNum + ")"))
+                {
+                    fileNum++;
+                }
+                filePath = filePath + " (" + fileNum + ")";
+            }
+
+            try
+            {
+                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+            }
+            catch (Exception e)
+            {
+                unsavedMessages.Clear();
+                ThrowError("Saving debug console log to " + filePath + " failed", e);
+            }
         }
     }
 }
