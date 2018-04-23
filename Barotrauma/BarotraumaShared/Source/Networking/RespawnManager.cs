@@ -516,14 +516,6 @@ namespace Barotrauma.Networking
                     Spawner.CreateNetworkEvent(oxyTank, false);
                     divingSuit.Combine(oxyTank);
                     respawnItems.Add(oxyTank);
-
-                    if (batteryPrefab != null)
-                    {
-                        var battery = new Item(batteryPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(battery, false);
-                        divingSuit.Combine(battery);
-                        respawnItems.Add(battery);
-                    }
                 }
 
                 if (scooterPrefab != null && batteryPrefab != null)

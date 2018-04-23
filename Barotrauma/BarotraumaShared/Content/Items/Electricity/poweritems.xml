@@ -18,7 +18,9 @@
     </fixrequirement>
 
     <PowerTransfer canbeselected = "true">
-      <StatusEffect type="InWater" target="This" condition="-0.5"/>
+      <StatusEffect type="InWater" target="This" condition="-0.5">
+        <Conditional currPowerConsumption="lt -10"/>
+      </StatusEffect>
       <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
     </PowerTransfer>
 
