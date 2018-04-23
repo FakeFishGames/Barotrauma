@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected Alignment textAlignment;
 
-        private float textScale;
+        private float textScale = 1;
 
         protected Vector2 textPos;
         protected Vector2 origin;
