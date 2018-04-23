@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -26,35 +27,31 @@ namespace Barotrauma
 
         private Tab selectedTab;
 
+        // test elements
         private GUIFrame outerElement;
         private List<GUIFrame> innerElements = new List<GUIFrame>();
 
         public MainMenuScreen(GameMain game)
         {
-            // ui test, TODO: remove 
-            int width = (int)(GameMain.GraphicsWidth * 0.9f);
-            int height = (int)(GameMain.GraphicsHeight * 0.9f);
-            outerElement = new GUIFrame(new RectTransform(new Point(width - 100, height - 100), anchor: Anchor.Center));
+            // TODO: test element, remove from final code
+            outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
 
-            // ---
-
-            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-            
-            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
-            SetupButtons(CreateButtons(new Point(200, 30), 10, 20));
-
-            int y = (int)(GameMain.GraphicsHeight * 0.3f);
-
-            Rectangle panelRect = new Rectangle(290, y, 500, 360);
-
-            panelRect.Y += 10;
+            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, parent: null, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
+            float scale = 1;
+            var buttons = CreateButtons(new Point(200, 30), 10, 20, scale);
+            SetupButtons(buttons);
+            buttonsParent.RectTransform.ChangeScale(new Vector2(scale, scale));
+            // Changing the text scale messes the text position
+            //buttons.ForEach(b => b.TextBlock.TextScale = scale);
+            buttons.ForEach(b => b.TextBlock.SetTextPos());
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, "");
-            menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");
+            var relativeSize = new Vector2(0.5f, 0.5f);
+            var anchor = Anchor.Center;
+            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
 
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
@@ -62,7 +59,7 @@ namespace Barotrauma
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, "");
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
 
             new GUITextBlock(new Rectangle(0, 0, 100, 30), TextManager.Get("ServerName"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
@@ -418,16 +415,16 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private List<GUIButton> CreateButtons(Point buttonSize, int spacing = 0, int extra = 0)
+        private List<GUIButton> CreateButtons(Point buttonSize, int spacing = 0, int extra = 0, float scale = 1)
         {
             var buttons = new List<GUIButton>();
             int extraTotal = 0;
             for (int i = 0; i < 8; i++)
             {
                 extraTotal += i % 2 == 0 ? 0 : extra;
-                var offset = new Point(0, (buttonSize.Y + spacing) * i + extraTotal);
+                var offset = new Point(0, ((int)(buttonSize.Y * scale) + spacing) * i + extraTotal);
                 var buttonRect = new RectTransform(buttonSize, buttonsParent.RectTransform, offset, Anchor.BottomLeft);
-                var button = new GUIButton(buttonRect, "Button", parent: buttonsParent);
+                var button = new GUIButton(buttonRect, "Button", textAlignment: Alignment.Center, parent: buttonsParent);
                 button.Color = button.Color * 0.8f;
                 buttons.Add(button);
             }
@@ -495,10 +492,18 @@ namespace Barotrauma
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
             {
                 element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 1.01f);
+                buttonsParent.children
+                    .Select(b => b as GUIButton)
+                    .Where(b => b != null)
+                    .ForEach(b => b.TextBlock.SetTextPos());
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
                 element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 0.99f);
+                buttonsParent.children
+                    .Select(b => b as GUIButton)
+                    .Where(b => b != null)
+                    .ForEach(b => b.TextBlock.SetTextPos());
             }
             // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
