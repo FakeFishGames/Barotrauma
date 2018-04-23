@@ -42,10 +42,13 @@ namespace Barotrauma
                 Entity existingEntity;
                 if (dictionary.TryGetValue(value, out existingEntity))
                 {
-                    System.Diagnostics.Debug.WriteLine(existingEntity+" had the same ID as "+this);
+                    System.Diagnostics.Debug.WriteLine(existingEntity + " had the same ID as " + this + " (" + value + ")");
+                    DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     dictionary.Remove(value);
                     dictionary.Add(id, existingEntity);
                     existingEntity.id = id;
+                    DebugConsole.Log("The id of " + existingEntity + " is now " + id);
+                    DebugConsole.Log("The id of " + this + " is now " + value);
                 }
 
                 id = value;                             
@@ -183,6 +186,21 @@ namespace Barotrauma
 
         public virtual void Remove()
         {
+            DebugConsole.Log("Removing entity " + this.ToString() + " (" + ID + ") from entity dictionary.");
+            Entity existingEntity;
+            if (!dictionary.TryGetValue(ID, out existingEntity))
+            {
+                DebugConsole.Log("Entity " + this.ToString() + " (" + ID + ") not present in entity dictionary.");
+            }
+            else if (existingEntity != this)
+            {
+                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID);
+                foreach (var keyValuePair in dictionary.Where(kvp => kvp.Value == this).ToList())
+                {
+                    dictionary.Remove(keyValuePair.Key);
+                }
+            }
+
             dictionary.Remove(ID);
             Removed = true;
         }

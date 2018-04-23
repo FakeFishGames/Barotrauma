@@ -219,7 +219,7 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;
-                item.Remove();
+                item.Drop();
             }
         }
 

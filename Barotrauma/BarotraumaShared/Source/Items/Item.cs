@@ -1860,6 +1860,13 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                return;
+            }
+            DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
+
             base.Remove();
 
             foreach (Character character in Character.CharacterList)
