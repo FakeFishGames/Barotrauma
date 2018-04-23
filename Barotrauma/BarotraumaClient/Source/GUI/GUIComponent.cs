@@ -323,7 +323,9 @@ namespace Barotrauma
         protected GUIComponent(string style, RectTransform rectT, GUIComponent parent = null) : this(style)
         {
             RectTransform = rectT;
+            rect = RectTransform.Rect;
             if (parent != null) { parent.AddChild(this); }
+            if (parent != null && this.parent == null) { throw new Exception(); }
         }
 
         public static void Init(GameWindow window)
@@ -375,7 +377,6 @@ namespace Barotrauma
         {
             if (!Visible) return;
             var rect = RectTransform != null ? RectTransform.Rect : this.rect;
-
 
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;
@@ -507,7 +508,6 @@ namespace Barotrauma
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
-            //size = new Point((int)(size.X * GlobalScale.X), (int)(size.Y * GlobalScale.Y));
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
@@ -528,7 +528,8 @@ namespace Barotrauma
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            //rect = rect.ScaleSize(GlobalScale);
+            // Don't manipulate the rect, if the component is using RectTransform component.
+            if (RectTransform != null) { return; }
 
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
