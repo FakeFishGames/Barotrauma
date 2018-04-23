@@ -303,6 +303,8 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
+            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
@@ -320,7 +322,7 @@ namespace Barotrauma
             {
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    new Vector2(rect.X, rect.Y) + textPos + offset,
+                    rect.Location.ToVector2() + textPos + offset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
