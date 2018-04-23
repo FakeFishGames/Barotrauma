@@ -243,6 +243,8 @@ namespace Barotrauma
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
+                // TODO: still does not work if the rect is scaled?
+                var rect = RectTransform != null ? RectTransform.Rect : this.rect;
                 return ClampMouseRectToParent ? ClampRect(rect) : rect;
             }
         }
