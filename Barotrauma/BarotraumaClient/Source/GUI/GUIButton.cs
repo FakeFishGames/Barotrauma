@@ -6,7 +6,9 @@ namespace Barotrauma
     public class GUIButton : GUIComponent
     {
         protected GUITextBlock textBlock;
+        public GUITextBlock TextBlock { get { return textBlock; } }
         protected GUIFrame frame;
+        public GUIFrame Frame { get { return frame; } }
 
         public delegate bool OnClickedHandler(GUIButton button, object obj);
         public OnClickedHandler OnClicked;
