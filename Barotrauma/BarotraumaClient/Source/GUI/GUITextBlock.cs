@@ -142,6 +142,28 @@ namespace Barotrauma
         {
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null) 
+            : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            if (textColor.HasValue)
+            {
+                this.textColor = textColor.Value;
+            }
+            this.Font = font ?? GUI.Font;
+            this.text = text;
+            this.textAlignment = textAlignment;
+            this.Wrap = wrap;
+            SetTextPos();
+        }
+
         protected override void UpdateDimensions(GUIComponent parent = null)
         {
             base.UpdateDimensions(parent);
