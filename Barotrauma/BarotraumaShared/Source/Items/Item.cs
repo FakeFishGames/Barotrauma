@@ -400,33 +400,36 @@ namespace Barotrauma
                         components.Add(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
-
-                        if (ic.statusEffectLists == null) continue;
-
-                        if (statusEffectLists == null) 
-                            statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
-
-                        //go through all the status effects of the component 
-                        //and add them to the corresponding statuseffect list
-                        foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
-                        {
-
-                            ActionType actionType = componentEffectList.First().type;
-
-                            List<StatusEffect> statusEffectList;
-                            if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
-                            {
-                                statusEffectList = new List<StatusEffect>();
-                                statusEffectLists.Add(actionType, statusEffectList);
-                            }
-
-                            foreach (StatusEffect effect in componentEffectList)
-                            {
-                                statusEffectList.Add(effect);
-                            }
-                        }
-
+                        
                         break;
+                }
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                if (ic.statusEffectLists == null) continue;
+
+                if (statusEffectLists == null)
+                    statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                //go through all the status effects of the component 
+                //and add them to the corresponding statuseffect list
+                foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
+                {
+
+                    ActionType actionType = componentEffectList.First().type;
+
+                    List<StatusEffect> statusEffectList;
+                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    {
+                        statusEffectList = new List<StatusEffect>();
+                        statusEffectLists.Add(actionType, statusEffectList);
+                    }
+
+                    foreach (StatusEffect effect in componentEffectList)
+                    {
+                        statusEffectList.Add(effect);
+                    }
                 }
             }
 
