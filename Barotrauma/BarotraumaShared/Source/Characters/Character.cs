@@ -2098,7 +2098,9 @@ namespace Barotrauma
             if (Removed)
             {
                 DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
+                return;
             }
+            DebugConsole.Log("Removing character " + Name + " (ID: " + ID + ")");
 
             base.Remove();
 

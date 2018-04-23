@@ -216,12 +216,13 @@ namespace Barotrauma
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
             {
-                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
             }
-
-
+            
             sw.WriteLine(sb.ToString());
             sw.Close();
+            
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
             CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
                 " If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");       
