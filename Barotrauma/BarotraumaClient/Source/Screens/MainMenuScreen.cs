@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
 
-        private GUIFrame buttonsTab;
+        private GUIFrame buttonsParent;
 
         private GUIFrame[] menuTabs;
 
@@ -39,18 +39,8 @@ namespace Barotrauma
             // ---
 
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-
-            // old
-            //buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
-            //buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
-            // relative
-            //buttonsTab = new GUIFrame(new RectTransform(relativeSize: new Vector2(0.99f, 0.99f), parent: null, anchor: Anchor.Center));
-
-            // absolute
-            //buttonsTab = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth - 40, GameMain.GraphicsHeight - 40), anchor: Anchor.Center));
             
-            buttonsTab = new GUIFrame(new RectTransform(Point.Zero, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
+            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
             SetupButtons(CreateButtons(new Point(200, 30), 10, 20));
 
             int y = (int)(GameMain.GraphicsHeight * 0.3f);
@@ -140,7 +130,7 @@ namespace Barotrauma
 
             if (button != null) button.Selected = true;
 
-            foreach (GUIComponent child in buttonsTab.children)
+            foreach (GUIComponent child in buttonsParent.children)
             {
                 GUIButton otherButton = child as GUIButton;
                 if (otherButton == null || otherButton == button) continue;
@@ -284,13 +274,13 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            buttonsTab.AddToGUIUpdateList();
+            buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
-            buttonsTab.Update((float)deltaTime);
+            buttonsParent.Update((float)deltaTime);
 
             if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
@@ -358,7 +348,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            buttonsTab.Draw(spriteBatch);
+            buttonsParent.Draw(spriteBatch);
             if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
@@ -436,8 +426,8 @@ namespace Barotrauma
             {
                 extraTotal += i % 2 == 0 ? 0 : extra;
                 var offset = new Point(0, (buttonSize.Y + spacing) * i + extraTotal);
-                var buttonRect = new RectTransform(buttonSize, buttonsTab.RectTransform, offset, Anchor.BottomLeft);
-                var button = new GUIButton(buttonRect, "Button", parent: buttonsTab);
+                var buttonRect = new RectTransform(buttonSize, buttonsParent.RectTransform, offset, Anchor.BottomLeft);
+                var button = new GUIButton(buttonRect, "Button", parent: buttonsParent);
                 button.Color = button.Color * 0.8f;
                 buttons.Add(button);
             }
@@ -534,7 +524,7 @@ namespace Barotrauma
         private void UpdateRects()
         {
             //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
-            var element = buttonsTab;
+            var element = buttonsParent;
             if (element == null) { return; }
             // Scaling
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
