@@ -272,6 +272,7 @@ namespace Barotrauma
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicDuration = 18.0f;
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
 
@@ -282,18 +283,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
-                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
+                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;                
 
                 yield return CoroutineStatus.Running;
             }
 
-            if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
-
-            End("");
-
-            yield return new WaitForSeconds(18.0f);
-            
-            SoundPlayer.OverrideMusicType = null;
+            if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
         }
