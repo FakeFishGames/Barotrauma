@@ -85,6 +85,10 @@ namespace Barotrauma
             }
         }
 
+        private float pressedTimer;
+        private float pressedDelay = 0.5f;
+        private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
+
         public GUINumberInput(Rectangle rect, string style, NumberType inputType, GUIComponent parent = null)
             : this(rect, style, inputType, Alignment.TopLeft, parent)
         {
@@ -104,18 +108,34 @@ namespace Barotrauma
             textBox.OnTextChanged += TextChanged;
             
             plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
+            plusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
             plusButton.OnClicked += ChangeIntValue;
             plusButton.OnPressed += () =>
             {
-                IntValue++;
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue++;
+                }
                 return true;
             };
             plusButton.Visible = inputType == NumberType.Int;
             minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
+            minusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
             minusButton.OnClicked += ChangeIntValue;
             minusButton.OnPressed += () =>
             {
-                IntValue--;
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue--;
+                }
                 return true;
             };
             minusButton.Visible = inputType == NumberType.Int;
@@ -216,6 +236,15 @@ namespace Barotrauma
             if (!Visible) return;
 
             DrawChildren(spriteBatch);
+        }
+
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            if (IsPressedTimerRunning)
+            {
+                pressedTimer -= deltaTime;
+            }
         }
     }
 }
