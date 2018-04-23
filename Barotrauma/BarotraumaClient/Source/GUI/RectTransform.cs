@@ -298,6 +298,7 @@ namespace Barotrauma
             RecalculateChildren(resizeChildren);
         }
 
+        // TODO: also allow scaling the offset
         public void ChangeScale(Vector2 newScale)
         {
             LocalScale = newScale;
