@@ -65,7 +65,8 @@ namespace Barotrauma
             {
                 nonScaledSize = value;
                 RecalculateRelativeSize();
-                RecalculateAll(resize: false, scale: false, withChildren: true);
+                RecalculateAll(resize: false, scale: false, withChildren: false);
+                RecalculateChildren(resize: true, scale: false);
             }
         }
         /// <summary>
@@ -319,13 +320,15 @@ namespace Barotrauma
         {
             nonScaledSize = newSize;
             RecalculateRelativeSize();
-            RecalculateAll(resize: false, scale: false, withChildren: resizeChildren);
+            RecalculateAll(resize: false, scale: false, withChildren: false);
+            RecalculateChildren(resizeChildren, false);
         }
 
         public void Resize(Vector2 newSize, bool resizeChildren = true)
         {
             relativeSize = newSize;
-            RecalculateAll(resize: true, scale: false, withChildren: resizeChildren);
+            RecalculateAll(resize: true, scale: false, withChildren: false);
+            RecalculateChildren(resizeChildren, false);
         }
 
         // TODO: also allow scaling the offset
