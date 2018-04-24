@@ -274,7 +274,7 @@ namespace Barotrauma
 
         protected void RecalculateAbsoluteSize()
         {
-            nonScaledSize = NonScaledParentRect.Size.Multiply(relativeSize);
+            nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize);
         }
 
         protected void RecalculateAll(bool resize, bool scale = true, bool withChildren = true)
