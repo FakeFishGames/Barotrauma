@@ -313,8 +313,6 @@ namespace Barotrauma
                     {
                         case 0:
                             element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
-                            // absolute element
-                            //element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
                             break;
                         case 1:
                             element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
@@ -326,7 +324,8 @@ namespace Barotrauma
                             element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
                             break;
                         case 4:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.25f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
+                            // absolute element
+                            element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
                             break;
                         default:
                             element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
@@ -334,7 +333,9 @@ namespace Barotrauma
                     }
                     if (i < 4)
                     {
-                        element.RectTransform.RelativeOffset = new Point(50, 50);
+                        // offsets are cumulative
+                        element.RectTransform.AbsoluteOffset = new Point(10, 10);
+                        element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
                     }
                     innerElements.Add(element);
                 }
