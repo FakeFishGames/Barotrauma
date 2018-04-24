@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return true; //We do the actual throwing in Aim because Use might be used by chems
+            return characterUsable || character == null; //We do the actual throwing in Aim because Use might be used by chems
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
