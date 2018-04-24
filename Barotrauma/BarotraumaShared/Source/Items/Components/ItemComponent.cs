@@ -143,7 +143,7 @@ namespace Barotrauma.Items.Components
         }
         
         //Can the "Use" action be triggered by characters or just other items/statuseffects
-        [Serialize(true, false)]
+        [Serialize(false, false)]
         public bool CharacterUsable
         {
             get { return characterUsable; }
