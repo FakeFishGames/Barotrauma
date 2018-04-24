@@ -127,7 +127,7 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return base.Rect;
             }
             set
             {
@@ -219,7 +219,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
             base.Update(deltaTime);
-            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonReleased())
