@@ -532,19 +532,23 @@ namespace Barotrauma
             // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(1, 0));
+                //element.RectTransform.NonScaledSize -= new Point(1, 0);
+                element.RectTransform.RelativeSize -= new Vector2(step, 0);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Right))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(1, 0));
+                //element.RectTransform.NonScaledSize += new Point(1, 0);
+                element.RectTransform.RelativeSize += new Vector2(step, 0);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Up))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize + new Point(0, 1));
+                //element.RectTransform.NonScaledSize += new Point(0, 1);
+                element.RectTransform.RelativeSize += new Vector2(0, step);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Down))
             {
-                element.RectTransform.Resize(element.RectTransform.NonScaledSize - new Point(0, 1));
+                //element.RectTransform.NonScaledSize -= new Point(0, 1);
+                element.RectTransform.RelativeSize -= new Vector2(0, step);
             }
             // Translation (absolute offset)
             if (Keyboard.GetState().IsKeyDown(Keys.A))
