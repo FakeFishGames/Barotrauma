@@ -978,7 +978,7 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, "", permissionsBox);
                     permissionTick.UserData = permission;
                     permissionTick.Selected = selectedClient.HasPermission(permission);
 
@@ -1015,7 +1015,7 @@ namespace Barotrauma
                 commandList.UserData = selectedClient;
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
-                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
+                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, "", commandList);
                     commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
                     commandTickBox.ToolTip = command.help;
                     commandTickBox.UserData = command;
