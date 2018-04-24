@@ -177,9 +177,9 @@ namespace Barotrauma
         #endregion
 
         #region Initialization
-        public RectTransform(Vector2 relativeSize, RectTransform parent, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
+        public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
-            Init(parent, offset, anchor, pivot);
+            Init(parent, anchor, pivot);
             this.relativeSize = relativeSize;
             RecalculateScale();
             RecalculateAbsoluteSize();
@@ -187,9 +187,9 @@ namespace Barotrauma
             RecalculatePivotOffset();
         }
 
-        public RectTransform(Point absoluteSize, RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
+        public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
-            Init(parent, offset, anchor, pivot);
+            Init(parent, anchor, pivot);
             this.nonScaledSize = absoluteSize;
             RecalculateScale();
             RecalculateRelativeSize();            
@@ -197,10 +197,9 @@ namespace Barotrauma
             RecalculatePivotOffset();
         }
 
-        private void Init(RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
+        private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Parent = parent;
-            AbsoluteOffset = offset ?? Point.Zero;
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(Anchor);
         }

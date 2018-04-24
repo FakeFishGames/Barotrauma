@@ -36,7 +36,11 @@ namespace Barotrauma
             // TODO: test element, remove from final code
             outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
 
-            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, parent: null, offset: new Point(50, 100), anchor: Anchor.BottomLeft));
+            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, parent: null, anchor: Anchor.BottomLeft)
+            {
+                RelativeOffset = new Vector2(0, 0.1f),
+                AbsoluteOffset = new Point(50, 0)
+            });
             float scale = 1;
             var buttons = CreateButtons(new Point(200, 30), 10, 20, scale);
             SetupButtons(buttons);
@@ -360,8 +364,8 @@ namespace Barotrauma
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             // ui test, TODO: remove
-            outerElement.Draw(spriteBatch);
-            innerElements.ForEach(e => e.Draw(spriteBatch));
+            //outerElement.Draw(spriteBatch);
+            //innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -431,8 +435,10 @@ namespace Barotrauma
             for (int i = 0; i < 8; i++)
             {
                 extraTotal += i % 2 == 0 ? 0 : extra;
-                var offset = new Point(0, ((int)(buttonSize.Y * scale) + spacing) * i + extraTotal);
-                var buttonRect = new RectTransform(buttonSize, buttonsParent.RectTransform, offset, Anchor.BottomLeft);
+                var buttonRect = new RectTransform(buttonSize, buttonsParent.RectTransform, Anchor.BottomLeft)
+                {
+                    AbsoluteOffset = new Point(0, ((int)(buttonSize.Y * scale) + spacing) * i + extraTotal)
+                };
                 var button = new GUIButton(buttonRect, "Button", textAlignment: Alignment.Center, parent: buttonsParent);
                 button.Color = button.Color * 0.8f;
                 buttons.Add(button);
@@ -494,8 +500,8 @@ namespace Barotrauma
         // ui test, TODO: remove
         private void UpdateRects()
         {
-            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
-            //var element = buttonsParent;
+            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            var element = buttonsParent;
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
