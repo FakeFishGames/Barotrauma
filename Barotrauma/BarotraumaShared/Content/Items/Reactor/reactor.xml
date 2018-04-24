@@ -23,7 +23,7 @@
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2">
-      <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,860,400" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">

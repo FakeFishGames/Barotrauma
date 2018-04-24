@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
             int y = 30;
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, innerFrame);
+                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, "", innerFrame);
                 tickBox.Selected = true;
                 tickBox.TextColor = messageColor[(int)msgType];
 
