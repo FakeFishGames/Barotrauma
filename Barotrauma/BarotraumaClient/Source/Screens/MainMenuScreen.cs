@@ -290,8 +290,16 @@ namespace Barotrauma
             // ui test, TODO: remove
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {
-                outerElement.RectTransform.ResetScale();
-                innerElements.Clear();
+                bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
+                if (global)
+                {
+                    RectTransform.ResetGlobalScale();
+                }
+                else
+                {
+                    outerElement.RectTransform.ResetScale();
+                    innerElements.Clear();
+                }
                 for (int i = 0; i < 5; i++)
                 {
                     //var parent = innerElements.LastOrDefault();
@@ -351,8 +359,8 @@ namespace Barotrauma
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             // ui test, TODO: remove
-            //outerElement.Draw(spriteBatch);
-            //innerElements.ForEach(e => e.Draw(spriteBatch));
+            outerElement.Draw(spriteBatch);
+            innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -485,13 +493,22 @@ namespace Barotrauma
         // ui test, TODO: remove
         private void UpdateRects()
         {
-            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
-            var element = buttonsParent;
+            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            //var element = buttonsParent;
             if (element == null) { return; }
+            bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
+            float step = 0.01f;
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
             {
-                element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 1.01f);
+                if (global)
+                {
+                    RectTransform.GlobalScale *= 1 + step;
+                }
+                else
+                {
+                    element.RectTransform.LocalScale *= 1 + step;
+                }
                 buttonsParent.children
                     .Select(b => b as GUIButton)
                     .Where(b => b != null)
@@ -499,7 +516,14 @@ namespace Barotrauma
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
-                element.RectTransform.ChangeScale(element.RectTransform.LocalScale *= 0.99f);
+                if (global)
+                {
+                    RectTransform.GlobalScale *= 1 - step;
+                }
+                else
+                {
+                    element.RectTransform.LocalScale *= 1 - step;
+                }
                 buttonsParent.children
                     .Select(b => b as GUIButton)
                     .Where(b => b != null)

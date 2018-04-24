@@ -50,7 +50,7 @@ namespace Barotrauma
             set
             {
                 relativeSize = value;
-                RecalculateAbsoluteSize();
+                RecalculateAll(resize: true, scale: false, withChildren: true);
             }
         }
 
@@ -65,29 +65,44 @@ namespace Barotrauma
             {
                 nonScaledSize = value;
                 RecalculateRelativeSize();
+                RecalculateAll(resize: false, scale: false, withChildren: true);
             }
         }
         /// <summary>
         /// Absolute size after scale multiplications.
         /// </summary>
-        public Point ScaledSize { get { return NonScaledSize.Multiply(GlobalScale); } }
+        public Point ScaledSize { get { return NonScaledSize.Multiply(Scale); } }
 
-        public Vector2 LocalScale { get; set; } = Vector2.One;
-        public Vector2 GlobalScale
+        private static List<RectTransform> rectTransforms = new List<RectTransform>();
+        public static IEnumerable<RectTransform> RectTransforms { get { return rectTransforms; } }
+
+        private static Vector2 globalScale = Vector2.One;
+        /// <summary>
+        /// Applied to all RectTransforms.
+        /// </summary>
+        public static Vector2 GlobalScale
         {
-            get
+            get { return globalScale; }
+            set
             {
-                var parents = GetParents();
-                if (parents.Any())
-                {
-                    return parents.Select(rt => rt.LocalScale).Aggregate((parent, child) => parent * child) * LocalScale;
-                }
-                else
-                {
-                    return LocalScale;
-                }
+                globalScale = value;
+                rectTransforms.ForEach(r => r.RecalculateAll(false, true, true));
             }
         }
+
+        private Vector2 localScale = Vector2.One;
+        public Vector2 LocalScale
+        {
+            get { return localScale; }
+            set
+            {
+                localScale = value;
+                RecalculateAll(resize: false, scale: true, withChildren: true);
+            }
+        }
+
+        public Vector2 Scale { get; private set; }
+
         /// <summary>
         /// Relative to the anchor point. Calculated away from the anchor point.
         /// Note that the offset is still in pixels. Only the direction of the offset is relative, not the amount!
@@ -161,19 +176,21 @@ namespace Barotrauma
         public RectTransform(Vector2 relativeSize, RectTransform parent, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, offset, anchor, pivot);
-            RelativeSize = relativeSize;
-            RecalculateAll(false, false);
+            this.relativeSize = relativeSize;
+            RecalculateAll(resize: true, scale: true, withChildren: true);
         }
 
         public RectTransform(Point absoluteSize, RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, offset, anchor, pivot);
-            NonScaledSize = absoluteSize;
-            RecalculateAll(false, false);
+            nonScaledSize = absoluteSize;
+            RecalculateRelativeSize();
+            RecalculateAll(resize: false, scale: false, withChildren: true);
         }
 
         private void Init(RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
+            rectTransforms.Add(this);
             Parent = parent;
             RelativeOffset = offset ?? Point.Zero;
             Anchor = anchor;
@@ -238,6 +255,13 @@ namespace Barotrauma
             }
         }
 
+        protected void RecalculateScale()
+        {
+            var scale = LocalScale * globalScale;
+            var parents = GetParents();
+            Scale = parents.Any() ? parents.Select(rt => rt.LocalScale).Aggregate((parent, child) => parent * child) * scale : scale;
+        }
+
         protected void RecalculatePivotOffset()
         {
             PivotOffset = CalculatePivot(Pivot, ScaledSize);
@@ -258,8 +282,12 @@ namespace Barotrauma
             nonScaledSize = NonScaledParentRect.Size.Multiply(relativeSize);
         }
 
-        protected void RecalculateAll(bool resize, bool withChildren = true)
+        protected void RecalculateAll(bool resize, bool scale = true, bool withChildren = true)
         {
+            if (scale)
+            {
+                RecalculateScale();
+            }
             if (resize)
             {
                 RecalculateAbsoluteSize();
@@ -268,16 +296,13 @@ namespace Barotrauma
             RecalculatePivotOffset();
             if (withChildren)
             {
-                RecalculateChildren(resize);
+                RecalculateChildren(resize, scale);
             }
         }
 
-        protected void RecalculateChildren(bool resize)
+        protected void RecalculateChildren(bool resize, bool scale = true)
         {
-            foreach (var child in children)
-            {
-                child.RecalculateAll(resize, withChildren: true);
-            }
+            children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
         }
         #endregion
 
@@ -287,24 +312,26 @@ namespace Barotrauma
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(anchor);
             AbsoluteOffset = Point.Zero;
-            RecalculateChildren(false);
+            RecalculateChildren(false, false);
         }
 
         public void Resize(Point newSize, bool resizeChildren = true)
         {
-            NonScaledSize = newSize;
-            RecalculateAnchorPoint();
-            RecalculatePivotOffset();
-            RecalculateChildren(resizeChildren);
+            nonScaledSize = newSize;
+            RecalculateRelativeSize();
+            RecalculateAll(resize: false, scale: false, withChildren: resizeChildren);
+        }
+
+        public void Resize(Vector2 newSize, bool resizeChildren = true)
+        {
+            relativeSize = newSize;
+            RecalculateAll(resize: true, scale: false, withChildren: resizeChildren);
         }
 
         // TODO: also allow scaling the offset
         public void ChangeScale(Vector2 newScale)
         {
             LocalScale = newScale;
-            RecalculateAnchorPoint();
-            RecalculatePivotOffset();
-            RecalculateChildren(false);
         }
 
         public void ResetScale()
@@ -318,7 +345,7 @@ namespace Barotrauma
         public void Translate(Point translation)
         {
             AbsoluteOffset += translation;
-            RecalculateChildren(false);
+            RecalculateChildren(false, false);
         }
 
         public IEnumerable<RectTransform> GetParents()
@@ -344,6 +371,11 @@ namespace Barotrauma
                 throw new Exception($"[RectTransform] Cannot match pivot to anchor {anchor}");
             }
             return pivot;
+        }
+
+        public static void ResetGlobalScale()
+        {
+            GlobalScale = Vector2.One;
         }
         #endregion
     }
