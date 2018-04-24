@@ -503,7 +503,8 @@ namespace Barotrauma
             {
                 if (global)
                 {
-                    RectTransform.GlobalScale *= 1 + step;
+                    RectTransform.globalScale *= 1 + step;
+                    buttonsParent.RectTransform.RecalculateScale(true);
                 }
                 else
                 {
@@ -518,7 +519,8 @@ namespace Barotrauma
             {
                 if (global)
                 {
-                    RectTransform.GlobalScale *= 1 - step;
+                    RectTransform.globalScale *= 1 - step;
+                    buttonsParent.RectTransform.RecalculateScale(true);
                 }
                 else
                 {

@@ -74,22 +74,17 @@ namespace Barotrauma
         /// </summary>
         public Point ScaledSize { get { return NonScaledSize.Multiply(Scale); } }
 
-        private static List<RectTransform> rectTransforms = new List<RectTransform>();
-        public static IEnumerable<RectTransform> RectTransforms { get { return rectTransforms; } }
-
-        private static Vector2 globalScale = Vector2.One;
         /// <summary>
         /// Applied to all RectTransforms.
+        /// The elements are not automatically resized, if the global scale changes.
+        /// You have to manually call RecalculateScale() for all elements after changing the global scale.
+        /// This is because there is currently no easy way to inform all the elements without having a reference to them.
+        /// Having a reference (static list, or event) is problematic, because deconstructing the elements is not handled manually.
+        /// This means that the uncleared references would bloat the memory.
+        /// We could recalculate the scale each time it's needed, 
+        /// but in that case the calculation would need to be very lightweight and garbage free, which it currently is not.
         /// </summary>
-        public static Vector2 GlobalScale
-        {
-            get { return globalScale; }
-            set
-            {
-                globalScale = value;
-                rectTransforms.ForEach(r => r.RecalculateAll(false, true, true));
-            }
-        }
+        public static Vector2 globalScale = Vector2.One;
 
         private Vector2 localScale = Vector2.One;
         public Vector2 LocalScale
@@ -191,7 +186,6 @@ namespace Barotrauma
 
         private void Init(RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
-            rectTransforms.Add(this);
             Parent = parent;
             RelativeOffset = offset ?? Point.Zero;
             Anchor = anchor;
@@ -343,6 +337,19 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Currently this needs to be manually called only when the global scale changes.
+        /// If the local scale changes, the scale is automatically recalculated.
+        /// </summary>
+        public void RecalculateScale(bool withChildren)
+        {
+            RecalculateScale();
+            if (withChildren)
+            {
+                RecalculateChildren(resize: false, scale: true);
+            }
+        }
+
+        /// <summary>
         /// Manipulates AbsoluteOffset.
         /// </summary>
         public void Translate(Point translation)
@@ -376,9 +383,18 @@ namespace Barotrauma
             return pivot;
         }
 
+        /// <summary>
+        /// The elements are not automatically resized, if the global scale changes.
+        /// You have to manually call RecalculateScale() for all elements after changing the global scale.
+        /// This is because there is currently no easy way to inform all the elements without having a reference to them.
+        /// Having a reference (static list, or event) is problematic, because deconstructing the elements is not handled manually.
+        /// This means that the uncleared references would bloat the memory.
+        /// We could recalculate the scale each time it's needed, 
+        /// but in that case the calculation would need to be very lightweight and garbage free, which it currently is not.
+        /// </summary>
         public static void ResetGlobalScale()
         {
-            GlobalScale = Vector2.One;
+            globalScale = Vector2.One;
         }
         #endregion
     }
