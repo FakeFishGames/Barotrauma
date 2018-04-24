@@ -56,7 +56,7 @@ namespace Barotrauma
 
         private Point nonScaledSize;
         /// <summary>
-        /// Absolute size before scale multiplications.
+        /// Size before scale multiplications.
         /// </summary>
         public Point NonScaledSize
         {
@@ -65,12 +65,13 @@ namespace Barotrauma
             {
                 nonScaledSize = value;
                 RecalculateRelativeSize();
-                RecalculateAll(resize: false, scale: false, withChildren: false);
+                RecalculateAnchorPoint();
+                RecalculatePivotOffset();
                 RecalculateChildren(resize: true, scale: false);
             }
         }
         /// <summary>
-        /// Absolute size after scale multiplications.
+        /// Size after scale multiplications.
         /// </summary>
         public Point ScaledSize { get { return NonScaledSize.Multiply(Scale); } }
 
@@ -100,50 +101,57 @@ namespace Barotrauma
         public Vector2 Scale { get; private set; }
 
         /// <summary>
-        /// Relative to the anchor point. Calculated away from the anchor point.
-        /// Note that the offset is still in pixels. Only the direction of the offset is relative, not the amount!
+        /// Defined as portions of the parent size.
+        /// Also the direction of the offset is relative, calculated away from the anchor point, like a padding.
         /// </summary>
-        public Point RelativeOffset { get; set; } = Point.Zero;
+        public Vector2 RelativeOffset { get; set; } = Vector2.Zero;
         /// <summary>
-        /// Absolute, screen space offset. From top left corner.
+        /// Absolute in pixels but relative to the anchor point.
+        /// Calculated away from the anchor point, like a padding.
+        /// Use RelativeOffset to set an amount relative to the parent size.
         /// </summary>
         public Point AbsoluteOffset { get; set; } = Point.Zero;
         /// <summary>
-        /// Calculated from the selected pivot.
+        /// Screen space offset. From top left corner. In pixels.
+        /// </summary>
+        public Point ScreenSpaceOffset { get; set; } = Point.Zero;
+        /// <summary>
+        /// Calculated from the selected pivot. In pixels.
         /// </summary>
         public Point PivotOffset { get; private set; }
+        /// <summary>
+        /// Screen space point in pixels.
+        /// </summary>
         public Point AnchorPoint { get; private set; }
 
-        public Point TopLeft { get { return AnchorPoint + PivotOffset + CorrectedOffset + AbsoluteOffset; } }
-        public Rectangle Rect { get { return new Rectangle(TopLeft, ScaledSize); } }
-        public Rectangle ParentRect { get { return Parent != null ? Parent.Rect : ScreenRect; } }
-
-        protected Rectangle NonScaledRect { get { return new Rectangle(TopLeft, NonScaledSize); } }
-        protected Rectangle NonScaledParentRect { get { return parent != null ? Parent.NonScaledRect : ScreenRect; } }
-        protected Rectangle ScreenRect { get { return new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight); } }
-
-        /// <summary>
-        /// Calculates the offset from the relative offset, so that the offset is always away from the anchor point.
-        /// </summary>
-        protected Point CorrectedOffset
+        public Point TopLeft
         {
             get
             {
-                switch (Anchor)
-                {
-                    case Anchor.BottomRight:
-                        return RelativeOffset.Inverse();
-                    case Anchor.BottomLeft:
-                    case Anchor.BottomCenter:
-                        return new Point(RelativeOffset.X, -RelativeOffset.Y);
-                    case Anchor.TopRight:
-                    case Anchor.CenterRight:
-                        return new Point(-RelativeOffset.X, RelativeOffset.Y);
-                    default:
-                        return RelativeOffset;
-                }
+                Point absoluteOffset = ConvertOffsetRelativeToAnchor(AbsoluteOffset, Anchor);
+                Point relativeOffset = ParentRect.MultiplySize(RelativeOffset);
+                relativeOffset = ConvertOffsetRelativeToAnchor(relativeOffset, Anchor);
+                return AnchorPoint + PivotOffset + absoluteOffset + relativeOffset + ScreenSpaceOffset;
             }
         }
+
+        protected Point NonScaledTopLeft
+        {
+            get
+            {
+                Point absoluteOffset = ConvertOffsetRelativeToAnchor(AbsoluteOffset, Anchor);
+                Point relativeOffset = NonScaledParentRect.MultiplySize(RelativeOffset);
+                relativeOffset = ConvertOffsetRelativeToAnchor(relativeOffset, Anchor);
+                return AnchorPoint + PivotOffset + absoluteOffset + relativeOffset + ScreenSpaceOffset;
+            }
+        }
+
+        public Rectangle Rect { get { return new Rectangle(TopLeft, ScaledSize); } }
+        public Rectangle ParentRect { get { return Parent != null ? Parent.Rect : ScreenRect; } }
+
+        protected Rectangle NonScaledRect { get { return new Rectangle(NonScaledTopLeft, NonScaledSize); } }
+        protected Rectangle NonScaledParentRect { get { return parent != null ? Parent.NonScaledRect : ScreenRect; } }
+        protected Rectangle ScreenRect { get { return new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight); } }
 
         private Pivot pivot;
         public Pivot Pivot
@@ -173,83 +181,32 @@ namespace Barotrauma
         {
             Init(parent, offset, anchor, pivot);
             this.relativeSize = relativeSize;
-            RecalculateAll(resize: true, scale: true, withChildren: true);
+            RecalculateScale();
+            RecalculateAbsoluteSize();
+            RecalculateAnchorPoint();
+            RecalculatePivotOffset();
         }
 
         public RectTransform(Point absoluteSize, RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, offset, anchor, pivot);
-            nonScaledSize = absoluteSize;
-            RecalculateRelativeSize();
-            RecalculateAll(resize: false, scale: false, withChildren: true);
+            this.nonScaledSize = absoluteSize;
+            RecalculateScale();
+            RecalculateRelativeSize();            
+            RecalculateAnchorPoint();
+            RecalculatePivotOffset();
         }
 
         private void Init(RectTransform parent = null, Point? offset = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Parent = parent;
-            RelativeOffset = offset ?? Point.Zero;
+            AbsoluteOffset = offset ?? Point.Zero;
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(Anchor);
         }
         #endregion
 
-        #region Calculations and protected methods
-        protected Point CalculatePivot(Pivot pivot, Point size)
-        {
-            int width = size.X;
-            int height = size.Y;
-            switch (pivot)
-            {
-                case Pivot.TopLeft:
-                    return Point.Zero;
-                case Pivot.TopCenter:
-                    return new Point(-width / 2, 0);
-                case Pivot.TopRight:
-                    return new Point(-width, 0);
-                case Pivot.CenterLeft:
-                    return new Point(0, -height / 2);
-                case Pivot.Center:
-                    return size.Divide(2).Inverse();
-                case Pivot.CenterRight:
-                    return new Point(-width, -height / 2);
-                case Pivot.BottomLeft:
-                    return new Point(0, -height);
-                case Pivot.BottomCenter:
-                    return new Point(-width / 2, -height);
-                case Pivot.BottomRight:
-                    return new Point(-width, -height);
-                default:
-                    throw new NotImplementedException(pivot.ToString());
-            }
-        }
-
-        protected Point CalculateAnchor(Anchor anchor, Rectangle parent)
-        {
-            switch (anchor)
-            {
-                case Anchor.TopLeft:
-                    return parent.Location;
-                case Anchor.TopCenter:
-                    return new Point(parent.Center.X, parent.Top);
-                case Anchor.TopRight:
-                    return new Point(parent.Right, parent.Top);
-                case Anchor.CenterLeft:
-                    return new Point(parent.Left, parent.Center.Y);
-                case Anchor.Center:
-                    return parent.Center;
-                case Anchor.CenterRight:
-                    return new Point(parent.Right, parent.Center.Y);
-                case Anchor.BottomLeft:
-                    return new Point(parent.Left, parent.Bottom);
-                case Anchor.BottomCenter:
-                    return new Point(parent.Center.X, parent.Bottom);
-                case Anchor.BottomRight:
-                    return new Point(parent.Right, parent.Bottom);
-                default:
-                    throw new NotImplementedException(anchor.ToString());
-            }
-        }
-
+        #region Protected methods
         protected void RecalculateScale()
         {
             var scale = LocalScale * globalScale;
@@ -259,12 +216,12 @@ namespace Barotrauma
 
         protected void RecalculatePivotOffset()
         {
-            PivotOffset = CalculatePivot(Pivot, ScaledSize);
+            PivotOffset = CalculatePivotOffset(Pivot, ScaledSize);
         }
 
         protected void RecalculateAnchorPoint()
         {
-            AnchorPoint = CalculateAnchor(Anchor, ParentRect);
+            AnchorPoint = CalculateAnchorPoint(Anchor, ParentRect);
         }
 
         protected void RecalculateRelativeSize()
@@ -306,7 +263,7 @@ namespace Barotrauma
         {
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(anchor);
-            AbsoluteOffset = Point.Zero;
+            ScreenSpaceOffset = Point.Zero;
             RecalculateChildren(false, false);
         }
 
@@ -349,11 +306,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Manipulates AbsoluteOffset.
+        /// Manipulates ScreenSpaceOffset.
         /// </summary>
         public void Translate(Point translation)
         {
-            AbsoluteOffset += translation;
+            ScreenSpaceOffset += translation;
             RecalculateChildren(false, false);
         }
 
@@ -380,6 +337,82 @@ namespace Barotrauma
                 throw new Exception($"[RectTransform] Cannot match pivot to anchor {anchor}");
             }
             return pivot;
+        }
+
+        /// <summary>
+        /// Converts the offset so that the direction is always away from the anchor point.
+        /// </summary>
+        public static Point ConvertOffsetRelativeToAnchor(Point offset, Anchor anchor)
+        {
+            switch (anchor)
+            {
+                case Anchor.BottomRight:
+                    return offset.Inverse();
+                case Anchor.BottomLeft:
+                case Anchor.BottomCenter:
+                    return new Point(offset.X, -offset.Y);
+                case Anchor.TopRight:
+                case Anchor.CenterRight:
+                    return new Point(-offset.X, offset.Y);
+                default:
+                    return offset;
+            }
+        }
+
+        public static Point CalculatePivotOffset(Pivot pivot, Point size)
+        {
+            int width = size.X;
+            int height = size.Y;
+            switch (pivot)
+            {
+                case Pivot.TopLeft:
+                    return Point.Zero;
+                case Pivot.TopCenter:
+                    return new Point(-width / 2, 0);
+                case Pivot.TopRight:
+                    return new Point(-width, 0);
+                case Pivot.CenterLeft:
+                    return new Point(0, -height / 2);
+                case Pivot.Center:
+                    return size.Divide(2).Inverse();
+                case Pivot.CenterRight:
+                    return new Point(-width, -height / 2);
+                case Pivot.BottomLeft:
+                    return new Point(0, -height);
+                case Pivot.BottomCenter:
+                    return new Point(-width / 2, -height);
+                case Pivot.BottomRight:
+                    return new Point(-width, -height);
+                default:
+                    throw new NotImplementedException(pivot.ToString());
+            }
+        }
+
+        public static Point CalculateAnchorPoint(Anchor anchor, Rectangle parent)
+        {
+            switch (anchor)
+            {
+                case Anchor.TopLeft:
+                    return parent.Location;
+                case Anchor.TopCenter:
+                    return new Point(parent.Center.X, parent.Top);
+                case Anchor.TopRight:
+                    return new Point(parent.Right, parent.Top);
+                case Anchor.CenterLeft:
+                    return new Point(parent.Left, parent.Center.Y);
+                case Anchor.Center:
+                    return parent.Center;
+                case Anchor.CenterRight:
+                    return new Point(parent.Right, parent.Center.Y);
+                case Anchor.BottomLeft:
+                    return new Point(parent.Left, parent.Bottom);
+                case Anchor.BottomCenter:
+                    return new Point(parent.Center.X, parent.Bottom);
+                case Anchor.BottomRight:
+                    return new Point(parent.Right, parent.Bottom);
+                default:
+                    throw new NotImplementedException(anchor.ToString());
+            }
         }
 
         /// <summary>
