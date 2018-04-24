@@ -29,7 +29,7 @@
       <Containable name="chem"/>
     </ItemContainer>
 
-    <Projectile launchimpulse="20.0" sticktocharacters="true">
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack damage="5" bleedingdamage="0.2" structuredamage="1" damagetype="Blunt" stun="0.1" targetforce="5"/>
       <StatusEffect type="OnImpact" target="Contained, Character" Condition="-50.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
@@ -511,7 +511,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">

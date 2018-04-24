@@ -179,7 +179,7 @@
     
     <Propulsion force="-40" usablein="both"/>
 
-    <Projectile launchimpulse="80.0">
+    <Projectile characterusable="false" launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
