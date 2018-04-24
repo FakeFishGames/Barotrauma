@@ -91,7 +91,7 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return base.Rect;
             }
             set
             {
@@ -201,13 +201,14 @@ namespace Barotrauma
             base.SetDimensions(size, expandChildren);
             frame.SetDimensions(size, expandChildren);
 
+            // TODO: does not work with RectTransform
             if (scrollBar.IsHorizontal)
             {
-                scrollBar.Rect = new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20);
+                scrollBar.Rect = new Rectangle(Rect.X, Rect.Bottom - 20, Rect.Width, 20);
             }
             else
             {
-                scrollBar.Rect = new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height);
+                scrollBar.Rect = new Rectangle(Rect.Right - 20, Rect.Y, 20, Rect.Height);
             }
 
             UpdateScrollBarSize();
@@ -215,17 +216,17 @@ namespace Barotrauma
 
         private void UpdateChildrenRect(float deltaTime)
         {
-            int x = rect.X, y = rect.Y;
+            int x = Rect.X, y = Rect.Y;
 
             if (!scrollBarHidden)
             {
                 if (scrollBar.IsHorizontal)
                 {
-                    x -= (int)((totalSize - rect.Width) * scrollBar.BarScroll);
+                    x -= (int)((totalSize - Rect.Width) * scrollBar.BarScroll);
                 }
                 else
                 {
-                    y -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
+                    y -= (int)((totalSize - Rect.Height) * scrollBar.BarScroll);
                 }
             }
 
@@ -295,6 +296,7 @@ namespace Barotrauma
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
         }
 
+        // TODO:
         public override Rectangle MouseRect
         {
             get
@@ -362,14 +364,15 @@ namespace Barotrauma
             totalSize += (children.Count - 1) * spacing;
 
             scrollBar.BarSize = scrollBar.IsHorizontal ?
-                Math.Max(Math.Min((float)rect.Width / (float)totalSize, 1.0f), 5.0f / rect.Width) :
-                Math.Max(Math.Min((float)rect.Height / (float)totalSize, 1.0f), 5.0f / rect.Height);
+                Math.Max(Math.Min((float)Rect.Width / (float)totalSize, 1.0f), 5.0f / Rect.Width) :
+                Math.Max(Math.Min((float)Rect.Height / (float)totalSize, 1.0f), 5.0f / Rect.Height);
 
             scrollBarHidden = scrollBar.BarSize >= 1.0f;
         }
 
         public override void AddChild(GUIComponent child)
         {
+            // TODO: cannot do this when using RectTransform
             //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
             if (scrollBar.IsHorizontal)            
                 rect.Height -= scrollBar.Rect.Height;
@@ -440,13 +443,13 @@ namespace Barotrauma
 
             if (scrollBar.IsHorizontal)
             {
-                if (child.Rect.Right < rect.X) return false;
-                if (child.Rect.X > rect.Right) return false;
+                if (child.Rect.Right < Rect.X) return false;
+                if (child.Rect.X > Rect.Right) return false;
             }
             else
             {
-                if (child.Rect.Bottom < rect.Y) return false;
-                if (child.Rect.Y > rect.Bottom) return false;
+                if (child.Rect.Bottom < Rect.Y) return false;
+                if (child.Rect.Y > Rect.Bottom) return false;
             }
 
             return true;

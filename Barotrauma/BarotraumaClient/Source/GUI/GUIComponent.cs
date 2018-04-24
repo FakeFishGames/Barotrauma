@@ -173,13 +173,13 @@ namespace Barotrauma
 
         public Vector2 Center
         {
-            get { return new Vector2(rect.Center.X, rect.Center.Y); }
+            get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
         }
 
         protected Rectangle ClampRect(Rectangle r)
         {
             if (parent == null || !ClampMouseRectToParent) return r;
-            Rectangle parentRect = parent.ClampRect(parent.rect);
+            Rectangle parentRect = parent.ClampRect(parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
             if (parentRect.X > r.X)
             {
@@ -207,29 +207,34 @@ namespace Barotrauma
             return r;
         }
 
+        /// <summary>
+        /// Does not set the rect values if the component uses RectTransform.
+        /// </summary>
         public virtual Rectangle Rect
         {
-            get { return rect; }
+            get { return RectTransform != null ? RectTransform.Rect : rect; }
             set
             {
-                int prevX = rect.X, prevY = rect.Y;
-                int prevWidth = rect.Width, prevHeight = rect.Height;
-
-                rect = value;
-
-                if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-
-                //TODO: fix this (or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                foreach (GUIComponent child in children)
+                if (RectTransform == null)
                 {
-                    child.Rect = new Rectangle(
-                        child.rect.X + (rect.X - prevX),
-                        child.rect.Y + (rect.Y - prevY),
-                        Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
-                        Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
-                }
+                    int prevX = rect.X, prevY = rect.Y;
+                    int prevWidth = rect.Width, prevHeight = rect.Height;
 
+                    rect = value;
+
+                    if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
+
+                    //TODO: fix this (or replace with something better in the new GUI system)
+                    //simply expanding the rects by the same amount as their parent only works correctly in some special cases
+                    foreach (GUIComponent child in children)
+                    {
+                        child.Rect = new Rectangle(
+                            child.rect.X + (rect.X - prevX),
+                            child.rect.Y + (rect.Y - prevY),
+                            Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
+                            Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
+                    }
+                }
                 if (parent != null && parent is GUIListBox)
                 {
                     ((GUIListBox)parent).UpdateScrollBarSize();
@@ -243,9 +248,7 @@ namespace Barotrauma
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
-                // TODO: still does not work if the rect is scaled?
-                var rect = RectTransform != null ? RectTransform.Rect : this.rect;
-                return ClampMouseRectToParent ? ClampRect(rect) : rect;
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
             }
         }
 
@@ -378,7 +381,7 @@ namespace Barotrauma
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
             if (!Visible) return;
-            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+            var rect = Rect;
 
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;
@@ -455,6 +458,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
         public  void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
@@ -510,6 +514,7 @@ namespace Barotrauma
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
+            if (RectTransform != null) { return; }
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
