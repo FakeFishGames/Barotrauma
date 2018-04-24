@@ -81,7 +81,7 @@ namespace Barotrauma
 
             set
             {
-                Point moveAmount = value.Location - rect.Location;
+                Point moveAmount = value.Location - Rect.Location;
                 base.Rect = value;
 
                 button.Rect = new Rectangle(button.Rect.Location + moveAmount, button.Rect.Size);

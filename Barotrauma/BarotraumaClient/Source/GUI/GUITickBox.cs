@@ -44,7 +44,7 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return base.Rect;
             }
             set
             {

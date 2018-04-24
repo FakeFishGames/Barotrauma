@@ -66,6 +66,7 @@ namespace Barotrauma
             }
             set
             {
+                if (RectTransform != null) { return; }
                 if (base.Rect == value) return;
                 foreach (GUIComponent child in children)
                 {
@@ -221,7 +222,7 @@ namespace Barotrauma
         {
             if (text == null) return;
 
-            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+            var rect = Rect;
 
             overflowClipActive = false;
 
@@ -305,7 +306,7 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
-            var rect = RectTransform != null ? RectTransform.Rect : this.rect;
+            var rect = Rect;
 
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
