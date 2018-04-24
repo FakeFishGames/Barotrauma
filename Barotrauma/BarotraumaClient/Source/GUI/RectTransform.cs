@@ -316,17 +316,17 @@ namespace Barotrauma
             RecalculateChildren(false, false);
         }
 
-        public void Resize(Point newSize, bool resizeChildren = true)
+        public void Resize(Point absoluteSize, bool resizeChildren = true)
         {
-            nonScaledSize = newSize;
+            nonScaledSize = absoluteSize;
             RecalculateRelativeSize();
             RecalculateAll(resize: false, scale: false, withChildren: false);
             RecalculateChildren(resizeChildren, false);
         }
 
-        public void Resize(Vector2 newSize, bool resizeChildren = true)
+        public void Resize(Vector2 relativeSize, bool resizeChildren = true)
         {
-            relativeSize = newSize;
+            this.relativeSize = relativeSize;
             RecalculateAll(resize: true, scale: false, withChildren: false);
             RecalculateChildren(resizeChildren, false);
         }
