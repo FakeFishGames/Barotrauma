@@ -590,7 +590,7 @@ namespace Barotrauma
                 medicalItems.Add(item);
             }
 
-            return medicalItems;
+            return medicalItems.Distinct().ToList();
         }
 
         private bool ItemContainerNeedsRefresh(List<Item> availableItems)

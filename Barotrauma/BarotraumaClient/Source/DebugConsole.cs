@@ -67,7 +67,18 @@ namespace Barotrauma
             {
                 while (queuedMessages.Count > 0)
                 {
-                    AddMessage(queuedMessages.Dequeue());
+                    var newMsg = queuedMessages.Dequeue();
+                    AddMessage(newMsg);
+
+                    if (GameSettings.SaveDebugConsoleLogs)
+                    {
+                        unsavedMessages.Add(newMsg);
+                        if (unsavedMessages.Count >= messagesPerFile)
+                        {
+                            SaveLogs();
+                            unsavedMessages.Clear();
+                        }
+                    }
                 }
             }
 
@@ -151,7 +162,10 @@ namespace Barotrauma
         {
             while (queuedMessages.Count > 0)
             {
-                AddMessage(queuedMessages.Dequeue());
+                var newMsg = queuedMessages.Dequeue();
+                AddMessage(newMsg);
+
+                if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
         }
 
