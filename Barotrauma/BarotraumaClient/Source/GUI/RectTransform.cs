@@ -54,6 +54,36 @@ namespace Barotrauma
             }
         }
 
+        private Point? minSize;
+        /// <summary>
+        /// Min size in pixels.
+        /// Does not affect scaling.
+        /// </summary>
+        public Point MinSize
+        {
+            get { return minSize ?? Point.Zero; }
+            set
+            {
+                minSize = value;
+                RecalculateAll(true, false, true);
+            }
+        }
+        private static Point maxPoint = new Point(int.MaxValue, int.MaxValue);
+        private Point? maxSize;
+        /// <summary>
+        /// Max size in pixels.
+        /// Does not affect scaling.
+        /// </summary>
+        public Point MaxSize
+        {
+            get { return maxSize ?? maxPoint; }
+            set
+            {
+                maxSize = value;
+                RecalculateAll(true, false, true);
+            }
+        }
+
         private Point nonScaledSize;
         /// <summary>
         /// Size before scale multiplications.
@@ -63,7 +93,7 @@ namespace Barotrauma
             get { return nonScaledSize; }
             set
             {
-                nonScaledSize = value;
+                nonScaledSize = value.Clamp(MinSize, MaxSize);
                 RecalculateRelativeSize();
                 RecalculateAnchorPoint();
                 RecalculatePivotOffset();
@@ -177,10 +207,12 @@ namespace Barotrauma
         #endregion
 
         #region Initialization
-        public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
+        public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null)
         {
             Init(parent, anchor, pivot);
             this.relativeSize = relativeSize;
+            this.minSize = minSize;
+            this.maxSize = maxSize;
             RecalculateScale();
             RecalculateAbsoluteSize();
             RecalculateAnchorPoint();
@@ -230,7 +262,7 @@ namespace Barotrauma
 
         protected void RecalculateAbsoluteSize()
         {
-            nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize);
+            nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
         }
 
         protected void RecalculateAll(bool resize, bool scale = true, bool withChildren = true)
