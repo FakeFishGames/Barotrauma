@@ -611,8 +611,8 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect characterusable="true" type="OnUse" target="Character" HuskInfectionState="0.01">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
         <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
         <Conditional HuskInfectionState="lt 0.01"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
@@ -661,7 +661,7 @@
 
     <Body width="25" height="5" density="10"/>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       
@@ -671,7 +671,7 @@
         <Remove/>
       </StatusEffect>
 
-      <StatusEffect characterusable="true" type="OnUse" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -690,12 +690,12 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect characterusable="true" type="OnUse" target="Character" Health="-5.0">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Did You Know? If OxygenAvailable is too low, character will take -5 Oxygen loss per tick, otherwise they restore +10 oxygen. -->
-      <StatusEffect characterusable="true" tags="poison,sufforin" type="OnUse" target="Character" Oxygen="-5.0" OxygenAvailable="-10000.0" Health="-0.5" duration="60.0" delay="20.0"> 
+      <StatusEffect tags="poison,sufforin" type="OnUse" target="Character" Oxygen="-5.0" OxygenAvailable="-10000.0" Health="-0.5" duration="60.0" delay="20.0"> 
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
