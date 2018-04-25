@@ -28,5 +28,10 @@ namespace Barotrauma.Extensions
         {
             return new Point(-p.X, -p.Y);
         }
+
+        public static Point Clamp(this Point p, Point min, Point max)
+        {
+            return new Point(MathHelper.Clamp(p.X, min.X, max.X), MathHelper.Clamp(p.Y, min.Y, max.Y));
+        }
     }
 }
