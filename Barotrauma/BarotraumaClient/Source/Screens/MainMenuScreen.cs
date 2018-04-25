@@ -42,8 +42,9 @@ namespace Barotrauma
                 AbsoluteOffset = new Point(50, 0)
             }, color: Color.Transparent);
             float scale = 1;
-            // TODO: if the resolution is very low, the text does no fit into buttons -> min size?
-            var buttons = CreateButtons(relativeSize: new Vector2(1, 0.04f), absoluteSpacing: 5, extraSpacing: 20, relativeSpacing: 0.05f, scale: scale);
+            var minButtonSize = new Point(120, 20);
+            var maxButtonSize = new Point(240, 40);
+            var buttons = CreateButtons(new Vector2(1, 0.04f), minButtonSize, maxButtonSize, absoluteSpacing: 5, extraSpacing: 20, relativeSpacing: 0.05f, scale: scale);
             SetupButtons(buttons);
             buttonsParent.RectTransform.ChangeScale(new Vector2(scale, scale));
             // Changing the text scale messes the text position
@@ -334,8 +335,8 @@ namespace Barotrauma
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             // ui test, TODO: remove
-            outerElement.Draw(spriteBatch);
-            innerElements.ForEach(e => e.Draw(spriteBatch));
+            //outerElement.Draw(spriteBatch);
+            //innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -398,30 +399,18 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private List<GUIButton> CreateButtons(Point? absoluteSize = null, Vector2? relativeSize = null, int absoluteSpacing = 0, int extraSpacing = 0, float relativeSpacing = 0, float scale = 1)
+        private List<GUIButton> CreateButtons(Vector2? relativeSize = null, Point? minSize = null, Point? maxSize = null, int absoluteSpacing = 0, int extraSpacing = 0, float relativeSpacing = 0, float scale = 1)
         {
             var buttons = new List<GUIButton>();
             int extraTotal = 0;
             for (int i = 0; i < 8; i++)
             {
                 extraTotal += i % 2 == 0 ? 0 : extraSpacing;
-                RectTransform buttonRect;
-                if (absoluteSize.HasValue)
+                var buttonRect = new RectTransform(relativeSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft, minSize: minSize, maxSize: maxSize)
                 {
-                    buttonRect = new RectTransform(absoluteSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft)
-                    {
-                        RelativeOffset = new Vector2(0, relativeSpacing * i),
-                        AbsoluteOffset = new Point(0, ((int)(absoluteSize.Value.Y * scale) + absoluteSpacing) * i + extraTotal)
-                    };
-                }
-                else
-                {
-                    buttonRect = new RectTransform(relativeSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft)
-                    {
-                        RelativeOffset = new Vector2(0, relativeSpacing + relativeSize.Value.Y * i),
-                        AbsoluteOffset = new Point(0, absoluteSpacing * i + extraTotal)
-                    };
-                }
+                    RelativeOffset = new Vector2(0, relativeSpacing + relativeSize.Value.Y * i),
+                    AbsoluteOffset = new Point(0, absoluteSpacing * i + extraTotal)
+                };
                 var button = new GUIButton(buttonRect, "Button", textAlignment: Alignment.Center, parent: buttonsParent);
                 button.Color = button.Color * 0.8f;
                 buttons.Add(button);
@@ -607,9 +596,9 @@ namespace Barotrauma
         // ui test, TODO: remove
         private void UpdateRects()
         {
-            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
             //var element = buttonsParent;
-            //var element = menuTabs[(int)Tab.HostServer];
+            var element = menuTabs[(int)Tab.HostServer];
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
