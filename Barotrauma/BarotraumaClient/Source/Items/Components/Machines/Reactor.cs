@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            new GUITextBlock(new Rectangle(0, -40, 0, 30), "Fission Rate", "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
+            new GUITextBlock(new Rectangle(0, -40, 0, 30), TextManager.Get("ReactorFissionRate"), "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
             {
                 CanBeFocused = false
             };
@@ -135,22 +135,22 @@ namespace Barotrauma.Items.Components
                 return false;
             };
             
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Turbine Output", "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), TextManager.Get("ReactorTurbineOutput"), "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
             {
                 CanBeFocused = false
             };
 
-            criticalHeatWarning = new GUITickBox(new Rectangle(0, 0, 30, 30), "Critical\nHeat", Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
+            criticalHeatWarning = new GUITickBox(new Rectangle(0, 0, 30, 30), TextManager.Get("ReactorWarningCriticalTemp"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
 
-            lowTemperatureWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.25f), 0, 30, 30), "Critically Low\nTemperature", Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
+            lowTemperatureWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.25f), 0, 30, 30), TextManager.Get("ReactorWarningCriticalLowTemp"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
             lowTemperatureWarning.CanBeFocused = false;
-            criticalOutputWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.66f), 0, 30, 30), "Critical\nOutput", Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
+            criticalOutputWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.66f), 0, 30, 30), TextManager.Get("ReactorWarningCriticalOutput"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
             criticalOutputWarning.CanBeFocused = false;
 
-            new GUITextBlock(new Rectangle(0, 60, columnMid.Rect.Width / 2, 20), "Fission rate", "", Alignment.TopLeft, Alignment.Center, columnMid);
-            new GUITextBlock(new Rectangle(columnMid.Rect.Width / 2, 60, columnMid.Rect.Width / 2, 20), "Turbine output", "", Alignment.TopLeft, Alignment.Center, columnMid);
+            new GUITextBlock(new Rectangle(0, 60, columnMid.Rect.Width / 2, 20), TextManager.Get("ReactorFissionRate"), "", Alignment.TopLeft, Alignment.Center, columnMid);
+            new GUITextBlock(new Rectangle(columnMid.Rect.Width / 2, 60, columnMid.Rect.Width / 2, 20), TextManager.Get("ReactorTurbineOutput"), "", Alignment.TopLeft, Alignment.Center, columnMid);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Automatic control", "", columnRight);
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("ReactorAutoTemp"), "", columnRight);
             autoTempTickBox = new GUIScrollBar(new Rectangle(0, 30, 100, 30), Color.White, 0.5f, Alignment.TopLeft, "OnOffSlider", columnRight);
             autoTempTickBox.OnMoved = (scrollBar, scrollAmount) =>
             {
@@ -180,10 +180,13 @@ namespace Barotrauma.Items.Components
 
             var loadText = new GUITextBlock(new Rectangle(40, columnRight.Rect.Height / 2 - 50, 100, 20), "Load", "", columnRight);
             loadText.TextColor = Color.LightBlue;
-            loadText.TextGetter += () => { return "Load: " + (int)load + " kW"; };
+            string loadStr = TextManager.Get("ReactorLoad");
+            loadText.TextGetter += () => { return loadStr.Replace("[kw]", ((int)load).ToString()); };
+
             var outputText = new GUITextBlock(new Rectangle(40, 0, 100, 20), "Output", "", Alignment.BottomLeft, Alignment.TopLeft, columnRight);
             outputText.TextColor = Color.LightGreen;
-            outputText.TextGetter += () => { return "Output: " + (int)(-currPowerConsumption) + " kW"; };
+            string outputStr = TextManager.Get("ReactorOutput");
+            outputText.TextGetter += () => { return outputStr.Replace("[kw]", ((int)-currPowerConsumption).ToString()); };
         }
 
         public override void OnItemLoaded()
