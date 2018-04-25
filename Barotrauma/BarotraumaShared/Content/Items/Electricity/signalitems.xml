@@ -267,9 +267,8 @@
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 
-    <fixrequirement name="Reset fuse">
+    <fixrequirement name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5">
       <skill name="Electrical Engineering" level="30"/>
-      <item name="Screwdriver"/>
     </fixrequirement>
 
     <Body width="16" height="16" density="30"/>

@@ -20,7 +20,7 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
@@ -54,7 +54,7 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
@@ -88,7 +88,7 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
     </fixrequirement>
@@ -119,7 +119,7 @@
     <PowerTransfer/>
     <Wire/>
     
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Mechanical Engineering" level="60"/>
       <item name="Welding Tool"/>
     </fixrequirement>
@@ -149,7 +149,7 @@
       </StatusEffect>
     </DockingPort>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Electrical Engineering" level="40"/>
       <item name="Wire"/>
       <item name="Screwdriver"/>
@@ -157,11 +157,6 @@
 
     <PowerTransfer/>
     <Wire/>
-
-    <fixrequirement name="Mechanical repairs">
-      <skill name="Mechanical Engineering" level="60"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver" type="Equipped"/>
@@ -193,7 +188,7 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
       <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
     </fixrequirement>
