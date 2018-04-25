@@ -173,6 +173,14 @@ namespace Barotrauma.Items.Components
             outputText.TextGetter += () => { return "Output: " + (int)(-currPowerConsumption) + " kW"; };
         }
 
+        public override void OnItemLoaded()
+        {
+            Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
+            inventory.CenterPos = new Vector2(
+                GuiFrame.children[0].Rect.Center.X / (float)GameMain.GraphicsWidth, 
+                (GuiFrame.children[0].Rect.Y + GuiFrame.children[0].Rect.Height * 0.75f) / GameMain.GraphicsHeight);
+        }
+
         private void UpdateGraph(float deltaTime)
         {
             graphTimer += deltaTime * 1000.0f;

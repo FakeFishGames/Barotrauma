@@ -23,7 +23,7 @@
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2">
-      <GuiFrame rect="0,0,860,400" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="50,0,860,400" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
@@ -44,7 +44,7 @@
       <output name="meltdown_warning"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hudpos="0.5,0.15">
+    <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="Fuel Rods">
       <Containable name="Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>

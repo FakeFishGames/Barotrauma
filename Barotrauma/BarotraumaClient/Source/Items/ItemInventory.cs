@@ -54,11 +54,12 @@ namespace Barotrauma
                 if (container.InventoryTopSprite == null)
                 {
                     Item item = Owner as Item;
-                    if (item != null && !subInventory)
+                    string label = container.UILabel ?? item?.Name;
+                    if (!string.IsNullOrEmpty(label) && !subInventory)
                     {
                         GUI.DrawString(spriteBatch,
-                            new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(item.Name).X / 2), (int)backgroundFrame.Y + 5),
-                            item.Name, Color.White * 0.9f);
+                            new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(label).X / 2), (int)backgroundFrame.Y + 5),
+                            label, Color.White * 0.9f);
                     }
                 }
                 else if (!subInventory)
