@@ -11,14 +11,15 @@
     <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>
     <BrokenSprite texture="junctionbox.png" sourcerect="140,0,70,84" depth="0.8" maxcondition="0"/>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="30">
       <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
       <item name="Screwdriver"/>
     </fixrequirement>
 
     <PowerTransfer canbeselected = "true">
-      <StatusEffect type="InWater" target="This" condition="-0.5"/>
+      <StatusEffect type="InWater" target="This" condition="-0.5">
+        <Conditional currPowerConsumption="lt -10"/>
+      </StatusEffect>
       <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
     </PowerTransfer>
 

@@ -10,7 +10,7 @@
 
     <trigger x="20" y ="0" width="333" height="113"/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
@@ -48,7 +48,7 @@
 
     <trigger x="15" y ="0" width="194" height="73"/>
     
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="10">
       <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
@@ -83,9 +83,8 @@
 
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20">
       <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
       <item name="Screwdriver"/>
     </fixrequirement>
     
@@ -118,9 +117,8 @@
     
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20">
       <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
       <item name="Screwdriver"/>
     </fixrequirement>
 

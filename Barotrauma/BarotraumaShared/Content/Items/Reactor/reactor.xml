@@ -7,13 +7,13 @@
     
     <trigger/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
       <skill name="Electrical Engineering" level="40"/>
       <item name="Wire"/>
       <item name="Screwdriver"/>
