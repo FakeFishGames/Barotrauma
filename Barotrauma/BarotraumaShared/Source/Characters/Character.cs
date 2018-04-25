@@ -1488,7 +1488,10 @@ namespace Barotrauma
             }
             else if (focusedCharacter != null && IsKeyHit(InputType.Select))
             {
-                SelectCharacter(focusedCharacter);                
+                SelectCharacter(focusedCharacter);
+#if CLIENT
+                CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
+#endif
             }
             else if (focusedItem != null)
             {
@@ -1774,7 +1777,7 @@ namespace Barotrauma
                         GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.DisplayName, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
- #endif
+#endif
                 if (GameMain.Server != null)
                 {
                     GameMain.Server.SendChatMessage(message.Message, message.MessageType.Value, null, this);
