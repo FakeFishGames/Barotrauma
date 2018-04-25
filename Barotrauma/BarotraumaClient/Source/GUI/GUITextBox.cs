@@ -197,6 +197,21 @@ namespace Barotrauma
             CaretEnabled = true;
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUITextBox(RectTransform rectT, string text = null, Color? textColor = null, ScalableFont font = null,
+            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null)
+            : base(style, rectT, parent)
+        {
+            Enabled = true;
+            this.color = color ?? Color.White;
+            this.alignment = textAlignment;
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textColor, font, textAlignment, wrap, this, style, color);
+            GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
+            CaretEnabled = true;
+        }
+
         public void Select()
         {
             Selected = true;
