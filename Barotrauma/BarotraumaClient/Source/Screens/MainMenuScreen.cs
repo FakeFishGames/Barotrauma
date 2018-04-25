@@ -36,13 +36,13 @@ namespace Barotrauma
             // TODO: test element, remove from final code
             outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
 
-            buttonsParent = new GUIFrame(new RectTransform(Point.Zero, parent: null, anchor: Anchor.BottomLeft)
+            buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0, 0.1f),
                 AbsoluteOffset = new Point(50, 0)
-            });
+            }, color: Color.Transparent);
             float scale = 1;
-            var buttons = CreateButtons(new Point(200, 30), 10, 20, scale);
+            var buttons = CreateButtons(relativeSize: new Vector2(1, 0.04f), absoluteSpacing: 5, extraSpacing: 20, relativeSpacing: 0.05f, scale: scale);
             SetupButtons(buttons);
             buttonsParent.RectTransform.ChangeScale(new Vector2(scale, scale));
             // Changing the text scale messes the text position
@@ -428,17 +428,30 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private List<GUIButton> CreateButtons(Point buttonSize, int spacing = 0, int extra = 0, float scale = 1)
+        private List<GUIButton> CreateButtons(Point? absoluteSize = null, Vector2? relativeSize = null, int absoluteSpacing = 0, int extraSpacing = 0, float relativeSpacing = 0, float scale = 1)
         {
             var buttons = new List<GUIButton>();
             int extraTotal = 0;
             for (int i = 0; i < 8; i++)
             {
-                extraTotal += i % 2 == 0 ? 0 : extra;
-                var buttonRect = new RectTransform(buttonSize, buttonsParent.RectTransform, Anchor.BottomLeft)
+                extraTotal += i % 2 == 0 ? 0 : extraSpacing;
+                RectTransform buttonRect;
+                if (absoluteSize.HasValue)
                 {
-                    AbsoluteOffset = new Point(0, ((int)(buttonSize.Y * scale) + spacing) * i + extraTotal)
-                };
+                    buttonRect = new RectTransform(absoluteSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft)
+                    {
+                        RelativeOffset = new Vector2(0, relativeSpacing * i),
+                        AbsoluteOffset = new Point(0, ((int)(absoluteSize.Value.Y * scale) + absoluteSpacing) * i + extraTotal)
+                    };
+                }
+                else
+                {
+                    buttonRect = new RectTransform(relativeSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft)
+                    {
+                        RelativeOffset = new Vector2(0, relativeSpacing + relativeSize.Value.Y * i),
+                        AbsoluteOffset = new Point(0, absoluteSpacing * i + extraTotal)
+                    };
+                }
                 var button = new GUIButton(buttonRect, "Button", textAlignment: Alignment.Center, parent: buttonsParent);
                 button.Color = button.Color * 0.8f;
                 buttons.Add(button);
