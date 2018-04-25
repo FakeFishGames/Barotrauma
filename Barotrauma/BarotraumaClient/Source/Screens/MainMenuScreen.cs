@@ -308,6 +308,8 @@ namespace Barotrauma
                         // offsets are cumulative
                         element.RectTransform.AbsoluteOffset = new Point(10, 10);
                         element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
+                        element.RectTransform.MinSize = new Point(200, 200);
+                        element.RectTransform.MaxSize = new Point(400, 400);
                     }
                     innerElements.Add(element);
                 }
@@ -332,8 +334,8 @@ namespace Barotrauma
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             // ui test, TODO: remove
-            //outerElement.Draw(spriteBatch);
-            //innerElements.ForEach(e => e.Draw(spriteBatch));
+            outerElement.Draw(spriteBatch);
+            innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -605,9 +607,9 @@ namespace Barotrauma
         // ui test, TODO: remove
         private void UpdateRects()
         {
-            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
             //var element = buttonsParent;
-            var element = menuTabs[(int)Tab.HostServer];
+            //var element = menuTabs[(int)Tab.HostServer];
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
