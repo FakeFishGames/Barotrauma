@@ -13,7 +13,6 @@
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
       <item name="Screwdriver"/>
     </fixrequirement>
 
