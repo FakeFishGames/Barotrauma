@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -16,19 +17,21 @@ namespace Barotrauma.Items.Components
         private float graphTimer;
         private int updateGraphInterval = 500;
 
-        private static Sprite fissionRateMeter, turbineOutputMeter;
-        private static Sprite meterPointer;
-        private static Sprite sectorSprite;
+        private Sprite fissionRateMeter, turbineOutputMeter;
+        private Sprite meterPointer;
+        private Sprite sectorSprite;
 
-        private static Sprite tempMeterFrame, tempMeterBar;
-        private static Sprite tempRangeIndicator;
+        private Sprite tempMeterFrame, tempMeterBar;
+        private Sprite tempRangeIndicator;
+
+        private Sprite graphLine;
 
         private GUIScrollBar fissionRateScrollBar;
         private GUIScrollBar turbineOutputScrollBar;
 
         private float[] outputGraph = new float[GraphSize];
         private float[] loadGraph = new float[GraphSize];
-
+        
         private GUITickBox criticalHeatWarning;
         private GUITickBox lowTemperatureWarning;
         private GUITickBox criticalOutputWarning;
@@ -43,29 +46,39 @@ namespace Barotrauma.Items.Components
             "ReactorWarningMeltdown","ReactorWarningSCRAM"
         };
 
-        partial void InitProjSpecific()
+
+
+        partial void InitProjSpecific(XElement element)
         {
-            //TODO: define in xml
-            if (fissionRateMeter == null)
+            foreach (XElement subElement in element.Elements())
             {
-                fissionRateMeter = new Sprite("Content/Items/MachineInterface.png", new Rectangle(0, 335, 252, 177));
-                fissionRateMeter.Origin = new Vector2(127, 116);
-
-                turbineOutputMeter = new Sprite("Content/Items/MachineInterface.png", new Rectangle(252, 335, 252, 177));
-                turbineOutputMeter.Origin = new Vector2(127, 116);
-
-                meterPointer = new Sprite("Content/Items/MachineInterface.png", new Rectangle(367, 22, 14, 118));
-                meterPointer.Origin = new Vector2(7, 110);
-
-                sectorSprite = new Sprite("Content/Items/MachineInterface.png", new Rectangle(329, 160, 90, 172));
-                sectorSprite.Origin = new Vector2(sectorSprite.SourceRect.Width, sectorSprite.SourceRect.Height / 2 - 8);
-
-                tempMeterFrame = new Sprite("Content/Items/MachineInterface.png", new Rectangle(188, 212, 27, 95));
-                tempMeterBar = new Sprite("Content/Items/MachineInterface.png", new Rectangle(191, 194, 21, 8));
-                tempMeterBar.Origin = new Vector2(tempMeterBar.size.X / 2, 0);
-
-                tempRangeIndicator = new Sprite("Content/Items/MachineInterface.png", new Rectangle(176, 308, 51, 10));
-                tempRangeIndicator.Origin = tempRangeIndicator.size / 2;
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "fissionratemeter":
+                        fissionRateMeter = new Sprite(subElement);
+                        break;
+                    case "turbineoutputmeter":
+                        turbineOutputMeter = new Sprite(subElement);
+                        break;
+                    case "meterpointer":
+                        meterPointer = new Sprite(subElement);
+                        break;
+                    case "sectorsprite":
+                        sectorSprite = new Sprite(subElement);
+                        break;
+                    case "tempmeterframe":
+                        tempMeterFrame = new Sprite(subElement);
+                        break;
+                    case "tempmeterbar":
+                        tempMeterBar = new Sprite(subElement);
+                        break;
+                    case "temprangeindicator":
+                        tempRangeIndicator = new Sprite(subElement);
+                        break;
+                    case "graphline":
+                        graphLine = new Sprite(subElement);
+                        break;
+                }
             }
 
             GuiFrame.Padding = Vector4.One * 20.0f;
@@ -121,7 +134,7 @@ namespace Barotrauma.Items.Components
 
                 return false;
             };
-
+            
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "Turbine Output", "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
             {
                 CanBeFocused = false
@@ -372,8 +385,11 @@ namespace Barotrauma.Items.Components
             graph[0] = newValue;
         }
 
-        static void DrawGraph(IList<float> graph, SpriteBatch spriteBatch, Rectangle rect, float maxVal, float xOffset, Color color)
+        private void DrawGraph(IList<float> graph, SpriteBatch spriteBatch, Rectangle rect, float maxVal, float xOffset, Color color)
         {
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.GraphicsDevice.ScissorRectangle = rect;
+
             float lineWidth = (float)rect.Width / (float)(graph.Count - 2);
             float yScale = (float)rect.Height / maxVal;
 
@@ -388,8 +404,16 @@ namespace Barotrauma.Items.Components
                 currX -= lineWidth;
 
                 Vector2 newPoint = new Vector2(currX, rect.Bottom - graph[i] * yScale);
-
-                GUI.DrawLine(spriteBatch, prevPoint, newPoint - new Vector2(1.0f, 0), color);
+                
+                if (graphLine == null)
+                {
+                    GUI.DrawLine(spriteBatch, prevPoint, newPoint - new Vector2(1.0f, 0), color);
+                }
+                else
+                {
+                    Vector2 dir = Vector2.Normalize(newPoint - prevPoint);
+                    GUI.DrawLine(spriteBatch, graphLine.Texture, prevPoint - dir, newPoint + dir, color, 0, 5);
+                }
 
                 prevPoint = newPoint;
             }
@@ -397,7 +421,28 @@ namespace Barotrauma.Items.Components
             Vector2 lastPoint = new Vector2(rect.X,
                 rect.Bottom - (graph[graph.Count - 1] + (graph[graph.Count - 2] - graph[graph.Count - 1]) * xOffset) * yScale);
 
-            GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color);
+            if (graphLine == null)
+            {
+                GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color);
+            }
+            else
+            {
+                GUI.DrawLine(spriteBatch, graphLine.Texture, prevPoint, lastPoint + (lastPoint - prevPoint), color, 0, 5);
+            }
+
+            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+        }
+        
+        protected override void RemoveComponentSpecific()
+        {
+            graphLine.Remove();
+            fissionRateMeter.Remove();
+            turbineOutputMeter.Remove();
+            meterPointer.Remove();
+            sectorSprite.Remove();
+            tempMeterFrame.Remove();
+            tempMeterBar.Remove();
+            tempRangeIndicator.Remove();
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

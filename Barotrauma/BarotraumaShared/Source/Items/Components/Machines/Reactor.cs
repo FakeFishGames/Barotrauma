@@ -162,10 +162,10 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {         
             IsActive = true;
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
                 
         public override void Update(float deltaTime, Camera cam)
         {

@@ -24,6 +24,15 @@
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2">
       <GuiFrame rect="50,0,860,400" alignment="Center" style="ItemUI"/>
+      <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
+      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
+      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
+      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93"/>
+      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5"/>
+      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
+      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
+      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
+      
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
