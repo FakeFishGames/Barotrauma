@@ -57,6 +57,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
 
+            // TODO: refactor using the RectTransform
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
             campaignSetupUI.StartNewGame = StartGame;
@@ -65,38 +66,49 @@ namespace Barotrauma
 
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 30), TextManager.Get("ServerName"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
+            CreateHostServerFields();
 
-            new GUITextBlock(new Rectangle(0, 50, 100, 30), TextManager.Get("ServerPort"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
-            portBox.Text = NetConfig.DefaultPort.ToString();
-            portBox.ToolTip = "Server port";
+            //new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), parent: menuTabs[(int)Tab.HostServer].RectTransform)
+            //{
+            //    RelativeOffset = new Vector2(0.05f, 0.1f)
+            //}, TextManager.Get("ServerName"), parent: menuTabs[(int)Tab.HostServer]);
+            //serverNameBox = new GUITextBox(new RectTransform(new Vector2(0.25f, 0.1f), parent: menuTabs[(int)Tab.HostServer].RectTransform)
+            //{
+            //    RelativeOffset = new Vector2(0.25f, 0.1f)
+            //}, parent: menuTabs[(int)Tab.HostServer]);
 
-            new GUITextBlock(new Rectangle(0, 100, 100, 30), TextManager.Get("MaxPlayers"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, "", menuTabs[(int)Tab.HostServer]);
-            maxPlayersBox.Text = "8";
-            maxPlayersBox.Enabled = false;
+            //new GUITextBlock(new Rectangle(0, 0, 100, 30), TextManager.Get("ServerName"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            //serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
 
-            var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", "", menuTabs[(int)Tab.HostServer]);
-            minusPlayersBox.UserData = -1;
-            minusPlayersBox.OnClicked = ChangeMaxPlayers;
+            //new GUITextBlock(new Rectangle(0, 50, 100, 30), TextManager.Get("ServerPort"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            //portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
+            //portBox.Text = NetConfig.DefaultPort.ToString();
+            //portBox.ToolTip = "Server port";
 
-            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", "", menuTabs[(int)Tab.HostServer]);
-            plusPlayersBox.UserData = 1;
-            plusPlayersBox.OnClicked = ChangeMaxPlayers;
+            //new GUITextBlock(new Rectangle(0, 100, 100, 30), TextManager.Get("MaxPlayers"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            //maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, "", menuTabs[(int)Tab.HostServer]);
+            //maxPlayersBox.Text = "8";
+            //maxPlayersBox.Enabled = false;
 
-            new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
+            //var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", "", menuTabs[(int)Tab.HostServer]);
+            //minusPlayersBox.UserData = -1;
+            //minusPlayersBox.OnClicked = ChangeMaxPlayers;
 
-            isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
+            //var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", "", menuTabs[(int)Tab.HostServer]);
+            //plusPlayersBox.UserData = 1;
+            //plusPlayersBox.OnClicked = ChangeMaxPlayers;
 
-            useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
+            //new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            //passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
 
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
-            hostButton.OnClicked = HostServerClicked;
+            //isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            //isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
+
+            //useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            //useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
+
+            //GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
+            //hostButton.OnClicked = HostServerClicked;
 
             this.game = game;
         }
@@ -428,6 +440,90 @@ namespace Barotrauma
         }
 
         #region UI Methods
+        private void CreateHostServerFields()
+        {
+            Vector2 textLabelSize = new Vector2(0.25f, 0.1f);
+            Vector2 textFieldSize = new Vector2(0.25f, 0.1f);
+            Vector2 buttonSize = new Vector2(0.05f, 0.05f);
+            float leftMargin = 0.05f;
+            float topMargin = 0.1f;
+            int absoluteSpacing = 5;
+            float relativeSpacing = 0.01f;
+            GUIComponent parent = menuTabs[(int)Tab.HostServer];
+
+            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform)
+            {
+                RelativeOffset = new Vector2(leftMargin, topMargin)
+            }, TextManager.Get("ServerName"), parent: parent);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(absoluteSpacing, 0),
+                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, topMargin)
+            }, parent: parent);
+
+
+            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(0, absoluteSpacing),
+                RelativeOffset = new Vector2(leftMargin, topMargin + textLabelSize.Y + relativeSpacing)
+            }, TextManager.Get("ServerPort"), parent: parent);
+            portBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(absoluteSpacing, 0),
+                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, topMargin + textFieldSize.Y + relativeSpacing)
+            }, parent: parent)
+            {
+                Text = NetConfig.DefaultPort.ToString(),
+                ToolTip = "Server port"
+            };
+
+            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(0, absoluteSpacing * 2),
+                RelativeOffset = new Vector2(leftMargin, topMargin + (textLabelSize.Y + relativeSpacing) * 2)
+            }, TextManager.Get("MaxPlayers"), parent: parent);
+            maxPlayersBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(absoluteSpacing, 0),
+                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, topMargin + (textFieldSize.Y + relativeSpacing) * 2)
+            }, parent: parent)
+            {
+                Text = "8",
+                Enabled = false
+            };
+
+            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(0, absoluteSpacing * 3),
+                RelativeOffset = new Vector2(leftMargin, topMargin + (textLabelSize.Y + relativeSpacing) * 3)
+            }, "-", parent: parent)
+            {
+                UserData = -1,
+                OnClicked = ChangeMaxPlayers
+            };
+            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
+            {
+                AbsoluteOffset = new Point(0, absoluteSpacing * 4),
+                RelativeOffset = new Vector2(leftMargin, topMargin + (textLabelSize.Y + relativeSpacing) * 3 + buttonSize.Y + relativeSpacing)
+            }, "+", parent: parent)
+            {
+                UserData = 1,
+                OnClicked = ChangeMaxPlayers
+            };
+
+            //new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            //passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
+
+            //isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            //isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
+
+            //useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            //useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
+
+            //GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
+            //hostButton.OnClicked = HostServerClicked;
+        }
+
         private List<GUIButton> CreateButtons(Point? absoluteSize = null, Vector2? relativeSize = null, int absoluteSpacing = 0, int extraSpacing = 0, float relativeSpacing = 0, float scale = 1)
         {
             var buttons = new List<GUIButton>();
@@ -514,7 +610,8 @@ namespace Barotrauma
         private void UpdateRects()
         {
             //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
-            var element = buttonsParent;
+            //var element = buttonsParent;
+            var element = menuTabs[(int)Tab.HostServer];
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
@@ -525,6 +622,7 @@ namespace Barotrauma
                 {
                     RectTransform.globalScale *= 1 + step;
                     buttonsParent.RectTransform.RecalculateScale(true);
+                    menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
                 }
                 else
                 {
@@ -532,8 +630,7 @@ namespace Barotrauma
                 }
                 buttonsParent.children
                     .Select(b => b as GUIButton)
-                    .Where(b => b != null)
-                    .ForEach(b => b.TextBlock.SetTextPos());
+                    .ForEach(b => b?.TextBlock.SetTextPos());
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
@@ -541,6 +638,7 @@ namespace Barotrauma
                 {
                     RectTransform.globalScale *= 1 - step;
                     buttonsParent.RectTransform.RecalculateScale(true);
+                    menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
                 }
                 else
                 {
@@ -548,8 +646,7 @@ namespace Barotrauma
                 }
                 buttonsParent.children
                     .Select(b => b as GUIButton)
-                    .Where(b => b != null)
-                    .ForEach(b => b.TextBlock.SetTextPos());
+                    .ForEach(b => b?.TextBlock.SetTextPos());
             }
             // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
