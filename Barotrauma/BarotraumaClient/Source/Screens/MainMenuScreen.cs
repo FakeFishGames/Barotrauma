@@ -42,12 +42,14 @@ namespace Barotrauma
             //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test.", parent: p);
             //new GUITextBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 30) }, "Carry on.", parent: p);
             //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
-            var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown", parent: p);
-            dropdown.AddItem("Test1");
-            dropdown.AddItem("Test2");
-            dropdown.AddItem("Test3");
-            dropdown.AddItem("Test4");
-            dropdown.AddItem("Test5");
+            //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown", parent: p);
+            //dropdown.AddItem("Test1");
+            //dropdown.AddItem("Test2");
+            //dropdown.AddItem("Test3");
+            //dropdown.AddItem("Test4");
+            //dropdown.AddItem("Test5");
+            var rectT = new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center);
+            new GUIImage(rectT, new Sprite(CreateTexture(100, 100), rectT.Rect, Vector2.Zero), parent: p);
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
@@ -732,6 +734,19 @@ namespace Barotrauma
             {
                 element.RectTransform.SetPosition(Anchor.BottomRight);
             }
+        }
+
+        public Texture2D CreateTexture(int width, int height, Color? color = null)
+        {
+            var texture = new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, width, height);
+            var data = new Color[width * height];
+            Color c = color ?? Color.White;
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = c;
+            }
+            texture.SetData(data);
+            return texture;
         }
     }
 }
