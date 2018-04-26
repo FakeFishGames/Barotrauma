@@ -51,19 +51,21 @@ namespace Barotrauma
             //buttons.ForEach(b => b.TextBlock.TextScale = scale);
             buttons.ForEach(b => b.TextBlock.SetTextPos());
 
-            // TODO: if the resolution is very low, this is too small a size -> min size?
             var relativeSize = new Vector2(0.5f, 0.5f);
+            var minSize = new Point(600, 400);
+            var maxSize = new Point(900, 600);
             var anchor = Anchor.Center;
+            var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
 
             // TODO: refactor using the RectTransform
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
             campaignSetupUI.StartNewGame = StartGame;
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, parent: null, anchor: anchor));
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
 
             CreateHostServerFields();
 
