@@ -276,7 +276,7 @@ namespace Barotrauma
             {
                 OpenHealthWindow = openHealthWindow == this ? null : this;
             }
-            if (PlayerInput.RightButtonClicked() || PlayerInput.KeyHit(InputType.Select)) OpenHealthWindow = null;
+            if (PlayerInput.RightButtonClicked()) OpenHealthWindow = null;
             
             if (character.IsDead)
             {
