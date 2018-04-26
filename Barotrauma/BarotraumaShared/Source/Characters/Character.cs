@@ -1786,7 +1786,7 @@ namespace Barotrauma
                     }
                 }
 #endif
-                if (GameMain.Server != null)
+                if (GameMain.Server != null && message.MessageType != ChatMessageType.Order)
                 {
                     GameMain.Server.SendChatMessage(message.Message, message.MessageType.Value, null, this);
                 }

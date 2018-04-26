@@ -84,7 +84,7 @@ namespace Barotrauma
                     }
                     else if (GameMain.Server != null)
                     {
-                        GameMain.Server.SendOrderChatMessage(msg, null);
+                        GameMain.Server.SendOrderChatMessage(msg);
                     }
                 }
                 return;
@@ -105,7 +105,7 @@ namespace Barotrauma
                 }
                 else if (GameMain.Server != null)
                 {
-                    GameMain.Server.SendOrderChatMessage(msg, null);
+                    GameMain.Server.SendOrderChatMessage(msg);
                 }
             }            
         }
@@ -139,7 +139,7 @@ namespace Barotrauma
                 }
                 else if (GameMain.Server != null)
                 {
-                    GameMain.Server.SendOrderChatMessage(msg, null);
+                    GameMain.Server.SendOrderChatMessage(msg);
                 }
             }
             

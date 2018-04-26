@@ -190,8 +190,6 @@ namespace Barotrauma
 
             if (newOrder != null)
             {
-#if CLIENT
-                //TODO: move crewmanager to shared project to allow ai crew to report things in dedicated server?
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
@@ -200,10 +198,9 @@ namespace Barotrauma
                     if (GameMain.Server != null)
                     {
                         OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character);
-                        GameMain.Server.SendOrderChatMessage(msg, null);
+                        GameMain.Server.SendOrderChatMessage(msg);
                     }
-                }             
-#endif
+                }
             }
         }
 
