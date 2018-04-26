@@ -269,19 +269,28 @@ namespace Barotrauma.Networking
 
             if (type == ChatMessageType.Order)
             {
+                if (!c.Character.CanSpeak || c.Character.IsDead) return;
+
+                ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
                 if (orderMsg.Order.TargetAllCharacters)
                 {
 #if CLIENT
-                    GameMain.GameSession?.CrewManager?.AddOrder(
-                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
-                        orderMsg.Order.Prefab.FadeOutTime);
+                    //add the order to the crewmanager only if the host is not controlling a character 
+                    //OR the character is close enough to hear it
+                    if (Character.Controlled == null || 
+                        !string.IsNullOrEmpty(ApplyDistanceEffect(orderMsg.Text, messageType, orderMsg.Sender, Character.Controlled)))
+                    {
+                        GameMain.GameSession?.CrewManager?.AddOrder(
+                            new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
+                            orderMsg.Order.Prefab.FadeOutTime);
+                    }
 #endif
                 }
-                else
+                else if (orderTargetCharacter != null)
                 {
-                    orderTargetCharacter?.SetOrder(
+                    orderTargetCharacter.SetOrder(
                         new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()), 
-                            orderMsg.OrderOption, orderMsg.Sender);
+                            orderMsg.OrderOption, orderMsg.Sender);                    
                 }
 
                 GameMain.Server.SendOrderChatMessage(orderMsg);
@@ -318,6 +327,13 @@ namespace Barotrauma.Networking
             }
 
             return length;
+        }
+
+        public static bool CanUseRadio(Character sender)
+        {
+            if (sender == null) return false;
+            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
         }
 
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c)

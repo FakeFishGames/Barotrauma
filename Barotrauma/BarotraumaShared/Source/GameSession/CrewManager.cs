@@ -53,5 +53,18 @@ namespace Barotrauma
         {
             activeOrders.RemoveAll(o => o.First == order);
         }
+
+        public void Update(float deltaTime)
+        {
+            foreach (Pair<Order, float> order in activeOrders)
+            {
+                order.Second -= deltaTime;
+            }
+            activeOrders.RemoveAll(o => o.Second <= 0.0f);
+
+            UpdateProjectSpecific(deltaTime);
+        }
+
+        partial void UpdateProjectSpecific(float deltaTime);
     }
 }

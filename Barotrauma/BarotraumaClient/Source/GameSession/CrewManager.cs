@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -20,12 +21,14 @@ namespace Barotrauma
 
         public int WinningTeam = 1;
         
+        private float conversationTimer, conversationLineTimer;
+        private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
+
+        #region UI
+
         private GUIFrame guiFrame;
         private GUIFrame characterFrame;
         private GUIListBox characterListBox;
-
-        private float conversationTimer, conversationLineTimer;
-        private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
         private GUIButton scrollButtonUp, scrollButtonDown;
 
@@ -37,8 +40,10 @@ namespace Barotrauma
 
         private ChatBox chatBox;
 
-        private CrewCommander commander;
-        
+        //listbox for report buttons that appear at the corner of the screen 
+        //when there's something to report in the hull the character is currently in
+        private GUIListBox reportButtonContainer;
+
         private GUIComponent orderTargetFrame;
 
         public bool ToggleCrewAreaOpen
@@ -47,10 +52,9 @@ namespace Barotrauma
             set { toggleCrewAreaOpen = value; }
         }
 
-        public CrewCommander CrewCommander
-        {
-            get { return commander; }
-        }
+        #endregion
+        
+        #region Constructors
 
         public CrewManager(XElement element, bool isSinglePlayer)
             : this(isSinglePlayer)
@@ -94,152 +98,40 @@ namespace Barotrauma
 
             scrollButtonUp = new GUIButton(new Rectangle(0, (int)(-scrollButtonHeight * 0.66f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
             scrollButtonUp.ClampMouseRectToParent = false;
+            scrollButtonUp.Visible = false;
             scrollButtonDown = new GUIButton(new Rectangle(0, characterListBox.Rect.Height - (int)(scrollButtonHeight * 0.33f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
             scrollButtonDown.ClampMouseRectToParent = false;
             scrollButtonDown.children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+            scrollButtonDown.Visible = false;
+
+            //PH: make space for the icon part of the report button
+            Rectangle rect = HUDLayoutSettings.ReportArea;
+            rect = new Rectangle(rect.X, rect.Y + 64, rect.Width, rect.Height);
+            reportButtonContainer = new GUIListBox(rect, null, Alignment.TopRight, null);
+            reportButtonContainer.Color = Color.Transparent;
+            reportButtonContainer.Spacing = 50;
+            reportButtonContainer.HideChildrenOutsideFrame = false;
 
             if (isSinglePlayer)
             {
                 chatBox = new ChatBox(guiFrame, true);
             }
-
-            commander = new CrewCommander(this);
         }
 
+        #endregion
+
+        #region Character list management
+        
         public List<Character> GetCharacters()
         {
             return new List<Character>(characters);
         }
-
+        
         public List<CharacterInfo> GetCharacterInfos()
         {
             return new List<CharacterInfo>(characterInfos);
         }
 
-        /// <summary>
-        /// Sets which character is selected in the crew UI (highlight effect etc)
-        /// </summary>
-        public bool CharacterClicked(GUIComponent component, object selection)
-        {
-            Character character = selection as Character;
-            if (character == null || character.IsDead || character.IsUnconscious) return false;
-            Character.Controlled = character;
-            return true;
-        }
-
-        /// <summary>
-        /// Sets which character is selected in the crew UI (highlight effect etc)
-        /// </summary>
-        public void SetCharacterSelected(Character character)
-        {
-            if (character != null && !characters.Contains(character)) return;
-            
-            GUIComponent selectedCharacterFrame = null;
-            foreach (GUIComponent child in characterListBox.children)
-            {
-                GUIButton button = child.children.Find(c => c.UserData is Character) as GUIButton;
-                if (button == null) continue;
-
-                bool isSelectedCharacter = (Character)button.UserData == character;
-
-                button.Selected = isSelectedCharacter;
-                child.GetChild("reportbuttons").Visible = isSelectedCharacter;
-                child.GetChild("orderbuttons").Visible = !isSelectedCharacter;
-
-                if ((Character)button.UserData == character)
-                {
-                    selectedCharacterFrame = child;
-                }
-            }
-
-            if (selectedCharacterFrame != null)
-            {
-                //move the selected character to the top of the list
-                characterListBox.RemoveChild(selectedCharacterFrame);
-                characterListBox.children.Insert(0, selectedCharacterFrame);
-                characterListBox.BarScroll = 0.0f; 
-            }      
-        }
-
-        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
-        {
-            if (!isSinglePlayer)
-            {
-                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
-                return;
-            }
-
-            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
-        }
-
-        private void UpdateConversations(float deltaTime)
-        {
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.P))
-            {
-                conversationTimer = 0.0f;
-            }
-
-            conversationTimer -= deltaTime;
-            if (conversationTimer <= 0.0f)
-            {
-                List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
-                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
-                if (GameMain.Server != null)
-                {
-                    foreach (Client client in GameMain.Server.ConnectedClients)
-                    {
-                        if (client.Character != null) availableSpeakers.Remove(client.Character);
-                    }
-                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
-                }
-                
-                pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
-                conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
-            }
-
-            if (pendingConversationLines.Count > 0)
-            {
-                conversationLineTimer -= deltaTime;
-                if (conversationLineTimer <= 0.0f)
-                {
-                    //speaker of the next line can't speak, interrupt the conversation
-                    if (!pendingConversationLines[0].First.CanSpeak)
-                    {
-                        pendingConversationLines.Clear();
-                        return;
-                    }
-
-                    pendingConversationLines[0].First.Speak(pendingConversationLines[0].Second, null);
-                    if (pendingConversationLines.Count > 1)
-                    {
-                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].Second.Length * 0.1f, 1.0f, 5.0f);
-                    }
-                    pendingConversationLines.RemoveAt(0);                    
-                }
-            }
-        }
-        
-        public void SetCharacterOrder(Character character, Order order, string option = null)
-        {
-            foreach (GUIComponent child in characterListBox.children)
-            {
-                var characterFrame = characterListBox.FindChild(character);
-                if (characterFrame == null) continue;
-
-                var currentOrderIcon = characterFrame.FindChild("currentorder");
-                if (currentOrderIcon != null)
-                {
-                    characterFrame.RemoveChild(currentOrderIcon);
-                }
-
-                var img = new GUIImage(new Rectangle(0, 0, characterFrame.Rect.Height, characterFrame.Rect.Height), order.SymbolSprite, Alignment.CenterRight, characterFrame);
-                img.Scale = characterFrame.Rect.Height / (float)img.SourceRect.Width;
-                img.Color = order.Color;
-                img.UserData = "currentorder";
-                img.ToolTip = order.Name;
-            }
-        }
-        
         public void AddCharacter(Character character)
         {
             if (character.Removed)
@@ -252,7 +144,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
                 return;
             }
-
+            
             if (!characters.Contains(character)) characters.Add(character);
             if (!characterInfos.Contains(character.Info))
             {
@@ -274,6 +166,45 @@ namespace Barotrauma
             }
         }
 
+        public void AddCharacterInfo(CharacterInfo characterInfo)
+        {
+            if (characterInfos.Contains(characterInfo))
+            {
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
+                return;
+            }
+
+            characterInfos.Add(characterInfo);
+        }
+
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false)
+        {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
+                return;
+            }
+            characters.Remove(character);
+            if (removeInfo) characterInfos.Remove(character.Info);
+        }
+        
+        /// <summary>
+        /// Remove info of a selected character. The character will not be visible in any menus or the round summary.
+        /// </summary>
+        /// <param name="characterInfo"></param>
+        public void RemoveCharacterInfo(CharacterInfo characterInfo)
+        {
+            characterInfos.Remove(characterInfo);
+        }
+
+        /// <summary>
+        /// Create the UI component that holds the character's portrait and order/report buttons for the character
+        /// </summary>
         private GUIFrame CreateCharacterFrame(Character character, GUIComponent parent)
         {
             int correctOrderCount = 0, neutralOrderCount = 0, wrongOrderCount = 0;
@@ -334,7 +265,7 @@ namespace Barotrauma
                 img.Scale = iconWidth / (float)img.SourceRect.Width;
                 img.Color = order.Color;
                 img.ToolTip = order.Name;
-                
+
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
 
                 btn.OnClicked += (GUIButton button, object userData) =>
@@ -347,8 +278,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        commander.SetOrder(character, order, Character.Controlled);
-                        SetCharacterOrder(character, order);
+                        SetCharacterOrder(character, order, null, Character.Controlled);
                     }
                     return true;
                 };
@@ -356,7 +286,6 @@ namespace Barotrauma
                 btn.ToolTip = order.Name;
                 x -= iconWidth + padding;
             }
-
 
             var reportButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
             reportButtonFrame.UserData = "reportbuttons";
@@ -369,13 +298,13 @@ namespace Barotrauma
                 var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
                 img.Scale = iconWidth / (float)img.SourceRect.Width;
                 img.Color = order.Color;
-                img.ToolTip = order.Name;                
+                img.ToolTip = order.Name;
                 img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
 
                 btn.OnClicked += (GUIButton button, object userData) =>
                 {
                     if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
-                    commander.SetOrder(character, order, Character.Controlled);                    
+                    SetCharacterOrder(character, order, null, Character.Controlled);
                     return true;
                 };
 
@@ -388,7 +317,15 @@ namespace Barotrauma
                 Padding = Vector4.Zero,
                 UserData = character
             };
-            if (isSinglePlayer) characterArea.OnClicked = CharacterClicked;
+            if (isSinglePlayer)
+            {
+                characterArea.OnClicked = CharacterClicked;
+            }
+            else
+            { 
+                characterArea.CanBeFocused = false;
+                characterArea.CanBeSelected = false;
+            }
 
             var characterImage = new GUIImage(new Rectangle(0, 0, 0, 0), character.Info.HeadSprite, Alignment.CenterLeft, characterArea)
             {
@@ -405,7 +342,260 @@ namespace Barotrauma
             };
             return frame;
         }
+        
+        /// <summary>
+        /// Sets which character is selected in the crew UI (highlight effect etc)
+        /// </summary>
+        public bool CharacterClicked(GUIComponent component, object selection)
+        {
+            Character character = selection as Character;
+            if (character == null || character.IsDead || character.IsUnconscious) return false;
+            Character.Controlled = character;
+            return true;
+        }
 
+        /// <summary>
+        /// Sets which character is selected in the crew UI (highlight effect etc)
+        /// </summary>
+        public void SetCharacterSelected(Character character)
+        {
+            if (character != null && !characters.Contains(character)) return;
+            
+            GUIComponent selectedCharacterFrame = null;
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                GUIButton button = child.children.Find(c => c.UserData is Character) as GUIButton;
+                if (button == null) continue;
+
+                bool isSelectedCharacter = (Character)button.UserData == character;
+
+                button.Selected = isSelectedCharacter;
+                child.GetChild("reportbuttons").Visible = isSelectedCharacter;
+                child.GetChild("orderbuttons").Visible = !isSelectedCharacter;
+
+                if ((Character)button.UserData == character)
+                {
+                    selectedCharacterFrame = child;
+                }
+            }
+
+            if (selectedCharacterFrame != null)
+            {
+                //move the selected character to the top of the list
+                characterListBox.RemoveChild(selectedCharacterFrame);
+                characterListBox.children.Insert(0, selectedCharacterFrame);
+                characterListBox.BarScroll = 0.0f; 
+            }      
+        }
+
+        public void ReviveCharacter(Character revivedCharacter)
+        {
+            GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
+            if (characterBlock != null)
+            {
+                characterBlock.Color = Color.Transparent;
+            }
+            else
+            {
+                AddCharacter(revivedCharacter);
+            }
+        }
+
+        public void KillCharacter(Character killedCharacter)
+        {
+            GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
+            if (characterBlock != null)
+            {
+                CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
+            }
+            RemoveCharacter(killedCharacter);
+        }
+
+        private IEnumerable<object> KillCharacterAnim(GUIComponent component)
+        {
+            List<GUIComponent> components = component.GetAllChildren();
+            components.Add(component);
+            foreach (GUIComponent comp in components)
+            {
+                comp.Color = Color.DarkRed;
+            }
+
+            yield return new WaitForSeconds(1.0f);
+
+            float timer = 0.0f;
+            float hideDuration = 1.0f;
+            while (timer < hideDuration)
+            {
+                foreach (GUIComponent comp in components)
+                {
+                    comp.Color = Color.Lerp(Color.DarkRed, Color.Transparent, timer / hideDuration);
+                    comp.Rect = new Rectangle(component.Rect.X, component.Rect.Y, component.Rect.Width, (int)(component.Rect.Height * (1.0f - (timer / hideDuration))));
+                }
+                timer += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+            component.Parent.RemoveChild(component);
+            yield return CoroutineStatus.Success;
+        }
+
+        #endregion
+
+        #region Dialog
+
+        private void UpdateConversations(float deltaTime)
+        {
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.P))
+            {
+                conversationTimer = 0.0f;
+            }
+
+            conversationTimer -= deltaTime;
+            if (conversationTimer <= 0.0f)
+            {
+                List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
+                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
+                if (GameMain.Server != null)
+                {
+                    foreach (Client client in GameMain.Server.ConnectedClients)
+                    {
+                        if (client.Character != null) availableSpeakers.Remove(client.Character);
+                    }
+                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
+                }
+                
+                pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
+                conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
+            }
+
+            if (pendingConversationLines.Count > 0)
+            {
+                conversationLineTimer -= deltaTime;
+                if (conversationLineTimer <= 0.0f)
+                {
+                    //speaker of the next line can't speak, interrupt the conversation
+                    if (!pendingConversationLines[0].First.CanSpeak)
+                    {
+                        pendingConversationLines.Clear();
+                        return;
+                    }
+
+                    pendingConversationLines[0].First.Speak(pendingConversationLines[0].Second, null);
+                    if (pendingConversationLines.Count > 1)
+                    {
+                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].Second.Length * 0.1f, 1.0f, 5.0f);
+                    }
+                    pendingConversationLines.RemoveAt(0);                    
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Adds the message to the single player chatbox.
+        /// </summary>
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
+        {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+
+            chatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
+        }
+
+        private WifiComponent GetHeadset(Character character, bool requireEquipped)
+        {
+            if (character?.Inventory == null) return null;
+
+            var radioItem = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
+            if (radioItem == null) return null;
+            if (requireEquipped && !character.HasEquippedItem(radioItem)) return null;
+
+            return radioItem.GetComponent<WifiComponent>();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Sets the character's current order (if it's close enough to receive messages from orderGiver) and
+        /// displays the order in the crew UI
+        /// </summary>
+        public void SetCharacterOrder(Character character, Order order, string option, Character orderGiver)
+        {
+            if (order.TargetAllCharacters)
+            {
+                if (orderGiver == null || orderGiver.CurrentHull == null) return;
+                AddOrder(new Order(order.Prefab, orderGiver.CurrentHull, null), order.Prefab.FadeOutTime);
+
+                if (IsSinglePlayer)
+                {
+                    orderGiver.Speak(
+                        order.GetChatMessage("", orderGiver.CurrentHull?.RoomName), ChatMessageType.Order);
+                }
+                else
+                {
+                    OrderChatMessage msg = new OrderChatMessage(order, "", orderGiver.CurrentHull, null, orderGiver);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        GameMain.Server.SendOrderChatMessage(msg);
+                    }
+                }
+                return;
+            }
+
+            character.SetOrder(order, option, orderGiver);
+            if (IsSinglePlayer)
+            {
+                orderGiver?.Speak(
+                    order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
+            }
+            else
+            {
+                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SendChatMessage(msg);
+                }
+                else if (GameMain.Server != null)
+                {
+                    GameMain.Server.SendOrderChatMessage(msg);
+                }
+            }
+            DisplayCharacterOrder(character, order);
+        }
+
+        /// <summary>
+        /// Displays the specified order in the crew UI next to the character. 
+        /// </summary>
+        public void DisplayCharacterOrder(Character character, Order order)
+        {
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                var characterFrame = characterListBox.FindChild(character);
+                if (characterFrame == null) continue;
+
+                var currentOrderIcon = characterFrame.FindChild("currentorder");
+                if (currentOrderIcon != null)
+                {
+                    characterFrame.RemoveChild(currentOrderIcon);
+                }
+
+                var img = new GUIImage(new Rectangle(0, 0, characterFrame.Rect.Height, characterFrame.Rect.Height), order.SymbolSprite, Alignment.CenterRight, characterFrame);
+                img.Scale = characterFrame.Rect.Height / (float)img.SourceRect.Width;
+                img.Color = order.Color;
+                img.UserData = "currentorder";
+                img.ToolTip = order.Name;
+            }
+        }
+        
+        /// <summary>
+        /// Create the UI panel that's used to select the target and options for a given order 
+        /// (which railgun to use, whether to power up the reactor or shut it down...)
+        /// </summary>
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
             List<Item> matchingItems = new List<Item>();
@@ -437,8 +627,7 @@ namespace Barotrauma
                     optionButton.OnClicked += (btn, userData) =>
                     {
                         if (Character.Controlled == null) return false;
-                        commander.SetOrder(character, userData as Order, orderOption, Character.Controlled);
-                        SetCharacterOrder(character, userData as Order, orderOption);
+                        SetCharacterOrder(character, userData as Order, orderOption, Character.Controlled);
                         orderTargetFrame = null;
                         return true;
                     };
@@ -449,46 +638,20 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Remove the character from the crew (and crew menus).
-        /// </summary>
-        /// <param name="character">The character to remove</param>
-        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
-        public void RemoveCharacter(Character character, bool removeInfo = false)
-        {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace);
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
-        }
-        
-        public void AddCharacterInfo(CharacterInfo characterInfo)
-        {
-            if (characterInfos.Contains(characterInfo))
-            {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
-                return;
-            }
-
-            characterInfos.Add(characterInfo);
-        }
-
-        public void RemoveCharacterInfo(CharacterInfo characterInfo)
-        {
-            characterInfos.Remove(characterInfo);
-        }
+        #region Updating and drawing the UI
 
         public void AddToGUIUpdateList()
         {
             guiFrame.AddToGUIUpdateList();
-            commander.AddToGUIUpdateList();
             if (orderTargetFrame != null) orderTargetFrame.AddToGUIUpdateList();
+            
+            if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
+            {
+                reportButtonContainer.AddToGUIUpdateList();
+            }
         }
 
-        public void Update(float deltaTime)
+        partial void UpdateProjectSpecific(float deltaTime)
         {
             guiFrame.Update(deltaTime);
             if (chatBox != null) chatBox.Update(deltaTime);
@@ -509,6 +672,11 @@ namespace Barotrauma
             if (GUIComponent.MouseOn == scrollButtonDown || scrollButtonDown.IsParentOf(GUIComponent.MouseOn))
             {
                 characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
+            }
+
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                child.Visible = Character.Controlled != null && Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
             }
 
             crewAreaOffset.X = MathHelper.Lerp(
@@ -532,15 +700,8 @@ namespace Barotrauma
                 toggleCrewAreaOpen = !toggleCrewAreaOpen;
             }
 
+            UpdateReports(deltaTime);
             UpdateConversations(deltaTime);
-
-            foreach (Pair<Order, float> order in activeOrders)
-            {
-                order.Second -= deltaTime;
-            }
-            activeOrders.RemoveAll(o => o.Second <= 0.0f);
-
-            commander.Update(deltaTime);
 
             if (orderTargetFrame != null)
             {
@@ -557,60 +718,28 @@ namespace Barotrauma
             }
         }
 
-        public void ReviveCharacter(Character revivedCharacter)
+        public void Draw(SpriteBatch spriteBatch)
         {
-            GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
-            if (characterBlock != null)
+            characterFrame.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
+            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
+            
+            guiFrame.Draw(spriteBatch);
+
+            if (orderTargetFrame != null) orderTargetFrame.Draw(spriteBatch);
+
+
+            if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
             {
-                characterBlock.Color = Color.Transparent;
-            }
-            else
-            {
-                AddCharacter(revivedCharacter);
+                reportButtonContainer.Draw(spriteBatch);
             }
         }
 
-        public void KillCharacter(Character killedCharacter)
-        {
-            GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
-            if (characterBlock != null)
-            {
-                CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
-            }
-            RemoveCharacter(killedCharacter);
-        }
+        #endregion
 
-        private IEnumerable<object> KillCharacterAnim(GUIComponent component)
-        {
-            component.Color = Color.DarkRed;
-            List<GUIComponent> components = new List<GUIComponent>();
-            components.Add(component);
-            components.AddRange(component.children);
-
-            foreach (GUIComponent comp in components)
-            {
-                comp.Color = Color.DarkRed;
-            }
-
-            yield return new WaitForSeconds(1.0f);
-
-            float timer = 0.0f;
-            float hideDuration = 1.0f;
-            while (timer < hideDuration)
-            {
-                foreach (GUIComponent comp in components)
-                {
-                    comp.Color = Color.Lerp(Color.DarkRed, Color.Transparent, timer / hideDuration);
-                    comp.Rect = new Rectangle(component.Rect.X, component.Rect.Y, component.Rect.Width, (int)(component.Rect.Height * (1.0f - (timer / hideDuration))));
-                }
-                timer += CoroutineManager.DeltaTime;
-                yield return CoroutineStatus.Running;
-            }
-            component.Parent.RemoveChild(component);
-            yield return CoroutineStatus.Success;
-        }
-
-        public void CreateCrewFrame(List<Character> crew, GUIFrame crewFrame)
+        /// <summary>
+        /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
+        /// </summary>
+        public void CreateCrewListFrame(List<Character> crew, GUIFrame crewFrame)
         {
             List<byte> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
@@ -656,6 +785,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Select a character from CrewListFrame
+        /// </summary>
         protected bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
             if (character == null) return false;
@@ -675,9 +807,115 @@ namespace Barotrauma
 
             return true;
         }
-        
 
-        public void StartRound()
+        #region Reports
+
+        /// <summary>
+        /// Enables/disables report buttons when needed
+        /// </summary>
+        public void UpdateReports(float deltaTime)
+        {
+            bool hasRadio = false;
+            if (Character.Controlled?.CurrentHull != null && Character.Controlled.CanSpeak)
+            {
+                WifiComponent radio = GetHeadset(Character.Controlled, true);
+                hasRadio = radio != null && radio.CanTransmit();
+            }
+
+            if (hasRadio)
+            {
+                bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
+                ToggleReportButton("reportfire", hasFires);
+
+                bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
+                ToggleReportButton("reportbreach", hasLeaks);
+
+                bool hasIntruders = Character.CharacterList.Any(c =>
+                    c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
+                    (c.AIController is EnemyAIController || c.TeamID != Character.Controlled.TeamID));
+
+                ToggleReportButton("reportintruders", hasIntruders);
+
+                if (reportButtonContainer.CountChildren > 0 && ReportButtonsVisible())
+                {
+                    reportButtonContainer.Update(deltaTime);
+                }
+            }
+            else
+            {
+                reportButtonContainer.ClearChildren();
+            }
+        }
+
+        /// <summary>
+        /// Should report buttons be visible on the screen atm?
+        /// </summary>
+        private bool ReportButtonsVisible()
+        {
+            return CharacterHealth.OpenHealthWindow == null;
+        }
+
+        private GUIButton CreateReportButton(Rectangle rect, Order order, GUIComponent parent, bool createSymbol = true)
+        {
+            var orderButton = new GUIButton(rect, order.Name, null, Alignment.TopCenter, Alignment.Center, "GUITextBox", parent);
+            orderButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            orderButton.UserData = order;
+            orderButton.OnClicked = ReportButtonClicked;
+
+            if (createSymbol)
+            {
+                var symbol = new GUIImage(new Rectangle(0, -60, 64, 64), order.SymbolSprite, Alignment.TopCenter, orderButton);
+                symbol.Color = order.Color;
+
+                orderButton.children.Insert(0, symbol);
+                orderButton.children.RemoveAt(orderButton.children.Count - 1);
+            }
+
+            return orderButton;
+        }
+
+        private bool ReportButtonClicked(GUIButton button, object userData)
+        {
+            //order targeted to all characters
+            Order order = userData as Order;
+            if (order.TargetAllCharacters)
+            {
+                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
+                AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+                SetCharacterOrder(null, order, "", Character.Controlled);
+            }
+            return true;
+        }
+
+        private void ToggleReportButton(string orderAiTag, bool enabled)
+        {
+            Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            var existingButton = reportButtonContainer.GetChild(order);
+
+            //already reported, disable the button
+            if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
+                o.First.TargetEntity == Character.Controlled.CurrentHull &&
+                o.First.AITag == orderAiTag))
+            {
+                enabled = false;
+            }
+
+            if (enabled)
+            {
+                if (existingButton == null)
+                {
+                    CreateReportButton(new Rectangle(0, 0, 0, 20), order, reportButtonContainer, true);
+                }
+            }
+            else
+            {
+                if (existingButton != null) reportButtonContainer.RemoveChild(existingButton);
+            }
+        }
+
+        #endregion
+
+        public void InitSinglePlayerRound()
         {
             characterListBox.ClearChildren();
             characters.Clear();
@@ -736,17 +974,7 @@ namespace Barotrauma
             characters.Clear();
             characterInfos.Clear();
             characterListBox.ClearChildren();
-        }
-
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            characterFrame.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
-            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
-            
-            guiFrame.Draw(spriteBatch);
-            commander.Draw(spriteBatch);
-
-            if (orderTargetFrame != null) orderTargetFrame.Draw(spriteBatch);
+            reportButtonContainer.ClearChildren();
         }
 
         public void Save(XElement parentElement)

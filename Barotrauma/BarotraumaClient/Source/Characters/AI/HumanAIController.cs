@@ -10,13 +10,13 @@ namespace Barotrauma
             {
                 CurrentOrder = Order.PrefabList.Find(o => o.Name.ToLowerInvariant() == "dismissed");
                 objectiveManager.SetOrder(CurrentOrder, "", null);
-                GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder);
+                GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder, null, null);
             }
         }
 
         partial void SetOrderProjSpecific(Order order)
         {
-            GameMain.GameSession.CrewManager.SetCharacterOrder(Character, order);
+            GameMain.GameSession.CrewManager.DisplayCharacterOrder(Character, order);
         }
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

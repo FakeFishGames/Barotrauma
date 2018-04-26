@@ -59,7 +59,7 @@ namespace Barotrauma
 
             isRunning = true;
 
-            CrewManager.StartRound();
+            CrewManager.InitSinglePlayerRound();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
