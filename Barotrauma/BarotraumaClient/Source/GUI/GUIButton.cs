@@ -184,7 +184,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIButton(RectTransform rectT, string text, Alignment textAlignment = Alignment.Center, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
+        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
         {
             if (color.HasValue)
             {
