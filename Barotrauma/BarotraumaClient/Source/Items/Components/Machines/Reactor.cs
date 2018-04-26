@@ -100,7 +100,8 @@ namespace Barotrauma.Items.Components
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
 
-            fissionRateScrollBar = new GUIScrollBar(new Rectangle(0, -40, 0, 30), Color.Red, 0.1f, Alignment.Bottom, "", columnMid);
+            new GUITextBlock(new Rectangle(00, -90, 0, 20), TextManager.Get("ReactorFissionRate"), "", Alignment.Bottom, Alignment.Center, columnMid);
+            fissionRateScrollBar = new GUIScrollBar(new Rectangle(0, -60, 0, 30), null, 0.1f, Alignment.Bottom, "GUISlider", columnMid);
             fissionRateScrollBar.BarScroll = 1.0f;
             fissionRateScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
             {
@@ -115,12 +116,9 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            new GUITextBlock(new Rectangle(0, -40, 0, 30), TextManager.Get("ReactorFissionRate"), "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
-            {
-                CanBeFocused = false
-            };
 
-            turbineOutputScrollBar = new GUIScrollBar(new Rectangle(0, 0, 0, 30), Color.CornflowerBlue, 0.1f, Alignment.Bottom, "", columnMid);
+            new GUITextBlock(new Rectangle(0, -30, 0, 20), TextManager.Get("ReactorTurbineOutput"), "", Alignment.Bottom, Alignment.Center, columnMid);
+            turbineOutputScrollBar = new GUIScrollBar(new Rectangle(0, 0, 0, 30), null, 0.1f, Alignment.Bottom, "GUISlider", columnMid);
             turbineOutputScrollBar.BarScroll = 1.0f;
             turbineOutputScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
             {
@@ -135,10 +133,6 @@ namespace Barotrauma.Items.Components
                 return false;
             };
             
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), TextManager.Get("ReactorTurbineOutput"), "", Alignment.Bottom, Alignment.CenterLeft, columnMid)
-            {
-                CanBeFocused = false
-            };
 
             criticalHeatWarning = new GUITickBox(new Rectangle(0, 0, 30, 30), TextManager.Get("ReactorWarningCriticalTemp"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
 
