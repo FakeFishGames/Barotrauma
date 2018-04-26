@@ -39,10 +39,15 @@ namespace Barotrauma
 
             testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
             var p = testElement;
-            new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test.", parent: p);
-            new GUITextBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 30) }, "Carry on.", parent: p);
-            new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
-            //new GUIDropDown()
+            //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test.", parent: p);
+            //new GUITextBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 30) }, "Carry on.", parent: p);
+            //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
+            var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown", parent: p);
+            dropdown.AddItem("Test1");
+            dropdown.AddItem("Test2");
+            dropdown.AddItem("Test3");
+            dropdown.AddItem("Test4");
+            dropdown.AddItem("Test5");
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
@@ -256,7 +261,7 @@ namespace Barotrauma
         {
             buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
-            //testElement.AddToGUIUpdateList();
+            testElement.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
@@ -344,7 +349,7 @@ namespace Barotrauma
             buttonsParent.Draw(spriteBatch);
             if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
-            //testElement.Draw(spriteBatch);
+            testElement.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 

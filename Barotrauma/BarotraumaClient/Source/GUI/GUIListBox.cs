@@ -182,7 +182,36 @@ namespace Barotrauma
 
             scrollBar.BarScroll = 0.0f;
         }
-        
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIListBox(RectTransform rectT, GUIComponent parent = null, bool isHorizontal = false, Color? color = null, string style = null) : base(style, rectT, parent)
+        {
+            selected = new List<GUIComponent>();
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            scrollBarHidden = true;
+            if (isHorizontal)
+            {
+                scrollBar = new GUIScrollBar(new RectTransform(new Point(Rect.Width, 20), rectT, Anchor.BottomLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, 20) });
+            }
+            else
+            {
+                scrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) });
+            }
+            scrollBar.IsHorizontal = isHorizontal;
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this, style);
+            if (style != null) GUI.Style.Apply(frame, style, this);
+            UpdateScrollBarSize();
+            children.Clear();
+            enabled = true;
+            scrollBarEnabled = true;
+            scrollBar.BarScroll = 0.0f;
+        }
+
         public void Select(object userData, bool force = false)
         {
             for (int i = 0; i < children.Count; i++)

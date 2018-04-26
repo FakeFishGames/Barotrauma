@@ -113,9 +113,9 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIDropDown(RectTransform rectT, string text = "", string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
         {
-            button = new GUIButton(rectT, text, Alignment.CenterLeft, parent: this, style: "GUIDropDown")
+            button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
                 OnClicked = OnClicked
             };
@@ -123,9 +123,10 @@ namespace Barotrauma
             {
                 GUI.Style.Apply(button, style, this);
             }
-            // TODO: implement and use the new constructors.
-            listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
-            listBox.OnSelected = SelectItem;
+            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft), style: style)
+            {
+                OnSelected = SelectItem
+            };
         }
 
         public override void AddChild(GUIComponent child)
