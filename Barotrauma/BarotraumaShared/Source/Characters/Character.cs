@@ -1499,11 +1499,19 @@ namespace Barotrauma
                 {
                     focusedItem.IsHighlighted = true;
                 }
-                focusedItem.TryInteract(this);
+                if (focusedItem.TryInteract(this))
+                {
+#if CLIENT
+                    CharacterHealth.OpenHealthWindow = null;
+#endif
+                }
             }
             else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
             {
                 selectedConstruction = null;
+#if CLIENT
+                CharacterHealth.OpenHealthWindow = null;
+#endif
             }
         }
         
