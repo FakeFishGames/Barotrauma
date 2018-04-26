@@ -171,7 +171,82 @@ namespace Barotrauma
 
             InputType = inputType;
         }
-        
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        {
+            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: Alignment.Center, parent: this, style: style);
+            textBox.OnTextChanged += TextChanged;
+
+            // TODO: relative button size
+            plusButton = new GUIButton(new RectTransform(new Point(15, Rect.Height / 2), rectT, Anchor.TopRight), "+", parent: this);
+            plusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            plusButton.OnClicked += ChangeIntValue;
+            plusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue++;
+                }
+                return true;
+            };
+            plusButton.Visible = inputType == NumberType.Int;
+            // TODO: relative button size
+            minusButton = new GUIButton(new RectTransform(new Point(15, Rect.Height / 2), rectT, Anchor.BottomRight), "-", parent: this);
+            minusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            minusButton.OnClicked += ChangeIntValue;
+            minusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue--;
+                }
+                return true;
+            };
+            minusButton.Visible = inputType == NumberType.Int;
+
+            if (inputType == NumberType.Int)
+            {
+                textBox.Text = "0";
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = IntValue.ToString();
+                    textBox.Deselect();
+                    return true;
+                };
+                textBox.OnDeselected += (txtBox, key) =>
+                {
+                    textBox.Text = IntValue.ToString();
+                };
+            }
+            else if (inputType == NumberType.Float)
+            {
+                textBox.Text = "0.0";
+                textBox.OnDeselected += (txtBox, key) =>
+                {
+                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                };
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    textBox.Deselect();
+                    return true;
+                };
+            }
+
+            InputType = inputType;
+        }
+
         private bool ChangeIntValue(GUIButton button, object userData)
         {
             if (button == plusButton)
