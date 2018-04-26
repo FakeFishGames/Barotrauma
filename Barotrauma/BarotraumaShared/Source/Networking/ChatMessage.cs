@@ -284,7 +284,7 @@ namespace Barotrauma.Networking
                             orderMsg.OrderOption, orderMsg.Sender);
                 }
 
-                GameMain.Server.SendOrderChatMessage(orderMsg, c);
+                GameMain.Server.SendOrderChatMessage(orderMsg);
             }
             else
             {

@@ -18,10 +18,8 @@ namespace Barotrauma
         private string savePath;
 
         private Submarine submarine;
-
-#if CLIENT
+        
         public CrewManager CrewManager;
-#endif
 
         public double RoundStartTime;
 
@@ -102,10 +100,10 @@ namespace Barotrauma
             EventManager = new EventManager(this);
             
             this.savePath = savePath;
-
-#if CLIENT
+            
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
 
+#if CLIENT
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
             infoButton = new GUIButton(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
@@ -136,9 +134,7 @@ namespace Barotrauma
 #endif
                     case "multiplayercampaign":
                         GameMode = MultiPlayerCampaign.LoadNew(subElement);
-#if CLIENT
                         CrewManager = new CrewManager(false);
-#endif
                         break;
                 }
             }

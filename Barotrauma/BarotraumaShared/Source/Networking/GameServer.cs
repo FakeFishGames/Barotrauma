@@ -1931,9 +1931,17 @@ namespace Barotrauma.Networking
             }       
         }
         
-        public void SendOrderChatMessage(OrderChatMessage message, Client senderClient = null)
+        public void SendOrderChatMessage(OrderChatMessage message)
         {
-            if (message.Sender == null || !message.Sender.CanSpeak) return;            
+            if (message.Sender == null || !message.Sender.CanSpeak) return;
+            ChatMessageType messageType;
+
+            messageType = ChatMessageType.Default;
+            var senderItem = message.Sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+            if (senderItem != null && message.Sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
+            {
+                messageType = ChatMessageType.Radio;
+            }
 
             //check which clients can receive the message and apply distance effects
             foreach (Client client in ConnectedClients)
@@ -1943,7 +1951,7 @@ namespace Barotrauma.Networking
                 if (message.Sender != null &&
                     client.Character != null && !client.Character.IsDead)
                 {
-                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, client.Character);
+                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, client.Character);
 
                     //too far to hear the msg -> don't send
                     if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
@@ -1959,7 +1967,7 @@ namespace Barotrauma.Networking
             string myReceivedMessage = message.Text;
             if (gameStarted && myCharacter != null)
             {
-                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, myCharacter);
+                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, myCharacter);
             }
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))

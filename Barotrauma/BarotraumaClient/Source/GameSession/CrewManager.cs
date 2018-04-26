@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class CrewManager
+    partial class CrewManager
     {
         const float ChatMessageFadeTime = 10.0f;
 
@@ -17,9 +17,6 @@ namespace Barotrauma
         
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
-
-        //orders that have not been issued to a specific character
-        private List<Pair<Order, float>> activeOrders = new List<Pair<Order, float>>();
 
         public int WinningTeam = 1;
         
@@ -41,9 +38,7 @@ namespace Barotrauma
         private ChatBox chatBox;
 
         private CrewCommander commander;
-
-        private bool isSinglePlayer;
-
+        
         private GUIComponent orderTargetFrame;
 
         public bool ToggleCrewAreaOpen
@@ -57,28 +52,28 @@ namespace Barotrauma
             get { return commander; }
         }
 
-        public bool IsSinglePlayer
+        public CrewManager(XElement element, bool isSinglePlayer)
+            : this(isSinglePlayer)
         {
-            get { return isSinglePlayer; }
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
+
+                characterInfos.Add(new CharacterInfo(subElement));
+            }
         }
 
-        public List<Pair<Order, float>> ActiveOrders
+        partial void InitProjectSpecific()
         {
-            get { return activeOrders; }
-        }
-                
-        public CrewManager(bool isSinglePlayer)
-        {
-            this.isSinglePlayer = isSinglePlayer;
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
-            
+
             guiFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
             guiFrame.CanBeFocused = false;
 
             int scrollButtonHeight = (int)(30 * GUI.Scale);
-            
+
             characterFrame = new GUIFrame(HUDLayoutSettings.CrewArea, null, guiFrame);
             toggleCrewButton = new GUIButton(new Rectangle(characterFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", characterFrame);
             toggleCrewButton.ClampMouseRectToParent = false;
@@ -91,7 +86,7 @@ namespace Barotrauma
                 }
                 return true;
             };
-            
+
             characterListBox = new GUIListBox(Rectangle.Empty, Color.Transparent, null, characterFrame);
             characterListBox.Spacing = (int)(5 * GUI.Scale);
             characterListBox.ScrollBarEnabled = false;
@@ -109,17 +104,6 @@ namespace Barotrauma
             }
 
             commander = new CrewCommander(this);
-        }
-
-        public CrewManager(XElement element, bool isSinglePlayer)
-            : this(isSinglePlayer)
-        {
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
-
-                characterInfos.Add(new CharacterInfo(subElement));
-            }
         }
 
         public List<Character> GetCharacters()
@@ -235,32 +219,6 @@ namespace Barotrauma
             }
         }
         
-        public bool AddOrder(Order order, float fadeOutTime)
-        {
-            if (order.TargetEntity == null)
-            {
-                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace);
-                return false;
-            }
-
-            Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
-            if (existingOrder != null)
-            {
-                existingOrder.Second = fadeOutTime;
-                return false;
-            }
-            else
-            {
-                activeOrders.Add(new Pair<Order, float>(order, fadeOutTime));
-                return true;
-            }
-        }
-
-        public void RemoveOrder(Order order)
-        {
-            activeOrders.RemoveAll(o => o.First == order);
-        }
-
         public void SetCharacterOrder(Character character, Order order, string option = null)
         {
             foreach (GUIComponent child in characterListBox.children)
