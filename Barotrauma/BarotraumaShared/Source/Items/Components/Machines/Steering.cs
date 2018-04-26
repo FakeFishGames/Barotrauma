@@ -341,12 +341,9 @@ namespace Barotrauma.Items.Components
         public void SetDestinationLevelStart()
         {
             AutoPilot = true;
-
             MaintainPos = false;
             posToMaintain = null;
-
             LevelEndSelected = false;
-
             if (!LevelStartSelected)
             {
                 LevelStartSelected = true;
@@ -356,13 +353,10 @@ namespace Barotrauma.Items.Components
 
         public void SetDestinationLevelEnd()
         {
-            AutoPilot = false;
-
+            AutoPilot = true;
             MaintainPos = false;
             posToMaintain = null;
-
             LevelStartSelected = false;
-
             if (!LevelEndSelected)
             {
                 LevelEndSelected = true;
@@ -386,7 +380,31 @@ namespace Barotrauma.Items.Components
                 TargetVelocity = targetSpeed / 5.0f;
             }
         }
-        
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            switch (objective.Option.ToLowerInvariant())
+            {
+                case "maintain position":
+                    if (!autoPilot || !MaintainPos)
+                    {
+                        //todo: maintain the position of the sub when the order was given?
+                        posToMaintain = item.Submarine.WorldPosition;
+                    }
+                    AutoPilot = true;
+                    MaintainPos = true;
+                    break;
+                case "navigate back":
+                    SetDestinationLevelStart();
+                    break;
+                case "navigate to destination":
+                    SetDestinationLevelEnd();
+                    break;
+            }
+
+            return false;
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             if (connection.Name == "velocity_in")
