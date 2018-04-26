@@ -48,15 +48,16 @@ namespace Barotrauma
             //dropdown.AddItem("Test3");
             //dropdown.AddItem("Test4");
             //dropdown.AddItem("Test5");
-            //new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] { "Cancel" }, parent: p);
+
             //new GUIProgressBar(new Rectangle(0, 0, 200, 20), Color.Green, "", 0.5f, Alignment.BottomCenter, parent: p);
             //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, parent: p);
 
-            new GUINumberInput(new RectTransform(new Point(200, 50), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int, parent: p)
-            {
-                MinValueInt = 1,
-                MaxValueInt = 128
-            };
+            //new GUIMessageBox(new RectTransform(Vector2.One, parent: p.RectTransform, anchor: Anchor.Center),
+            //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
+            //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+            //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+            //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
+            //    "", parent: p);
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
