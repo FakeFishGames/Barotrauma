@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Items.Components;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -114,6 +115,12 @@ namespace Barotrauma
                     break;
                 case "extinguishfires":
                     currentOrder = new AIObjectiveExtinguishFires(character);
+                    break;
+                case "steer":
+                    var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
+                    if (steering != null) steering.PosToMaintain = steering.Item.Submarine?.WorldPosition;
+                    if (order.TargetItemComponent == null) return;
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
                     break;
                 default:
                     if (order.TargetItemComponent == null) return;
