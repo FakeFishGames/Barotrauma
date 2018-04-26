@@ -312,7 +312,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
                     return;
                 }
-                character.SetOrder(ai.CurrentOrder, "", false);
+                character.SetOrder(ai.CurrentOrder, "", null, false);
             }
         }
 
@@ -479,7 +479,7 @@ namespace Barotrauma
                     optionButton.OnClicked += (btn, userData) =>
                     {
                         if (Character.Controlled == null) return false;
-                        commander.SetOrder(character, userData as Order, orderOption);
+                        commander.SetOrder(character, userData as Order, orderOption, Character.Controlled);
                         SetCharacterOrder(character, userData as Order, orderOption);
                         orderTargetFrame = null;
                         return true;

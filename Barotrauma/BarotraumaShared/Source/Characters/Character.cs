@@ -1730,10 +1730,10 @@ namespace Barotrauma
             aiTarget.SightRange = MathHelper.Clamp((float)Math.Sqrt(Mass) * 1000.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
         }
 
-        public void SetOrder(Order order, string orderOption, bool speak = true)
+        public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
         {
             HumanAIController humanAI = AIController as HumanAIController;
-            humanAI?.SetOrder(order, orderOption, speak);
+            humanAI?.SetOrder(order, orderOption, orderGiver, speak);
 
             currentOrder = order;
             currentOrderOption = orderOption;

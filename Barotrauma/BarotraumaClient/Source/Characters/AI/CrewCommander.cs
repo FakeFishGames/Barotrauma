@@ -90,7 +90,7 @@ namespace Barotrauma
                 return;
             }
 
-            character.SetOrder(order, "");
+            character.SetOrder(order, "", orderGiver);
             if (crewManager.IsSinglePlayer)
             {
                 orderGiver?.Speak(
@@ -118,21 +118,21 @@ namespace Barotrauma
             {
                 if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
                 crewManager.AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-                SetOrder(null, order, "");
+                SetOrder(null, order, "", Character.Controlled);
             }            
             return true;
         }
         
-        public bool SetOrder(Character character, Order order, string option)
+        public bool SetOrder(Character character, Order order, string option, Character orderGiver)
         {
             if (crewManager.IsSinglePlayer)
             {
-                Character.Controlled?.Speak(
-                    order.GetChatMessage(character == null ? "" : character.Name, Character.Controlled.CurrentHull?.RoomName, option), ChatMessageType.Order);
+                orderGiver?.Speak(
+                    order.GetChatMessage(character == null ? "" : character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
             }
             else
             {
-                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, Character.Controlled);
+                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
                 if (GameMain.Client != null)
                 {
                     GameMain.Client.SendChatMessage(msg);
@@ -143,7 +143,7 @@ namespace Barotrauma
                 }
             }
             
-            character?.SetOrder(order, option);
+            character?.SetOrder(order, option, orderGiver);
 
             return true;
         }
