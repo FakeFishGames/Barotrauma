@@ -48,8 +48,9 @@ namespace Barotrauma
             //dropdown.AddItem("Test3");
             //dropdown.AddItem("Test4");
             //dropdown.AddItem("Test5");
-            var rectT = new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center);
-            new GUIImage(rectT, new Sprite(CreateTexture(100, 100), rectT.Rect, Vector2.Zero), parent: p);
+            //new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] { "Cancel" }, parent: p);
+            //new GUIProgressBar(new Rectangle(0, 0, 200, 20), Color.Green, "", 0.5f, Alignment.BottomCenter, parent: p);
+            //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, parent: p);
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
