@@ -63,6 +63,24 @@ namespace Barotrauma
             UpdateRect();
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            isHorizontal = (Rect.Width > Rect.Height);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this);
+            GUI.Style.Apply(frame, "", this);
+            slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
+            GUI.Style.Apply(slider, "Slider", this);
+            this.barSize = barSize;
+            UpdateRect();
+        }
+
         /*public override void ApplyStyle(GUIComponentStyle style)
         {
             if (frame == null) return;
@@ -80,6 +98,7 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
+            // TODO: does not work with RectTransforms
             slider.Rect = new Rectangle(
                 (int)(frame.Rect.X + padding.X),
                 (int)(frame.Rect.Y + padding.Y),
