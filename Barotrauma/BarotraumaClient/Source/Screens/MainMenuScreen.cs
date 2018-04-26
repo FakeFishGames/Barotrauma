@@ -30,11 +30,19 @@ namespace Barotrauma
         // test elements
         private GUIFrame outerElement;
         private List<GUIFrame> innerElements = new List<GUIFrame>();
+        private GUIFrame testElement;
 
         public MainMenuScreen(GameMain game)
         {
             // TODO: test element, remove from final code
             outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
+
+            testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+            var p = testElement;
+            new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test.", parent: p);
+            new GUITextBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 30) }, "Carry on.", parent: p);
+            new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
+            //new GUIDropDown()
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
@@ -248,11 +256,13 @@ namespace Barotrauma
         {
             buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
+            //testElement.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             buttonsParent.Update((float)deltaTime);
+            testElement.Update((float)deltaTime);
 
             if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
@@ -333,6 +343,8 @@ namespace Barotrauma
 
             buttonsParent.Draw(spriteBatch);
             if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
+
+            //testElement.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -600,7 +612,8 @@ namespace Barotrauma
         {
             //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
             //var element = buttonsParent;
-            var element = menuTabs[(int)Tab.HostServer];
+            //var element = menuTabs[(int)Tab.HostServer];
+            var element = testElement;
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
@@ -610,6 +623,7 @@ namespace Barotrauma
                 if (global)
                 {
                     RectTransform.globalScale *= 1 + step;
+                    element.RectTransform.RecalculateScale(true);
                     buttonsParent.RectTransform.RecalculateScale(true);
                     menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
                 }
@@ -626,6 +640,7 @@ namespace Barotrauma
                 if (global)
                 {
                     RectTransform.globalScale *= 1 - step;
+                    element.RectTransform.RecalculateScale(true);
                     buttonsParent.RectTransform.RecalculateScale(true);
                     menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
                 }
