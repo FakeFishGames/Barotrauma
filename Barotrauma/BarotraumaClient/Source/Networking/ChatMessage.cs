@@ -71,7 +71,8 @@ namespace Barotrauma.Networking
                 else if (targetCharacter != null)
                 {
                     targetCharacter.SetOrder(
-                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                            orderOption, senderCharacter);
                 }
 
                 if (NetIdUtils.IdMoreRecent(ID, LastID))

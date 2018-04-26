@@ -238,11 +238,11 @@ namespace Barotrauma
             combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
         }
 
-        public void SetOrder(Order order, string option, bool speak = true)
+        public void SetOrder(Order order, string option, Character orderGiver, bool speak = true)
         {
             CurrentOrderOption = option;
             CurrentOrder = order;
-            objectiveManager.SetOrder(order, option);
+            objectiveManager.SetOrder(order, option, orderGiver);
             if (speak && Character.CanSpeak) Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);

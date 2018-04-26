@@ -85,7 +85,7 @@ namespace Barotrauma
             CurrentObjective = objectives[0];
         }
 
-        public void SetOrder(Order order, string option)
+        public void SetOrder(Order order, string option, Character orderGiver)
         {
             currentOrder = null;
             if (order == null) return;
@@ -93,7 +93,7 @@ namespace Barotrauma
             switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
-                    currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
+                    currentOrder = new AIObjectiveGoTo(orderGiver, character, true);
                     break;
                 case "wait":
                     currentOrder = new AIObjectiveGoTo(character, character, true);

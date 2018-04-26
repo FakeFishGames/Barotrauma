@@ -280,7 +280,8 @@ namespace Barotrauma.Networking
                 else
                 {
                     orderTargetCharacter?.SetOrder(
-                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()), orderMsg.OrderOption);
+                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()), 
+                            orderMsg.OrderOption, orderMsg.Sender);
                 }
 
                 GameMain.Server.SendOrderChatMessage(orderMsg, c);
