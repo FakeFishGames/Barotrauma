@@ -1934,14 +1934,7 @@ namespace Barotrauma.Networking
         public void SendOrderChatMessage(OrderChatMessage message)
         {
             if (message.Sender == null || !message.Sender.CanSpeak) return;
-            ChatMessageType messageType;
-
-            messageType = ChatMessageType.Default;
-            var senderItem = message.Sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            if (senderItem != null && message.Sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
-            {
-                messageType = ChatMessageType.Radio;
-            }
+            ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
 
             //check which clients can receive the message and apply distance effects
             foreach (Client client in ConnectedClients)

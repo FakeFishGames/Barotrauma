@@ -298,6 +298,22 @@ namespace Barotrauma
             return null;
         }
 
+        public List<GUIComponent> GetAllChildren()
+        {
+            List<GUIComponent> children = new List<GUIComponent>();
+            GetAllChildrenRecursive(children);
+            return children;
+        }
+
+        private void GetAllChildrenRecursive(List<GUIComponent> childList)
+        {
+            foreach (GUIComponent child in children)
+            {
+                childList.Add(child);
+                child.GetAllChildrenRecursive(childList);
+            }
+        }
+
         public bool IsParentOf(GUIComponent component)
         {
             for(int i = children.Count - 1; i >= 0; i--)

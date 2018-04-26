@@ -96,7 +96,6 @@
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
-    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />

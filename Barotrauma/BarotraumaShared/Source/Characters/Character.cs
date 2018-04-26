@@ -1732,6 +1732,13 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
         {
+            if (orderGiver != null)
+            {
+                //set the character order only if the character is close enough to hear the message
+                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) ? ChatMessageType.Radio : ChatMessageType.Default;
+                if (string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, orderGiver, this))) return;
+            }
+
             HumanAIController humanAI = AIController as HumanAIController;
             humanAI?.SetOrder(order, orderOption, orderGiver, speak);
 
@@ -1769,12 +1776,7 @@ namespace Barotrauma
 
                 if (message.MessageType == null)
                 {
-                    message.MessageType = ChatMessageType.Default;
-                    var senderItem = Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                    if (senderItem != null && HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
-                    {
-                        message.MessageType = ChatMessageType.Radio;
-                    }
+                    message.MessageType = ChatMessage.CanUseRadio(this) ? ChatMessageType.Radio : ChatMessageType.Default;
                 }
 #if CLIENT
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
