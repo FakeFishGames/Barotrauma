@@ -111,6 +111,12 @@ namespace Barotrauma.Items.Components
             get { return steeringPath; }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
         public Steering(Item item, XElement element)
             : base(item, element)
         {
@@ -386,9 +392,8 @@ namespace Barotrauma.Items.Components
             switch (objective.Option.ToLowerInvariant())
             {
                 case "maintain position":
-                    if (!autoPilot || !MaintainPos)
+                    if (!posToMaintain.HasValue)
                     {
-                        //todo: maintain the position of the sub when the order was given?
                         posToMaintain = item.Submarine.WorldPosition;
                     }
                     AutoPilot = true;
