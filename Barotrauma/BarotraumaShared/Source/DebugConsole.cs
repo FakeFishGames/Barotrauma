@@ -2147,17 +2147,17 @@ namespace Barotrauma
             if (args[0].ToLowerInvariant() == "human")
             {
                 spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, ToolBox.RandomSeed(8));
-
-#if CLIENT
                 if (GameMain.GameSession != null)
                 {
-                    SinglePlayerCampaign mode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
-                    if (mode != null)
+                    if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
-                        GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
+                        //TODO: a way to select which team to spawn to?
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
                     }
-                }
+#if CLIENT
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
+                }
             }
             else
             {
