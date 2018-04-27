@@ -86,12 +86,12 @@ namespace Barotrauma
         /// This is the new constructor.
         /// </summary>
         public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter, GUIComponent parent = null)
-            : base(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.5f, parent: parent)
+            : base(rectT, parent, "", Color.White)
         {
-            // TODO: background color is not working?
+            new GUIFrame(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.8f, parent: this);
             float headerHeight = 0.2f;
             float margin = 0.05f;
-            var frame = new GUIFrame(new RectTransform(Vector2.One, rectT), parent: this);
+            var frame = new GUIFrame(rectT, parent: this);
             GUI.Style.Apply(frame, "", this);
             GUITextBlock header = null;
             if (!string.IsNullOrWhiteSpace(headerText))
