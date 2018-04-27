@@ -24,9 +24,8 @@ namespace Barotrauma
             get { return barSize; }
             set
             {
-                float oldBarSize = barSize;
                 barSize = MathHelper.Clamp(value, 0.0f, 1.0f);
-                if (barSize != oldBarSize) UpdateRect();
+                UpdateRect();
             }
         }
 
