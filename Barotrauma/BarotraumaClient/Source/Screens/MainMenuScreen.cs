@@ -39,9 +39,10 @@ namespace Barotrauma
 
             testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
             var p = testElement;
-            //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test.", parent: p);
-            //new GUITextBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 30) }, "Carry on.", parent: p);
+            //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true, parent: p);
+            //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true, parent: p);
             //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
+
             //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown", parent: p);
             //dropdown.AddItem("Test1");
             //dropdown.AddItem("Test2");
@@ -50,7 +51,9 @@ namespace Barotrauma
             //dropdown.AddItem("Test5");
 
             //new GUIProgressBar(new Rectangle(0, 0, 200, 20), Color.Green, "", 0.5f, Alignment.BottomCenter, parent: p);
-            //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, parent: p);
+            //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green, parent: p);
+
+            //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int, parent: p);
 
             //new GUIMessageBox(new RectTransform(Vector2.One, parent: p.RectTransform, anchor: Anchor.Center),
             //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
@@ -70,8 +73,6 @@ namespace Barotrauma
             var buttons = CreateButtons(new Vector2(1, 0.04f), minButtonSize, maxButtonSize, absoluteSpacing: 5, extraSpacing: 20, relativeSpacing: 0.05f, scale: scale);
             SetupButtons(buttons);
             buttonsParent.RectTransform.ChangeScale(new Vector2(scale, scale));
-            // Changing the text scale messes the text position
-            //buttons.ForEach(b => b.TextBlock.TextScale = scale);
             buttons.ForEach(b => b.TextBlock.SetTextPos());
 
             var relativeSize = new Vector2(0.5f, 0.5f);
@@ -271,7 +272,7 @@ namespace Barotrauma
         {
             buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
-            testElement.AddToGUIUpdateList();
+            //testElement.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
@@ -359,7 +360,7 @@ namespace Barotrauma
             buttonsParent.Draw(spriteBatch);
             if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
-            testElement.Draw(spriteBatch);
+            //testElement.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -688,7 +689,7 @@ namespace Barotrauma
                 //element.RectTransform.NonScaledSize -= new Point(0, 1);
                 element.RectTransform.RelativeSize -= new Vector2(0, step);
             }
-            // Translation (absolute offset)
+            // Translation
             if (Keyboard.GetState().IsKeyDown(Keys.A))
             {
                 element.RectTransform.Translate(new Point(-1, 0));
