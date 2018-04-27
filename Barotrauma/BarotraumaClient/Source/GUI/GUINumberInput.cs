@@ -180,8 +180,10 @@ namespace Barotrauma
             textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: Alignment.Center, parent: this, style: style);
             textBox.OnTextChanged += TextChanged;
 
-            // TODO: relative button size
-            plusButton = new GUIButton(new RectTransform(new Point(15, Rect.Height / 2), rectT, Anchor.TopRight), "+", parent: this);
+            var height = Rect.Height / 2;
+            var buttonSize = new Point(height, height);
+
+            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight, Pivot.TopLeft), "+", parent: this);
             plusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -197,8 +199,9 @@ namespace Barotrauma
                 return true;
             };
             plusButton.Visible = inputType == NumberType.Int;
-            // TODO: relative button size
-            minusButton = new GUIButton(new RectTransform(new Point(15, Rect.Height / 2), rectT, Anchor.BottomRight), "-", parent: this);
+            plusButton.ClampMouseRectToParent = false;
+
+            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight, Pivot.BottomLeft), "-", parent: this);
             minusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -214,6 +217,7 @@ namespace Barotrauma
                 return true;
             };
             minusButton.Visible = inputType == NumberType.Int;
+            minusButton.ClampMouseRectToParent = false;
 
             if (inputType == NumberType.Int)
             {
