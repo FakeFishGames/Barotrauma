@@ -97,12 +97,19 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
-            // TODO: does not work with RectTransforms
-            slider.Rect = new Rectangle(
-                (int)(frame.Rect.X + padding.X),
-                (int)(frame.Rect.Y + padding.Y),
-                isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
-                isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            if (RectTransform != null)
+            {
+                var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
+                slider.RectTransform.Resize(newSize);
+            }
+            else
+            {
+                slider.Rect = new Rectangle(
+                    (int)(frame.Rect.X + padding.X),
+                    (int)(frame.Rect.Y + padding.Y),
+                    isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
+                    isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)

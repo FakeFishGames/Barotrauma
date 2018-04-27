@@ -87,9 +87,8 @@ namespace Barotrauma
             get { return barSize; }
             set 
             {
-                float oldBarSize = barSize;
                 barSize = Math.Min(Math.Max(value, 0.0f), 1.0f);
-                if (barSize != oldBarSize) UpdateRect();
+                UpdateRect();
             }
         }
 
