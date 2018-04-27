@@ -162,8 +162,6 @@ namespace Barotrauma
             this.text = text;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
-            // TODO: Doesn't seem to have any effect.
-            this.padding = new Vector4(5, 5, 5, 5);
             SetTextPos();
         }
 
