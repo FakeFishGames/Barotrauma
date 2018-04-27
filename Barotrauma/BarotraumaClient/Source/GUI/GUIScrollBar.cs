@@ -169,10 +169,11 @@ namespace Barotrauma
                     isHorizontal ? (int)height : (int)(height * barSize));
 
                 ClampRect();
-            }
-            foreach (GUIComponent child in bar.children)
-            {
-                child.Rect = bar.Rect;
+
+                foreach (GUIComponent child in bar.children)
+                {
+                    child.Rect = bar.Rect;
+                }
             }
         }
 
