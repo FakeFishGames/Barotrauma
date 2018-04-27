@@ -130,21 +130,48 @@ namespace Barotrauma
 
         public Vector2 Scale { get; private set; }
 
+        private Vector2 relativeOffset = Vector2.Zero;
+        private Point absoluteOffset = Point.Zero;
+        private Point screenSpaceOffset = Point.Zero;
         /// <summary>
         /// Defined as portions of the parent size.
         /// Also the direction of the offset is relative, calculated away from the anchor point, like a padding.
         /// </summary>
-        public Vector2 RelativeOffset { get; set; } = Vector2.Zero;
+        public Vector2 RelativeOffset
+        {
+            get { return relativeOffset; }
+            set
+            {
+                relativeOffset = value;
+                RecalculateChildren(false, false);
+            }
+        }
         /// <summary>
         /// Absolute in pixels but relative to the anchor point.
         /// Calculated away from the anchor point, like a padding.
         /// Use RelativeOffset to set an amount relative to the parent size.
         /// </summary>
-        public Point AbsoluteOffset { get; set; } = Point.Zero;
+        public Point AbsoluteOffset
+        {
+            get { return absoluteOffset; }
+            set
+            {
+                absoluteOffset = value;
+                RecalculateChildren(false, false);
+            }
+        }
         /// <summary>
         /// Screen space offset. From top left corner. In pixels.
         /// </summary>
-        public Point ScreenSpaceOffset { get; set; } = Point.Zero;
+        public Point ScreenSpaceOffset
+        {
+            get { return screenSpaceOffset; }
+            set
+            {
+                screenSpaceOffset = value;
+                RecalculateChildren(false, false);
+            }
+        }
         /// <summary>
         /// Calculated from the selected pivot. In pixels.
         /// </summary>
@@ -283,7 +310,7 @@ namespace Barotrauma
             }
         }
 
-        protected void RecalculateChildren(bool resize, bool scale = true)
+        public void RecalculateChildren(bool resize, bool scale = true)
         {
             children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
         }
@@ -337,12 +364,12 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Manipulates ScreenSpaceOffset.
+        /// Manipulates ScreenSpaceOffset. 
+        /// If you want to manipulate some other offset, access the property setters directly.
         /// </summary>
         public void Translate(Point translation)
         {
             ScreenSpaceOffset += translation;
-            RecalculateChildren(false, false);
         }
 
         public IEnumerable<RectTransform> GetParents()
