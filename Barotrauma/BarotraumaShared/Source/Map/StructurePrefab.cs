@@ -117,7 +117,9 @@ namespace Barotrauma
         public static StructurePrefab Load(XElement element)
         {
             StructurePrefab sp = new StructurePrefab();
-            sp.name = element.Name.ToString();
+            sp.name = element.GetAttributeString("name", "");
+            if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
+            sp.identifier = element.GetAttributeString("identifier", "");
             
             sp.Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");
@@ -180,6 +182,21 @@ namespace Barotrauma
                 sp.size = Vector2.Zero;
                 sp.size.X = element.GetAttributeFloat("width", 0.0f);
                 sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+            }
+
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(sp.identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
             }
 
             return sp;

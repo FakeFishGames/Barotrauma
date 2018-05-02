@@ -12,6 +12,12 @@ namespace Barotrauma.Items.Components
         private float targetForce;
 
         private float maxForce;
+
+        private SpriteSheet propellerSprite;
+
+        private Attack propellerDamage;
+
+        private float damageTimer;
         
         [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
         Serialize(2000.0f, true)]
@@ -22,6 +28,13 @@ namespace Barotrauma.Items.Components
             {
                 maxForce = Math.Max(0.0f, value);
             }
+        }
+
+        [Editable, Serialize("0.0,0.0", true)]
+        public Vector2 PropellerPos
+        {
+            get;
+            set;
         }
 
         public float Force
@@ -56,12 +69,28 @@ namespace Barotrauma.Items.Components
                 
                 return true;
             };
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "propellersprite":
+                        propellerSprite = new SpriteSheet(subElement);
+                        AnimSpeed = subElement.GetAttributeFloat("animspeed", 1.0f);
+                        break;
+                    case "propellerdamage":
+                        propellerDamage = new Attack(subElement);
+                        break;
+                }
+            }
 #endif
         }
     
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
+
+            UpdateAnimation(deltaTime);
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
             if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
@@ -76,6 +105,8 @@ namespace Barotrauma.Items.Components
 
                 item.Submarine.ApplyForce(currForce);
 
+                UpdatePropellerDamage(deltaTime);
+
                 if (item.CurrentHull != null)
                 {
                     item.CurrentHull.AiTarget.SoundRange = Math.Max(currForce.Length(), item.CurrentHull.AiTarget.SoundRange);
@@ -84,7 +115,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 for (int i = 0; i < 5; i++)
                 {
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition - (Vector2.UnitX * item.Rect.Width/2),
+                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos,
                         -currForce / 5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)),
                         0.0f, item.CurrentHull);
                 }
@@ -93,6 +124,27 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
+
+        private void UpdatePropellerDamage(float deltaTime)
+        {
+            damageTimer += deltaTime;
+            if (damageTimer < 0.5f) return;
+            damageTimer = 0.1f;
+
+            if (propellerDamage == null) return;
+            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos;
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.Submarine != null || !character.Enabled || character.Removed) continue;
+
+                float dist = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
+                if (dist > propellerDamage.DamageRange * propellerDamage.DamageRange) continue;
+
+                propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+            }
+        }
+
+        partial void UpdateAnimation(float deltaTime);
         
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
