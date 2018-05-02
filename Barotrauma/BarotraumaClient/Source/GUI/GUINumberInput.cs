@@ -85,6 +85,10 @@ namespace Barotrauma
             }
         }
 
+        private float pressedTimer;
+        private float pressedDelay = 0.5f;
+        private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
+
         public GUINumberInput(Rectangle rect, string style, NumberType inputType, GUIComponent parent = null)
             : this(rect, style, inputType, Alignment.TopLeft, parent)
         {
@@ -104,10 +108,36 @@ namespace Barotrauma
             textBox.OnTextChanged += TextChanged;
             
             plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
+            plusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
             plusButton.OnClicked += ChangeIntValue;
+            plusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue++;
+                }
+                return true;
+            };
             plusButton.Visible = inputType == NumberType.Int;
             minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
+            minusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
             minusButton.OnClicked += ChangeIntValue;
+            minusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue--;
+                }
+                return true;
+            };
             minusButton.Visible = inputType == NumberType.Int;
 
             if (inputType == NumberType.Int)
@@ -141,7 +171,86 @@ namespace Barotrauma
 
             InputType = inputType;
         }
-        
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        {
+            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: Alignment.Center, parent: this, style: style);
+            textBox.OnTextChanged += TextChanged;
+
+            var height = Rect.Height / 2;
+            var buttonSize = new Point(height, height);
+
+            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight, Pivot.TopLeft), "+", parent: this);
+            plusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            plusButton.OnClicked += ChangeIntValue;
+            plusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue++;
+                }
+                return true;
+            };
+            plusButton.Visible = inputType == NumberType.Int;
+            plusButton.ClampMouseRectToParent = false;
+
+            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight, Pivot.BottomLeft), "-", parent: this);
+            minusButton.OnButtonDown += () =>
+            {
+                pressedTimer = pressedDelay;
+                return true;
+            };
+            minusButton.OnClicked += ChangeIntValue;
+            minusButton.OnPressed += () =>
+            {
+                if (!IsPressedTimerRunning)
+                {
+                    IntValue--;
+                }
+                return true;
+            };
+            minusButton.Visible = inputType == NumberType.Int;
+            minusButton.ClampMouseRectToParent = false;
+
+            if (inputType == NumberType.Int)
+            {
+                textBox.Text = "0";
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = IntValue.ToString();
+                    textBox.Deselect();
+                    return true;
+                };
+                textBox.OnDeselected += (txtBox, key) =>
+                {
+                    textBox.Text = IntValue.ToString();
+                };
+            }
+            else if (inputType == NumberType.Float)
+            {
+                textBox.Text = "0.0";
+                textBox.OnDeselected += (txtBox, key) =>
+                {
+                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                };
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    textBox.Deselect();
+                    return true;
+                };
+            }
+
+            InputType = inputType;
+        }
+
         private bool ChangeIntValue(GUIButton button, object userData)
         {
             if (button == plusButton)
@@ -206,6 +315,15 @@ namespace Barotrauma
             if (!Visible) return;
 
             DrawChildren(spriteBatch);
+        }
+
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            if (IsPressedTimerRunning)
+            {
+                pressedTimer -= deltaTime;
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Barotrauma
         bool caretVisible;
         float caretTimer;
         
-        GUITextBlock textBlock;
+        private GUITextBlock textBlock;
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
         public OnEnterHandler OnEnterPressed;
@@ -197,6 +197,21 @@ namespace Barotrauma
             CaretEnabled = true;
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUITextBox(RectTransform rectT, string text = null, Color? textColor = null, ScalableFont font = null,
+            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null)
+            : base(style, rectT, parent)
+        {
+            Enabled = true;
+            this.color = color ?? Color.White;
+            var frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), this, style, color);
+            GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap, parent: this);
+            CaretEnabled = true;
+        }
+
         public void Select()
         {
             Selected = true;
@@ -292,15 +307,13 @@ namespace Barotrauma
 
         public void ReceiveTextInput(char inputChar)
         {
-            Text = Text + inputChar;
-
-            if (OnTextChanged!=null) OnTextChanged(this, Text);
+            Text += inputChar;
+            OnTextChanged?.Invoke(this, Text);
         }
         public void ReceiveTextInput(string text)
         {
-            Text = Text + text;
-
-            if (OnTextChanged != null) OnTextChanged(this, Text);
+            Text += text;
+            OnTextChanged?.Invoke(this, Text);
         }
         public void ReceiveCommandInput(char command)
         {
@@ -309,16 +322,18 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (Text.Length > 0)  Text = Text.Substring(0, Text.Length - 1);
-                    if (OnTextChanged != null) OnTextChanged(this, Text);
+                    if (Text.Length > 0)
+                    {
+                        Text = Text.Substring(0, Text.Length - 1);
+                    }
+                    OnTextChanged?.Invoke(this, Text);
                     break;
             }
-
         }
 
         public void ReceiveSpecialInput(Keys key)
         {
-            if (OnKeyHit != null) OnKeyHit(this, key);
+            OnKeyHit?.Invoke(this, key);
         }
 
         //public event TextBoxEvent OnTabPressed;

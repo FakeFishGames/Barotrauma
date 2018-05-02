@@ -137,7 +137,11 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
+#if DEBUG
+            sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
+#else
             sb.AppendLine("Game version " + GameMain.Version);
+#endif
             sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
@@ -186,15 +190,16 @@ namespace Barotrauma
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
             {
-                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
             }
-
-
+            
             sw.WriteLine(sb.ToString());
             sw.Close();
 
-            CrashMessageBox( "A crash report (\"crashreport.txt\") was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+
+            CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
+                " If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");       
         }
     }
 #endif

@@ -125,6 +125,59 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
                 }
             }
+            if (dictionary.Count > 0)
+            {
+                DebugConsole.ThrowError("Some entities were not removed in Entity.RemoveAll:");
+                foreach (Entity e in dictionary.Values)
+                {
+                    DebugConsole.ThrowError(" - " + e.ToString() + "(ID " + e.id + ")");
+                }
+            }
+            if (Item.ItemList.Count > 0)
+            {
+                DebugConsole.ThrowError("Some items were not removed in Entity.RemoveAll:");
+                foreach (Item item in Item.ItemList)
+                {
+                    DebugConsole.ThrowError(" - " + item.Name + "(ID " + item.id + ")");
+                }
+
+                var items = new List<Item>(Item.ItemList);
+                foreach (Item item in items)
+                {
+                    try
+                    {
+                        item.Remove();
+                    }
+                    catch (Exception exception)
+                    {
+                        DebugConsole.ThrowError("Error while removing entity \"" + item.ToString() + "\"", exception);
+                    }
+                }
+                Item.ItemList.Clear();
+            }
+            if (Character.CharacterList.Count > 0)
+            {
+                DebugConsole.ThrowError("Some characters were not removed in Entity.RemoveAll:");
+                foreach (Character character in Character.CharacterList)
+                {
+                    DebugConsole.ThrowError(" - " + character.Name + "(ID " + character.id + ")");
+                }
+
+                var characters = new List<Character>(Character.CharacterList);
+                foreach (Character character in characters)
+                {
+                    try
+                    {
+                        character.Remove();
+                    }
+                    catch (Exception exception)
+                    {
+                        DebugConsole.ThrowError("Error while removing entity \"" + character.ToString() + "\"", exception);
+                    }
+                }
+                Character.CharacterList.Clear();
+            }
+
             dictionary.Clear();
         }
 

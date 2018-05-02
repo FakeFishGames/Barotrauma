@@ -147,10 +147,10 @@ namespace Barotrauma
                 soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
                 soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
 
-                int index = (int)Math.Floor(strongestFlow / 100.0f);
-                index = Math.Min(index, 2);
+                int index = (int)Math.Floor(MathHelper.Lerp(0, SoundPlayer.FlowSounds.Count - 1, strongestFlow / 600.0f));
+                index = Math.Min(index, SoundPlayer.FlowSounds.Count - 1);
 
-                var flowSound = SoundPlayer.flowSounds[index];
+                var flowSound = SoundPlayer.FlowSounds[index];
                 if (flowSound != currentFlowSound && soundIndex > -1)
                 {
                     Sounds.SoundManager.Stop(soundIndex);
@@ -171,7 +171,8 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < waveY.Length; i++)
+            if (waterVolume < 1.0f) return;
+            for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f, 10.0f))
@@ -190,10 +191,12 @@ namespace Barotrauma
         {
             Rectangle hullDrawRect = rect;
             if (Submarine != null) hullDrawRect.Location += Submarine.DrawPosition.ToPoint();
-                        
+
+            float depth = 1.0f;
             foreach (Decal d in decals)
             {
-                d.Draw(spriteBatch, this);
+                d.Draw(spriteBatch, this, depth);
+                depth -= 0.000001f;
             }
         }
 

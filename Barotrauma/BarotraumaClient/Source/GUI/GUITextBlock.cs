@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected Alignment textAlignment;
 
-        private float textScale;
+        private float textScale = 1;
 
         protected Vector2 textPos;
         protected Vector2 origin;
@@ -66,6 +66,7 @@ namespace Barotrauma
             }
             set
             {
+                if (RectTransform != null) { return; }
                 if (base.Rect == value) return;
                 foreach (GUIComponent child in children)
                 {
@@ -142,6 +143,28 @@ namespace Barotrauma
         {
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null) 
+            : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            if (textColor.HasValue)
+            {
+                this.textColor = textColor.Value;
+            }
+            this.Font = font ?? GUI.Font;
+            this.text = text;
+            this.textAlignment = textAlignment;
+            this.Wrap = wrap;
+            SetTextPos();
+        }
+
         protected override void UpdateDimensions(GUIComponent parent = null)
         {
             base.UpdateDimensions(parent);
@@ -198,6 +221,8 @@ namespace Barotrauma
         public void SetTextPos()
         {
             if (text == null) return;
+
+            var rect = Rect;
 
             overflowClipActive = false;
 
@@ -281,6 +306,8 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
+            var rect = Rect;
+
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
@@ -298,7 +325,7 @@ namespace Barotrauma
             {
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    new Vector2(rect.X, rect.Y) + textPos + offset,
+                    rect.Location.ToVector2() + textPos + offset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);

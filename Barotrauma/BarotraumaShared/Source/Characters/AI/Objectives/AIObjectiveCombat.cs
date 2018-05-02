@@ -50,7 +50,7 @@ namespace Barotrauma
                 //TODO: make sure the weapon is ready to use (projectiles/batteries loaded)
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    if (character.Inventory.TryPutItem(weapon, 3, false, character))
+                    if (character.Inventory.TryPutItem(weapon, 3, false, false, character))
                     {
                         weapon.Equip(character);
                     }

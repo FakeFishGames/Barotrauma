@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     partial class Ragdoll
     {
-        public static List<Ragdoll> list = new List<Ragdoll>();
+        private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
         
@@ -22,7 +22,19 @@ namespace Barotrauma
         public AnimationStateData animationStateData;
         public AnimationState animationState;
 
-        public Limb[] Limbs;
+        private Limb[] limbs;
+        public Limb[] Limbs
+        {
+            get
+            {
+                if (limbs == null)
+                {
+                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                    return new Limb[0];
+                }
+                return limbs;
+            }
+        }
         
         private bool frozen;
         public bool Frozen
@@ -286,7 +298,7 @@ namespace Barotrauma
 
             float scale = element.GetAttributeFloat("scale", 1.0f);
             
-            Limbs           = new Limb[element.Elements("limb").Count()];
+            limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
@@ -329,6 +341,7 @@ namespace Barotrauma
                     case "collider":
                         collider.Add(new PhysicsBody(subElement, scale));
 
+                        collider[collider.Count - 1].UserData = character;
                         collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
                         collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
                         collider[collider.Count - 1].FarseerBody.FixedRotation = true;
@@ -343,8 +356,9 @@ namespace Barotrauma
 
             if (collider[0] == null)
             {
-                DebugConsole.ThrowError("No collider configured for \""+character.Name+"\"!");
+                DebugConsole.ThrowError("No collider configured for \"" + character.Name + "\"!");
                 collider[0] = new PhysicsBody(0.0f, 0.0f, 0.5f, 5.0f);
+                collider[0].UserData = character;
                 collider[0].BodyType = BodyType.Dynamic;
                 collider[0].CollisionCategories = Physics.CollisionCharacter;
                 collider[0].FarseerBody.AngularDamping = 5.0f;
@@ -434,14 +448,56 @@ namespace Barotrauma
 
         public void AddLimb(Limb limb)
         {
+            if (Limbs.Contains(limb)) return;
+
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
 
-            Array.Resize(ref Limbs, Limbs.Length + 1);
+            Array.Resize(ref limbs, Limbs.Length + 1);
 
-            Limbs[Limbs.Length-1] = limb;
+            Limbs[Limbs.Length - 1] = limb;
 
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+        }
+
+        public void RemoveLimb(Limb limb)
+        {
+            if (!Limbs.Contains(limb)) return;
+
+            Limb[] newLimbs = new Limb[Limbs.Length - 1];
+
+            int i = 0;
+            foreach (Limb existingLimb in Limbs)
+            {
+                if (existingLimb == limb) continue;
+                newLimbs[i] = existingLimb;
+                i++;
+            }
+
+            limbs = newLimbs;
+            if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
+
+            //remove all joints that were attached to the removed limb
+            LimbJoint[] attachedJoints = Array.FindAll(LimbJoints, lj => lj.LimbA == limb || lj.LimbB == limb);
+            if (attachedJoints.Length > 0)
+            {
+                LimbJoint[] newJoints = new LimbJoint[LimbJoints.Length - attachedJoints.Length];
+                i = 0;
+                foreach (LimbJoint limbJoint in LimbJoints)
+                {
+                    if (attachedJoints.Contains(limbJoint)) continue;
+                    newJoints[i] = limbJoint;
+                    i++;
+                }
+                LimbJoints = newJoints;
+            }
+
+
+            limb.Remove();
+            foreach (LimbJoint limbJoint in attachedJoints)
+            {
+                GameMain.World.RemoveJoint(limbJoint);
+            }
         }
           
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
@@ -856,7 +912,8 @@ namespace Barotrauma
                 else
                 {
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - GetFloorY() > HeadPosition * 0.95f)
+                    floorY = GetFloorY();
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
                     {
                         inWater = true;
                     }
@@ -1143,7 +1200,7 @@ namespace Barotrauma
         {
             Vector2 movePos = simPosition;
 
-            if (original != simPosition)
+            if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
                 //if (!ignorePlatforms) collisionCategory |= Physics.CollisionPlatform;
@@ -1478,7 +1535,7 @@ namespace Barotrauma
                 {
                     l.Remove();
                 }
-                Limbs = null;
+                limbs = null;
             }
 
             foreach (PhysicsBody b in collider)
@@ -1504,6 +1561,7 @@ namespace Barotrauma
             {
                 list[i].Remove();
             }
+            System.Diagnostics.Debug.Assert(list.Count == 0, "Some ragdolls were not removed in Ragdoll.RemoveAll");
         }
     }
 }

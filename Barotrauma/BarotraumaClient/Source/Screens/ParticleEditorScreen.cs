@@ -162,29 +162,31 @@ namespace Barotrauma
 
         private void SerializeAll()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(GameMain.ParticleManager.ConfigFile);
-            if (doc == null || doc.Root == null) return;
-
-            var prefabList = GameMain.ParticleManager.GetPrefabList();
-            foreach (ParticlePrefab prefab in prefabList)
+            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Particles))
             {
-                foreach (XElement element in doc.Root.Elements())
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                if (doc == null || doc.Root == null) continue;
+
+                var prefabList = GameMain.ParticleManager.GetPrefabList();
+                foreach (ParticlePrefab prefab in prefabList)
                 {
-                    if (element.Name.ToString().ToLowerInvariant() != prefab.Name.ToLowerInvariant()) continue;
-
-                    SerializableProperty.SerializeProperties(prefab, element, true);
+                    foreach (XElement element in doc.Root.Elements())
+                    {
+                        if (element.Name.ToString().ToLowerInvariant() != prefab.Name.ToLowerInvariant()) continue;
+                        SerializableProperty.SerializeProperties(prefab, element, true);
+                    }
                 }
-            }
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.OmitXmlDeclaration = true;
-            settings.NewLineOnAttributes = true;
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                settings.OmitXmlDeclaration = true;
+                settings.NewLineOnAttributes = true;
 
-            using (var writer = XmlWriter.Create(GameMain.ParticleManager.ConfigFile, settings))
-            {
-                doc.WriteTo(writer);
-                writer.Flush();
+                using (var writer = XmlWriter.Create(configFile, settings))
+                {
+                    doc.WriteTo(writer);
+                    writer.Flush();
+                }
             }
         }
 

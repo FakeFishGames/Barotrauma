@@ -105,13 +105,13 @@ namespace Barotrauma.Particles
             fadeTimer = Prefab.FadeInTime;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Hull hull)
+        public void Draw(SpriteBatch spriteBatch, Hull hull, float depth)
         {
             Vector2 drawPos = position + hull.Rect.Location.ToVector2();
             drawPos += hull.Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
             
-            spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * GetAlpha(), 0, Vector2.Zero, scale, SpriteEffects.None, 1);
+            spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * GetAlpha(), 0, Vector2.Zero, scale, SpriteEffects.None, depth);
         }
 
         private float GetAlpha()

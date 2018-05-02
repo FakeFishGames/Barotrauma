@@ -18,10 +18,28 @@ namespace Barotrauma
             get { return prefab.GetActiveSprite(condition); }
         }
 
+        public Color GetSpriteColor()
+        {
+            Color color = spriteColor;
+            if (prefab.UseContainedSpriteColor && ownInventory != null)
+            {
+                for (int i = 0; i < ownInventory.Items.Length; i++)
+                {
+                    if (ownInventory.Items[i] != null)
+                    {
+                        color = ownInventory.Items[i].spriteColor;
+                        break;
+                    }
+                }
+            }
+            return color;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
-            Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
+            
+            Color color = (IsSelected && editing) ? Color.Red : GetSpriteColor();
             if (isHighlighted) color = Color.Orange;
 
             Sprite activeSprite = prefab.sprite;
@@ -63,8 +81,9 @@ namespace Barotrauma
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
-                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
-                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color * fadeInBrokenSpriteAlpha, Point.Zero, selectedSprite.Depth - 0.000001f);
+                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
+                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
+                            depth: selectedSprite.Depth - 0.000001f);
 
                     }
                     else
@@ -81,11 +100,21 @@ namespace Barotrauma
                     {
                         if (holdable.Picker.SelectedItems[0] == this)
                         {
-                            depth = holdable.Picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.000001f;
+                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.RightHand);
+                            depth = holdLimb.sprite.Depth + 0.000001f;
+                            foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                            {
+                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Min(wearableSprite.Sprite.Depth, depth);
+                            }
                         }
                         else if (holdable.Picker.SelectedItems[1] == this)
                         {
-                            depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
+                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftHand);
+                            depth = holdLimb.sprite.Depth - 0.000001f;
+                            foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                            {
+                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) depth = Math.Max(wearableSprite.Sprite.Depth, depth);
+                            }
                         }
                     }
                     body.Draw(spriteBatch, selectedSprite, color, depth);

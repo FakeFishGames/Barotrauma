@@ -17,11 +17,11 @@ namespace Barotrauma
             private set;
         }
 
-        private string hitSound;
+        private string hitSoundTag;
 
-        public string HitSound
+        public string HitSoundTag
         {
-            get { return hitSound; }
+            get { return hitSoundTag; }
         }
 
         partial void InitProjSpecific(XElement element)
@@ -34,7 +34,12 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         break;
                     case "sound":
-                        hitSound = subElement.GetAttributeString("file", "");
+                        hitSoundTag = subElement.GetAttributeString("tag", "");
+                        if (string.IsNullOrWhiteSpace(hitSoundTag))
+                        {
+                            //legacy support
+                            hitSoundTag = subElement.GetAttributeString("file", "");
+                        }
                         break;
                 }
             }

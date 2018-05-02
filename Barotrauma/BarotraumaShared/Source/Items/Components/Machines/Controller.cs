@@ -39,6 +39,12 @@ namespace Barotrauma.Items.Components
             set { userPos = value; }
         }
 
+        [Serialize(false, true)]
+        public bool RequireAimToUse
+        {
+            get; set;
+        }
+
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -74,8 +80,9 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam) 
         {
             this.cam = cam;
-
+            
             if (character == null 
+                || character.Removed
                 || character.SelectedConstruction != item
                 || !character.CanInteractWith(item))
             {
@@ -147,11 +154,19 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (character == null || activator != character || character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (activator != character)
+            {
+                return false;
+            }
+
+            if (character == null || character.Removed ||
+                character.SelectedConstruction != item || !character.CanInteractWith(item))
             {
                 character = null;
                 return false;
             }
+
+            if (RequireAimToUse && !activator.IsKeyDown(InputType.Aim)) return false;
 
             item.SendSignal(0, "1", "trigger_out", character);
             
@@ -162,9 +177,15 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.character == null || this.character != character || this.character.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (this.character != character)
             {
-                character = null;
+                return false;
+            }
+
+            if (this.character == null || character.Removed ||
+                this.character.SelectedConstruction != item || !character.CanInteractWith(item))
+            {
+                this.character = null;
                 return false;
             }
             if (character == null) return false;     
@@ -172,7 +193,14 @@ namespace Barotrauma.Items.Components
             Entity focusTarget = GetFocusTarget();
             if (focusTarget == null)
             {
-                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
+
+                Vector2 offset = character.CursorWorldPosition - centerPos;
+                offset.Y = -offset.Y;
+
+                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
                 return false;
             }
             
@@ -189,7 +217,24 @@ namespace Barotrauma.Items.Components
             
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
-                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
+
+                Item targetItem = focusTarget as Item;
+                if (targetItem != null)
+                {
+                    Turret turret = targetItem.GetComponent<Turret>();
+                    if (turret != null)
+                    {
+                        centerPos = new Vector2(targetItem.WorldRect.X + turret.BarrelPos.X, targetItem.WorldRect.Y - turret.BarrelPos.Y);
+                    }
+                }
+
+                Vector2 offset = character.CursorWorldPosition - centerPos;
+                offset.Y = -offset.Y;
+
+                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
             }
 
             return true;
@@ -224,6 +269,8 @@ namespace Barotrauma.Items.Components
 
         private void CancelUsing(Character character)
         {
+            if (character == null || character.Removed) return;
+
             foreach (LimbPos lb in limbPositions)
             {
                 Limb limb = character.AnimController.GetLimb(lb.limbType);
@@ -241,10 +288,10 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character activator)
         {
-            if (activator == null) return false;
+            if (activator == null || activator.Removed) return false;
 
             //someone already using the item
-            if (character != null)
+            if (character != null && !character.Removed)
             {
                 if (character == activator)
                 {
@@ -256,8 +303,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                character = activator;
-                    
+                character = activator;                    
                 IsActive = true;
             }
 

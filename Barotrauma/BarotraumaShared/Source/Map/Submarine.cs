@@ -88,7 +88,7 @@ namespace Barotrauma
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
         public string RecommendedCrewExperience;
 
-        public string ContentPackage;
+        public HashSet<string> CompatibleContentPackages = new HashSet<string>();
         
         //properties ----------------------------------------------------
 
@@ -286,7 +286,11 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
-                    ContentPackage = doc.Root.GetAttributeString("contentpackage", "Unknown");
+                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("compatiblecontentpackages", new string[0]);
+                    foreach (string contentPackageName in contentPackageNames)
+                    {
+                        CompatibleContentPackages.Add(contentPackageName);
+                    }
 
 #if CLIENT                    
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
@@ -675,10 +679,12 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-            
-            foreach (MapEntity e in MapEntity.mapEntityList)
+
+            List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+
+            foreach (MapEntity e in subEntities)
             {
-                if (e.MoveWithLevel || e.Submarine != this || e is Item) continue;
+                if (e.MoveWithLevel || e is Item) continue;
                 
                 if (e is LinkedSubmarine)
                 {
@@ -697,10 +703,9 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            foreach (MapEntity mapEntity in subEntities)
             {
-                if (MapEntity.mapEntityList[i].Submarine != this) continue;
-                MapEntity.mapEntityList[i].Move(-HiddenSubPosition);
+                mapEntity.Move(-HiddenSubPosition);
             }
 
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
@@ -715,10 +720,9 @@ namespace Barotrauma
             }
             entityGrid = Hull.GenerateEntityGrid(this);
 
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            foreach (MapEntity mapEntity in subEntities)
             {
-                if (MapEntity.mapEntityList[i].Submarine != this) continue;
-                MapEntity.mapEntityList[i].Move(HiddenSubPosition);
+                mapEntity.Move(HiddenSubPosition);
             }
 
             foreach (Item item in Item.ItemList)
@@ -1201,7 +1205,7 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
-            element.Add(new XAttribute("contentpackage", ContentPackage ?? ""));
+            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", CompatibleContentPackages)));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -1245,7 +1249,7 @@ namespace Barotrauma
                 List<Item> items = new List<Item>(Item.ItemList);
                 foreach (Item item in items)
                 {
-                    DebugConsole.ThrowError("Error while unloading submarines - item \""+item.Name+"\" not removed");
+                    DebugConsole.ThrowError("Error while unloading submarines - item \"" + item.Name + "\" (ID:" + item.ID + ") not removed");
                     try
                     {
                         item.Remove();

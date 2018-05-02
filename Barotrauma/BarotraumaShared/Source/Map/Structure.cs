@@ -57,6 +57,7 @@ namespace Barotrauma
         private SpriteEffects SpriteEffects = SpriteEffects.None;
 
         private bool flippedX;
+        private bool flippedY;
 
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
@@ -145,6 +146,8 @@ namespace Barotrauma
             get { return prefab.Tags; }
         }
 
+        // TODO: encapsulate visuals?
+
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -152,7 +155,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-
+        
         public override Rectangle Rect
         {
             get
@@ -687,8 +690,9 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
-
             if (!MathUtils.IsValid(damage)) return;
+
+            damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
@@ -756,7 +760,7 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
-            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+            if (damageDiff != 0.0f) //otherwise it's possible to infinitely gain karma by welding fixed things
                 AdjustKarma(attacker, damageDiff);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
@@ -831,9 +835,7 @@ namespace Barotrauma
             newBody.Friction = 0.5f;
 
             newBody.OnCollision += OnWallCollision;
-
-            newBody.CollisionCategories = Physics.CollisionWall;
-
+            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
 
             bodies.Add(newBody);
@@ -877,8 +879,12 @@ namespace Barotrauma
 
                 CreateStairBodies();
             }
-
-            CreateSections();
+            
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
         
         public static void Load(XElement element, Submarine submarine)

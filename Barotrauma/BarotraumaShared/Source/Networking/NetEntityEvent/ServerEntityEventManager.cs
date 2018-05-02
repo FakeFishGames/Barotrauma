@@ -326,7 +326,7 @@ namespace Barotrauma.Networking
                 if (entityID == 0)
                 {
                     msg.ReadPadBits();
-                    sender.LastSentEntityEventID++;
+                    if (thisEventID == (UInt16)(sender.LastSentEntityEventID + 1)) sender.LastSentEntityEventID++;
                     continue;
                 }
 

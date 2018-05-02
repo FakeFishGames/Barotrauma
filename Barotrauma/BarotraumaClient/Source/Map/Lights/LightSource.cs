@@ -42,7 +42,22 @@ namespace Barotrauma.Lights
         //(e.g. position or range of the lightsource has changed)
         public bool NeedsHullCheck = true;
         //do we need to recalculate the vertices of the light volume
-        public bool NeedsRecalculation = true;
+        private bool needsRecalculation;
+        public bool NeedsRecalculation
+        {
+            get { return needsRecalculation; }
+            set
+            {
+                if (!needsRecalculation && value)
+                {
+                    foreach (ConvexHullList chList in hullsInRange)
+                    {
+                        chList.IsHidden.Clear();
+                    }
+                }
+                needsRecalculation = value;
+            }
+        }
 
         //when were the vertices of the light volume last calculated
         private float lastRecalculationTime;
@@ -64,7 +79,7 @@ namespace Barotrauma.Lights
                 position = value;
 
                 if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 5.0f * 5.0f) return;
-
+                
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
                 prevCalculatedPosition = position;
@@ -117,7 +132,7 @@ namespace Barotrauma.Lights
 
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
                 if (Math.Abs(prevCalculatedRange - range) < 10.0f) return;
-
+                
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
                 prevCalculatedRange = range;
@@ -209,7 +224,7 @@ namespace Barotrauma.Lights
                     NeedsRecalculation = true;
                 }
 
-                if (chList.List.Any(ch => ch.LastVertexChangeTime > lastRecalculationTime))
+                if (chList.List.Any(ch => ch.LastVertexChangeTime > lastRecalculationTime && !chList.IsHidden.Contains(ch)))
                 {
                     NeedsRecalculation = true;
                 }
@@ -309,7 +324,16 @@ namespace Barotrauma.Lights
             var hulls = new List<ConvexHull>();// ConvexHull.GetHullsInRange(position, range, ParentSub);
             foreach (ConvexHullList chList in hullsInRange)
             {
-                hulls.AddRange(chList.List);
+                //hulls.AddRange(chList.List);
+                foreach (ConvexHull hull in chList.List)
+                {
+                    if (!chList.IsHidden.Contains(hull)) hulls.Add(hull);
+                    //hulls.Add(hull);
+                }
+                foreach (ConvexHull hull in chList.List)
+                {
+                    chList.IsHidden.Add(hull);
+                }
             }
 
             float bounds = range * 2;
@@ -353,7 +377,7 @@ namespace Barotrauma.Lights
 
                         SegmentPoint start = visibleSegments[i].Start;
                         SegmentPoint end = visibleSegments[i].End;
-                        SegmentPoint mid = new SegmentPoint(intersectionVal);
+                        SegmentPoint mid = new SegmentPoint(intersectionVal, null);
 
                         if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 25.0f ||
                             Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 25.0f)
@@ -361,8 +385,8 @@ namespace Barotrauma.Lights
                             continue;
                         }
 
-                        Segment seg1 = new Segment(start, mid); seg1.IsHorizontal = visibleSegments[i].IsHorizontal;
-                        Segment seg2 = new Segment(mid, end); seg2.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        Segment seg1 = new Segment(start, mid, visibleSegments[i].ConvexHull); seg1.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        Segment seg2 = new Segment(mid, end, visibleSegments[i].ConvexHull); seg2.IsHorizontal = visibleSegments[i].IsHorizontal;
                         visibleSegments[i] = seg1;
                         visibleSegments.Insert(i+1,seg2);
                         i--;
@@ -386,17 +410,17 @@ namespace Barotrauma.Lights
 
             //(might be more effective to calculate if we actually need these extra points)
             var boundaryCorners = new List<SegmentPoint> {
-                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y + bounds)),
-                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y - bounds)),
-                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y - bounds)),
-                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds))
+                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y + bounds), null),
+                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y - bounds), null),
+                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y - bounds), null),
+                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds), null)
             };
 
             points.AddRange(boundaryCorners);
 
             for (int i = 0; i < 4; i++)
             {
-                visibleSegments.Add(new Segment(boundaryCorners[i], boundaryCorners[(i + 1) % 4]));
+                visibleSegments.Add(new Segment(boundaryCorners[i], boundaryCorners[(i + 1) % 4], null));
             }
             
             var compareCCW = new CompareSegmentPointCW(drawPos);
@@ -447,8 +471,15 @@ namespace Barotrauma.Lights
 
                 if (isPoint1 && isPoint2)
                 {
-                    //hit at the current segmentpoint -> place the segmentpoint into the list
+                    //hit at the current segmentpoint -> place the segmentpoint into the list 
                     output.Add(p.WorldPos);
+
+                    foreach (ConvexHullList hullList in hullsInRange)
+                    {
+                        hullList.IsHidden.Remove(p.ConvexHull);
+                        hullList.IsHidden.Remove(seg1.ConvexHull);
+                        hullList.IsHidden.Remove(seg2.ConvexHull);
+                    }
                 }
                 else if (intersection1.First != intersection2.First)
                 {
@@ -456,6 +487,13 @@ namespace Barotrauma.Lights
                     //we definitely want to generate new geometry here
                     output.Add(isPoint1 ? p.WorldPos : intersection1.Second);
                     output.Add(isPoint2 ? p.WorldPos : intersection2.Second);
+
+                    foreach (ConvexHullList hullList in hullsInRange)
+                    {
+                        hullList.IsHidden.Remove(p.ConvexHull);
+                        hullList.IsHidden.Remove(seg1.ConvexHull);
+                        hullList.IsHidden.Remove(seg2.ConvexHull);
+                    }
                 }
                 //if neither of the conditions above are met, we just assume
                 //that the raycasts both resulted on the same segment

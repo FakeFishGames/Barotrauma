@@ -82,6 +82,40 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter, GUIComponent parent = null)
+            : base(rectT, parent, "", Color.White)
+        {
+            new GUIFrame(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.8f, parent: this);
+            float headerHeight = 0.2f;
+            float margin = 0.05f;
+            var frame = new GUIFrame(rectT, parent: this);
+            GUI.Style.Apply(frame, "", this);
+            GUITextBlock header = null;
+            if (!string.IsNullOrWhiteSpace(headerText))
+            {
+                header = new GUITextBlock(new RectTransform(new Vector2(1, headerHeight), frame.RectTransform, Anchor.TopCenter)
+                {
+                    RelativeOffset = new Vector2(0, margin)
+                }, headerText, 
+                    textAlignment: Alignment.Center, parent: frame);
+                GUI.Style.Apply(header, "", this);
+            }
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                float offset = headerHeight + margin;
+                var size = header == null ? Vector2.One : new Vector2(1 - margin * 2, 1 - offset + margin);
+                var textBlock = new GUITextBlock(new RectTransform(size, frame.RectTransform, Anchor.TopCenter)
+                {
+                    RelativeOffset = new Vector2(0, offset)
+                }, text, textAlignment: textAlignment, wrap: true, parent: frame);
+                GUI.Style.Apply(textBlock, "", this);
+            }
+            MessageBoxes.Add(this);
+        }
+
         public void Close()
         {
             if (parent != null) parent.RemoveChild(this);

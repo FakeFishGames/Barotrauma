@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
 
             CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;

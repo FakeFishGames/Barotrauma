@@ -204,7 +204,7 @@ namespace Barotrauma.Items.Components
                 Item item = Entity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
-                Inventory.TryPutItem(item, i, false, null, false);
+                Inventory.TryPutItem(item, i, false, false, null, false);
             }
 
             itemIds = null;

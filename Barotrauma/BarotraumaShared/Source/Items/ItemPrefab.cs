@@ -150,6 +150,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool UseContainedSpriteColor
+        {
+            get;
+            private set;
+        }
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
@@ -301,6 +308,10 @@ namespace Barotrauma
                         canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
+                        if (subElement.Attribute("sourcerect") == null)
+                        {
+                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for item \"" + Name + "\"!");
+                        }
                         size = sprite.size;
                         break;
 #if CLIENT

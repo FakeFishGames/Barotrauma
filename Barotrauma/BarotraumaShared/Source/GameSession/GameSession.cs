@@ -134,7 +134,7 @@ namespace Barotrauma
                         break;
 #endif
                     case "multiplayercampaign":
-                        GameMode = MultiplayerCampaign.LoadNew(subElement);
+                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
                         break;
                 }
             }
@@ -237,7 +237,7 @@ namespace Barotrauma
             {
                 GUIFrame summaryFrame = roundSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.children[0]);
+                var okButton = new GUIButton(new Rectangle(0, 20, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.children[0]);
                 okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
             }
 #endif
@@ -303,7 +303,7 @@ namespace Barotrauma
                         break;
 #endif
                     case "multiplayercampaign":
-                        MultiplayerCampaign mpCampaign = GameMode as MultiplayerCampaign;
+                        MultiPlayerCampaign mpCampaign = GameMode as MultiPlayerCampaign;
                         if (mpCampaign == null)
                         {
                             DebugConsole.ThrowError("Error while loading a save file: the save file is for a multiplayer campaign but the current gamemode is "+GameMode.GetType().ToString());

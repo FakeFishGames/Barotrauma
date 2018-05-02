@@ -37,6 +37,26 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        partial void InitProjSpecific(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                string texturePath = subElement.GetAttributeString("texture", "");
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "crosshair":
+                        crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                    case "disabledcrosshair":
+                        disabledCrossHairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                }
+            }
+
+            int barWidth = 200;
+            powerIndicator = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth / 2 - barWidth / 2, 20, barWidth, 30), Color.White, 0.0f);
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);

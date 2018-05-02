@@ -78,6 +78,8 @@ namespace Barotrauma
 
         private static BackgroundSpriteManager backgroundSpriteManager;
 
+        private List<Vector2> bottomPositions;
+
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -668,7 +670,7 @@ namespace Barotrauma
             BottomPos = generationParams.SeaFloorDepth;
             SeaFloorTopPos = BottomPos;
             
-            List<Vector2> bottomPositions = new List<Vector2>();
+            bottomPositions = new List<Vector2>();
             bottomPositions.Add(new Vector2(0, BottomPos));
 
             int mountainCount = Rand.Range(generationParams.MountainCountMin, generationParams.MountainCountMax, Rand.RandSync.Server);
@@ -981,6 +983,19 @@ namespace Barotrauma
 
             renderer.Update(deltaTime);
 #endif
+        }
+
+        public Vector2 GetBottomPosition(float xPosition)
+        {
+            int index = (int)Math.Floor(xPosition / Size.X * (bottomPositions.Count - 1));
+            if (index < 0 || index >= bottomPositions.Count - 1) return new Vector2(xPosition, BottomPos);
+
+            float yPos = MathHelper.Lerp(
+                bottomPositions[index].Y,
+                bottomPositions[index + 1].Y,
+                (xPosition - bottomPositions[index].X) / (bottomPositions[index + 1].X - bottomPositions[index].X));
+
+            return new Vector2(xPosition, yPos);
         }
 
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)

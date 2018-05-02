@@ -224,6 +224,8 @@ namespace Barotrauma.Items.Components
                 if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
                 {
                     item.body.FarseerBody.IsBullet = false;
+                    //projectiles with a stickjoint don't become inactive until the stickjoint is detached
+                    if (stickJoint == null) IsActive = false;
                 }
             }
 
@@ -273,6 +275,8 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
         {
+            if (User != null && User.Removed) User = null;
+
             if (IgnoredBodies.Contains(target.Body)) return false;
 
             if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))

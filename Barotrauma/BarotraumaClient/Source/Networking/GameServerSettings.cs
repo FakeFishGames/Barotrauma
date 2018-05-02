@@ -350,6 +350,23 @@ namespace Barotrauma.Networking
             };
             kickVoteSlider.OnMoved(kickVoteSlider, kickVoteSlider.BarScroll);
 
+            y += 20;
+
+            var autobanTimeText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), $"Auto ban time: " + ToolBox.SecondsToReadableTime(AutoBanTime), "", settingsTabs[1], GUI.SmallFont);
+
+            var autobanTimeSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
+            autobanTimeSlider.UserData = autobanTimeText;
+            autobanTimeSlider.Step = 0.05f;
+            autobanTimeSlider.BarScroll = AutoBanTime / MaxAutoBanTime;
+            autobanTimeSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
+                AutoBanTime = Math.Max(barScroll * MaxAutoBanTime, 0);
+                voteText.Text = "Auto ban time: " + ToolBox.SecondsToReadableTime(AutoBanTime);
+                return true;
+            };
+            autobanTimeSlider.OnMoved(autobanTimeSlider, autobanTimeSlider.BarScroll);
+
             y += 45;
 
             var shareSubsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Share submarine files with players", Alignment.Left, settingsTabs[1]);

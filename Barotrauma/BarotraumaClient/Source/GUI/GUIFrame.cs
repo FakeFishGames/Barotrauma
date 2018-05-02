@@ -37,6 +37,17 @@ namespace Barotrauma
             //if (style != null) ApplyStyle(style);
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIFrame(RectTransform rectT, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+        }
+
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!Visible) return;
@@ -45,12 +56,12 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
 
-            if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A/255.0f), true);
+            if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
             base.Draw(spriteBatch);
 
             if (OutlineColor != Color.Transparent)
             {
-                GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (OutlineColor.A/255.0f), false);
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false);
             }
 
 

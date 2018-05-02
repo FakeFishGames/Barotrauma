@@ -18,6 +18,8 @@ namespace Barotrauma
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
 
+        float hudInfoHeight;
+
         private List<CharacterSound> sounds;
 
         //the Character that the player is currently controlling
@@ -280,6 +282,19 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
+            pos.Y += hudInfoHeight;
+
+            if (CurrentHull != null && DrawPosition.Y > CurrentHull.WorldRect.Y - 130.0f)
+            {
+                float lowerAmount = DrawPosition.Y - (CurrentHull.WorldRect.Y - 130.0f);
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f - lowerAmount, 0.1f);
+                hudInfoHeight = Math.Max(hudInfoHeight, 20.0f);
+            }
+            else
+            {
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f, 0.1f);
+            }
+
             pos.Y = -pos.Y;
 
             if (speechBubbleTimer > 0.0f)
@@ -301,7 +316,7 @@ namespace Barotrauma
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
@@ -329,7 +344,7 @@ namespace Barotrauma
 
             if (health < maxHealth * 0.98f && hudInfoVisible)
             {
-                Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
+                Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), 
                     health / maxHealth, 
                     Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f * hudInfoAlpha,

@@ -137,22 +137,25 @@ namespace Barotrauma
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
             
             new GUITextBlock(new Rectangle(246, 60, 100, 20),
-                TextManager.Get("ContentPackage") + ": " + (ContentPackage ?? "Unknown"),
-                "", frame, GUI.SmallFont);
-
-            new GUITextBlock(new Rectangle(246, 80, 100, 20),
                 TextManager.Get("Dimensions") + ": " + dimensionsStr,
                 "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(246, 100, 100, 20),
+            new GUITextBlock(new Rectangle(246, 80, 100, 20),
                 TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
                 "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(246, 120, 100, 20),
+            new GUITextBlock(new Rectangle(246, 100, 100, 20),
                 TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
                 "", frame, GUI.SmallFont);
 
-            var descr = new GUITextBlock(new Rectangle(0, 200, 0, 100), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            new GUITextBlock(new Rectangle(246, 120, 0, 20),
+                TextManager.Get("CompatibleContentPackages") + ":\n" + string.Join(", ", CompatibleContentPackages),
+                "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+
+            var descrBox = new GUIListBox(new Rectangle(0, 200, 0, 120), "", frame);
+
+            var descr = new GUITextBlock(new Rectangle(0, 0, descrBox.Rect.Width - 15, 0), Description + "\n", "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+            descrBox.AddChild(descr);
             descr.CanBeFocused = false;
         }
 

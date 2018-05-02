@@ -58,25 +58,25 @@ namespace Barotrauma
 
         private static BackgroundMusic currentMusic;
         private static BackgroundMusic targetMusic;
-        private static BackgroundMusic[] musicClips;
+        private static List<BackgroundMusic> musicClips;
         private static float currMusicVolume;
 
         private static float updateMusicTimer;
 
         //ambience
-        private static Sound[] waterAmbiences = new Sound[2];
+        private static List<Sound> waterAmbiences = new List<Sound>();
         private static int[] waterAmbienceIndexes = new int[2];
 
         private static float ambientSoundTimer;
         private static Vector2 ambientSoundInterval = new Vector2(20.0f, 40.0f); //x = min, y = max
 
         //misc
-        public static Sound[] flowSounds = new Sound[3];
-        public static Sound[] SplashSounds = new Sound[10];
+        public static List<Sound> FlowSounds = new List<Sound>();
+        public static List<Sound> SplashSounds = new List<Sound>();
 
         private static List<DamageSound> damageSounds;
 
-        private static Sound startDrone;
+        private static Sound startUpSound;
 
         public static bool Initialized;
 
@@ -86,88 +86,81 @@ namespace Barotrauma
             set;
         }
 
+        public static float? OverrideMusicDuration;
+
         public static int SoundCount;
         
         public static IEnumerable<object> Init()
         {
             OverrideMusicType = null;
 
-            XDocument doc = XMLExtensions.TryLoadXml("Content/Sounds/sounds.xml");
-            if (doc == null) yield return CoroutineStatus.Failure;
+            List<string> soundFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Sounds);
 
-            SoundCount = 16 + doc.Root.Elements().Count();
-
-            startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
-            startDrone.Play();
-
-            yield return CoroutineStatus.Running;
-
-            waterAmbiences[0] = Sound.Load("Content/Sounds/Water/WaterAmbience1.ogg", false);
-            yield return CoroutineStatus.Running;
-            waterAmbiences[1] = Sound.Load("Content/Sounds/Water/WaterAmbience2.ogg", false);
-            yield return CoroutineStatus.Running;
-            flowSounds[0] = Sound.Load("Content/Sounds/Water/FlowSmall.ogg", false);
-            yield return CoroutineStatus.Running;
-            flowSounds[1] = Sound.Load("Content/Sounds/Water/FlowMedium.ogg", false);
-            yield return CoroutineStatus.Running;
-            flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg", false);
-            yield return CoroutineStatus.Running;
-
-            for (int i = 0; i < 10; i++ )
+            List<XElement> soundElements = new List<XElement>();
+            foreach (string soundFile in soundFiles)
             {
-                SplashSounds[i] = Sound.Load("Content/Sounds/Water/Splash"+(i)+".ogg", false);
-                yield return CoroutineStatus.Running;
-            }
-            
-            var xMusic = doc.Root.Elements("music").ToList();
-
-            if (xMusic.Any())
-            {
-                musicClips = new BackgroundMusic[xMusic.Count];
-                int i = 0;
-                foreach (XElement element in xMusic)
+                XDocument doc = XMLExtensions.TryLoadXml(soundFile);
+                if (doc != null && doc.Root != null)
                 {
-                    string file = element.GetAttributeString("file", "");
-                    string type = element.GetAttributeString("type", "").ToLowerInvariant();
-                    Vector2 priority = element.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
-
-                    musicClips[i] = new BackgroundMusic(file, type, priority);
-
-                    yield return CoroutineStatus.Running;
-
-                    i++;
+                    soundElements.AddRange(doc.Root.Elements());
                 }
             }
+            
+            SoundCount = 1 + soundElements.Count();
 
+            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().ToLowerInvariant() == "startupsound");
+            if (startUpSoundElement != null)
+            {
+                startUpSound = Sound.Load(startUpSoundElement, false);
+                startUpSound.Play();
+            }
+
+            yield return CoroutineStatus.Running;
+                                    
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
             damageSounds = new List<DamageSound>();
+            musicClips = new List<BackgroundMusic>();
             
-            foreach (XElement subElement in doc.Root.Elements())
+            foreach (XElement soundElement in soundElements)
             {
                 yield return CoroutineStatus.Running;
 
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                switch (soundElement.Name.ToString().ToLowerInvariant())
                 {
                     case "music":
-                        continue;
+                        string file = soundElement.GetAttributeString("file", "");
+                        string type = soundElement.GetAttributeString("type", "").ToLowerInvariant();
+                        Vector2 priority = soundElement.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
+
+                        musicClips.Add(new BackgroundMusic(file, type, priority));
+                        break;
+                    case "splash":
+                        SplashSounds.Add(Sound.Load(soundElement, false));
+                        break;
+                    case "flow":
+                        FlowSounds.Add(Sound.Load(soundElement, false));
+                        break;
+                    case "waterambience":
+                        waterAmbiences.Add(Sound.Load(soundElement, false));
+                        break;
                     case "damagesound":
-                        Sound damageSound = Sound.Load(subElement.GetAttributeString("file", ""), false);
+                        Sound damageSound = Sound.Load(soundElement.GetAttributeString("file", ""), false);
                         if (damageSound == null) continue;
                     
-                        string damageSoundType = subElement.GetAttributeString("damagesoundtype", "None");
+                        string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
 
                         damageSounds.Add(new DamageSound(
                             damageSound, 
-                            subElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
+                            soundElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
                             damageSoundType, 
-                            subElement.GetAttributeString("requiredtag", "")));
+                            soundElement.GetAttributeString("requiredtag", "")));
 
                         break;
                     default:
-                        Sound sound = Sound.Load(subElement.GetAttributeString("file", ""), false);
+                        Sound sound = Sound.Load(soundElement.GetAttributeString("file", ""), false);
                         if (sound != null)
                         {
-                            miscSoundList.Add(new KeyValuePair<string, Sound>(subElement.Name.ToString().ToLowerInvariant(), sound));
+                            miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
                         }
 
                         break;
@@ -187,10 +180,10 @@ namespace Barotrauma
         {
             UpdateMusic(deltaTime);
 
-            if (startDrone != null && !startDrone.IsPlaying)
+            if (startUpSound != null && !startUpSound.IsPlaying)
             {
-                startDrone.Remove();
-                startDrone = null;                
+                startUpSound.Remove();
+                startUpSound = null;                
             }
 
             //stop submarine ambient sounds if no sub is loaded
@@ -255,15 +248,18 @@ namespace Barotrauma
             }
 
             SoundManager.LowPassHFGain = lowpassHFGain;
-            waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
-            waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
+            if (waterAmbiences.Count > 1)
+            {
+                waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
+                waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
+            }
 
         }
 
         public static Sound GetSound(string soundTag)
         {
             var matchingSounds = miscSounds[soundTag].ToList();
-            if (matchingSounds.Count == 0) return Sound.Load(soundTag);
+            if (matchingSounds.Count == 0) return null;
 
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
@@ -283,6 +279,16 @@ namespace Barotrauma
         private static void UpdateMusic(float deltaTime)
         {
             if (musicClips == null) return;
+
+            if (OverrideMusicType != null && OverrideMusicDuration.HasValue)
+            {
+                OverrideMusicDuration -= deltaTime;
+                if (OverrideMusicDuration <= 0.0f)
+                {
+                    OverrideMusicType = null;
+                    OverrideMusicDuration = null;
+                }                
+            }
 
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
@@ -429,7 +435,7 @@ namespace Barotrauma
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)
         {
-            int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2,2)), 0, SplashSounds.Length-1);
+            int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2, 2)), 0, SplashSounds.Count - 1);
 
             SplashSounds[splashIndex].Play(1.0f, 800.0f, worldPosition);
         }
