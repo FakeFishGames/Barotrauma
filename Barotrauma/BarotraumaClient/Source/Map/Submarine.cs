@@ -46,8 +46,8 @@ namespace Barotrauma
             {
                 Sound sound = roundSounds.Find(s =>
                     s.Filename == element.GetAttributeString("file", "") &&
-                    Math.Abs(s.BaseGain-element.GetAttributeFloat("volume", 1.0f))<0.01f &&
-                    Math.Abs(s.BaseFar-element.GetAttributeFloat("range", 1000.0f))<0.01f &&
+                    Math.Abs(s.BaseGain - element.GetAttributeFloat("volume", 1.0f)) < 0.01f &&
+                    Math.Abs(s.BaseFar - element.GetAttributeFloat("range", 1000.0f)) < 0.01f &&
                     s.Stream == stream);
 
                 if (sound != null) return sound;
@@ -67,11 +67,10 @@ namespace Barotrauma
         public static void RemoveAllRoundSounds()
         {
             if (roundSounds == null) return;
-            for (int i=roundSounds.Count-1;i>=0;i--)
+            for (int i = roundSounds.Count - 1; i >= 0; i--)
             {
                 RemoveRoundSound(roundSounds[i]);
             }
-            Items.Components.Powered.ClearSounds();
         }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
