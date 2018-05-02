@@ -37,6 +37,8 @@ namespace Barotrauma.Items.Components
         private float steeringAdjustSpeed = 1.0f;
 
         private Character user;
+
+        private Radar radar;
                 
         public bool AutoPilot
         {
@@ -125,6 +127,11 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific();
+
+        public override void OnItemLoaded()
+        {
+            radar = item.GetComponent<Radar>();
+        }
 
         public override bool Select(Character character)
         {
@@ -406,6 +413,8 @@ namespace Barotrauma.Items.Components
                     SetDestinationLevelEnd();
                     break;
             }
+
+            radar?.AIOperate(deltaTime, character, objective);
 
             return false;
         }

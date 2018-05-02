@@ -25,6 +25,8 @@ namespace Barotrauma.Items.Components
         private float displayScale;
         
         private float displayBorderSize;
+
+        private bool aiPingCheckPending;
                 
         [Serialize(10000.0f, false)]
         public float Range
@@ -118,12 +120,14 @@ namespace Barotrauma.Items.Components
                 {
                     if (item.CurrentHull != null) item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * pingState, item.CurrentHull.AiTarget.SoundRange);
                     if (item.AiTarget != null) item.AiTarget.SoundRange = Math.Max(Range * pingState, item.AiTarget.SoundRange);
+                    aiPingCheckPending = true;
                     item.Use(deltaTime);
                     pingState = 0.0f;
                 }
             }
             else
             {
+                aiPingCheckPending = false;
                 pingState = 0.0f;
             }
 
@@ -141,7 +145,62 @@ namespace Barotrauma.Items.Components
             if (screenOverlay != null) screenOverlay.Remove();
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            if (!IsActive || !aiPingCheckPending) return false;
+
+            Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
+                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) continue;
+                if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) continue;
+
+                string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition);
+
+                if (!targetGroups.ContainsKey(directionName))
+                {
+                    targetGroups.Add(directionName, new List<Character>());
+                }
+                targetGroups[directionName].Add(c);
+            }
+
+            foreach (KeyValuePair<string, List<Character>> targetGroup in targetGroups)
+            {
+                string dialogTag = "DialogSonarTarget";
+                if (targetGroup.Value.Count > 1)
+                {
+                    dialogTag = "DialogSonarTargetMultiple";
+                }
+                else if (targetGroup.Value[0].Mass > 100.0f)
+                {
+                    dialogTag = "DialogSonarTargetLarge";
+                }
+                character.Speak(TextManager.Get(dialogTag).Replace("[direction]", targetGroup.Key).Replace("[count]", targetGroup.Value.Count.ToString()),
+                    null, 0, "sonartarget" + targetGroup.Value[0].ID, 30);
+
+                //prevent the character from reporting other targets in the group
+                for (int i = 1; i < targetGroup.Value.Count; i++)
+                {
+                    character.DisableLine("sonartarget" + targetGroup.Value[i].ID);
+                }
+            }
+
+            return true;
+        }
+
+        private string GetDirectionName(Vector2 dir)
+        {
+            float angle = MathUtils.WrapAngleTwoPi((float)-Math.Atan2(dir.Y, dir.X) + MathHelper.PiOver2);
+
+            int clockDir = (int)Math.Round((angle / MathHelper.TwoPi) * 12);
+            if (clockDir == 0) clockDir = 12;
+
+            return TextManager.Get("SubDirOClock").Replace("[dir]", clockDir.ToString());
+        }
+
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
 
@@ -155,7 +214,7 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsActive);
         }

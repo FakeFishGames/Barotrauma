@@ -281,6 +281,7 @@
   <SubBottomLeft>Lower aft side</SubBottomLeft>
   <SubBottomCenter>Lower mid</SubBottomCenter>
   <SubBottomRight>Lower fore side</SubBottomRight>
+  <SubDirOClock>[dir] o'clock</SubDirOClock>
   
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
@@ -439,6 +440,15 @@
   <DialogFindExtinguisher>Got to find an extinguisher!</DialogFindExtinguisher>
   <DialogPutOutFire>Put out a fire in [roomname]!</DialogPutOutFire>
   <DialogPutOutFire>Extinguished a fire in [roomname]!</DialogPutOutFire>
+  <DialogSonarTarget>A target on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>A blip on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>Something on the sonar at [direction]!</DialogSonarTarget>
+  <DialogSonarTarget>Got a target at [direction]!</DialogSonarTarget>
+  <DialogSonarTargetLarge>A large target on the sonar at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Got a large ping at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetLarge>Something big on the sonar at [direction]!</DialogSonarTargetLarge>
+  <DialogSonarTargetMultiple>[count] targets on the sonar at [direction]!</DialogSonarTargetMultiple>
+  <DialogSonarTargetMultiple>We've got [count] targets at [direction]!</DialogSonarTargetMultiple>
 
   <!-- Status -->
   <Deceased>Deceased</Deceased>
@@ -472,6 +482,8 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
+
 
 
 
