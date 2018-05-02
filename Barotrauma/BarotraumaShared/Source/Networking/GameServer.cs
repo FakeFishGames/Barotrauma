@@ -1282,10 +1282,10 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, selectedLevelDifficulty, teamCount > 1);
             }
 
-            GameServer.Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
-            GameServer.Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
-            GameServer.Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
-            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
+            Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+            Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
+            Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
+            Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
 
             bool missionAllowRespawn = campaign == null &&
                 (!(GameMain.GameSession.GameMode is MissionMode) || 
@@ -1333,6 +1333,22 @@ namespace Barotrauma.Networking
                     characterInfos.Add(characterInfo);
                 }
 
+                List<CharacterInfo> bots = new List<CharacterInfo>();
+                int botsToSpawn = BotSpawnMode == BotSpawnMode.Fill ? BotCount - characterInfos.Count : BotCount;
+                for (int i = 0; i < botsToSpawn; i++)
+                {
+                    var botInfo = new CharacterInfo(Character.HumanConfigFile);
+                    characterInfos.Add(botInfo);
+                    bots.Add(botInfo);
+                }
+                AssignBotJobs(bots, teamID);
+
+                if (characterInfo != null && hostTeam == teamID)
+                {
+                    characterInfos.Remove(characterInfo);
+                    characterInfos.Add(characterInfo);
+                }
+
                 WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -1343,6 +1359,16 @@ namespace Barotrauma.Networking
 
                     teamClients[i].Character = spawnedCharacter;
 
+#if CLIENT
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
+#endif
+                }
+
+                for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
+                {
+                    Character spawnedCharacter = Character.Create(characterInfos[i], assignedWayPoints[i].WorldPosition, characterInfos[i].Name, false, true);
+                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    spawnedCharacter.TeamID = (byte)teamID;
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
 #endif
@@ -2251,6 +2277,70 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+        }
+
+        public void AssignBotJobs(List<CharacterInfo> bots, int teamID)
+        {
+            Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
+            foreach (JobPrefab jp in JobPrefab.List)
+            {
+                assignedPlayerCount.Add(jp, 0);
+            }
+            
+            if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
+            {
+                assignedPlayerCount[myCharacter.Info.Job.Prefab]++;
+            }
+            else if (characterInfo?.Job != null && characterInfo.TeamID == teamID)
+            {
+                assignedPlayerCount[characterInfo?.Job.Prefab]++;
+            }            
+
+            //count the clients who already have characters with an assigned job
+            foreach (Client c in connectedClients)
+            {
+                if (c.TeamID != teamID) continue;
+                if (c.Character?.Info?.Job != null && !c.Character.IsDead)
+                {
+                    assignedPlayerCount[c.Character.Info.Job.Prefab]++;
+                }
+                else if (c.CharacterInfo?.Job != null)
+                {
+                    assignedPlayerCount[c.CharacterInfo?.Job.Prefab]++;
+                }
+            }
+
+            List<CharacterInfo> unassignedBots = new List<CharacterInfo>(bots);
+            foreach (CharacterInfo bot in bots)
+            {
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                {
+                    if (jobPrefab.MinNumber < 1 || assignedPlayerCount[jobPrefab] >= jobPrefab.MinNumber) continue;
+                    bot.Job = new Job(jobPrefab);
+                    assignedPlayerCount[jobPrefab]++;
+                    unassignedBots.Remove(bot);
+                    break;
+                }
+            }
+
+            //find a suitable job for the rest of the players
+            foreach (CharacterInfo c in unassignedBots)
+            {
+                //find all jobs that are still available
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                //all jobs taken, give a random job
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    c.Job = new Job(JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)]);
+                    assignedPlayerCount[c.Job.Prefab]++;
+                }
+                else //some jobs still left, choose one of them by random
+                {
+                    c.Job = new Job(remainingJobs[Rand.Range(0, remainingJobs.Count)]);
+                    assignedPlayerCount[c.Job.Prefab]++;
+                }                    
+            }            
         }
 
         private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)

@@ -29,6 +29,12 @@ namespace Barotrauma
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;
 
+        private GUIButton[] botCountButtons;
+        private GUITextBlock botCountText;
+
+        private GUIButton[] botSpawnModeButtons;
+        private GUITextBlock botSpawnModeText;
+
         private GUIButton[] missionTypeButtons;
         private GUIComponent missionTypeBlock;
 
@@ -352,12 +358,30 @@ namespace Barotrauma
             traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 135, 20, 20), ">", "", defaultModeContainer);
             traitorProbabilityButtons[1].UserData = 1;
 
+            //bot count ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 160, 20, 20), TextManager.Get("BotCount"), "", defaultModeContainer);
+            botCountButtons = new GUIButton[2];
+            botCountButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 185, 20, 20), "<", "", defaultModeContainer);
+            botCountButtons[0].UserData = -1;
+            botCountText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 185, 80, 20), "0", null, null, Alignment.Center, "", defaultModeContainer);
+            botCountButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 185, 20, 20), ">", "", defaultModeContainer);
+            botCountButtons[1].UserData = 1;
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 205, 20, 20), TextManager.Get("BotSpawnMode"), "", defaultModeContainer);
+            botSpawnModeButtons = new GUIButton[2];
+            botSpawnModeButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 230, 20, 20), "<", "", defaultModeContainer);
+            botSpawnModeButtons[0].UserData = -1;
+            botSpawnModeText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 230, 80, 20), "", null, null, Alignment.Center, "", defaultModeContainer);
+            botSpawnModeButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 230, 20, 20), ">", "", defaultModeContainer);
+            botSpawnModeButtons[1].UserData = 1;
+
             //automatic restart ------------------------------------------------------------------
 
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, columnY + 175, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, columnY + 265, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
             autoRestartBox.OnSelected = ToggleAutoRestart;
 
-            var restartText = new GUITextBlock(new Rectangle(columnX, columnY + 200, 20, 20), "", "", defaultModeContainer);
+            var restartText = new GUITextBlock(new Rectangle(columnX, columnY + 290, 20, 20), "", "", defaultModeContainer);
             restartText.Font = GUI.SmallFont;
             restartText.TextGetter = AutoRestartText;
 
@@ -422,11 +446,10 @@ namespace Barotrauma
 
             levelDifficultyScrollBar.Enabled = GameMain.Server != null;
 
-            traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
-            traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
-
-            missionTypeButtons[0].Enabled = GameMain.Server != null;
-            missionTypeButtons[1].Enabled = GameMain.Server != null;
+            traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
+            missionTypeButtons[0].Enabled = missionTypeButtons[1].Enabled = GameMain.Server != null;
+            botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Server != null;
+            botSpawnModeButtons[0].Enabled = botSpawnModeButtons[1].Enabled = GameMain.Server != null;
 
             ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
 
@@ -481,6 +504,11 @@ namespace Barotrauma
 
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
+
+                botCountButtons[0].OnClicked = ChangeBotCount;
+                botCountButtons[1].OnClicked = ChangeBotCount;
+                botSpawnModeButtons[0].OnClicked = ChangeBotSpawnMode;
+                botSpawnModeButtons[1].OnClicked = ChangeBotSpawnMode;
 
                 missionTypeButtons[0].OnClicked = ToggleMissionType;
                 missionTypeButtons[1].OnClicked = ToggleMissionType;
@@ -721,7 +749,21 @@ namespace Barotrauma
             ToggleTraitorsEnabled((int)userData);
             return true;
         }
-        
+
+        public bool ChangeBotCount(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotCount(GameMain.Server.BotCount + (int)userData);
+            return true;
+        }
+
+        public bool ChangeBotSpawnMode(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotSpawnMode(GameMain.Server.BotSpawnMode == BotSpawnMode.Fill ? BotSpawnMode.Normal : BotSpawnMode.Fill);
+            return true;
+        }
+
         private bool SelectSub(GUIComponent component, object obj)
         {
             if (GameMain.Server == null) return false;
@@ -978,7 +1020,7 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, "", permissionsBox);
                     permissionTick.UserData = permission;
                     permissionTick.Selected = selectedClient.HasPermission(permission);
 
@@ -1015,7 +1057,7 @@ namespace Barotrauma
                 commandList.UserData = selectedClient;
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
-                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
+                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, "", commandList);
                     commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
                     commandTickBox.ToolTip = command.help;
                     commandTickBox.UserData = command;

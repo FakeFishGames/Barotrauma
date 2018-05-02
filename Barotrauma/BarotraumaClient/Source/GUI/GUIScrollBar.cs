@@ -120,14 +120,14 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            isHorizontal = (rect.Width > rect.Height);
+            isHorizontal = (this.rect.Width > this.rect.Height);
             frame = new GUIFrame(new Rectangle(0,0,0,0), style, this);
             GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
 
             this.barSize = barSize;
 
             bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, "", this);
-            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtoneVertical", this);
+            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             
             bar.OnPressed = SelectBar;
 

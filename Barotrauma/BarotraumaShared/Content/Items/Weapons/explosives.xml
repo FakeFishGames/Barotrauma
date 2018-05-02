@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="C-4 Block"
+    identifier="c4block"
     category="Equipment"
     Tags="smallitem,explosive"
     cargocontainername="Explosive Crate">
@@ -25,6 +26,7 @@
 
   <Item
     name="Compound N"
+    identifier="compoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     cargocontainername="Explosive Crate"
@@ -45,6 +47,7 @@
 
   <Item
     name="Volatile Compound N"
+    identifier="volcompoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    
@@ -71,6 +74,7 @@
 
   <Item
     name="IC-4 Block"
+    identifier="ic4block"
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
@@ -93,6 +97,7 @@
 
   <Item
     name="Detonator"
+    identifier="detonator"
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"

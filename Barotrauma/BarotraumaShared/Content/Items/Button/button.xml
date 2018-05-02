@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
-    name="Button"
+    name="Button"    
+    identifier="button"
     category="Electrical"
     linkable="true"
     tags="smallitem"
@@ -38,6 +39,7 @@
 
   <Item
     name="Switch"
+    identifier="switch"
     category="Electrical"
     linkable="true"
     tags="smallitem"
