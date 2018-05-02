@@ -73,6 +73,9 @@
   <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
   <flow file="Content/Sounds/Water/FlowLarge.ogg"/>
 
+  <fire file="Content/Sounds/fire.ogg"/>
+  <firelarge file="Content/Sounds/firelarge.ogg"/>
+
   <waterambience file="Content/Sounds/Water/WaterAmbience1.ogg"/>
   <waterambience file="Content/Sounds/Water/WaterAmbience2.ogg"/>
 
