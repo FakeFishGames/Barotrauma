@@ -39,6 +39,7 @@
 
     <ItemContainer capacity="3">
       <Containable name="chem"/>
+      <Containable name="medical"/>
     </ItemContainer>
   </Item>
 
@@ -63,6 +64,7 @@
 
     <ItemContainer capacity="6">
       <Containable name="chem"/>
+      <Containable name="medical"/>
     </ItemContainer>
   </Item>
 </Items>

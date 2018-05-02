@@ -7,10 +7,16 @@ sampler LosSampler = sampler_state { Texture = <xLosTexture>; };
 
 float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {	
+	float4 sampleColor = xTexture.Sample(TextureSampler, texCoord);
 	float4 losColor = xLosTexture.Sample(LosSampler, texCoord);
-	float4 sample = xTexture.Sample(TextureSampler, texCoord);
 	
-	float4 outColor = float4(sample.x*losColor.x, sample.y*losColor.x, sample.z*losColor.x, losColor.x);
+	float obscureAmount = 1.0f - losColor.r;
+
+	float4 outColor = float4(
+		sampleColor.r * color.r, 
+		sampleColor.g * color.g, 
+		sampleColor.b * color.b,
+		obscureAmount);
 		
 	return outColor;
 }

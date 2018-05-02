@@ -6,7 +6,7 @@
     cargocontainername="Metal Crate"
     description="A token of the Captain's unquestionable authority.">
 
-    <Sprite texture ="captainhat.png" depth="0.6"/>
+    <Sprite texture="captainhat.png" depth="0.6" sourcerect="0,0,32,32"/>
 
     <Body width="25" height="15" density="30"/>
 
@@ -34,6 +34,10 @@
       <sprite texture="captainTorso.png" limb="RightArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
       <sprite texture="captainTorso.png" limb="LeftArm" sourcerect="30,0,17,42" origin="0.5,0.5" hidelimb="true"/>
     </Wearable>
+    
+    <ItemContainer capacity="5">
+      <Containable name="smallitem"/>
+    </ItemContainer>
   </Item>
 
   <Item

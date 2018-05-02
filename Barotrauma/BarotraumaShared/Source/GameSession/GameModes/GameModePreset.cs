@@ -63,7 +63,7 @@ namespace Barotrauma
                 + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
                 + "when the task is completed or everyone in the crew has died.";
 
-            new GameModePreset("Campaign", typeof(MultiplayerCampaign), false, false);
+            new GameModePreset("Campaign", typeof(MultiPlayerCampaign), false, false);
         }
     }
 }

@@ -54,9 +54,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (string.IsNullOrWhiteSpace(expression) || regex==null) return;
+            if (string.IsNullOrWhiteSpace(expression) || regex == null) return;
 
-            if (receivedSignal != previousReceivedSignal)
+            if (receivedSignal != previousReceivedSignal && receivedSignal != null)
             {
                 try
                 {

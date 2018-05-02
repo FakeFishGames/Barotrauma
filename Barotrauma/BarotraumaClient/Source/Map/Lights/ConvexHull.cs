@@ -6,44 +6,10 @@ using System.Diagnostics;
 
 namespace Barotrauma.Lights
 {
-    /*class CachedShadow : IDisposable
-    {
-        public VertexBuffer ShadowBuffer;
-
-        public Vector2 LightPos;
-
-        public int ShadowVertexCount, PenumbraVertexCount;
-
-        public CachedShadow(VertexPositionColor[] shadowVertices, Vector2 lightPos, int shadowVertexCount, int penumbraVertexCount)
-        {
-            //var ShadowVertices = new VertexPositionColor [shadowVertices.Count()];
-            //shadowVertices.CopyTo(ShadowVertices, 0);
-
-            ShadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6*2, BufferUsage.None);
-            ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
-
-            ShadowVertexCount = shadowVertexCount;
-            PenumbraVertexCount = penumbraVertexCount;
-
-            LightPos = lightPos;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            ShadowBuffer.Dispose();
-        }
-    }*/
-
     class ConvexHullList
     {
         private List<ConvexHull> list;
+        public HashSet<ConvexHull> IsHidden;
 
         public readonly Submarine Submarine;
         public List<ConvexHull> List
@@ -54,13 +20,16 @@ namespace Barotrauma.Lights
                 Debug.Assert(value != null);
                 Debug.Assert(!list.Contains(null));
                 list = value;
+                IsHidden.RemoveWhere(ch => !list.Contains(ch));
             }
         }
+        
 
         public ConvexHullList(Submarine submarine)
         {
             Submarine = submarine;
             list = new List<ConvexHull>();
+            IsHidden = new HashSet<ConvexHull>();
         }
     }
 
@@ -69,15 +38,18 @@ namespace Barotrauma.Lights
         public SegmentPoint Start;
         public SegmentPoint End;
 
+        public ConvexHull ConvexHull;
+
         public bool IsHorizontal;
 
-        public Segment(SegmentPoint start, SegmentPoint end)
+        public Segment(SegmentPoint start, SegmentPoint end, ConvexHull convexHull)
         {
             Start = start;
             End = end;
+            ConvexHull = convexHull;
 
-            start.Segment = this;
-            end.Segment = this;
+            start.ConvexHull = convexHull;
+            end.ConvexHull = convexHull;
 
             IsHorizontal = Math.Abs(start.Pos.X - end.Pos.X) > Math.Abs(start.Pos.Y - end.Pos.Y);
         }
@@ -88,14 +60,13 @@ namespace Barotrauma.Lights
         public Vector2 Pos;        
         public Vector2 WorldPos;
 
-        public Segment Segment;
+        public ConvexHull ConvexHull;
 
-        public SegmentPoint(Vector2 pos)
+        public SegmentPoint(Vector2 pos, ConvexHull convexHull)
         {
             Pos = pos;
             WorldPos = pos;
-
-            Segment = null;
+            ConvexHull = convexHull;
         }
 
         public override string ToString()
@@ -107,27 +78,30 @@ namespace Barotrauma.Lights
     class ConvexHull
     {
         public static List<ConvexHullList> HullLists = new List<ConvexHullList>();
-        static BasicEffect shadowEffect;
-        static BasicEffect penumbraEffect;
-
-        //private Dictionary<LightSource, CachedShadow> cachedShadows;
-
-        public VertexBuffer ShadowBuffer;
-
+        public static BasicEffect shadowEffect;
+        public static BasicEffect penumbraEffect;
+        
         Segment[] segments = new Segment[4];
         SegmentPoint[] vertices = new SegmentPoint[4];
         SegmentPoint[] losVertices = new SegmentPoint[4];
-
-        //private Vector2[] vertices;
-        //private Vector2[] losVertices;
-
+        
         private bool[] backFacing;
         private bool[] ignoreEdge;
 
         private VertexPositionColor[] shadowVertices;
         private VertexPositionTexture[] penumbraVertices;
-        
-        int shadowVertexCount;
+
+        public VertexPositionColor[] ShadowVertices
+        {
+            get { return shadowVertices; }
+        }
+
+        public VertexPositionTexture[] PenumbraVertices
+        {
+            get { return penumbraVertices; }
+        }
+
+        public int shadowVertexCount;
 
         private Entity parentEntity;
 
@@ -276,13 +250,13 @@ namespace Barotrauma.Lights
 
             for (int i = 0; i < 4; i++)
             {
-                vertices[i]     = new SegmentPoint(points[i]);
-                losVertices[i]  = new SegmentPoint(points[i]);
+                vertices[i]     = new SegmentPoint(points[i], this);
+                losVertices[i]  = new SegmentPoint(points[i], this);
 
             }
             for (int i = 0; i < 4; i++)
             {
-                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4]);
+                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4], this);
             }
             
             int margin = 0;
@@ -399,8 +373,14 @@ namespace Barotrauma.Lights
             }
         }
 
-        private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
+        public void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
+            Vector3 offset = Vector3.Zero;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+            }
+
             shadowVertexCount = 0;
 
             var vertices = los ? losVertices : this.vertices;
@@ -463,7 +443,7 @@ namespace Barotrauma.Lights
                 //one vertex on the hull
                 shadowVertices[i] = new VertexPositionColor();
                 shadowVertices[i].Color = los ? Color.Black : Color.Transparent;
-                shadowVertices[i].Position = vertexPos;
+                shadowVertices[i].Position = vertexPos+ offset;
 
                 //one extruded by the light direction
                 shadowVertices[j] = new VertexPositionColor();
@@ -472,7 +452,7 @@ namespace Barotrauma.Lights
                 Vector3 L2P = vertexPos - new Vector3(lightSourcePos, 0);
                 L2P.Normalize();
                 
-                shadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000;
+                shadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000 + offset;
 
                 svCount += 2;
                 currentIndex = (currentIndex + 1) % 4;
@@ -486,12 +466,18 @@ namespace Barotrauma.Lights
 
         private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
         {
+            Vector3 offset = Vector3.Zero;
+            if (parentEntity != null && parentEntity.Submarine != null)
+            {
+                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
+            }
+
             for (int n = 0; n < 4; n += 3)
             {
                 Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex].Pos : vertices[endingIndex].Pos, 0.0f);
 
                 penumbraVertices[n] = new VertexPositionTexture();
-                penumbraVertices[n].Position = penumbraStart;
+                penumbraVertices[n].Position = penumbraStart + offset;
                 penumbraVertices[n].TextureCoordinate = new Vector2(0.0f, 1.0f);
                 //penumbraVertices[0].te = fow ? Color.Black : Color.Transparent;
 
@@ -506,7 +492,7 @@ namespace Barotrauma.Lights
 
                     vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
                     vertexDir.Normalize();
-                    penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000;
+                    penumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
 
                     if (los)
                     {
@@ -531,7 +517,7 @@ namespace Barotrauma.Lights
         {
             List<ConvexHull> list = new List<ConvexHull>();
 
-            foreach (ConvexHullList chList in ConvexHull.HullLists)
+            foreach (ConvexHullList chList in HullLists)
             {
                 Vector2 lightPos = position;
                 if (ParentSub == null)
@@ -581,85 +567,7 @@ namespace Barotrauma.Lights
 
             return list;
         }
-
-        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, LightSource light, Matrix transform, bool los = true)
-        {
-            if (!Enabled) return;
-
-            Vector2 lightSourcePos = light.Position;
-
-            if (parentEntity != null && parentEntity.Submarine != null)
-            {
-                if (light.ParentSub == null)
-                {
-                    lightSourcePos -= parentEntity.Submarine.Position;
-                }
-                else if (light.ParentSub != parentEntity.Submarine)
-                {
-                    lightSourcePos += (light.ParentSub.Position-parentEntity.Submarine.Position);
-                }
-                
-            }
-            
-            CalculateShadowVertices(lightSourcePos, los);
-            ShadowBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
-            ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
-            
-            graphicsDevice.SetVertexBuffer(ShadowBuffer);
-            shadowVertexCount = shadowVertices.Length;
-
-            DrawShadows(graphicsDevice, cam, transform, los);
-        }
-
-        public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Vector2 lightSourcePos, Matrix transform, bool los = true)
-        {
-            if (!Enabled) return;
-
-            if (parentEntity != null && parentEntity.Submarine != null) lightSourcePos -= parentEntity.Submarine.Position;
-
-            CalculateShadowVertices(lightSourcePos, los);
-
-            DrawShadows(graphicsDevice, cam, transform, los);
-        }
-
-        private void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, Matrix transform, bool los = true)
-        {
-            Vector3 offset = Vector3.Zero;
-            if (parentEntity != null && parentEntity.Submarine != null)
-            {
-                offset = new Vector3(parentEntity.Submarine.DrawPosition.X, parentEntity.Submarine.DrawPosition.Y, 0.0f);
-            }
-            
-            if (shadowVertexCount>0)
-            {                
-                shadowEffect.World = Matrix.CreateTranslation(offset) * transform;                
-
-                if (los)
-                {
-                    shadowEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, shadowVertices, 0, shadowVertexCount * 2 - 2, VertexPositionColor.VertexDeclaration);
-                }
-                else
-                {                    
-                    shadowEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, shadowVertexCount * 2 - 2);
-                }               
-            
-            }
-
-
-            if (los)
-            {
-                penumbraEffect.World = shadowEffect.World;
-                penumbraEffect.CurrentTechnique.Passes[0].Apply();
-
-#if WINDOWS
-                graphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, penumbraVertices, 0, 2, VertexPositionTexture.VertexDeclaration);
-#endif
-            }
-
-        }
-
+        
         public void Remove()
         {
             var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);

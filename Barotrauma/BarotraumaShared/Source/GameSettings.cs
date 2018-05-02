@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get
             {
-                return defaultPlayerName;
+                return defaultPlayerName ?? "";
             }
             set
             {
@@ -123,6 +123,7 @@ namespace Barotrauma
         }
 
         public static bool VerboseLogging { get; set; }
+        public static bool SaveDebugConsoleLogs { get; set; }
 
         public GameSettings(string filePath)
         {
@@ -141,6 +142,7 @@ namespace Barotrauma
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
+            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
             if (doc == null)
             {
@@ -284,6 +286,7 @@ namespace Barotrauma
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen));
 
             if (WasGameUpdated)
@@ -342,7 +345,7 @@ namespace Barotrauma
             doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName));
+            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
             doc.Root.Add(playerElement);
 
             doc.Save(filePath);

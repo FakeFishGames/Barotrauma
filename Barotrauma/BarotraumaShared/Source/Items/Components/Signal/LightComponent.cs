@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using Lidgren.Network;
 #if CLIENT
+using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
 #endif
 
@@ -21,6 +22,8 @@ namespace Barotrauma.Items.Components
 
         private bool castShadows;
 
+        public PhysicsBody ParentBody;
+
         [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
         public float Range
         {
@@ -33,6 +36,8 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
+
+        public float Rotation;
 
         [Editable(ToolTip = "Should structures cast shadows when light from this light source hits them. "+
             "Disabling shadows increases the performance of the game, and is recommended for lights with a short range."), Serialize(true, true)]
@@ -124,7 +129,7 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
             light.ParentSub = item.Submarine;
@@ -133,21 +138,30 @@ namespace Barotrauma.Items.Components
                 light.Color = Color.Transparent;
                 return;
             }
-            light.Position = item.Position;
+            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
 #endif
 
-            if (item.body != null)
+            PhysicsBody body = ParentBody ?? item.body;
+
+            if (body != null)
             {
 #if CLIENT
-                light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+                light.Rotation = body.Dir > 0.0f ? body.Rotation : body.Rotation - MathHelper.Pi;
+                light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
 #endif
-                if (!item.body.Enabled)
+                if (!body.Enabled)
                 {
 #if CLIENT
                     light.Color = Color.Transparent;
 #endif
                     return;
                 }
+            }
+            else
+            {
+#if CLIENT
+                light.Rotation = -Rotation;
+#endif
             }
             
             if (powerConsumption == 0.0f)

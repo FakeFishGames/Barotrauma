@@ -17,7 +17,12 @@ namespace Barotrauma
                 var entity = FindEntityByID(entityId);
                 if (entity != null)
                 {
+                    DebugConsole.Log("Received entity removal message for \"" + entity.ToString() + "\".");
                     entity.Remove();
+                }
+                else
+                {
+                    DebugConsole.Log("Received entity removal message for ID " + entityId + ". Entity with a matching ID not found.");
                 }
             }
             else

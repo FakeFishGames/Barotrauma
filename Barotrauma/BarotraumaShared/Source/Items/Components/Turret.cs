@@ -16,6 +16,9 @@ namespace Barotrauma.Items.Components
 
         Vector2 barrelPos;
 
+        bool? hasLight;
+        LightComponent lightComponent;
+
         float rotation, targetRotation;
 
         float reload, reloadTime;
@@ -62,8 +65,8 @@ namespace Barotrauma.Items.Components
             }
             set
             {
-                minRotation = MathHelper.ToRadians(value.X);
-                maxRotation = MathHelper.ToRadians(value.Y);
+                minRotation = MathHelper.ToRadians(Math.Min(value.X, value.Y));
+                maxRotation = MathHelper.ToRadians(Math.Max(value.X, value.Y));
 
                 rotation = (minRotation + maxRotation) / 2;
             }
@@ -88,28 +91,30 @@ namespace Barotrauma.Items.Components
                     element.GetAttributeVector2("origin", Vector2.Zero));
             }
 
-#if CLIENT
-            foreach (XElement subElement in element.Elements())
-            {
-                string texturePath = subElement.GetAttributeString("texture", "");
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "crosshair":
-                        crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
-                        break;
-                    case "disabledcrosshair":
-                        disabledCrossHairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
-                        break;
-                }
-            }
+            hasLight = null;
 
-            int barWidth = 200;
-            powerIndicator = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth / 2 - barWidth / 2, 20, barWidth, 30                ), Color.White, 0.0f);
-#endif
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (hasLight == null)
+            {
+                List<LightComponent> lightComponents = item.GetComponents<LightComponent>();
+                
+                if (lightComponents != null && lightComponents.Count>0)
+                {
+                    lightComponent = lightComponents.Find(lc => lc.Parent == this);
+                    hasLight = (lightComponent != null);
+                }
+                else
+                {
+                    hasLight = false;
+                }
+            }
+
             this.cam = cam;
 
             if (reload > 0.0f) reload -= deltaTime;
@@ -141,6 +146,11 @@ namespace Barotrauma.Items.Components
             else if (rotMidDiff > maxDist)
             {
                 rotation = maxRotation;
+            }
+
+            if ((bool)hasLight)
+            {
+                lightComponent.Rotation = rotation;
             }
         }
 
@@ -396,14 +406,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    Vector2 receivedPos = XMLExtensions.ParseVector2(signal, false);
-
-                    Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
-
-                    Vector2 offset = receivedPos - centerPos;
-                    offset.Y = -offset.Y;
-                   
-                    targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+                    float.TryParse(signal, out targetRotation);
 
                     IsActive = true;
 

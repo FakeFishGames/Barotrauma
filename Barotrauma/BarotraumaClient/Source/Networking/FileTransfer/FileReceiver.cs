@@ -288,8 +288,8 @@ namespace Barotrauma.Networking
                         string errorMessage = "";
                         if (ValidateReceivedData(activeTransfer, out errorMessage))
                         {
-                            OnFinished(activeTransfer);
                             StopTransfer(activeTransfer);
+                            OnFinished(activeTransfer);
                         }
                         else
                         {
@@ -433,7 +433,7 @@ namespace Barotrauma.Networking
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to delete file \""+transfer.FilePath+"\" ("+e.Message+")");
+                    DebugConsole.ThrowError("Failed to delete file \"" + transfer.FilePath + "\" (" + e.Message + ")");
                 }
             }
         }

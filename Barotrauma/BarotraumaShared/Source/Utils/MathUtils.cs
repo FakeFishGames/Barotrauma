@@ -16,11 +16,26 @@ namespace Barotrauma
 
     static class MathUtils
     {
+        public static int PositiveModulo(int i, int n)
+        {
+            return (i % n + n) % n;
+        }
+
         public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
         {
             return new Vector2(
                  MathHelper.SmoothStep(v1.X, v2.X, amount),
                  MathHelper.SmoothStep(v1.Y, v2.Y, amount));
+        }
+
+        public static Vector2 ClampLength(this Vector2 v, float length)
+        {
+            float currLength = v.Length();
+            if (v.Length() > length)
+            {
+                return v / currLength * length;
+            }
+            return v;
         }
 
         public static float Round(float value, float div)

@@ -11,6 +11,8 @@ namespace Barotrauma
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
 
+        public static int size = 20;
+
         private bool selected;
 
         public bool Selected
@@ -44,10 +46,11 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return base.Rect;
             }
             set
             {
+                if (RectTransform != null) { return; }
                 base.Rect = value;
 
                 if (box != null) box.Rect = new Rectangle(value.X,value.Y,box.Rect.Width,box.Rect.Height);
@@ -103,6 +106,23 @@ namespace Barotrauma
             
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 
+            Enabled = true;
+        }
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, GUIComponent parent = null) : base(null, rectT, parent)
+        {
+            box = new GUIFrame(new RectTransform(new Point(size, size), rectT, Anchor.CenterLeft), this, string.Empty, Color.DarkGray)
+            {
+                HoverColor = Color.Gray,
+                SelectedColor = Color.DarkGray,
+                CanBeFocused = false
+            };
+            GUI.Style.Apply(box, "GUITickBox");
+            text = new GUITextBlock(new RectTransform(new Vector2(1 - box.RectTransform.RelativeSize.X, 1), rectT, Anchor.CenterRight), label, font: font, textAlignment: Alignment.CenterRight, parent: this);
+            GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
         }
         

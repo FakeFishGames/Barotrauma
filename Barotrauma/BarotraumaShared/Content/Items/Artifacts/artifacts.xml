@@ -158,8 +158,15 @@
 
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
-    <RepairTool structurefixamount="-5.0" limbfixamount="-2.0" range="600" barrelpos="30,15" particles="largeplasma">
+    <RepairTool structurefixamount="-5.0" limbfixamount="-2.0" range="600" barrelpos="30,15">
       <Fixable name="structure"/>
+
+      <ParticleEmitter particle="largeplasma" particlespersecond="50"/>
+      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20"/>
+      <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
       <StatusEffect type="OnUse" target="This" Condition="-1.0"/>
 
@@ -256,10 +263,9 @@
    name="Artifact Holder"
    linkable="true"
    category="Alien"
-   Tags="alien"
-   >
+   Tags="alien">
 
-    <Sprite texture="artifactholder.png" depth="0.8"/>
+    <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256"/>
 
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128">
       <Containable name="Alien"/>

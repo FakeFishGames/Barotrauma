@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
+#if CLIENT
+using Barotrauma.Particles;
+#endif
+
 namespace Barotrauma.Items.Components
 {
     class RepairTool : ItemComponent
@@ -45,18 +49,19 @@ namespace Barotrauma.Items.Components
             get; set;
         }
 
-        [Serialize("", false)]
-        public string Particles
+#if CLIENT
+        public ParticleEmitter ParticleEmitter
         {
-            get { return particles; }
-            set { particles = value; }
+            get;
+            private set;
         }
 
-        [Serialize(0.0f, false)]
-        public float ParticleSpeed
-        {
-            get; set;
-        }
+        private List<ParticleEmitter> ParticleEmitterHitStructure = new List<ParticleEmitter>();
+
+        private List<ParticleEmitter> ParticleEmitterHitItem = new List<ParticleEmitter>();
+
+        private List<ParticleEmitter> ParticleEmitterHitCharacter = new List<ParticleEmitter>();
+#endif
 
         [Serialize("0.0,0.0", false)]
         public Vector2 BarrelPos
@@ -89,6 +94,20 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         fixableEntities.Add(subElement.Attribute("name").Value);
                         break;
+#if CLIENT
+                    case "particleemitter":
+                        ParticleEmitter = new ParticleEmitter(subElement);
+                        break;
+                    case "particleemitterhititem":
+                        ParticleEmitterHitItem.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemitterhitstructure":
+                        ParticleEmitterHitStructure.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemitterhitcharacter":
+                        ParticleEmitterHitCharacter.Add(new ParticleEmitter(subElement));
+                        break;
+#endif
                 }
             }
         }
@@ -101,7 +120,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
+            if (character == null || character.Removed) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
             
             float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
@@ -123,6 +142,7 @@ namespace Barotrauma.Items.Components
                 if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
+            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
             IsActive = true;
             activeTimer = 0.1f;
@@ -144,8 +164,13 @@ namespace Barotrauma.Items.Components
             }
 
 #if CLIENT
-            GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
-                -item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
+            if (ParticleEmitter != null)
+            {
+                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                ParticleEmitter.Emit(
+                    deltaTime, item.WorldPosition + TransformedBarrelPos, 
+                    item.CurrentHull, particleAngle, -particleAngle);
+            }
 #endif
           
             return true;
@@ -153,32 +178,41 @@ namespace Barotrauma.Items.Components
 
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
+                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
+
             if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
             {
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
-
-                displayPos += item.CurrentHull.Submarine.Position;
-
-                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                if (hull != null)
+                List<FireSource> fireSourcesInRange = new List<FireSource>();
+                //step along the ray in 10% intervals, collecting all fire sources in the range
+                for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
-                    hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
-                    if (hull != item.CurrentHull)
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
+                    displayPos += item.CurrentHull.Submarine.Position;
+
+                    Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                    if (hull == null) continue;
+                    foreach (FireSource fs in hull.FireSources)
                     {
-                        item.CurrentHull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
+                        if (fs.IsInDamageRange(displayPos, 100.0f) && !fireSourcesInRange.Contains(fs))
+                        {
+                            fireSourcesInRange.Add(fs);
+                        }
                     }
                 }
 
+                foreach (FireSource fs in fireSourcesInRange)
+                {
+                    fs.Extinguish(deltaTime, ExtinquishAmount);
+                }
             }
-
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
-                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
             if (targetBody == null || targetBody.UserData == null) return;
 
             pickedPosition = Submarine.LastPickedPosition;
 
             Structure targetStructure;
+            Character targetCharacter;
             Limb targetLimb;
             Item targetItem;
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
@@ -203,9 +237,17 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition; 
+                foreach (var emitter in ParticleEmitterHitStructure)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
 #endif
 
-                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess,user);
+                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -221,18 +263,66 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            else if ((targetCharacter = (targetBody.UserData as Character)) != null)
+            {
+                targetCharacter.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+#if CLIENT
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
+                foreach (var emitter in ParticleEmitterHitCharacter)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
+#endif
+            }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);                
+                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+
+#if CLIENT
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition;
+                foreach (var emitter in ParticleEmitterHitCharacter)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
+#endif
             }
             else if ((targetItem = (targetBody.UserData as Item)) != null)
             {
                 targetItem.IsHighlighted = true;
 
-                ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
-            }        
+                float prevCondition = targetItem.Condition;
+
+                ApplyStatusEffectsOnTarget(deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+
+#if CLIENT
+                if (item.Condition != prevCondition)
+                {
+                    Vector2 progressBarPos = targetItem.DrawPosition;
+
+                    var progressBar = user.UpdateHUDProgressBar(
+                        targetItem,
+                        progressBarPos,
+                        targetItem.Condition / 100.0f,
+                        Color.Red, Color.Green);
+
+                    if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+
+                    Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                    if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
+                    foreach (var emitter in ParticleEmitterHitItem)
+                    {
+                        float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                        emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                    }
+                }
+#endif
+            }
         }
-        
+
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;
@@ -266,6 +356,22 @@ namespace Barotrauma.Items.Components
             Use(deltaTime, character);
 
             return leak.Open <= 0.0f;
+        }
+
+        private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
+        {
+            if (statusEffectLists == null) return;
+
+            List<StatusEffect> statusEffects;
+            if (!statusEffectLists.TryGetValue(actionType, out statusEffects)) return;
+
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.UseTarget))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets);
+                }
+            }
         }
     }
 }

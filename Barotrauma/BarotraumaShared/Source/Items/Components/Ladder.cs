@@ -1,23 +1,34 @@
-﻿using System.Xml.Linq;
+﻿using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     class Ladder : ItemComponent
     {
+        private static List<Ladder> list = new List<Ladder>();
+        public static List<Ladder> List
+        {
+            get { return list; }
+        }
 
         public Ladder(Item item, XElement element)
             : base(item, element)
         {
+            list.Add(this);
         }
 
         public override bool Select(Character character)
         {
-            if (character == null || character.LockHands) return false;
+            if (character == null || character.LockHands || character.Removed) return false;
 
             character.AnimController.Anim = AnimController.Animation.Climbing;
-            //picker.SelectedConstruction = item;
 
             return true;
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            list.Remove(this);
         }
     }
 }

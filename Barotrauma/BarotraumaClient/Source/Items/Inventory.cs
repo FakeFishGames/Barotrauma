@@ -386,7 +386,7 @@ namespace Barotrauma
                 {
                     Inventory selectedInventory = selectedSlot.Inventory;
                     int slotIndex = selectedSlot.SlotIndex;
-                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
+                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
                     {
                         if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                         GUI.PlayUISound(GUISoundType.PickItem);
@@ -462,7 +462,7 @@ namespace Barotrauma
 
             if (item == null || !drawItem) return;
 
-            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
+            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.GetSpriteColor());
         }
     }
 }

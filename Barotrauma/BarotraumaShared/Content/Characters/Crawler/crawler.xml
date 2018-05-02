@@ -59,7 +59,7 @@
     </limb>
     <limb id = "5" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_metal"/>
     </limb>
 
     <limb id = "6" width="13" height="35" type="LeftLeg" flip="true">
@@ -67,7 +67,7 @@
     </limb>
     <limb id = "7" width="5" height="40" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_metal"/>
     </limb>
 
     <limb id = "8" width="13" height="35" type="RightLeg" flip="true">
@@ -75,7 +75,7 @@
     </limb>
     <limb id = "9" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_metal"/>
     </limb>
 
     <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40" canbesevered="true"/>

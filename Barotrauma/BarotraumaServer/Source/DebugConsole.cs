@@ -81,7 +81,7 @@ namespace Barotrauma
                     if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length && 
                         GameMain.NetLobbyScreen.GameModes[index].Name == "Campaign")
                     {
-                        MultiplayerCampaign.StartCampaignSetup();
+                        MultiPlayerCampaign.StartCampaignSetup();
                     }
                     else
                     {
@@ -93,7 +93,7 @@ namespace Barotrauma
                     string modeName = string.Join(" ", args);
                     if (modeName.ToLowerInvariant() == "campaign")
                     {
-                        MultiplayerCampaign.StartCampaignSetup();
+                        MultiPlayerCampaign.StartCampaignSetup();
                     }
                     else
                     {

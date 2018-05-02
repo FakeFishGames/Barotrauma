@@ -4,9 +4,9 @@
     linkable="true"
     >
 
-    <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
+    <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
@@ -25,7 +25,7 @@
       <item name="Welding Tool"/>
     </fixrequirement>
   
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -40,7 +40,7 @@
 
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door window="0,-32,10,75" canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door window="0,-32,10,75" canbepicked="true" canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
@@ -74,7 +74,7 @@
 
     <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" horizontal="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
       <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
@@ -182,7 +182,7 @@
 
     <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0">
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
       <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>

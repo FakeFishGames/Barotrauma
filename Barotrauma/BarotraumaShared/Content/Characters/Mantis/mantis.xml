@@ -61,14 +61,14 @@
     </limb>
     <limb id = "5" width="15" height="63" mass = "4" refjoint="3" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_armor"/>
     </limb>
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
       <attack range="200" damagerange="100" duration="0.25" damage="50" stun="0.1" bleedingdamage="5" structuredamage="20"  damagetype="slash" targetforce="-100" severlimbsprobability="0.8"
               torque="-20" force="10" applyforceonlimbs="0,1,6"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_armor"/>
     </limb>
 
     <limb id = "7" width="15" height="63" mass = "4" type="LeftLeg" flip="true">
@@ -76,7 +76,7 @@
     </limb>
     <limb id = "8" width="15" height="63" mass = "4" type="LeftFoot" flip="true" pullpos="0.0,30.0" refjoint="0" stepoffset="100.0,0.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="206,3,20,85" depth="0.014" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_armor"/>
     </limb>
 
     <limb id = "9" width="15" height="63" mass = "4" type="RightLeg" flip="true">
@@ -84,7 +84,7 @@
     </limb>
     <limb id = "10" width="15" height="102" mass = "4" type="RightFoot" flip="true" pullpos="0.0,50.0" refjoint="5" stepoffset="-150.0,0.0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5"/>
-      <sound file ="Content/Sounds/stepMetal.ogg"/>
+      <sound tag="footstep_armor"/>
     </limb>
     
     <joint limb1="0" limb1anchor="-5,-53" limb2="1" limb2anchor="0,20" lowerlimit="-20" upperlimit="20" canbesevered="true"/>

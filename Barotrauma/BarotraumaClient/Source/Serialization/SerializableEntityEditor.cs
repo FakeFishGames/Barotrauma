@@ -288,6 +288,7 @@ namespace Barotrauma
             return label;
         }
 
+        // TODO: DRY, auto positioning
         private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value, int yPos, GUIComponent parent)
         {
             var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
@@ -462,23 +463,21 @@ namespace Barotrauma
 
         private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
-            if (entity is ItemComponent)
+            if (entity is ItemComponent e)
             {
-                entity = ((ItemComponent)entity).Item;
+                entity = e.Item;
             }
 
             if (GameMain.Server != null)
             {
-                IServerSerializable serverSerializable = entity as IServerSerializable;
-                if (serverSerializable != null)
+                if (entity is IServerSerializable serverSerializable)
                 {
                     GameMain.Server.CreateEntityEvent(serverSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
                 }
             }
             else if (GameMain.Client != null)
             {
-                IClientSerializable clientSerializable = entity as IClientSerializable;
-                if (clientSerializable != null)
+                if (entity is IClientSerializable clientSerializable)
                 {
                     GameMain.Client.CreateEntityEvent(clientSerializable, new object[] { NetEntityEvent.Type.ChangeProperty, property });
                 }

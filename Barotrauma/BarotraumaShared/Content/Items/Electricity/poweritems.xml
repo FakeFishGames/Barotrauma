@@ -69,11 +69,10 @@
   <Item
     name="Supercapacitor"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Can deliver charge much faster than batteries.">
 
-    <Sprite texture ="supercapacitor.png" depth="0.8"/>
+    <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,0,77,88"/>
 
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected = "true">
       <GuiFrame rect="0,0,0.3,0.3" alignment="Center" style="ItemUI"/>

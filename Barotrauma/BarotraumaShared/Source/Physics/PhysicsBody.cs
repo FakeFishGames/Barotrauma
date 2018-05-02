@@ -370,6 +370,19 @@ namespace Barotrauma
             body.ApplyLinearImpulse(impulse);
         }
 
+        /// <summary>
+        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// </summary>
+        public void ApplyLinearImpulse(Vector2 impulse, float maxVelocity)
+        {
+            float currSpeed = body.LinearVelocity.Length();
+            Vector2 velocityAddition = impulse / Mass;
+            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+
+            body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass);
+        }
+
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
             body.ApplyLinearImpulse(impulse, point);
@@ -396,8 +409,17 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
             
-
             body.SetTransform(simPosition, rotation);
+            SetPrevTransform(simPosition, rotation);
+        }
+
+        public void SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
+        {
+            System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
+            
+            body.SetTransformIgnoreContacts(ref simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
         }
 

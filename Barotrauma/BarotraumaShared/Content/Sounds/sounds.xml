@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <sounds>
+  <startupsound file="Content/Sounds/startDrone.ogg"/>
+  
   <damagesound file="Content/Sounds/Damage/StructureBlunt1.ogg" damagerange="0.0,30.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt2.ogg" damagerange="20.0,30.0" damagesoundtype="StructureBlunt"/>
   <damagesound file="Content/Sounds/Damage/StructureBlunt3.ogg" damagerange="25.0,50.0" damagesoundtype="StructureBlunt"/>
@@ -55,6 +57,24 @@
   <drown file="Content/Sounds/Water/Drown2.ogg"/>
   <drown file="Content/Sounds/Water/Drown3.ogg"/>
   <drown file="Content/Sounds/Water/Drown4.ogg"/>
+
+  <splash file="Content/Sounds/Water/Splash0.ogg"/>
+  <splash file="Content/Sounds/Water/Splash1.ogg"/>
+  <splash file="Content/Sounds/Water/Splash2.ogg"/>
+  <splash file="Content/Sounds/Water/Splash3.ogg"/>
+  <splash file="Content/Sounds/Water/Splash4.ogg"/>
+  <splash file="Content/Sounds/Water/Splash5.ogg"/>
+  <splash file="Content/Sounds/Water/Splash6.ogg"/>
+  <splash file="Content/Sounds/Water/Splash7.ogg"/>
+  <splash file="Content/Sounds/Water/Splash8.ogg"/>
+  <splash file="Content/Sounds/Water/Splash9.ogg"/>
+
+  <flow file="Content/Sounds/Water/FlowSmall.ogg"/>
+  <flow file="Content/Sounds/Water/FlowMedium.ogg"/>
+  <flow file="Content/Sounds/Water/FlowLarge.ogg"/>
+
+  <waterambience file="Content/Sounds/Water/WaterAmbience1.ogg"/>
+  <waterambience file="Content/Sounds/Water/WaterAmbience2.ogg"/>
 
   <footstep file="Content/Sounds/Footsteps/step.ogg"/>
   <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-01.ogg"/>

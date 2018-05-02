@@ -24,9 +24,8 @@ namespace Barotrauma
             get { return barSize; }
             set
             {
-                float oldBarSize = barSize;
                 barSize = MathHelper.Clamp(value, 0.0f, 1.0f);
-                if (barSize != oldBarSize) UpdateRect();
+                UpdateRect();
             }
         }
 
@@ -63,6 +62,24 @@ namespace Barotrauma
             UpdateRect();
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            isHorizontal = (Rect.Width > Rect.Height);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this);
+            GUI.Style.Apply(frame, "", this);
+            slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
+            GUI.Style.Apply(slider, "Slider", this);
+            this.barSize = barSize;
+            UpdateRect();
+        }
+
         /*public override void ApplyStyle(GUIComponentStyle style)
         {
             if (frame == null) return;
@@ -80,11 +97,19 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
-            slider.Rect = new Rectangle(
-                (int)(frame.Rect.X + padding.X),
-                (int)(frame.Rect.Y + padding.Y),
-                isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
-                isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            if (RectTransform != null)
+            {
+                var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
+                slider.RectTransform.Resize(newSize);
+            }
+            else
+            {
+                slider.Rect = new Rectangle(
+                    (int)(frame.Rect.X + padding.X),
+                    (int)(frame.Rect.Y + padding.Y),
+                    isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
+                    isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -105,7 +130,7 @@ namespace Barotrauma
                 {
                     if (uiSprite.Tile)
                     {
-                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), currColor);
+                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), color: currColor);
                     }
                     else
                     {

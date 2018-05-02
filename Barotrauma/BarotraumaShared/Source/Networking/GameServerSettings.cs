@@ -254,6 +254,20 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(60f, true)]
+        public float AutoBanTime
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(360f, true)]
+        public float MaxAutoBanTime
+        {
+            get;
+            private set;
+        }
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
@@ -350,17 +364,20 @@ namespace Barotrauma.Networking
             showLogButton.Visible = SaveServerLogs;
 #endif
 
-            List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();
+            List<string> monsterNames = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
             for (int i = 0; i < monsterNames.Count; i++)
             {
-                monsterNames[i] = monsterNames[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+                monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));
             }
             monsterEnabled = new Dictionary<string, bool>();
             foreach (string s in monsterNames)
             {
-                monsterEnabled.Add(s, true);
+                if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
+
+            AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
+            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()

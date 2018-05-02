@@ -200,7 +200,7 @@ namespace Barotrauma
 
         public bool CanInteract
         {
-            get { return AllowInput && IsHumanoid && !LockHands; }
+            get { return AllowInput && IsHumanoid && !LockHands && !Removed; }
         }
 
         public Vector2 CursorPosition
@@ -331,7 +331,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
 
-                SetStun(value);
+                SetStun(value, true);
             }
         }
 
@@ -393,13 +393,11 @@ namespace Barotrauma
             set
             {
                 if (ConfigPath != humanConfigFile) return;
-
+                
                 if (value <= 0.0f)
                 {
                     if (huskInfection != null)
                     {
-                        //already active, can't cure anymore
-                        if (huskInfection.State == HuskInfection.InfectionState.Active) return;
                         huskInfection.Remove(this);
                         huskInfection = null;
                     }
@@ -497,7 +495,7 @@ namespace Barotrauma
         {
             get
             {
-                return isDead || Stun > 0.0f || LockHands || IsUnconscious || Removed;
+                return !Removed && (isDead || Stun > 0.0f || LockHands || IsUnconscious);
             }
         }
 
@@ -659,7 +657,7 @@ namespace Barotrauma
                         if (item == null) continue;
 
                         item.TryInteract(this, true, true, true);
-                        inventory.TryPutItem(item, i, false, null, false);
+                        inventory.TryPutItem(item, i, false, false, null, false);
                     }
                 }
             }
@@ -912,10 +910,13 @@ namespace Barotrauma
                     Vector2 attackPos =
                         attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
 
+                    List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                    ignoredBodies.Add(AnimController.Collider.FarseerBody);
+
                     var body = Submarine.PickBody(
                         attackLimb.SimPosition,
                         attackPos,
-                        AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                        ignoredBodies,
                         Physics.CollisionCharacter | Physics.CollisionWall);
                     
                     IDamageable attackTarget = null;
@@ -930,7 +931,7 @@ namespace Barotrauma
                             body = Submarine.PickBody(
                                 attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
                                 attackPos - ((Submarine)body.UserData).SimPosition,
-                                AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                                ignoredBodies,
                                 Physics.CollisionWall);
 
                             if (body != null)
@@ -1131,7 +1132,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
+            if (c == this || Removed || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1406,6 +1407,34 @@ namespace Barotrauma
             else
             {
                 findFocusedTimer -= deltaTime;
+            }
+
+            //climb ladders automatically when pressing up/down inside their trigger area
+            if (selectedConstruction == null && !AnimController.InWater)
+            {
+                bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
+                
+                Ladder nearbyLadder = null;
+                if (Controlled == this || climbInput)
+                {
+                    float minDist = float.PositiveInfinity;
+                    foreach (Ladder ladder in Ladder.List)
+                    {
+                        float dist;
+                        if (CanInteractWith(ladder.Item, out dist) && dist < minDist)
+                        {
+                            minDist = dist;
+                            nearbyLadder = ladder;
+                            if (Controlled == this) ladder.Item.IsHighlighted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (nearbyLadder != null && climbInput)
+                {
+                    if (nearbyLadder.Select(this)) selectedConstruction = nearbyLadder.Item;
+                }
             }
             
             if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
@@ -1957,8 +1986,18 @@ namespace Barotrauma
 
         public void Revive(bool isNetworkMessage)
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to revive an already removed character\n" + Environment.StackTrace);
+                return;
+            }
+
             isDead = false;
 
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+            }
             aiTarget = new AITarget(this);
 
             Health = Math.Max(maxHealth * 0.1f, health);
@@ -1983,12 +2022,10 @@ namespace Barotrauma
         
         public override void Remove()
         {
-#if DEBUG
             if (Removed)
             {
                 DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
             }
-#endif
 
             base.Remove();
 

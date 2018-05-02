@@ -2,10 +2,9 @@
   <Item
   name="Pump"
   linkable="true"
-  category="Machine"
-  >
+  category="Machine">
 
-    <Sprite texture ="pump.png" depth="0.8"/>
+    <Sprite texture ="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
 
     <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
       <GuiFrame rect="0,0,330,145" alignment="Center" style="ItemUI"/>
@@ -25,8 +24,7 @@
   <Item
   name="Small Pump"
   linkable="true"
-  category="Machine"
-  >
+  category="Machine">
 
     <Sprite texture ="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
 

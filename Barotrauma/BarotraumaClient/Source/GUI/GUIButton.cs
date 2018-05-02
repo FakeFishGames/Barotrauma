@@ -6,13 +6,21 @@ namespace Barotrauma
     public class GUIButton : GUIComponent
     {
         protected GUITextBlock textBlock;
+        public GUITextBlock TextBlock { get { return textBlock; } }
         protected GUIFrame frame;
+        public GUIFrame Frame { get { return frame; } }
 
         public delegate bool OnClickedHandler(GUIButton button, object obj);
         public OnClickedHandler OnClicked;
 
         public delegate bool OnPressedHandler();
         public OnPressedHandler OnPressed;
+
+        public delegate bool OnButtonDownHandler();
+        public OnButtonDownHandler OnButtonDown;
+
+        public delegate bool OnButtonUpHandler();
+        public OnButtonDownHandler OnButtonUp;
 
         public bool CanBeSelected = true;
 
@@ -119,7 +127,7 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return base.Rect;
             }
             set
             {
@@ -173,6 +181,25 @@ namespace Barotrauma
             Enabled = true;
         }
 
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
+        {
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this, style);
+            GUI.Style.Apply(frame, string.IsNullOrEmpty(style) ? "GUIButton" : style);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, parent: this)
+            {
+                TextColor = this.style == null ? Color.Black : this.style.textColor
+            };
+            GUI.Style.Apply(textBlock, style, this);
+            Enabled = true;
+        }
+
         public override void ApplyStyle(GUIComponentStyle style)
         {
             base.ApplyStyle(style);
@@ -192,9 +219,17 @@ namespace Barotrauma
         {
             if (!Visible) return;
             base.Update(deltaTime);
-            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
+                if (PlayerInput.LeftButtonReleased())
+                {
+                    OnButtonUp?.Invoke();
+                }
+                else if (PlayerInput.LeftButtonDown())
+                {
+                    OnButtonDown?.Invoke();
+                }
                 if (PlayerInput.LeftButtonHeld())
                 {
                     if (OnPressed != null)

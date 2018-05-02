@@ -75,6 +75,25 @@ namespace Barotrauma
             return String.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
+        public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            if (trim)
+            {
+                for (int i = 0; i < splitValue.Length; i++)
+                {
+                    splitValue[i] = splitValue[i].Trim();
+                }
+            }
+
+            return splitValue;
+        }
+
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)
         {
             if (element == null) return defaultValue;
@@ -143,6 +162,31 @@ namespace Barotrauma
             return val;
         }
 
+        public static float[] GetAttributeFloatArray(this XElement element, string name, float[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            float[] floatValue = new float[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    float val = Single.Parse(splitValue[i], CultureInfo.InvariantCulture);
+                    floatValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                }
+            }
+
+            return floatValue;
+        }
+
         public static int GetAttributeInt(this XElement element, string name, int defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;
@@ -159,6 +203,31 @@ namespace Barotrauma
             }
 
             return val;
+        }
+
+        public static int[] GetAttributeIntArray(this XElement element, string name, int[] defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            string stringValue = element.Attribute(name).Value;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+            string[] splitValue = stringValue.Split(',');
+            int[] intValue = new int[splitValue.Length];
+            for (int i = 0; i < splitValue.Length; i++)
+            {
+                try
+                {
+                    int val = Int32.Parse(splitValue[i]);
+                    intValue[i] = val;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                }
+            }
+
+            return intValue;
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)

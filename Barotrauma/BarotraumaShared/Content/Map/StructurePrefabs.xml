@@ -250,7 +250,7 @@
 
   <RuinClaw category="Alien" 
     width="126" height="270">
-    <sprite  texture="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"/>
+    <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth ="0.97"/>
   </RuinClaw>
 
 </prefabs>

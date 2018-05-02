@@ -142,7 +142,10 @@ namespace Barotrauma
                     PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
                     PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
                 {
-                    var clones = Clone(copiedList);
+                    List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+                    Clone(copiedList);
+
+                    var clones = mapEntityList.Except(prevEntities).ToList();
 
                     Vector2 center = Vector2.Zero;
                     clones.ForEach(c => center += c.WorldPosition);

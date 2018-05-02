@@ -14,7 +14,7 @@ namespace Barotrauma
         public StatusEffect Parent;
         public Entity Entity;
         public List<ISerializableEntity> Targets;
-        public float StartTimer;
+        public float Timer;
     }
 
     partial class StatusEffect
@@ -26,7 +26,7 @@ namespace Barotrauma
         }
 
         private TargetType targetTypes;
-        private HashSet<string> targetNames;
+        protected HashSet<string> targetNames;
 
         private List<RelatedItem> requiredItems;
 
@@ -54,9 +54,11 @@ namespace Barotrauma
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
-        public bool Stackable; //Can the same status effect be applied several times to the same targets?
+        public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
+
+        private readonly bool removeItem;
 
         public readonly ActionType type;
 
@@ -211,6 +213,10 @@ namespace Barotrauma
                     case "useitem":
                         useItemCount++;
                         break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -277,20 +283,62 @@ namespace Barotrauma
             if (this.type != type || !HasRequiredItems(entity)) return;
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
-
-            if (duration > 0.0f && !Stackable && DurationList.Find(d => d.Parent == this && d.Entity == entity && d.Targets.Contains(target)) != null) return;
+            
+            if (duration > 0.0f && !Stackable)
+            {
+                //ignore if not stackable and there's already an identical statuseffect
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.Count == 1 && d.Targets[0] == target);
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    return;
+                }
+            }
 
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
             targets.Add(target);
 
             if (!HasRequiredConditions(targets)) return;
 
-            Apply(type, deltaTime, entity, targets);
+            Apply(deltaTime, entity, targets);
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
-            if (this.type != type || !HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+            if (this.type != type) return;
+
+            //remove invalid targets
+            if (targetNames != null)
+            {
+                targets.RemoveAll(t => 
+                {
+                    Item item = t as Item;
+                    if (item == null)
+                    {
+                        return !targetNames.Contains(t.Name);
+                    }
+                    else
+                    {
+                        if (item.HasTag(targetNames)) return false;
+                        if (item.Prefab.NameMatches(targetNames)) return false;
+                    }
+                    return true;
+                });
+                if (targets.Count == 0) return;
+            }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+
+            if (duration > 0.0f && !Stackable)
+            {
+                //ignore if not stackable and there's already an identical statuseffect
+                DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(targets));
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    return;
+                }
+            }
 
             Apply(deltaTime, entity, targets);
         }
@@ -326,11 +374,19 @@ namespace Barotrauma
                 }
             }
 
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner.AddToRemoveQueue(item);
+                }
+            }
+
             if (duration > 0.0f)
             {
                 DurationListElement element = new DurationListElement();
                 element.Parent = this;
-                element.StartTimer = duration;
+                element.Timer = duration;
                 element.Entity = entity;
                 element.Targets = targets;
 
@@ -439,9 +495,9 @@ namespace Barotrauma
                     }
                 }
 
-                element.StartTimer -= deltaTime;
+                element.Timer -= deltaTime;
 
-                if (element.StartTimer > 0.0f) continue;
+                if (element.Timer > 0.0f) continue;
                 DurationList.Remove(element);
             }
         }

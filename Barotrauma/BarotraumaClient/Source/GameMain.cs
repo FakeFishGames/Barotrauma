@@ -325,9 +325,9 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
+            ParticleManager = new ParticleManager(GameScreen.Cam);
             ParticleManager.LoadPrefabs();
-            DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");
+            DecalManager = new DecalManager();
         yield return CoroutineStatus.Running;
 
             LocationType.Init();
@@ -372,8 +372,11 @@ namespace Barotrauma
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
-
-                PlayerInput.Update(Timing.Step);
+                
+                if (WindowActive)
+                {
+                    PlayerInput.Update(Timing.Step);
+                }
 
                 if (loadingScreenOpen)
                 {
@@ -418,7 +421,7 @@ namespace Barotrauma
                     GUIComponent.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
-                    paused = paused || DebugConsole.IsOpen;
+                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
                     
                     if (!paused)
                     {

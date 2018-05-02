@@ -68,7 +68,7 @@
       <Item name="Uranium Bar" mincondition="0.9"/>
     </Deconstruct>
 
-    <Sprite texture ="fuelrod.png" depth="0.55"/>
+    <Sprite texture="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>
 
     <Body radius="6" height="22" density="5"/>
 
@@ -86,7 +86,7 @@
       <Item name="Incendium Bar" mincondition="0.95"/>
     </Deconstruct>
 
-    <Sprite texture ="fuelrod.png" depth="0.55"/>
+    <Sprite texture ="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>
 
     <Body radius="6" height="22" density="5"/>
 

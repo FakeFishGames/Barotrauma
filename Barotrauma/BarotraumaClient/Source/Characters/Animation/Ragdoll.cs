@@ -10,8 +10,6 @@ namespace Barotrauma
 {
     partial class Ragdoll
     {
-
-
         partial void ImpactProjSpecific(float impact, Body body)
         {
             float volume = Math.Min(impact - 3.0f, 1.0f);
@@ -20,14 +18,19 @@ namespace Barotrauma
             {
                 Limb limb = (Limb)body.UserData;
 
-                if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
+                if (impact > 3.0f && limb.SoundTimer <= 0.0f)
                 {
                     limb.SoundTimer = Limb.SoundInterval;
-                    SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
-                    foreach(WearableSprite wearable in limb.WearingItems)
+                    if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
-                        if (limb.type == wearable.Limb && wearable.Sound != null)
+                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);
+                    }
+                    foreach (WearableSprite wearable in limb.WearingItems)
+                    {
+                        if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
+                        {
                             SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                        }
                     }
                 }
             }
@@ -74,13 +77,13 @@ namespace Barotrauma
             if (simplePhysicsEnabled) return;
 
             Collider.UpdateDrawPosition();
-            
+
             if (Limbs == null)
             {
                 DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
                 return;
             }
-              
+
             foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);
@@ -105,7 +108,7 @@ namespace Barotrauma
 
                 limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
             }
-            
+
             Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.ToString(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 

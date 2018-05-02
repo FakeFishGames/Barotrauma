@@ -21,7 +21,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f)
         {
             emitTimer += deltaTime;
 
@@ -30,23 +30,23 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess);
+                    Emit(position, hullGuess, angle, particleRotation);
                     emitTimer -= emitInterval;
                 }
             }
 
             for (int i = 0; i < Prefab.ParticleAmount; i++)
             {
-                Emit(position, hullGuess);
+                Emit(position, hullGuess, particleRotation);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess = null)
+        private void Emit(Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f)
         {
-            float angle = Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
+            angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
             Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax);
 
-            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, 0.0f, hullGuess);
+            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess);
 
             if (particle != null)
             {

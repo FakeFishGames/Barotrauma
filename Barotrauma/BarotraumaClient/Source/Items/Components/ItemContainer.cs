@@ -46,6 +46,7 @@ namespace Barotrauma.Items.Components
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(transformedItemPos.X, -transformedItemPos.Y),
+                    containedItem.GetSpriteColor(),
                     -currentRotation,
                     1.0f,
                     (item.body != null && item.body.Dir == -1) ? SpriteEffects.FlipHorizontally : SpriteEffects.None);

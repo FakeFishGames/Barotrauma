@@ -461,6 +461,11 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.OnItemLoaded();
+            }
         }
 
         public override MapEntity Clone()
@@ -528,7 +533,14 @@ namespace Barotrauma
             {
                 try
                 {
-                    body.SetTransform(simPosition, rotation);
+                    if (body.Enabled)
+                    {
+                        body.SetTransform(simPosition, rotation);
+                    }
+                    else
+                    {
+                        body.SetTransformIgnoreContacts(simPosition, rotation);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -682,6 +694,16 @@ namespace Barotrauma
             return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
         }
 
+        public bool HasTag(IEnumerable<string> allowedTags)
+        {
+            if (allowedTags == null) return true;
+
+            foreach (string tag in allowedTags)
+            {
+                if (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant())) return true;
+            }
+            return false;
+        }
 
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
         {
@@ -1074,21 +1096,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (forceSelectKey)
-                    {
-                        if (ic.PickKey == InputType.Select) pickHit = true;
-                        if (ic.SelectKey == InputType.Select) selectHit = true;
-                    }
-                    else if (forceActionKey)
-                    {
-                        if (ic.PickKey == InputType.Use) pickHit = true;
-                        if (ic.SelectKey == InputType.Use) selectHit = true;
-                    }
-                    else
-                    {
-                        pickHit = picker.IsKeyHit(ic.PickKey);
-                        selectHit = picker.IsKeyHit(ic.SelectKey);
-                    }
+                    pickHit = (forceActionKey && ic.CanBePicked) || picker.IsKeyHit(ic.PickKey);
+                    selectHit = (forceSelectKey && ic.CanBeSelected)  || picker.IsKeyHit(ic.SelectKey);
                 }
 
                 if (!pickHit && !selectHit) continue;
@@ -1167,7 +1176,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public void SecondaryUse(float deltaTime, Character character = null)
@@ -1193,7 +1205,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public List<ColoredText> GetHUDTexts(Character character)
@@ -1515,7 +1530,12 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
-            msg.Write(Description);
+            msg.Write(Description != prefab.Description);
+            if (Description != prefab.Description)
+            {
+                msg.Write(Description);
+            }            
+
             msg.Write(ID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
@@ -1533,20 +1553,31 @@ namespace Barotrauma
                 int index = ParentInventory.FindIndex(this);
                 msg.Write(index < 0 ? (byte)255 : (byte)index);
             }
+            
+            bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
+            msg.Write(tagsChanged);
+            if (tagsChanged)
+            {
+                msg.Write(Tags);
+            }
 
-            //TODO: See if tags are different from their prefab before sending 'em
-            msg.Write(Tags);            
         }
 
         public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
         {
             if (GameMain.Server != null) return null;
 
-            string itemName     = msg.ReadString();
-            string itemDesc     = msg.ReadString();
-            ushort itemId       = msg.ReadUInt16();
+            string itemName = msg.ReadString();
+            bool descriptionChanged = msg.ReadBoolean();
+            string itemDesc = "";
+            if (descriptionChanged)
+            {
+                itemDesc = msg.ReadString();
+            }
+            ushort itemId = msg.ReadUInt16();
+            ushort inventoryId = msg.ReadUInt16();
 
-            ushort inventoryId  = msg.ReadUInt16();
+            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
@@ -1567,8 +1598,13 @@ namespace Barotrauma
                 }
             }
 
-            string tags = msg.ReadString();
-
+            bool tagsChanged = msg.ReadBoolean();
+            string tags = "";
+            if (tagsChanged)
+            {
+                tags = msg.ReadString();
+            }
+            
             if (!spawn) return null;
 
             //----------------------------------------
@@ -1578,7 +1614,7 @@ namespace Barotrauma
 
             Inventory inventory = null;
 
-            var inventoryOwner = Entity.FindEntityByID(inventoryId);
+            var inventoryOwner = FindEntityByID(inventoryId);
             if (inventoryOwner != null)
             {
                 if (inventoryOwner is Character)
@@ -1596,21 +1632,20 @@ namespace Barotrauma
             }
 
             var item = new Item(itemPrefab, pos, sub);
-
-            item.Description = itemDesc;
             item.ID = itemId;
+            if (descriptionChanged) item.Description = itemDesc;
+            if (tagsChanged) item.Tags = tags;
+
             if (sub != null)
             {
                 item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
                 item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
             }
 
-            if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
-
             if (inventory != null)
             {
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, null, false))
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
                 {
                     return null;
                 }
@@ -1826,7 +1861,16 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
-            
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.SelectedConstruction == this) character.SelectedConstruction = null;
+                for (int i = 0; i < character.SelectedItems.Length; i++)
+                {
+                    if (character.SelectedItems[i] == this) character.SelectedItems[i] = null;
+                }
+            }
+
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);

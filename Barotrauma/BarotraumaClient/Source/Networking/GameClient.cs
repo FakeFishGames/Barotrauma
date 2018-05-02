@@ -701,15 +701,16 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (monsterEnabled == null)
             {
-                List<string> monsterNames1 = Directory.GetDirectories("Content/Characters").ToList();
+                List<string> monsterNames1 = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
                 for (int i = 0; i < monsterNames1.Count; i++)
                 {
-                    monsterNames1[i] = monsterNames1[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
                 }
+
                 monsterEnabled = new Dictionary<string, bool>();
                 foreach (string s in monsterNames1)
                 {
-                    monsterEnabled.Add(s, true);
+                    if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
                 }
             }
 
@@ -721,8 +722,8 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
-            MultiplayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
-                GameMain.GameSession?.GameMode as MultiplayerCampaign : null;
+            MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
 
             if (gameMode == null)
             {
@@ -954,7 +955,7 @@ namespace Barotrauma.Networking
                         inc.ReadPadBits();
                         if (campaignUpdated)
                         {
-                            MultiplayerCampaign.ClientRead(inc);
+                            MultiPlayerCampaign.ClientRead(inc);
                         }
 
                         lastSentChatMsgID = inc.ReadUInt16();
@@ -1064,7 +1065,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
 
-            var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
             {
                 outmsg.Write((UInt16)0);
@@ -1072,6 +1073,7 @@ namespace Barotrauma.Networking
             else
             {
                 outmsg.Write(campaign.LastSaveID);
+                outmsg.Write(campaign.CampaignID);
                 outmsg.Write(campaign.LastUpdateID);
             }
 
@@ -1187,19 +1189,46 @@ namespace Barotrauma.Networking
                             GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
                             GameMain.NetLobbyScreen.SubList.children;
 
-                        var textBlock = subListChildren.Find(c => 
+                        var subElement = subListChildren.Find(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 
-                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash) as GUITextBlock;
+                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
 
-                        if (textBlock == null) continue;
-                        textBlock.TextColor = new Color(textBlock.TextColor, 1.0f);
+                        if (subElement == null) continue;
+                        subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
+                        subElement.UserData = newSub;
+                        subElement.ToolTip = newSub.Description;
 
-                        textBlock.UserData = newSub;
-                        textBlock.ToolTip = newSub.Description;
+                        GUIButton infoButton = subElement.GetChild<GUIButton>();
+                        if (infoButton == null)
+                        {
+                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                        }
+                        infoButton.UserData = newSub;
+                        infoButton.OnClicked = (component, userdata) =>
+                        {
+                            var msgBox = new GUIMessageBox("", "", 550, 400);
+                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            return true;
+                        };
                     }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedSub != null && 
+                        GameMain.NetLobbyScreen.FailedSelectedSub.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.SubList);
+                    }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedShuttle != null &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    }
+
                     break;
                 case FileTransferType.CampaignSave:
-                    var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+                    var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
                     if (campaign == null) return;
 
                     GameMain.GameSession.SavePath = transfer.FilePath;
@@ -1417,7 +1446,7 @@ namespace Barotrauma.Networking
 
         public void SendCampaignState()
         {
-            MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
+            MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
             if (campaign == null)
             {
                 DebugConsole.ThrowError("Failed send campaign state to the server (no campaign active).\n" + Environment.StackTrace);

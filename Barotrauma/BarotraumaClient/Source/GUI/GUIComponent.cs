@@ -9,8 +9,54 @@ namespace Barotrauma
 {
     public abstract class GUIComponent
     {
+        #region Hierarchy
+        public T GetChild<T>() where T : GUIComponent
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child is T) return (T)(object)child;
+            }
+
+            return default(T);
+        }
+
+        public GUIComponent GetChild(object obj)
+        {
+            foreach (GUIComponent child in children)
+            {
+                if (child.UserData == obj) return child;
+            }
+            return null;
+        }
+
+        public bool IsParentOf(GUIComponent component)
+        {
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                if (children[i] == component) return true;
+                if (children[i].IsParentOf(component)) return true;
+            }
+
+            return false;
+        }
+
+        public IEnumerable<GUIComponent> GetParents()
+        {
+            var parents = new List<GUIComponent>();
+            if (Parent != null)
+            {
+                parents.Add(Parent);
+                return parents.Concat(Parent.GetParents());
+            }
+            else
+            {
+                return parents;
+            }
+        }
+        #endregion
+
         const float FlashDuration = 1.5f;
-        
+
         public static GUIComponent MouseOn
         {
             get;
@@ -28,7 +74,7 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-            
+
             List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
             foreach (GUIComponent c in fixedChildren)
             {
@@ -39,7 +85,7 @@ namespace Barotrauma
         public static void ClearUpdateList()
         {
             if (keyboardDispatcher != null &&
-                KeyboardDispatcher.Subscriber is GUIComponent && 
+                KeyboardDispatcher.Subscriber is GUIComponent &&
                 !ComponentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
             {
                 KeyboardDispatcher.Subscriber = null;
@@ -70,7 +116,7 @@ namespace Barotrauma
         protected Alignment alignment;
 
         protected GUIComponentStyle style;
-        
+
         protected object userData;
 
         protected Rectangle rect;
@@ -119,7 +165,7 @@ namespace Barotrauma
         private static GUITextBlock toolTipBlock;
 
         //protected float alpha;
-                
+
         public GUIComponent Parent
         {
             get { return parent; }
@@ -127,13 +173,13 @@ namespace Barotrauma
 
         public Vector2 Center
         {
-            get { return new Vector2(rect.Center.X, rect.Center.Y); }
+            get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
         }
 
         protected Rectangle ClampRect(Rectangle r)
         {
             if (parent == null || !ClampMouseRectToParent) return r;
-            Rectangle parentRect = parent.ClampRect(parent.rect);
+            Rectangle parentRect = parent.ClampRect(parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
             if (parentRect.X > r.X)
             {
@@ -161,33 +207,38 @@ namespace Barotrauma
             return r;
         }
 
+        /// <summary>
+        /// Does not set the rect values if the component uses RectTransform.
+        /// </summary>
         public virtual Rectangle Rect
         {
-            get { return rect; }
-            set 
+            get { return RectTransform != null ? RectTransform.Rect : rect; }
+            set
             {
-                int prevX = rect.X, prevY = rect.Y;
-                int prevWidth = rect.Width, prevHeight = rect.Height;
-
-                rect = value;
-
-                if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-
-                //TODO: fix this (or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                foreach (GUIComponent child in children)
+                if (RectTransform == null)
                 {
-                    child.Rect = new Rectangle(
-                        child.rect.X + (rect.X - prevX), 
-                        child.rect.Y + (rect.Y - prevY),
-                        Math.Max(child.rect.Width + (rect.Width - prevWidth),0),
-                        Math.Max(child.rect.Height + (rect.Height - prevHeight),0));
-                }    
-                
+                    int prevX = rect.X, prevY = rect.Y;
+                    int prevWidth = rect.Width, prevHeight = rect.Height;
+
+                    rect = value;
+
+                    if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
+
+                    //TODO: fix this (or replace with something better in the new GUI system)
+                    //simply expanding the rects by the same amount as their parent only works correctly in some special cases
+                    foreach (GUIComponent child in children)
+                    {
+                        child.Rect = new Rectangle(
+                            child.rect.X + (rect.X - prevX),
+                            child.rect.Y + (rect.Y - prevY),
+                            Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
+                            Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
+                    }
+                }
                 if (parent != null && parent is GUIListBox)
                 {
                     ((GUIListBox)parent).UpdateScrollBarSize();
-                }            
+                }
             }
         }
 
@@ -197,7 +248,7 @@ namespace Barotrauma
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
-                return ClampMouseRectToParent ? ClampRect(rect) : rect;
+                return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
             }
         }
 
@@ -260,7 +311,7 @@ namespace Barotrauma
             OutlineColor = Color.Transparent;
 
             Font = GUI.Font;
-            
+
             children = new List<GUIComponent>();
 
             CanBeFocused = true;
@@ -269,39 +320,22 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
+        public RectTransform RectTransform { get; private set; }
+
+        /// <summary>
+        /// This is the new constructor.
+        /// </summary>
+        protected GUIComponent(string style, RectTransform rectT, GUIComponent parent = null) : this(style)
+        {
+            RectTransform = rectT;
+            rect = RectTransform.Rect;
+            if (parent != null) { parent.AddChild(this); }
+            if (parent != null && this.parent == null) { throw new Exception(); }
+        }
+
         public static void Init(GameWindow window)
         {
             keyboardDispatcher = new KeyboardDispatcher(window);
-        }
-
-        public T GetChild<T>() where T : GUIComponent
-        {
-            foreach (GUIComponent child in children)
-            {
-                if (child is T) return (T)(object)child;
-            }
-
-            return default(T);
-        }
-        
-        public GUIComponent GetChild(object obj)
-        {
-            foreach (GUIComponent child in children)
-            {
-                if (child.UserData == obj) return child;
-            }
-            return null;
-        }
-
-        public bool IsParentOf(GUIComponent component)
-        {
-            for(int i = children.Count - 1; i >= 0; i--)
-            {
-                if (children[i] == component) return true;
-                if (children[i].IsParentOf(component)) return true;
-            }
-
-            return false;
         }
 
         protected virtual void SetAlpha(float a)
@@ -347,6 +381,7 @@ namespace Barotrauma
         public virtual void Draw(SpriteBatch spriteBatch) 
         {
             if (!Visible) return;
+            var rect = Rect;
 
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;
@@ -387,7 +422,7 @@ namespace Barotrauma
                                     new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
                                     uiSprite.Slices[x + y * 3],
                                     currColor * (currColor.A / 255.0f));
-                                
+
                                 pos.Y += height;
                             }
                             pos.X += width;
@@ -402,7 +437,7 @@ namespace Barotrauma
                         if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
                         if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
 
-                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, color: currColor * (currColor.A / 255.0f));
                     }
                     else
                     {
@@ -411,7 +446,7 @@ namespace Barotrauma
                             float scale = (float)(rect.Width) / uiSprite.Sprite.SourceRect.Width;
 
                             spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
-                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
+                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)),
                                 currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
                         }
                         else
@@ -423,6 +458,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
         public  void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
@@ -478,14 +514,14 @@ namespace Barotrauma
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
-            Point expandAmount = size - rect.Size;
-
+            if (RectTransform != null) { return; }
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
             {
-                //TODO: fix this (or replace with something better in the new GUI system)
+                //TODO: fix this(or replace with something better in the new GUI system)
                 //simply expanding the rects by the same amount as their parent only works correctly in some special cases
+                Point expandAmount = size - rect.Size;
                 foreach (GUIComponent child in children)
                 {
                     child.Rect = new Rectangle(
@@ -499,6 +535,9 @@ namespace Barotrauma
 
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
+            // Don't manipulate the rect, if the component is using RectTransform component.
+            if (RectTransform != null) { return; }
+
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
             Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
@@ -533,7 +572,7 @@ namespace Barotrauma
             else
             {
                 rect.Y += parentRect.Y + (int)padding.Y;
-            }            
+            }
         }
 
         public virtual void ApplyStyle(GUIComponentStyle style)

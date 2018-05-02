@@ -57,6 +57,7 @@ namespace Barotrauma
         private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
+        private GUIComponent campaignSetupUI;
 
         private Sprite backgroundSprite;
 
@@ -265,7 +266,7 @@ namespace Barotrauma
             //respawn shuttle ------------------------------------------------------------------
 
             shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, 200, 20), "", "", defaultModeContainer);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, columnWidth, 20), "", "", defaultModeContainer);
             shuttleTickBox.Selected = true;
             shuttleTickBox.OnSelected = (GUITickBox box) =>
             {
@@ -436,9 +437,12 @@ namespace Barotrauma
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
             
-            campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
-            campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
-            campaignViewButton.Visible = false;
+            if (campaignViewButton == null)
+            {
+                campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), TextManager.Get("CampaignView"), Alignment.BottomRight, "", defaultModeContainer);
+                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
+                campaignViewButton.Visible = false;
+            }
 
             if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
             {
@@ -793,7 +797,7 @@ namespace Barotrauma
                 infoButton.UserData = sub;
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    var msgBox = new GUIMessageBox("", "", 550, 400);
                     ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
                     return true;
                 };
@@ -1108,7 +1112,11 @@ namespace Barotrauma
         {
             base.AddToGUIUpdateList();
 
-            if (jobInfoFrame != null)
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.AddToGUIUpdateList();
+            }
+            else if (jobInfoFrame != null)
             {
                 jobInfoFrame.AddToGUIUpdateList();
             }
@@ -1152,8 +1160,19 @@ namespace Barotrauma
 
             if (campaignContainer.Visible && campaignUI != null)
             {
-                //campaignContainer.Update((float)deltaTime);
                 campaignUI.Update((float)deltaTime);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                if (!campaignSetupUI.Visible)
+                {
+                    campaignSetupUI = null;
+                }
+                else
+                {
+                    campaignSetupUI.Update((float)deltaTime);
+                }
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1181,6 +1200,11 @@ namespace Barotrauma
             if (campaignContainer.Visible && campaignUI != null)
             {
                 campaignUI.Draw(spriteBatch);
+            }
+
+            if (campaignSetupUI != null)
+            {
+                campaignSetupUI.Draw(spriteBatch);
             }
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
@@ -1251,7 +1275,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server != null)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return;
                 }
             }
@@ -1279,7 +1303,7 @@ namespace Barotrauma
                 // -> don't select the mode yet and start campaign setup
                 if (GameMain.Server != null && !campaignContainer.Visible)
                 {
-                    MultiplayerCampaign.StartCampaignSetup();
+                    campaignSetupUI = MultiPlayerCampaign.StartCampaignSetup();
                     return false;
                 }
             }
@@ -1319,6 +1343,7 @@ namespace Barotrauma
                     campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
 
                     var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), TextManager.Get("Back"), "", campaignContainer);
+                    backButton.ClampMouseRectToParent = false;
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
                     int buttonX = backButton.Rect.Width + 50;
@@ -1326,6 +1351,7 @@ namespace Barotrauma
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
                         var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
+                        tabButton.ClampMouseRectToParent = false;
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
@@ -1421,6 +1447,9 @@ namespace Barotrauma
             GameMain.Config.JobNamePreferences = jobNamePreferences;
         }
 
+        public Pair<string, string> FailedSelectedSub;
+        public Pair<string, string> FailedSelectedShuttle;
+
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
             if (GameMain.Client == null) return false;
@@ -1440,10 +1469,20 @@ namespace Barotrauma
                 subList.OnSelected -= VotableClicked;
                 subList.Select(subList.children.IndexOf(matchingListSub), true);
                 subList.OnSelected += VotableClicked;
+
+                if (subList == SubList)
+                    FailedSelectedSub = null;
+                else
+                    FailedSelectedShuttle = null;
             }
 
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
+                if (subList == SubList)
+                    FailedSelectedSub = Pair<string, string>.Create(subName, md5Hash);
+                else
+                    FailedSelectedShuttle = Pair<string, string>.Create(subName, md5Hash);
+
                 string errorMsg = "";
                 if (sub == null)
                 {
