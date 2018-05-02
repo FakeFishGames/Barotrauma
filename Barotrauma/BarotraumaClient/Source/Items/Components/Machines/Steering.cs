@@ -40,21 +40,21 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), TextManager.Get("SteeringMaintainPos"), Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), TextManager.Get("SteeringMaintainPos"), Alignment.TopLeft, GUI.SmallFont, "", GuiFrame);
             maintainPosTickBox.Enabled = false;
             maintainPosTickBox.OnSelected = ToggleMaintainPosition;
 
             levelStartTickBox = new GUITickBox(
                 new Rectangle(5, 70, 15, 15),
                 GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
-                Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+                Alignment.TopLeft, GUI.SmallFont, "", GuiFrame);
             levelStartTickBox.Enabled = false;
             levelStartTickBox.OnSelected = SelectDestination;
 
             levelEndTickBox = new GUITickBox(
                 new Rectangle(5, 90, 15, 15),
                 GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
-                Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+                Alignment.TopLeft, GUI.SmallFont, "", GuiFrame);
             levelEndTickBox.Enabled = false;
             levelEndTickBox.OnSelected = SelectDestination;
         }

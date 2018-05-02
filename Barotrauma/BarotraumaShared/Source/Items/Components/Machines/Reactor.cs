@@ -145,7 +145,12 @@ namespace Barotrauma.Items.Components
             { 
                 autoTemp = value;
 #if CLIENT
-                if (autoTempTickBox != null) autoTempTickBox.Selected = value;
+                if (autoTempTickBox != null) 
+                {
+                    autoTempTickBox.BarScroll = value ? 
+                        Math.Min(0.45f, autoTempTickBox.BarScroll) : 
+                        Math.Max(0.55f, autoTempTickBox.BarScroll);
+                }
 #endif
             }
         }
@@ -157,10 +162,10 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {         
             IsActive = true;
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
                 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -189,9 +194,11 @@ namespace Barotrauma.Items.Components
 
             //calculate tolerances of the meters based on the skills of the user
             //more skilled characters have larger "sweet spots", making it easier to keep the power output at a suitable level
-            optimalTurbineOutput = Vector2.Lerp(new Vector2(0.8f, 1.2f), new Vector2(0.6f, 1.4f), degreeOfSuccess) * correctTurbineOutput;
-            allowedTurbineOutput = Vector2.Lerp(new Vector2(0.6f, 1.4f), new Vector2(0.4f, 1.6f), degreeOfSuccess) * correctTurbineOutput;
-
+            float tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
+            optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+            tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
+            allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+            
             float temperatureTolerance = MathHelper.Lerp(10.0f, 20.0f, degreeOfSuccess);
             optimalTemperature = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);
             allowedTemperature = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);

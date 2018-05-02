@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Headset"
+    identifier="headset"
     category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
@@ -32,6 +33,7 @@
 
   <Item
     name="Clown Mask"
+    identifier="clownmask"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem"
@@ -53,6 +55,7 @@
 
   <Item
     name="Clown Costume"
+    identifier="clowncostumes"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem"

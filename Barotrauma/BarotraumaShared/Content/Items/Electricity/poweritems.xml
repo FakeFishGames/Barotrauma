@@ -2,14 +2,15 @@
 <Items>
   <Item
     name="Junction Box"
+    identifier="junctionbox"
     category="Electrical"
     linkable="true"
     
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
-    <Sprite texture="junctionbox.png" sourcerect="0,0,70,84" depth="0.8" canflipx="false"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="140,0,70,84" depth="0.8" maxcondition="0"/>
+    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,70,123" depth="0.8" canflipx="false"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="70,0,70,123" depth="0.8" maxcondition="50" fadein="true"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="140,0,70,123" depth="0.8" maxcondition="0"/>
 
     <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="30">
       <skill name="Electrical Engineering" level="40"/>
@@ -45,9 +46,9 @@
 
   <Item
     name="Battery"
+    identifier="battery"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Generally used for storing backup power in case of a reactor failure.">
 
     <Sprite texture ="battery.png" sourcerect="0,0,58,77" depth="0.8"/>
@@ -76,6 +77,7 @@
 
   <Item
     name="Supercapacitor"
+    identifier="supercapacitor"
     category="Electrical"
     linkable="true"    
     description="Can deliver charge much faster than batteries.">
@@ -101,6 +103,7 @@
 
   <Item
     name="Charging Dock"
+    identifier="chargingdock"
     category="Electrical"
     linkable="true"
     

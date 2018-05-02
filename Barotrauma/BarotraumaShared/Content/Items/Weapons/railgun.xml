@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Railgun"
+    identifier="railgun"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
@@ -32,6 +33,7 @@
 
   <Item
     name="Railgun Controller"
+    identifier="railguncontroller"
     category="Machine"
     type="Controller"
     linkable="true"
@@ -56,6 +58,7 @@
 
   <Item
     name="Railgun Loader"
+    identifier="railgunloader"
     category="Machine"
     linkable="true">
 
@@ -70,6 +73,7 @@
   
   <Item
     name="Railgun Shell"
+    identifier="railgunshell"
     category="Misc"
     radarsize="5">
 
@@ -110,6 +114,7 @@
 
   <Item
     name="Nuclear Shell"
+    identifier="nuclearshell"
     category="Misc"
     radarsize="5">
     

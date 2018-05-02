@@ -336,12 +336,23 @@
   <PumpIn>IN</PumpIn>
   <PumpOut>OUT</PumpOut>
   <PumpSpeed>Pumping speed</PumpSpeed>
-  <ReactorAutoTemp>Automatic temperature control</ReactorAutoTemp>
-  <ReactorOutput>Output</ReactorOutput>
-  <ReactorGridLoad>Grid load</ReactorGridLoad>
+  <ReactorAutoTemp>Automatic Control</ReactorAutoTemp>
+  <ReactorOutput>Output: [kw] kW</ReactorOutput>
+  <ReactorLoad>Load: [kw] kW</ReactorLoad>
   <ReactorShutdownTemp>Shutdown temperature</ReactorShutdownTemp>
   <ReactorFissionRate>Fission rate</ReactorFissionRate>
-  <ReactorCoolingRate>Cooling rate</ReactorCoolingRate>
+  <ReactorTurbineOutput>Turbine output</ReactorTurbineOutput>
+  <ReactorWarningCriticalTemp>Critical\nHeat</ReactorWarningCriticalTemp>
+  <ReactorWarningCriticalLowTemp>Critically\nLow Temperature</ReactorWarningCriticalLowTemp>
+  <ReactorWarningCriticalOutput>Critical\nOutput</ReactorWarningCriticalOutput>
+  <ReactorWarningLowTemp>Temperature Low</ReactorWarningLowTemp>
+  <ReactorWarningOverheating>Overheat</ReactorWarningOverheating>
+  <ReactorWarningLowOutput>Output Low</ReactorWarningLowOutput>
+  <ReactorWarningHighOutput>Output High</ReactorWarningHighOutput>
+  <ReactorWarningLowFuel>Fuel Low</ReactorWarningLowFuel>
+  <ReactorWarningFuelOut>Fuel Out</ReactorWarningFuelOut>
+  <ReactorWarningMeltdown>Meltdown</ReactorWarningMeltdown>
+  <ReactorWarningSCRAM>SCRAM</ReactorWarningSCRAM>
   <SteeringAutoPilot>Autopilot</SteeringAutoPilot>
   <SteeringMaintainPos>Maintain position</SteeringMaintainPos>
   <SteeringVelocityX>Velocity: [kph] km/h</SteeringVelocityX>

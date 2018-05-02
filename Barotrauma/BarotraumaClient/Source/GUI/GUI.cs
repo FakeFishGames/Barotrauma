@@ -256,11 +256,16 @@ namespace Barotrauma
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
+            DrawLine(sb, t, start, end, clr, depth, width);
+        }
+
+        public static void DrawLine(SpriteBatch sb, Texture2D texture, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        {
             Vector2 edge = end - start;
             // calculate angle to rotate line
             float angle = (float)Math.Atan2(edge.Y, edge.X);
 
-            sb.Draw(t,
+            sb.Draw(texture,
                 new Rectangle(// rectangle defines shape of line and position of start of line
                     (int)start.X,
                     (int)start.Y,
@@ -269,14 +274,13 @@ namespace Barotrauma
                 null,
                 clr, //colour of line
                 angle,     //angle of line (calulated above)
-                new Vector2(0, 0), // point in line about which to rotate
+                new Vector2(0, texture.Height / 2.0f), // point in line about which to rotate
                 SpriteEffects.None,
                 depth);
         }
         
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, ScalableFont font = null)
         {
-
             if (font == null) font = Font;
             if (backgroundColor != null)
             {

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
   
   <Item
-    name="Lamp"
+    name="Lamp"    
+    identifier="lamp"
     category="Electrical"
     Tags="smallitem,light">
 
@@ -24,7 +24,8 @@
   </Item>
 
   <Item
-    name="Emergency Light"
+    name="Emergency Light"    
+    identifier="emergencylight"
     category="Electrical"
     Tags="smallitem,light">
 
