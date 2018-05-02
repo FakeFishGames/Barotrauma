@@ -19,6 +19,11 @@ namespace Barotrauma.Networking
         No = 0, Maybe = 1, Yes = 2
     }
 
+    enum BotSpawnMode
+    {
+        Normal, Fill
+    }
+
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
@@ -178,6 +183,26 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        [Serialize(0, true)]
+        public int BotCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(16, true)]
+        public int MaxBotCount
+        {
+            get;
+            set;
+        }
+        
+        public BotSpawnMode BotSpawnMode
+        {
+            get;
+            set;
+        }
 
         public float SelectedLevelDifficulty
         {
@@ -295,6 +320,11 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
+            /*doc.Root.SetAttributeValue("BotCount", BotCount);
+            doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
+            doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
+
+
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
 #endif
@@ -357,6 +387,10 @@ namespace Barotrauma.Networking
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
 
+            var botSpawnMode = BotSpawnMode.Fill;
+            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Fill"), out botSpawnMode);
+            BotSpawnMode = botSpawnMode;
+
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
                 && GameMain.NetLobbyScreen.ServerMessage != null
@@ -370,6 +404,9 @@ namespace Barotrauma.Networking
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
+
+            GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
+            GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
 #if CLIENT
             showLogButton.Visible = SaveServerLogs;

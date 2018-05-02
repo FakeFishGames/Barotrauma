@@ -191,7 +191,9 @@
   <Random>Random</Random>
   <LevelSeed>Level seed</LevelSeed>
   <LevelDifficulty>Level difficulty</LevelDifficulty>
-  <Traitors>Traitors</Traitors>
+  <Traitors>Traitors</Traitors>  
+  <BotCount>Bot count</BotCount>
+  <BotSpawnMode>Bot spawn mode</BotSpawnMode>
   <AutoRestart>Automatic restart</AutoRestart>
   <ServerLog>Server log</ServerLog>
   <CampaignView>Campaign view</CampaignView>
@@ -430,7 +432,7 @@
   <DialogLowOxygen>*gasping*</DialogLowOxygen>
   <DialogBleeding>Help, I'm bleeding!</DialogBleeding>
   <DialogBleeding>I'm bleeding out!</DialogBleeding>
-  <DialogBleeding>I'm losing blood</DialogBleeding>
+  <DialogBleeding>I'm losing blood!</DialogBleeding>
   <DialogPressure>Pressure rising in [roomname]!</DialogPressure>
   <DialogPressure>Dangerous pressure in [roomname]!</DialogPressure>
   <DialogPressure>Pressure level dangerously high in [roomname]!</DialogPressure>
