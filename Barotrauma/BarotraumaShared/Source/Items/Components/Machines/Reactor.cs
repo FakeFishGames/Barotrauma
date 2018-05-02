@@ -391,6 +391,8 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (GameMain.Client != null) return false;
+
             float degreeOfSuccess = DegreeOfSuccess(character);
 
             //characters with insufficient skill levels don't refuel the reactor
@@ -434,15 +436,22 @@ namespace Barotrauma.Items.Components
                     //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                     if (degreeOfSuccess < 0.5f)
                     {
+                        if (!autoTemp) unsentChanges = true;
                         AutoTemp = true;
                     }
                     else
                     {
                         AutoTemp = false;
+                        unsentChanges = true;
                         UpdateAutoTemp(2.0f + degreeOfSuccess * 5.0f, deltaTime);
                     }                    
                     break;
                 case "shutdown":
+                    if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f || autoTemp)
+                    {
+                        unsentChanges = true;
+                    }
+                    AutoTemp = false;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;

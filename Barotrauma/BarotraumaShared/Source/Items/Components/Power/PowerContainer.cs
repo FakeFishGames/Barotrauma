@@ -167,10 +167,13 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (GameMain.Client != null) return false;
+
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
                 if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
                 {
+                    item.CreateServerEvent(this);
                     RechargeSpeed = maxRechargeSpeed * 0.5f;
                     character.Speak(TextManager.Get("DialogChargeBatteries")
                         .Replace("[itemname]", item.Name)
@@ -181,9 +184,8 @@ namespace Barotrauma.Items.Components
             {
                 if (rechargeSpeed > 0.0f)
                 {
+                    item.CreateServerEvent(this);
                     RechargeSpeed = 0.0f;
-
-                    RechargeSpeed = maxRechargeSpeed * 0.5f;
                     character.Speak(TextManager.Get("DialogStopChargingBatteries")
                         .Replace("[itemname]", item.Name)
                         .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
