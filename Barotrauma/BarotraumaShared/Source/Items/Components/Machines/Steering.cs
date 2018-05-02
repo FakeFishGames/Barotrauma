@@ -401,15 +401,27 @@ namespace Barotrauma.Items.Components
                 case "maintain position":
                     if (!posToMaintain.HasValue)
                     {
+                        unsentChanges = true;
                         posToMaintain = item.Submarine.WorldPosition;
                     }
+
+                    if (!AutoPilot || !MaintainPos) unsentChanges = true;
+
                     AutoPilot = true;
                     MaintainPos = true;
                     break;
                 case "navigate back":
+                    if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
                     SetDestinationLevelStart();
                     break;
                 case "navigate to destination":
+                    if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
                     SetDestinationLevelEnd();
                     break;
             }

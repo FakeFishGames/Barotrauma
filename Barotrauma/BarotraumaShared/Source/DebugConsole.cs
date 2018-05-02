@@ -309,6 +309,54 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("Crew AI enabled", client);
             }));
 
+            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("Set the number of bots to " + botCount, Color.White);
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("\"" + client.Name + "\" set the number of bots to " + botCount, Color.White);
+                GameMain.Server.SendConsoleMessage("Set the number of bots to " + botCount, client);
+            }));
+
+            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("Set bot spawn mode to " + spawnMode, Color.White);
+                }
+                else
+                {
+                    NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("\"" + client.Name + "\" set bot spawn mode to " + spawnMode, Color.White);
+                    GameMain.Server.SendConsoleMessage("Set bot spawn mode to " + spawnMode, client);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                }
+            }));
+
             commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;

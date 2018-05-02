@@ -580,7 +580,7 @@ namespace Barotrauma
 
             foreach (string contentPackageName in contentPacks)
             {
-                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, contentPackList);
+                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, "", contentPackList);
                 cpTickBox.Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName);
                 cpTickBox.UserData = contentPackageName;
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>

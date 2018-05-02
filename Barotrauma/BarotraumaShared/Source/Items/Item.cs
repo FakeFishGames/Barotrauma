@@ -382,6 +382,7 @@ namespace Barotrauma
                         body.FarseerBody.LinearDamping  = 0.1f;
                         break;
                     case "trigger":
+                    case "inventoryicon":
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
@@ -1669,6 +1670,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
+            msg.Write(Prefab.Identifier);
             msg.Write(Description != prefab.Description);
             if (Description != prefab.Description)
             {
@@ -1707,6 +1709,7 @@ namespace Barotrauma
             if (GameMain.Server != null) return null;
 
             string itemName = msg.ReadString();
+            string itemIdentifier = msg.ReadString();
             bool descriptionChanged = msg.ReadBoolean();
             string itemDesc = "";
             if (descriptionChanged)
@@ -1748,7 +1751,7 @@ namespace Barotrauma
 
             //----------------------------------------
             
-            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
             if (itemPrefab == null) return null;
 
             Inventory inventory = null;
@@ -1848,12 +1851,26 @@ namespace Barotrauma
 
         public static Item Load(XElement element, Submarine submarine)
         {
-            string name = element.Attribute("name").Value;
+            string name = element.Attribute("name").Value;            
+            string identifier = element.GetAttributeString("identifier", "");
 
-            ItemPrefab prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            ItemPrefab prefab;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as ItemPrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+            }
+
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
+                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 
@@ -1915,7 +1932,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Item");
 
-            element.Add(new XAttribute("name", prefab.Name),
+            element.Add(
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));

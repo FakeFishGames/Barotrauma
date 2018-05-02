@@ -132,6 +132,45 @@ namespace Barotrauma.Networking
                 (c.Character == null || c.Character.IsDead));
         }
 
+        private List<CharacterInfo> GetBotsToRespawn()
+        {
+            GameServer server = networkMember as GameServer;
+
+            if (server.BotSpawnMode == BotSpawnMode.Normal)
+            {
+                return Character.CharacterList
+                    .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null && c.IsDead)
+                    .Select(c => c.Info)
+                    .ToList();
+            }
+
+            int currPlayerCount = server.ConnectedClients.Count(c => c.InGame && (!c.SpectateOnly || !server.AllowSpectating));
+            if (server.CharacterInfo != null) currPlayerCount++;
+
+            var existingBots = Character.CharacterList
+                .FindAll(c => c.TeamID == 1 && c.AIController != null && c.Info != null);
+
+            int requiredBots = server.BotCount - currPlayerCount;
+            requiredBots -= existingBots.Count(b => !b.IsDead);
+
+            List<CharacterInfo> botsToRespawn = new List<CharacterInfo>();
+            for (int i = 0; i < requiredBots; i++)
+            {
+                CharacterInfo botToRespawn = existingBots.Find(b => b.IsDead)?.Info;
+                if (botToRespawn == null)
+                {
+                    botToRespawn = new CharacterInfo(Character.HumanConfigFile);
+                }
+                else
+                {
+                    existingBots.Remove(botToRespawn.Character);
+                }
+                botsToRespawn.Add(botToRespawn);
+            }
+            return botsToRespawn;
+        }
+
+
         public void Update(float deltaTime)
         {
             if (respawnShuttle == null)
@@ -438,7 +477,7 @@ namespace Barotrauma.Networking
             var server = networkMember as GameServer;
             if (server == null) return;
 
-            var respawnSub = respawnShuttle != null ? respawnShuttle : Submarine.MainSub;
+            var respawnSub = respawnShuttle ?? Submarine.MainSub;
             
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
@@ -448,8 +487,11 @@ namespace Barotrauma.Networking
                 c.TeamID = 1;
                 if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, c.Name);
             }
-
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
+
+            var botsToSpawn = GetBotsToRespawn();
+            characterInfos.AddRange(botsToSpawn);
+
             if (server.Character != null && server.Character.IsDead)
             {
                 characterInfos.Add(server.CharacterInfo);
@@ -478,10 +520,11 @@ namespace Barotrauma.Networking
             {
                 bool myCharacter = false;
 #if CLIENT
-                myCharacter = i >= clients.Count;
+                myCharacter = i >= clients.Count + botsToSpawn.Count;
 #endif
+                bool bot = i >= clients.Count && !myCharacter;
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter, false);                
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !myCharacter && !bot, bot);                
                 character.TeamID = 1;
 
 #if CLIENT
@@ -495,15 +538,20 @@ namespace Barotrauma.Networking
                     GameMain.LightManager.LosEnabled = true;
                     GameServer.Log(string.Format("Respawning {0} (host) as {1}", character.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
-                else
+#endif
+                if (!myCharacter)
                 {
-#endif
-                clients[i].Character = character;
-                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
-
-#if CLIENT
+                    if (bot)
+                    {
+                        GameServer.Log(string.Format("Respawning bot {0} as {1}", character.Info.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    }
+                    else
+                    {
+                        clients[i].Character = character;
+                        GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    }
                 }
-#endif
+
 
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;                
                 if (divingSuitPrefab != null && oxyPrefab != null)

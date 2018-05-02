@@ -24,6 +24,8 @@ namespace Barotrauma
     {
         public List<BrokenItemSprite> BrokenSprites = new List<BrokenItemSprite>();
 
+        public Sprite InventoryIcon;
+        
         public Sprite GetActiveSprite(float condition)
         {
             Sprite activeSprite = sprite;

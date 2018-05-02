@@ -444,11 +444,6 @@ namespace Barotrauma
 
         private void UpdateConversations(float deltaTime)
         {
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.P))
-            {
-                conversationTimer = 0.0f;
-            }
-
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {

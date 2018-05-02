@@ -1,10 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Engine : Powered
+    partial class Engine : Powered, IDrawableComponent
     {
+        private float spriteIndex;
+        
+        public float AnimSpeed
+        {
+            get;
+            private set;
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             GuiFrame.Draw(spriteBatch);
@@ -20,6 +29,27 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);
+        }
+
+        partial void UpdateAnimation(float deltaTime)
+        {
+            if (propellerSprite == null) return;
+
+            spriteIndex += (force / 100.0f) * AnimSpeed * deltaTime;
+            if (spriteIndex < 0) spriteIndex = propellerSprite.FrameCount;
+            if (spriteIndex >= propellerSprite.FrameCount) spriteIndex = 0.0f;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing)
+        {
+            if (propellerSprite != null)
+            {
+                Vector2 drawPos = item.DrawPosition;
+                drawPos += PropellerPos;
+                drawPos.Y = -drawPos.Y;
+
+                propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
+            }
         }
     }
 }
