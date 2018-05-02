@@ -363,11 +363,11 @@
     </GUIFrameHorizontal>
 
     <GUIButtonHorizontal
-      color="1.0,1.0,1.0,1.0"
+      color="0.9,0.9,0.9,1.0"
+      hovercolor="1.0,1.0,1.0,1.0"
+      selectedcolor="0.9,0.9,0.9,1.0"
       textcolor="1.0,1.0,1.0,1.0">
-      <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="122,229,55,38" tile="false"/>
-      <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="122,229,55,38" tile="false"/>
-      <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect="122,229,55,38" tile="false"/>
+      <Sprite texture="Content/Items/MachineInterface.png" sourcerect="122,229,55,38" tile="false"/>
     </GUIButtonHorizontal>
   </OnOffSlider>
 
@@ -397,11 +397,11 @@
     </GUIFrameVertical>
 
     <GUIButtonVertical
-      color="1.0,1.0,1.0,1.0"
+      color="0.9,0.9,0.9,1.0"
+      hovercolor="1.0,1.0,1.0,1.0"
+      selectedcolor="0.9,0.9,0.9,1.0"
       textcolor="1.0,1.0,1.0,1.0">
-      <Sprite texture="Content/Items/MachineInterface.png" state="None" sourcerect="0,268,104,24" tile="false"/>
-      <Sprite texture="Content/Items/MachineInterface.png" state="Hover" sourcerect="0,268,104,24" tile="false"/>
-      <Sprite texture="Content/Items/MachineInterface.png" state="Selected" sourcerect="0,268,104,24" tile="false"/>
+      <Sprite texture="Content/Items/MachineInterface.png" sourcerect="0,268,104,24" tile="false"/>
     </GUIButtonVertical>
   </OnOffLever>
 

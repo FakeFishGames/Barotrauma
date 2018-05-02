@@ -98,12 +98,19 @@ namespace Barotrauma
                         bool maintainAspect = subElement.GetAttributeBool("maintainaspectratio",false);
                         bool tile = subElement.GetAttributeBool("tile", true);
 
-                        string stateStr = subElement.GetAttributeString("state", "None");
+                        bool allStates = false;
                         GUIComponent.ComponentState spriteState = GUIComponent.ComponentState.None;
-                        Enum.TryParse(stateStr, out spriteState);
+                        if (subElement.Attribute("state") != null)
+                        {
+                            string stateStr = subElement.GetAttributeString("state", "None");
+                            Enum.TryParse(stateStr, out spriteState);
+                        }
+                        else
+                        {
+                            allStates = true;
+                        }
 
                         UISprite newSprite = new UISprite(sprite, tile, maintainAspect);
-
                         Vector4 sliceVec = subElement.GetAttributeVector4("slice", Vector4.Zero);
                         if (sliceVec != Vector4.Zero)
                         {
@@ -135,7 +142,18 @@ namespace Barotrauma
                             newSprite.Slices[8] = new Rectangle(newSprite.Slices[2].X, slice.Bottom, newSprite.Slices[2].Width, newSprite.Sprite.SourceRect.Bottom - slice.Bottom);
                         }
 
-                        Sprites[spriteState].Add(newSprite);
+                        if (allStates)
+                        {
+                            foreach (GUIComponent.ComponentState state in Enum.GetValues(typeof(GUIComponent.ComponentState)))
+                            {
+                                Sprites[state].Add(newSprite);
+                            }
+                        }
+                        else
+                        {
+                            Sprites[spriteState].Add(newSprite);
+                        }
+
                         break;
                     default:
                         ChildStyles.Add(subElement.Name.ToString().ToLowerInvariant(), new GUIComponentStyle(subElement));
