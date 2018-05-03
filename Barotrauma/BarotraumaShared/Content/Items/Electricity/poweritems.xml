@@ -4,8 +4,7 @@
     name="Junction Box"
     identifier="junctionbox"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
     <Sprite texture="FF_junctionbox.png" sourcerect="0,0,70,123" depth="0.8" canflipx="false"/>

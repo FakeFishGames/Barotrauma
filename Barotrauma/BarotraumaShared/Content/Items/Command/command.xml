@@ -17,6 +17,11 @@
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <LightComponent range="10.0" lightcolor="1.0,1.0,1.0,0.1" powerconsumption="5" IsOn="true" castshadows="false">
         <sprite texture="Content/Items/Command/navigatorLights.png" depth="0.025" origin="0.5,0.5" alpha="1.0"/>
       </LightComponent>
@@ -58,6 +63,11 @@
 
     <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
@@ -80,6 +90,11 @@
     <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
 
     <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
     </MiniMap>
 

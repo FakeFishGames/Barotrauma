@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.WorldPosition);
+                if (voltage > 0.1f && sparkSounds.Count > 0) sparkSounds[Rand.Int(sparkSounds.Count)].Play(1.0f, 400.0f, item.WorldPosition);
 #endif
                 lightBrightness = 0.0f;
             }

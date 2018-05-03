@@ -12,7 +12,7 @@ namespace Barotrauma
         private SoundChannel basicSoundChannel;
         private SoundChannel largeSoundChannel;
 
-        static Sound fireSoundBasic, fireSoundLarge;
+        private Sound fireSoundBasic, fireSoundLarge;
 
         private LightSource lightSource;
 
@@ -57,8 +57,8 @@ namespace Barotrauma
                             largeSoundChannel = fireSoundBasic.Play(gain, 1000.0f, position);
                             largeSoundChannel.Looping = true;
                         }
-                        basicSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
-                        basicSoundChannel.Gain = gain;
+                        largeSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
+                        largeSoundChannel.Gain = gain;
                     }
                 }
                 else
