@@ -135,9 +135,9 @@ namespace Barotrauma
         {
             cam = new Camera();
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("blurshader_opengl");
+            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
 #else
-            var blurEffect = content.Load<Effect>("blurshader");
+            var blurEffect = content.Load<Effect>("Effects/blurshader");
 #endif
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
 

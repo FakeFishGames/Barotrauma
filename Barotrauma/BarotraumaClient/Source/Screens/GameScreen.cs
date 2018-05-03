@@ -31,20 +31,20 @@ namespace Barotrauma
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
-            
+
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("blurshader_opengl");
-            damageEffect = content.Load<Effect>("damageshader_opengl");
+            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
+            damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
 #else
-            var blurEffect = content.Load<Effect>("blurshader");
-            damageEffect = content.Load<Effect>("damageshader");
+            var blurEffect = content.Load<Effect>("Effects/blurshader");
+            damageEffect = content.Load<Effect>("Effects/damageshader");
 #endif
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
             
-            distortTexture = TextureLoader.FromFile("Content/distortnormals.png");
+            distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
