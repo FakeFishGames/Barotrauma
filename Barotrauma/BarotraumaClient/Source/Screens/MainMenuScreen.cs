@@ -78,12 +78,13 @@ namespace Barotrauma
                 RelativeOffset = new Vector2(0, 0.1f),
                 AbsoluteOffset = new Point(50, 0)
             }, color: Color.Transparent);
-            float scale = 1;
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
-            var buttons = CreateButtons(new Vector2(1, 0.04f), minButtonSize, maxButtonSize, absoluteSpacing: 5, extraSpacing: 20, relativeSpacing: 0.05f, scale: scale);
+            // 
+            var buttons = GUI.CreateButtons(8, new Vector2(1, 0.04f), buttonsParent, anchor: Anchor.BottomLeft,
+                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 0 : 20);
+            buttons.ForEach(b => b.Color *= 0.8f);
             SetupButtons(buttons);
-            buttonsParent.RectTransform.ChangeScale(new Vector2(scale, scale));
             buttons.ForEach(b => b.TextBlock.SetTextPos());
 
             var relativeSize = new Vector2(0.5f, 0.5f);
@@ -444,25 +445,6 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private List<GUIButton> CreateButtons(Vector2? relativeSize = null, Point? minSize = null, Point? maxSize = null, int absoluteSpacing = 0, int extraSpacing = 0, float relativeSpacing = 0, float scale = 1)
-        {
-            var buttons = new List<GUIButton>();
-            int extraTotal = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                extraTotal += i % 2 == 0 ? 0 : extraSpacing;
-                var buttonRect = new RectTransform(relativeSize.Value, buttonsParent.RectTransform, Anchor.BottomLeft, minSize: minSize, maxSize: maxSize)
-                {
-                    RelativeOffset = new Vector2(0, relativeSpacing + relativeSize.Value.Y * i),
-                    AbsoluteOffset = new Point(0, absoluteSpacing * i + extraTotal)
-                };
-                var button = new GUIButton(buttonRect, "Button", textAlignment: Alignment.Center, parent: buttonsParent);
-                button.Color = button.Color * 0.8f;
-                buttons.Add(button);
-            }
-            return buttons;
-        }
-
         private void SetupButtons(List<GUIButton> buttons)
         {
             for (int i = 0; i < 8; i++)

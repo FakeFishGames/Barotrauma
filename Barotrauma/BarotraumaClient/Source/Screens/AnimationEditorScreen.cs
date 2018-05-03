@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             base.Select();
             gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: null, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
-
+            var buttons = GUI.CreateButtons(5, new Vector2(0.9f, 0.1f), gui, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 20);
             //Submarine.RefreshSavedSubs();
             //Submarine.MainSub = Submarine.SavedSubmarines.First();
             //Submarine.MainSub.Load(true);
