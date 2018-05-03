@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class BasicTutorial : TutorialType
+    class BasicTutorial : Tutorial
     {
-        public BasicTutorial(string name)
-            : base(name)
+        public BasicTutorial(XElement element)
+            : base(element)
         {
-
         }
 
         public override IEnumerable<object> UpdateState()

@@ -361,12 +361,5 @@ namespace Barotrauma
 
             doc.Save(filePath);
         }
-        
-        private IEnumerable<object> ApplyUnsavedChanges()
-        {
-            yield return new WaitForSeconds(10.0f);
-
-            Save("config.xml");
-        }
     }
 }

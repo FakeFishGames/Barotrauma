@@ -68,5 +68,6 @@
   <NPCConversations file="Content/Characters/Human/NpcConversations.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
+  <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <Executable file="Barotrauma.exe" />
 </contentpackage>
