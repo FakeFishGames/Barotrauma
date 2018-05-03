@@ -145,7 +145,7 @@ namespace Barotrauma
 			spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
 			Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
-			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
+			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !((Structure)s).DrawBelowWater && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
             spriteBatch.End();
 			spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
