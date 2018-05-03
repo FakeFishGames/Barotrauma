@@ -9,6 +9,8 @@
     <Import_RootNamespace>BarotraumaShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
   <ItemGroup>
@@ -231,8 +233,8 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\CodeWords.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
-    <Content Include="$(MSBuildThisFileDirectory)Content\distortnormals.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Effects\damageshader.fx" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Effects\distortnormals.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\EventManagerSettings.xml">
@@ -928,7 +930,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\utg_4.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\waterbump.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Effects\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\clientpermissions.xml">
@@ -952,10 +954,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)Content\blurshader.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\blurshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\blurshader_opengl.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\alarm1.ogg">
@@ -1096,10 +1098,10 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Content.mgcb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\damageshader.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\damageshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\damageshader_opengl.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\damageshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Exo2-Light.otf">
@@ -1240,13 +1242,13 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\syringegun.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\losshader.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\losshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\losshader_opengl.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\losshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Map\TutorialSub.sub">
+    <None Include="$(MSBuildThisFileDirectory)Content\Tutorials\TutorialSub.sub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Ambient\Ambient1.ogg">
@@ -1588,10 +1590,10 @@
     <None Include="$(MSBuildThisFileDirectory)Content\utg_4.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\watershader.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\watershader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\watershader_opengl.xnb">
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\watershader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Submarines\Aegir Mark III.sub">

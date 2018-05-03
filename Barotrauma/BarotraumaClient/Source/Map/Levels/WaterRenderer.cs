@@ -69,14 +69,14 @@ namespace Barotrauma
         public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
         {
 #if WINDOWS
-            WaterEffect = content.Load<Effect>("watershader");
+            WaterEffect = content.Load<Effect>("Effects/watershader");
 #endif
 #if LINUX || OSX
 
-            WaterEffect = content.Load<Effect>("watershader_opengl");
+            WaterEffect = content.Load<Effect>("Effects/watershader_opengl");
 #endif
 
-            waterTexture = TextureLoader.FromFile("Content/waterbump.png");
+            waterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
             WaterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
             WaterEffect.Parameters["waterColor"].SetValue(waterColor.ToVector4());
 
