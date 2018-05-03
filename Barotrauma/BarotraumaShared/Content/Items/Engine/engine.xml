@@ -6,9 +6,9 @@
     linkable="true"
     category="Machine">
 
-    <Sprite texture ="BTart_EngineDiesel_02.png" depth="0.8" sourcerect="0,0,752,591" canflipx="true"/>
+    <Sprite texture ="BTart_EngineDiesel_02.png" depth="0.8" sourcerect="0,0,590,464" canflipx="true"/>
 
-    <trigger x="20" y ="0" width="590" height="464"/>
+    <trigger x="20" y ="0" width="590" height="232"/>
 
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30">
       <skill name="Mechanical Engineering" level="40"/>
