@@ -1485,13 +1485,17 @@ namespace Barotrauma
                 listBox.children[i].Color = color;
                 listBox.children[i].HoverColor = color;
                 listBox.children[i].SelectedColor = color;
-                
-                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
+
+                (listBox.children[i] as GUITextBlock).Text = (i + 1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
 
                 jobNamePreferences.Add((listBox.children[i].UserData as JobPrefab).Name);
             }
 
-            GameMain.Config.JobNamePreferences = jobNamePreferences;
+            if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
+            {
+                GameMain.Config.JobNamePreferences = jobNamePreferences;
+                GameMain.Config.Save("config.xml");
+            }
         }
 
         public Pair<string, string> FailedSelectedSub;
