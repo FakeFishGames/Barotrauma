@@ -31,6 +31,7 @@ namespace Barotrauma
         private GUIFrame outerElement;
         private List<GUIFrame> innerElements = new List<GUIFrame>();
         private GUIFrame testElement;
+        private GUIButton animEditorButton;
 
         public MainMenuScreen(GameMain game)
         {
@@ -61,6 +62,16 @@ namespace Barotrauma
             //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
             //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
             //    "", parent: p);
+
+            animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: null, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
+            {
+                Color = Color.Red * 0.8f
+            };
+            animEditorButton.OnClicked += (button, obj) => 
+            {
+                GameMain.AnimationEditorScreen.Select();
+                return true;
+            };
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
@@ -273,12 +284,14 @@ namespace Barotrauma
             buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
             //testElement.AddToGUIUpdateList();
+            animEditorButton.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             buttonsParent.Update((float)deltaTime);
             testElement.Update((float)deltaTime);
+            animEditorButton.Update((float)deltaTime);
 
             if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
@@ -359,6 +372,8 @@ namespace Barotrauma
 
             buttonsParent.Draw(spriteBatch);
             if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
+
+            animEditorButton.Draw(spriteBatch);
 
             //testElement.Draw(spriteBatch);
 
