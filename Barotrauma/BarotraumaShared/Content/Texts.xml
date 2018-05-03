@@ -5,7 +5,7 @@
   <PressAnyKey>Press any key to continue</PressAnyKey>
   
   <!-- Main menu buttons -->
-  <TutorialButton>Tutorial</TutorialButton>
+  <TutorialButton>Training</TutorialButton>
   <NewGameButton>New Game</NewGameButton>
   <LoadGameButton>Load Game</LoadGameButton>
   <JoinServerButton>Join Server</JoinServerButton>

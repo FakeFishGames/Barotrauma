@@ -28,9 +28,16 @@ namespace Barotrauma.Tutorials
             private set;
         }
 
-        public string SubmarinePath
+        private bool completed;
+        public bool Completed
         {
-            get { return submarinePath; }
+            get { return completed; }
+            protected set
+            {
+                if (completed == value) return;
+                completed = value;
+                GameMain.Config.Save();
+            }
         }
 
         public static void Init()
@@ -106,16 +113,30 @@ namespace Barotrauma.Tutorials
             submarinePath = element.GetAttributeString("submarinepath", "");
             levelSeed = element.GetAttributeString("levelseed", "tuto");
 
+            Completed = GameMain.Config.CompletedTutorialNames.Contains(Name);
+
             Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
         }
         
-        public virtual void Initialize()
+        public void Initialize()
         {
+            GameMain.Instance.ShowLoading(Loading());
+        }
+
+        private IEnumerable<object> Loading()
+        {
+            yield return CoroutineStatus.Running;
+
+            Submarine.MainSub = Submarine.Load(submarinePath, "", true);
+            yield return CoroutineStatus.Running;
+
             GameMain.GameSession = new GameSession(Submarine.MainSub, "", GameModePreset.list.Find(gm => gm.Name.ToLowerInvariant() == "tutorial"));
             (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
             GameMain.GameSession.StartRound(levelSeed);
             GameMain.GameSession.EventManager.Events.Clear();
             GameMain.GameScreen.Select();
+
+            yield return CoroutineStatus.Success;
         }
 
         public virtual void Start()

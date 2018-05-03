@@ -608,6 +608,8 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle " +
             "most of the basic tasks on board the submarine.");
 
+            Completed = true;
+
             yield return new WaitForSeconds(4.0f);
 
             Controlled = null;
@@ -633,9 +635,7 @@ namespace Barotrauma.Tutorials
 
             return Character.Controlled.Inventory.FindItem(itemName) != null;
         }
-
-
-
+        
         protected IEnumerable<object> KeepReactorRunning(Reactor reactor)
         {
             do

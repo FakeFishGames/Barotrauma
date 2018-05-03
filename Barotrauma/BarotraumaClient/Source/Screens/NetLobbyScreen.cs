@@ -1494,7 +1494,7 @@ namespace Barotrauma
             if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
             {
                 GameMain.Config.JobNamePreferences = jobNamePreferences;
-                GameMain.Config.Save("config.xml");
+                GameMain.Config.Save();
             }
         }
 

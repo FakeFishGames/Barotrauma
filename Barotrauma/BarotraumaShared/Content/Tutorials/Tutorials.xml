@@ -10,4 +10,24 @@
       </Job>
     </Character>
   </BasicTutorial>
+  <BasicTutorial name="Test 1" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+    <Character file="Content/Characters/Human/human.xml">
+      <Job name="Engineer">
+        <Skill name="Electrical Engineering" level="60"/>
+        <Skill name="Mechanical Engineering" level="50"/>
+        <Skill name="Helm" level="50"/>
+        <Skill name="Weapons" level="50"/>
+      </Job>
+    </Character>
+  </BasicTutorial>
+  <BasicTutorial name="Test 2" submarinepath="Content/Tutorials/TutorialSub.sub" levelseed="tuto" spawnpointtype="cargo">
+    <Character file="Content/Characters/Human/human.xml">
+      <Job name="Engineer">
+        <Skill name="Electrical Engineering" level="60"/>
+        <Skill name="Mechanical Engineering" level="50"/>
+        <Skill name="Helm" level="50"/>
+        <Skill name="Weapons" level="50"/>
+      </Job>
+    </Character>
+  </BasicTutorial>
 </Tutorials>

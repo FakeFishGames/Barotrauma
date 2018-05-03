@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,7 +9,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
 
         private GUIFrame buttonsTab;
 
@@ -37,9 +38,9 @@ namespace Barotrauma
                 500, 360);
 
             GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-
             button.Color = button.Color * 0.8f;
-            button.OnClicked = TutorialButtonClicked;
+            button.UserData = Tab.Tutorials;
+            button.OnClicked = SelectTab;
 
             button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
@@ -82,7 +83,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");
-
+            
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
             campaignSetupUI.StartNewGame = StartGame;
@@ -123,6 +124,25 @@ namespace Barotrauma
             
             GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
             hostButton.OnClicked = HostServerClicked;
+
+            //----------------------------------------------------------------------
+
+            menuTabs[(int)Tab.Tutorials] = new GUIFrame(panelRect, "");
+            menuTabs[(int)Tab.Tutorials].Padding = new Vector4(20.0f, 60.0f, 20.0f, 20.0f);
+
+            //PLACEHOLDER
+            var tutorialList = new GUIListBox(new Rectangle(0, 0, 0, 0), "", menuTabs[(int)Tab.Tutorials]);
+            foreach (Tutorial tutorial in Tutorial.Tutorials)
+            {
+                var tutorialText = new GUITextBlock(new Rectangle(0, 0, 0, 35), tutorial.Name, "", Alignment.TopLeft, Alignment.Center, tutorialList, false, GUI.LargeFont);
+                if (tutorial.Completed) tutorialText.TextColor = Color.LightGreen;
+                tutorialText.UserData = tutorial;
+            }
+            tutorialList.OnSelected += (component, obj) =>
+            {
+                TutorialMode.StartTutorial(obj as Tutorial);
+                return true;
+            };
 
             this.game = game;
         }
@@ -207,7 +227,7 @@ namespace Barotrauma
 
         private bool ApplySettings(GUIButton button, object userData)
         {
-            GameMain.Config.Save("config.xml");
+            GameMain.Config.Save();
             
             if (userData is Tab) SelectTab((Tab)userData);            
 
@@ -228,16 +248,7 @@ namespace Barotrauma
 
             return true;
         }
-
-
-        private bool TutorialButtonClicked(GUIButton button, object obj)
-        {
-            //!!!!!!!!!!!!!!!!!! placeholder
-            TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
-
-            return true;
-        }
-
+        
         private bool JoinServerClicked(GUIButton button, object obj)
         {            
             GameMain.ServerListScreen.Select();

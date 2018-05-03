@@ -8,8 +8,7 @@ namespace Barotrauma
         public Tutorial tutorial;
         
         public static void StartTutorial(Tutorial tutorial)
-        {
-            Submarine.MainSub = Submarine.Load(tutorial.SubmarinePath, "", true);            
+        {     
             tutorial.Initialize();
         }
 

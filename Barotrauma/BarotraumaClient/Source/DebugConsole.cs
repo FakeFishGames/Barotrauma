@@ -457,7 +457,7 @@ namespace Barotrauma
                     ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
                 }
 
-                GameMain.Config.Save("config.xml");
+                GameMain.Config.Save();
 
                 var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Tutorials;
 #endif
 using System;
 
@@ -17,6 +18,8 @@ namespace Barotrauma
 
     public partial class GameSettings
     {
+        const string FilePath = "config.xml";
+
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
 
@@ -117,10 +120,12 @@ namespace Barotrauma
                 if (defaultPlayerName != value)
                 {
                     defaultPlayerName = value;
-                    Save("config.xml");
+                    Save();
                 }
             }
         }
+
+        public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
@@ -128,7 +133,7 @@ namespace Barotrauma
         public GameSettings(string filePath)
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
-
+            CompletedTutorialNames = new List<string>();
             Load(filePath);
         }
 
@@ -242,6 +247,12 @@ namespace Barotrauma
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
                         break;
+                    case "tutorials":
+                        foreach (XElement tutorialElement in subElement.Elements())
+                        {
+                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
+                        }
+                        break;
                 }
             }
 
@@ -262,8 +273,7 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-
-
+                        
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
 
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
@@ -272,7 +282,7 @@ namespace Barotrauma
             }
         }
         
-        public void Save(string filePath)
+        public void Save()
         {
             UnsavedSettings = false;
 
@@ -359,7 +369,26 @@ namespace Barotrauma
             playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
             doc.Root.Add(playerElement);
 
-            doc.Save(filePath);
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
+
+            doc.Save(FilePath);
         }
     }
 }

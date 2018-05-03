@@ -252,7 +252,7 @@ namespace Barotrauma
         
         private bool ApplyClicked(GUIButton button, object userData)
         {
-            Save("config.xml");
+            Save();
 
             settingsFrame.Flash(Color.Green);
             

@@ -109,7 +109,7 @@ namespace Barotrauma
                                 {
                                     DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed", Microsoft.Xna.Framework.Color.Red);
                                     GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
-                                    GameMain.Config.Save("config.xml");
+                                    GameMain.Config.Save();
                                 }
                                 return false;
                             default:
