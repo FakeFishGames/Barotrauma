@@ -43,14 +43,7 @@ namespace Barotrauma
         public List<string> JobNamePreferences
         {
             get { return jobNamePreferences; }
-            set
-            {
-                // Begin saving coroutine. Remove any existing save coroutines if one is running.
-                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
-                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
-
-                jobNamePreferences = value;
-            }
+            set { jobNamePreferences = value; }
         }
 
         private bool unsavedSettings;
@@ -160,10 +153,10 @@ namespace Barotrauma
 
                 SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
 
-                JobNamePreferences = new List<string>();
+                jobNamePreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    JobNamePreferences.Add(job.Name);
+                    jobNamePreferences.Add(job.Name);
                 }
                 return;
             }
@@ -240,10 +233,10 @@ namespace Barotrauma
                         }
                         break;
                     case "gameplay":
-                        JobNamePreferences = new List<string>();
+                        jobNamePreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            JobNamePreferences.Add(ele.GetAttributeString("name", ""));
+                            jobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
                     case "player":
