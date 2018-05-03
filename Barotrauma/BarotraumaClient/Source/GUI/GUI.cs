@@ -637,5 +637,152 @@ namespace Barotrauma
             
             if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
         }
+
+        #region New helper methods
+        /// <summary>
+        /// Creates multiple buttons with relative size and positions them automatically.
+        /// </summary>
+        public static List<GUIButton> CreateButtons(int count, Vector2 relativeSize, GUIComponent parent,
+            Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
+            int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
+            int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false,
+            Alignment textAlignment = Alignment.Center, string style = "")
+        {
+            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, parent, style);
+            return CreateElements(count, relativeSize, parent.RectTransform, constructor, anchor, pivot, minSize, maxSize, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+        }
+
+        /// <summary>
+        /// Creates multiple buttons with absolute size and positions them automatically.
+        /// </summary>
+        public static List<GUIButton> CreateButtons(int count, Point absoluteSize, GUIComponent parent = null,
+            Anchor anchor = Anchor.TopLeft, Pivot? pivot = null,
+            int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
+            int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false,
+            Alignment textAlignment = Alignment.Center, string style = "")
+        {
+            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, parent, style);
+            return CreateElements(count, absoluteSize, parent.RectTransform, constructor, anchor, pivot, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+        }
+
+        /// <summary>
+        /// Creates multiple elements with relative size and positions them automatically.
+        /// </summary>
+        public static List<T> CreateElements<T>(int count, Vector2 relativeSize, RectTransform parent, Func<RectTransform, T> constructor,
+            Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null, 
+            int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null, 
+            int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false) 
+            where T : GUIComponent
+        {
+            return CreateElements(count, parent, constructor, relativeSize, null, anchor, pivot, minSize, maxSize, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+        }
+
+        /// <summary>
+        /// Creates multiple elements with absolute size and positions them automatically.
+        /// </summary>
+        public static List<T> CreateElements<T>(int count, Point absoluteSize, RectTransform parent, Func<RectTransform, T> constructor, 
+            Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, 
+            int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
+            int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false)
+            where T : GUIComponent
+        {
+            return CreateElements(count, parent, constructor, null, absoluteSize, anchor, pivot, null, null, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+        }
+        #endregion
+
+        #region Element positioning
+        private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
+            Vector2? relativeSize = null, Point? absoluteSize = null,
+            Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
+            int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
+            int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false)
+            where T : GUIComponent
+        {
+            var elements = new List<T>();
+            int extraTotal = 0;
+            for (int i = 0; i < count; i++)
+            {
+                if (extraSpacing != null)
+                {
+                    extraTotal += extraSpacing(i);
+                }
+                if (relativeSize.HasValue)
+                {
+                    var size = relativeSize.Value;
+                    var offsets = CalculateOffsets(size, startOffsetRelative, startOffsetAbsolute, relativeSpacing, absoluteSpacing, i, extraTotal, isHorizontal);
+                    elements.Add(constructor(new RectTransform(size, parent, anchor, pivot, minSize, maxSize)
+                    {
+                        RelativeOffset = offsets.Item1,
+                        AbsoluteOffset = offsets.Item2
+                    }));
+                }
+                else
+                {
+                    var size = absoluteSize.Value;
+                    var offsets = CalculateOffsets(size, startOffsetRelative, startOffsetAbsolute, relativeSpacing, absoluteSpacing, i, extraTotal, isHorizontal);
+                    elements.Add(constructor(new RectTransform(size, parent, anchor, pivot)
+                    {
+                        RelativeOffset = offsets.Item1,
+                        AbsoluteOffset = offsets.Item2
+                    }));
+                }
+            }
+            return elements;
+        }
+
+        private static Tuple<Vector2, Point> CalculateOffsets(Vector2 relativeSize, float startOffsetRelative, int startOffsetAbsolute, float relativeSpacing, int absoluteSpacing, int counter, int extra, bool isHorizontal)
+        {
+            float relX = 0, relY = 0;
+            int absX = 0, absY = 0;
+            if (isHorizontal)
+            {
+                relX = CalculateRelativeOffset(startOffsetRelative, relativeSpacing, relativeSize.X, counter);
+                absX = CalculateAbsoluteOffset(startOffsetAbsolute, absoluteSpacing, counter, extra);
+            }
+            else
+            {
+                relY = CalculateRelativeOffset(startOffsetRelative, relativeSpacing, relativeSize.Y, counter);
+                absY = CalculateAbsoluteOffset(startOffsetAbsolute, absoluteSpacing, counter, extra);
+            }
+            return Tuple.Create(new Vector2(relX, relY), new Point(absX, absY));
+        }
+
+        private static Tuple<Vector2, Point> CalculateOffsets(Point absoluteSize, float startOffsetRelative, int startOffsetAbsolute, float relativeSpacing, int absoluteSpacing, int counter, int extra, bool isHorizontal)
+        {
+            float relX = 0, relY = 0;
+            int absX = 0, absY = 0;
+            if (isHorizontal)
+            {
+                relX = CalculateRelativeOffset(startOffsetRelative, relativeSpacing, counter);
+                absX = CalculateAbsoluteOffset(startOffsetAbsolute, absoluteSpacing, absoluteSize.X, counter, extra);
+            }
+            else
+            {
+                relY = CalculateRelativeOffset(startOffsetRelative, relativeSpacing, counter);
+                absY = CalculateAbsoluteOffset(startOffsetAbsolute, absoluteSpacing, absoluteSize.Y, counter, extra);
+            }
+            return Tuple.Create(new Vector2(relX, relY), new Point(absX, absY));
+        }
+
+        private static float CalculateRelativeOffset(float startOffset, float spacing, float size, int counter)
+        {
+            return startOffset + (spacing + size) * counter;
+        }
+
+        private static float CalculateRelativeOffset(float startOffset, float spacing, int counter)
+        {
+            return startOffset + spacing * counter;
+        }
+
+        private static int CalculateAbsoluteOffset(int startOffset, int spacing, int counter, int extra)
+        {
+            return startOffset + spacing * counter + extra;
+        }
+
+        private static int CalculateAbsoluteOffset(int startOffset, int spacing, int size, int counter, int extra)
+        {
+            return startOffset + (spacing + size) * counter + extra;
+        }
+        #endregion
     }
 }
