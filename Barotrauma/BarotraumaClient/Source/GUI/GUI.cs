@@ -18,7 +18,7 @@ namespace Barotrauma
         DropItem
     }
     
-    public class GUI
+    public static class GUI
     {
         public static float Scale
         {
@@ -28,9 +28,8 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
-        public static ScalableFont Font, SmallFont, LargeFont;
 
-        private static Sprite cursor;
+        private static Sprite Cursor => Style.CursorSprite;
 
         private static GraphicsDevice graphicsDevice;
         public static GraphicsDevice GraphicsDevice
@@ -56,6 +55,10 @@ namespace Barotrauma
 
         private static Sprite submarineIcon, arrow;
 
+        public static ScalableFont Font => Style.Font;
+        public static ScalableFont SmallFont => Style.SmallFont;
+        public static ScalableFont LargeFont => Style.LargeFont;
+
         public static Sprite SubmarineIcon
         {
             get { return submarineIcon; }
@@ -76,13 +79,18 @@ namespace Barotrauma
 
         public static void Init(ContentManager content)
         {
-            Font = new ScalableFont("Content/Exo2-Medium.otf", 14, graphicsDevice);
-            SmallFont = new ScalableFont("Content/Exo2-Light.otf", 12, graphicsDevice);
-            LargeFont = new ScalableFont("Content/Code Pro Bold.otf", 22, graphicsDevice);
+            var uiStyles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.UIStyle);
+            if (uiStyles.Count == 0)
+            {
+                DebugConsole.ThrowError("No UI styles defined in the selected content package!");
+                return;
+            }
+            else if (uiStyles.Count > 1)
+            {
+                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+            }
 
-            cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
-
-            Style = new GUIStyle("Content/UI/style.xml");
+            Style = new GUIStyle(uiStyles[0]);
         }
 
         public static bool PauseMenuOpen
@@ -620,8 +628,7 @@ namespace Barotrauma
 
             if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
 
-            if (!GUI.DisableHUD)
-                cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
+            if (!DisableHUD) Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
 
         public static void AddToGUIUpdateList()

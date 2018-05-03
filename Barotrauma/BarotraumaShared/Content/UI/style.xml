@@ -1,5 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <style>
+  <Cursor texture="Content/UI/cursor.png"/>
+  
+  <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
+  <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
+  <LargeFont file="Content/Fonts/Code Pro Bold.otf" size="22"/>
+  
   <GUIFrame
     padding="40.0, 50.0, 40.0, 50.0"
     color="1.0,1.0,1.0,1.0"
