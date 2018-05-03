@@ -41,9 +41,13 @@ namespace Barotrauma
 
     class LevelGenerationParams : ISerializableEntity
     {
+        public static List<LevelGenerationParams> LevelParams
+        {
+            get { return levelParams; }
+        }
+
         private static List<LevelGenerationParams> levelParams;
         private static List<Biome> biomes;
-
 
         public string Name
         {
@@ -240,6 +244,12 @@ namespace Barotrauma
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
         
+        public Sprite BackgroundSprite { get; private set; }
+        public Sprite BackgroundTopSprite { get; private set; }
+        public Sprite WallSprite { get; private set; }
+        public Sprite WallEdgeSprite { get; private set; }
+        public Sprite WaterParticles { get; private set; }
+        
         public static List<Biome> GetBiomes()
         {
             return biomes;
@@ -309,6 +319,28 @@ namespace Barotrauma
                     }
 
                     allowedBiomes.Add(matchingBiome);
+                }
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "background":
+                        BackgroundSprite = new Sprite(subElement);
+                        break;
+                    case "backgroundtop":
+                        BackgroundTopSprite = new Sprite(subElement);
+                        break;
+                    case "wall":
+                        WallSprite = new Sprite(subElement);
+                        break;
+                    case "walledge":
+                        WallEdgeSprite = new Sprite(subElement);
+                        break;
+                    case "waterparticles":
+                        WaterParticles = new Sprite(subElement);
+                        break;
                 }
             }
         }
