@@ -7,7 +7,13 @@ namespace Barotrauma
     public class GUIStyle
     {
         private Dictionary<string, GUIComponentStyle> componentStyles;
-                
+
+        public ScalableFont Font { get; private set; }
+        public ScalableFont SmallFont { get; private set; }
+        public ScalableFont LargeFont { get; private set; }
+
+        public Sprite CursorSprite { get; private set; }
+            
         public GUIStyle(string file)
         {
             componentStyles = new Dictionary<string, GUIComponentStyle>();
@@ -26,8 +32,25 @@ namespace Barotrauma
 
             foreach (XElement subElement in doc.Root.Elements())
             {
-                GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
-                componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "font":
+                        Font = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        break;
+                    case "smallfont":
+                        SmallFont = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        break;
+                    case "largefont":
+                        LargeFont = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        break;
+                    case "cursor":
+                        CursorSprite = new Sprite(subElement);
+                        break;
+                    default:
+                        GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
+                        componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
+                        break;
+                }
             }
         }
 
