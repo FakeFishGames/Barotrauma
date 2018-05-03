@@ -1749,6 +1749,15 @@ namespace Barotrauma
         private List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
         private List<AIChatMessage> prevAiChatMessages = new List<AIChatMessage>();
 
+        public void DisableLine(string identifier)
+        {
+            var dummyMsg = new AIChatMessage("", ChatMessageType.Default, identifier)
+            {
+                SendTime = Timing.TotalTime
+            };
+            prevAiChatMessages.Add(dummyMsg);
+        }
+
         public void Speak(string message, ChatMessageType? messageType, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
             if (GameMain.Client != null) return;

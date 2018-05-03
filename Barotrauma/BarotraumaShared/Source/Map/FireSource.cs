@@ -81,11 +81,9 @@ namespace Barotrauma
             this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
 
 #if CLIENT
-            if (fireSoundBasic == null)
-            {
-                fireSoundBasic = Barotrauma.Submarine.LoadRoundSound("Content/Sounds/fire.ogg", false);
-                fireSoundLarge = Barotrauma.Submarine.LoadRoundSound("Content/Sounds/firelarge.ogg", false);
-            }
+            fireSoundBasic = SoundPlayer.GetSound("fire");
+            fireSoundLarge = SoundPlayer.GetSound("firelarge");
+            
 
             lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
 #endif
