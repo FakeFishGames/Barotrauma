@@ -1741,9 +1741,13 @@ namespace Barotrauma
             GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
             SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice);
 
-            spriteBatch.Begin();
-            LevelRenderer.BackgroundTop.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
-            spriteBatch.End();
+            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            if (backgroundSprite != null)
+            {
+                spriteBatch.Begin();
+                backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                spriteBatch.End();
+            }
             
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
             Submarine.Draw(spriteBatch, false);
