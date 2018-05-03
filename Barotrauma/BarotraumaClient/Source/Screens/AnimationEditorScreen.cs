@@ -23,13 +23,16 @@ namespace Barotrauma
             base.Select();
             gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: null, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
 
-            Submarine.RefreshSavedSubs();
-            Submarine.MainSub = Submarine.SavedSubmarines.First();
-            Submarine.MainSub.Load(true);
-            var spawnPos = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
+            //Submarine.RefreshSavedSubs();
+            //Submarine.MainSub = Submarine.SavedSubmarines.First();
+            //Submarine.MainSub.Load(true);
+
+            //var spawnPos = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
+            var spawnPos = Vector2.Zero;
             character = Character.Create(Character.HumanConfigFile, spawnPos, hasAi: false);
+            character.AnimController.forceStanding = true;
             Character.Controlled = character;
-            character.Submarine = Submarine.MainSub;
+            //character.Submarine = Submarine.MainSub;
             //GameMain.World.ProcessChanges();
             cam = new Camera()
             {
@@ -49,6 +52,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
+            //Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            //Submarine.MainSub.Update((float)deltaTime);
+
             //Vector2 mouseSimPos = ConvertUnits.ToSimUnits(character.CursorPosition);
             //foreach (Limb limb in character.AnimController.Limbs)
             //{
@@ -56,18 +62,16 @@ namespace Barotrauma
             //}
             //character.AnimController.Collider.SetTransform(mouseSimPos, 0.0f);
 
-            cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: false);
-
-            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
 
             character.ControlLocalPlayer((float)deltaTime, cam, false);
             character.Control((float)deltaTime, cam);
             character.AnimController.UpdateAnim((float)deltaTime);
             character.AnimController.Update((float)deltaTime, cam);
+
+            cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: false);
             cam.Position = character.Position;
 
-            Submarine.MainSub.Update((float)deltaTime);
             GameMain.World.Step((float)deltaTime);
 
             gui.Update((float)deltaTime);
@@ -80,9 +84,9 @@ namespace Barotrauma
             cam.UpdateTransform(true);
 
             // Submarine
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
-            Submarine.Draw(spriteBatch, true);
-            spriteBatch.End();
+            //spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            //Submarine.Draw(spriteBatch, true);
+            //spriteBatch.End();
 
             // Character
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
