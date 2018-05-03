@@ -164,7 +164,7 @@ namespace Barotrauma
             GameMain.spineEffect.Parameters["Projection"].SetValue(cam.Transform *
                 Matrix.CreateOrthographicOffCenter(0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height, 0, 1, 0));
                             
-            if (true)
+            if (false)
             {
                 GameMain.skeletonRenderer.Begin();
                 spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);

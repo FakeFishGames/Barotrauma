@@ -32,6 +32,7 @@ namespace Barotrauma
         public static SubEditorScreen         SubEditorScreen;
         public static CharacterEditorScreen   CharacterEditorScreen;
         public static ParticleEditorScreen  ParticleEditorScreen;
+        public static AnimationEditorScreen AnimationEditorScreen;
 
         public static Lights.LightManager LightManager;
         
@@ -322,6 +323,7 @@ namespace Barotrauma
             SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
+            AnimationEditorScreen   =   new AnimationEditorScreen();
 
         yield return CoroutineStatus.Running;
 
