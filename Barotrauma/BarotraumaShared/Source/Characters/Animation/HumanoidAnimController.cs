@@ -189,9 +189,13 @@ namespace Barotrauma
 
                     if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
 
+                    if (forceStanding)
+                    {
+                        swimming = false;
+                    }
                     //0.5 second delay for switching between swimming and walking
                     //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
-                    if (inWater)
+                    else if (inWater)
                     {
                         inWaterTimer = Math.Max(inWaterTimer + deltaTime, 0.5f);
                         if (inWaterTimer >= 1.0f) swimming = true;
