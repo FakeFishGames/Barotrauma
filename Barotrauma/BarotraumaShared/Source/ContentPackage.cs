@@ -24,7 +24,8 @@ namespace Barotrauma
         Particles,
         Decals,
         NPCConversations,
-        Afflictions
+        Afflictions,
+        Tutorials
     }
 
     public class ContentPackage

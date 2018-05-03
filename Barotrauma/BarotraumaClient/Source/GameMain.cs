@@ -271,6 +271,7 @@ namespace Barotrauma
 
             MissionPrefab.Init();
             MapEntityPrefab.Init();
+            Tutorials.Tutorial.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));

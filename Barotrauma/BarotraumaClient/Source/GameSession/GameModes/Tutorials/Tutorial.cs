@@ -1,18 +1,26 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class TutorialType
+    abstract class Tutorial
     {
-
-        public static List<TutorialType> TutorialTypes;
+        public static List<Tutorial> Tutorials;
 
         protected GUIComponent infoBox;
 
-        Character character;
+        private XElement configElement;
 
+        private Character character;
+
+        private SpawnType spawnPointType;
+
+        private string submarinePath;
+        private string levelSeed;
 
         public string Name
         {
@@ -20,44 +28,109 @@ namespace Barotrauma.Tutorials
             private set;
         }
 
-        static TutorialType()
+        public string SubmarinePath
         {
-            TutorialTypes = new List<TutorialType>();
-
-            TutorialTypes.Add(new BasicTutorial("Basic tutorial"));
-
+            get { return submarinePath; }
         }
 
-        public TutorialType(string name)
+        public static void Init()
         {
-            this.Name = name;
+            Tutorials = new List<Tutorial>();
+            foreach (string file in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Tutorials))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc?.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    Tutorial newTutorial = Load(element);
+                    if (newTutorial != null) Tutorials.Add(newTutorial);
+                }
+            }
         }
 
+        private static Tutorial Load(XElement element)
+        {
+            Type t;
+            string type = element.Name.ToString().ToLowerInvariant();
+            try
+            {
+                // Get the type of a specified class.                
+                t = Type.GetType("Barotrauma.Tutorials." + type + "", false, true);
+                if (t == null)
+                {
+                    DebugConsole.ThrowError("Could not find tutorial type \"" + type + "\"");
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Could not find tutorial type \"" + type + "\"", e);
+                return null;
+            }
+
+            ConstructorInfo constructor;
+            try
+            {
+                if (!t.IsSubclassOf(typeof(Tutorial))) return null;
+                constructor = t.GetConstructor(new Type[] { typeof(XElement) });
+                if (constructor == null)
+                {
+                    DebugConsole.ThrowError("Could not find the constructor of tutorial type \"" + type + "\"");
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Could not find the constructor of tutorial type \"" + type + "\"", e);
+                return null;
+            }
+            Tutorial tutorial = null;
+            try
+            {
+                object component = constructor.Invoke(new object[] { element });
+                tutorial = (Tutorial)component;
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Error while loading tutorial of the type " + t + ".", e.InnerException);
+            }
+
+            return tutorial;
+        }
+
+        public Tutorial(XElement element)
+        {
+            configElement = element;
+            Name = element.GetAttributeString("name", "Unnamed");
+            submarinePath = element.GetAttributeString("submarinepath", "");
+            levelSeed = element.GetAttributeString("levelseed", "tuto");
+
+            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);
+        }
+        
         public virtual void Initialize()
         {
-
             GameMain.GameSession = new GameSession(Submarine.MainSub, "", GameModePreset.list.Find(gm => gm.Name.ToLowerInvariant() == "tutorial"));
-            (GameMain.GameSession.GameMode as TutorialMode).tutorialType = this;
-
-            GameMain.GameSession.StartRound("tuto");
-
+            (GameMain.GameSession.GameMode as TutorialMode).tutorial = this;
+            GameMain.GameSession.StartRound(levelSeed);
             GameMain.GameSession.EventManager.Events.Clear();
-
             GameMain.GameScreen.Select();
         }
 
         public virtual void Start()
         {
-
-            WayPoint wayPoint = WayPoint.GetRandom(SpawnType.Cargo, null);
+            WayPoint wayPoint = WayPoint.GetRandom(spawnPointType, null);
             if (wayPoint == null)
             {
-                DebugConsole.ThrowError("A waypoint with the spawntype \"cargo\" is required for the tutorial event");
+                DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
                 return;
             }
 
-            CharacterInfo charInfo = new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer"));
-
+            CharacterInfo charInfo = configElement.Element("Character") == null ?                
+                new CharacterInfo(Character.HumanConfigFile, "", Gender.None, JobPrefab.List.Find(jp => jp.Name == "Engineer")) :
+                new CharacterInfo(configElement.Element("Character"));
+            
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
             Character.Controlled = character;
             character.GiveJobItems(null);
@@ -70,8 +143,7 @@ namespace Barotrauma.Tutorials
             }
             idCard.AddTag("com");
             idCard.AddTag("eng");
-
-            //CoroutineManager.StartCoroutine(QuitChecker());
+            
             CoroutineManager.StartCoroutine(UpdateState());
         }
 
@@ -82,9 +154,9 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-            if (character!=null)
+            if (character != null)
             {
-                if (Character.Controlled==null)
+                if (Character.Controlled == null)
                 {
                     CoroutineManager.StopCoroutines("TutorialMode.UpdateState");
                     infoBox = null;
@@ -99,9 +171,6 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-
-            //CrewManager.Update(deltaTime);
-
             if (infoBox != null) infoBox.Update(deltaTime);
         }
 
@@ -112,11 +181,8 @@ namespace Barotrauma.Tutorials
 
         public virtual void Draw(SpriteBatch spriteBatch)
         {
-
             if (infoBox != null) infoBox.Draw(spriteBatch);
         }
-
-
 
         private IEnumerable<object> Dead()
         {
@@ -138,7 +204,6 @@ namespace Barotrauma.Tutorials
         protected bool CloseInfoFrame(GUIButton button, object userData)
         {
             infoBox = null;
-
             return true;
         }
 
@@ -163,8 +228,7 @@ namespace Barotrauma.Tutorials
                 var okButton = new GUIButton(new Rectangle(0, -40, 80, 25), "OK", Alignment.BottomCenter, "", textBlock);
                 okButton.OnClicked = CloseInfoFrame;
             }
-
-
+            
             GUI.PlayUISound(GUISoundType.Message);
 
             return infoBlock;

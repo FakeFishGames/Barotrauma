@@ -133,7 +133,7 @@
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\Tutorial.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
     <Compile Include="Source\GameSession\HireManager.cs" />
     <Compile Include="Source\GameSession\RoundSummary.cs" />

@@ -308,7 +308,7 @@ namespace Barotrauma
 
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
-                TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
+                TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
             }));
 
             commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>

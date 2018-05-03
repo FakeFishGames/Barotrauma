@@ -362,12 +362,12 @@ namespace Barotrauma
             entityList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
         }
 
-        public void StartTutorial()
+        /*public void StartTutorial()
         {
             tutorial = new Tutorials.EditorTutorial("EditorTutorial");
 
             CoroutineManager.StartCoroutine(tutorial.UpdateState());
-        }
+        }*/
 
         public override void Select()
         {
