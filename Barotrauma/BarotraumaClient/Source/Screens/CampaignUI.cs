@@ -320,9 +320,9 @@ namespace Barotrauma
                 CreateItemFrame(ep, storeItemList, width);
             }
 
-            storeItemList.children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
+            storeItemList.Children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
 
-            foreach (GUIComponent child in button.Parent.children)
+            foreach (GUIComponent child in button.Parent.Children)
             {
                 var otherButton = child as GUIButton;
                 if (child.UserData is MapEntityCategory && otherButton != button)
@@ -343,7 +343,7 @@ namespace Barotrauma
         private bool SelectCharacter(GUIComponent component, object selection)
         {
             GUIComponent prevInfoFrame = null;
-            foreach (GUIComponent child in tabs[(int)selectedTab].children)
+            foreach (GUIComponent child in tabs[(int)selectedTab].Children)
             {
                 if (!(child.UserData is CharacterInfo)) continue;
 

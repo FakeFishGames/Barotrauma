@@ -107,7 +107,7 @@ namespace Barotrauma
             
             new SerializableEntityEditor(this, inGame, editingHUD, true);
             
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
 
             return editingHUD;
         }

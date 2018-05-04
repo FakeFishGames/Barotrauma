@@ -204,8 +204,8 @@ namespace Barotrauma
 
                 if (summaryScreen != null)
                 {
-                    summaryScreen = summaryScreen.children[0];
-                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+                    summaryScreen = summaryScreen.Children[0];
+                    summaryScreen.RemoveChild(summaryScreen.Children.Find(c => c is GUIButton));
 
                     var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
                     okButton.OnClicked += (GUIButton button, object obj) => 

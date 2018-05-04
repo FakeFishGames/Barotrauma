@@ -256,7 +256,7 @@ namespace Barotrauma
                     }
                 }
 
-                itemList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+                itemList.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
 
                 i++;
             }
@@ -770,13 +770,13 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                GUItabs[selectedTab].GetChild<GUIListBox>().children.ForEach(c => c.Visible = true);
+                GUItabs[selectedTab].GetChild<GUIListBox>().Children.ForEach(c => c.Visible = true);
                 return true;
             }
 
             text = text.ToLower();
 
-            foreach (GUIComponent child in GUItabs[selectedTab].GetChild<GUIListBox>().children)
+            foreach (GUIComponent child in GUItabs[selectedTab].GetChild<GUIListBox>().Children)
             {
                 var textBlock = child.GetChild<GUITextBlock>();
                 child.Visible = textBlock.Text.ToLower().Contains(text);
@@ -1008,7 +1008,7 @@ namespace Barotrauma
 
             if (previouslyUsedList.CountChildren == PreviouslyUsedCount)
             {
-                previouslyUsedList.RemoveChild(previouslyUsedList.children.Last());
+                previouslyUsedList.RemoveChild(previouslyUsedList.Children.Last());
             }
 
             var existing = previouslyUsedList.FindChild(mapEntityPrefab);
@@ -1025,7 +1025,7 @@ namespace Barotrauma
             textBlock.UserData = mapEntityPrefab;
 
             previouslyUsedList.RemoveChild(textBlock);
-            previouslyUsedList.children.Insert(0, textBlock);
+            previouslyUsedList.Children.Insert(0, textBlock);
         }
         
         public void AutoHull()

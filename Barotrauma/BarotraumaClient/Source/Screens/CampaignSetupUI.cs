@@ -237,7 +237,7 @@ namespace Barotrauma
         private void RemoveSaveFrame()
         {
             GUIComponent prevFrame = null;
-            foreach (GUIComponent child in loadGameContainer.children)
+            foreach (GUIComponent child in loadGameContainer.Children)
             {
                 if (child.UserData as string != "savefileframe") continue;
 

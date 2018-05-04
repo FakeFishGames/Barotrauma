@@ -496,7 +496,7 @@ namespace Barotrauma.Networking
         {
             subSelectionMode = (SelectionMode)tickBox.UserData;
 
-            foreach (GUIComponent otherTickBox in tickBox.Parent.children)
+            foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
             {
                 if (otherTickBox == tickBox) continue;
                 ((GUITickBox)otherTickBox).Selected = false;
@@ -528,7 +528,7 @@ namespace Barotrauma.Networking
         {
             modeSelectionMode = (SelectionMode)tickBox.UserData;
 
-            foreach (GUIComponent otherTickBox in tickBox.Parent.children)
+            foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
             {
                 if (otherTickBox == tickBox) continue;
                 ((GUITickBox)otherTickBox).Selected = false;

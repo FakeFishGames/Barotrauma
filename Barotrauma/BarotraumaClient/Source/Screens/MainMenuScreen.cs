@@ -138,7 +138,7 @@ namespace Barotrauma
 
             if (button != null) button.Selected = true;
 
-            foreach (GUIComponent child in buttonsParent.children)
+            foreach (GUIComponent child in buttonsParent.Children)
             {
                 GUIButton otherButton = child as GUIButton;
                 if (otherButton == null || otherButton == button) continue;
@@ -644,7 +644,7 @@ namespace Barotrauma
                 {
                     element.RectTransform.LocalScale *= 1 + step;
                 }
-                buttonsParent.children
+                buttonsParent.Children
                     .Select(b => b as GUIButton)
                     .ForEach(b => b?.TextBlock.SetTextPos());
             }
@@ -661,7 +661,7 @@ namespace Barotrauma
                 {
                     element.RectTransform.LocalScale *= 1 - step;
                 }
-                buttonsParent.children
+                buttonsParent.Children
                     .Select(b => b as GUIButton)
                     .ForEach(b => b?.TextBlock.SetTextPos());
             }

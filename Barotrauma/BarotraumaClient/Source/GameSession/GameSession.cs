@@ -80,13 +80,13 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case InfoFrameTab.Crew:
-                    CrewManager.CreateCrewFrame(CrewManager.GetCharacters(), infoFrame.children[0] as GUIFrame);
+                    CrewManager.CreateCrewFrame(CrewManager.GetCharacters(), infoFrame.Children[0] as GUIFrame);
                     break;
                 case InfoFrameTab.Mission:
-                    CreateMissionInfo(infoFrame.children[0] as GUIFrame);
+                    CreateMissionInfo(infoFrame.Children[0] as GUIFrame);
                     break;
                 case InfoFrameTab.ManagePlayers:
-                    GameMain.Server.ManagePlayersFrame(infoFrame.children[0] as GUIFrame);
+                    GameMain.Server.ManagePlayersFrame(infoFrame.Children[0] as GUIFrame);
                     break;
             }
 

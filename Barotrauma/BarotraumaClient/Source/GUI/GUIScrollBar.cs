@@ -170,7 +170,7 @@ namespace Barotrauma
 
                 ClampRect();
 
-                foreach (GUIComponent child in bar.children)
+                foreach (GUIComponent child in bar.Children)
                 {
                     child.Rect = bar.Rect;
                 }

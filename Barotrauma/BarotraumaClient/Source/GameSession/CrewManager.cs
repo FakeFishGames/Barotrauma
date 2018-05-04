@@ -88,26 +88,26 @@ namespace Barotrauma
 
             if (characterFrame == null) return;
 
-            int characterIndex = listBox.children.IndexOf(characterFrame);
+            int characterIndex = listBox.Children.IndexOf(characterFrame);
 
-            orderListBox.children[characterIndex].ClearChildren();
+            orderListBox.Children[characterIndex].ClearChildren();
             
-            var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
+            var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.Children[characterIndex]);
             img.Scale = 30.0f / img.SourceRect.Width;
             img.Color = order.Color;
             img.CanBeFocused = false;
 
-            orderListBox.children[characterIndex].ToolTip = TextManager.Get("Order") + ": " + order.Name;
+            orderListBox.Children[characterIndex].ToolTip = TextManager.Get("Order") + ": " + order.Name;
         }
 
         public bool SelectCharacterOrder(GUIComponent component, object selection)
         {
             commander.ToggleGUIFrame();
 
-            int orderIndex = orderListBox.children.IndexOf(component);
-            if (orderIndex < 0 || orderIndex >= listBox.children.Count) return false;
+            int orderIndex = orderListBox.Children.IndexOf(component);
+            if (orderIndex < 0 || orderIndex >= listBox.Children.Count) return false;
 
-            var characterFrame = listBox.children[orderIndex];
+            var characterFrame = listBox.Children[orderIndex];
             if (characterFrame == null) return false;
 
             commander.SelectCharacter(characterFrame.UserData as Character);

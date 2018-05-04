@@ -118,8 +118,8 @@ namespace Barotrauma
                 var symbol = new GUIImage(new Rectangle(0,-60,64,64), order.SymbolSprite, Alignment.TopCenter, orderButton);
                 symbol.Color = order.Color;
 
-                orderButton.children.Insert(0, symbol);
-                orderButton.children.RemoveAt(orderButton.children.Count-1);
+                orderButton.Children.Insert(0, symbol);
+                orderButton.Children.RemoveAt(orderButton.Children.Count-1);
             }
             
             return orderButton;
@@ -130,7 +130,7 @@ namespace Barotrauma
             CreateGUIFrame();
 
             List<GUIComponent> prevCharacterFrames = new List<GUIComponent>();
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in frame.Children)
             {
                 if (!(child.UserData is Character)) continue;
 
@@ -192,7 +192,7 @@ namespace Barotrauma
                 i++;
             }
 
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in frame.Children)
             {
                 if (!(child.UserData is Order)) continue;
 
@@ -216,7 +216,7 @@ namespace Barotrauma
         {
             Order order = userData as Order;
 
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in frame.Children)
             {
                 Character character = child.UserData as Character;
                 if (character == null) continue;
@@ -247,7 +247,7 @@ namespace Barotrauma
             var humanAi = character.AIController as HumanAIController;
             if (humanAi == null) return;
 
-            var existingOrder = characterFrame.children.Find(c => c.UserData is Order);
+            var existingOrder = characterFrame.Children.Find(c => c.UserData is Order);
             if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
             
             var orderFrame = new GUIFrame(new Rectangle(-5, 40, characterFrame.Rect.Width, 30 + order.Options.Length * 15), "InnerFrame", characterFrame);
