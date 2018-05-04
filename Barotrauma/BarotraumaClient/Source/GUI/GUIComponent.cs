@@ -399,7 +399,7 @@ namespace Barotrauma
         public RectTransform RectTransform
         {
             get { return rectTransform; }
-            set
+            private set
             {
                 rectTransform = value;
                 // This is the only place where the element should be assigned!
