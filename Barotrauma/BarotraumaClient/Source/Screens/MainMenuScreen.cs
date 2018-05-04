@@ -135,7 +135,6 @@ namespace Barotrauma
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
                 var tutorialText = new GUITextBlock(new Rectangle(0, 0, 0, 35), tutorial.Name, "", Alignment.TopLeft, Alignment.Center, tutorialList, false, GUI.LargeFont);
-                if (tutorial.Completed) tutorialText.TextColor = Color.LightGreen;
                 tutorialText.UserData = tutorial;
             }
             tutorialList.OnSelected += (component, obj) =>
@@ -143,6 +142,8 @@ namespace Barotrauma
                 TutorialMode.StartTutorial(obj as Tutorial);
                 return true;
             };
+
+            UpdateTutorialList();
 
             this.game = game;
         }
@@ -158,6 +159,8 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
+
+            UpdateTutorialList();
 
             campaignSetupUI.UpdateSubList();
 
@@ -222,6 +225,18 @@ namespace Barotrauma
                     GameMain.Config.ResetSettingsFrame();
                     menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
                     break;
+            }
+        }
+
+        private void UpdateTutorialList()
+        {
+            var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+            foreach (GUITextBlock tutorialText in tutorialList.children)
+            {
+                if (((Tutorial)tutorialText.UserData).Completed)
+                {
+                    tutorialText.TextColor = Color.LightGreen;
+                }
             }
         }
 

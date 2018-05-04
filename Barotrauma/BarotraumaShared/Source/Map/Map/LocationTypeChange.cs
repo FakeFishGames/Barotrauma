@@ -10,6 +10,8 @@ namespace Barotrauma
         public readonly float Probability;
         public readonly int RequiredDuration;
 
+        public List<string> Messages = new List<string>();
+
         //the change can't happen if there's a location of the given type next to this one
         public readonly List<string> DisallowedAdjacentLocations;
 
@@ -24,6 +26,14 @@ namespace Barotrauma
 
             DisallowedAdjacentLocations = element.GetAttributeStringArray("disallowedadjacentlocations", new string[0]).ToList();
             RequiredAdjacentLocations = element.GetAttributeStringArray("requiredadjacentlocations", new string[0]).ToList();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "message")
+                {
+                    Messages.Add(subElement.GetAttributeString("text", ""));
+                }
+            }
         }
     }
 }
