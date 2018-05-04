@@ -92,18 +92,17 @@ namespace Barotrauma
             children.Add(child);
         }
 
-        /// <summary>
-        /// TODO: remove this method
-        /// </summary>
         public virtual void RemoveChild(GUIComponent child)
         {
             if (RectTransform != null)
             {
-                DebugConsole.ThrowError("Tried to remove a child from a component using RectTransform.\n" + Environment.StackTrace);
-                return;
+                RectTransform.RemoveChild(child.RectTransform);
             }
-            if (child == null) return;
-            if (children.Contains(child)) children.Remove(child);
+            else
+            {
+                if (child == null) return;
+                if (children.Contains(child)) children.Remove(child);
+            }
         }
 
         // TODO: refactor
@@ -464,7 +463,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch) 
+        public virtual void Draw(SpriteBatch spriteBatch, bool drawChildren = true) 
         {
             if (!Visible) return;
             var rect = Rect;
@@ -541,6 +540,10 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
             }
         }
 

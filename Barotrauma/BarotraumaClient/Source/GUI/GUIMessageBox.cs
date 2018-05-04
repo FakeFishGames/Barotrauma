@@ -1,5 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -9,22 +12,15 @@ namespace Barotrauma
 
         public const int DefaultWidth = 400, DefaultHeight = 250;
         
-        public GUIButton[] Buttons;
+        public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
+        public GUIFrame BackgroundFrame { get; private set; }
+        public GUIFrame InnerFrame { get; private set; }
+        public GUITextBlock Header { get; private set; }
+        public GUITextBlock Text { get; private set; }
 
         public static GUIComponent VisibleBox
         {
             get { return MessageBoxes.Count == 0 ? null : MessageBoxes[0]; }
-        }
-
-        public GUIFrame InnerFrame
-        {
-            get { return Children[0] as GUIFrame; }
-        }
-
-        public string Text
-        {
-            get { return (Children[0].Children[1] as GUITextBlock).Text; }
-            set { (Children[0].Children[1] as GUITextBlock).Text = value; }
         }
 
         public GUIMessageBox(string headerText, string text)
@@ -71,7 +67,7 @@ namespace Barotrauma
             }
 
             int x = 0;
-            this.Buttons = new GUIButton[buttons.Length];
+            Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
                 this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, "", frame);
@@ -86,33 +82,50 @@ namespace Barotrauma
         /// This is the new constructor.
         /// </summary>
         public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
-            : base(rectT, "", Color.White)
+            : base(rectT, "")
         {
-            new GUIFrame(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.8f);
+            BackgroundFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), rectT, Anchor.Center), null, Color.Black * 0.5f);
             float headerHeight = 0.2f;
             float margin = 0.05f;
-            var frame = new GUIFrame(rectT);
-            GUI.Style.Apply(frame, "", this);
-            GUITextBlock header = null;
+            InnerFrame = new GUIFrame(rectT);
+            GUI.Style.Apply(InnerFrame, "", this);
+            Header = null;
             if (!string.IsNullOrWhiteSpace(headerText))
             {
-                header = new GUITextBlock(new RectTransform(new Vector2(1, headerHeight), frame.RectTransform, Anchor.TopCenter)
+                Header = new GUITextBlock(new RectTransform(new Vector2(1, headerHeight), InnerFrame.RectTransform, Anchor.TopCenter)
                 {
                     RelativeOffset = new Vector2(0, margin)
                 }, headerText, textAlignment: Alignment.Center);
-                GUI.Style.Apply(header, "", this);
+                GUI.Style.Apply(Header, "", this);
             }
             if (!string.IsNullOrWhiteSpace(text))
             {
                 float offset = headerHeight + margin;
-                var size = header == null ? Vector2.One : new Vector2(1 - margin * 2, 1 - offset + margin);
-                var textBlock = new GUITextBlock(new RectTransform(size, frame.RectTransform, Anchor.TopCenter)
+                var size = Header == null ? Vector2.One : new Vector2(1 - margin * 2, 1 - offset + margin);
+                Text = new GUITextBlock(new RectTransform(size, InnerFrame.RectTransform, Anchor.TopCenter)
                 {
                     RelativeOffset = new Vector2(0, offset)
                 }, text, textAlignment: textAlignment, wrap: true);
-                GUI.Style.Apply(textBlock, "", this);
+                GUI.Style.Apply(Text, "", this);
             }
             MessageBoxes.Add(this);
+        }
+
+        // Custom draw order so that the background is rendered behind the parent.
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        {
+            if (drawChildren)
+            {
+                BackgroundFrame.Draw(spriteBatch);
+            }
+            base.Draw(spriteBatch, false);
+            if (drawChildren)
+            {
+                InnerFrame.Draw(spriteBatch);
+                Header.Draw(spriteBatch);
+                Text.Draw(spriteBatch);
+                Buttons.ForEach(b => b.Draw(spriteBatch));
+            }
         }
 
         public void Close()
@@ -131,6 +144,17 @@ namespace Barotrauma
         public static void CloseAll()
         {
             MessageBoxes.Clear();
+        }
+
+        /// <summary>
+        /// Parent does not matter. It's overridden.
+        /// </summary>
+        public void AddButton(RectTransform rectT, string text, GUIButton.OnClickedHandler onClick)
+        {
+            rectT.Parent = RectTransform;
+            var button = new GUIButton(rectT, text);
+            button.OnClicked += onClick;
+            Buttons.Add(button);
         }
     }
 }

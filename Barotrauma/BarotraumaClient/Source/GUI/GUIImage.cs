@@ -94,7 +94,7 @@ namespace Barotrauma
             this.sprite = sprite;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
 
@@ -107,8 +107,10 @@ namespace Barotrauma
                 spriteBatch.Draw(sprite.Texture, Rect.Location.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
                     Scale, SpriteEffects.None, 0.0f);
             }          
-            
-            DrawChildren(spriteBatch);
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
+            }
         }
     }
 }

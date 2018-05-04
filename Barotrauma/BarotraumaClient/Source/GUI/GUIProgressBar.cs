@@ -112,13 +112,16 @@ namespace Barotrauma
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
 
             if (ProgressGetter != null) BarSize = ProgressGetter();
 
-            DrawChildren(spriteBatch);
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
+            }    
 
             Color currColor = color;
             if (state == ComponentState.Selected) currColor = selectedColor;

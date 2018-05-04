@@ -293,12 +293,12 @@ namespace Barotrauma
             textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
-            Draw(spriteBatch, Vector2.Zero);
+            Draw(spriteBatch, Vector2.Zero, drawChildren);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 offset)
+        public void Draw(SpriteBatch spriteBatch, Vector2 offset, bool drawChildren = true)
         {
             if (!Visible) return;
 
@@ -311,7 +311,7 @@ namespace Barotrauma
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, false);
             
             if (TextGetter != null) Text = TextGetter();
             
@@ -336,7 +336,10 @@ namespace Barotrauma
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             }
 
-            DrawChildren(spriteBatch);
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
+            }
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);
         }

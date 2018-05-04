@@ -155,12 +155,5 @@ namespace Barotrauma
                 box.State = ComponentState.Selected;
             }
         }
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            if (!Visible) return;
-
-            DrawChildren(spriteBatch);            
-        }
     }
 }

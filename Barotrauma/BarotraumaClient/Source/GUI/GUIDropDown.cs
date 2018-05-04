@@ -237,11 +237,11 @@ namespace Barotrauma
             if (Dropped) listBox.Update(deltaTime);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
 
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, false);
 
             button.Draw(spriteBatch);
 
