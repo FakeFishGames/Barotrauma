@@ -28,7 +28,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in Children)
             {
-                if (child is T) return (T)(object)child;
+                if (child is T) return child as T;
             }
 
             return default(T);
