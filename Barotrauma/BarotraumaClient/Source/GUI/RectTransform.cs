@@ -379,7 +379,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns all elements in the hierarchy tree.
+        /// Returns all parent elements in the hierarchy.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<RectTransform> GetParents()
@@ -397,7 +397,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns all elements in the hierarchy tree. TODO: test
+        /// Returns all child elements in the hierarchy.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<RectTransform> GetChildren()
@@ -407,20 +407,20 @@ namespace Barotrauma
             return childs;
         }
 
-        /// <summary>
-        /// TODO: test
-        /// </summary>
         public bool IsParentOf(RectTransform rectT)
         {
             return children.Contains(rectT) || children.Any(c => c.IsParentOf(rectT));
-            //foreach (var child in children)
-            //{
-            //    if (child == rectT) { return true; }
-            //    if (child.IsParentOf(rectT)) { return true; }
-            //}
-            //return false;
         }
 
+        public void ClearChildren()
+        {
+            children.Clear();
+        }
+
+        public bool RemoveChild(RectTransform child)
+        {
+            return children.Remove(child);
+        }
         #endregion
 
         #region Static methods
