@@ -930,6 +930,9 @@ namespace Barotrauma.Networking
                             string levelSeed            = inc.ReadString();
                             float levelDifficulty       = inc.ReadFloat();
 
+                            byte botCount               = inc.ReadByte();
+                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
+                            
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
 
@@ -948,31 +951,23 @@ namespace Barotrauma.Networking
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
-
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
-
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
-                                if (!allowSubVoting)
-                                {
-                                    GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
-                                }
+                                if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
                                 GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
 
-                                if (!allowModeVoting)
-                                {
-                                    GameMain.NetLobbyScreen.SelectMode(modeIndex);
-                                }
+                                if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);                                
                                 
-                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);                                
-
+                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
-                                
+                                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 ConnectedClients.Clear();

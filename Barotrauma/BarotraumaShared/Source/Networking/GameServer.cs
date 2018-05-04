@@ -1038,6 +1038,9 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
                 outmsg.Write(selectedLevelDifficulty);
 
+                outmsg.Write((byte)BotCount);
+                outmsg.Write(BotSpawnMode == BotSpawnMode.Fill);
+
                 outmsg.Write(AutoRestart);
                 if (autoRestart)
                 {
