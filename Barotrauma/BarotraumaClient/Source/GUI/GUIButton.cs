@@ -184,15 +184,15 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, GUIComponent parent = null, string style = "", Color? color = null) : base(style, rectT, parent)
+        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
             if (color.HasValue)
             {
                 this.color = color.Value;
             }
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this, style);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
             GUI.Style.Apply(frame, string.IsNullOrEmpty(style) ? "GUIButton" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, parent: this)
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment)
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor
             };

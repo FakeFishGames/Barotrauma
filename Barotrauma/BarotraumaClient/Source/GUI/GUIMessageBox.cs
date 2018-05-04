@@ -85,13 +85,13 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter, GUIComponent parent = null)
-            : base(rectT, parent, "", Color.White)
+        public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
+            : base(rectT, "", Color.White)
         {
-            new GUIFrame(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.8f, parent: this);
+            new GUIFrame(new RectTransform(Vector2.One, parent: null), color: Color.Black * 0.8f);
             float headerHeight = 0.2f;
             float margin = 0.05f;
-            var frame = new GUIFrame(rectT, parent: this);
+            var frame = new GUIFrame(rectT);
             GUI.Style.Apply(frame, "", this);
             GUITextBlock header = null;
             if (!string.IsNullOrWhiteSpace(headerText))
@@ -99,8 +99,7 @@ namespace Barotrauma
                 header = new GUITextBlock(new RectTransform(new Vector2(1, headerHeight), frame.RectTransform, Anchor.TopCenter)
                 {
                     RelativeOffset = new Vector2(0, margin)
-                }, headerText, 
-                    textAlignment: Alignment.Center, parent: frame);
+                }, headerText, textAlignment: Alignment.Center);
                 GUI.Style.Apply(header, "", this);
             }
             if (!string.IsNullOrWhiteSpace(text))
@@ -110,7 +109,7 @@ namespace Barotrauma
                 var textBlock = new GUITextBlock(new RectTransform(size, frame.RectTransform, Anchor.TopCenter)
                 {
                     RelativeOffset = new Vector2(0, offset)
-                }, text, textAlignment: textAlignment, wrap: true, parent: frame);
+                }, text, textAlignment: textAlignment, wrap: true);
                 GUI.Style.Apply(textBlock, "", this);
             }
             MessageBoxes.Add(this);

@@ -201,14 +201,14 @@ namespace Barotrauma
         /// This is the new constructor.
         /// </summary>
         public GUITextBox(RectTransform rectT, string text = null, Color? textColor = null, ScalableFont font = null,
-            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null)
-            : base(style, rectT, parent)
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
+            : base(style, rectT)
         {
             Enabled = true;
             this.color = color ?? Color.White;
-            var frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), this, style, color);
+            var frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap, parent: this);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap);
             CaretEnabled = true;
         }
 

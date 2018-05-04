@@ -79,7 +79,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, GUIComponent parent = null) : base(null, rectT, parent)
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null) : base(null, rectT)
         {
             if (sourceRect.HasValue)
             {

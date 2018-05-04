@@ -248,8 +248,6 @@ namespace Barotrauma
 
         private static GUITextBlock toolTipBlock;
 
-        //protected float alpha;
-
         public Vector2 Center
         {
             get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
@@ -287,7 +285,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Does not set the rect values if the component uses RectTransform.
+        /// Does not set the rect values if the component uses RectTransform. TODO: remove setter.
         /// </summary>
         public virtual Rectangle Rect
         {
@@ -415,12 +413,10 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        protected GUIComponent(string style, RectTransform rectT, GUIComponent parent = null) : this(style)
+        protected GUIComponent(string style, RectTransform rectT) : this(style)
         {
             RectTransform = rectT;
             rect = RectTransform.Rect;
-            //if (parent != null) { parent.AddChild(this); }
-            //if (parent != null && this.Parent == null) { throw new Exception(); }
         }
 
         public static void Init(GameWindow window)

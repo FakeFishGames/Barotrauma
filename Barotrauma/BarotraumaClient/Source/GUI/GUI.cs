@@ -642,27 +642,27 @@ namespace Barotrauma
         /// <summary>
         /// Creates multiple buttons with relative size and positions them automatically.
         /// </summary>
-        public static List<GUIButton> CreateButtons(int count, Vector2 relativeSize, GUIComponent parent,
+        public static List<GUIButton> CreateButtons(int count, Vector2 relativeSize, RectTransform parent,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
             int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
             int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false,
             Alignment textAlignment = Alignment.Center, string style = "")
         {
-            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, parent, style);
-            return CreateElements(count, relativeSize, parent.RectTransform, constructor, anchor, pivot, minSize, maxSize, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, style);
+            return CreateElements(count, relativeSize, parent, constructor, anchor, pivot, minSize, maxSize, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
         }
 
         /// <summary>
         /// Creates multiple buttons with absolute size and positions them automatically.
         /// </summary>
-        public static List<GUIButton> CreateButtons(int count, Point absoluteSize, GUIComponent parent = null,
+        public static List<GUIButton> CreateButtons(int count, Point absoluteSize, RectTransform parent,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null,
             int absoluteSpacing = 0, float relativeSpacing = 0, Func<int, int> extraSpacing = null,
             int startOffsetAbsolute = 0, float startOffsetRelative = 0, bool isHorizontal = false,
             Alignment textAlignment = Alignment.Center, string style = "")
         {
-            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, parent, style);
-            return CreateElements(count, absoluteSize, parent.RectTransform, constructor, anchor, pivot, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
+            Func<RectTransform, GUIButton> constructor = rectT => new GUIButton(rectT, string.Empty, textAlignment, style);
+            return CreateElements(count, absoluteSize, parent, constructor, anchor, pivot, absoluteSpacing, relativeSpacing, extraSpacing, startOffsetAbsolute, startOffsetRelative, isHorizontal);
         }
 
         /// <summary>
