@@ -29,40 +29,11 @@ namespace Barotrauma
 
         // test elements
         private GUIFrame outerElement;
-        private List<GUIFrame> innerElements = new List<GUIFrame>();
         private GUIFrame testElement;
         private GUIButton animEditorButton;
 
         public MainMenuScreen(GameMain game)
         {
-            // TODO: test element, remove from final code
-            outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
-
-            testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
-            var p = testElement;
-            //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true, parent: p);
-            //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true, parent: p);
-            //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button", parent: p);
-
-            //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown", parent: p);
-            //dropdown.AddItem("Test1");
-            //dropdown.AddItem("Test2");
-            //dropdown.AddItem("Test3");
-            //dropdown.AddItem("Test4");
-            //dropdown.AddItem("Test5");
-
-            //new GUIProgressBar(new Rectangle(0, 0, 200, 20), Color.Green, "", 0.5f, Alignment.BottomCenter, parent: p);
-            //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green, parent: p);
-
-            //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int, parent: p);
-
-            //new GUIMessageBox(new RectTransform(Vector2.One, parent: p.RectTransform, anchor: Anchor.Center),
-            //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
-            //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-            //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-            //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
-            //    "", parent: p);
-
             animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: null, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
             {
                 Color = Color.Red * 0.8f
@@ -81,7 +52,7 @@ namespace Barotrauma
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
             // 
-            var buttons = GUI.CreateButtons(8, new Vector2(1, 0.04f), buttonsParent, anchor: Anchor.BottomLeft,
+            var buttons = GUI.CreateButtons(8, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
                 minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 0 : 20);
             buttons.ForEach(b => b.Color *= 0.8f);
             SetupButtons(buttons);
@@ -284,14 +255,14 @@ namespace Barotrauma
         {
             buttonsParent.AddToGUIUpdateList();
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
-            //testElement.AddToGUIUpdateList();
+            testElement?.AddToGUIUpdateList();
+            outerElement?.AddToGUIUpdateList();
             animEditorButton.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             buttonsParent.Update((float)deltaTime);
-            testElement.Update((float)deltaTime);
             animEditorButton.Update((float)deltaTime);
 
             if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
@@ -302,62 +273,10 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
-            // ui test, TODO: remove
-            if (Keyboard.GetState().IsKeyDown(Keys.R))
-            {
-                bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
-                if (global)
-                {
-                    RectTransform.ResetGlobalScale();
-                }
-                else
-                {
-                    outerElement.RectTransform.ResetScale();
-                    innerElements.Clear();
-                }
-                for (int i = 0; i < 5; i++)
-                {
-                    //var parent = innerElements.LastOrDefault();
-                    //if (parent == null)
-                    //{
-                    //    parent = outerElement;
-                    //}
-                    var parent = outerElement;
-                    GUIFrame element;
-                    switch (i)
-                    {
-                        case 0:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
-                            break;
-                        case 1:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
-                            break;
-                        case 2:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
-                            break;
-                        case 3:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
-                            break;
-                        case 4:
-                            // absolute element
-                            element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-                            break;
-                        default:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-                            break;
-                    }
-                    if (i < 4)
-                    {
-                        // offsets are cumulative
-                        element.RectTransform.AbsoluteOffset = new Point(10, 10);
-                        element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
-                        element.RectTransform.MinSize = new Point(200, 200);
-                        element.RectTransform.MaxSize = new Point(400, 400);
-                    }
-                    innerElements.Add(element);
-                }
-            }
-            UpdateRects();
+            CreateTestElements();
+            UpdateTestElements();
+            testElement?.Update((float)deltaTime);
+            outerElement?.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -376,13 +295,10 @@ namespace Barotrauma
 
             animEditorButton.Draw(spriteBatch);
 
-            //testElement.Draw(spriteBatch);
+            testElement?.Draw(spriteBatch);
+            outerElement?.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
-
-            // ui test, TODO: remove
-            //outerElement.Draw(spriteBatch);
-            //innerElements.ForEach(e => e.Draw(spriteBatch));
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -513,12 +429,12 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform)
             {
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerName"), textAlignment: textAlignment, parent: parent);
+            }, TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, parent.RectTransform)
             {
                 AbsoluteOffset = new Point(absoluteSpacing, 0),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment, parent: parent);
+            }, textAlignment: textAlignment);
 
             lineCount++;
 
@@ -526,12 +442,12 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(0, absoluteSpacing),
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerPort"), textAlignment: textAlignment, parent: parent);
+            }, TextManager.Get("ServerPort"), textAlignment: textAlignment);
             portBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
             {
                 AbsoluteOffset = new Point(absoluteSpacing, 0),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment, parent: parent)
+            }, textAlignment: textAlignment)
             {
                 Text = NetConfig.DefaultPort.ToString(),
                 ToolTip = "Server port"
@@ -543,13 +459,13 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("MaxPlayers"), textAlignment: textAlignment, parent: parent);
+            }, TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
 
             new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
             {
                 AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount + 10),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, "-", textAlignment: Alignment.Center, parent: parent)
+            }, "-", textAlignment: Alignment.Center)
             {
                 UserData = -1,
                 OnClicked = ChangeMaxPlayers
@@ -560,7 +476,7 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(absoluteSpacing * 2, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 2 + buttonSize.X, getY(lineCount))
-            }, textAlignment: Alignment.Center, parent: parent)
+            }, textAlignment: Alignment.Center)
             {
                 Text = "8",
                 Enabled = false
@@ -569,7 +485,7 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(absoluteSpacing * 3, absoluteSpacing * lineCount + 10),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 3 + buttonSize.X + maxPlayersBoxWidth, getY(lineCount))
-            }, "+", textAlignment: Alignment.Center, parent: parent)
+            }, "+", textAlignment: Alignment.Center)
             {
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
@@ -581,12 +497,12 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("Password"), textAlignment: textAlignment, parent: parent);
+            }, TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
             {
                 AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment, parent: parent);
+            }, textAlignment: textAlignment);
 
             lineCount++;
 
@@ -594,7 +510,7 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("PublicServer"), parent: parent)
+            }, TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
@@ -605,7 +521,7 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
                 RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("AttemptUPnP"), parent: parent)
+            }, TextManager.Get("AttemptUPnP"))
             {
                 ToolTip = TextManager.Get("AttemptUPnPToolTip")
             };
@@ -613,15 +529,116 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), parent.RectTransform, Anchor.BottomRight)
             {
                 RelativeOffset = new Vector2(leftMargin, topMargin)
-            }, TextManager.Get("StartServerButton"), parent: parent)
+            }, TextManager.Get("StartServerButton"))
             {
                 OnClicked = HostServerClicked
             };
         }
         #endregion
 
-        // ui test, TODO: remove
-        private void UpdateRects()
+        #region UI Test
+        private void CreateTestElements()
+        {
+            //if (Keyboard.GetState().IsKeyDown(Keys.T))
+            //{
+            //    //outerElement.RectTransform.GetChildren().ForEachMod(c => outerElement.RectTransform.RemoveChild(c));
+            //    outerElement.RectTransform.GetChildren().ForEachMod(c =>
+            //    {
+            //        if (outerElement.RectTransform.IsParentOf(c))
+            //        {
+            //            outerElement.RectTransform.RemoveChild(c);
+            //        }
+            //    });
+            //}
+            if (PlayerInput.KeyHit(Keys.T))
+            {
+                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+                var p = testElement;
+                //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
+                //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
+                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
+
+                // TODO: does not work
+                var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+
+                //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green);
+
+                //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int);
+
+                //var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
+                //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
+                //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
+                //    "");
+                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
+                //{
+                //    messageBox.Close();
+                //    return true;
+                //});
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.R))
+            {
+                outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
+                bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
+                if (global)
+                {
+                    RectTransform.ResetGlobalScale();
+                }
+                else
+                {
+                    //outerElement.RectTransform.ResetScale();
+                    //outerElement.RectTransform.ClearChildren();
+                }
+                for (int i = 0; i < 5; i++)
+                {
+                    //var parent = innerElements.LastOrDefault();
+                    //if (parent == null)
+                    //{
+                    //    parent = outerElement;
+                    //}
+                    var parent = outerElement;
+                    GUIFrame element;
+                    switch (i)
+                    {
+                        case 0:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
+                            break;
+                        case 1:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
+                            break;
+                        case 2:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
+                            break;
+                        case 3:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
+                            break;
+                        case 4:
+                            // absolute element
+                            element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
+                            break;
+                        default:
+                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
+                            break;
+                    }
+                    if (i < 4)
+                    {
+                        // offsets are cumulative
+                        element.RectTransform.AbsoluteOffset = new Point(10, 10);
+                        element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
+                        element.RectTransform.MinSize = new Point(200, 200);
+                        element.RectTransform.MaxSize = new Point(400, 400);
+                    }
+                }
+            }
+        }
+
+        private void UpdateTestElements()
         {
             //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
             //var element = buttonsParent;
@@ -754,5 +771,6 @@ namespace Barotrauma
             texture.SetData(data);
             return texture;
         }
+        #endregion
     }
 }
