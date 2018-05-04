@@ -445,7 +445,7 @@ namespace Barotrauma
             {
                 if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
                 {
-                    foreach (GUIComponent component in editingHUD.children)
+                    foreach (GUIComponent component in editingHUD.Children)
                     {
                         var textBox = component as GUITextBox;
                         if (textBox == null) continue;

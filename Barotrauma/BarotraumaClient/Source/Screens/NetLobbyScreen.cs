@@ -156,7 +156,7 @@ namespace Barotrauma
             get
             {
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
-                foreach (GUIComponent child in jobList.children)
+                foreach (GUIComponent child in jobList.Children)
                 {
                     JobPrefab jobPrefab = child.UserData as JobPrefab;
                     if (jobPrefab == null) continue;
@@ -432,8 +432,8 @@ namespace Barotrauma
             ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
 
             infoFrame.RemoveChild(StartButton);
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
+            infoFrame.RemoveChild(infoFrame.Children.Find(c => c.UserData as string == "settingsButton"));
+            infoFrame.RemoveChild(infoFrame.Children.Find(c => c.UserData as string == "spectateButton"));
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
             
@@ -444,7 +444,7 @@ namespace Barotrauma
                 campaignViewButton.Visible = false;
             }
 
-            if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
+            if (myPlayerFrame.Children.Find(c => c.UserData as string == "playyourself") == null)
             {
                 var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PlayYourself"), Alignment.TopLeft, myPlayerFrame);
                 playYourself.Selected = GameMain.NetworkMember.CharacterInfo != null;
@@ -530,7 +530,7 @@ namespace Barotrauma
             if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
             if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = subList.children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                var nonShuttles = subList.Children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
                 subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
@@ -544,7 +544,7 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) return;
 
-            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
+            infoFrame.RemoveChild(infoFrame.Children.Find(c => c.UserData as string == "spectateButton"));
             GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), TextManager.Get("SpectateButton"), Alignment.BottomRight, "", infoFrame);
             spectateButton.OnClicked = GameMain.Client.SpectateClicked;
             spectateButton.UserData = "spectateButton";
@@ -552,7 +552,7 @@ namespace Barotrauma
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo)
         {
-            if (myPlayerFrame.children.Count <= 2)
+            if (myPlayerFrame.Children.Count <= 2)
             {
                 myPlayerFrame.ClearChildren();
                 
@@ -825,7 +825,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
-                        GameMain.Client.RequestSelectSub(component.Parent.children.IndexOf(component));
+                        GameMain.Client.RequestSelectSub(component.Parent.Children.IndexOf(component));
                         return true;
                     }
                     return false;
@@ -839,7 +839,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
                     {
-                        GameMain.Client.RequestSelectMode(component.Parent.children.IndexOf(component));
+                        GameMain.Client.RequestSelectMode(component.Parent.Children.IndexOf(component));
                         return true;
                     }
                     return false;
@@ -890,7 +890,7 @@ namespace Barotrauma
 
         public void RemovePlayer(string name)
         {
-            GUIComponent child = playerList.children.Find(c => c.UserData as string == name);
+            GUIComponent child = playerList.Children.Find(c => c.UserData as string == name);
 
             if (child != null) playerList.RemoveChild(child);
 
@@ -1133,7 +1133,7 @@ namespace Barotrauma
         public List<Submarine> GetSubList()
         {
             List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.children)
+            foreach (GUIComponent component in subList.Children)
             {
                 if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
             }
@@ -1220,7 +1220,7 @@ namespace Barotrauma
 
             while (chatBox.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.children[1]);
+                chatBox.RemoveChild(chatBox.Children[1]);
             }
 
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0),
@@ -1269,9 +1269,9 @@ namespace Barotrauma
 
         public void SelectMode(int modeIndex)
         {
-            if (modeIndex < 0 || modeIndex >= modeList.children.Count || modeList.SelectedIndex == modeIndex) return;
+            if (modeIndex < 0 || modeIndex >= modeList.Children.Count || modeList.SelectedIndex == modeIndex) return;
 
-            if (((GameModePreset)modeList.children[modeIndex].UserData).Name == "Campaign")
+            if (((GameModePreset)modeList.Children[modeIndex].UserData).Name == "Campaign")
             {
                 if (GameMain.Server != null)
                 {
@@ -1395,7 +1395,7 @@ namespace Barotrauma
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", jobInfoFrame.children[0]);
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", jobInfoFrame.Children[0]);
             closeButton.OnClicked = CloseJobInfo;
             return true;
         }
@@ -1411,13 +1411,13 @@ namespace Barotrauma
             GUIComponent jobText = button.Parent;
             GUIListBox jobList = jobText.Parent as GUIListBox;
 
-            int index = jobList.children.IndexOf(jobText);
+            int index = jobList.Children.IndexOf(jobText);
             int newIndex = index + (int)obj;
-            if (newIndex < 0 || newIndex > jobList.children.Count - 1) return false;
+            if (newIndex < 0 || newIndex > jobList.Children.Count - 1) return false;
 
-            GUIComponent temp = jobList.children[newIndex];
-            jobList.children[newIndex] = jobText;
-            jobList.children[index] = temp;
+            GUIComponent temp = jobList.Children[newIndex];
+            jobList.Children[newIndex] = jobText;
+            jobList.Children[index] = temp;
 
             UpdateJobPreferences(jobList);
 
@@ -1429,19 +1429,19 @@ namespace Barotrauma
             listBox.Deselect();
             List<string> jobNamePreferences = new List<string>();
 
-            for (int i = 0; i < listBox.children.Count; i++)
+            for (int i = 0; i < listBox.Children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
                 Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
-                listBox.children[i].Color = color;
-                listBox.children[i].HoverColor = color;
-                listBox.children[i].SelectedColor = color;
+                listBox.Children[i].Color = color;
+                listBox.Children[i].HoverColor = color;
+                listBox.Children[i].SelectedColor = color;
                 
-                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
+                (listBox.Children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.Children[i].UserData as JobPrefab).Name;
 
-                jobNamePreferences.Add((listBox.children[i].UserData as JobPrefab).Name);
+                jobNamePreferences.Add((listBox.Children[i].UserData as JobPrefab).Name);
             }
 
             GameMain.Config.JobNamePreferences = jobNamePreferences;
@@ -1463,11 +1463,11 @@ namespace Barotrauma
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
             if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
 
-            var matchingListSub = subList.children.Find(c => c.UserData == sub);
+            var matchingListSub = subList.Children.Find(c => c.UserData == sub);
             if (matchingListSub != null)
             {
                 subList.OnSelected -= VotableClicked;
-                subList.Select(subList.children.IndexOf(matchingListSub), true);
+                subList.Select(subList.Children.IndexOf(matchingListSub), true);
                 subList.OnSelected += VotableClicked;
 
                 if (subList == SubList)

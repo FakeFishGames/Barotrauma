@@ -68,7 +68,7 @@ namespace Barotrauma
             {
                 if (RectTransform != null) { return; }
                 if (base.Rect == value) return;
-                foreach (GUIComponent child in children)
+                foreach (GUIComponent child in Children)
                 {
                     child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
                 }

@@ -163,7 +163,7 @@ namespace Barotrauma
              if (button != null)
              {
                  button.Selected = true;
-                 foreach (GUIComponent child in topPanel.children)
+                 foreach (GUIComponent child in topPanel.Children)
                  {
                      GUIButton otherButton = child as GUIButton;
                      if (otherButton == null || otherButton == button) continue;

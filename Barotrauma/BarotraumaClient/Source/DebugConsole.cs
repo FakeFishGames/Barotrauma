@@ -83,10 +83,10 @@ namespace Barotrauma
             }
 
             if (activeQuestionText != null &&
-                (listBox.children.Count == 0 || listBox.children[listBox.children.Count - 1] != activeQuestionText))
+                (listBox.Children.Count == 0 || listBox.Children[listBox.Children.Count - 1] != activeQuestionText))
             {
-                listBox.children.Remove(activeQuestionText);
-                listBox.children.Add(activeQuestionText);
+                listBox.Children.Remove(activeQuestionText);
+                listBox.Children.Add(activeQuestionText);
             }
 
             if (PlayerInput.KeyHit(Keys.F3))
@@ -174,9 +174,9 @@ namespace Barotrauma
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
 
-            if (listBox.children.Count > MaxMessages)
+            if (listBox.Children.Count > MaxMessages)
             {
-                listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
+                listBox.Children.RemoveRange(0, listBox.Children.Count - MaxMessages);
             }
 
             Messages.Add(msg);

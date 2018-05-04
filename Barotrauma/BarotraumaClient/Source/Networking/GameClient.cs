@@ -356,7 +356,7 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, "", msgBox.children[0]);
+                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, "", msgBox.Children[0]);
                     passwordBox.UserData = "password";
 
                     var okButton = msgBox.Buttons[0];
@@ -1186,8 +1186,8 @@ namespace Barotrauma.Networking
                     for (int i = 0; i < 2; i++)
                     {
                         List<GUIComponent> subListChildren = (i == 0) ? 
-                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
-                            GameMain.NetLobbyScreen.SubList.children;
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.Children : 
+                            GameMain.NetLobbyScreen.SubList.Children;
 
                         var subElement = subListChildren.Find(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 

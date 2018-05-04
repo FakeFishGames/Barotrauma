@@ -126,7 +126,7 @@ namespace Barotrauma
         {
             serverList.RemoveChild(serverList.FindChild("noresults"));
             
-            foreach (GUIComponent child in serverList.children)
+            foreach (GUIComponent child in serverList.Children)
             {
                 if (!(child.UserData is ServerInfo)) continue;
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
@@ -138,7 +138,7 @@ namespace Barotrauma
                     (!filterEmpty.Selected || serverInfo.PlayerCount > 0);
             }
 
-            if (serverList.children.All(c => !c.Visible))
+            if (serverList.Children.All(c => !c.Visible))
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoMatchingServers"), "", serverList).UserData = "noresults";
             }

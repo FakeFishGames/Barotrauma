@@ -285,7 +285,7 @@ namespace Barotrauma
                 }
             }
 
-            int contentHeight = (int)(editingHUD.children.Sum(c => c.Rect.Height) + (listBox.children.Count - 1) * listBox.Spacing + listBox.Padding.Y + listBox.Padding.W);
+            int contentHeight = (int)(editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.Children.Count - 1) * listBox.Spacing + listBox.Padding.Y + listBox.Padding.W);
 
             editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(contentHeight, 50, editingHUD.Rect.Height)));
 

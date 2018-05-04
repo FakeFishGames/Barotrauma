@@ -18,7 +18,7 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);
+                    GUIComponent component = reqFrame.Children.Find(c => c.UserData as string == itemName);
                     GUITextBlock text = component as GUITextBlock;
                     if (text != null) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
                 }
@@ -31,7 +31,7 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.children.Find(c => c.UserData as Skill == skill);
+                    GUIComponent component = reqFrame.Children.Find(c => c.UserData as Skill == skill);
                     GUITextBlock text = component as GUITextBlock;
                     if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
                 }
@@ -124,7 +124,7 @@ namespace Barotrauma
             if (frame == null) return;
 
             bool unfixedFound = false;
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in frame.Children)
             {
                 FixRequirement requirement = child.UserData as FixRequirement;
                 if (requirement == null) continue;

@@ -18,13 +18,13 @@ namespace Barotrauma
 
         public GUIFrame InnerFrame
         {
-            get { return children[0] as GUIFrame; }
+            get { return Children[0] as GUIFrame; }
         }
 
         public string Text
         {
-            get { return (children[0].children[1] as GUITextBlock).Text; }
-            set { (children[0].children[1] as GUITextBlock).Text = value; }
+            get { return (Children[0].Children[1] as GUITextBlock).Text; }
+            set { (Children[0].Children[1] as GUITextBlock).Text = value; }
         }
 
         public GUIMessageBox(string headerText, string text)
@@ -118,7 +118,7 @@ namespace Barotrauma
 
         public void Close()
         {
-            if (parent != null) parent.RemoveChild(this);
+            if (Parent != null) Parent.RemoveChild(this);
             if (MessageBoxes.Contains(this)) MessageBoxes.Remove(this);
         }
 

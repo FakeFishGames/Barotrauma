@@ -10,9 +10,23 @@ namespace Barotrauma
     public abstract class GUIComponent
     {
         #region Hierarchy
+        private GUIComponent parent;
+        public GUIComponent Parent
+        {
+            get => parent;
+            protected set => parent = value; 
+        }
+
+        private List<GUIComponent> children;
+        public List<GUIComponent> Children
+        {
+            get => children;
+            protected set => children = value;
+        }
+
         public T GetChild<T>() where T : GUIComponent
         {
-            foreach (GUIComponent child in children)
+            foreach (GUIComponent child in Children)
             {
                 if (child is T) return (T)(object)child;
             }
@@ -22,7 +36,7 @@ namespace Barotrauma
 
         public GUIComponent GetChild(object obj)
         {
-            foreach (GUIComponent child in children)
+            foreach (GUIComponent child in Children)
             {
                 if (child.UserData == obj) return child;
             }
@@ -31,10 +45,10 @@ namespace Barotrauma
 
         public bool IsParentOf(GUIComponent component)
         {
-            for (int i = children.Count - 1; i >= 0; i--)
+            for (int i = Children.Count - 1; i >= 0; i--)
             {
-                if (children[i] == component) return true;
-                if (children[i].IsParentOf(component)) return true;
+                if (Children[i] == component) return true;
+                if (Children[i].IsParentOf(component)) return true;
             }
 
             return false;
@@ -75,7 +89,7 @@ namespace Barotrauma
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
 
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
             foreach (GUIComponent c in fixedChildren)
             {
                 c.AddToGUIUpdateList();
@@ -129,9 +143,6 @@ namespace Barotrauma
         protected Color hoverColor;
         protected Color selectedColor;
 
-        protected GUIComponent parent;
-        public List<GUIComponent> children;
-
         protected ComponentState state;
 
         protected Color flashColor;
@@ -166,11 +177,6 @@ namespace Barotrauma
 
         //protected float alpha;
 
-        public GUIComponent Parent
-        {
-            get { return parent; }
-        }
-
         public Vector2 Center
         {
             get { return new Vector2(Rect.Center.X, Rect.Center.Y); }
@@ -178,8 +184,8 @@ namespace Barotrauma
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (parent == null || !ClampMouseRectToParent) return r;
-            Rectangle parentRect = parent.ClampRect(parent.Rect);
+            if (Parent == null || !ClampMouseRectToParent) return r;
+            Rectangle parentRect = Parent.ClampRect(Parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
             if (parentRect.X > r.X)
             {
@@ -226,7 +232,7 @@ namespace Barotrauma
 
                     //TODO: fix this (or replace with something better in the new GUI system)
                     //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                    foreach (GUIComponent child in children)
+                    foreach (GUIComponent child in Children)
                     {
                         child.Rect = new Rectangle(
                             child.rect.X + (rect.X - prevX),
@@ -235,9 +241,9 @@ namespace Barotrauma
                             Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
                     }
                 }
-                if (parent != null && parent is GUIListBox)
+                if (Parent != null && Parent is GUIListBox)
                 {
-                    ((GUIListBox)parent).UpdateScrollBarSize();
+                    ((GUIListBox)Parent).UpdateScrollBarSize();
                 }
             }
         }
@@ -276,7 +282,7 @@ namespace Barotrauma
 
         public int CountChildren
         {
-            get { return children.Count; }
+            get { return Children.Count; }
         }
 
         public virtual Color Color
@@ -312,7 +318,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            children = new List<GUIComponent>();
+            Children = new List<GUIComponent>();
 
             CanBeFocused = true;
 
@@ -330,7 +336,7 @@ namespace Barotrauma
             RectTransform = rectT;
             rect = RectTransform.Rect;
             if (parent != null) { parent.AddChild(this); }
-            if (parent != null && this.parent == null) { throw new Exception(); }
+            if (parent != null && this.Parent == null) { throw new Exception(); }
         }
 
         public static void Init(GameWindow window)
@@ -370,9 +376,9 @@ namespace Barotrauma
 
             SetAlpha(to);
 
-            if (removeAfter && parent != null)
+            if (removeAfter && Parent != null)
             {
-                parent.RemoveChild(this);
+                Parent.RemoveChild(this);
             }
 
             yield return CoroutineStatus.Success;
@@ -504,7 +510,8 @@ namespace Barotrauma
             
             //use a fixed list since children can change their order in the main children list
             //TODO: maybe find a more efficient way of handling changes in list order
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            // Note: this will create a new list per each frame.
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
             foreach (GUIComponent c in fixedChildren)
             {
                 if (!c.Visible) continue;
@@ -522,7 +529,7 @@ namespace Barotrauma
                 //TODO: fix this(or replace with something better in the new GUI system)
                 //simply expanding the rects by the same amount as their parent only works correctly in some special cases
                 Point expandAmount = size - rect.Size;
-                foreach (GUIComponent child in children)
+                foreach (GUIComponent child in Children)
                 {
                     child.Rect = new Rectangle(
                         child.rect.X,
@@ -593,9 +600,9 @@ namespace Barotrauma
 
         public virtual void DrawChildren(SpriteBatch spriteBatch)
         {
-            for (int i = 0; i < children.Count; i++ )
+            for (int i = 0; i < Children.Count; i++ )
             {
-                children[i].Draw(spriteBatch);
+                Children[i].Draw(spriteBatch);
             }
         }
 
@@ -612,30 +619,30 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
                 return;
             }
-            if (children.Contains(child))
+            if (Children.Contains(child))
             {
                 DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
                 return;
             }
 
-            child.parent = this;
+            child.Parent = this;
             child.UpdateDimensions(this);
 
-            children.Add(child);
+            Children.Add(child);
         }
 
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) return;
-            if (children.Contains(child)) children.Remove(child);            
+            if (Children.Contains(child)) Children.Remove(child);            
         }
 
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
-            var matchingChild = children.FirstOrDefault(c => c.userData == userData);
+            var matchingChild = Children.FirstOrDefault(c => c.userData == userData);
             if (recursive && matchingChild == null)
             {
-                foreach (GUIComponent child in children)
+                foreach (GUIComponent child in Children)
                 {
                     matchingChild = child.FindChild(userData, recursive);
                     if (matchingChild != null) return matchingChild;
@@ -647,12 +654,12 @@ namespace Barotrauma
 
         public List<GUIComponent> FindChildren(object userData)
         {
-            return children.FindAll(c => c.userData == userData);
+            return Children.FindAll(c => c.userData == userData);
         }
 
         public virtual void ClearChildren()
         {
-            children.Clear();
+            Children.Clear();
         }
     }
 }

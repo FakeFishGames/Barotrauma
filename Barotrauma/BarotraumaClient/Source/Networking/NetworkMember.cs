@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
             var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK", "Cancel" }, 400, 300);
-            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.children[0]);
+            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.Children[0]);
             banReasonBox.Wrap = true;
             banReasonBox.MaxTextLength = 100;
 
@@ -175,11 +175,11 @@ namespace Barotrauma.Networking
 
             if (ban)
             {
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.children[0]);
-                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.children[0]);
+                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.Children[0]);
+                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.Children[0]);
                 permaBanTickBox.Selected = true;
 
-                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.children[0]);
+                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.Children[0]);
                 durationContainer.Visible = false;
 
                 permaBanTickBox.OnSelected += (tickBox) =>
