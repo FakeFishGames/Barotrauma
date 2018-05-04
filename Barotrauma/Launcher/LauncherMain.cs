@@ -269,7 +269,7 @@ namespace Launcher
             settings.GraphicsWidth = selectedMode.Width;
             settings.GraphicsHeight = selectedMode.Height;
             settings.SelectedContentPackage = selectedPackage;
-            settings.Save(configPath);
+            settings.Save();
 
             return true;
         }
