@@ -13,7 +13,7 @@ namespace Barotrauma
         #region Hierarchy
         // TODO: remove the backup field when the old system is not needed.
         private GUIComponent parent;
-        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent.Element : parent;
+        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent?.Element : parent;
 
         // TODO: remove the backup field when the old system is not needed.
         private List<GUIComponent> children = new List<GUIComponent>();
