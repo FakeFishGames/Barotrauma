@@ -68,7 +68,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
-                keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
+                keys[i] = new Key((InputType)i);
             }
 
             var soundElements = doc.Root.Elements("sound").ToList();

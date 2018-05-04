@@ -70,7 +70,7 @@ namespace Barotrauma
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("config.xml");
+                Config.Save();
             }
 
             GameScreen = new GameScreen();
