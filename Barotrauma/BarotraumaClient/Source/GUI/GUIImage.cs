@@ -74,7 +74,6 @@ namespace Barotrauma
             this.sourceRect = sourceRect;
 
             if (parent != null) parent.AddChild(this);
-            this.Parent = parent;
         }
 
         /// <summary>
