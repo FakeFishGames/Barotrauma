@@ -23,6 +23,11 @@ namespace Barotrauma
     public class RectTransform
     {
         #region Fields and Properties
+        /// <summary>
+        /// Should be assigned only by GUIComponent.
+        /// </summary>
+        public GUIComponent Element { get; set; }
+
         private RectTransform parent;
         public RectTransform Parent
         {
@@ -373,6 +378,10 @@ namespace Barotrauma
             ScreenSpaceOffset += translation;
         }
 
+        /// <summary>
+        /// Returns all elements in the hierarchy tree.
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<RectTransform> GetParents()
         {
             var parents = new List<RectTransform>();
@@ -386,6 +395,32 @@ namespace Barotrauma
                 return parents;
             }
         }
+
+        /// <summary>
+        /// Returns all elements in the hierarchy tree. TODO: test
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<RectTransform> GetChildren()
+        {
+            var childs = children.AsEnumerable();
+            children.ForEach(c => childs.Concat(c.GetChildren()));
+            return childs;
+        }
+
+        /// <summary>
+        /// TODO: test
+        /// </summary>
+        public bool IsParentOf(RectTransform rectT)
+        {
+            return children.Contains(rectT) || children.Any(c => c.IsParentOf(rectT));
+            //foreach (var child in children)
+            //{
+            //    if (child == rectT) { return true; }
+            //    if (child.IsParentOf(rectT)) { return true; }
+            //}
+            //return false;
+        }
+
         #endregion
 
         #region Static methods
