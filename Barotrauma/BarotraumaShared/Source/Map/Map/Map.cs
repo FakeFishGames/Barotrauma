@@ -425,15 +425,18 @@ namespace Barotrauma
                 }
 
                 //select a random type change
-                var selectedTypeChange = 
-                    ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
-                if (selectedTypeChange != null)
+                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(t => t.Probability))
                 {
-                    string prevName = location.Name;
-                    location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == selectedTypeChange.ChangeTo.ToLowerInvariant()));
-                    ChangeLocationType(location, prevName, selectedTypeChange);
-                    location.TypeChangeTimer = -1;
-                    break;
+                    var selectedTypeChange = 
+                        ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
+                    if (selectedTypeChange != null)
+                    {
+                        string prevName = location.Name;
+                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == selectedTypeChange.ChangeTo.ToLowerInvariant()));
+                        ChangeLocationType(location, prevName, selectedTypeChange);
+                        location.TypeChangeTimer = -1;
+                        break;
+                    }
                 }
                 
                 if (allowedTypeChanges.Count > 0)
@@ -455,17 +458,16 @@ namespace Barotrauma
 
             int size = element.GetAttributeInt("size", DefaultSize);
             Map map = new Map(mapSeed, size);
-            map.Load(element);
+            map.Load(element, false);
 
             return map;
         }
 
-        public void Load(XElement element)
+        public void Load(XElement element, bool showNotifications)
         {
             SetLocation(element.GetAttributeInt("currentlocation", 0));
 
-            Version saveVersion;
-            if (!Version.TryParse(element.GetAttributeString("version", ""), out saveVersion))
+            if (!Version.TryParse(element.GetAttributeString("version", ""), out _))
             {
                 DebugConsole.ThrowError("Incompatible map save file, loading the game failed.");
                 return;
@@ -477,12 +479,21 @@ namespace Barotrauma
                 {
                     case "location":
                         string locationType = subElement.GetAttributeString("type", "");
-                        int locationIndex = subElement.GetAttributeInt("i", 0);
+                        Location location = locations[subElement.GetAttributeInt("i", 0)];
                         int typeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
 
-                        locations[locationIndex].Discovered = true;
-                        locations[locationIndex].ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
-                        locations[locationIndex].TypeChangeTimer = typeChangeTimer;
+                        string prevLocationName = location.Name;
+                        LocationType prevLocationType = location.Type;
+                        location.Discovered = true;
+                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
+                        location.TypeChangeTimer = typeChangeTimer;
+                        if (showNotifications && prevLocationType != location.Type)
+                        {
+                            ChangeLocationType(
+                                location,
+                                prevLocationName,
+                                prevLocationType.CanChangeTo.Find(c => c.ChangeTo.ToLowerInvariant() == location.Type.Name.ToLowerInvariant()));
+                        }
                         break;
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);

@@ -1288,6 +1288,9 @@ namespace Barotrauma.Networking
                     }
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    //decrement campaign update ID so the server will send us the latest data
+                    //(as there may have been campaign updates after the save file was created)
+                    campaign.LastUpdateID--;
                     break;
             }
         }
