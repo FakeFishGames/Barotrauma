@@ -152,9 +152,7 @@ namespace Barotrauma
         public void AddButton(RectTransform rectT, string text, GUIButton.OnClickedHandler onClick)
         {
             rectT.Parent = RectTransform;
-            var button = new GUIButton(rectT, text);
-            button.OnClicked += onClick;
-            Buttons.Add(button);
+            Buttons.Add(new GUIButton(rectT, text) { OnClicked = onClick });
         }
     }
 }
