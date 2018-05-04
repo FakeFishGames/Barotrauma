@@ -427,14 +427,20 @@ namespace Barotrauma
 
         public override void RemoveChild(GUIComponent child)
         {
-            if (child == null) return;
-
-            base.RemoveChild(child);
-            if (selected.Contains(child)) selected.Remove(child);
+            if (RectTransform != null)
+            {
+                RectTransform.RemoveChild(child.RectTransform);
+            }
+            else
+            {
+                if (child == null) return;
+                base.RemoveChild(child);
+                if (selected.Contains(child)) selected.Remove(child);
+            }
             UpdateScrollBarSize();
         }
         
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
             
@@ -446,7 +452,7 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
 
             
-
+            // TODO: change?
             int lastVisible = 0;
             for (int i = 0; i < Children.Count; i++)
             {

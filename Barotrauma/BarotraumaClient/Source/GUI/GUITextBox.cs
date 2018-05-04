@@ -286,11 +286,14 @@ namespace Barotrauma
             textBlock.Update(deltaTime);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
 
-            DrawChildren(spriteBatch);
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
+            }
 
             if (!CaretEnabled) return;
             

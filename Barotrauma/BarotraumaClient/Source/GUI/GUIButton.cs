@@ -207,13 +207,6 @@ namespace Barotrauma
             if (frame != null) frame.ApplyStyle(style);
             if (textBlock != null) textBlock.ApplyStyle(style);
         }
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            if (!Visible) return;
-            
-            DrawChildren(spriteBatch);
-        }
         
         public override void Update(float deltaTime)
         {

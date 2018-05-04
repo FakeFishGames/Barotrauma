@@ -240,7 +240,7 @@ namespace Barotrauma.Networking
                 {
                     connectingText += ".";
                 }
-                reconnectBox.Text = connectingText;
+                reconnectBox.Text.Text = connectingText;
 
                 if (DateTime.Now > reqAuthTime)
                 {

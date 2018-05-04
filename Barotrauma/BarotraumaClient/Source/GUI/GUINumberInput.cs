@@ -310,13 +310,6 @@ namespace Barotrauma
             return true;
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            if (!Visible) return;
-
-            DrawChildren(spriteBatch);
-        }
-
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);

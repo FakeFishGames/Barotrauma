@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 
 namespace Barotrauma
@@ -48,7 +49,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
                            
@@ -57,16 +58,16 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
 
             if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
-            base.Draw(spriteBatch);
+            base.Draw(spriteBatch, false);
 
             if (OutlineColor != Color.Transparent)
             {
                 GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false);
             }
-
-
-            DrawChildren(spriteBatch);
+            if (drawChildren)
+            {
+                DrawChildren(spriteBatch);
+            }
         }
-
     }
 }
