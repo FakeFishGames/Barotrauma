@@ -75,7 +75,7 @@ namespace Barotrauma
 
         private string RandomName(LocationType type)
         {
-            baseName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
+            baseName = type.GetRandomName();
             nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
             return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }

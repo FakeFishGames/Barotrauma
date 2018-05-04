@@ -1,6 +1,7 @@
 ﻿<locationtypes>
   <None
     name="Natural Formation"
+    namefile="Content/Map/locationNames.txt"
     commonness="5"
     background="Content/Map/beaconbackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9">
@@ -32,6 +33,7 @@
 
   <City
     name="Colony"
+    namefile="Content/Map/cityNames.txt"
     commonness="5"
     background="Content/Map/citybackground.jpg"
     allowedzones="1,2"
@@ -45,15 +47,17 @@
     <Hireable name="Medical Doctor" commonness="1"/>
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
-    
+
     <nameformats
-      f0="The City of [name]"
-      f1="[name] City"
+      f0="[name]"
+      f1="The City of [name]"
+      f2="[name] City"
       f3="[name] Station"/>
   </City>
 
   <Outpost
     name="Habitation Outpost"
+    namefile="Content/Map/cityNames.txt"
     commonness="5"
     background="Content/Map/beaconbackground.jpg"
     allowedzones="1,2,3"
@@ -81,6 +85,7 @@
   
   <Military
     name="Military Outpost"
+    namefile="Content/Map/locationNames.txt"
     commonness="3"
     background="Content/Map/militarybackground.jpg"
     allowedzones="1,2,3,4"
@@ -104,6 +109,7 @@
 
   <Research
     name="Research Outpost"
+    namefile="Content/Map/locationNames.txt"
     commonness="3"
     background="Content/Map/researchbackground.jpg"
     allowedzones="1,2,3"
@@ -127,6 +133,7 @@
 
   <Lair
     name="Breeding Grounds"
+    namefile="Content/Map/alienNames.txt"
     commonness="2"
     background="Content/Map/beaconbackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9"
@@ -146,6 +153,7 @@
 
   <Ruins
     name="Alien Ruins"
+    namefile="Content/Map/alienNames.txt"
     commonness="3"
     background="Content/Map/beaconbackground.jpg"
     allowedzones="3,4,5,6,7,8,9"
