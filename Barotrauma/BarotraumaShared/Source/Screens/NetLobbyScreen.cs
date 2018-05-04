@@ -58,8 +58,8 @@ namespace Barotrauma
                 if (botCount > GameMain.Server.MaxBotCount) botCount = 0;
 
                 GameMain.Server.BotCount = botCount;
+                lastUpdateID++;
             }
-            lastUpdateID++;
 #if CLIENT
             (botCountText as GUITextBlock).Text = botCount.ToString();
 #endif
@@ -70,8 +70,8 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 GameMain.Server.BotSpawnMode = botSpawnMode;
+                lastUpdateID++;
             }
-            lastUpdateID++;
 #if CLIENT
             (botSpawnModeText as GUITextBlock).Text = botSpawnMode.ToString();
 #endif
