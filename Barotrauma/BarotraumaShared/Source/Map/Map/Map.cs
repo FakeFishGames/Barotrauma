@@ -31,7 +31,8 @@ namespace Barotrauma
         private LocationConnection selectedConnection;
 
         public Action<Location, LocationConnection> OnLocationSelected;
-        public Action<Location> OnLocationChanged;
+        //from -> to
+        public Action<Location, Location> OnLocationChanged;
 
         public Location CurrentLocation
         {
@@ -112,7 +113,11 @@ namespace Barotrauma
             {
                 connection.Level = Level.CreateRandom(connection);
             }
+
+            InitProjectSpecific();
         }
+
+        partial void InitProjectSpecific();
 
         private void GenerateLocations()
         {
@@ -137,13 +142,7 @@ namespace Barotrauma
             foreach (GraphEdge edge in edges)
             {
                 if (edge.point1 == edge.point2) continue;
-
-                //remove points from the edge of the map
-                /*if (edge.point1.X == 0 || edge.point1.X == size) continue;
-                if (edge.point1.Y == 0 || edge.point1.Y == size) continue;
-                if (edge.point2.X == 0 || edge.point2.X == size) continue;
-                if (edge.point2.Y == 0 || edge.point2.Y == size) continue;*/
-
+                
                 if (Vector2.DistanceSquared(edge.point1, mapCenter) >= mapRadius * mapRadius ||
                     Vector2.DistanceSquared(edge.point2, mapCenter) >= mapRadius * mapRadius) continue;
 
@@ -301,13 +300,14 @@ namespace Barotrauma
         
         public void MoveToNextLocation()
         {
+            Location prevLocation = currentLocation;
             selectedConnection.Passed = true;
 
             currentLocation = selectedLocation;
             currentLocation.Discovered = true;
             selectedLocation = null;
 
-            OnLocationChanged?.Invoke(currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, currentLocation);
         }
 
         public void SetLocation(int index)
@@ -324,10 +324,11 @@ namespace Barotrauma
                 return;
             }
 
+            Location prevLocation = currentLocation;
             currentLocation = locations[index];
             currentLocation.Discovered = true;
 
-            OnLocationChanged?.Invoke(currentLocation);
+            OnLocationChanged?.Invoke(prevLocation, currentLocation);
         }
 
         public void SelectLocation(int index)
@@ -423,21 +424,18 @@ namespace Barotrauma
                     }
                 }
 
-                float probabilitySum = readyTypeChanges.Sum(m => m.Probability);
-                float randomNumber = Rand.Range(0.0f, 1.0f);
-
-                foreach (LocationTypeChange typeChange in readyTypeChanges)
+                //select a random type change
+                var selectedTypeChange = 
+                    ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
+                if (selectedTypeChange != null)
                 {
-                    if (randomNumber <= typeChange.Probability)
-                    {
-                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == typeChange.ChangeTo.ToLowerInvariant()));
-                        location.TypeChangeTimer = -1;
-                        break;
-                    }
-
-                    randomNumber -= typeChange.Probability;
-                } 
-
+                    string prevName = location.Name;
+                    location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == selectedTypeChange.ChangeTo.ToLowerInvariant()));
+                    ChangeLocationType(location, prevName, selectedTypeChange);
+                    location.TypeChangeTimer = -1;
+                    break;
+                }
+                
                 if (allowedTypeChanges.Count > 0)
                 {
                     location.TypeChangeTimer++;
@@ -448,6 +446,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change);
 
         public static Map LoadNew(XElement element)
         {

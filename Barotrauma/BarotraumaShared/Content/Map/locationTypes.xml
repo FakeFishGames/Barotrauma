@@ -10,18 +10,24 @@
     <Symbol texture="Content/Map/beaconSymbol.png"/>
     
     <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
-    
-    <ChangeTo type="Outpost" probability="0.5" requiredduration="3" 
+
+    <ChangeTo type="Outpost" probability="0.5" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-    
-    <ChangeTo type="Military" probability="0.25" requiredduration="3" 
+              disallowedadjacentlocations="Lair">
+      <Message text="A new outpost has been established at [prevname]."/>
+    </ChangeTo>
+
+    <ChangeTo type="Military" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
-    
-    <ChangeTo type="Research" probability="0.25" requiredduration="3" 
+              disallowedadjacentlocations="Lair">
+      <Message text="A new military outpost has been established at [prevname]."/>
+    </ChangeTo>
+
+    <ChangeTo type="Research" probability="0.25" requiredduration="3"
               requiredadjacentlocations="Outpost,Military,Research,City"
-              disallowedadjacentlocations="Lair"/>
+              disallowedadjacentlocations="Lair">
+      <Message text="A new research outpost has been established at [prevname]."/>
+    </ChangeTo>
   </None>
 
   <City
@@ -62,8 +68,11 @@
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
 
-    <!-- can become a city if there are no adjacent lairs -->    
-    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair"/>
+    <!-- can become a city if there are no adjacent lairs -->
+    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair">
+      <Message text="[prevname] has become [name]."/>
+      <Message text="[prevname] has become a city!"/>
+    </ChangeTo>
 
     <nameformats
       f0="[name] Habitation Outpost"
@@ -127,11 +136,12 @@
 
     <nameformats
       f0="[name] Breeding Grounds"
-      f1="[name] Reef"
-      f2="The Hives of [name]"/>
+      f1="The Hives of [name]"/>
 
     <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
-    <ChangeTo type="None" probability="1.0"/>
+    <ChangeTo type="None" probability="1.0">
+      <Message text="[prevname] have been depopulated."/>
+    </ChangeTo>
   </Lair>
 
   <Ruins
@@ -146,8 +156,14 @@
     <nameformats
       f0="[name] Ruins"/>
 
-    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>    
-    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
-    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="A research outpost has been established at [prevname]."/>
+    </ChangeTo>
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="An outpost has been established at [prevname]."/>
+    </ChangeTo>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair">
+      <Message text="A military outpost has been established at [prevname]."/>
+    </ChangeTo>
   </Ruins>
 </locationtypes>

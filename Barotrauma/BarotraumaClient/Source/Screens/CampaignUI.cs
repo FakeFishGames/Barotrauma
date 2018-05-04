@@ -27,9 +27,7 @@ namespace Barotrauma
         private GUIFrame characterPreviewFrame;
         
         private Level selectedLevel;
-
-        private float mapZoom = 3.0f;
-
+        
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
 
@@ -117,7 +115,7 @@ namespace Barotrauma
             UpdateLocationTab(campaign.Map.CurrentLocation);
 
             campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnLocationChanged += (location) => UpdateLocationTab(location);
+            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationTab(newLocation);
             campaign.CargoManager.OnItemsChanged += RefreshItemTab;
         }
 
@@ -154,20 +152,14 @@ namespace Barotrauma
         }
 
         public void Update(float deltaTime)
-        {
-            if (selectedTab == Tab.Map)
-            {
-                mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-                mapZoom = MathHelper.Clamp(mapZoom, 0.1f, 4.0f);
-            }
-            
+        {            
             if (GameMain.GameSession?.Map != null)
             {
                 GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
                     tabs[(int)selectedTab].Rect.X + 20,
                     tabs[(int)selectedTab].Rect.Y + 20,
                     tabs[(int)selectedTab].Rect.Width - 310,
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                    tabs[(int)selectedTab].Rect.Height - 40));
             }
         }
 
@@ -179,7 +171,7 @@ namespace Barotrauma
                     tabs[(int)selectedTab].Rect.X + 20, 
                     tabs[(int)selectedTab].Rect.Y + 20,
                     tabs[(int)selectedTab].Rect.Width - 310, 
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                    tabs[(int)selectedTab].Rect.Height - 40));
             }
         }
 

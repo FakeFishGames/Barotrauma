@@ -216,12 +216,12 @@ namespace Barotrauma
             return buffer;
         }
 
-        public static T SelectWeightedRandom<T>(List<T> objects, List<float> weights, Rand.RandSync randSync)
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Rand.RandSync randSync)
         {
             return SelectWeightedRandom(objects, weights, Rand.GetRNG(randSync));
         }
 
-        public static T SelectWeightedRandom<T>(List<T> objects, List<float> weights, Random random)
+        public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
             if (objects.Count == 0) return default(T);
 
