@@ -105,7 +105,7 @@ namespace Barotrauma
             }
         }
 
-        // TODO: refactor
+        // TODO: refactor?
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
             var matchingChild = Children.FirstOrDefault(c => c.userData == userData);

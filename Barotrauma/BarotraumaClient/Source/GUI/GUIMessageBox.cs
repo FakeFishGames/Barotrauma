@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -79,7 +77,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// This is the new constructor.
+        /// This is the new constructor. TODO: for some reason the background does not prohibit input on the elements that are behind the box
         /// </summary>
         public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
             : base(rectT, "")
