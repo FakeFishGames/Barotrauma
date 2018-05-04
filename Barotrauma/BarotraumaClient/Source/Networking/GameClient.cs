@@ -1278,8 +1278,6 @@ namespace Barotrauma.Networking
                     if (campaign == null) return;
 
                     GameMain.GameSession.SavePath = transfer.FilePath;
-                    campaign.LastSaveID = campaign.PendingSaveID;
-
                     if (GameMain.GameSession.Submarine == null)
                     {
                         var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
@@ -1288,6 +1286,7 @@ namespace Barotrauma.Networking
                     }
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    campaign.LastSaveID = campaign.PendingSaveID;
                     //decrement campaign update ID so the server will send us the latest data
                     //(as there may have been campaign updates after the save file was created)
                     campaign.LastUpdateID--;
