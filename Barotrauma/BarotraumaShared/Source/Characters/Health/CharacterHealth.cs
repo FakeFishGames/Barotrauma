@@ -80,8 +80,10 @@ namespace Barotrauma
         //non-limb-specific afflictions
         private List<Affliction> afflictions = new List<Affliction>();
 
+        private HashSet<Affliction> irremovableAfflictions = new HashSet<Affliction>();
         private Affliction bloodlossAffliction;
         private Affliction oxygenLowAffliction;
+        private Affliction pressureAffliction;
         private Affliction stunAffliction;
                 
         public bool IsUnconscious
@@ -144,6 +146,11 @@ namespace Barotrauma
             set { stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); }
         }
 
+        public Affliction PressureAffliction
+        {
+            get { return pressureAffliction; }
+        }
+
         public Character Character
         {
             get { return character; }
@@ -158,12 +165,16 @@ namespace Barotrauma
             DoesBleed = true;
             UseBloodParticles = true;
 
-            afflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
-            afflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
-
+            irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
+            irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
+            irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
             if (character.NeedsAir)
             {
-                afflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+                irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+            }
+            foreach (Affliction affliction in irremovableAfflictions)
+            {
+                afflictions.Add(affliction);
             }
 
             limbHealths.Add(new LimbHealth());
@@ -348,21 +359,7 @@ namespace Barotrauma
                 }
             }            
         }
-
-        public void ApplyDamage(Limb hitLimb, float damage, float bleedingDamage, float burnDamage, float stun)
-        {
-            if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
-            {
-                DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + character.Name +
-                    "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + hitLimb.type + " is targeting index " + hitLimb.HealthIndex);
-                return;
-            }
-            
-            if (damage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.InternalDamage.Instantiate(damage));            
-            if (bleedingDamage != 0.0f && DoesBleed) AddLimbAffliction(hitLimb, AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));            
-            if (burnDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Burn.Instantiate(burnDamage));
-        }
-
+        
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
         {
             foreach (LimbHealth limbHealth in limbHealths)
@@ -388,10 +385,11 @@ namespace Barotrauma
                 limbHealth.Afflictions.Clear();
             }
 
-            afflictions.RemoveAll(a => a != stunAffliction && a != bloodlossAffliction && a != oxygenLowAffliction);
-            stunAffliction.Strength = 0.0f;
-            bloodlossAffliction.Strength = 0.0f;
-            oxygenLowAffliction.Strength = 0.0f;
+            afflictions.RemoveAll(a => !irremovableAfflictions.Contains(a));
+            foreach (Affliction affliction in irremovableAfflictions)
+            {
+                affliction.Strength = 0.0f;
+            }
         }
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
@@ -447,7 +445,6 @@ namespace Barotrauma
             CalculateVitality();
             if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
         }
-
         
         public void Update(float deltaTime)
         {
@@ -467,7 +464,7 @@ namespace Barotrauma
                 }
             }
 
-            afflictions.RemoveAll(a => a.Strength <= 0.0f && a != bloodlossAffliction && a != oxygenLowAffliction && a != stunAffliction);
+            afflictions.RemoveAll(a => a.Strength <= 0.0f && !irremovableAfflictions.Contains(a));
             for (int i = 0; i < afflictions.Count; i++)
             {
                 afflictions[i].Update(this, null, deltaTime);

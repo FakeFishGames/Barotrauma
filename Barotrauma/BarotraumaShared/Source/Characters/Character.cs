@@ -1984,6 +1984,7 @@ namespace Barotrauma
             }
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
+            health.PressureAffliction.Strength = health.PressureAffliction.Prefab.MaxStrength;
             health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
             BreakJoints();            
         }
