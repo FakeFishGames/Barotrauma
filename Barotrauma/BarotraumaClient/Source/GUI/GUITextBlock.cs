@@ -147,8 +147,8 @@ namespace Barotrauma
         /// This is the new constructor.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, GUIComponent parent = null, string style = "", Color? color = null) 
-            : base(style, rectT, parent)
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
+            : base(style, rectT)
         {
             if (color.HasValue)
             {

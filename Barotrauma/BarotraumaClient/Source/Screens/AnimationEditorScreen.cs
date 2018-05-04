@@ -40,7 +40,9 @@ namespace Barotrauma
             cam.UpdateTransform(true);
 
             gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: null, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
-            var buttons = GUI.CreateButtons(1, new Vector2(0.9f, 0.1f), gui, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 30);
+
+
+            var buttons = GUI.CreateButtons(1, new Vector2(0.9f, 0.1f), gui.RectTransform, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 30);
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];

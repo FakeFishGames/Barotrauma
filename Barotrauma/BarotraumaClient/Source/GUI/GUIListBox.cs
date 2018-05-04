@@ -186,7 +186,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIListBox(RectTransform rectT, GUIComponent parent = null, bool isHorizontal = false, Color? color = null, string style = null) : base(style, rectT, parent)
+        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = null) : base(style, rectT)
         {
             selected = new List<GUIComponent>();
             if (color.HasValue)
@@ -203,7 +203,7 @@ namespace Barotrauma
                 scrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) });
             }
             scrollBar.IsHorizontal = isHorizontal;
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this, style);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
             if (style != null) GUI.Style.Apply(frame, style, this);
             UpdateScrollBarSize();
             Children.Clear();

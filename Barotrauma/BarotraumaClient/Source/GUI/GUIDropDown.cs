@@ -113,7 +113,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "") : base(style, rectT)
         {
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {

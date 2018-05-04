@@ -137,13 +137,13 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIScrollBar(RectTransform rectT, float barSize = 1, GUIComponent parent = null, Color? color = null, string style = "") : base(style, rectT, parent)
+        public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "") : base(style, rectT)
         {
             isHorizontal = (Rect.Width > Rect.Height);
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
-            bar = new GUIButton(new RectTransform(Vector2.One, rectT), parent: this, color: color);
+            bar = new GUIButton(new RectTransform(Vector2.One, rectT), color: color);
             GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtoneVertical", this);
             bar.OnPressed = SelectBar;
             enabled = true;

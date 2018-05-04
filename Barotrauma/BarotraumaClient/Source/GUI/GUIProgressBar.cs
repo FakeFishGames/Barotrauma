@@ -65,14 +65,14 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "") : base(style, rectT)
         {
             if (color.HasValue)
             {
                 this.color = color.Value;
             }
             isHorizontal = (Rect.Width > Rect.Height);
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), this);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(frame, "", this);
             slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(slider, "Slider", this);

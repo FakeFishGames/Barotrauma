@@ -175,15 +175,15 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", GUIComponent parent = null) : base(style, rectT, parent)
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "") : base(style, rectT)
         {
-            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: Alignment.Center, parent: this, style: style);
+            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: Alignment.Center, style: style);
             textBox.OnTextChanged += TextChanged;
 
             var height = Rect.Height / 2;
             var buttonSize = new Point(height, height);
 
-            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight, Pivot.TopLeft), "+", parent: this);
+            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight, Pivot.TopLeft), "+");
             plusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -201,7 +201,7 @@ namespace Barotrauma
             plusButton.Visible = inputType == NumberType.Int;
             plusButton.ClampMouseRectToParent = false;
 
-            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight, Pivot.BottomLeft), "-", parent: this);
+            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight, Pivot.BottomLeft), "-");
             minusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
