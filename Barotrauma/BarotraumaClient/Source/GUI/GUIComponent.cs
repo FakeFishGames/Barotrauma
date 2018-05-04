@@ -126,17 +126,16 @@ namespace Barotrauma
             return Children.Where(c => c.userData == userData);
         }
 
-        /// <summary>
-        /// TODO: remove this method
-        /// </summary>
         public virtual void ClearChildren()
         {
             if (RectTransform != null)
             {
-                DebugConsole.ThrowError("Tried to clear childs from a component using RectTransform.\n" + Environment.StackTrace);
-                return;
+                RectTransform.ClearChildren();
             }
-            children.Clear();
+            else
+            {
+                children.Clear();
+            }
         }
         #endregion
 
@@ -160,11 +159,13 @@ namespace Barotrauma
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
 
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
-            foreach (GUIComponent c in fixedChildren)
-            {
-                c.AddToGUIUpdateList();
-            }
+            //TODO:  Is this necessary?
+            //List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
+            //foreach (GUIComponent c in fixedChildren)
+            //{
+            //    c.AddToGUIUpdateList();
+            //}
+            Children.ForEach(c => c.AddToGUIUpdateList());
         }
 
         public static void ClearUpdateList()
@@ -590,15 +591,23 @@ namespace Barotrauma
                 }
 
             }*/
-            
+
             //use a fixed list since children can change their order in the main children list
             //TODO: maybe find a more efficient way of handling changes in list order
-            // Note: this will create a new list per each frame.
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
-            foreach (GUIComponent c in fixedChildren)
+            // Note: this will create a new list per each tick -> why is the original list manipulated? keep it intact and use a copy instead?
+            //List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
+            //foreach (GUIComponent c in fixedChildren)
+            //{
+            //    if (!c.Visible) continue;
+            //    c.Update(deltaTime);
+            //}
+            if (RectTransform != null)
             {
-                if (!c.Visible) continue;
-                c.Update(deltaTime);
+                RectTransform.Children.ForEach(c => c.Element.Update(deltaTime));
+            }
+            else
+            {
+                children.ForEach(c => c.Update(deltaTime));
             }
         }
 
