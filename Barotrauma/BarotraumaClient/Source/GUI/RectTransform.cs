@@ -40,6 +40,7 @@ namespace Barotrauma
                 }
                 parent = value;
                 parent?.children.Add(this);
+                RecalculateAll(false, true, true);
             }
         }
 
@@ -264,7 +265,8 @@ namespace Barotrauma
 
         private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
-            Parent = parent;
+            this.parent = parent;
+            parent?.children.Add(this);
             Anchor = anchor;
             Pivot = pivot ?? MatchPivotToAnchor(Anchor);
         }
