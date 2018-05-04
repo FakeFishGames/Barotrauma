@@ -2,21 +2,15 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class CharacterHealth
     {
-        private static Sprite noiseOverlay, damageOverlay;
-
-        private static Sprite statusIconOxygen;
-        private static Sprite statusIconPressure;
-        private static Sprite statusIconBloodloss;
+        private static Sprite damageOverlay;
 
         private GUIButton cprButton;
 
@@ -43,10 +37,6 @@ namespace Barotrauma
 
         private float bloodParticleTimer;
         
-        /*private GUIFrame healthWindow;
-        private GUIProgressBar healthWindowHealthBar;
-        private GUIFrame limbIndicatorContainer;
-        ;*/
         private GUIListBox healItemContainer;
 
         private GUIFrame healthWindow;
@@ -80,17 +70,14 @@ namespace Barotrauma
         }
 
         static CharacterHealth()
-        {
-            noiseOverlay = new Sprite("Content/UI/noise.png", Vector2.Zero);            
+        {        
             damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
-            
-            statusIconOxygen = new Sprite("Content/UI/Health/statusIcons.png", new Rectangle(96, 48, 48, 48), null);
-            statusIconPressure = new Sprite("Content/UI/Health/statusIcons.png", new Rectangle(0, 48, 48, 48), null);
-            statusIconBloodloss = new Sprite("Content/UI/Health/statusIcons.png", new Rectangle(48, 0, 48, 48), null);
         }
 
         partial void InitProjSpecific(Character character)
         {
+            character.OnAttacked += OnAttacked;
+
             healthBar = new GUIProgressBar(HUDLayoutSettings.HealthBarAreaLeft, Color.White, null, 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
 
@@ -144,6 +131,11 @@ namespace Barotrauma
                 }
                 return true;
             };
+        }
+
+        private void OnAttacked(Character attacker, AttackResult attackResult)
+        {
+            damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
         }
 
         private void UpdateAlignment()
@@ -398,7 +390,8 @@ namespace Barotrauma
             if (openHealthWindow == null)
             {
                 List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
-                if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
+                if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f)
+                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.Pressure.Icon, "High pressure"));
 
                 var allAfflictions = GetAllAfflictions(true);
                 foreach (Affliction affliction in allAfflictions)

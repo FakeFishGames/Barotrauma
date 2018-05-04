@@ -13,11 +13,6 @@ namespace Barotrauma
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
-                
-        public static void TakeDamage(float amount)
-        {
-            //TODO: some effect
-        }
 
         public static void AddToGUIUpdateList(Character character)
         {

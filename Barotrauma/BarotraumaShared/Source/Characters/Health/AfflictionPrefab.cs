@@ -67,6 +67,7 @@ namespace Barotrauma
         public static AfflictionPrefab Burn;
         public static AfflictionPrefab OxygenLow;
         public static AfflictionPrefab Bloodloss;
+        public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
         public static AfflictionPrefab Husk;
 
@@ -131,6 +132,9 @@ namespace Barotrauma
                             break;
                         case "bloodloss":
                             List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "pressure":
+                            List.Add(Pressure = new AfflictionPrefab(element, typeof(Affliction)));
                             break;
                         case "stun":
                             List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));

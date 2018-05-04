@@ -115,6 +115,21 @@
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
   </Stun>
 
+  <Pressure
+    name="Barotrauma"
+    description="Massive organ damage caused by hydrostatic pressure."
+    type="pressure"
+    causeofdeathdescription="Crushed by water pressure"
+    selfcauseofdeathdescription="You have been crushed by water pressure."
+    limbspecific="false"
+    maxstrength="1"
+    damageoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="1" multiplybymaxvitality="true"
+      minvitalitydecrease="1"
+      maxvitalitydecrease="1"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,48,48,48" origin="0,0"/>
+  </Pressure>
+
   <AfflictionHusk
     name="Husk infection"
     description="Lorem ipsum dolor sin amet. Aösld sdfl asmd dfg wqer gsdfg. Asdfel ösdfke!"
