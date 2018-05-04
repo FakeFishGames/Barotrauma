@@ -29,16 +29,17 @@ namespace Barotrauma
             get { return parent; }
             set
             {
-                parent = value;
-                if (parent != null)
+                if (parent != value)
                 {
-                    parent.children.Add(this);
+                    parent?.children.Remove(this);
                 }
+                parent = value;
+                parent?.children.Add(this);
             }
         }
 
         private HashSet<RectTransform> children = new HashSet<RectTransform>();
-        public IEnumerable<RectTransform> Children { get { return children; } }
+        public IEnumerable<RectTransform> Children => children;
 
         private Vector2 relativeSize = Vector2.One;
         /// <summary>
@@ -103,7 +104,7 @@ namespace Barotrauma
         /// <summary>
         /// Size after scale multiplications.
         /// </summary>
-        public Point ScaledSize { get { return NonScaledSize.Multiply(Scale); } }
+        public Point ScaledSize => NonScaledSize.Multiply(Scale);
 
         /// <summary>
         /// Applied to all RectTransforms.
@@ -203,12 +204,12 @@ namespace Barotrauma
             }
         }
 
-        public Rectangle Rect { get { return new Rectangle(TopLeft, ScaledSize); } }
-        public Rectangle ParentRect { get { return Parent != null ? Parent.Rect : ScreenRect; } }
+        public Rectangle Rect => new Rectangle(TopLeft, ScaledSize);
+        public Rectangle ParentRect => Parent != null ? Parent.Rect : ScreenRect;
 
-        protected Rectangle NonScaledRect { get { return new Rectangle(NonScaledTopLeft, NonScaledSize); } }
-        protected Rectangle NonScaledParentRect { get { return parent != null ? Parent.NonScaledRect : ScreenRect; } }
-        protected Rectangle ScreenRect { get { return new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight); } }
+        protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
+        protected Rectangle NonScaledParentRect => parent != null ? Parent.NonScaledRect : ScreenRect;
+        protected Rectangle ScreenRect => new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
         private Pivot pivot;
         public Pivot Pivot
