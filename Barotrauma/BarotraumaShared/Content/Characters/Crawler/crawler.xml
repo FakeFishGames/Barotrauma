@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name ="crawler" humanoid="false">
+<Character name="crawler" humanoid="false">
   
   <health
     vitality="70"
@@ -61,7 +61,8 @@
     steertorque="20"
     legtorque="10"
     impacttolerance="6"
-    flip="true">
+    flip="true"
+    draggable="true">
 
     <collider height="60" radius="22"/>
 

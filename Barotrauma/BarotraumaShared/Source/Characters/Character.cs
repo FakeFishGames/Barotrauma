@@ -116,7 +116,7 @@ namespace Barotrauma
         }
 
         private string currentOrderOption;
-
+        
         public Entity ViewTarget
         {
             get;
@@ -475,12 +475,21 @@ namespace Barotrauma
             }
         }
 
+        public bool CanBeDragged
+        {
+            get
+            {
+                if (Removed || !AnimController.Draggable) return false;
+                return isDead || Stun > 0.0f || LockHands || IsUnconscious;
+            }
+        }
+        
         //can other characters access the inventory of this character
         public bool CanInventoryBeAccessed
         {
             get
             {
-                if (Removed) return false;
+                if (Removed || inventory == null) return false;
 
                 if (!inventory.AccessibleWhenAlive)
                 {
@@ -1185,7 +1194,8 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || Removed || !c.Enabled || c.inventory == null || !c.CanBeSelected) return false;
+            if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
+            if (!c.health.UseHealthWindow && !c.CanBeDragged) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;

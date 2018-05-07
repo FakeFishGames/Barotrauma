@@ -33,7 +33,7 @@
     </Limb>
   </health>
 
-  <inventory slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
+  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
   
   <ragdoll headposition="154" torsoposition="115" 
            stepsize="42.0, 12.0"
@@ -44,7 +44,8 @@
            walkspeed="1.5" swimspeed="2.0"
            runspeedmultiplier="3.0" swimspeedmultiplier="1.2"
            colliderheightfromfloor="55"
-           impacttolerance="7.5">
+           impacttolerance="7.5"
+           draggable="true">
 
     <collider height="55" radius="15"/>
     <collider height="40" radius="15"/>

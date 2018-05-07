@@ -189,7 +189,7 @@ namespace Barotrauma
                         if (useItemTimer <= 0.0f) Anim = Animation.None;
                     }
 
-                    if (character.SelectedCharacter != null && character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter != null && character.SelectedCharacter.CanBeDragged)
                     {
                         DragCharacter(character.SelectedCharacter);
                     }
@@ -1088,24 +1088,14 @@ namespace Barotrauma
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
                     pullLimb.pullJoint.Enabled = true;
-                    if (targetLimb.type == LimbType.Torso)
+                    if (targetLimb.type == LimbType.Torso || targetLimb.Mass > 10.0f)
                     {
                         pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
                         pullLimb.pullJoint.MaxForce = 5000.0f;
                         targetMovement *= (Mass / target.Mass); //Carrying people like that takes a lot of effort.
                         
-                        if (target.AnimController.Dir != Dir)
-                            target.AnimController.Flip();
-                    }                        
-                    else
-                    {
-                        pullLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition + diff;
-                        pullLimb.pullJoint.MaxForce = 5000.0f;
-                    }
+                        if (target.AnimController.Dir != Dir) target.AnimController.Flip();
 
-                    targetLimb.pullJoint.Enabled = true;
-                    if (targetLimb.type == LimbType.Torso)
-                    {
                         //hand length
                         float a = 37.0f;
                         //arm length
@@ -1113,12 +1103,15 @@ namespace Barotrauma
 
                         Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
                         Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
-                        
+
                         targetLimb.pullJoint.WorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
                         targetLimb.pullJoint.MaxForce = 100.0f;
-                    }
+                    }                        
                     else
                     {
+                        pullLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition + diff;
+                        pullLimb.pullJoint.MaxForce = 5000.0f;
+
                         targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;                    
                         targetLimb.pullJoint.MaxForce = 5000.0f;
                     }

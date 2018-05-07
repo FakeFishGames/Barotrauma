@@ -230,6 +230,12 @@ namespace Barotrauma
             get { return torsoAngle; } 
         }
 
+        public bool Draggable
+        {
+            get;
+            private set;
+        }
+
         public float Dir
         {
             get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
@@ -325,6 +331,8 @@ namespace Barotrauma
 
             colliderHeightFromFloor = element.GetAttributeFloat("colliderheightfromfloor", 45.0f);
             colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
+
+            Draggable = element.GetAttributeBool("draggable", false);
 
             collider = new List<PhysicsBody>();
              
@@ -630,7 +638,8 @@ namespace Barotrauma
                     for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 10.0f); i++)
                     {
                         GameMain.ParticleManager.CreateParticle("heavygib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(50.0f, 250.0f), character.CurrentHull);
-                    }                    
+                    }
+                    character.CurrentHull?.AddDecal("blood", limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
                 }
             }
 #endif
