@@ -102,8 +102,10 @@ namespace Barotrauma
             {
                 SelectTab((Tab)obj);
             }
-            catch
+            catch (Exception e)
             {
+                // TODO: This is bad, because the exception might be quite important in debugging. Try to get rid of this try catch block.
+                //DebugConsole.ThrowError("Exception: ", e);
                 selectedTab = 0;
             }
 
@@ -262,10 +264,10 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            buttonsParent.Update((float)deltaTime);
-            animEditorButton.Update((float)deltaTime);
+            //buttonsParent.Update((float)deltaTime);
+            //animEditorButton.Update((float)deltaTime);
 
-            if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
+            //if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
@@ -275,8 +277,8 @@ namespace Barotrauma
 
             CreateTestElements();
             UpdateTestElements();
-            testElement?.Update((float)deltaTime);
-            outerElement?.Update((float)deltaTime);
+            //testElement?.Update((float)deltaTime);
+            //outerElement?.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -291,14 +293,16 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             buttonsParent.Draw(spriteBatch);
-            if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
-
             animEditorButton.Draw(spriteBatch);
+
+            if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             testElement?.Draw(spriteBatch);
             outerElement?.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
+
+            GUI.DrawString(spriteBatch, new Vector2(200, 100), "selected tab " + selectedTab, Color.White);
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -554,9 +558,9 @@ namespace Barotrauma
             {
                 testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
                 var p = testElement;
-                //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
-                //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
-                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
+                new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
+                new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
+                new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
 
                 //// TODO: does not work
                 //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
@@ -570,22 +574,22 @@ namespace Barotrauma
 
                 //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int);
 
-                var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
-                    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
-                    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
-                    "");
-                messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
-                {
-                    messageBox.Close();
-                    return true;
-                });
-                messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomLeft) { RelativeOffset = new Vector2(0.1f, 0.1f) }, "Add text", (button, obj) =>
-                {
-                    messageBox.Text.Text += "\nNew text";
-                    return true;
-                });
+                //var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
+                //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
+                //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
+                //    "");
+                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
+                //{
+                //    messageBox.Close();
+                //    return true;
+                //});
+                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomLeft) { RelativeOffset = new Vector2(0.1f, 0.1f) }, "Add text", (button, obj) =>
+                //{
+                //    messageBox.Text.Text += "\nNew text";
+                //    return true;
+                //});
             }
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {

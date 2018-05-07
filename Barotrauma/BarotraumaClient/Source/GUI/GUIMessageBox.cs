@@ -68,16 +68,18 @@ namespace Barotrauma
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
-                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, "", frame);
-
-                x += this.Buttons[i].Rect.Width + 20;
+                var button = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, "", frame);
+                Buttons.Add(button);
+                x += button.Rect.Width + 20;
             }
 
             MessageBoxes.Add(this);
         }
 
         /// <summary>
-        /// This is the new constructor. TODO: for some reason the background does not prohibit input on the elements that are behind the box
+        /// This is the new constructor.
+        /// TODO: for some reason the background does not prohibit input on the elements that are behind the box
+        /// TODO: allow providing buttons in the constructor
         /// </summary>
         public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
             : base(rectT, "")
@@ -109,20 +111,27 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
-        // Custom draw order so that the background is rendered behind the parent.
         public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
-            if (drawChildren)
+            if (RectTransform == null)
             {
-                BackgroundFrame.Draw(spriteBatch);
+                base.Draw(spriteBatch, drawChildren);
             }
-            base.Draw(spriteBatch, false);
-            if (drawChildren)
+            else
             {
-                InnerFrame.Draw(spriteBatch);
-                Header.Draw(spriteBatch);
-                Text.Draw(spriteBatch);
-                Buttons.ForEach(b => b.Draw(spriteBatch));
+                // Custom draw order so that the background is rendered behind the parent.
+                if (drawChildren)
+                {
+                    BackgroundFrame?.Draw(spriteBatch);
+                }
+                base.Draw(spriteBatch, false);
+                if (drawChildren)
+                {
+                    InnerFrame?.Draw(spriteBatch);
+                    Header?.Draw(spriteBatch);
+                    Text?.Draw(spriteBatch);
+                    Buttons.ForEach(b => b.Draw(spriteBatch));
+                }
             }
         }
 
