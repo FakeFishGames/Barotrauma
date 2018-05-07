@@ -213,7 +213,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
                 return;
             }
-            //if (!component.Visible) { return; }
+            if (!component.Visible) { return; }
             bool checkChildren = forceCheckChildren && !ignoreChildren;
             if (!componentsToUpdate.Contains(component))
             {
@@ -298,8 +298,10 @@ namespace Barotrauma
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
         public static void Update(float deltaTime)
-        {  
-            componentsToUpdate.ForEach(c => c.Update(deltaTime));
+        {
+            componentsToUpdate.ForEachMod(c => c.Update(deltaTime));
+            // TODO: will throw exceptions when the collection is modified -> solve
+            //componentsToUpdate.ForEach(c => c.Update(deltaTime));
         }
 
         #region Element drawing

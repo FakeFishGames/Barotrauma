@@ -300,27 +300,27 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
-        {
-            //GUI.AddToUpdateList(this, ignoreChildren: true);
-            //var fixedChildren = Children;
-            //int lastVisible = 0;
-            //for (int i = 0; i < fixedChildren.Count; i++)
-            //{
-            //    if (fixedChildren[i] == frame) continue;
+        //public override void AddToGUIUpdateList()
+        //{
+        //    GUI.AddToUpdateList(this, ignoreChildren: true);
+        //    var fixedChildren = Children;
+        //    int lastVisible = 0;
+        //    for (int i = 0; i < fixedChildren.Count; i++)
+        //    {
+        //        if (fixedChildren[i] == frame) continue;
 
-            //    if (!IsChildVisible(fixedChildren[i]))
-            //    {
-            //        if (lastVisible > 0) break;
-            //        continue;
-            //    }
+        //        if (!IsChildVisible(fixedChildren[i]))
+        //        {
+        //            if (lastVisible > 0) break;
+        //            continue;
+        //        }
 
-            //    lastVisible = i;
-            //    fixedChildren[i].AddToGUIUpdateList();
-            //}
+        //        lastVisible = i;
+        //        fixedChildren[i].AddToGUIUpdateList();
+        //    }
 
-            //if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
-        }
+        //    if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
+        //}
 
         public override void Update(float deltaTime)
         {

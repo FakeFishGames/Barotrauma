@@ -374,8 +374,6 @@ namespace Barotrauma
 
             if (style != null)
                 GUI.Style.Apply(this, style);
-
-            //GUI.AddToUpdateList(this, forceCheckChildren: true);
         }
 
         public void Destroy()
@@ -385,7 +383,7 @@ namespace Barotrauma
 
         public virtual void AddToGUIUpdateList()
         {
-            // TODO: test ignoring children
+            // TODO: test not force checking the children
             GUI.AddToUpdateList(this, forceCheckChildren: true, ignoreChildren: false);
         }
 

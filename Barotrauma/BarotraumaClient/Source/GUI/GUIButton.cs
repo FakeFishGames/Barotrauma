@@ -210,7 +210,7 @@ namespace Barotrauma
             if (!Visible) return;
             base.Update(deltaTime);
             //if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && GUI.IsMouseOn(this))
-            if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (GUI.MouseOn == null || GUI.MouseOn == this || IsParentOf(GUI.MouseOn)))
+            if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && GUI.IsMouseOn(this))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonDown())
