@@ -276,7 +276,7 @@ namespace Barotrauma
                 
                 if (deltaTime>0.0f) child.Update(deltaTime);
                 if (enabled && child.CanBeFocused &&
-                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+                    (GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
@@ -302,11 +302,8 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            if (!Visible) return;
-            if (ComponentsToUpdate.Contains(this)) return;
-            ComponentsToUpdate.Add(this);
-            
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
+            GUI.AddToUpdateList(this, ignoreChildren: true);
+            var fixedChildren = Children;
             int lastVisible = 0;
             for (int i = 0; i < fixedChildren.Count; i++)
             {
@@ -333,7 +330,7 @@ namespace Barotrauma
             
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
-            if ((MouseOn == this || MouseOn == scrollBar || IsParentOf(MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
+            if ((GUI.MouseOn == this || GUI.MouseOn == scrollBar || IsParentOf(GUI.MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
             {
                 scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
             }

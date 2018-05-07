@@ -194,14 +194,23 @@ namespace Barotrauma
             wasOpened = true;
             Dropped = !Dropped;
 
+            // TODO: does not work with the current system
+            //if (Dropped)
+            //{
+            //    if (Enabled) OnDropped?.Invoke(this, userData);
+            //    if (Parent.Children[Parent.Children.Count - 1] != this)
+            //    {
+            //        Parent.Children.Remove(this);
+            //        Parent.Children.Add(this);
+            //    }
+            //}
             if (Dropped)
             {
-                if (Enabled) OnDropped?.Invoke(this, userData);
-                if (Parent.Children[Parent.Children.Count - 1] != this)
+                if (Enabled)
                 {
-                    Parent.Children.Remove(this);
-                    Parent.Children.Add(this);
+                    OnDropped?.Invoke(this, userData);
                 }
+                // TODO: show hidden elements
             }
 
             return true;
@@ -210,8 +219,8 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            button.AddToGUIUpdateList();
-            if (Dropped) listBox.AddToGUIUpdateList();
+            //button.AddToGUIUpdateList();
+            //if (Dropped) listBox.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)

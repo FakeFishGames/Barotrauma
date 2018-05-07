@@ -27,7 +27,7 @@ namespace Barotrauma.Networking
                 FilterMessages();
                 return true;
             };
-            GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
+            GUI.KeyboardDispatcher.Subscriber = searchBox;
 
             var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, "", innerFrame);
             clearButton.OnClicked = ClearFilter;

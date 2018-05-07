@@ -85,6 +85,7 @@ namespace Launcher
             base.Initialize();
         }
 
+        // TODO: this method is never called.
         protected override void LoadContent()
         {
             graphicsWidth = GraphicsDevice.Viewport.Width;
@@ -98,8 +99,7 @@ namespace Launcher
 
             TextureLoader.Init(GraphicsDevice);
 
-            GUI.GraphicsDevice = GraphicsDevice;
-            GUI.Init(Content);
+            GUI.Init(Window, Content);
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -210,14 +210,14 @@ namespace Launcher
             if (GUIMessageBox.VisibleBox != null)
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-                GUIComponent.UpdateMouseOn();
+                GUI.UpdateMouseOn();
                 GUIMessageBox.VisibleBox.Update(deltaTime);
                 return;
-            }            
+            }
 
-            GUIComponent.ClearUpdateList();
+            GUI.ClearUpdateList();
             guiRoot.AddToGUIUpdateList();
-            GUIComponent.UpdateMouseOn();
+            GUI.UpdateMouseOn();
 
             guiRoot.Update(deltaTime);
         }

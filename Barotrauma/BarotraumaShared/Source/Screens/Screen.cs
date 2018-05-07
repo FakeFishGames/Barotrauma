@@ -24,7 +24,7 @@
             {
                 selected.Deselect();
 #if CLIENT
-                GUIComponent.KeyboardDispatcher.Subscriber = null;
+                GUI.KeyboardDispatcher.Subscriber = null;
 #endif
             }
             selected = this;

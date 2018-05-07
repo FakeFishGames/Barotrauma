@@ -383,7 +383,6 @@ namespace Barotrauma
         /// <summary>
         /// Returns all parent elements in the hierarchy.
         /// </summary>
-        /// <returns></returns>
         public IEnumerable<RectTransform> GetParents()
         {
             var parents = new List<RectTransform>();
@@ -401,11 +400,10 @@ namespace Barotrauma
         /// <summary>
         /// Returns all child elements in the hierarchy.
         /// </summary>
-        /// <returns></returns>
-        public IEnumerable<RectTransform> GetChildren()
+        public IEnumerable<RectTransform> GetAllChildren()
         {
             var childs = children.AsEnumerable();
-            children.ForEach(c => childs.Concat(c.GetChildren()));
+            children.ForEach(c => childs.Concat(c.GetAllChildren()));
             return childs;
         }
 

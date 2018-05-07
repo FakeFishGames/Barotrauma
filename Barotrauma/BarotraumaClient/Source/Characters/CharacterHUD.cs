@@ -321,7 +321,7 @@ namespace Barotrauma
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
-                        GUIComponent.ForceMouseOn(null);
+                        GUI.ForceMouseOn(null);
                         if (Character.Controlled != null)
                         {
                             if (GameMain.Client != null)

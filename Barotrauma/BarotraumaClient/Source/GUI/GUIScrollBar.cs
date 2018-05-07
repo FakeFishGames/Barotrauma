@@ -195,7 +195,7 @@ namespace Barotrauma
 
             if (!enabled) return;
 
-            if (MouseOn == frame)
+            if (GUI.MouseOn == frame)
             {
                 if (PlayerInput.LeftButtonClicked())
                 {

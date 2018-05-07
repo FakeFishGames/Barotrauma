@@ -39,10 +39,11 @@ namespace Barotrauma
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
         }
-        
+
 #if CLIENT
         private static GUIListBox editor;
 
+        // called in HumanoidAnimController
         public static void UpdateEditor(float deltaTime)
         {
             if (editor == null)
@@ -56,6 +57,7 @@ namespace Barotrauma
             editor.AddToGUIUpdateList();
         }
 
+        // Called by GUI
         public static void DrawEditor(SpriteBatch spriteBatch)
         {
             editor?.Draw(spriteBatch);
@@ -86,7 +88,7 @@ namespace Barotrauma
             }
         }
 #endif
-        
+
         [Serialize(0.3f, true), Editable]
         public float GetUpSpeed
         {

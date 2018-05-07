@@ -251,11 +251,8 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-            GUI.GraphicsDevice = base.GraphicsDevice;
-            GUI.Init(Content);
-
-            GUIComponent.Init(Window);
-            DebugConsole.Init(Window);
+            GUI.Init(Window, Content);
+            DebugConsole.Init();
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
@@ -404,7 +401,7 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    GUIComponent.ClearUpdateList();
+                    GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
@@ -418,9 +415,9 @@ namespace Barotrauma
                         NetworkMember.AddToGUIUpdateList();
                     }
 
-                    GUI.AddToGUIUpdateList();
+                    GUI.CheckPersistentElements();
                     DebugConsole.AddToGUIUpdateList();
-                    GUIComponent.UpdateMouseOn();
+                    GUI.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
@@ -466,10 +463,10 @@ namespace Barotrauma
             }
 
             if (!DebugDraw) return;
-            if (GUIComponent.MouseOn!=null)
+            if (GUI.MouseOn != null)
             {
                 spriteBatch.Begin();
-                GUI.DrawRectangle(spriteBatch, GUIComponent.MouseOn.MouseRect, Color.Lime);
+                GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
                 spriteBatch.End();
             }
         }

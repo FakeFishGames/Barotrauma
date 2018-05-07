@@ -558,29 +558,34 @@ namespace Barotrauma
                 //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
                 //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
 
-                // TODO: does not work
-                var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
-                dropdown.AddItem("Test1");
-                dropdown.AddItem("Test2");
-                dropdown.AddItem("Test3");
-                dropdown.AddItem("Test4");
-                dropdown.AddItem("Test5");
+                //// TODO: does not work
+                //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
+                //dropdown.AddItem("Test1");
+                //dropdown.AddItem("Test2");
+                //dropdown.AddItem("Test3");
+                //dropdown.AddItem("Test4");
+                //dropdown.AddItem("Test5");
 
                 //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green);
 
                 //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int);
 
-                //var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
-                //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
-                //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
-                //    "");
-                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
-                //{
-                //    messageBox.Close();
-                //    return true;
-                //});
+                var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
+                    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
+                    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
+                    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
+                    "");
+                messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
+                {
+                    messageBox.Close();
+                    return true;
+                });
+                messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomLeft) { RelativeOffset = new Vector2(0.1f, 0.1f) }, "Add text", (button, obj) =>
+                {
+                    messageBox.Text.Text += "\nNew text";
+                    return true;
+                });
             }
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {
@@ -640,7 +645,7 @@ namespace Barotrauma
 
         private void UpdateTestElements()
         {
-            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? innerElements.FirstOrDefault() : outerElement;
+            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? outerElement.Children.FirstOrDefault() : outerElement;
             //var element = buttonsParent;
             //var element = menuTabs[(int)Tab.HostServer];
             var element = testElement;
