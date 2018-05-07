@@ -31,6 +31,8 @@
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
   </health>
+
+  <inventory slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
   
   <ragdoll headposition="154" torsoposition="115" 
            stepsize="42.0, 12.0"

@@ -23,6 +23,8 @@
     <targetpriority tag="room" state="Attack" priority="5"/>
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
+
+  <inventory slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
   
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"

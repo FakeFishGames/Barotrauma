@@ -642,13 +642,16 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, ragdollElement, seed);
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(CharacterInventory.SlotTypes.Length, this);
+                
             }
             else
             {
                 AnimController = new FishAnimController(this, ragdollElement, seed);
                 PressureProtection = 100.0f;
             }
+
+            XElement inventoryElement = doc.Root.Element("inventory");
+            if (inventoryElement != null) inventory = new CharacterInventory(inventoryElement, this);
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
 
@@ -657,25 +660,21 @@ namespace Barotrauma
             XElement healthElement = doc.Root.Element("health") ?? doc.Root.Element("Health");
             health = healthElement == null ? new CharacterHealth(this) : new CharacterHealth(healthElement, this);
                         
-            if (file == humanConfigFile)
+            if (file == humanConfigFile && Info.PickedItemIDs.Any())
             {
-                if (Info.PickedItemIDs.Any())
+                for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
                 {
-                    for (ushort i = 0; i < Info.PickedItemIDs.Count; i++ )
-                    {
-                        if (Info.PickedItemIDs[i] == 0) continue;
+                    if (Info.PickedItemIDs[i] == 0) continue;
 
-                        Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
+                    Item item = FindEntityByID(Info.PickedItemIDs[i]) as Item;
 
-                        System.Diagnostics.Debug.Assert(item != null);
-                        if (item == null) continue;
+                    System.Diagnostics.Debug.Assert(item != null);
+                    if (item == null) continue;
 
-                        item.TryInteract(this, true, true, true);
-                        inventory.TryPutItem(item, i, false, false, null, false);
-                    }
-                }
+                    item.TryInteract(this, true, true, true);
+                    inventory.TryPutItem(item, i, false, false, null, false);
+                }                
             }
-
 
             AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
@@ -1090,9 +1089,9 @@ namespace Barotrauma
         
         public bool HasEquippedItem(Item item)
         {
-            for (int i = 0; i < CharacterInventory.SlotTypes.Length; i++)
+            for (int i = 0; i < inventory.Capacity; i++)
             {
-                if (inventory.Items[i] == item && CharacterInventory.SlotTypes[i] != InvSlotType.Any) return true;
+                if (inventory.Items[i] == item && inventory.SlotTypes[i] != InvSlotType.Any) return true;
             }
 
             return false;
@@ -1100,9 +1099,9 @@ namespace Barotrauma
 
         public bool HasEquippedItem(string itemName, bool allowBroken = true)
         {
-            for (int i = 0; i < inventory.Items.Length; i++)
+            for (int i = 0; i < inventory.Capacity; i++)
             {
-                if (CharacterInventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
+                if (inventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
                 if (!allowBroken && inventory.Items[i].Condition <= 0.0f) continue;
                 if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
             }
