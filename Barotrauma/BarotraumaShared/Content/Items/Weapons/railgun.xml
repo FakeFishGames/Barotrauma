@@ -93,7 +93,7 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
-    <Projectile launchimpulse="80.0">
+    <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
         <affliction name="Internal Damage" strength="100"/>
         <affliction name="Bleeding" strength="10"/>
@@ -133,7 +133,7 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 
-    <Projectile launchimpulse="80.0">
+    <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
         <affliction name="Internal Damage" strength="100"/>
         <affliction name="Bleeding" strength="10"/>

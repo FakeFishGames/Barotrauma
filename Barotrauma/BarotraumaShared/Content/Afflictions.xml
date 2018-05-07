@@ -123,6 +123,7 @@
     selfcauseofdeathdescription="You have been crushed by water pressure."
     limbspecific="false"
     maxstrength="1"
+    showiconthreshold="10"
     damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="1" multiplybymaxvitality="true"
       minvitalitydecrease="1"

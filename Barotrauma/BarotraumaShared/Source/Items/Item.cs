@@ -1916,10 +1916,14 @@ namespace Barotrauma
                 }
             }
 
+            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
-                ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-                if (component != null) component.Load(subElement);
+                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
+                if (component == null) continue;
+
+                component.Load(subElement);
+                unloadedComponents.Remove(component);
             }
 
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);

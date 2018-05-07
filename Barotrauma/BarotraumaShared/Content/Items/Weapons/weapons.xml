@@ -20,7 +20,7 @@
     <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
-    <Projectile launchimpulse="20.0" sticktocharacters="true">
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="50">
         <affliction name="Bleeding" strength="30"/>
         <affliction name="Internal Damage" strength="30"/>
@@ -119,7 +119,7 @@
     <Body width="8" height="3" density="40"/>
 
     <Pickable slots="Any"/>
-    <Projectile hitscan="true" removeonhit="true" >
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" >
       <Attack structuredamage="100" stun="0.5" targetforce="50">
         <affliction name="Gunshot wound" strength="40"/>
         <affliction name="Internal Damage" strength="30"/>
