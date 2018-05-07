@@ -336,22 +336,6 @@ namespace Barotrauma
             set { selectedColor = value; }
         }
 
-        protected GUIComponent(string style)
-        {
-            Visible = true;
-
-            TileSprites = true;
-
-            OutlineColor = Color.Transparent;
-
-            Font = GUI.Font;
-
-            CanBeFocused = true;
-
-            if (style != null)
-                GUI.Style.Apply(this, style);
-        }
-
         private RectTransform rectTransform;
         public RectTransform RectTransform
         {
@@ -374,6 +358,35 @@ namespace Barotrauma
         {
             RectTransform = rectT;
             rect = RectTransform.Rect;
+        }
+
+        protected GUIComponent(string style)
+        {
+            Visible = true;
+
+            TileSprites = true;
+
+            OutlineColor = Color.Transparent;
+
+            Font = GUI.Font;
+
+            CanBeFocused = true;
+
+            if (style != null)
+                GUI.Style.Apply(this, style);
+
+            //GUI.AddToUpdateList(this, forceCheckChildren: true);
+        }
+
+        public void Destroy()
+        {
+            GUI.RemoveFromUpdateList(this, forceCheckChildren: true);
+        }
+
+        public virtual void AddToGUIUpdateList()
+        {
+            // TODO: test ignoring children
+            GUI.AddToUpdateList(this, forceCheckChildren: true, ignoreChildren: false);
         }
 
         protected virtual void SetAlpha(float a)
@@ -657,12 +670,6 @@ namespace Barotrauma
                     children[i].Draw(spriteBatch);
                 }
             }
-        }
-
-        public virtual void AddToGUIUpdateList()
-        {
-            // TODO: test ignoring children
-            GUI.AddToUpdateList(this, forceCheckChildren: false, ignoreChildren: false);
         }
     }
 }
