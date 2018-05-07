@@ -109,6 +109,7 @@
       </fabricableitem>
 
       <fabricableitem name="Oxygen Tank" requireditems="Steel Bar" outcondition="0.0"/>
+      <fabricableitem name="Oxygenite Tank" requireditems="Steel Bar, Liquid Oxygenite, Liquid Oxygenite, Liquid Oxygenite" outcondition="100.0" requiredtime="5" />
       <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar" outcondition="0.0"/>
     </Fabricator>
 		

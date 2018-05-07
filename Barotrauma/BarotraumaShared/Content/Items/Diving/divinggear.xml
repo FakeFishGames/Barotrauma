@@ -22,7 +22,32 @@
       </StatusEffect>
     </Pickable>
   </Item>
-  
+
+  <Item
+  name="Oxygenite Tank"
+  category="Equipment,Misc"
+  Tags="meditem,oxygensource"
+  description="A Tank containing liquid Oxygenite.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Liquid Oxygenite" mincondition="0.1"/>
+      <Item name="Liquid Oxygenite" mincondition="0.5"/>
+      <Item name="Liquid Oxygenite" mincondition="0.9"/>
+    </Deconstruct>
+
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
+
+    <Body width="12" height="33" density="9.9"/>
+
+    <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
+      <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+        <sound file="Content/Items/Reactor/explosion.ogg"/>
+        <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="3.0"/>
+      </StatusEffect>
+    </Pickable>
+  </Item> 
+ 
   <Item
     name="Diving Mask"
     category="Equipment"
@@ -49,14 +74,14 @@
         <RequiredItem type="Contained" name="Welding Fuel Tank"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem type="Contained" name="Oxygenite Tank"/>
       </StatusEffect>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>  
   </Item>
 
@@ -115,7 +140,7 @@
         <RequiredItem type="Contained" name="Welding Fuel Tank"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem type="Contained" name="Oxygenite Tank"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
 
@@ -127,7 +152,7 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>
   </Item>
 

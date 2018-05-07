@@ -60,6 +60,7 @@
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>
   </Item>
 
@@ -112,6 +113,7 @@
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>
   </Item>
 
