@@ -241,6 +241,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (fabricatedItem == null)
+            {
+                CancelFabricating();
+                return;
+            }
+
 #if CLIENT
             if (progressBar != null)
             {
