@@ -84,7 +84,7 @@ namespace Barotrauma
         {
             if (RectTransform != null)
             {
-                DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
+                //DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
                 return;
             }
             if (child == null) return;
@@ -553,14 +553,16 @@ namespace Barotrauma
             //    if (!c.Visible) continue;
             //    c.Update(deltaTime);
             //}
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.Element.Update(deltaTime));
-            }
-            else
-            {
-                children.ForEach(c => c.Update(deltaTime));
-            }
+
+            // don't update children, because otherwise they are updated multiple times!
+            //if (RectTransform != null)
+            //{
+            //    RectTransform.Children.ForEach(c => c.Element.Update(deltaTime));
+            //}
+            //else
+            //{
+            //    children.ForEach(c => c.Update(deltaTime));
+            //}
         }
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
