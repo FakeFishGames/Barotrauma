@@ -19,9 +19,6 @@ namespace Barotrauma
         public delegate bool OnButtonDownHandler();
         public OnButtonDownHandler OnButtonDown;
 
-        public delegate bool OnButtonUpHandler();
-        public OnButtonDownHandler OnButtonUp;
-
         public bool CanBeSelected = true;
 
         private bool enabled;
@@ -215,11 +212,7 @@ namespace Barotrauma
             if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (GUI.MouseOn == null || GUI.MouseOn == this || IsParentOf(GUI.MouseOn)))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonReleased())
-                {
-                    OnButtonUp?.Invoke();
-                }
-                else if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.LeftButtonDown())
                 {
                     OnButtonDown?.Invoke();
                 }
