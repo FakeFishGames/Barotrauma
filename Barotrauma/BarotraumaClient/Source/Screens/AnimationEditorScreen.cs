@@ -96,7 +96,7 @@ namespace Barotrauma
 
             GameMain.World.Step((float)deltaTime);
 
-            gui.Update((float)deltaTime);
+            //gui.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

@@ -180,6 +180,8 @@ namespace Barotrauma
             {
                 cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
             }
+            DrawString(spriteBatch, new Vector2(200, 0), "gui components: " + componentsToUpdate.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+            DrawString(spriteBatch, new Vector2(200, 50), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
         }
 
         private static List<GUIComponent> componentsToUpdate = new List<GUIComponent>();
@@ -211,7 +213,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
                 return;
             }
-            if (!component.Visible) { return; }
+            //if (!component.Visible) { return; }
             bool checkChildren = forceCheckChildren && !ignoreChildren;
             if (!componentsToUpdate.Contains(component))
             {
@@ -238,11 +240,26 @@ namespace Barotrauma
             }
         }
 
+        private static void Remove(GUIComponent component)
+        {
+            if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
+            {
+                KeyboardDispatcher.Subscriber = null;
+            }
+            componentsToUpdate.Remove(component);
+        }
+
+        public static void RemoveFromUpdateList(GUIComponent component, bool forceCheckChildren = false)
+        {
+            if (!forceCheckChildren && !componentsToUpdate.Contains(component)) { return; }
+            Remove(component);
+            component.Children.ForEach(c => RemoveFromUpdateList(c, forceCheckChildren));
+            //component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.Element, forceCheckChildren));
+        }
+
         public static void ClearUpdateList()
         {
-            if (KeyboardDispatcher != null &&
-                KeyboardDispatcher.Subscriber is GUIComponent &&
-                !componentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
+            if (KeyboardDispatcher.Subscriber is GUIComponent && !componentsToUpdate.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
             {
                 KeyboardDispatcher.Subscriber = null;
             }
@@ -281,7 +298,7 @@ namespace Barotrauma
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
         public static void Update(float deltaTime)
-        {
+        {  
             componentsToUpdate.ForEach(c => c.Update(deltaTime));
         }
 
