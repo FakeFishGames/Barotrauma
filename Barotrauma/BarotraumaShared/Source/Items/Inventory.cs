@@ -209,7 +209,7 @@ namespace Barotrauma
             syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -217,6 +217,12 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 newItemIDs[i] = msg.ReadUInt16();
+            }
+
+            if (this is CharacterInventory)
+            {
+                if (Owner == null || !(Owner is Character)) return;
+                if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead) return;
             }
 
             if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))

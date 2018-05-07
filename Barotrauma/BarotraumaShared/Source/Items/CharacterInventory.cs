@@ -26,12 +26,20 @@ namespace Barotrauma
 
         protected bool[] IsEquipped;
 
+        public bool AccessibleWhenAlive
+        {
+            get;
+            private set;
+        }
+
         public CharacterInventory(XElement element, Character character)
             : base(character, element.GetAttributeString("slots", "").Split(',').Count())
         {
             this.character = character;
             IsEquipped = new bool[capacity];
             SlotTypes = new InvSlotType[capacity];
+
+            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", true);
 
             string[] slotTypeNames = element.GetAttributeString("slots", "").Split(',');
             System.Diagnostics.Debug.Assert(slotTypeNames.Length == capacity);
@@ -57,10 +65,10 @@ namespace Barotrauma
                 }               
             }
 
-            InitProjSpecific();
+            InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
 
         private bool UseItemOnSelf(int slotIndex)
         {
