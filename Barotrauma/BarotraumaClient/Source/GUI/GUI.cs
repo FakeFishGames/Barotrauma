@@ -251,9 +251,10 @@ namespace Barotrauma
 
         public static GUIComponent MouseOn { get; private set; }
 
-        public static bool CheckMouseOn(GUIComponent target)
+        public static bool IsMouseOn(GUIComponent target)
         {
             if (target == null) { return false; }
+            if (MouseOn == null) { return true; }
             return target == MouseOn || target.IsParentOf(MouseOn);
         }
 
