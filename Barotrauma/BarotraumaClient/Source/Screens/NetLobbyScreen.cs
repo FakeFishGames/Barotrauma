@@ -386,7 +386,7 @@ namespace Barotrauma
                 else
                 {
                     GameMain.Server.ServerLog.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
+                    GUI.KeyboardDispatcher.Subscriber = null;
                 }
                 return true;
             };

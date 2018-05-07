@@ -30,7 +30,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     log.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
+                    GUI.KeyboardDispatcher.Subscriber = null;
                 }
                 return true;
             };

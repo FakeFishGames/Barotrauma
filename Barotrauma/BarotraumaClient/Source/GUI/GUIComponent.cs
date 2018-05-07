@@ -41,6 +41,24 @@ namespace Barotrauma
             return null;
         }
 
+        /// <summary>
+        /// Returns all child elements in the hierarchy.
+        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the Element property directly.
+        /// </summary>
+        public IEnumerable<GUIComponent> GetAllChildren()
+        {
+            if (RectTransform != null)
+            {
+                return RectTransform.GetAllChildren().Select(c => c.Element);
+            }
+            else
+            {
+                var childs = children.AsEnumerable();
+                children.ForEach(c => childs.Concat(c.GetAllChildren()));
+                return childs;
+            }
+        }
+
         public bool IsParentOf(GUIComponent component)
         {
             if (component == null) { return false; }
@@ -140,62 +158,6 @@ namespace Barotrauma
         #endregion
 
         const float FlashDuration = 1.5f;
-
-        public static GUIComponent MouseOn
-        {
-            get;
-            private set;
-        }
-        public static void ForceMouseOn(GUIComponent c)
-        {
-            MouseOn = c;
-        }
-
-        protected static List<GUIComponent> ComponentsToUpdate = new List<GUIComponent>();
-
-        public virtual void AddToGUIUpdateList()
-        {
-            if (!Visible) return;
-            if (ComponentsToUpdate.Contains(this)) return;
-            ComponentsToUpdate.Add(this);
-
-            //TODO:  Is this necessary?
-            //List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
-            //foreach (GUIComponent c in fixedChildren)
-            //{
-            //    c.AddToGUIUpdateList();
-            //}
-            Children.ForEach(c => c.AddToGUIUpdateList());
-        }
-
-        public static void ClearUpdateList()
-        {
-            if (keyboardDispatcher != null &&
-                KeyboardDispatcher.Subscriber is GUIComponent &&
-                !ComponentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
-            {
-                KeyboardDispatcher.Subscriber = null;
-            }
-
-            ComponentsToUpdate.Clear();
-        }
-
-        public static GUIComponent UpdateMouseOn()
-        {
-            MouseOn = null;
-            for (int i = ComponentsToUpdate.Count - 1; i >= 0; i--)
-            {
-                GUIComponent c = ComponentsToUpdate[i];
-                if (c.MouseRect.Contains(PlayerInput.MousePosition))
-                {
-                    MouseOn = c;
-                    break;
-                }
-            }
-            return MouseOn;
-        }
-
-        protected static KeyboardDispatcher keyboardDispatcher;
 
         public enum ComponentState { None, Hover, Pressed, Selected };
 
@@ -374,11 +336,6 @@ namespace Barotrauma
             set { selectedColor = value; }
         }
 
-        public static KeyboardDispatcher KeyboardDispatcher
-        {
-            get { return keyboardDispatcher; }
-        }
-
         protected GUIComponent(string style)
         {
             Visible = true;
@@ -417,11 +374,6 @@ namespace Barotrauma
         {
             RectTransform = rectT;
             rect = RectTransform.Rect;
-        }
-
-        public static void Init(GameWindow window)
-        {
-            keyboardDispatcher = new KeyboardDispatcher(window);
         }
 
         protected virtual void SetAlpha(float a)
@@ -564,7 +516,7 @@ namespace Barotrauma
 
             }
 
-            toolTipBlock.rect = new Rectangle(MouseOn.Rect.Center.X, MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
+            toolTipBlock.rect = new Rectangle(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
             if (toolTipBlock.rect.Right > GameMain.GraphicsWidth - 10)
             {
                 toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);
@@ -703,6 +655,12 @@ namespace Barotrauma
                     children[i].Draw(spriteBatch);
                 }
             }
+        }
+
+        public virtual void AddToGUIUpdateList()
+        {
+            // TODO: test ignoring children
+            GUI.AddToUpdateList(this, forceCheckChildren: false, ignoreChildren: false);
         }
     }
 }

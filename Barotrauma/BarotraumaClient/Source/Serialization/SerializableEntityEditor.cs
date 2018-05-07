@@ -18,7 +18,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new editor.
         /// </summary>
-        public SerializableEntityEditor(RectTransform rectT, ISerializableEntity entity, bool inGame, GUIComponent parent, bool showName, string style = "") : base(style, rectT, parent)
+        public SerializableEntityEditor(RectTransform rectT, ISerializableEntity entity, bool inGame, bool showName, string style = "") : base(style, rectT)
         {
 
         }
@@ -127,13 +127,6 @@ namespace Barotrauma
                 Children[i].Rect = new Rectangle(Children[i].Rect.X, Children[i].Rect.Y + component.Rect.Height, Children[i].Rect.Width, Children[i].Rect.Height);
             }
             SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);
-        }
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);
-
-            DrawChildren(spriteBatch);
         }
 
         private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, int yPos, GUIComponent parent)

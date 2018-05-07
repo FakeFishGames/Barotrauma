@@ -130,7 +130,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (MouseOn == this && Enabled)
+            if (GUI.MouseOn == this && Enabled)
             {
                 box.State = ComponentState.Hover;
 

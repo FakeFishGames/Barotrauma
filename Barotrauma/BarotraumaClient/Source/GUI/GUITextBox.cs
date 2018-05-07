@@ -215,15 +215,17 @@ namespace Barotrauma
         public void Select()
         {
             Selected = true;
-            keyboardDispatcher.Subscriber = this;
+            GUI.KeyboardDispatcher.Subscriber = this;
             //if (Clicked != null) Clicked(this);
         }
 
         public void Deselect()
         {
             Selected = false;
-            if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
-
+            if (GUI.KeyboardDispatcher.Subscriber == this)
+            {
+                GUI.KeyboardDispatcher.Subscriber = null;
+            }
             OnDeselected?.Invoke(this, Keys.None);
         }
 
@@ -240,7 +242,7 @@ namespace Barotrauma
             if (!Enabled) return;
             
             if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled &&
-                (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
+                (GUI.MouseOn == null || GUI.MouseOn == this || IsParentOf(GUI.MouseOn) || GUI.MouseOn.IsParentOf(this)))
             {
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())
@@ -260,7 +262,7 @@ namespace Barotrauma
                 caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
             }
             
-            if (keyboardDispatcher.Subscriber == this)
+            if (GUI.KeyboardDispatcher.Subscriber == this)
             {
                 state = ComponentState.Selected;
                 Character.DisableControls = true;

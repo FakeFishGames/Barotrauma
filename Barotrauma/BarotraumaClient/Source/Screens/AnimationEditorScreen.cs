@@ -41,6 +41,8 @@ namespace Barotrauma
 
             gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: null, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
 
+            //new SerializableEntityEditor(HumanoidAnimParams.WalkInstance, false, editor, true);
+            //new SerializableEntityEditor(HumanoidAnimParams.RunInstance, false, editor, true);
 
             var buttons = GUI.CreateButtons(1, new Vector2(0.9f, 0.1f), gui.RectTransform, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 30);
             for (int i = 0; i < buttons.Count; i++)

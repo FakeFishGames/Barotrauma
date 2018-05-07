@@ -168,7 +168,7 @@ namespace Barotrauma
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (allowMove && GUIComponent.KeyboardDispatcher.Subscriber == null)
+                if (allowMove && GUI.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;

@@ -216,7 +216,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);
+            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);
 
             guiRoot.Update((float)deltaTime);
 

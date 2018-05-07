@@ -100,10 +100,10 @@ namespace Barotrauma
                 return;
             }
 
-            if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow)
+            if (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow)
             {
                 if (highlightedListBox == null ||
-                    (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn)))
+                    (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn)))
                 {
                     UpdateHighlightedListBox(null);
                     return;
@@ -169,9 +169,9 @@ namespace Barotrauma
             if (startMovingPos == Vector2.Zero)
             {
                 List<MapEntity> highlightedEntities = new List<MapEntity>();
-                if (highlightedListBox != null && highlightedListBox.IsParentOf(GUIComponent.MouseOn))
+                if (highlightedListBox != null && highlightedListBox.IsParentOf(GUI.MouseOn))
                 {
-                    highLightedEntity = GUIComponent.MouseOn.UserData as MapEntity;
+                    highLightedEntity = GUI.MouseOn.UserData as MapEntity;
                 }
                 else
                 {
@@ -330,7 +330,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space) &&
-                    (highlightedListBox == null || (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn))))
+                    (highlightedListBox == null || (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn))))
                 {
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in selectedList)
@@ -352,7 +352,7 @@ namespace Barotrauma
             }
             if (highlightedListBox != null)
             {
-                if (GUIComponent.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUIComponent.MouseOn)) return;
+                if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
                 if (highlightedEntities.SequenceEqual(highlightedList)) return;
             }
 
@@ -398,7 +398,7 @@ namespace Barotrauma
         /// </summary>
         public static void DrawSelecting(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GUIComponent.MouseOn != null) return;
+            if (GUI.MouseOn != null) return;
 
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);

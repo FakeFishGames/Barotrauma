@@ -29,7 +29,7 @@ namespace Barotrauma
         static GUIListBox listBox;
         static GUITextBox textBox;
 
-        public static void Init(GameWindow window)
+        public static void Init()
         {
             int x = 20, y = 20;
             int width = 800, height = 500;
@@ -99,7 +99,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUIComponent.ForceMouseOn(null);
+                    GUI.ForceMouseOn(null);
                     textBox.Deselect();
                 }
             }

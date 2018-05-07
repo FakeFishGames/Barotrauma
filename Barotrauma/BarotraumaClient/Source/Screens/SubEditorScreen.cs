@@ -321,7 +321,7 @@ namespace Barotrauma
         {
             base.Select();
 
-            GUIComponent.ForceMouseOn(null);
+            GUI.ForceMouseOn(null);
             characterMode = false;
 
             if (Submarine.MainSub != null)
@@ -354,7 +354,7 @@ namespace Barotrauma
         {
             base.Deselect();
 
-            GUIComponent.ForceMouseOn(null);
+            GUI.ForceMouseOn(null);
 
             MapEntityPrefab.Selected = null;
 
@@ -696,6 +696,7 @@ namespace Barotrauma
 
         private bool LoadSub(GUIButton button, object obj)
         {
+            // TODO: loadFrame is null
             GUIListBox subList = loadFrame.GetChild<GUIListBox>();
 
             if (subList.Selected == null) return false;
@@ -764,7 +765,7 @@ namespace Barotrauma
         {
             if (selectedTab == -1)
             {
-                GUIComponent.KeyboardDispatcher.Subscriber = null;
+                GUI.KeyboardDispatcher.Subscriber = null;
                 return false;
             }
 
@@ -988,7 +989,7 @@ namespace Barotrauma
 
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;
-            GUIComponent.ForceMouseOn(null);
+            GUI.ForceMouseOn(null);
             return false;
         }
 
@@ -1371,7 +1372,7 @@ namespace Barotrauma
                 }
             }
 
-            GUI.AddToGUIUpdateList();
+            //GUI.AddToGUIUpdateList();
         }
 
         /// <summary>
@@ -1384,7 +1385,7 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
 
-            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);            
+            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);            
 
             if (characterMode || wiringMode)
             {
@@ -1496,7 +1497,7 @@ namespace Barotrauma
                 CharacterHUD.Update((float)deltaTime, dummyCharacter);
             }
 
-            GUI.Update((float)deltaTime);
+            //GUI.Update((float)deltaTime);
         }
 
         /// <summary>
