@@ -46,7 +46,7 @@ namespace Barotrauma
                 toggleArrow.Origin = toggleArrow.size / 2;
             }
 
-            toggleArrowSlotIndex = MathHelper.Clamp(0, capacity - 1, element.GetAttributeInt("arrowslot", 0));
+            toggleArrowSlotIndex = MathHelper.Clamp( element.GetAttributeInt("arrowslot", 0), 0, capacity - 1);
 
             hidden = true;
 
