@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <style>
-  <Cursor texture="Content/UI/cursor.png"/>
+  <Cursor texture="Content/UI/cursor.png" origin="0,0"/>
   
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
