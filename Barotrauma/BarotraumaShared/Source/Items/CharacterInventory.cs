@@ -50,7 +50,7 @@ namespace Barotrauma
                 slotTypeNames[i] = slotTypeNames[i].Trim();
                 if (!Enum.TryParse(slotTypeNames[i], out parsedSlotType))
                 {
-                    DebugConsole.ThrowError("Error in the inventory config of \""+character.SpeciesName+"\" - "+slotTypeNames[i]+" is not a valid inventory slot type.");
+                    DebugConsole.ThrowError("Error in the inventory config of \"" + character.SpeciesName + "\" - " + slotTypeNames[i] + " is not a valid inventory slot type.");
                 }
                 SlotTypes[i] = parsedSlotType;
                 switch (SlotTypes[i])
@@ -64,8 +64,23 @@ namespace Barotrauma
                         break;
                 }               
             }
-
+            
             InitProjSpecific(element);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
+
+                string itemName = subElement.GetAttributeString("name", "");
+                ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemName + "\" not found.");
+                    continue;
+                }
+
+                Entity.Spawner.AddToSpawnQueue(itemPrefab, this);
+            }
         }
 
         partial void InitProjSpecific(XElement element);
