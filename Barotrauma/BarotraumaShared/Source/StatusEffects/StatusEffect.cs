@@ -410,7 +410,7 @@ namespace Barotrauma
             {
                 foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
+                    Entity.Spawner?.AddToRemoveQueue(item);
                 }
             }
 
