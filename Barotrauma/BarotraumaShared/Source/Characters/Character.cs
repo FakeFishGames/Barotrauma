@@ -480,7 +480,16 @@ namespace Barotrauma
         {
             get
             {
-                return !Removed && (isDead || Stun > 0.0f || LockHands || IsUnconscious);
+                if (Removed) return false;
+
+                if (!inventory.AccessibleWhenAlive)
+                {
+                    return IsDead;
+                }
+                else
+                {
+                    return (isDead || Stun > 0.0f || LockHands || IsUnconscious);
+                }
             }
         }
 
@@ -1176,7 +1185,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || Removed || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
+            if (c == this || Removed || !c.Enabled || c.inventory == null || !c.CanBeSelected) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;

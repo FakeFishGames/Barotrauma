@@ -61,6 +61,8 @@ namespace Barotrauma
             set
             {
                 if (openHealthWindow == value) return;
+                if (value != null && !value.UseHealthWindow) return;
+
                 openHealthWindow = value;
                 if (openHealthWindow != null)
                 {
@@ -320,7 +322,7 @@ namespace Barotrauma
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft) :
                 Rectangle.Union(HUDLayoutSettings.AfflictionAreaRight, HUDLayoutSettings.HealthBarAreaRight);
 
-            if (character.AllowInput && hoverArea.Contains(PlayerInput.MousePosition))
+            if (character.AllowInput && UseHealthWindow && hoverArea.Contains(PlayerInput.MousePosition))
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())

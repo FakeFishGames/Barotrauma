@@ -76,6 +76,8 @@ namespace Barotrauma
         public bool DoesBleed { get; private set; }
         public bool UseBloodParticles { get; private set; }
 
+        public bool UseHealthWindow { get; private set; }
+
         private List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
         private List<Affliction> afflictions = new List<Affliction>();
@@ -164,6 +166,7 @@ namespace Barotrauma
 
             DoesBleed = true;
             UseBloodParticles = true;
+            UseHealthWindow = false;
 
             irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
             irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
@@ -190,7 +193,8 @@ namespace Barotrauma
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
             UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
-            
+            UseHealthWindow         = element.GetAttributeBool("usehealthwindow", false);
+
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
 
             limbHealths.Clear();

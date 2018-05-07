@@ -1043,12 +1043,17 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
 
             Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftHand);
+            if (targetLeftHand == null) targetLeftHand = target.AnimController.GetLimb(LimbType.Torso);
+            if (targetLeftHand == null) targetLeftHand = target.AnimController.MainLimb;
+
             Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightHand);
+            if (targetRightHand == null) targetRightHand = target.AnimController.GetLimb(LimbType.Torso);
+            if (targetRightHand == null) targetRightHand = target.AnimController.MainLimb;
 
             //only grab with one hand when swimming
             leftHand.Disabled = true;
             if (!inWater) rightHand.Disabled = true;
-
+            
             for (int i = 0; i < 2; i++)
             {
                 Limb targetLimb = target.AnimController.GetLimb(LimbType.Torso);
@@ -1077,11 +1082,8 @@ namespace Barotrauma
                 
                 Limb pullLimb = i == 0 ? leftHand : rightHand;
 
-                if (i == 1 && inWater)
-                {
-                    targetLimb.pullJoint.Enabled = false;
-                }
-                else
+                //only pull with one hand when swimming
+                if (i < 1 || !inWater)
                 {
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
@@ -1090,7 +1092,7 @@ namespace Barotrauma
                     {
                         pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
                         pullLimb.pullJoint.MaxForce = 5000.0f;
-                        targetMovement *= 0.7f; //Carrying people like that takes a lot of effort.
+                        targetMovement *= (Mass / target.Mass); //Carrying people like that takes a lot of effort.
                         
                         if (target.AnimController.Dir != Dir)
                             target.AnimController.Flip();
@@ -1104,8 +1106,16 @@ namespace Barotrauma
                     targetLimb.pullJoint.Enabled = true;
                     if (targetLimb.type == LimbType.Torso)
                     {
-                        targetLimb.pullJoint.WorldAnchorB = torso.SimPosition + (Vector2.UnitX * Dir) * 0.6f;
-                        targetLimb.pullJoint.MaxForce = 300.0f;
+                        //hand length
+                        float a = 37.0f;
+                        //arm length
+                        float b = 28.0f;
+
+                        Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
+                        Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
+                        
+                        targetLimb.pullJoint.WorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
+                        targetLimb.pullJoint.MaxForce = 100.0f;
                     }
                     else
                     {

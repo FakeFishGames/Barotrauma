@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,11 +13,12 @@ namespace Barotrauma
     {        
         private static Sprite toggleArrow;
         private float arrowAlpha;
-        
+
+        //which slot is the toggle arrow drawn above
+        private int toggleArrowSlotIndex;
+
         public Vector2[] SlotPositions;
-
-        //private GUIButton[] useOnSelfButton;
-
+        
         private Alignment alignment;
         public Alignment Alignment
         {
@@ -35,16 +37,16 @@ namespace Barotrauma
             get { return hidden; }
             set { hidden = value; }
         }
-
-        partial void InitProjSpecific()
+        
+        partial void InitProjSpecific(XElement element)
         {
-            //useOnSelfButton = new GUIButton[2];
-            
             if (toggleArrow == null)
             {
                 toggleArrow = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(585, 973, 67, 23), null);
                 toggleArrow.Origin = toggleArrow.size / 2;
             }
+
+            toggleArrowSlotIndex = MathHelper.Clamp(0, capacity - 1, element.GetAttributeInt("arrowslot", 0));
 
             hidden = true;
 
@@ -253,6 +255,8 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, bool isSubInventory = false)
         {
+            if (!AccessibleWhenAlive && !character.IsDead) return;
+
             base.Update(deltaTime);
 
             bool hoverOnInventory = GUIComponent.MouseOn == null &&
@@ -262,8 +266,8 @@ namespace Barotrauma
             if (alignment == Alignment.Center)
             {
                 Rectangle arrowRect = new Rectangle(
-                    (int)(slots[9].Rect.Center.X + slots[9].DrawOffset.X - toggleArrow.size.X / 2),
-                    (int)(slots[9].Rect.Y + slots[9].DrawOffset.Y - 50 - toggleArrow.size.Y / 2), 
+                    (int)(slots[toggleArrowSlotIndex].Rect.Center.X + slots[toggleArrowSlotIndex].DrawOffset.X - toggleArrow.size.X / 2),
+                    (int)(slots[toggleArrowSlotIndex].Rect.Y + slots[toggleArrowSlotIndex].DrawOffset.Y - 50 - toggleArrow.size.Y / 2), 
                     (int)toggleArrow.size.X, (int)toggleArrow.size.Y);
                 arrowRect.Inflate(30, 0);
 
@@ -288,8 +292,8 @@ namespace Barotrauma
                 }
 
                 if (GUIComponent.MouseOn == null &&
-                    (slots[9].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
-                    slots[9].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[9].EquipButtonRect.Bottom) &&
+                    (slots[toggleArrowSlotIndex].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
+                    slots[toggleArrowSlotIndex].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[toggleArrowSlotIndex].EquipButtonRect.Bottom) &&
                     slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
                 {
                     hoverOnInventory = true;
@@ -579,6 +583,8 @@ namespace Barotrauma
         
         public void DrawOwn(SpriteBatch spriteBatch)
         {
+            if (!AccessibleWhenAlive && !character.IsDead) return;
+
             if (slots == null) CreateSlots();
             
             base.Draw(spriteBatch);
@@ -625,7 +631,7 @@ namespace Barotrauma
             if (Alignment == Alignment.Center)
             {
                 toggleArrow.Draw(spriteBatch, 
-                    slots[9].DrawOffset + new Vector2(slots[9].Rect.Center.X, slots[9].Rect.Y - 50), 
+                    slots[toggleArrowSlotIndex].DrawOffset + new Vector2(slots[toggleArrowSlotIndex].Rect.Center.X, slots[toggleArrowSlotIndex].Rect.Y - 50), 
                     Color.White * arrowAlpha, hidden ? 0 : MathHelper.Pi);
             }
         
