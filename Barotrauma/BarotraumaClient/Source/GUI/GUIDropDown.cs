@@ -216,9 +216,9 @@ namespace Barotrauma
             return true;
         }
 
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(bool ignoreChildren = false)
         {
-            base.AddToGUIUpdateList();
+            base.AddToGUIUpdateList(ignoreChildren);
             //button.AddToGUIUpdateList();
             //if (Dropped) listBox.AddToGUIUpdateList();
         }
