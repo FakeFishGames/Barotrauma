@@ -1334,6 +1334,7 @@ namespace Barotrauma.Networking
                 {
                     characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                     characterInfos.Add(characterInfo);
+                    characterInfo.TeamID = hostTeam;
                 }
 
                 List<CharacterInfo> bots = new List<CharacterInfo>();
