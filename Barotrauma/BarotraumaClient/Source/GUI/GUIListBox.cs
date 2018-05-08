@@ -453,7 +453,7 @@ namespace Barotrauma
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
-                GUIComponent child = Children[i];
+                GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
 
                 if (!IsChildVisible(child))
