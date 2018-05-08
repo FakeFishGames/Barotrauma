@@ -189,12 +189,12 @@ namespace Barotrauma
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = null) : base(style, rectT)
         {
             selected = new List<GUIComponent>();
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            if (style != null) GUI.Style.Apply(frame, style, this);
             if (color.HasValue)
             {
                 this.color = color.Value;
             }
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            if (style != null) GUI.Style.Apply(frame, style, this);
             scrollBarHidden = true;
             if (isHorizontal)
             {
