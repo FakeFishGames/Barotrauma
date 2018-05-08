@@ -264,7 +264,14 @@ namespace Barotrauma
                 GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
 
-                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                if (child.RectTransform != null)
+                {
+                    child.RectTransform.AbsoluteOffset = new Point(x, y);
+                }
+                else
+                {
+                    child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                }
                 if (scrollBar.IsHorizontal)
                 {
                     x += child.Rect.Width + spacing;
@@ -274,6 +281,7 @@ namespace Barotrauma
                     y += child.Rect.Height + spacing;
                 }
                 
+                // TODO: not sure if we should do this.
                 if (deltaTime>0.0f) child.Update(deltaTime);
                 if (enabled && child.CanBeFocused &&
                     (GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
@@ -397,14 +405,21 @@ namespace Barotrauma
 
         public override void AddChild(GUIComponent child)
         {
+            if (RectTransform != null && child.RectTransform != null)
+            {
+                child.RectTransform.Parent = RectTransform;
+            }
+            else
+            {
+                base.AddChild(child);
+            }
+
             // TODO: cannot do this when using RectTransform
             //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
             if (scrollBar.IsHorizontal)            
                 rect.Height -= scrollBar.Rect.Height;
             else
                 rect.Width -= scrollBar.Rect.Width;
-
-            base.AddChild(child);
 
             if (scrollBar.IsHorizontal)
                 rect.Height += scrollBar.Rect.Height;
