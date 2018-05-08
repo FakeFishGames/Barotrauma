@@ -1088,14 +1088,12 @@ namespace Barotrauma
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
                     pullLimb.pullJoint.Enabled = true;
-                    if (targetLimb.type == LimbType.Torso || targetLimb.Mass > 10.0f)
+                    if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
                         pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
                         pullLimb.pullJoint.MaxForce = 5000.0f;
-                        targetMovement *= (Mass / target.Mass); //Carrying people like that takes a lot of effort.
+                        targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
                         
-                        if (target.AnimController.Dir != Dir) target.AnimController.Flip();
-
                         //hand length
                         float a = 37.0f;
                         //arm length
@@ -1105,7 +1103,8 @@ namespace Barotrauma
                         Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
 
                         targetLimb.pullJoint.WorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
-                        targetLimb.pullJoint.MaxForce = 100.0f;
+                        targetLimb.pullJoint.MaxForce = 200.0f;
+                        targetLimb.pullJoint.Enabled = true;
                     }                        
                     else
                     {
@@ -1125,7 +1124,7 @@ namespace Barotrauma
             //limit movement if moving away from the target
             if (Vector2.Dot(target.SimPosition - Collider.SimPosition, targetMovement)<0)
             {
-                targetMovement *= MathHelper.Clamp(2.0f - dist, 0.0f, 1.0f);
+                targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
             }
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
