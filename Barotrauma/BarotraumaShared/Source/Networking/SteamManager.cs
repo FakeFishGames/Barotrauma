@@ -179,9 +179,9 @@ namespace Barotrauma.Networking
             instance.serverList.Clear();
             instance.ReleaseRequest();
 
-            MatchMakingKeyValuePair_t[] filters = new MatchMakingKeyValuePair_t[0];
+            MatchMakingKeyValuePair_t[] filters = new MatchMakingKeyValuePair_t[]
             {
-                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() };
+                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() }
             };
 
             instance.m_ServerListRequest =
