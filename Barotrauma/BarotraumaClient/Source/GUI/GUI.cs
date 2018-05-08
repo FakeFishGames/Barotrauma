@@ -191,8 +191,9 @@ namespace Barotrauma
 
         /// <summary>
         /// Adds the component on the addition queue.
+        /// Note: does not automatically add children, because we might want to enforce a custom order for them.
         /// </summary>
-        public static void AddToUpdateList(GUIComponent component, bool ignoreChildren = false)
+        public static void AddToUpdateList(GUIComponent component)
         {
             if (component == null)
             {
@@ -204,35 +205,27 @@ namespace Barotrauma
             {
                 additions.Enqueue(component);
             }
-            if (!ignoreChildren)
-            {
-                if (component.RectTransform != null)
-                {
-                    component.RectTransform.Children.ForEach(c => AddToUpdateList(c.GUIComponent));
-                }
-                else
-                {
-                    component.Children.ForEach(c => AddToUpdateList(c));
-                }
-            }
         }
 
         /// <summary>
         /// Adds the component on the removal queue.
         /// </summary>
-        public static void RemoveFromUpdateList(GUIComponent component)
+        public static void RemoveFromUpdateList(GUIComponent component, bool alsoChildren = true)
         {
             if (componentsToUpdate.Contains(component))
             {
                 removals.Enqueue(component);
             }
-            if (component.RectTransform != null)
+            if (alsoChildren)
             {
-                component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.GUIComponent));
-            }
-            else
-            {
-                component.Children.ForEach(c => RemoveFromUpdateList(c));
+                if (component.RectTransform != null)
+                {
+                    component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.GUIComponent));
+                }
+                else
+                {
+                    component.Children.ForEach(c => RemoveFromUpdateList(c));
+                }
             }
         }
 
@@ -279,11 +272,11 @@ namespace Barotrauma
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
-                AddToUpdateList(pauseMenu);
+                pauseMenu.AddToGUIUpdateList();
             }
             if (settingsMenuOpen)
             {
-                AddToUpdateList(GameMain.Config.SettingsFrame);
+                GameMain.Config.SettingsFrame.AddToGUIUpdateList();
             }
         }
         #endregion

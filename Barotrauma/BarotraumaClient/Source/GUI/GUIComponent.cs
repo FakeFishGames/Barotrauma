@@ -315,6 +315,7 @@ namespace Barotrauma
 
         public int CountChildren
         {
+            // TODO: optimize
             get { return Children.Count(); }
         }
 
@@ -376,14 +377,25 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
-        public void RemoveFromGUIUpdateList()
+        public void RemoveFromGUIUpdateList(bool alsoChildren = true)
         {
-            GUI.RemoveFromUpdateList(this);
+            GUI.RemoveFromUpdateList(this, alsoChildren);
         }
 
-        public virtual void AddToGUIUpdateList()
+        public virtual void AddToGUIUpdateList(bool ignoreChildren = false)
         {
             GUI.AddToUpdateList(this);
+            if (!ignoreChildren)
+            {
+                if (RectTransform != null)
+                {
+                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren));
+                }
+                else
+                {
+                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren));
+                }
+            }
         }
 
         protected virtual void SetAlpha(float a)

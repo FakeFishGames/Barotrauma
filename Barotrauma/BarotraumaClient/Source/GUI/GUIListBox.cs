@@ -300,17 +300,16 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
+        public override void AddToGUIUpdateList(bool ignoreChildren = false)
         {
             if (!Visible) { return; }
-            GUI.AddToUpdateList(this, ignoreChildren: true);
+            GUI.AddToUpdateList(this);
             var children = Children;
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
                 var child = children[i];
                 if (child == scrollBar) { continue; }
-                if (child == frame) continue;
 
                 if (!IsChildVisible(child))
                 {
@@ -322,7 +321,10 @@ namespace Barotrauma
                 child.AddToGUIUpdateList();
             }
 
-            if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
+            if (scrollBarEnabled && !scrollBarHidden)
+            {
+                scrollBar.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
