@@ -202,6 +202,7 @@ namespace Barotrauma
                 {
                     c.DamageLimb(WorldPosition, limb, new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(dmg) }, 0.0f, false, 0.0f);
                 }
+                c.ApplyStatusEffects(ActionType.OnFire, deltaTime);
             }
         }
 

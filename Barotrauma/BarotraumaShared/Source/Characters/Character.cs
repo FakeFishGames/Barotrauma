@@ -116,6 +116,8 @@ namespace Barotrauma
         }
 
         private string currentOrderOption;
+
+        private List<StatusEffect> statusEffects = new List<StatusEffect>();
         
         public Entity ViewTarget
         {
@@ -550,7 +552,6 @@ namespace Barotrauma
 #if LINUX
             if (!System.IO.File.Exists(file)) 
             {
-
                 //if the file was not found, attempt to convert the name of the folder to upper case
                 var splitPath = file.Split('/');
                 if (splitPath.Length > 2)
@@ -668,15 +669,26 @@ namespace Barotrauma
                 PressureProtection = 100.0f;
             }
 
-            XElement inventoryElement = doc.Root.Element("inventory");
-            if (inventoryElement != null) inventory = new CharacterInventory(inventoryElement, this);
+            foreach (XElement subElement in doc.Root.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "inventory":
+                        inventory = new CharacterInventory(subElement, this);
+                        break;
+                    case "health":
+                        health = new CharacterHealth(subElement, this);
+                        break;
+                    case "statuseffect":
+                        statusEffects.Add(StatusEffect.Load(subElement));
+                        break;
+                }
+            }
+            
+            needsAir = doc.Root.GetAttributeBool("needsair", false);
+            if (health == null) health = new CharacterHealth(this);
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
-
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
-
-            XElement healthElement = doc.Root.Element("health") ?? doc.Root.Element("Health");
-            health = healthElement == null ? new CharacterHealth(this) : new CharacterHealth(healthElement, this);
                         
             if (file == humanConfigFile && Info.PickedItemIDs.Any())
             {
@@ -1654,6 +1666,8 @@ namespace Barotrauma
                 }
             }
 
+            if (AnimController.InWater) ApplyStatusEffects(ActionType.InWater, deltaTime);            
+
             UpdateControlled(deltaTime, cam);
             
             //Health effects
@@ -1994,6 +2008,15 @@ namespace Barotrauma
             }
         }
 
+        public void ApplyStatusEffects(ActionType actionType, float deltaTime)
+        {
+            foreach (StatusEffect statusEffect in statusEffects)
+            {
+                if (statusEffect.type != actionType) continue;
+                statusEffect.Apply(actionType, deltaTime, this, this);
+            }
+        }
+
         private void Implode(bool isNetworkMessage = false)
         {
             if (!isNetworkMessage)
@@ -2030,7 +2053,6 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-
         public void Kill(Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath, bool isNetworkMessage = false)
         {
             Kill(causeOfDeath.First, causeOfDeath.Second, isNetworkMessage);
@@ -2046,11 +2068,7 @@ namespace Barotrauma
                 return;
             }
 
-            /*if (GameMain.NetworkMember != null)
-            {
-                if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-            }*/
+            ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
 
