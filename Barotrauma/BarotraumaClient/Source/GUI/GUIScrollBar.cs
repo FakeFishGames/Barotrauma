@@ -229,13 +229,15 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 moveAmount.Y = 0.0f;
-                BarScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
+                barScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
             }
             else
             {
                 moveAmount.X = 0.0f;
-                BarScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
+                barScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
             }
+
+            BarScroll = barScroll;
 
             if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
         }
