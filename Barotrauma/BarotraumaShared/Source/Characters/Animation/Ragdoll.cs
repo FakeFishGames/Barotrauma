@@ -588,15 +588,13 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        Vector2 temp;
-                        FarseerPhysics.Common.FixedArray2<Vector2> points;
-                        contact.GetWorldManifold(out temp, out points);
-
+                        contact.GetWorldManifold(out _, out FarseerPhysics.Common.FixedArray2<Vector2> points);
                         Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
                         if (character.Submarine != null) impactPos += character.Submarine.Position;
                         
                         character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
+                        character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
                     }
                 }
             }
