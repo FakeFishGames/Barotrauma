@@ -259,9 +259,10 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < Children.Count; i++)
+            var children = Children;
+            for (int i = 0; i < children.Count; i++)
             {
-                GUIComponent child = Children[i];
+                GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
 
                 child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
@@ -300,23 +301,24 @@ namespace Barotrauma
             }
         }
 
+        // Doesn't work with the current system like it should, but when deactivated, the scrollbar is not interactive
         //public override void AddToGUIUpdateList()
         //{
         //    GUI.AddToUpdateList(this, ignoreChildren: true);
-        //    var fixedChildren = Children;
+        //    var children = Children;
         //    int lastVisible = 0;
-        //    for (int i = 0; i < fixedChildren.Count; i++)
+        //    for (int i = 0; i < children.Count; i++)
         //    {
-        //        if (fixedChildren[i] == frame) continue;
+        //        if (children[i] == frame) continue;
 
-        //        if (!IsChildVisible(fixedChildren[i]))
+        //        if (!IsChildVisible(children[i]))
         //        {
         //            if (lastVisible > 0) break;
         //            continue;
         //        }
 
         //        lastVisible = i;
-        //        fixedChildren[i].AddToGUIUpdateList();
+        //        children[i].AddToGUIUpdateList();
         //    }
 
         //    if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
@@ -338,28 +340,29 @@ namespace Barotrauma
 
         public void Select(int childIndex, bool force = false)
         {
-            if (childIndex >= Children.Count || childIndex < 0) return;
+            var children = Children;
+            if (childIndex >= children.Count || childIndex < 0) return;
 
             bool wasSelected = true;
-            if (OnSelected != null) wasSelected = OnSelected(Children[childIndex], Children[childIndex].UserData) || force;
+            if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData) || force;
             
             if (!wasSelected) return;
 
             if (SelectMultiple)
             {
-                if (selected.Contains(Children[childIndex]))
+                if (selected.Contains(children[childIndex]))
                 {
-                    selected.Remove(Children[childIndex]);
+                    selected.Remove(children[childIndex]);
                 }
                 else
                 {
-                    selected.Add(Children[childIndex]);
+                    selected.Add(children[childIndex]);
                 }
             }
             else
             {
                 selected.Clear();
-                selected.Add(Children[childIndex]);
+                selected.Add(children[childIndex]);
             }
 
         }
@@ -371,14 +374,15 @@ namespace Barotrauma
 
         public void UpdateScrollBarSize()
         {
+            var children = Children;
             totalSize = (int)(padding.Y + padding.W);
-            foreach (GUIComponent child in Children)
+            foreach (GUIComponent child in children)
             {
                 if (child == frame || !child.Visible) continue;
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
             }
 
-            totalSize += (Children.Count - 1) * spacing;
+            totalSize += (children.Count - 1) * spacing;
 
             scrollBar.BarSize = scrollBar.IsHorizontal ?
                 Math.Max(Math.Min((float)Rect.Width / (float)totalSize, 1.0f), 5.0f / Rect.Width) :
@@ -439,10 +443,11 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
 
-            
+
             // TODO: change?
+            var children = Children;
             int lastVisible = 0;
-            for (int i = 0; i < Children.Count; i++)
+            for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = Children[i];
                 if (child == frame || !child.Visible) continue;
