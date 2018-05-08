@@ -264,11 +264,6 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            //buttonsParent.Update((float)deltaTime);
-            //animEditorButton.Update((float)deltaTime);
-
-            //if (selectedTab > 0) menuTabs[(int)selectedTab].Update((float)deltaTime);
-
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
@@ -277,8 +272,6 @@ namespace Barotrauma
 
             CreateTestElements();
             UpdateTestElements();
-            //testElement?.Update((float)deltaTime);
-            //outerElement?.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
