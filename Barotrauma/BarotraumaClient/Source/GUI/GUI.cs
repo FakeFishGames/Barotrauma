@@ -293,7 +293,7 @@ namespace Barotrauma
         public static bool IsMouseOn(GUIComponent target)
         {
             if (target == null) { return false; }
-            if (MouseOn == null) { return true; }
+            //if (MouseOn == null) { return true; }
             return target == MouseOn || target.IsParentOf(MouseOn);
         }
 
