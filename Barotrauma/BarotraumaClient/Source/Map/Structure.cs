@@ -229,7 +229,7 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        color: spriteColor,
+                        color: color,
                         startOffset: sectionOffset, 
                         depth: depth,
                         textureScale: TextureScale);
