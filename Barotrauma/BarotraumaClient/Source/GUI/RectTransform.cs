@@ -24,9 +24,9 @@ namespace Barotrauma
     {
         #region Fields and Properties
         /// <summary>
-        /// Should be assigned only by GUIComponent.
+        /// Should be assigned only by GUIComponent. TODO: consider protecting.
         /// </summary>
-        public GUIComponent Element { get; set; }
+        public GUIComponent GUIComponent { get; set; }
 
         private RectTransform parent;
         public RectTransform Parent

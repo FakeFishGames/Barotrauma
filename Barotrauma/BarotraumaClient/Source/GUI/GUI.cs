@@ -184,10 +184,90 @@ namespace Barotrauma
             DrawString(spriteBatch, new Vector2(200, 50), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
         }
 
+        #region Update list
         private static List<GUIComponent> componentsToUpdate = new List<GUIComponent>();
+        private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
+        private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
+
         public static IEnumerable<GUIComponent> ComponentsToUpdate => componentsToUpdate;
 
-        public static void CheckPersistentElements()
+        /// <summary>
+        /// Adds the component on the addition queue.
+        /// </summary>
+        public static void AddToUpdateList(GUIComponent component)
+        {
+            if (component == null)
+            {
+                DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
+                return;
+            }
+            if (!component.Visible) { return; }
+            if (!componentsToUpdate.Contains(component))
+            {
+                additions.Enqueue(component);
+            }
+            if (component.RectTransform != null)
+            {
+                component.RectTransform.Children.ForEach(c => AddToUpdateList(c.GUIComponent));
+            }
+            else
+            {
+                component.Children.ForEach(c => AddToUpdateList(c));
+            }
+        }
+
+        /// <summary>
+        /// Adds the component on the removal queue.
+        /// </summary>
+        public static void RemoveFromUpdateList(GUIComponent component)
+        {
+            if (componentsToUpdate.Contains(component))
+            {
+                removals.Enqueue(component);
+            }
+            if (component.RectTransform != null)
+            {
+                component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.GUIComponent));
+            }
+            else
+            {
+                component.Children.ForEach(c => RemoveFromUpdateList(c));
+            }
+        }
+
+        public static void ClearUpdateList()
+        {
+            if (KeyboardDispatcher.Subscriber is GUIComponent && !componentsToUpdate.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
+            {
+                KeyboardDispatcher.Subscriber = null;
+            }
+            removals.Clear();
+            additions.Clear();
+            componentsToUpdate.Clear();
+        }
+
+        private static void RefreshUpdateList()
+        {
+            while (removals.Count > 0)
+            {
+                var component = removals.Dequeue();
+                componentsToUpdate.Remove(component);
+                if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
+                {
+                    KeyboardDispatcher.Subscriber = null;
+                }
+            }
+            while (additions.Count > 0)
+            {
+                var component = additions.Dequeue();
+                if (!componentsToUpdate.Contains(component))
+                {
+                    componentsToUpdate.Add(component);
+                }
+            }
+        }
+
+        private static void AddPersistingElements()
         {
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
@@ -199,72 +279,7 @@ namespace Barotrauma
                 AddToUpdateList(GameMain.Config.SettingsFrame);
             }
         }
-
-        /// <summary>
-        /// If the component is already found in the list, it's children are not re-evaluated by default!
-        /// If the children of a component have changed, set forceCheck true.
-        /// Checking the children creates a temporary collection -> don't force check children if the hierarchy should have remained the same.
-        /// TODO: still generates garbage, as the list is recreated each frame.
-        /// </summary>
-        public static void AddToUpdateList(GUIComponent component, bool forceCheckChildren = false, bool ignoreChildren = false)
-        {
-            if (component == null)
-            {
-                DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
-                return;
-            }
-            if (!component.Visible) { return; }
-            bool checkChildren = forceCheckChildren && !ignoreChildren;
-            if (!componentsToUpdate.Contains(component))
-            {
-                componentsToUpdate.Add(component);
-                checkChildren = !ignoreChildren;
-            }
-            if (checkChildren)
-            {
-                // TODO: use this when it's certain that all components have RectTransform
-                //foreach (var child in component.RectTransform.GetChildren())
-                //{
-                //    if (!componentsToUpdate.Contains(child.Element))
-                //    {
-                //        componentsToUpdate.Add(child.Element);
-                //    }
-                //}               
-                foreach (var child in component.GetAllChildren())
-                {
-                    if (!componentsToUpdate.Contains(child))
-                    {
-                        componentsToUpdate.Add(child);
-                    }
-                }
-            }
-        }
-
-        private static void Remove(GUIComponent component)
-        {
-            if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
-            {
-                KeyboardDispatcher.Subscriber = null;
-            }
-            componentsToUpdate.Remove(component);
-        }
-
-        public static void RemoveFromUpdateList(GUIComponent component, bool forceCheckChildren = false)
-        {
-            if (!forceCheckChildren && !componentsToUpdate.Contains(component)) { return; }
-            Remove(component);
-            component.Children.ForEach(c => RemoveFromUpdateList(c, forceCheckChildren));
-            //component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.Element, forceCheckChildren));
-        }
-
-        public static void ClearUpdateList()
-        {
-            if (KeyboardDispatcher.Subscriber is GUIComponent && !componentsToUpdate.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
-            {
-                KeyboardDispatcher.Subscriber = null;
-            }
-            componentsToUpdate.Clear();
-        }
+        #endregion
 
         public static GUIComponent MouseOn { get; private set; }
 
@@ -299,9 +314,9 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            componentsToUpdate.ForEachMod(c => c.Update(deltaTime));
-            // TODO: will throw exceptions when the collection is modified -> solve
-            //componentsToUpdate.ForEach(c => c.Update(deltaTime));
+            AddPersistingElements();
+            RefreshUpdateList();
+            componentsToUpdate.ForEach(c => c.Update(deltaTime));
         }
 
         #region Element drawing
