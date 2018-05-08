@@ -41,6 +41,7 @@ namespace Barotrauma
         public static bool DisableHUD { get; set; }
         public static bool PauseMenuOpen => pauseMenuOpen;
         public static bool SettingsMenuOpen => settingsMenuOpen;
+        public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
         public static void Init(GameWindow window, ContentManager content)
         {
@@ -295,6 +296,9 @@ namespace Barotrauma
             MouseOn = c;
         }
 
+        /// <summary>
+        /// Updated automatically before updating the elements on the update list.
+        /// </summary>
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
@@ -309,13 +313,12 @@ namespace Barotrauma
             }
             return MouseOn;
         }
-        
-        public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
         public static void Update(float deltaTime)
         {
             AddPersistingElements();
             RefreshUpdateList();
+            UpdateMouseOn();
             componentsToUpdate.ForEach(c => c.Update(deltaTime));
         }
 
