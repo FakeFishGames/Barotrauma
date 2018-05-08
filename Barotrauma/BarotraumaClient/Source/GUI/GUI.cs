@@ -142,8 +142,11 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
+                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + componentsToUpdate.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
+                DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 HumanoidAnimParams.DrawEditor(spriteBatch);
             }
@@ -178,8 +181,6 @@ namespace Barotrauma
             {
                 cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
             }
-            DrawString(spriteBatch, new Vector2(200, 0), "gui components: " + componentsToUpdate.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
-            DrawString(spriteBatch, new Vector2(200, 50), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
         }
 
         #region Update list
