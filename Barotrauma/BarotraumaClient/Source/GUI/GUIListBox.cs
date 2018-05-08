@@ -193,6 +193,8 @@ namespace Barotrauma
             {
                 this.color = color.Value;
             }
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            if (style != null) GUI.Style.Apply(frame, style, this);
             scrollBarHidden = true;
             if (isHorizontal)
             {
@@ -203,10 +205,7 @@ namespace Barotrauma
                 scrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) });
             }
             scrollBar.IsHorizontal = isHorizontal;
-            frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            if (style != null) GUI.Style.Apply(frame, style, this);
             UpdateScrollBarSize();
-            Children.Clear();
             enabled = true;
             scrollBarEnabled = true;
             scrollBar.BarScroll = 0.0f;
@@ -301,28 +300,30 @@ namespace Barotrauma
             }
         }
 
-        // Doesn't work with the current system like it should, but when deactivated, the scrollbar is not interactive
-        //public override void AddToGUIUpdateList()
-        //{
-        //    GUI.AddToUpdateList(this, ignoreChildren: true);
-        //    var children = Children;
-        //    int lastVisible = 0;
-        //    for (int i = 0; i < children.Count; i++)
-        //    {
-        //        if (children[i] == frame) continue;
+        public override void AddToGUIUpdateList()
+        {
+            if (!Visible) { return; }
+            GUI.AddToUpdateList(this, ignoreChildren: true);
+            var children = Children;
+            int lastVisible = 0;
+            for (int i = 0; i < children.Count; i++)
+            {
+                var child = children[i];
+                if (child == scrollBar) { continue; }
+                if (child == frame) continue;
 
-        //        if (!IsChildVisible(children[i]))
-        //        {
-        //            if (lastVisible > 0) break;
-        //            continue;
-        //        }
+                if (!IsChildVisible(child))
+                {
+                    if (lastVisible > 0) break;
+                    continue;
+                }
 
-        //        lastVisible = i;
-        //        children[i].AddToGUIUpdateList();
-        //    }
+                lastVisible = i;
+                child.AddToGUIUpdateList();
+            }
 
-        //    if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
-        //}
+            if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
+        }
 
         public override void Update(float deltaTime)
         {
@@ -332,7 +333,8 @@ namespace Barotrauma
             
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
-            if ((GUI.MouseOn == this || GUI.MouseOn == scrollBar || IsParentOf(GUI.MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
+            //if ((GUI.MouseOn == this || GUI.MouseOn == scrollBar || IsParentOf(GUI.MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
+            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(scrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {
                 scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
             }
