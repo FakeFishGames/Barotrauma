@@ -415,7 +415,6 @@ namespace Barotrauma
                         NetworkMember.AddToGUIUpdateList();
                     }
 
-                    GUI.CheckPersistentElements();
                     DebugConsole.AddToGUIUpdateList();
                     GUI.UpdateMouseOn();
 

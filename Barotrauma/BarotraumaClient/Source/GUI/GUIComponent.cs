@@ -13,7 +13,7 @@ namespace Barotrauma
         #region Hierarchy
         // TODO: remove the backup field when the old system is not needed.
         private GUIComponent parent;
-        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent?.Element : parent;
+        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent?.GUIComponent : parent;
 
         // TODO: remove the backup field when the old system is not needed.
         private List<GUIComponent> children = new List<GUIComponent>();
@@ -21,7 +21,7 @@ namespace Barotrauma
         /// TODO: return IEnumerable.
         /// Maps RectTransform children's elements to a new collection. For efficiency, access RectTransform.Children directly.
         /// </summary>
-        public List<GUIComponent> Children => RectTransform != null ? RectTransform.Children.Select(c => c.Element).ToList() : children;
+        public List<GUIComponent> Children => RectTransform != null ? RectTransform.Children.Select(c => c.GUIComponent).ToList() : children;
 
         public T GetChild<T>() where T : GUIComponent
         {
@@ -49,7 +49,7 @@ namespace Barotrauma
         {
             if (RectTransform != null)
             {
-                return RectTransform.GetAllChildren().Select(c => c.Element);
+                return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
             }
             else
             {
@@ -346,7 +346,7 @@ namespace Barotrauma
                 // This is the only place where the element should be assigned!
                 if (rectTransform != null)
                 {
-                    rectTransform.Element = this;
+                    rectTransform.GUIComponent = this;
                 }
             }
         }
@@ -376,15 +376,14 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
-        public void Destroy()
+        public void RemoveFromGUIUpdateList()
         {
-            GUI.RemoveFromUpdateList(this, forceCheckChildren: true);
+            GUI.RemoveFromUpdateList(this);
         }
 
         public virtual void AddToGUIUpdateList()
         {
-            // TODO: test not force checking the children
-            GUI.AddToUpdateList(this, forceCheckChildren: true, ignoreChildren: false);
+            GUI.AddToUpdateList(this);
         }
 
         protected virtual void SetAlpha(float a)
@@ -659,7 +658,7 @@ namespace Barotrauma
         {
             if (RectTransform != null)
             {
-                RectTransform.Children.ForEach(c => c.Element.Draw(spriteBatch));
+                RectTransform.Children.ForEach(c => c.GUIComponent.Draw(spriteBatch));
             }
             else
             {
