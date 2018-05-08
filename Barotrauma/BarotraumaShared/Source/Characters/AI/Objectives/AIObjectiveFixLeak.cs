@@ -8,9 +8,7 @@ namespace Barotrauma
     class AIObjectiveFixLeak : AIObjective
     {
         private readonly Gap leak;
-
-        private AIObjectiveGoTo gotoObjective;
-
+        
         public Gap Leak
         {
             get { return leak; }

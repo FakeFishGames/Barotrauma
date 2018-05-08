@@ -1088,6 +1088,7 @@ namespace Barotrauma
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
                     pullLimb.pullJoint.Enabled = true;
+                    targetLimb.pullJoint.Enabled = true;
                     if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
                         pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
@@ -1104,7 +1105,6 @@ namespace Barotrauma
 
                         targetLimb.pullJoint.WorldAnchorB = shoulderPos - dragDir * ConvertUnits.ToSimUnits(a + b);
                         targetLimb.pullJoint.MaxForce = 200.0f;
-                        targetLimb.pullJoint.Enabled = true;
                     }                        
                     else
                     {
@@ -1124,7 +1124,7 @@ namespace Barotrauma
             //limit movement if moving away from the target
             if (Vector2.Dot(target.SimPosition - Collider.SimPosition, targetMovement)<0)
             {
-                targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
+                targetMovement *= MathHelper.Clamp(2.0f - dist, 0.0f, 1.0f);
             }
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;

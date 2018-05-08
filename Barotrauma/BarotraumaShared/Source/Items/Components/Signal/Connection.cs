@@ -17,9 +17,7 @@ namespace Barotrauma.Items.Components
         private Item item;
 
         public readonly bool IsOutput;
-
-        private static Wire draggingConnected;
-
+        
         public readonly List<StatusEffect> effects;
 
         public readonly ushort[] wireId;

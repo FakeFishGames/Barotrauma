@@ -43,10 +43,7 @@ namespace Barotrauma
             get { return isHighlighted; }
             set { isHighlighted = value; }
         }
-
-        private static bool resizing;
-        private int resizeDirX, resizeDirY;
-        
+                
         public virtual Rectangle Rect { 
             get { return rect; }
             set { rect = value; }
