@@ -126,18 +126,10 @@ namespace Barotrauma
                 }
                 return currentTarget - pos2;
             }
-
-            bool doorBlockingPath = false;
+            
             if (canOpenDoors && !character.LockHands)
             {
                 CheckDoorsInPath();
-            }
-            else if (canBreakDoors)
-            {
-                if (currentPath.CurrentNode?.ConnectedDoor != null && !currentPath.CurrentNode.ConnectedDoor.IsOpen)
-                {
-                    doorBlockingPath = true;
-                }
             }
             
             Vector2 pos = host.SimPosition;

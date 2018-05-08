@@ -21,9 +21,7 @@ namespace Barotrauma.Items.Components
         private Vector2 pickedPosition;
 
         private Vector2 barrelPos;
-
-        private string particles;
-
+        
         private float activeTimer;
 
         [Serialize(0.0f, false)]

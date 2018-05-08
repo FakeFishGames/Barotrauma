@@ -28,7 +28,7 @@ namespace Barotrauma
         public Sprite SlotSprite;
 
         public Keys QuickUseKey;
-
+        
         public bool IsHighlighted
         {
             get
@@ -112,6 +112,8 @@ namespace Barotrauma
         public static Sprite EquipIndicator, EquipIndicatorOn;
 
         public float HideTimer;
+
+        private bool isSubInventory;
 
         public class SlotReference
         {

@@ -10,11 +10,9 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static Wire HighlightedWire;
-
         public List<Connection> Connections;
 
-        Character user;
+        private Character user;
 
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)

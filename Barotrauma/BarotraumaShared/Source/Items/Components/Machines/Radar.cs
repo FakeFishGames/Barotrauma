@@ -15,15 +15,7 @@ namespace Barotrauma.Items.Components
         private readonly Sprite pingCircle, screenOverlay;
 
         private readonly Sprite radarBlip;
-
-        private float prevPingRadius;
-
-        float prevPassivePingRadius;
-
-        private Vector2 center;
-        private float displayRadius;
-        private float displayScale;
-        
+                
         private float displayBorderSize;
 
         private bool aiPingCheckPending;

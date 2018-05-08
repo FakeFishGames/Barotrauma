@@ -7,7 +7,9 @@ namespace Barotrauma.Items.Components
     partial class Engine : Powered, IDrawableComponent
     {
         private float spriteIndex;
-        
+
+        private SpriteSheet propellerSprite;
+
         public float AnimSpeed
         {
             get;

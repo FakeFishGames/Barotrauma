@@ -15,6 +15,9 @@ namespace Barotrauma
 
         protected static Vector2 startMovingPos = Vector2.Zero;
 
+        private static bool resizing;
+        private int resizeDirX, resizeDirY;
+
         //which entities have been selected for editing
         private static List<MapEntity> selectedList = new List<MapEntity>();
         public static List<MapEntity> SelectedList

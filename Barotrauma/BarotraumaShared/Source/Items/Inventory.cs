@@ -15,9 +15,7 @@ namespace Barotrauma
 
         public Item[] Items;
         protected bool[] hideEmptySlot;
-
-        private bool isSubInventory;
-
+        
         public bool Locked;
 
         private ushort[] receivedItemIDs;

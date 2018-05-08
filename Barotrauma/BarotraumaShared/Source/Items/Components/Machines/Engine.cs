@@ -12,9 +12,7 @@ namespace Barotrauma.Items.Components
         private float targetForce;
 
         private float maxForce;
-
-        private SpriteSheet propellerSprite;
-
+        
         private Attack propellerDamage;
 
         private float damageTimer;
@@ -78,12 +76,19 @@ namespace Barotrauma.Items.Components
                         propellerSprite = new SpriteSheet(subElement);
                         AnimSpeed = subElement.GetAttributeFloat("animspeed", 1.0f);
                         break;
+                }
+            }
+#endif
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
                     case "propellerdamage":
                         propellerDamage = new Attack(subElement);
                         break;
                 }
             }
-#endif
         }
     
         public override void Update(float deltaTime, Camera cam)

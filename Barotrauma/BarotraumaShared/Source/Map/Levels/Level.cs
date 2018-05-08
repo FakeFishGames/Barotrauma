@@ -68,10 +68,7 @@ namespace Barotrauma
         private List<InterestingPosition> positionsOfInterest;
 
         private List<Ruin> ruins;
-
-        private Color backgroundColor;
-        private Color wallColor;
-
+        
         private LevelGenerationParams generationParams;
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
@@ -159,12 +156,12 @@ namespace Barotrauma
 
         public Color BackgroundColor
         {
-            get { return backgroundColor; }
+            get { return generationParams.BackgroundColor; }
         }
 
         public Color WallColor
         {
-            get { return wallColor; }
+            get { return generationParams.WallColor; }
         }
 
         public Level(string seed, float difficulty, LevelGenerationParams generationParams)
@@ -240,7 +237,7 @@ namespace Barotrauma
 #if CLIENT
             renderer = new LevelRenderer(this);
 
-            backgroundColor = generationParams.BackgroundColor;
+            var backgroundColor = generationParams.BackgroundColor;
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 #endif
@@ -708,7 +705,7 @@ namespace Barotrauma
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
             
-            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor) };
+            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.BackgroundColor) };
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
