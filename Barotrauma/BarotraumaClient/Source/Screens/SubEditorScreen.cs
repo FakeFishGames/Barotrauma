@@ -1443,8 +1443,8 @@ namespace Barotrauma
                 MapEntity.UpdateEditor(cam);
             }
 
-            leftPanel.Update((float)deltaTime);
-            topPanel.Update((float)deltaTime);
+            //leftPanel.Update((float)deltaTime);
+            //topPanel.Update((float)deltaTime);
 
             if (wiringMode)
             {
@@ -1452,21 +1452,21 @@ namespace Barotrauma
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }
-                wiringToolPanel.Update((float)deltaTime);
+                //wiringToolPanel.Update((float)deltaTime);
             }
             
             if (loadFrame!=null)
             {
-                loadFrame.Update((float)deltaTime);
+                //loadFrame.Update((float)deltaTime);
                 if (PlayerInput.RightButtonClicked()) loadFrame = null;
             }
             else if (saveFrame != null)
             {
-                saveFrame.Update((float)deltaTime);
+                //saveFrame.Update((float)deltaTime);
             }
             else if (selectedTab > -1)
             {
-                GUItabs[selectedTab].Update((float)deltaTime);
+                //GUItabs[selectedTab].Update((float)deltaTime);
                 if (PlayerInput.RightButtonClicked()) selectedTab = -1;
             }
 
