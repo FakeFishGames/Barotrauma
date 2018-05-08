@@ -207,6 +207,9 @@ namespace Launcher
 
             PlayerInput.Update(deltaTime);
 
+            // TODO: Currently GUI updates the visible box automatically when it's active. 
+            // Not sure what's intended here, or if this is necessary any more.
+            // Updating the box manually leads to double updates.
             if (GUIMessageBox.VisibleBox != null)
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
@@ -219,7 +222,7 @@ namespace Launcher
             guiRoot.AddToGUIUpdateList();
             GUI.UpdateMouseOn();
 
-            guiRoot.Update(deltaTime);
+            //guiRoot.Update(deltaTime);
         }
 
         protected override void Draw(GameTime gameTime)
