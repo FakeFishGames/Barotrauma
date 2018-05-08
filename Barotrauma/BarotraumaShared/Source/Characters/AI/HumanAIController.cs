@@ -17,6 +17,10 @@ namespace Barotrauma
 
         private float updateObjectiveTimer;
 
+        private bool shouldCrouch;
+        private float crouchRaycastTimer;
+        const float CrouchRaycastInterval = 1.0f;
+
         public override AIObjectiveManager ObjectiveManager
         {
             get { return objectiveManager; }
@@ -52,7 +56,8 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
 
-            (Character.AnimController as HumanoidAnimController).Crouching = false;
+            (Character.AnimController as HumanoidAnimController).Crouching = shouldCrouch;
+            CheckCrouching(deltaTime);
             Character.ClearInputs();
             
             if (updateObjectiveTimer > 0.0f)
@@ -249,6 +254,22 @@ namespace Barotrauma
         public override void SelectTarget(AITarget target)
         {
             selectedAiTarget = target;
+        }
+
+        private void CheckCrouching(float deltaTime)
+        {
+            crouchRaycastTimer -= deltaTime;
+            if (crouchRaycastTimer > 0.0f) return;
+
+            crouchRaycastTimer = CrouchRaycastInterval;
+
+            //start the raycast in front of the character in the direction it's heading to
+            Vector2 startPos = Character.SimPosition;
+            startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
+
+            //do a raycast upwards to find any walls
+            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
+            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall) != null;
         }
     }
 }
