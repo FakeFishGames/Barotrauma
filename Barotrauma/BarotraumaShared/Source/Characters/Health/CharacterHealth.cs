@@ -126,12 +126,12 @@ namespace Barotrauma
         {
             get
             {
-                if (oxygenLowAffliction == null) return 100.0f;
+                if (!character.NeedsAir) return 100.0f;
                 return -oxygenLowAffliction.Strength + 100;
             }
             set
             {
-                if (oxygenLowAffliction == null) return;
+                if (!character.NeedsAir) return;
                 oxygenLowAffliction.Strength = MathHelper.Clamp(-value + 100, 0.0f, 200.0f);
             }
         }
@@ -171,10 +171,8 @@ namespace Barotrauma
             irremovableAfflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
             irremovableAfflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
             irremovableAfflictions.Add(pressureAffliction = new Affliction(AfflictionPrefab.Pressure, 0.0f));
-            if (character.NeedsAir)
-            {
-                irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
-            }
+            irremovableAfflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+            
             foreach (Affliction affliction in irremovableAfflictions)
             {
                 afflictions.Add(affliction);
