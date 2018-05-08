@@ -136,7 +136,17 @@ namespace Barotrauma
 
         public void AddItem(string text, object userData = null, string toolTip = "")
         {
-            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
+            GUITextBlock textBlock = null;
+            if (RectTransform != null)
+            {
+                // TODO: min and max sizes
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), listBox.RectTransform), text, style: "ListBoxElement");
+                //textBlock.RectTransform.AbsoluteOffset = new Point(0, textBlock.RectTransform.NonScaledSize.Y);
+            }
+            else
+            {
+                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
+            }
             textBlock.UserData = userData;
             textBlock.ToolTip = toolTip;
         }
