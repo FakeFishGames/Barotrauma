@@ -66,7 +66,6 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            base.AddToGUIUpdateList();
             gui.AddToGUIUpdateList();
         }
 

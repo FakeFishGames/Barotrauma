@@ -209,7 +209,6 @@ namespace Barotrauma
         {
             if (!Visible) return;
             base.Update(deltaTime);
-            //if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && GUI.IsMouseOn(this))
             if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && GUI.IsMouseOn(this))
             {
                 state = ComponentState.Hover;
@@ -229,7 +228,6 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.LeftButtonClicked())
                 {
-                    DebugConsole.NewMessage("click", Color.White);
                     GUI.PlayUISound(GUISoundType.Click);
                     if (OnClicked != null)
                     {

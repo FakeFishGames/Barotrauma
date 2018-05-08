@@ -218,7 +218,7 @@ namespace Launcher
                 return;
             }
 
-            GUI.ClearUpdateList();
+            //GUI.ClearUpdateList();
             guiRoot.AddToGUIUpdateList();
             GUI.UpdateMouseOn();
 
