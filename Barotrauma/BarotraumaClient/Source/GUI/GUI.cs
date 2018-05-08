@@ -144,6 +144,8 @@ namespace Barotrauma
 
                     GUI.DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
+
+                HumanoidAnimParams.DrawEditor(spriteBatch);
             }
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
@@ -154,11 +156,6 @@ namespace Barotrauma
             {
                 GUIMessageBox.VisibleBox.Draw(spriteBatch);
             }          
-            
-            if (GameMain.DebugDraw && Character.Controlled?.AnimController is HumanoidAnimController)
-            {
-                HumanoidAnimParams.DrawEditor(spriteBatch);
-            }
 
             if (pauseMenuOpen)
             {
@@ -195,7 +192,7 @@ namespace Barotrauma
         /// <summary>
         /// Adds the component on the addition queue.
         /// </summary>
-        public static void AddToUpdateList(GUIComponent component)
+        public static void AddToUpdateList(GUIComponent component, bool ignoreChildren = false)
         {
             if (component == null)
             {
@@ -207,13 +204,16 @@ namespace Barotrauma
             {
                 additions.Enqueue(component);
             }
-            if (component.RectTransform != null)
+            if (!ignoreChildren)
             {
-                component.RectTransform.Children.ForEach(c => AddToUpdateList(c.GUIComponent));
-            }
-            else
-            {
-                component.Children.ForEach(c => AddToUpdateList(c));
+                if (component.RectTransform != null)
+                {
+                    component.RectTransform.Children.ForEach(c => AddToUpdateList(c.GUIComponent));
+                }
+                else
+                {
+                    component.Children.ForEach(c => AddToUpdateList(c));
+                }
             }
         }
 
@@ -242,13 +242,18 @@ namespace Barotrauma
             {
                 KeyboardDispatcher.Subscriber = null;
             }
-            removals.Clear();
-            additions.Clear();
             componentsToUpdate.Clear();
         }
 
         private static void RefreshUpdateList()
         {
+            foreach (var component in componentsToUpdate)
+            {
+                if (!component.Visible)
+                {
+                    RemoveFromUpdateList(component);
+                }
+            }
             while (removals.Count > 0)
             {
                 var component = removals.Dequeue();
@@ -268,8 +273,9 @@ namespace Barotrauma
             }
         }
 
-        private static void AddPersistingElements()
+        private static void HandlePersistingElements(float deltaTime)
         {
+            HumanoidAnimParams.UpdateEditor(deltaTime);
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
@@ -316,10 +322,12 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            AddPersistingElements();
+            //ClearUpdateList();
+            HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
             componentsToUpdate.ForEach(c => c.Update(deltaTime));
+            //ClearUpdateList();
         }
 
         #region Element drawing

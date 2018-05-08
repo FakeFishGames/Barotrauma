@@ -42,25 +42,35 @@ namespace Barotrauma
 
 #if CLIENT
         private static GUIListBox editor;
-
-        // called in HumanoidAnimController
-        public static void UpdateEditor(float deltaTime)
+        private static GUIListBox Editor
         {
-            if (editor == null)
+            get
             {
-                editor = new GUIListBox(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "", null);
-                editor.Padding = Vector4.One * 5.0f;
-                new SerializableEntityEditor(WalkInstance, false, editor, true);
-                new SerializableEntityEditor(RunInstance, false, editor, true);
+                if (editor == null)
+                {
+                    editor = new GUIListBox(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "", null);
+                    editor.Padding = Vector4.One * 5.0f;
+                    new SerializableEntityEditor(WalkInstance, false, editor, true);
+                    new SerializableEntityEditor(RunInstance, false, editor, true);
+                }
+                return editor;
             }
-            editor.Update(deltaTime);
-            editor.AddToGUIUpdateList();
         }
 
-        // Called by GUI
+        public static void UpdateEditor(float deltaTime)
+        {
+            if (Character.Controlled == null)
+            {
+                Editor.Visible = false;
+                return;
+            }
+            Editor.Visible = GameMain.DebugDraw;
+            Editor.AddToGUIUpdateList();
+        }
+
         public static void DrawEditor(SpriteBatch spriteBatch)
         {
-            editor?.Draw(spriteBatch);
+            Editor.Draw(spriteBatch);
 
             if (PlayerInput.KeyDown(Keys.LeftAlt) && PlayerInput.KeyHit(Keys.S))
             {
