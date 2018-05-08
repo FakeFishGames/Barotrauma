@@ -76,13 +76,6 @@ namespace Barotrauma
         {
             if (Frozen) return;
 
-#if CLIENT
-            if (Character.Controlled == character)
-            {
-                HumanoidAnimParams.UpdateEditor(deltaTime);
-            }
-#endif
-
             levitatingCollider = true;
             ColliderIndex = Crouching ? 1 : 0;
             if (!Crouching && ColliderIndex == 1) Crouching = true;
