@@ -642,6 +642,7 @@ namespace Barotrauma
             SpeciesName = doc.Root.GetAttributeString("name", "Unknown");            
             IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
+            needsAir = doc.Root.GetAttributeBool("needsair", false);
 
             List<XElement> ragdollElements = new List<XElement>();
             List<float> ragdollCommonness = new List<float>();
@@ -685,7 +686,6 @@ namespace Barotrauma
                 }
             }
             
-            needsAir = doc.Root.GetAttributeBool("needsair", false);
             if (health == null) health = new CharacterHealth(this);
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
