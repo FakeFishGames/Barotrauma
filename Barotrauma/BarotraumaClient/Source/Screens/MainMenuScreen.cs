@@ -295,7 +295,7 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            GUI.DrawString(spriteBatch, new Vector2(200, 100), "selected tab " + selectedTab, Color.White);
+            //GUI.DrawString(spriteBatch, new Vector2(500, 100), "selected tab " + selectedTab, Color.White);
 
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
@@ -550,18 +550,33 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Keys.T))
             {
                 testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+                //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
-                new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
-                new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
-                new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
+                //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
+                //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
+                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
 
-                //// TODO: does not work
-                //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
+                //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
+
+                var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+
+                //var listBox = new GUIListBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child", color: Color.Red));
 
                 //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green);
 
