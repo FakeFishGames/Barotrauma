@@ -263,13 +263,15 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
-
             base.Draw(spriteBatch, false);
-
-            button.Draw(spriteBatch);
-
-            if (!Dropped) return;
-            listBox.Draw(spriteBatch);
+            if (drawChildren)
+            {
+                button.Draw(spriteBatch);
+                if (Dropped)
+                {
+                    listBox.Draw(spriteBatch);
+                }
+            }
         }
     }
 }
