@@ -8,9 +8,7 @@ namespace Barotrauma
     {
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
-
-        public LimbType GrabLimb;
-
+        
         protected Character character;
 
         protected float walkSpeed, swimSpeed;
@@ -45,8 +43,8 @@ namespace Barotrauma
             }
         }
 
-        public AnimController(Character character, XElement element)
-            : base(character, element)
+        public AnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             this.character = character;
 

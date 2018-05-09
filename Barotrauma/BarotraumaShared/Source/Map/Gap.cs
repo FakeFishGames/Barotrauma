@@ -13,7 +13,11 @@ namespace Barotrauma
 
         public static bool ShowGaps = true;
 
-        public readonly bool IsHorizontal;
+        public bool IsHorizontal
+        {
+            get;
+            private set;
+        }
         
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;           
@@ -142,6 +146,40 @@ namespace Barotrauma
         {
             return ShowGaps && Submarine.RectContains(WorldRect, position) &&
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -5), position);
+        }
+
+        public void AutoOrient()
+        {
+            Vector2 searchPosLeft = new Vector2(rect.X, rect.Y - rect.Height / 2);
+            Hull hullLeft = Hull.FindHullOld(searchPosLeft, null, false);
+            Vector2 searchPosRight = new Vector2(rect.Right, rect.Y - rect.Height / 2);
+            Hull hullRight = Hull.FindHullOld(searchPosRight, null, false);
+
+            if (hullLeft != null && hullRight != null && hullLeft != hullRight)
+            {
+                IsHorizontal = true;
+                return;
+            }
+
+            Vector2 searchPosTop = new Vector2(rect.Center.X, rect.Y);
+            Hull hullTop = Hull.FindHullOld(searchPosTop, null, false);
+            Vector2 searchPosBottom = new Vector2(rect.Center.X, rect.Y - rect.Height);
+            Hull hullBottom = Hull.FindHullOld(searchPosBottom, null, false);
+
+            if (hullTop != null && hullBottom != null && hullTop != hullBottom)
+            {
+                IsHorizontal = false;
+                return;
+            }
+
+            if ((hullLeft == null) != (hullRight == null))
+            {
+                IsHorizontal = true;
+            }
+            else if ((hullTop == null) != (hullBottom == null))
+            {
+                IsHorizontal = false;
+            }
         }
 
         private void FindHulls()

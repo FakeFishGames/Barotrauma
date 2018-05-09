@@ -1,19 +1,20 @@
 ﻿<Items>
   <Item
     name="Nuclear Reactor"
+    identifier="reactor1"
     type ="Reactor"
     linkable="true"
     category="Machine">
     
     <trigger/>
 
-    <fixrequirement name="Mechanical repairs">
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
       <skill name="Mechanical Engineering" level="40"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
       <skill name="Electrical Engineering" level="40"/>
       <item name="Wire"/>
       <item name="Screwdriver"/>
@@ -21,16 +22,26 @@
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
-    <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000">
-      <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
+    <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2">
+      <GuiFrame rect="50,0,860,400" alignment="Center" style="ItemUI"/>
+      <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
+      <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
+      <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
+      <MeterPointer texture="Content/Items/MachineInterface.png" sourcerect="367,22,14,118" origin="0.5,0.93"/>
+      <SectorSprite texture="Content/Items/MachineInterface.png" sourcerect="329,160,90,172" origin="0.98,0.5"/>
+      <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
+      <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
+      <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
+      
       <RequiredSkill name="Mechanical Engineering" level="30"/>
-      <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
-      <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
-
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <Sound file="Content/Items/Reactor/explosion.ogg" range="5000"/>
-        <Explosion range ="800" damage="500" structuredamage="400" stun="5.0" force="5.0"/>
+        <Explosion range ="800"  structuredamage="400" force="5.0">
+          <affliction name="Burn" strength="200"/>
+          <affliction name="Internal Damage" strength="200"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
     </Reactor>
 
@@ -42,13 +53,12 @@
       <output name="meltdown_warning"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5" canbeselected="true" hudpos="0.5,0.15">
+    <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="Fuel Rods">
       <Containable name="Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
       <Containable name="Incendium Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
-        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
       </Containable>
       <Containable name="Heat Absorber"/>
       <Containable name="Temperature Control Circuit"/>  
@@ -57,6 +67,7 @@
 
   <Item
     name="Fuel Rod"
+    identifier="fuelrod"
     Tags="smallitem,reactorfuel"
     cargocontainername="Metal Crate">
     
@@ -81,6 +92,7 @@
 
   <Item
     name="Incendium Fuel Rod"
+    identifier="incendiumfuelrod"
     Tags="smallitem,reactorfuel"    
     cargocontainername="Metal Crate"
     spritecolor="0.5,0.0,0.0,1.0">

@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="C-4 Block"
+    identifier="c4block"
     category="Equipment"
     Tags="smallitem,explosive"
     cargocontainername="Explosive Crate">
@@ -14,16 +15,18 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="500.0" structuredamage="250" damage="200" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5"/>
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
     name="Compound N"
+    identifier="compoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     cargocontainername="Explosive Crate"
@@ -32,17 +35,19 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5"/>
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
     name="Volatile Compound N"
+    identifier="volcompoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    
@@ -51,18 +56,25 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="Always" target="This" Condition="-0.35"/>
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+      <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
+        <Explosion range="600.0" structuredamage="150" damage="300" stun="5" force="20.0" severlimbsprobability="0.6" decal="explosion" decalsize="0.5"/>
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
     name="IC-4 Block"
+    identifier="ic4block"
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
@@ -72,18 +84,20 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="2000"/>
         <Explosion range="500.0" structuredamage="50" damage="300" stun="5" force="20.0" severlimbsprobability="0.6"/>
         <Fire size="500"/>
+        <Remove/>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
     name="Detonator"
+    identifier="detonator"
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"
@@ -109,7 +123,7 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="activate">
-        <StatusEffect type="OnUse" target="Contained" Condition="-100.0">
+        <StatusEffect type="OnUse" target="Contained">
           <Use/>
         </StatusEffect>
       </input>

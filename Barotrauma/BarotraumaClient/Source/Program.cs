@@ -31,6 +31,7 @@ namespace Barotrauma
             try
             {
                 game = new GameMain();
+                game.GraphicsDevice.PresentationParameters.IsFullScreen = false;
             }
             catch (Exception e)
             {
@@ -108,7 +109,7 @@ namespace Barotrauma
                                 {
                                     DebugConsole.NewMessage("Failed to set fullscreen mode, switching configuration to borderless windowed", Microsoft.Xna.Framework.Color.Red);
                                     GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
-                                    GameMain.Config.Save("config.xml");
+                                    GameMain.Config.Save();
                                 }
                                 return false;
                             default:
@@ -153,7 +154,7 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
+            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/.");
             sb.AppendLine("\n");
 #if DEBUG
             sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
@@ -215,15 +216,16 @@ namespace Barotrauma
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
             {
-                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
             }
-
-
+            
             sw.WriteLine(sb.ToString());
             sw.Close();
+            
+            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
             CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
+                " If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");       
         }
     }
 #endif

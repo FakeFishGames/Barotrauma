@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
   <Item
     name="Spear"
+    identifier="spear"
     category="Equipment"
     interactthroughwalls="true"
     cargocontainername="Metal Crate">
@@ -20,7 +20,7 @@
     <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
-    <Projectile launchimpulse="20.0" sticktocharacters="true">
+    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="50" stun="0.2" targetforce="50">
         <affliction name="Bleeding" strength="30"/>
         <affliction name="Internal Damage" strength="30"/>
@@ -30,6 +30,7 @@
   
   <Item
     name="Harpoon Gun"
+    identifier="harpoongun"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="weapon">
@@ -67,6 +68,7 @@
 
   <Item
     name="Syringe Gun"
+    identifier="syringegun"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="weapon">
@@ -102,6 +104,7 @@
 
   <Item
     name="Revolver Round"
+    identifier="revolverround"
     category="Equipment"
     interactthroughwalls="true"
     cargocontainername="Metal Crate"
@@ -116,7 +119,7 @@
     <Body width="8" height="3" density="40"/>
 
     <Pickable slots="Any"/>
-    <Projectile hitscan="true" removeonhit="true" >
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" >
       <Attack structuredamage="100" stun="0.5" targetforce="50">
         <affliction name="Gunshot wound" strength="40"/>
         <affliction name="Internal Damage" strength="30"/>
@@ -126,6 +129,7 @@
   
   <Item
     name="Revolver"
+    identifier="revolver"
     category="Equipment"
     cargocontainername="Metal Crate"
     tags="smallitem,weapon">
@@ -162,6 +166,7 @@
 
   <Item
     name="Stun Grenade"
+    identifier="stungrenade"
     category="Equipment"
     cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
@@ -202,6 +207,7 @@
 
   <Item
     name="Incendium Grenade"
+    identifier="incendiumgrenade"
     category="Equipment"    
     cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
@@ -239,6 +245,7 @@
 
   <Item
     name="Stun Baton"
+    identifier="stunbaton"
     category="Equipment"
     Tags="smallitem,weapon"
     cargocontainername="Metal Crate"
@@ -282,6 +289,7 @@
 
   <Item
     name="Battery Cell"
+    identifier="batterycell"
     category="Equipment,Electrical"    
     tags="smallitem,loadable"
     cargocontainername="Metal Crate"
@@ -307,6 +315,7 @@
   
   <Item
     name="Fulgurium Battery Cell"
+    identifier="fulguriumbatterycell"
     category="Equipment,Electrical"
     tags="smallitem,loadable"
     cargocontainername="Metal Crate"
@@ -327,6 +336,7 @@
 
   <Item
     name="Bike Horn"
+    identifier="bikehorn"
     category="Equipment"
     tags="weapon,smallitem"
     cargocontainername="Metal Crate"

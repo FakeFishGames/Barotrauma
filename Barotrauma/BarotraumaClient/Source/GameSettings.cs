@@ -160,15 +160,15 @@ namespace Barotrauma
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                new GUITextBlock(new Rectangle(x, y, 100, 18), inputNames[i] + ": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame);
-                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 18), null, null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
-
+                new GUITextBlock(new Rectangle(x, y, 100, 15), inputNames[i] + ": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame, false, GUI.SmallFont);
+                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), null, null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
+                keyBox.Font = GUI.SmallFont;
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
 
-                y += 20;
+                y += 16;
             }
 
             applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("ApplySettingsButton"), Alignment.BottomRight, "", settingsFrame);
@@ -252,7 +252,7 @@ namespace Barotrauma
         
         private bool ApplyClicked(GUIButton button, object userData)
         {
-            Save("config.xml");
+            Save();
 
             settingsFrame.Flash(Color.Green);
             

@@ -86,6 +86,8 @@ namespace Barotrauma
             set;
         }
 
+        public static float? OverrideMusicDuration;
+
         public static int SoundCount;
         
         public static IEnumerable<object> Init()
@@ -185,7 +187,7 @@ namespace Barotrauma
             }
 
             //stop submarine ambient sounds if no sub is loaded
-            if (Submarine.MainSub == null)  
+            if (Submarine.MainSub == null || Screen.Selected != GameMain.GameScreen)  
             {
                 for (int i = 0; i < waterAmbienceChannels.Length; i++)
                 {
@@ -297,6 +299,16 @@ namespace Barotrauma
         {
             if (musicClips == null) return;
 
+            if (OverrideMusicType != null && OverrideMusicDuration.HasValue)
+            {
+                OverrideMusicDuration -= deltaTime;
+                if (OverrideMusicDuration <= 0.0f)
+                {
+                    OverrideMusicType = null;
+                    OverrideMusicDuration = null;
+                }                
+            }
+
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
@@ -367,7 +379,7 @@ namespace Barotrauma
 
             if (suitableMusic.Count > 1)
             {
-                targetMusic = suitableMusic.Find(m => m.file != currentMusic.Filename);
+                targetMusic = currentMusic == null ? suitableMusic[0] : suitableMusic.Find(m => m.file != currentMusic.Filename);
             }
         }
 

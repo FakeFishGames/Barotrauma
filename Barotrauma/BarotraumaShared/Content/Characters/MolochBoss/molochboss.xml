@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="molochboss" humanoid="false" health="1000" doesbleed="false">
+<Character name="molochboss" humanoid="false">
 
+  <health
+    vitality="1200"
+    doesbleed="false"/>
+  
   <sound file="Content/Characters/Moloch/attack1.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Moloch/attack2.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Moloch/idle1.ogg" state="None" range="3000"/>
@@ -14,6 +18,7 @@
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="nasonov" state="Attack" priority="45"/>
+    <targetpriority tag="sonar" state="Attack" priority="45"/>
     <targetpriority tag="human" state="Attack" priority="40"/>
   </ai>
 

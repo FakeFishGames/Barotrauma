@@ -2,23 +2,24 @@
 <Items>
   <Item
     name="Junction Box"
+    identifier="junctionbox"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
-    <Sprite texture="junctionbox.png" sourcerect="0,0,70,84" depth="0.8" canflipx="false"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>
-    <BrokenSprite texture="junctionbox.png" sourcerect="140,0,70,84" depth="0.8" maxcondition="0"/>
+    <Sprite texture="FF_junctionbox.png" sourcerect="0,0,70,123" depth="0.8" canflipx="false"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="70,0,70,123" depth="0.8" maxcondition="50" fadein="true"/>
+    <BrokenSprite texture="FF_junctionbox.png" sourcerect="140,0,70,123" depth="0.8" maxcondition="0"/>
 
-    <fixrequirement name="Electrical repairs">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="30">
       <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
       <item name="Screwdriver"/>
     </fixrequirement>
 
     <PowerTransfer canbeselected = "true">
-      <StatusEffect type="InWater" target="This" condition="-0.5"/>
+      <StatusEffect type="InWater" target="This" condition="-0.5">
+        <Conditional currPowerConsumption="lt -10"/>
+      </StatusEffect>
       <GuiFrame rect="0,0,350,160" alignment="Center" style="ItemUI"/>
     </PowerTransfer>
 
@@ -44,9 +45,9 @@
 
   <Item
     name="Battery"
+    identifier="battery"
     category="Electrical"
-    linkable="true"
-    
+    linkable="true"    
     description="Generally used for storing backup power in case of a reactor failure.">
 
     <Sprite texture ="battery.png" sourcerect="0,0,58,77" depth="0.8"/>
@@ -58,7 +59,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="15"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
@@ -72,6 +76,7 @@
 
   <Item
     name="Supercapacitor"
+    identifier="supercapacitor"
     category="Electrical"
     linkable="true"    
     description="Can deliver charge much faster than batteries.">
@@ -84,7 +89,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="30" stun="20" force="5.0" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="5.0" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="30"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_out"/>
@@ -94,6 +102,7 @@
 
   <Item
     name="Charging Dock"
+    identifier="chargingdock"
     category="Electrical"
     linkable="true"
     
@@ -108,7 +117,10 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true">
+          <affliction name="Burn" strength="15"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>

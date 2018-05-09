@@ -67,7 +67,18 @@ namespace Barotrauma
             {
                 while (queuedMessages.Count > 0)
                 {
-                    AddMessage(queuedMessages.Dequeue());
+                    var newMsg = queuedMessages.Dequeue();
+                    AddMessage(newMsg);
+
+                    if (GameSettings.SaveDebugConsoleLogs)
+                    {
+                        unsavedMessages.Add(newMsg);
+                        if (unsavedMessages.Count >= messagesPerFile)
+                        {
+                            SaveLogs();
+                            unsavedMessages.Clear();
+                        }
+                    }
                 }
             }
 
@@ -151,7 +162,10 @@ namespace Barotrauma
         {
             while (queuedMessages.Count > 0)
             {
-                AddMessage(queuedMessages.Dequeue());
+                var newMsg = queuedMessages.Dequeue();
+                AddMessage(newMsg);
+
+                if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
         }
 
@@ -294,7 +308,7 @@ namespace Barotrauma
 
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
-                TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
+                TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
             }));
 
             commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
@@ -370,6 +384,18 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
+            {
+                GameMain.ShowFPS = !GameMain.ShowFPS;
+                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
+            {
+                HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
+                NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.White);
 
             }));
 
@@ -431,7 +457,7 @@ namespace Barotrauma
                     ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
                 }
 
-                GameMain.Config.Save("config.xml");
+                GameMain.Config.Save();
 
                 var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 

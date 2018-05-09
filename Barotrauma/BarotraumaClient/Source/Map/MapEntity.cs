@@ -15,6 +15,9 @@ namespace Barotrauma
 
         protected static Vector2 startMovingPos = Vector2.Zero;
 
+        private static bool resizing;
+        private int resizeDirX, resizeDirY;
+
         //which entities have been selected for editing
         private static List<MapEntity> selectedList = new List<MapEntity>();
         public static List<MapEntity> SelectedList
@@ -142,7 +145,10 @@ namespace Barotrauma
                     PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
                     PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
                 {
-                    var clones = Clone(copiedList);
+                    List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+                    Clone(copiedList);
+
+                    var clones = mapEntityList.Except(prevEntities).ToList();
 
                     Vector2 center = Vector2.Zero;
                     clones.ForEach(c => center += c.WorldPosition);

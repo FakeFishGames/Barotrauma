@@ -83,8 +83,9 @@ namespace Barotrauma
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
-                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
-                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color * fadeInBrokenSpriteAlpha, Point.Zero, selectedSprite.Depth - 0.000001f);
+                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
+                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
+                            depth: selectedSprite.Depth - 0.000001f);
 
                     }
                     else
@@ -132,7 +133,18 @@ namespace Barotrauma
                 staticDrawableComponents[i].Draw(spriteBatch, editing);
             }
 
-            if (GameMain.DebugDraw && aiTarget != null) aiTarget.Draw(spriteBatch);
+            if (GameMain.DebugDraw)
+            {
+                aiTarget?.Draw(spriteBatch);
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item item in containedItems)
+                    {
+                        item.AiTarget?.Draw(spriteBatch);
+                    }
+                }
+            }
 
             if (!editing || (body != null && !body.Enabled))
             {

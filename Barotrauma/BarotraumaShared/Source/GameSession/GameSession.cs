@@ -18,10 +18,8 @@ namespace Barotrauma
         private string savePath;
 
         private Submarine submarine;
-
-#if CLIENT
+        
         public CrewManager CrewManager;
-#endif
 
         public double RoundStartTime;
 
@@ -102,11 +100,12 @@ namespace Barotrauma
             EventManager = new EventManager(this);
             
             this.savePath = savePath;
-
-#if CLIENT
+            
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
 
-            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
+#if CLIENT
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+            infoButton = new GUIButton(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
 
@@ -135,9 +134,7 @@ namespace Barotrauma
 #endif
                     case "multiplayercampaign":
                         GameMode = MultiPlayerCampaign.LoadNew(subElement);
-#if CLIENT
                         CrewManager = new CrewManager(false);
-#endif
                         break;
                 }
             }
@@ -171,9 +168,9 @@ namespace Barotrauma
             SaveUtil.LoadGame(savePath);
         }
 
-        public void StartRound(string levelSeed, bool loadSecondSub = false)
+        public void StartRound(string levelSeed, float? difficulty = null, bool loadSecondSub = false)
         {
-            Level randomLevel = Level.CreateRandom(levelSeed);
+            Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
 
             StartRound(randomLevel, true, loadSecondSub);
         }

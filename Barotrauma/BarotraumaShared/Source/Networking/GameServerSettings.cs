@@ -19,6 +19,11 @@ namespace Barotrauma.Networking
         No = 0, Maybe = 1, Yes = 2
     }
 
+    enum BotSpawnMode
+    {
+        Normal, Fill
+    }
+
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
@@ -57,6 +62,8 @@ namespace Barotrauma.Networking
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
+
+        private float selectedLevelDifficulty;
 
         private bool registeredToMaster;
 
@@ -176,6 +183,32 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        [Serialize(0, true)]
+        public int BotCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(16, true)]
+        public int MaxBotCount
+        {
+            get;
+            set;
+        }
+        
+        public BotSpawnMode BotSpawnMode
+        {
+            get;
+            set;
+        }
+
+        public float SelectedLevelDifficulty
+        {
+            get { return selectedLevelDifficulty; }
+            set { selectedLevelDifficulty = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
 
         public YesNoMaybe TraitorsEnabled
         {
@@ -253,10 +286,24 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-
+        
         public int MaxPlayers
         {
             get { return maxPlayers; }
+        }
+
+        [Serialize(60f, true)]
+        public float AutoBanTime
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(360f, true)]
+        public float MaxAutoBanTime
+        {
+            get;
+            private set;
         }
 
         private void SaveSettings()
@@ -275,8 +322,13 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
-
+            doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
+
+            /*doc.Root.SetAttributeValue("BotCount", BotCount);
+            doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
+            doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
+
 
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
@@ -325,17 +377,24 @@ namespace Barotrauma.Networking
 #endif
 
             subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
+            selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
+            GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
+
             var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
+            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+
+            var botSpawnMode = BotSpawnMode.Fill;
+            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Fill"), out botSpawnMode);
+            BotSpawnMode = botSpawnMode;
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
@@ -350,6 +409,9 @@ namespace Barotrauma.Networking
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
+
+            GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
+            GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
 #if CLIENT
             showLogButton.Visible = SaveServerLogs;
@@ -366,6 +428,9 @@ namespace Barotrauma.Networking
                 if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
+
+            AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
+            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()

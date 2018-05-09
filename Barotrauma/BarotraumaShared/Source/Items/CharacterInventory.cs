@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -17,24 +18,72 @@ namespace Barotrauma
     {
         private Character character;
 
-        public static InvSlotType[] SlotTypes = new InvSlotType[] {
-            InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.RightHand,
-            InvSlotType.LeftHand, InvSlotType.Head, InvSlotType.Headset, InvSlotType.Card,
-            InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
-            InvSlotType.Pack };
+        public InvSlotType[] SlotTypes
+        {
+            get;
+            private set;
+        }
 
         protected bool[] IsEquipped;
 
-        public CharacterInventory(int capacity, Character character)
-            : base(character, capacity)
+        public bool AccessibleWhenAlive
+        {
+            get;
+            private set;
+        }
+
+        public CharacterInventory(XElement element, Character character)
+            : base(character, element.GetAttributeString("slots", "").Split(',').Count())
         {
             this.character = character;
             IsEquipped = new bool[capacity];
+            SlotTypes = new InvSlotType[capacity];
 
-            InitProjSpecific();
+            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", true);
+
+            string[] slotTypeNames = element.GetAttributeString("slots", "").Split(',');
+            System.Diagnostics.Debug.Assert(slotTypeNames.Length == capacity);
+
+            for (int i = 0; i < capacity; i++)
+            {
+                InvSlotType parsedSlotType = InvSlotType.Any;
+                slotTypeNames[i] = slotTypeNames[i].Trim();
+                if (!Enum.TryParse(slotTypeNames[i], out parsedSlotType))
+                {
+                    DebugConsole.ThrowError("Error in the inventory config of \"" + character.SpeciesName + "\" - " + slotTypeNames[i] + " is not a valid inventory slot type.");
+                }
+                SlotTypes[i] = parsedSlotType;
+                switch (SlotTypes[i])
+                {
+                    case InvSlotType.Head:
+                    case InvSlotType.OuterClothes:
+                    case InvSlotType.LeftHand:
+                    case InvSlotType.RightHand:
+                    case InvSlotType.Pack:
+                        hideEmptySlot[i] = true;
+                        break;
+                }               
+            }
+            
+            InitProjSpecific(element);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
+
+                string itemName = subElement.GetAttributeString("name", "");
+                ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemName + "\" not found.");
+                    continue;
+                }
+
+                Entity.Spawner.AddToSpawnQueue(itemPrefab, this);
+            }
         }
 
-        partial void InitProjSpecific();
+        partial void InitProjSpecific(XElement element);
 
         private bool UseItemOnSelf(int slotIndex)
         {

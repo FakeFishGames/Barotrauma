@@ -23,11 +23,11 @@
       AllowedZones="8,9,10"/>	  
     
   </Biomes>
-  
+
   <Default
     biomes="Cold Caverns"
     width="150000"
-    height="60000"    
+    height="60000"
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
     MainPathNodeIntervalRange="10000,30000"
@@ -41,8 +41,13 @@
     MountainCountMax="3"
     SeaFloorDepth="-300000.0"
     MountainHeightMin="10000"
-    MountainHeightMax="20000"    
-    />
+    MountainHeightMax="20000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Default>
 
   <Open
     biomes="Great Sea"
@@ -56,8 +61,13 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="1"
-    BackgroundSpriteAmount="800" 
-    />
+    BackgroundSpriteAmount="800">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Open>
 
   <Pillars
     biomes="Cold Caverns, Volcanic Ridge"
@@ -77,8 +87,13 @@
     SeaFloorDepth="-150000.0"
     SeaFloorVariance="10000.0"
     MountainHeightMin="50000"
-    MountainHeightMax="100000"
-    />
+    MountainHeightMax="100000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Pillars>
 
   <Slabs
     biomes="Cold Caverns"
@@ -93,8 +108,13 @@
     RuinCount="1"
     BottomHoleProbability="0.0"
     BackgroundSpriteAmount="1000"
-    SeaFloorVariance="10000.0"
-    />
+    SeaFloorVariance="10000.0">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Slabs>
 
   <Maze
     biomes="Cold Caverns"
@@ -114,8 +134,13 @@
     SeaFloorDepth="-300000.0"
     SeaFloorVariance="20000"
     MountainHeightMin="10000"
-    MountainHeightMax="20000" 
-    />
+    MountainHeightMax="20000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Maze>
 
   <Wastes
     biomes="Hydrothermal Wastes"
@@ -136,8 +161,13 @@
     SeaFloorDepth="-50000.0"
     SeaFloorVariance="2000"
     MountainHeightMin="40000"
-    MountainHeightMax="50000" 
-    />
+    MountainHeightMax="50000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Wastes>
 
   <Ridge
     biomes="Volcanic Ridge"
@@ -158,8 +188,13 @@
     SeaFloorDepth="-100000.0"
     SeaFloorVariance="2000"
     MountainHeightMin="80000"
-    MountainHeightMax="120000"
-    />
+    MountainHeightMax="120000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Ridge>
 
   <Plateau
     biomes="Cold Caverns"
@@ -177,6 +212,11 @@
     MountainCountMin="1"
     MountainCountMax="2"
     MountainHeightMin="1000"
-    MountainHeightMax="5000"
-    />
+    MountainHeightMax="5000">
+    <Background texture="Content/Map/iceBackgroundFade.png"/>
+    <BackgroundTop texture="Content/Map/iceBackground.png"/>
+    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <Wall texture="Content/Map/iceBackground.png"/>
+    <WallEdge texture="Content/Map/iceWallEdge.png"/>
+  </Plateau>
 </LevelGenerationParameters>

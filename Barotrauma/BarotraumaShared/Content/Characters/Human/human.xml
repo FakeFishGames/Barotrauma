@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8">
+<Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
-  
+
   <health
+    usehealthwindow="true"
     vitality="100"
     doesbleed="true">
     <Limb>
@@ -31,6 +32,8 @@
       <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
   </health>
+
+  <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
   
   <ragdoll headposition="154" torsoposition="115" 
            stepsize="42.0, 12.0"
@@ -41,7 +44,8 @@
            walkspeed="1.5" swimspeed="2.0"
            runspeedmultiplier="3.0" swimspeedmultiplier="1.2"
            colliderheightfromfloor="55"
-           impacttolerance="7.5">
+           impacttolerance="7.5"
+           draggable="true">
 
     <collider height="55" radius="15"/>
     <collider height="40" radius="15"/>

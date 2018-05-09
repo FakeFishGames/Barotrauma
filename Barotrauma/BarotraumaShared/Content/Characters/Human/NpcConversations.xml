@@ -7,6 +7,7 @@
   <PersonalityTrait name="Joker" alloweddialogtags="joker,none" commonness="0.5"/>
   <PersonalityTrait name="Broken English" alloweddialogtags="brokenenglish" commonness="0.5"/>
   <PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="0.5"/>
+  <PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="0.5"/>
   
   <Conversation line="Alright folks, let's take her out for a spin!" flags="Initial" allowedjobs="Captain" speaker="0">
     <Conversation line=""/>
@@ -38,6 +39,7 @@
   <Conversation line="Ready crew, we got long way to go!" flags="Initial" speakertags="brokenenglish" allowedjobs="Captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
+    <Conversation line="Honkmother have mercy on our souls." speakertags="crazy" speaker="1"/>
   </Conversation>
 
   <Conversation line="Is captain speaking! Ready for mission crew and good luck!" flags="Initial" speakertags="brokenenglish" allowedjobs="Captain" speaker="0">
@@ -57,9 +59,9 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="I'm cold." speaker="0"/>
+  <Conversation line="I'm cold." maxintensity="0.4" speaker="0"/>
   
-  <Conversation line="I have a bad feeling about this..." speakertags="fearful" speaker="0">
+  <Conversation line="I have a bad feeling about this..." maxintensity="0.4" speakertags="fearful" speaker="0">
     <Conversation line="I knew this old captain who used to say..." speakertags="professional,tough" speaker="1">
       <Conversation line="You can't calm the storm, so stop trying." speaker="1">
         <Conversation line="What you can do is calm yourself, the storm will pass." speaker="1"/>
@@ -68,11 +70,11 @@
     <Conversation line="I'm sure we all do." speaker="1"/>  
   </Conversation>
 
-  <Conversation line="I can hear the hull creaking." speakertags="fearful" speaker="0">
+  <Conversation line="I can hear the hull creaking." maxintensity="0.4" speakertags="fearful" speaker="0">
     <Conversation line="I hear too." speakertags="brokenenglish" speaker="1"/>
   </Conversation>
   
-  <Conversation line="Can't wait to get back home and pop a bottle of Ol' Cadmus." speakertags="laid-back" speaker="0">
+  <Conversation line="Can't wait to get back home and pop a bottle of Ol' Cadmus." maxintensity="0.2" speakertags="laid-back" speaker="0">
     <Conversation line="Focus on your job or you'll get to join that bottle in your casket." speakertags="professional,tough,rude" speaker="1">
       <Conversation line="Haha! Burial in a casket! When was the last time that happened?" speakertags="laid-back,joker" speaker="2"/>
     </Conversation>
@@ -80,7 +82,7 @@
     <Conversation line="Cadmus fish piss. I like it stronger." speakertags="brokenenglish" speaker="1"/>
   </Conversation>
   
-  <Conversation line="Back in the Earth Navy they had this saying..." allowedjobs="Captain" speakertags="professional,tough" speaker="0">
+  <Conversation line="Back in the Earth Navy they had this saying..." maxintensity="0.3" allowedjobs="Captain" speakertags="professional,tough" speaker="0">
     <Conversation line="There are two ways to do things; the right way, and again." speaker="0">
       <Conversation line="That don't apply here. No second chances on Europa." speaker="0">
         <Conversation line="So everyone, focus on the task at hand." speaker="0"/>
@@ -88,7 +90,7 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="I'm Popeye the sailor man!" allowedjobs="Medical Doctor" speakertags="laid-back,joker" speaker="0">
+  <Conversation line="I'm Popeye the sailor man!" maxintensity="0.2" allowedjobs="Medical Doctor" speakertags="laid-back,joker" speaker="0">
     <Conversation line="I'm strong to the finich, cause I eats me spinach!" speaker="0">
       <Conversation line="Doc, have you been at the ethanol stash again?" speaker="1">
         <Conversation line="Okay, I'll stop." speaker="0"/>
@@ -98,7 +100,7 @@
     <Conversation line="No singing on my boat." allowedjobs="Captain" speakertags="professional,tough" speaker="1"/>
   </Conversation>
   
-  <Conversation line="I miss the sun." speaker="0">
+  <Conversation line="I miss the sun." maxintensity="0.2" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="I've heard sunlight gives you cancer. We're better off without it." speaker="1">
       <Conversation line="Jupiter gives you cancer too. I'd take the sun over Jupiter any day." speaker="0">
@@ -108,7 +110,7 @@
     <Conversation line="Cut it out." speakertags="professional,tough" speaker="1"/>
   </Conversation>
   
-  <Conversation line="Husks creep me out." speakertags="fearful" speaker="0">
+  <Conversation line="Husks creep me out." maxintensity="0.2" speakertags="fearful" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="Me too. Promise to put a spear through my head if I ever get infected." speaker="1">
       <Conversation line="I'd rather give you a shot of calyxanide." allowedjobs="Medical Doctor" speaker="2"/>
@@ -116,7 +118,7 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="Has any of you heard of labor unions?" speaker="0">
+  <Conversation line="Has any of you heard of labor unions?" maxintensity="0.2" speaker="0">
     <Conversation line="That's communist talk. The Coalition is the only union we need." allowedjobs="Captain" speakertags="professional,tough,rude" speaker="1"/>
     <Conversation line="Yes, what about it?" speaker="1">
       <Conversation line="I think we should establish one." speaker="0">
@@ -134,15 +136,16 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Ever seen what happens to a human body when it's exposed to the pressure outside?" speakertags="fearful" speaker="0">    
+  <Conversation line="Ever seen what happens to a human body when it's exposed to the pressure outside?" maxintensity="0.2" speakertags="fearful" speaker="0">    
     <Conversation line="I can imagine." speaker="1">
       <Conversation line="Still can't get the image out of my head." speaker="0">
         <Conversation line="A bag of meat and bones under a hydraulic press, that's the only way I can describe it." speaker="0"/>
+        <Conversation line="The loving embrace of Europa." speakertags="crazy" speaker="2"/>
       </Conversation>
     </Conversation>
   </Conversation>
 
-  <Conversation line="Take her fast, take her deep..." speakertags="joker,laid-back" flags="Casual" speaker="0">
+  <Conversation line="Take her fast, take her deep..." maxintensity="0.3" speakertags="joker,laid-back" flags="Casual" speaker="0">
     <Conversation line="Take her where the fishes sleep!">
       <Conversation line="Damn the depth, damn the pressure...">
         <Conversation line="Take her down just like the Thresher!">
@@ -156,14 +159,14 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="Are we there yet?" speakertags="joker" speaker="0">
+  <Conversation line="Are we there yet?" maxintensity="0.2" speakertags="joker" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="Shut up." speakertags="rude" speaker="1"/>
     <Conversation line="Still not funny." speaker="1"/>
     <Conversation line="Is no funny." speakertags="brokenenglish" speaker="1"/>
   </Conversation>
 
-  <Conversation line="Any of you remember the Earth?" speaker="0">
+  <Conversation line="Any of you remember the Earth?" maxintensity="0.2" speaker="0">
     <Conversation line="I'm old, but not that old." speaker="1"/>
     <Conversation line="My grandpa was an Earther." speaker="1">
       <Conversation line="I loved listening to his stories, although I'm sure half of those were made up." speaker="1">
@@ -181,15 +184,16 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Do you ever wonder what happened to whoever built the ruins?" speaker="0">
+  <Conversation line="Do you ever wonder what happened to whoever built the ruins?" maxintensity="0.2" speaker="0">
     <Conversation line="Who doesn't?" speaker="1"/>
     <Conversation line="I'll leave the wondering to the researchers." speaker="1">
       <Conversation line="Got more important things to worry about down here." speaker="1"/>
     </Conversation>
+    <Conversation line="Only the Abyss knows." speakertags="crazy" speaker="1"/>
     <Conversation line="I think about it but think no-one know." speakertags="brokenenglish" speaker="2"/>
   </Conversation>
 
-  <Conversation line="Ever seen one of those things that guard the ruins?" speaker="0">
+  <Conversation line="Ever seen one of those things that guard the ruins?" maxintensity="0.2" speaker="0">
     <Conversation line="Yes, but I wish I could forget about it." speakertags="fearful" speaker="1"/>
     <Conversation line="They have one at the institute." speaker="1">
       <Conversation line="They say it's not organic - closer to a robot than an animal." speaker="1">
@@ -198,7 +202,7 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="Cigarettes are so expensive nowadays." speakertags="laid-back" speaker="0">
+  <Conversation line="Cigarettes are so expensive nowadays." maxintensity="0.2" speakertags="laid-back" speaker="0">
     <Conversation line="Tell me about it." speaker="1"/>
     <Conversation line="Well yeah, hydroponic farms are expensive." speaker="1">
       <Conversation line="Makes more sense to use those for something more useful than tobacco." speaker="1"/>
@@ -208,18 +212,19 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Did you hear that?" speaker="0">
+  <Conversation line="Did you hear that?" maxintensity="0.4" speaker="0">
     <Conversation line="Hear what?" speaker="1">
       <Conversation line="Like something clawing at the hull." speaker="0">
         <Conversation line="Probably just my imagination." speaker="0"/>
       </Conversation>
       <Conversation line="Some deep groaning sound from the outside." speaker="0">
+        <Conversation line="The Crabmen. I've told you." speakertags="crazy" speaker="1"/>
         <Conversation line="Probably just the hull. Relax." speaker="1"/>
       </Conversation>
     </Conversation>
   </Conversation>
 
-  <Conversation line="I read an old sailor's manual the other day." speaker="0">
+  <Conversation line="I read an old sailor's manual the other day." maxintensity="0.2" speaker="0">
     <Conversation line="Couldn't wrap my head around some parts because of all the weird, ancient terminology." speaker="0">
       <Conversation line="For instance, what the hell is a starboard?" speaker="0">
         <Conversation line="Your guess is as good as mine." speaker="1"/>
@@ -228,7 +233,7 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Do you ever get the feeling the whole moon is against us?" speaker="0">
+  <Conversation line="Do you ever get the feeling the whole moon is against us?" maxintensity="0.3" speaker="0">
     <Conversation line="Well, it's not the most hospitable place to settle in." speaker="1">
       <Conversation line="Given the circumstances, I think it actually is." speaker="2">
         <Conversation line="You know what I meant." speaker="1"/>
@@ -245,7 +250,7 @@
     <Conversation line="Enough with that." speakertags="professional,tough" speaker="1"/>
   </Conversation>
 
-  <Conversation line="Second to Sun, second to Sun..." speakertags="laid-back" speaker="0">
+  <Conversation line="Second to Sun, second to Sun..." maxintensity="0.2" speakertags="laid-back,crazy" speaker="0">
     <Conversation line="Like Jupiter, we are the ones..." speaker="0">
       <Conversation line="" flags="Casual"/>
       <Conversation line="If you really must sing, please keep the headset off." speakertags="professional" speaker="1"/>
@@ -255,22 +260,20 @@
   <Conversation line="This sucks!" speakertags="tough" speaker="0">
     <Conversation line="I love it!"/>
   </Conversation>
-
-  <Conversation line="I want some action!" speakertags="tough"/>
-
+  <Conversation line="I want some action!" maxintensity="0.2" speakertags="tough"/>
   <Conversation line="Smooth seas don't make skillful sailors." speakertags="tough">
     <Conversation line="Rough sea make dead sailors!" speakertags="brokenenglish" speaker="1"/>    
   </Conversation>
   
-  <Conversation line="We should get a coffeemaker on board." speakertags="laid-back">
+  <Conversation line="We should get a coffeemaker on board." maxintensity="0.2" speakertags="laid-back">
     <Conversation line="Agreed." speaker="1"/>
     <Conversation line="I don't drink coffee." speaker="1"/>
     <Conversation line=""/>
   </Conversation>
 
-  <Conversation line="I saw a crawler the other day. Horrible creatures." speakertags="joker"/>
+  <Conversation line="I saw a crawler the other day. Horrible creatures." maxintensity="0.2" speakertags="joker,crazy"/>
   
-  <Conversation line="Give a man a fish and you feed him for a day;" speakertags="joker" speaker="0">
+  <Conversation line="Give a man a fish and you feed him for a day;" maxintensity="0.4" speakertags="joker" speaker="0">
     <Conversation line="Teach a man to fish and he most likely dies in a horrible accident." speakertags="joker" speaker="0">
       <Conversation line="I don't think that's how it goes." speaker="1">
         <Conversation line="Here that's exactly how it goes." speaker="0"/>        
@@ -279,7 +282,7 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="You know, I had a brilliant business idea the other day." speakertags="joker,laid-back" speaker="0">
+  <Conversation line="You know, I had a brilliant business idea the other day." maxintensity="0.2" speakertags="joker,laid-back" speaker="0">
     <Conversation line="Hear me out. We could make lots of money with this." speaker="0">
       <Conversation line="What if someone started making bigger oxygen tanks?" speaker="0">
         <Conversation line="Ones that last like an hour or two?" speaker="0">
@@ -306,7 +309,7 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Awfully quiet in here." speaker="0">
+  <Conversation line="Awfully quiet in here." maxintensity="0.3" speaker="0">
     <Conversation line="Is my headset still working?">
       <Conversation line="It is. Please keep the chatter to a minimum." speakertags="professional" speaker="1"/>
       <Conversation line="Hear you loud and clear." speaker="1"/>
@@ -314,13 +317,83 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="Radio check." speakertags="professional" speaker="0">
+  <Conversation line="Radio check." maxintensity="0.3" speakertags="professional" speaker="0">
     <Conversation line="Loud and clear." speakertags="professional" speaker="1"/>
     <Conversation line="Good and readable." speakertags="professional" speaker="1"/>
     <Conversation line="All good!" speaker="1"/>
     <Conversation line="Yes hear you good!" speakertags="brokenenglish" speaker="1"/>
   </Conversation>
+
+  <Conversation line="Can you hear the Crabmen singing?" maxintensity="0.2" speakertags="crazy">
+    <Conversation line="" />
+    <Conversation line="No." speaker="1"/>
+    <Conversation line="For the last time, the Crabmen don't exist." speaker="1"/>
+  </Conversation>
+
+  <Conversation line="Inward." maxintensity="0.2" speakertags="crazy">
+    <Conversation line="Diving deeper? No. Diving inward." maxintensity="0.2" speakertags="crazy">
+      <Conversation line="" />
+      <Conversation line="You're a fucking lost cause." speakertags="rude" speaker="1"/>
+      <Conversation line="I don't understood." speakertags="brokenenglish" speaker="1"/>
+    </Conversation>
+  </Conversation>
+  
+  <Conversation line="Can God see through leagues of ice?" maxintensity="0.2" speakertags="crazy">
+    <Conversation line="Or is it Jupiter?" speakertags="crazy">
+      <Conversation line="" />
+      <Conversation line="That makes no sense." speaker="1"/>
+    </Conversation>
+    <Conversation line="Or perhaps it's the Abyss, this gaze upon us." speakertags="crazy">
+      <Conversation line="The cult is right about one thing, there is something down there." speakertags="crazy">
+        <Conversation line="" />
+        <Conversation line="Please." speaker="1"/>
+        <Conversation line="Perhaps, perhaps." speaker="1">
+          <Conversation line="But we've got more important things to worry about right now." speaker="1"/>          
+        </Conversation>
+      </Conversation>
+    </Conversation>
+  </Conversation>
+
+  <Conversation line="At times I feel like we're just puppets on a string." maxintensity="0.3" speakertags="crazy">
+    <Conversation line="Dancing and dying for the amusement of the thing beyond the curtain.">
+      <Conversation line="" speaker="1"/>
+      <Conversation line="No dancing or dying on my boat, please." allowedjobs="Captain" speaker="1"/>
+      <Conversation line="I don't find any of this amusing at all." speakertags="professional" speaker="1"/>
+      <Conversation line="*sigh*" speaker="1"/>
+    </Conversation>  
+  </Conversation>
     
+  <Conversation line="This is going to be a rough ride." minintensity="0.3" maxintensity="0.5"/>
+  <Conversation line="This is getting tense." minintensity="0.3" maxintensity="0.6"/>
+  <Conversation line="We can do this." minintensity="0.3"/>
+  <Conversation line="Finally some action!" minintensity="0.3" speakertags="tough"/>
+  <Conversation line="Her work has begun!" minintensity="0.3" maxintensity="0.6" speakertags="crazy"/>
+  <Conversation line="Uh-oh." minintensity="0.5"/>
+  <Conversation line="Just a setback!" minintensity="0.5" speakertags="tough"/>
+  <Conversation line="How quickly the tide turns." minintensity="0.5"/>
+  <Conversation line="This bad!" speakertags="brokenenglish" minintensity="0.5"/>
+  <Conversation line="No good!" speakertags="brokenenglish" minintensity="0.5"/>
+  <Conversation line="Join the fleet they said! It'll be an exciting experience they said!" minintensity="0.5" speakertags="joker"/>
+  <Conversation line="I'm gonna need a drink after this!" minintensity="0.5" speakertags="joker,laid-back"/>
+  <Conversation line="Alright crew, show me what you've got!" speakertags="professional,tough,laid-back" allowedjobs="Captain" minintensity="0.5" speaker="0"/>
+  <Conversation line="We're not out of the woods yet!" allowedjobs="Captain" minintensity="0.5" speaker="0"/>
+  <Conversation line="I don't want to die!" minintensity="0.6" speakertags="fearful"/>
+  <Conversation line="Should've become a botanist instead!" minintensity="0.6" speakertags="joker"/>
+  <Conversation line="Hang in there everyone! We can do it!" minintensity="0.6" speakertags="tough">
+    <Conversation line="Are you sure?" speakertags="fearful" speaker="1"/>
+  </Conversation>
+  <Conversation line="I'm done with this shit!" minintensity="0.6" speakertags="rude"/>
+  <Conversation line="If I don't make it, tell my momma I love her!" minintensity="0.6" speakertags="fearful">
+    <Conversation line="Shut the fuck up!" speakertags="rude" speaker="1"/>
+    <Conversation line="Cut it out, you're going to make it!" speakertags="professional" speaker="1"/>
+  </Conversation>
+  <Conversation line="If we make it out of this I'm resigning!" minintensity="0.6" speakertags="joker,laid-back"/>
+  <Conversation line="And so life ebbs, and her thirst is quenched..." minintensity="0.7" speakertags="crazy"/>
+  <Conversation line="We sure fucked up this time." minintensity="0.8" speakertags="rude"/>
+  <Conversation line="Oh god." minintensity="0.8"/>
+  <Conversation line="Oh boy." minintensity="0.8" speakertags="joker"/>
+  <Conversation line="It was an honor serving with you guys." minintensity="0.8" speakertags="professional"/>
+
   <Conversation line="I always feel uneasy when we dive his deep." flags="SubmarineDeep" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="It'll be fine. She's been deeper." speakertags="tough" speaker="1"/>

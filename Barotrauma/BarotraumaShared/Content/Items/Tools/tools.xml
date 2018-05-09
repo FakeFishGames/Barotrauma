@@ -2,6 +2,7 @@
 <Items>
   <Item
     name="Welding Tool"
+    identifier="weldingtool"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -69,6 +70,7 @@
 
   <Item
     name="Plasma Cutter"
+    identifier="plasmacutter"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -125,6 +127,7 @@
 
   <Item
     name="Welding Fuel Tank"
+    identifier="weldingfueltank"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -145,13 +148,17 @@
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
+        <Explosion range="250.0" structuredamage="15" force="3.0">
+          <affliction name="Burn" strength="25"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
     </Holdable>
   </Item>
   
   <Item
     name="Fire Extinguisher"
+    identifier="extinguisher"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate"
@@ -174,7 +181,7 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="false"
               aimpos="40,-20" handle1="-2,30"/>
 
-    <RepairTool extinquishamount="60.0" range="500" barrelpos="21,25">
+    <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50"/>
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
       <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
@@ -186,6 +193,7 @@
 
   <Item
     name="Screwdriver"
+    identifier="screwdriver"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -194,7 +202,11 @@
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="Military" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="20"/>
-       
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
 
     <Body width="31" height="6" density="50"/>
@@ -205,6 +217,7 @@
 
   <Item
     name="Wrench"
+    identifier="wrench"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -213,6 +226,10 @@
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="Military" buyprice="10"/>
     <Price locationtype="Outpost" buyprice="20"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
@@ -226,6 +243,7 @@
 
   <Item
     name="Crowbar"
+    identifier="crowbar"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -234,6 +252,10 @@
     <Price locationtype="Research" buyprice="15"/>
     <Price locationtype="Military" buyprice="15"/>
     <Price locationtype="Outpost" buyprice="20"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
@@ -247,8 +269,9 @@
 
   <Item
     name="Handheld Sonar"
+    identifier="handheldsonar"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,sonar"
     cargocontainername="Metal Crate">
 
     <Price locationtype="City" buyprice="50"/>
@@ -256,20 +279,27 @@
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="Outpost" buyprice="100"/>
 
+    <Deconstruct time="15">
+      <Item name="Copper Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
     <Body width="31" height="6" density="40"/>
+
+    <AiTarget/>
 
     <Holdable slots="Any,RightHand,LeftHand"
               holdangle="30" handle1="-10,0"/>
 
     <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
-      <sound file="Content/Items/Engine/radarPing.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Command/radarPing.ogg" type="OnUse" range="1000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
-      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Engine/radarBlip.png" origin="0.5,0.5"/>
+      <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
     </Radar>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -281,6 +311,7 @@
 
   <Item
     name="Flashlight"
+    identifier="flashlight"
     category="Equipment"
     Tags="smallitem"
     cargocontainername="Metal Crate">
@@ -316,6 +347,7 @@
 
   <Item
     name="Flare"
+    identifier="flare"
     category="Equipment"
     cargocontainername="Metal Crate"
     spritecolor="1.0,0.0,0.0,1.0"

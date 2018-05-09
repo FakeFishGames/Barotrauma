@@ -304,7 +304,7 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                var ladders = item.GetComponent<Items.Components.Ladder>();
+                var ladders = item.GetComponent<Ladder>();
                 if (ladders == null) continue;
 
                 List<WayPoint> ladderPoints = new List<WayPoint>();
@@ -314,30 +314,46 @@ namespace Barotrauma
                 Vector2 prevPos = prevPoint.SimPosition;
                 List<Body> ignoredBodies = new List<Body>();
 
-                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 100.0f; y += 100.0f)
+                for (float y = ladderPoints[0].Position.Y + 100.0f; y < item.Rect.Y - 1.0f; y += 100.0f)
                 {
-                    var pickedBody = Submarine.PickBody(
-                        ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, 
-                        ignoredBodies, null, false);
+                    //first check if there's a door in the way
+                    //(we need to create a waypoint linked to the door for NPCs to open it)
+                    Body pickedBody = Submarine.PickBody(
+                        ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), 
+                        prevPos, ignoredBodies, Physics.CollisionWall, false,
+                        (Fixture f) => f.Body.UserData is Item && ((Item)f.Body.UserData).GetComponent<Door>() != null);
+
+                    Door pickedDoor = null;
+                    if (pickedBody != null)
+                    {
+                        pickedDoor = (pickedBody?.UserData as Item).GetComponent<Door>();
+                    }
+                    else
+                    {
+                        //no door, check for walls
+                        pickedBody = Submarine.PickBody(
+                            ConvertUnits.ToSimUnits(new Vector2(ladderPoints[0].Position.X, y)), prevPos, ignoredBodies, null, false);
+                    }
 
                     if (pickedBody == null)
                     {
                         prevPos = Submarine.LastPickedPosition;
                         continue;
                     }
-
-                    ignoredBodies.Add(pickedBody);
-
-                    if (pickedBody.UserData is Item && ((Item)pickedBody.UserData).GetComponent<Door>() != null)
+                    else
                     {
-                        var door = ((Item)pickedBody.UserData).GetComponent<Door>();
+                        ignoredBodies.Add(pickedBody);
+                    }
 
-                        WayPoint newPoint = new WayPoint(door.Item.Position, SpawnType.Path, submarine);
+
+                    if (pickedDoor != null)
+                    {
+                        WayPoint newPoint = new WayPoint(pickedDoor.Item.Position, SpawnType.Path, submarine);
                         ladderPoints.Add(newPoint);
-                        newPoint.ConnectedGap = door.LinkedGap;
+                        newPoint.ConnectedGap = pickedDoor.LinkedGap;
                         newPoint.ConnectTo(prevPoint);
                         prevPoint = newPoint;
-                        prevPos = new Vector2(prevPos.X, ConvertUnits.ToSimUnits(door.Item.Position.Y - door.Item.Rect.Height));
+                        prevPos = new Vector2(prevPos.X, ConvertUnits.ToSimUnits(pickedDoor.Item.Position.Y - pickedDoor.Item.Rect.Height));
                     }
                     else
                     {
@@ -349,7 +365,12 @@ namespace Barotrauma
                     }
                 }
 
-                ladderPoints.Add(new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine));
+                if (prevPoint.rect.Y < item.Rect.Y - 10.0f)
+                {
+                    WayPoint newPoint = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - 1.0f), SpawnType.Path, submarine);
+                    ladderPoints.Add(newPoint);
+                    newPoint.ConnectTo(prevPoint);
+                }
                 
                 foreach (WayPoint ladderPoint in ladderPoints)
                 {

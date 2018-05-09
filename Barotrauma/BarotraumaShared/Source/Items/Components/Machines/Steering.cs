@@ -37,6 +37,8 @@ namespace Barotrauma.Items.Components
         private float steeringAdjustSpeed = 1.0f;
 
         private Character user;
+
+        private Radar radar;
                 
         public bool AutoPilot
         {
@@ -111,6 +113,12 @@ namespace Barotrauma.Items.Components
             get { return steeringPath; }
         }
 
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
+        }
+
         public Steering(Item item, XElement element)
             : base(item, element)
         {
@@ -119,6 +127,11 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific();
+
+        public override void OnItemLoaded()
+        {
+            radar = item.GetComponent<Radar>();
+        }
 
         public override bool Select(Character character)
         {
@@ -341,12 +354,9 @@ namespace Barotrauma.Items.Components
         public void SetDestinationLevelStart()
         {
             AutoPilot = true;
-
             MaintainPos = false;
             posToMaintain = null;
-
             LevelEndSelected = false;
-
             if (!LevelStartSelected)
             {
                 LevelStartSelected = true;
@@ -356,13 +366,10 @@ namespace Barotrauma.Items.Components
 
         public void SetDestinationLevelEnd()
         {
-            AutoPilot = false;
-
+            AutoPilot = true;
             MaintainPos = false;
             posToMaintain = null;
-
             LevelStartSelected = false;
-
             if (!LevelEndSelected)
             {
                 LevelEndSelected = true;
@@ -386,7 +393,44 @@ namespace Barotrauma.Items.Components
                 TargetVelocity = targetSpeed / 5.0f;
             }
         }
-        
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            switch (objective.Option.ToLowerInvariant())
+            {
+                case "maintain position":
+                    if (!posToMaintain.HasValue)
+                    {
+                        unsentChanges = true;
+                        posToMaintain = item.Submarine.WorldPosition;
+                    }
+
+                    if (!AutoPilot || !MaintainPos) unsentChanges = true;
+
+                    AutoPilot = true;
+                    MaintainPos = true;
+                    break;
+                case "navigate back":
+                    if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
+                    SetDestinationLevelStart();
+                    break;
+                case "navigate to destination":
+                    if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
+                    SetDestinationLevelEnd();
+                    break;
+            }
+
+            radar?.AIOperate(deltaTime, character, objective);
+
+            return false;
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             if (connection.Name == "velocity_in")

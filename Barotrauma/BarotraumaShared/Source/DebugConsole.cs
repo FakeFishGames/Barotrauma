@@ -128,6 +128,10 @@ namespace Barotrauma
         //used for keeping track of the message entered when pressing up/down
         static int selectedIndex;
 
+        private static List<ColoredText> unsavedMessages = new List<ColoredText>();
+        private static int messagesPerFile = 800;
+        public const string SavePath = "ConsoleLogs";
+
         static DebugConsole()
         {
             commands.Add(new Command("help", "", (string[] args) =>
@@ -303,6 +307,54 @@ namespace Barotrauma
                 HumanAIController.DisableCrewAI = false;
                 NewMessage("Crew AI enabled by \"" + client.Name + "\"", Color.White);
                 GameMain.Server.SendConsoleMessage("Crew AI enabled", client);
+            }));
+
+            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("Set the number of bots to " + botCount, Color.White);
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("\"" + client.Name + "\" set the number of bots to " + botCount, Color.White);
+                GameMain.Server.SendConsoleMessage("Set the number of bots to " + botCount, client);
+            }));
+
+            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("Set bot spawn mode to " + spawnMode, Color.White);
+                }
+                else
+                {
+                    NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("\"" + client.Name + "\" set bot spawn mode to " + spawnMode, Color.White);
+                    GameMain.Server.SendConsoleMessage("Set bot spawn mode to " + spawnMode, client);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                }
             }));
 
             commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
@@ -987,6 +1039,7 @@ namespace Barotrauma
 
             commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
             {
+                throw new NotImplementedException();
                 if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
             }));
@@ -1714,6 +1767,38 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage(location.Name + " selected.", senderClient);
             }));
 
+            commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    NewMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    GameMain.Server.SendConsoleMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), client);
+                    NewMessage("Client \""+client.Name+"\" set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", client);
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
+            }));
+
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
@@ -1747,6 +1832,11 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(wall);
                 }
             }, null, null));
+
+            commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
+            {
+                Submarine.MainSub?.FlipX();
+            }));
 #endif
             InitProjectSpecific();
 
@@ -2104,20 +2194,18 @@ namespace Barotrauma
 
             if (args[0].ToLowerInvariant() == "human")
             {
-                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
-
-#if CLIENT
+                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
-                    SinglePlayerCampaign mode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
-                    if (mode != null)
+                    if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
-                        Character.Controlled = spawnedCharacter;
-                        GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
-                        GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
+                        //TODO: a way to select which team to spawn to?
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
                     }
-                }
+#if CLIENT
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
+                }
             }
             else
             {
@@ -2127,7 +2215,7 @@ namespace Barotrauma
                 {
                     if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
                     {
-                        Character.Create(characterFile, spawnPosition);
+                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
                         return;
                     }
                 }
@@ -2138,7 +2226,7 @@ namespace Barotrauma
                 string configPath = "Content/Characters/"
                     + args[0].First().ToString().ToUpper() + args[0].Substring(1)
                     + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition);
+                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 
@@ -2197,18 +2285,28 @@ namespace Barotrauma
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
-            Messages.Add(new ColoredText(msg, color, isCommand));
+            var newMsg = new ColoredText(msg, color, isCommand);
+            Messages.Add(newMsg);
 
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
             Console.WriteLine(msg);
             Console.ForegroundColor = ConsoleColor.White;
 
+            if (GameSettings.SaveDebugConsoleLogs)
+            {
+                unsavedMessages.Add(newMsg);
+                if (unsavedMessages.Count >= messagesPerFile)
+                {
+                    SaveLogs();
+                    unsavedMessages.Clear();
+                }
+            }
+
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }            
-
+            }
 #elif CLIENT
             lock (queuedMessages)
             {
@@ -2302,6 +2400,52 @@ namespace Barotrauma
 #if CLIENT
             isOpen = true;
 #endif
+        }
+
+
+        public static void SaveLogs()
+        {
+            if (unsavedMessages.Count == 0) return;
+            if (!Directory.Exists(SavePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SavePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to create a folder for debug console logs", e);
+                    return;
+                }
+            }
+
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+
+            string filePath = Path.Combine(SavePath, fileName);
+            if (File.Exists(filePath))
+            {
+                int fileNum = 2;
+                while (File.Exists(filePath + " (" + fileNum + ")"))
+                {
+                    fileNum++;
+                }
+                filePath = filePath + " (" + fileNum + ")";
+            }
+
+            try
+            {
+                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+            }
+            catch (Exception e)
+            {
+                unsavedMessages.Clear();
+                ThrowError("Saving debug console log to " + filePath + " failed", e);
+            }
         }
     }
 }

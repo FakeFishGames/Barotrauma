@@ -13,6 +13,8 @@ namespace Barotrauma
     {
         private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
 
+        private static ushort idCounter;
+
         public string Name;
         public string DisplayName
         {
@@ -73,6 +75,10 @@ namespace Barotrauma
         public byte TeamID;
 
         private NPCPersonalityTrait personalityTrait;
+
+        //unique ID given to character infos in MP
+        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+        public ushort ID;
 
         public List<ushort> PickedItemIDs
         {
@@ -140,6 +146,9 @@ namespace Barotrauma
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
+            ID = idCounter;
+            idCounter++;
+
             this.File = file;
 
             headSpriteRange = new Vector2[2];
@@ -222,6 +231,9 @@ namespace Barotrauma
 
         public CharacterInfo(XElement element)
         {
+            ID = idCounter;
+            idCounter++;
+
             Name = element.GetAttributeString("name", "unnamed");
 
             string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();

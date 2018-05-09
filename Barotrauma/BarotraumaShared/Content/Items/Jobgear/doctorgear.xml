@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Health Scanner HUD"
+    identifier="healthscanner"
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
@@ -19,6 +20,7 @@
 
   <Item
     name="Doctor's Uniform"
+    identifier="doctorsuniform"
     category="Equipment"  
     cargocontainername="Metal Crate"  
     tags="smallitem">

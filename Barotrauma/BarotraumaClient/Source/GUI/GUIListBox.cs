@@ -378,7 +378,7 @@ namespace Barotrauma
 
             foreach (GUIComponent child in children)
             {
-                if (child == frame) continue;
+                if (child == frame || !child.Visible) continue;
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
             }
 

@@ -1,10 +1,17 @@
 ﻿<Items>
   <Item
     name="Body Armor"
+    identifier="bodyarmor"
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
     description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
+
+    <Deconstruct time="40">
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="securitygear.png" sourcerect="68,0,60,31" depth="0.6"/>
 
@@ -21,6 +28,7 @@
 
   <Item
     name="Ballistic Helmet"
+    identifier="ballistichelmet"
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
@@ -44,6 +52,7 @@
 
   <Item
     name="Handcuffs"
+    identifier="handcuffs"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem" >
@@ -58,6 +67,21 @@
       
       <StatusEffect type="OnWearing" target="Character" lockhands="true" setvalue="true"/>
     </Wearable>
+  </Item>
+
+  <Item
+    name="Riot Shield"
+    identifier="riotshield"
+    category="Equipment"
+    tags="weapon">
+
+    <Sprite texture="riotgear.png" sourcerect="31,56,26,145" origin="0.5,0.5" depth="0.55"/>
+
+    <Body width="40" height="145" density="30"/>
+
+    <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-10,0" handle2="10,0" controlpose="true" blocksplayers="true">
+      <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true"/>
+    </Holdable>
   </Item>
 </Items>
 

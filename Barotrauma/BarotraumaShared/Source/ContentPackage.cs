@@ -24,7 +24,9 @@ namespace Barotrauma
         Particles,
         Decals,
         NPCConversations,
-        Afflictions
+        Afflictions,
+        Tutorials,
+        UIStyle
     }
 
     public class ContentPackage
@@ -200,8 +202,9 @@ namespace Barotrauma
                 {
                     Directory.CreateDirectory(folder);
                 }
-                catch
+                catch (Exception e)
                 {
+                    DebugConsole.ThrowError("Failed to create directory \"" + folder + "\"", e);
                     return;
                 }
             }

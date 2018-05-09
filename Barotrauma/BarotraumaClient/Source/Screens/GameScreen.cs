@@ -31,20 +31,20 @@ namespace Barotrauma
             renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
-            
+
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("blurshader_opengl");
-            damageEffect = content.Load<Effect>("damageshader_opengl");
+            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
+            damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
 #else
-            var blurEffect = content.Load<Effect>("blurshader");
-            damageEffect = content.Load<Effect>("damageshader");
+            var blurEffect = content.Load<Effect>("Effects/blurshader");
+            damageEffect = content.Load<Effect>("Effects/damageshader");
 #endif
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
             
-            distortTexture = TextureLoader.FromFile("Content/distortnormals.png");
+            distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
@@ -69,12 +69,7 @@ namespace Barotrauma
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
-            {
-                Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
-            }
-
+            
             if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
@@ -142,13 +137,7 @@ namespace Barotrauma
 			spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
 			Submarine.DrawBack(spriteBatch, false, s => s is Structure && ((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal);
-			foreach (Structure s in Structure.WallList)
-			{
-				if ((s.ResizeVertical != s.ResizeHorizontal) && s.CastShadow)
-				{
-					GUI.DrawRectangle(spriteBatch, new Vector2(s.DrawPosition.X-s.WorldRect.Width/2,-s.DrawPosition.Y-s.WorldRect.Height/2), new Vector2(s.WorldRect.Width, s.WorldRect.Height), Color.Black, true);
-				}
-			}
+			Submarine.DrawBack(spriteBatch, false, s => s is Structure && ((Structure)s).DrawBelowWater && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
 			spriteBatch.End();
             graphics.SetRenderTarget(renderTarget);
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, null);
@@ -156,7 +145,7 @@ namespace Barotrauma
 			spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
 			Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
-			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
+			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !((Structure)s).DrawBelowWater && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
             spriteBatch.End();
 			spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);

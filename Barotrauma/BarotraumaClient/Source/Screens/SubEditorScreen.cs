@@ -135,9 +135,9 @@ namespace Barotrauma
         {
             cam = new Camera();
 #if LINUX || OSX
-            var blurEffect = content.Load<Effect>("blurshader_opengl");
+            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
 #else
-            var blurEffect = content.Load<Effect>("blurshader");
+            var blurEffect = content.Load<Effect>("Effects/blurshader");
 #endif
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
 
@@ -362,12 +362,12 @@ namespace Barotrauma
             entityList.children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
         }
 
-        public void StartTutorial()
+        /*public void StartTutorial()
         {
             tutorial = new Tutorials.EditorTutorial("EditorTutorial");
 
             CoroutineManager.StartCoroutine(tutorial.UpdateState());
-        }
+        }*/
 
         public override void Select()
         {
@@ -387,11 +387,9 @@ namespace Barotrauma
             }
 
             SoundPlayer.OverrideMusicType = "none";
-            //TODO: reimplement
-            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Pause(i);
-            }*/
+            SoundPlayer.OverrideMusicDuration = null;
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -412,16 +410,13 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
 
-            if (characterMode) ToggleCharacterMode();            
+            if (characterMode) ToggleCharacterMode();
 
             if (wiringMode) ToggleWiringMode();
 
             SoundPlayer.OverrideMusicType = null;
-            //TODO: reimplement
-            /*for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Resume(i);
-            }*/
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
 
             if (dummyCharacter != null)
             {
@@ -435,7 +430,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
+            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
 
             for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
@@ -585,7 +580,7 @@ namespace Barotrauma
 
             foreach (string contentPackageName in contentPacks)
             {
-                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, contentPackList);
+                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, "", contentPackList);
                 cpTickBox.Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName);
                 cpTickBox.UserData = contentPackageName;
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>
@@ -1614,6 +1609,10 @@ namespace Barotrauma
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
+
+                    //wires need to be updated for the last node to follow the player during rewiring
+                    Wire wire = item.GetComponent<Wire>();
+                    if (wire != null) wire.Update((float)deltaTime, cam);
                 }
 
                 if (dummyCharacter.SelectedConstruction != null)
@@ -1685,23 +1684,16 @@ namespace Barotrauma
 
             leftPanel.Draw(spriteBatch);
             topPanel.Draw(spriteBatch);
-
-            //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
             if ((characterMode || wiringMode) && dummyCharacter != null)                     
             {
-                if (dummyCharacter.SelectedConstruction != null)
-                {
-                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, cam, dummyCharacter);
-                }
-                
-                dummyCharacter.DrawHUD(spriteBatch, cam);
+                dummyCharacter.DrawHUD(spriteBatch, cam, false);
                 
                 if (wiringMode) wiringToolPanel.Draw(spriteBatch);
             }
             else
             {
-                if (loadFrame!=null)
+                if (loadFrame != null)
                 {
                     loadFrame.Draw(spriteBatch);
                 }
@@ -1749,9 +1741,13 @@ namespace Barotrauma
             GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
             SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice);
 
-            spriteBatch.Begin();
-            LevelRenderer.BackgroundTop.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
-            spriteBatch.End();
+            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            if (backgroundSprite != null)
+            {
+                spriteBatch.Begin();
+                backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                spriteBatch.End();
+            }
             
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
             Submarine.Draw(spriteBatch, false);

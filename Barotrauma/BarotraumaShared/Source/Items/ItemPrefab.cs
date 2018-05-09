@@ -288,6 +288,7 @@ namespace Barotrauma
 
             name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+            identifier = element.GetAttributeString("identifier", "");
 
             DebugConsole.Log("    " + name);
 
@@ -345,6 +346,14 @@ namespace Barotrauma
                         prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
                         break;
 #if CLIENT
+                    case "inventoryicon":
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+                        InventoryIcon = new Sprite(subElement, iconFolder);
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
@@ -397,7 +406,21 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
             List.Add(this);
         }
 

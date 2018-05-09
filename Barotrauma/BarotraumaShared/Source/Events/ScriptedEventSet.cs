@@ -42,6 +42,7 @@ namespace Barotrauma
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
+            Commonness[""] = 1.0f;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

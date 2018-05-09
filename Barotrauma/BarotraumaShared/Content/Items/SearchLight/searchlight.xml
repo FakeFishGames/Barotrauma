@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
-
   <Item
     name="Searchlight"
+    identifier="searchlight"
     category="Machine"
     focusonselected="true"
-    offsetonselected="350"
+    offsetonselected="515"
     linkable="false">
 
     <Sprite texture="Content/Items/SearchLight/SearchLightBase.png" depth="0.01" sourcerect="0,0,128,128"/>
@@ -32,5 +31,4 @@
       <input name="trigger_in"/>
     </ConnectionPanel>
   </Item>
-
 </Items>

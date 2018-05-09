@@ -58,8 +58,8 @@ namespace Barotrauma
             if (GameMain.Client != null) return;
 
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
-                level.Difficulty > s.MinLevelDifficulty &&
-                level.Difficulty < s.MaxLevelDifficulty);
+                level.Difficulty >= s.MinLevelDifficulty &&
+                level.Difficulty <= s.MaxLevelDifficulty);
 
             if (suitableSettings.Count == 0)
             {

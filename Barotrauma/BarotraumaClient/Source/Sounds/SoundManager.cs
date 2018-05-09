@@ -303,6 +303,21 @@ namespace Barotrauma.Sounds
             return false;
         }
 
+        public SoundChannel GetChannelFromSound(Sound sound)
+        {
+            lock (playingChannels)
+            {
+                for (int i = 0; i < SOURCE_COUNT; i++)
+                {
+                    if (playingChannels[i] != null && playingChannels[i].Sound == sound)
+                    {
+                        if (playingChannels[i].IsPlaying) return playingChannels[i];
+                    }
+                }
+            }
+            return null;
+        }
+
         public void KillChannels(Sound sound)
         {
             lock (playingChannels)

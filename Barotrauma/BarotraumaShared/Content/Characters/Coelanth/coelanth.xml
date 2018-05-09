@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="coelanth" humanoid="false" health="100.0">
+<Character name ="coelanth" humanoid="false">
+
+  <health
+    vitality="100"
+    doesbleed="true"/>
 
   <sound file="Content/Characters/Coelanth/attack1.ogg" state="Attack" />
   <sound file="Content/Characters/Coelanth/idle1.ogg" state="None" />
@@ -13,6 +17,7 @@
     <targetpriority tag="human" state="Attack" priority="90"/>
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
+    <targetpriority tag="sonar" state="Attack" priority="45"/>
     <targetpriority tag="dead" state="Eat" priority="40"/>
     <targetpriority tag="nasonov" state="Attack" priority="30"/>
   </ai>

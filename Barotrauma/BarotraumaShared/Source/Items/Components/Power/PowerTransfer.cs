@@ -162,7 +162,10 @@ namespace Barotrauma.Items.Components
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                    if (sparkSounds.Count > 0)
+                    {
+                        sparkSounds[Rand.Int(sparkSounds.Count)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                    }
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
@@ -391,19 +394,20 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemComponent ic in recipient.Item.components)
                     {
-                        //powertransfer components don't need to receive the signal because we relay it straight 
-                        //to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer) continue;
+                        //powertransfer components don't need to receive the signal in the pass-through signal connections
+                        //because we relay it straight to the connected items without going through the whole chain of junction boxes
+                        if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
                     }
 
+                    bool broken = recipient.Item.Condition <= 0.0f;
                     foreach (StatusEffect effect in recipient.effects)
                     {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                        if (broken && effect.type != ActionType.OnBroken) continue;
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                     }
                 }
             }
         }
-
     }
 }

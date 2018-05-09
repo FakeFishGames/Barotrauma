@@ -1,15 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Items>
   
   <Item
-    name="Lamp"
+    name="Lamp"    
+    identifier="lamp"
     category="Electrical"
     Tags="smallitem,light">
 
     <Sprite texture="lamp.png" sourcerect="0,0,16,32" depth="0.8"/>
 
     <LightComponent lightcolor="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="5">
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0"/>
     </LightComponent>
 
@@ -24,7 +28,8 @@
   </Item>
 
   <Item
-    name="Emergency Light"
+    name="Emergency Light"    
+    identifier="emergencylight"
     category="Electrical"
     Tags="smallitem,light">
 

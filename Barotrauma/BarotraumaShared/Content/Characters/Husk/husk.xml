@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="husk" humanoid="true" needsair="false" doesbleed="false">
+<Character name="husk" humanoid="true" needsair="false">
+
+  <health
+    vitality="100"
+    doesbleed="false"/>
 
   <sound file="Content/Characters/Husk/Husk1.ogg" state="Attack" range="1000"/>
   <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
@@ -15,9 +19,12 @@
     <targetpriority tag="nasonov" state="Attack" priority="60"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="30"/>
+    <targetpriority tag="sonar" state="Attack" priority="25"/>
     <targetpriority tag="room" state="Attack" priority="5"/>
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
+
+  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack"/>
   
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"
@@ -26,7 +33,8 @@
            legtorque="15.0"
            thightorque="-5.0"
            walkspeed="1.2" swimspeed="2.5"
-           runspeedmultiplier="2.0" swimspeedmultiplier="1.5">
+           runspeedmultiplier="2.0" swimspeedmultiplier="1.5"
+           draggable="true">
 
     <collider height="80" radius="15"/>
 	  <collider height="40" radius="15"/>

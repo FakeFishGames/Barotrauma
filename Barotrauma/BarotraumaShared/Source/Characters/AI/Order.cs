@@ -192,10 +192,9 @@ namespace Barotrauma
 
         public string GetChatMessage(string targetCharacterName, string targetRoomName, string orderOption = "")
         {
-            if (!chatMessages.ContainsKey(orderOption))
-            {
-                return "";
-            }
+            orderOption = orderOption ?? "";
+            if (!chatMessages.ContainsKey(orderOption)) return "";
+            
             string message = chatMessages[orderOption].Count > 0 ? chatMessages[orderOption][Rand.Range(0, chatMessages[orderOption].Count)] : "";
             if (targetCharacterName == null) targetCharacterName = "";
             if (targetRoomName == null) targetRoomName = "";            

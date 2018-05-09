@@ -27,8 +27,12 @@ namespace Barotrauma
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+        {
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
+            endRoundButton = new GUIButton(
+                new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), 
+                TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+
             endRoundButton.Font = GUI.SmallFont;
             endRoundButton.OnClicked = TryEndRound;
 
@@ -55,7 +59,7 @@ namespace Barotrauma
 
             isRunning = true;
 
-            CrewManager.StartRound();
+            CrewManager.InitSinglePlayerRound();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -273,6 +277,7 @@ namespace Barotrauma
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicDuration = 18.0f;
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
 
@@ -283,18 +288,12 @@ namespace Barotrauma
         {
             while (cinematic.Running)
             {
-                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
+                if (Submarine.MainSub == null) yield return CoroutineStatus.Success;                
 
                 yield return CoroutineStatus.Running;
             }
 
-            if (Submarine.MainSub == null) yield return CoroutineStatus.Success;
-
-            End("");
-
-            yield return new WaitForSeconds(18.0f);
-            
-            SoundPlayer.OverrideMusicType = null;
+            if (Submarine.MainSub != null) End("");
 
             yield return CoroutineStatus.Success;
         }

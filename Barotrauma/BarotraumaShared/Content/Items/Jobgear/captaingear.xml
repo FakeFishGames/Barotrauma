@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Captain's Cap"
+    identifier="captainscap"    
     category="Equipment"
     tags="smallitem"
     cargocontainername="Metal Crate"
@@ -17,6 +18,7 @@
 
   <Item
     name="Captain's Uniform"
+    identifier="captainsuniform"
     category="Equipment"      
     cargocontainername="Metal Crate"  
     tags="smallitem">

@@ -220,7 +220,9 @@ namespace Barotrauma
 
                 for (int i = 0; i < amount; i++)
                 {
-                    monsters[i] = Character.Create(characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), null, GameMain.Client != null, true, true);
+                    monsters[i] = Character.Create(
+                        characterFile, spawnPos + Rand.Vector(100.0f, Rand.RandSync.Server), 
+                        i.ToString(), null, GameMain.Client != null, true, true);
                 }
 
                 spawnPending = false;

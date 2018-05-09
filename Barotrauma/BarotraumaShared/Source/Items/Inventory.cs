@@ -15,14 +15,17 @@ namespace Barotrauma
 
         public Item[] Items;
         protected bool[] hideEmptySlot;
-
-        private bool isSubInventory;
-
+        
         public bool Locked;
 
         private ushort[] receivedItemIDs;
         private float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
+
+        public int Capacity
+        {
+            get { return capacity; }
+        }
 
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
         {
@@ -42,6 +45,7 @@ namespace Barotrauma
                 slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
                 slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
                 slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
+                slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
                 EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
                 EquipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
             }
@@ -203,7 +207,7 @@ namespace Barotrauma
             syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -213,6 +217,12 @@ namespace Barotrauma
                 newItemIDs[i] = msg.ReadUInt16();
             }
 
+            if (this is CharacterInventory)
+            {
+                if (Owner == null || !(Owner is Character)) return;
+                if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead) return;
+            }
+
             if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
             {
                 return;
@@ -220,7 +230,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
+                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
                     System.Diagnostics.Debug.Assert(Items[i] == null);

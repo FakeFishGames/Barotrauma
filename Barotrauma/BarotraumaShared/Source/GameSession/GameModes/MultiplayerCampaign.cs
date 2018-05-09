@@ -166,11 +166,15 @@ namespace Barotrauma
                     case "map":
                         if (map == null)
                         {
+                            //map not created yet, loading this campaign for the first time
                             map = Map.LoadNew(subElement);
                         }
                         else
                         {
-                            map.Load(subElement);
+                            //map already created, update it
+                            //if we're not downloading the initial save file (LastSaveID > 0), 
+                            //show notifications about location type changes
+                            map.Load(subElement, LastSaveID > 0);
                         }
                         break;
                 }
