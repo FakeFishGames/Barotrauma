@@ -231,9 +231,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Note: does not do anything in the new system!
-        /// </summary>
         public override void SetDimensions(Point size, bool expandChildren = false)
         {
             base.SetDimensions(size, expandChildren);
