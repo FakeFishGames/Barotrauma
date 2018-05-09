@@ -234,7 +234,8 @@ namespace Barotrauma
         public override void SetDimensions(Point size, bool expandChildren = false)
         {
             base.SetDimensions(size, expandChildren);
-            frame.SetDimensions(size, expandChildren);
+            // Redundant, because the frame is a child of the listbox?
+            //frame.SetDimensions(size, expandChildren);
 
             // TODO: does not work with RectTransform
             if (scrollBar.IsHorizontal)
