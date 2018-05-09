@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Steamworks;
 
 namespace Barotrauma.Networking
@@ -77,14 +78,30 @@ namespace Barotrauma.Networking
         /// <param name="workshopTitle">Workshop Item Title</param>
         /// <param name="workshopDescription">Workshop Item Description</param>
         /// <param name="tags">Tags</param>
-        public void SaveToWorkshop(string fileName, string fileData, string workshopTitle, string workshopDescription, string[] tags)
+        public void SaveToWorkshop(string fileName, string filePath, string workshopTitle, string workshopDescription, string[] tags)
+        {
+            //TODO: exception handling
+            var bytes = File.ReadAllBytes(filePath);
+            SaveToWorkshop(fileName, bytes, workshopTitle, workshopDescription, tags);
+        }
+
+        /// <summary>
+        /// This functions saves a file to the workshop.
+        /// Make sure file size doesn't pass the steamworks limit on your app settings.
+        /// </summary>
+        /// <param name="fileName">File Name (actual physical file) example: map.txt</param>
+        /// <param name="fileData">File Data (actual file data)</param>
+        /// <param name="workshopTitle">Workshop Item Title</param>
+        /// <param name="workshopDescription">Workshop Item Description</param>
+        /// <param name="tags">Tags</param>
+        public void SaveToWorkshop(string fileName, byte[] fileData, string workshopTitle, string workshopDescription, string[] tags)
         {
             lastFileName = fileName;
             bool fileExists = SteamRemoteStorage.FileExists(fileName);
 
             if (fileExists)
             {
-                DebugConsole.Log("A file already exists with that name!");
+                DebugConsole.ThrowError("A file already exists with that name!");
             }
             else
             {
@@ -93,7 +110,7 @@ namespace Barotrauma.Networking
 
                 if (!upload)
                 {
-                    DebugConsole.Log("Upload failed!");
+                    DebugConsole.ThrowError("Upload failed!");
                 }
                 else
                 {
@@ -102,11 +119,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        private bool UploadFile(string fileName, string fileData)
+        private bool UploadFile(string fileName, byte[] fileData)
         {
-            byte[] Data = new byte[System.Text.Encoding.UTF8.GetByteCount(fileData)];
-            System.Text.Encoding.UTF8.GetBytes(fileData, 0, fileData.Length, Data, 0);
-            bool ret = SteamRemoteStorage.FileWrite(fileName, Data, Data.Length);
+            bool ret = SteamRemoteStorage.FileWrite(fileName, fileData, fileData.Length);
 
             return ret;
         }

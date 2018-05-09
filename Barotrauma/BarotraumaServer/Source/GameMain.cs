@@ -186,5 +186,10 @@ namespace Barotrauma
         {
             return CoroutineManager.StartCoroutine(loader);
         }
+
+        public void Exit()
+        {
+            ShouldRun = false;
+        }
     }
 }
