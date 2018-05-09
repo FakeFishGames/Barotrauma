@@ -285,14 +285,6 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            buttonsParent.Draw(spriteBatch);
-            animEditorButton.Draw(spriteBatch);
-
-            if (selectedTab > 0) menuTabs[(int)selectedTab].Draw(spriteBatch);
-
-            testElement?.Draw(spriteBatch);
-            outerElement?.Draw(spriteBatch);
-
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             //GUI.DrawString(spriteBatch, new Vector2(500, 100), "selected tab " + selectedTab, Color.White);
@@ -549,54 +541,57 @@ namespace Barotrauma
             //}
             if (PlayerInput.KeyHit(Keys.T))
             {
-                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
-                //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
+                //testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+                testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
+
                 //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
                 //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
                 //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
 
                 // old dropdown (also scroll bar dragging should now work)
-                //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
+                new GUITextBlock(new Rectangle(500, 350, 100, 20), text: "TEST", style: "", parent: p, color: null, textColor: null);
+                var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
 
                 //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
 
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                new GUITextBlock(new Rectangle(500, 350, 100, 20), text: "TEST2", style: "", parent: p, color: null, textColor: null);
 
                 // does not scroll, also colors don't work
-                var listBox = new GUIListBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
+                //var listBox = new GUIListBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
 
                 // old list box works
                 //var listBox = new GUIListBox(new Rectangle(600, 200, 100, 40), "", p);

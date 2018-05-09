@@ -293,12 +293,22 @@ namespace Barotrauma
             textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// TODO: define the offset as a class field instead of function parameter and remove this overload.
+        /// </summary>
+        public override void Draw(SpriteBatch spriteBatch)
         {
-            Draw(spriteBatch, Vector2.Zero, drawChildren);
+            Draw(spriteBatch, Vector2.Zero);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 offset, bool drawChildren = true)
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// TODO: define the offset as a class field instead of function parameter.
+        /// </summary>
+        public void Draw(SpriteBatch spriteBatch, Vector2 offset)
         {
             if (!Visible) return;
 
@@ -311,7 +321,7 @@ namespace Barotrauma
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
-            base.Draw(spriteBatch, false);
+            base.Draw(spriteBatch);
             
             if (TextGetter != null) Text = TextGetter();
             
@@ -336,10 +346,10 @@ namespace Barotrauma
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             }
 
-            if (drawChildren)
-            {
-                DrawChildren(spriteBatch);
-            }
+            //if (drawChildren)
+            //{
+            //    DrawChildren(spriteBatch);
+            //}
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);
         }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -205,35 +207,33 @@ namespace Barotrauma
             
             wasOpened = true;
             Dropped = !Dropped;
-
-            // TODO: does not work with the current system, but is it required anyway?
-            //if (Dropped)
-            //{
-            //    if (Enabled) OnDropped?.Invoke(this, userData);
-            //    if (Parent.Children[Parent.Children.Count - 1] != this)
-            //    {
-            //        Parent.Children.Remove(this);
-            //        Parent.Children.Add(this);
-            //    }
-            //}
             if (Dropped)
             {
                 if (Enabled)
                 {
                     OnDropped?.Invoke(this, userData);
                 }
+                // Used to enforce the dropdown to be the last element, not necessary if the listbox is added last on the guiupdatelist.
+                //if (Parent != null && Parent.Children.Last() != this)
+                //{
+                //    Parent.RemoveChild(this);
+                //    Parent.AddChild(this);
+                //}
             }
-
             return true;
         }
 
-        public override void AddToGUIUpdateList(bool ignoreChildren = false)
+        public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
         {
-            base.AddToGUIUpdateList(true);
+            base.AddToGUIUpdateList(true, updateLast);
             if (!ignoreChildren)
             {
-                button.AddToGUIUpdateList();
-                if (Dropped) listBox.AddToGUIUpdateList();
+                button.AddToGUIUpdateList(false, updateLast);
+                if (Dropped)
+                {
+                    // Enforces the listbox to be rendered on top of other elements.
+                    listBox.AddToGUIUpdateList(false, true);
+                }
             }
         }
 
@@ -253,18 +253,15 @@ namespace Barotrauma
             }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
-        {
-            if (!Visible) return;
-            base.Draw(spriteBatch, false);
-            if (drawChildren)
-            {
-                button.Draw(spriteBatch);
-                if (Dropped)
-                {
-                    listBox.Draw(spriteBatch);
-                }
-            }
-        }
+        //public override void Draw(SpriteBatch spriteBatch)
+        //{
+        //    if (!Visible) return;
+        //    base.Draw(spriteBatch);
+        //    button.Draw(spriteBatch);
+        //    if (Dropped)
+        //    {
+        //        listBox.Draw(spriteBatch);
+        //    }
+        //}
     }
 }

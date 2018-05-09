@@ -288,19 +288,16 @@ namespace Barotrauma
             textBlock.Update(deltaTime);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// </summary>
+        public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
-            if (drawChildren)
-            {
-                DrawChildren(spriteBatch);
-            }
-
-            if (!CaretEnabled) return;
-            
+            if (!CaretEnabled) return;           
             Vector2 caretPos = textBlock.CaretPos;
-
+            // TODO: caret is rendered in the wrong order.
             if (caretVisible && Selected)
             {
                 GUI.DrawLine(spriteBatch,
