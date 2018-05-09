@@ -174,17 +174,15 @@ namespace Barotrauma
                 textBlock = component.GetChild<GUITextBlock>();
                 if (textBlock == null) return false;
             }
-
             button.Text = textBlock.Text;
             Dropped = false;
-
-            if (OnSelected != null) OnSelected(component, component.UserData);
-
+            OnSelected?.Invoke(component, component.UserData);
             return true;
         }
 
         public void SelectItem(object userData)
         {
+            // TODO: cleanup
             //GUIComponent child = listBox.children.FirstOrDefault(c => c.UserData == userData);
 
             //if (child == null) return;
@@ -198,7 +196,6 @@ namespace Barotrauma
         {
             listBox.Select(index);
         }
-       
 
         private bool wasOpened;
 
@@ -209,7 +206,7 @@ namespace Barotrauma
             wasOpened = true;
             Dropped = !Dropped;
 
-            // TODO: does not work with the current system
+            // TODO: does not work with the current system, but is it required anyway?
             //if (Dropped)
             //{
             //    if (Enabled) OnDropped?.Invoke(this, userData);
@@ -225,7 +222,6 @@ namespace Barotrauma
                 {
                     OnDropped?.Invoke(this, userData);
                 }
-                // TODO: show hidden elements
             }
 
             return true;
@@ -244,15 +240,12 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
-
             wasOpened = false;
-
             base.Update(deltaTime);
-
             if (Dropped && PlayerInput.LeftButtonClicked())
             {
                 Rectangle listBoxRect = listBox.Rect;
-                listBoxRect.Width += 20; // TODO: might vary?
+                listBoxRect.Width += 20; // ?
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;
