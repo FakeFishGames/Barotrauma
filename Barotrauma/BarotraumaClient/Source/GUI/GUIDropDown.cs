@@ -229,8 +229,11 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false)
         {
             base.AddToGUIUpdateList(true);
-            button.AddToGUIUpdateList(ignoreChildren);
-            if (Dropped) listBox.AddToGUIUpdateList(ignoreChildren);
+            if (!ignoreChildren)
+            {
+                button.AddToGUIUpdateList();
+                if (Dropped) listBox.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(float deltaTime)
@@ -251,9 +254,9 @@ namespace Barotrauma
                 }
             }
             
-            button.Update(deltaTime);
+            //button.Update(deltaTime);
 
-            if (Dropped) listBox.Update(deltaTime);
+            //if (Dropped) listBox.Update(deltaTime);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
