@@ -50,6 +50,7 @@ namespace Barotrauma
             {
                 if (getExtinguisherObjective == null)
                 {
+                    character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
                     getExtinguisherObjective = new AIObjectiveGetItem(character, new string[] { "Fire Extinguisher", "extinguisher" }, true);
                 }
                 else
@@ -78,6 +79,11 @@ namespace Barotrauma
                     character.SetInput(InputType.Aim, false, true);
                     character.AIController.SteeringManager.Reset();
                     extinguisher.Use(deltaTime, character);
+
+                    if (!targetHull.FireSources.Contains(fs))
+                    {
+                        character.Speak(TextManager.Get("DialogPutOutFire").Replace("[roomname]", targetHull.Name), null, 0, "putoutfire", 10.0f);
+                    }
                     return;
                 }
             }

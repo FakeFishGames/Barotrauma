@@ -167,6 +167,11 @@ namespace Barotrauma.Networking
 
         public virtual void Update(float deltaTime) 
         {
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            {
+                GameMain.GameSession.CrewManager.Update(deltaTime);
+            }
+
 #if CLIENT
             GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
@@ -177,7 +182,6 @@ namespace Barotrauma.Networking
                 {
                     inGameHUD.Update(deltaTime);            
                     chatBox.Update(deltaTime);
-                    GameMain.GameSession.CrewManager.Update(deltaTime);
                 }
                 
                 if (Character.Controlled == null || Character.Controlled.IsDead)
@@ -194,6 +198,7 @@ namespace Barotrauma.Networking
             {
                 if (msgBox.Selected)
                 {
+                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
                     msgBox.Text = "";
                     msgBox.Deselect();
                 }
@@ -208,7 +213,7 @@ namespace Barotrauma.Networking
                 }
             }
 #endif
-        }
+            }
 
         public virtual void Disconnect() { }
     }

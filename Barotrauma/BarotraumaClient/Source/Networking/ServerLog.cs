@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
             int y = 30;
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, innerFrame);
+                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, "", innerFrame);
                 tickBox.Selected = true;
                 tickBox.TextColor = messageColor[(int)msgType];
 
@@ -83,6 +83,7 @@ namespace Barotrauma.Networking
             var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, "", Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
             textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
             textBlock.TextColor = messageColor[(int)line.Type];
+            textBlock.Visible = !msgTypeHidden[(int)line.Type];
             textBlock.CanBeFocused = false;
             textBlock.UserData = line;
 
@@ -108,7 +109,7 @@ namespace Barotrauma.Networking
 
                 textBlock.Visible = string.IsNullOrEmpty(filter) || textBlock.Text.ToLower().Contains(filter);
             }
-
+            listBox.UpdateScrollBarSize();
             listBox.BarScroll = 0.0f;
 
             return true;

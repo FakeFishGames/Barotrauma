@@ -109,7 +109,7 @@ namespace Barotrauma
                         for (int i = 0; i < character.Inventory.Items.Length; i++)
                         {
                             //slot not needed by the item, continue
-                            if (!slots.HasFlag(CharacterInventory.SlotTypes[i])) continue;
+                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) continue;
 
                             targetSlot = i;
 

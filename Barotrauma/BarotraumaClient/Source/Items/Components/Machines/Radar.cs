@@ -14,6 +14,14 @@ namespace Barotrauma.Items.Components
 
         private List<RadarBlip> radarBlips;
 
+        private float prevPingRadius;
+
+        float prevPassivePingRadius;
+
+        private Vector2 center;
+        private float displayRadius;
+        private float displayScale;
+
         private static Color[] blipColorGradient = 
         {
             Color.TransparentBlack,

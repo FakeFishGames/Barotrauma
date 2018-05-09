@@ -124,9 +124,9 @@ namespace Barotrauma.Sounds
             return Play(BaseGain);
         }
 
-        public SoundChannel Play(float gain,string category)
+        public SoundChannel Play(float? gain,string category)
         {
-            return new SoundChannel(this, gain, null, BaseNear, BaseFar, category);
+            return new SoundChannel(this, gain.HasValue ? gain.Value : BaseGain, null, BaseNear, BaseFar, category);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

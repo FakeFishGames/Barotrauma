@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class BasicTutorial : TutorialType
+    class BasicTutorial : Tutorial
     {
-        public BasicTutorial(string name)
-            : base(name)
+        public BasicTutorial(XElement element)
+            : base(element)
         {
-
         }
 
         public override IEnumerable<object> UpdateState()
@@ -297,7 +297,7 @@ namespace Barotrauma.Tutorials
 
             var moloch = Character.Create(
                 "Content/Characters/Moloch/moloch.xml", 
-                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
+                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f), "");
 
             moloch.PlaySound(CharacterSound.SoundType.Attack);
 
@@ -608,6 +608,8 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle " +
             "most of the basic tasks on board the submarine.");
 
+            Completed = true;
+
             yield return new WaitForSeconds(4.0f);
 
             Controlled = null;
@@ -633,9 +635,7 @@ namespace Barotrauma.Tutorials
 
             return Character.Controlled.Inventory.FindItem(itemName) != null;
         }
-
-
-
+        
         protected IEnumerable<object> KeepReactorRunning(Reactor reactor)
         {
             do

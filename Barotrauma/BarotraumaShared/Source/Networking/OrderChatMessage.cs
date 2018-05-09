@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
         public readonly string OrderOption;
 
         public OrderChatMessage(Order order, string orderOption, Entity targetEntity, Character targetCharacter, Character sender)
-            : base (sender.Name, 
+            : base (sender?.Name, 
                   order.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.RoomName, orderOption),
                   ChatMessageType.Order, sender)
         {

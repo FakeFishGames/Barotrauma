@@ -17,10 +17,17 @@ namespace Barotrauma.Networking
         {
             //----------------------------------------
 
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
+
+            var endRoundButton = new GUIButton(
+                new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), 
+                TextManager.Get("EndRound"), Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
 
-            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
+            showLogButton = new GUIButton(
+                new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), 
+                TextManager.Get("ServerLog"), Alignment.TopLeft, "", inGameHUD);
+
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
                 if (log.LogFrame == null)
@@ -35,7 +42,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
+            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "Settings", Alignment.TopLeft, "", inGameHUD);
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
 

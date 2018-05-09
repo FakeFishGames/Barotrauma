@@ -42,8 +42,10 @@ namespace Barotrauma
                         SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                     }
                 }
-
-                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = Math.Min(strongestImpact, 3.0f);
+            }
+            if (Character.Controlled == character)
+            {
+                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
             }
         }
 

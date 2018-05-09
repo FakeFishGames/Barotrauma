@@ -220,12 +220,12 @@ namespace Barotrauma
                     if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
                 }
 
-                if (closestSub != null && subsToMove.Contains(closestSub))                     
+                if (closestSub != null && subsToMove.Contains(closestSub))
                 {
                     GameMain.GameScreen.Cam.Position += moveAmount;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;    
-            
-                    if (Character.Controlled!=null) Character.Controlled.CursorPosition += moveAmount;
+                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;
+
+                    if (Character.Controlled != null) Character.Controlled.CursorPosition += moveAmount;
                 }
 
                 return;
@@ -662,23 +662,18 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
             }
 
-            Vector2 impulse = direction * impact * 0.5f;
-
-            float length = impulse.Length();
-            if (length > 5.0f) impulse = (impulse / length) * 5.0f;
-
+            Vector2 impulse = direction * impact * 0.5f;            
+            impulse = impulse.ClampLength(5.0f);            
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) continue;
-
                 if (impact > 2.0f) c.SetStun((impact - 2.0f) * 0.1f);
-
+                
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    limb.body.ApplyLinearImpulse(limb.Mass * impulse);
+                    limb.body.ApplyLinearImpulse(limb.Mass * impulse, 20.0f);
                 }
-
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse);
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 20.0f);
             }
 
             foreach (Item item in Item.ItemList)
@@ -686,7 +681,7 @@ namespace Barotrauma
                 if (item.Submarine != submarine || item.CurrentHull == null || 
                     item.body == null || !item.body.Enabled) continue;
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
+                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
 
             var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
@@ -710,7 +705,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
+                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

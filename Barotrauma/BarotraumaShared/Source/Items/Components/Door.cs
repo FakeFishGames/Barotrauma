@@ -30,6 +30,9 @@ namespace Barotrauma.Items.Components
 
         private bool isHorizontal;
 
+        private bool createdNewGap;
+        private bool autoOrientGap;
+
         private bool isStuck;
         
         private bool? predictedState;
@@ -102,11 +105,12 @@ namespace Barotrauma.Items.Components
                     rect.Width += 10;
                 }
 
-                linkedGap = new Gap(rect, Item.Submarine);
+                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine);
                 linkedGap.Submarine = item.Submarine;
                 linkedGap.PassAmbientLight = window != Rectangle.Empty;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
+                createdNewGap = true;
                 return linkedGap;
             }
         }
@@ -150,6 +154,7 @@ namespace Barotrauma.Items.Components
         {
             isHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
+            autoOrientGap = element.GetAttributeBool("autoorientgap", false);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -314,6 +319,7 @@ namespace Barotrauma.Items.Components
         {
             LinkedGap.ConnectedDoor = this;
             LinkedGap.Open = openState;
+            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
 
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);

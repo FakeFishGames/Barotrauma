@@ -571,7 +571,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -586,6 +586,8 @@ namespace Barotrauma
                     (ignoreSensors && fixture.IsSensor) ||
                     fixture.CollisionCategories == Category.None || 
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
+
+                if (customPredicate != null && !customPredicate(fixture)) return -1;
                 
                 if (collisionCategory != null && 
                     !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
@@ -1225,7 +1227,7 @@ namespace Barotrauma
                 List<Item> items = new List<Item>(Item.ItemList);
                 foreach (Item item in items)
                 {
-                    DebugConsole.ThrowError("Error while unloading submarines - item \""+item.Name+"\" not removed");
+                    DebugConsole.ThrowError("Error while unloading submarines - item \"" + item.Name + "\" (ID:" + item.ID + ") not removed");
                     try
                     {
                         item.Remove();
@@ -1242,7 +1244,7 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World.Clear();            
 
             Unloading = false;
         }

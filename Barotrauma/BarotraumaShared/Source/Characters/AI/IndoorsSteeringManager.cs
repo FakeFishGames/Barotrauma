@@ -84,7 +84,7 @@ namespace Barotrauma
                     var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
                     if (targetHull != null && targetHull.Submarine != null)
                     {
-                        pos -= targetHull.SimPosition;
+                        pos -= targetHull.Submarine.SimPosition;
                     }
                 }
 
@@ -126,18 +126,10 @@ namespace Barotrauma
                 }
                 return currentTarget - pos2;
             }
-
-            bool doorBlockingPath = false;
+            
             if (canOpenDoors && !character.LockHands)
             {
                 CheckDoorsInPath();
-            }
-            else if (canBreakDoors)
-            {
-                if (currentPath.CurrentNode?.ConnectedDoor != null && !currentPath.CurrentNode.ConnectedDoor.IsOpen)
-                {
-                    doorBlockingPath = true;
-                }
             }
             
             Vector2 pos = host.SimPosition;
@@ -202,6 +194,13 @@ namespace Barotrauma
 
                 character.AnimController.IgnorePlatforms = false;
                 return diff;
+            }
+            else if (character.AnimController.InWater)
+            {
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < collider.radius * collider.radius)
+                {
+                    currentPath.SkipToNextNode();
+                }
             }
             else
             {

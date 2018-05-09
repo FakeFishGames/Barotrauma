@@ -206,6 +206,8 @@ namespace Barotrauma
 
         public Dictionary<ComponentState, List<UISprite>> sprites;
 
+        public SpriteEffects SpriteEffects;
+
         public virtual Color OutlineColor { get; set; }
 
         public ComponentState State
@@ -294,6 +296,22 @@ namespace Barotrauma
                 if (child.UserData == obj) return child;
             }
             return null;
+        }
+
+        public List<GUIComponent> GetAllChildren()
+        {
+            List<GUIComponent> children = new List<GUIComponent>();
+            GetAllChildrenRecursive(children);
+            return children;
+        }
+
+        private void GetAllChildrenRecursive(List<GUIComponent> childList)
+        {
+            foreach (GUIComponent child in children)
+            {
+                childList.Add(child);
+                child.GetAllChildrenRecursive(childList);
+            }
         }
 
         public bool IsParentOf(GUIComponent component)
@@ -405,7 +423,7 @@ namespace Barotrauma
                         if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
                         if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
 
-                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, color: currColor * (currColor.A / 255.0f));
                     }
                     else
                     {
@@ -415,11 +433,11 @@ namespace Barotrauma
 
                             spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
                                 new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)), 
-                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects, 0.0f);
                         }
                         else
                         {
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
+                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), 0, Vector2.Zero, SpriteEffects, 0);
                         }
                     }
                 }

@@ -45,7 +45,7 @@ namespace Barotrauma.Networking
         private ClientEntityEventManager entityEventManager;
 
         private FileReceiver fileReceiver;
-
+        
         public byte ID
         {
             get { return myID; }
@@ -66,11 +66,13 @@ namespace Barotrauma.Networking
         
         public GameClient(string newName)
         {
-            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, 20, 20, 20), "End round", Alignment.TopLeft, inGameHUD);
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
+
+            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 20, buttonHeight), "End round", Alignment.TopLeft, inGameHUD);
             endVoteTickBox.OnSelected = ToggleEndRoundVote;
             endVoteTickBox.Visible = false;
 
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => 
             {
                 if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
@@ -718,6 +720,7 @@ namespace Barotrauma.Networking
 
             int seed                = inc.ReadInt32();
             string levelSeed        = inc.ReadString();
+            float levelDifficulty   = inc.ReadFloat();
 
             int missionTypeIndex    = inc.ReadByte();
 
@@ -789,7 +792,7 @@ namespace Barotrauma.Networking
             if (campaign == null)
             {
                 GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.MissionTypes[missionTypeIndex]);
-                GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
+                GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
             {
@@ -925,7 +928,11 @@ namespace Barotrauma.Networking
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
+                            float levelDifficulty       = inc.ReadFloat();
 
+                            byte botCount               = inc.ReadByte();
+                            BotSpawnMode botSpawnMode   = inc.ReadBoolean() ? BotSpawnMode.Fill : BotSpawnMode.Normal;
+                            
                             bool autoRestartEnabled     = inc.ReadBoolean();
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
 
@@ -944,30 +951,23 @@ namespace Barotrauma.Networking
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
-
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
-
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
-                                if (!allowSubVoting)
-                                {
-                                    GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
-                                }
+                                if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
                                 GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
 
-                                if (!allowModeVoting)
-                                {
-                                    GameMain.NetLobbyScreen.SelectMode(modeIndex);
-                                }
+                                if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);                                
                                 
-                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);                                
-
+                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
-                                
+                                GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
+                                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);                                
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 ConnectedClients.Clear();
@@ -1278,8 +1278,6 @@ namespace Barotrauma.Networking
                     if (campaign == null) return;
 
                     GameMain.GameSession.SavePath = transfer.FilePath;
-                    campaign.LastSaveID = campaign.PendingSaveID;
-
                     if (GameMain.GameSession.Submarine == null)
                     {
                         var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
@@ -1288,6 +1286,10 @@ namespace Barotrauma.Networking
                     }
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    campaign.LastSaveID = campaign.PendingSaveID;
+                    //decrement campaign update ID so the server will send us the latest data
+                    //(as there may have been campaign updates after the save file was created)
+                    campaign.LastUpdateID--;
                     break;
             }
         }

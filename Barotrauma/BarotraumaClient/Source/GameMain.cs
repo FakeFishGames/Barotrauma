@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = true;
+        public static bool ShowFPS = false;
         public static bool DebugDraw;
 
         public static FrameCounter FrameCounter;
@@ -133,7 +133,7 @@ namespace Barotrauma
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("config.xml");
+                Config.Save();
             }
 
             ApplyGraphicsSettings();
@@ -249,6 +249,7 @@ namespace Barotrauma
 
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 
@@ -271,6 +272,7 @@ namespace Barotrauma
 
             MissionPrefab.Init();
             MapEntityPrefab.Init();
+            Tutorials.Tutorial.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));

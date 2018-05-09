@@ -127,12 +127,8 @@ namespace Barotrauma.Networking
         public static bool IsValidName(string name)
         {
             if (name.Contains("\n") || name.Contains("\r")) return false;
-
-            return (name.All(c =>
-                c != ';' &&
-                c != ',' &&
-                c != '<' &&
-                c != '/'));
+            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
+            return !name.Any(c => disallowedChars.Contains(c));
         }
         
         public static string SanitizeName(string name)

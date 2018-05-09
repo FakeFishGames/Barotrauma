@@ -152,12 +152,19 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            if (GameMain.Client != null) return false;
+
             if (objective.Option.ToLowerInvariant() == "stop pumping")
             {
+                if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
                 FlowPercentage = 0.0f;
             }
             else
             {
+                if (!IsActive || FlowPercentage > -100.0f)
+                {
+                    item.CreateServerEvent(this);
+                }
                 IsActive = true;
                 FlowPercentage = -100.0f;
             }

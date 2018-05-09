@@ -20,7 +20,8 @@ namespace Barotrauma
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
-        OnImpact
+        OnImpact,
+        OnDeath = OnBroken
     }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
@@ -382,6 +383,7 @@ namespace Barotrauma
                         body.FarseerBody.LinearDamping  = 0.1f;
                         break;
                     case "trigger":
+                    case "inventoryicon":
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
@@ -402,33 +404,36 @@ namespace Barotrauma
                         components.Add(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
-
-                        if (ic.statusEffectLists == null) continue;
-
-                        if (statusEffectLists == null) 
-                            statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
-
-                        //go through all the status effects of the component 
-                        //and add them to the corresponding statuseffect list
-                        foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
-                        {
-
-                            ActionType actionType = componentEffectList.First().type;
-
-                            List<StatusEffect> statusEffectList;
-                            if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
-                            {
-                                statusEffectList = new List<StatusEffect>();
-                                statusEffectLists.Add(actionType, statusEffectList);
-                            }
-
-                            foreach (StatusEffect effect in componentEffectList)
-                            {
-                                statusEffectList.Add(effect);
-                            }
-                        }
-
+                        
                         break;
+                }
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                if (ic.statusEffectLists == null) continue;
+
+                if (statusEffectLists == null)
+                    statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                //go through all the status effects of the component 
+                //and add them to the corresponding statuseffect list
+                foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
+                {
+
+                    ActionType actionType = componentEffectList.First().type;
+
+                    List<StatusEffect> statusEffectList;
+                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    {
+                        statusEffectList = new List<StatusEffect>();
+                        statusEffectLists.Add(actionType, statusEffectList);
+                    }
+
+                    foreach (StatusEffect effect in componentEffectList)
+                    {
+                        statusEffectList.Add(effect);
+                    }
                 }
             }
             
@@ -743,15 +748,17 @@ namespace Barotrauma
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
-            if (!isNetworkEvent)
+            if (!isNetworkEvent && checkCondition)
             {
                 if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
             }
@@ -1664,6 +1671,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
+            msg.Write(Prefab.Identifier);
             msg.Write(Description != prefab.Description);
             if (Description != prefab.Description)
             {
@@ -1702,6 +1710,7 @@ namespace Barotrauma
             if (GameMain.Server != null) return null;
 
             string itemName = msg.ReadString();
+            string itemIdentifier = msg.ReadString();
             bool descriptionChanged = msg.ReadBoolean();
             string itemDesc = "";
             if (descriptionChanged)
@@ -1743,7 +1752,7 @@ namespace Barotrauma
 
             //----------------------------------------
             
-            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
             if (itemPrefab == null) return null;
 
             Inventory inventory = null;
@@ -1843,12 +1852,26 @@ namespace Barotrauma
 
         public static Item Load(XElement element, Submarine submarine)
         {
-            string name = element.Attribute("name").Value;
+            string name = element.Attribute("name").Value;            
+            string identifier = element.GetAttributeString("identifier", "");
 
-            ItemPrefab prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            ItemPrefab prefab;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as ItemPrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+            }
+
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
+                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 
@@ -1894,10 +1917,14 @@ namespace Barotrauma
                 }
             }
 
+            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
-                ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-                if (component != null) component.Load(subElement);
+                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
+                if (component == null) continue;
+
+                component.Load(subElement);
+                unloadedComponents.Remove(component);
             }
 
             if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
@@ -1910,7 +1937,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Item");
 
-            element.Add(new XAttribute("name", prefab.Name),
+            element.Add(
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID));
 
             if (FlippedX) element.Add(new XAttribute("flippedx", true));
@@ -1990,6 +2019,13 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                return;
+            }
+            DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
+
             base.Remove();
 
             foreach (Character character in Character.CharacterList)

@@ -10,42 +10,14 @@ namespace Barotrauma
     {
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
-        private static Sprite background, backgroundTop;
-        private static Sprite dustParticles;
-        private static Texture2D shaftTexture;
-
-        Vector2 dustOffset;
+        private Vector2 dustOffset;
 
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
 
-        public static Sprite Background
-        {
-            get
-            {
-                if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-                return background;
-            }
-        }
-
-        public static Sprite BackgroundTop
-        {
-            get
-            {
-                if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-                return backgroundTop;
-            }
-        }
-
         public LevelRenderer(Level level)
         {
-            if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/iceWall.png");
-
-            if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-            if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-            if (dustParticles == null) dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
-
             if (wallEdgeEffect == null)
             {
                 wallEdgeEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
@@ -53,7 +25,7 @@ namespace Barotrauma
                     DiffuseColor = new Vector3(0.8f, 0.8f, 0.8f),
                     VertexColorEnabled = true,
                     TextureEnabled = true,
-                    Texture = shaftTexture
+                    Texture = level.GenerationParams.WallEdgeSprite.Texture
                 };
                 wallEdgeEffect.CurrentTechnique = wallEdgeEffect.Techniques["BasicEffect_Texture"];
             }
@@ -64,7 +36,7 @@ namespace Barotrauma
                 {
                     VertexColorEnabled = true,
                     TextureEnabled = true,
-                    Texture = backgroundTop.Texture
+                    Texture = level.GenerationParams.WallSprite.Texture
                 };
                 wallCenterEffect.CurrentTechnique = wallCenterEffect.Techniques["BasicEffect_Texture"];
             }
@@ -123,21 +95,24 @@ namespace Barotrauma
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos *= 0.05f;
 
+
             if (backgroundPos.Y < 1024)
             {
-                if (backgroundPos.Y < 0)
+                if (backgroundPos.Y < 0 && level.GenerationParams.BackgroundTopSprite != null)
                 {
+                    var backgroundTop = level.GenerationParams.BackgroundTopSprite;
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
-                        Vector2.Zero, level.BackgroundColor);
+                        color: level.BackgroundColor);
                 }
-                if (backgroundPos.Y > -1024)
+                if (backgroundPos.Y > -1024 && level.GenerationParams.BackgroundSprite != null)
                 {
+                    var background = level.GenerationParams.BackgroundSprite;
                     background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
                     background.DrawTiled(spriteBatch,
                         (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
                         new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
-                        Vector2.Zero, level.BackgroundColor);
+                        color: level.BackgroundColor);
                 }
             }
 
@@ -152,30 +127,37 @@ namespace Barotrauma
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
 
-            Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
-            Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
-            Vector2 offset = -origin + dustOffset;
-            while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
-            while (offset.X > 0.0f) offset.X -= srcRect.Width;
-            while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
-            while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
-            for (int i = 0; i < 4; i++)
+            if (level.GenerationParams.WaterParticles != null)
             {
-                float scale = 1.0f - i * 0.2f;
-                float recipScale = 1.0f / scale;
+                Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
+                Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
+                Vector2 offset = -origin + dustOffset;
+                while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
+                while (offset.X > 0.0f) offset.X -= srcRect.Width;
+                while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
+                while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
+                for (int i = 0; i < 4; i++)
+                {
+                    float scale = 1.0f - i * 0.2f;
+                    float recipScale = 1.0f / scale;
 
-                //alpha goes from 1.0 to 0.0 when scale is in the range of 0.5-0.25
-                float alpha = (cam.Zoom * scale) < 0.5f ? (cam.Zoom * scale - 0.25f) * 40.0f : 1.0f;
-                if (alpha <= 0.0f) continue;
+                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.5-0.25
+                    float alpha = (cam.Zoom * scale) < 0.5f ? (cam.Zoom * scale - 0.25f) * 40.0f : 1.0f;
+                    if (alpha <= 0.0f) continue;
 
-                Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
-                while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
-                while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
-                while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
-                while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
+                    Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
+                    while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
+                    while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
+                    while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
+                    while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
 
-                dustParticles.DrawTiled(spriteBatch, origin + offsetS, new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), Vector2.Zero, srcRect, Color.White * alpha, new Vector2(scale));
+                    level.GenerationParams.WaterParticles.DrawTiled(
+                        spriteBatch, origin + offsetS, 
+                        new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
+                        rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(scale));
+                }
             }
+
 
             spriteBatch.End();
 
@@ -235,7 +217,7 @@ namespace Barotrauma
                     (int)(GameMain.GameScreen.Cam.WorldView.Y + pos.Y) - 30),
                     Color.Black, true);
 
-                spriteBatch.Draw(shaftTexture,
+                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
                     new Rectangle(0, 0, width, -1024),
                     level.BackgroundColor, 0.0f,
@@ -256,7 +238,7 @@ namespace Barotrauma
                     (int)(level.BottomPos - (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height))), 
                     Color.Black, true);
 
-                spriteBatch.Draw(shaftTexture,
+                spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
                     new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-level.BottomPos, width, 1024),
                     new Rectangle(0, 0, width, -1024),
                     level.BackgroundColor, 0.0f,

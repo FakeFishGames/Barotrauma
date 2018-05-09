@@ -59,6 +59,8 @@ namespace Barotrauma
         public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
+        
+        private readonly bool removeItem;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -167,7 +169,7 @@ namespace Barotrauma
                     case "disabledeltatime":                        
                         disableDeltaTime = attribute.GetAttributeBool(false);
                         break;
-                    case "setvalue":                        
+                    case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
@@ -222,6 +224,10 @@ namespace Barotrauma
                     case "use":
                     case "useitem":
                         useItemCount++;
+                        break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -297,10 +303,10 @@ namespace Barotrauma
                 if (target == null || target.SerializableProperties == null) continue;
                 foreach (PropertyConditional pc in propertyConditionals)
                 {
-                    if (!pc.Matches(target)) return false;
+                    if (pc.Matches(target)) return true;
                 }
             }
-            return true;
+            return false;
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
@@ -400,6 +406,14 @@ namespace Barotrauma
                 }
             }                     
 
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner?.AddToRemoveQueue(item);
+                }
+            }
+
             if (duration > 0.0f)
             {
                 DurationListElement element = new DurationListElement();
@@ -431,14 +445,17 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    Affliction multipliedAffliction = affliction;
+                    if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+
                     if (target is Character)
                     {
-                        ((Character)target).CharacterHealth.ApplyAffliction(null, affliction);
+                        ((Character)target).CharacterHealth.ApplyAffliction(null, multipliedAffliction);
                     }
                     else if (target is Limb)
                     {
                         Limb limb = (Limb)target;
-                        limb.character.CharacterHealth.ApplyAffliction(limb, affliction);
+                        limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
                     }
                 }
             }

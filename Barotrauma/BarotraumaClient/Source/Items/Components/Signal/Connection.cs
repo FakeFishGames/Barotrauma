@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
         private static Sprite connector;
         private static Sprite wireVertical;
 
+        private static Wire draggingConnected;
+
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
             int width = 400, height = 350;
@@ -20,9 +22,7 @@ namespace Barotrauma.Items.Components
             Rectangle panelRect = new Rectangle(x, y, width, height);
 
             spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White * 0.85f);
-
-            //GUI.DrawRectangle(spriteBatch, panelRect, Color.Black, true);
-
+            
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
             int totalWireCount = 0;

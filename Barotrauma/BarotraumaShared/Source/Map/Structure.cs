@@ -56,7 +56,7 @@ namespace Barotrauma
         private bool isHorizontal;
 
         private SpriteEffects SpriteEffects = SpriteEffects.None;
-
+        
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
         {
@@ -144,6 +144,8 @@ namespace Barotrauma
             get { return prefab.Tags; }
         }
 
+        // TODO: encapsulate visuals?
+
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -151,7 +153,7 @@ namespace Barotrauma
             get { return spriteColor; }
             set { spriteColor = value; }
         }
-
+        
         public override Rectangle Rect
         {
             get
@@ -621,7 +623,7 @@ namespace Barotrauma
 #if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
-            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 20);
+            particleAmount = Math.Min(particleAmount + Rand.Range(-5, 1), 5);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
@@ -974,9 +976,9 @@ namespace Barotrauma
             newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
-            newBody.CollisionCategories = Physics.CollisionWall;
+            newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
             newBody.UserData = this;
-            
+
             if (BodyRotation != 0.0f)
             {
                 Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
@@ -1025,9 +1027,12 @@ namespace Barotrauma
 
                 CreateStairBodies();
             }
-
-            CreateSections();
-            if (HasBody) UpdateSections();
+            
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1048,18 +1053,35 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            CreateSections();
-            if (HasBody) UpdateSections();
+            if (HasBody)
+            {
+                CreateSections();
+                UpdateSections();
+            }
         }
 
         public static Structure Load(XElement element, Submarine submarine)
         {
             string name = element.Attribute("name").Value;
+            string identifier = element.GetAttributeString("identifier", "");
 
-            StructurePrefab prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+            StructurePrefab prefab;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as StructurePrefab;
+            }
+
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading structure - structure prefab " + name + " not found.");
+                DebugConsole.ThrowError("Error loading structure - structure prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
                 return null;
             }
 
@@ -1096,7 +1118,9 @@ namespace Barotrauma
         {
             XElement element = new XElement("Structure");
 
-            element.Add(new XAttribute("name", prefab.Name),
+            element.Add(
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID),
                 new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +

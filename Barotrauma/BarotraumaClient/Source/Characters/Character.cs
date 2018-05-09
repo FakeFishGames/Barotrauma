@@ -31,13 +31,11 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
-                CharacterHealth.OpenHealthWindow = null;
                 controlled = value;
-
-                if (controlled != null)
-                {
-                    controlled.Enabled = true;
-                }
+                if (controlled != null) controlled.Enabled = true;
+                GameMain.GameSession?.CrewManager?.SetCharacterSelected(controlled);
+                CharacterHealth.OpenHealthWindow = null;
+                
             }
         }
         
@@ -70,7 +68,7 @@ namespace Barotrauma
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
-                keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));
+                keys[i] = new Key((InputType)i);
             }
 
             var soundElements = doc.Root.Elements("sound").ToList();
@@ -137,15 +135,13 @@ namespace Barotrauma
             }  
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (DebugConsole.IsOpen || GUI.PauseMenuOpen ||
-                (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            if (GUI.PauseMenuOpen)
             {
                 cam.OffsetAmount = 0.0f;
             }
             else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
-                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+                if (GUI.PauseMenuOpen || IsUnconscious)
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
                 }
@@ -278,10 +274,10 @@ namespace Barotrauma
             AnimController.Draw(spriteBatch);
         }
 
-        public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
+        public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
-            health.DrawHUD(spriteBatch, new Vector2(0.0f, 0.0f));
+            if (drawHealth) health.DrawHUD(spriteBatch);
         }
 
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -332,7 +328,7 @@ namespace Barotrauma
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);

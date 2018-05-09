@@ -144,6 +144,14 @@ namespace Barotrauma.Items.Components
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
         }
+        
+        //Can the "Use" action be triggered by characters or just other items/statuseffects
+        [Serialize(false, false)]
+        public bool CharacterUsable
+        {
+            get { return characterUsable; }
+            set { characterUsable = value; }
+        }
 
         public InputType PickKey
         {
@@ -535,9 +543,11 @@ namespace Barotrauma.Items.Components
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, false, false);
             }
         }
         
@@ -627,12 +637,19 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Could not find the constructor of the component \"" + type + "\" (" + file + ")", e);
                 return null;
             }
+            ItemComponent ic = null;
+            try
+            {
+                object[] lobject = new object[] { item, element };
+                object component = constructor.Invoke(lobject);
 
-            object[] lobject = new object[] { item, element };
-            object component = constructor.Invoke(lobject);
-
-            ItemComponent ic = (ItemComponent)component;
-            ic.name = element.Name.ToString();
+                ic = (ItemComponent)component;
+                ic.name = element.Name.ToString();
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+            }
 
             return ic;
         }

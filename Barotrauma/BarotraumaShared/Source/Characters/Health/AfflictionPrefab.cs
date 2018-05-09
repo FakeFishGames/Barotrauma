@@ -15,12 +15,15 @@ namespace Barotrauma
             public float MinStrength, MaxStrength;
 
             public readonly float MinVitalityDecrease = 0.0f;
-            public readonly float MaxVitalityDecrease = 100.0f;
+            public readonly float MaxVitalityDecrease = 0.0f;
             
             //how much the strength of the affliction changes per second
             public readonly float StrengthChange = 0.0f;
 
             public readonly bool MultiplyByMaxVitality;
+
+            public float MinScreenBlurStrength, MaxScreenBlurStrength;
+            public float MinScreenDistortStrength, MaxScreenDistortStrength;
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -33,8 +36,17 @@ namespace Barotrauma
                 MultiplyByMaxVitality = element.GetAttributeBool("multiplybymaxvitality", false);
 
                 MinVitalityDecrease = element.GetAttributeFloat("minvitalitydecrease", 0.0f);
-                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
+                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 0.0f);
                 MaxVitalityDecrease = Math.Max(MinVitalityDecrease, MaxVitalityDecrease);
+
+                MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
+                MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
+                MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
+
+                MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
+                MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
+                MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
 
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
@@ -55,6 +67,7 @@ namespace Barotrauma
         public static AfflictionPrefab Burn;
         public static AfflictionPrefab OxygenLow;
         public static AfflictionPrefab Bloodloss;
+        public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
         public static AfflictionPrefab Husk;
 
@@ -88,6 +101,8 @@ namespace Barotrauma
 
         private List<Effect> effects = new List<Effect>();
 
+        private Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
+
         private readonly string typeName;
 
         private readonly ConstructorInfo constructor;
@@ -117,6 +132,9 @@ namespace Barotrauma
                             break;
                         case "bloodloss":
                             List.Add(Bloodloss = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "pressure":
+                            List.Add(Pressure = new AfflictionPrefab(element, typeof(Affliction)));
                             break;
                         case "stun":
                             List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
@@ -170,6 +188,15 @@ namespace Barotrauma
                     case "effect":
                         effects.Add(new Effect(subElement));
                         break;
+                    case "suitabletreatment":
+                        string treatmentName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                        if (treatmentSuitability.ContainsKey(treatmentName))
+                        {
+                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentName + "\" defined multiple times");
+                            continue;
+                        }
+                        treatmentSuitability.Add(treatmentName, subElement.GetAttributeFloat("suitability", 0.0f));
+                        break;
                 }
             }
 
@@ -216,6 +243,12 @@ namespace Barotrauma
                 if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
             }
             return null;
+        }
+
+        public float GetTreatmentSuitability(Item item)
+        {
+            if (item == null || !treatmentSuitability.ContainsKey(item.Name.ToLowerInvariant())) return 0.0f;
+            return treatmentSuitability[item.Name.ToLowerInvariant()];
         }
     }
 }

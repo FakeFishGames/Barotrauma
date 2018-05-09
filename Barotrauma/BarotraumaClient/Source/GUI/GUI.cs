@@ -18,7 +18,7 @@ namespace Barotrauma
         DropItem
     }
     
-    public class GUI
+    public static class GUI
     {
         public static float Scale
         {
@@ -28,9 +28,8 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
-        public static ScalableFont Font, SmallFont, LargeFont;
 
-        private static Sprite cursor;
+        private static Sprite Cursor => Style.CursorSprite;
 
         private static GraphicsDevice graphicsDevice;
         public static GraphicsDevice GraphicsDevice
@@ -56,6 +55,10 @@ namespace Barotrauma
 
         private static Sprite submarineIcon, arrow;
 
+        public static ScalableFont Font => Style.Font;
+        public static ScalableFont SmallFont => Style.SmallFont;
+        public static ScalableFont LargeFont => Style.LargeFont;
+
         public static Sprite SubmarineIcon
         {
             get { return submarineIcon; }
@@ -76,13 +79,18 @@ namespace Barotrauma
 
         public static void Init(ContentManager content)
         {
-            Font = new ScalableFont("Content/Exo2-Medium.otf", 14, graphicsDevice);
-            SmallFont = new ScalableFont("Content/Exo2-Light.otf", 12, graphicsDevice);
-            LargeFont = new ScalableFont("Content/Code Pro Bold.otf", 22, graphicsDevice);
+            var uiStyles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.UIStyle);
+            if (uiStyles.Count == 0)
+            {
+                DebugConsole.ThrowError("No UI styles defined in the selected content package!");
+                return;
+            }
+            else if (uiStyles.Count > 1)
+            {
+                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+            }
 
-            cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
-
-            Style = new GUIStyle("Content/UI/style.xml");
+            Style = new GUIStyle(uiStyles[0]);
         }
 
         public static bool PauseMenuOpen
@@ -108,20 +116,19 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItem.ogg", false);
                 sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItemFail.ogg", false);
                 sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/dropItem.ogg", false);
-
             }
 
             // create 1x1 texture for line drawing
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
 
-            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64), null);
+            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64));
             submarineIcon.Origin = submarineIcon.size / 2;
 
-            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16), null);
+            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16));
             arrow.Origin = arrow.size / 2;
 
-            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61), null);
+            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61));
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
         }
 
@@ -257,11 +264,16 @@ namespace Barotrauma
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
+            DrawLine(sb, t, start, end, clr, depth, width);
+        }
+
+        public static void DrawLine(SpriteBatch sb, Texture2D texture, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        {
             Vector2 edge = end - start;
             // calculate angle to rotate line
             float angle = (float)Math.Atan2(edge.Y, edge.X);
 
-            sb.Draw(t,
+            sb.Draw(texture,
                 new Rectangle(// rectangle defines shape of line and position of start of line
                     (int)start.X,
                     (int)start.Y,
@@ -270,14 +282,13 @@ namespace Barotrauma
                 null,
                 clr, //colour of line
                 angle,     //angle of line (calulated above)
-                new Vector2(0, 0), // point in line about which to rotate
+                new Vector2(0, texture.Height / 2.0f), // point in line about which to rotate
                 SpriteEffects.None,
                 depth);
         }
         
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, ScalableFont font = null)
         {
-
             if (font == null) font = Font;
             if (backgroundColor != null)
             {
@@ -578,6 +589,8 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
+
+            if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
@@ -615,8 +628,7 @@ namespace Barotrauma
 
             if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
 
-            if (!GUI.DisableHUD)
-                cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
+            if (!DisableHUD) Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
 
         public static void AddToGUIUpdateList()
@@ -695,7 +707,7 @@ namespace Barotrauma
             int soundIndex = (int)soundType;
             if (soundIndex < 0 || soundIndex >= sounds.Length) return;
 
-            sounds[soundIndex].Play();
+            sounds[soundIndex].Play(null, "ui");
         }
 
         private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)

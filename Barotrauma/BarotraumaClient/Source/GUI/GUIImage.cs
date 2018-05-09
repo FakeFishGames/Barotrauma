@@ -12,7 +12,7 @@ namespace Barotrauma
 
         private Rectangle sourceRect;
 
-        bool crop;
+        private bool crop;
         
         public bool Crop
         {
@@ -49,27 +49,22 @@ namespace Barotrauma
         }
 
         public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : this(rect, sprite==null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, parent)
+            : this(rect, sprite == null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, 1.0f, parent)
         {
         }
 
-        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
+        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, float spriteScale, GUIComponent parent = null)
             : base(null)
         {
             this.rect = rect;
-
             this.alignment = alignment;
-
-            color = Color.White;
-
-            //alpha = 1.0f;
-
-            Scale = 1.0f;
-
             this.sprite = sprite;
 
-            if (rect.Width == 0) this.rect.Width = (int)sprite.size.X;
-            if (rect.Height == 0) this.rect.Height = (int)Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X));
+            color = Color.White;            
+            Scale = spriteScale;
+
+            if (rect.Width == 0) this.rect.Width = (int)(sprite.size.X * spriteScale);
+            if (rect.Height == 0) this.rect.Height = (int)(Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X)) * spriteScale);
 
             this.sourceRect = sourceRect;
 

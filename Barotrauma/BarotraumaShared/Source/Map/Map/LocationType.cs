@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -14,6 +15,7 @@ namespace Barotrauma
         private int commonness;
 
         private List<string> nameFormats;
+        private List<string> names;
 
         private Sprite symbolSprite;
 
@@ -67,6 +69,17 @@ namespace Barotrauma
                 nameFormats.Add(nameFormat.Value);
             }
 
+            string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
+            try
+            {
+                names = File.ReadAllLines(nameFile).ToList();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to read name file for location type \""+Name+"\"!", e);
+                names = new List<string>() { "Name file not found" };
+            }
+
             HaloColor = element.GetAttributeColor("halo", Color.Transparent);
 
             AllowedZones = element.GetAttributeIntArray("allowedzones", new int[] { 1,2,3,4,5,6,7,8,9 }).ToList();
@@ -115,6 +128,11 @@ namespace Barotrauma
             return null;
         }
 
+        public string GetRandomName()
+        {
+            return names[Rand.Int(names.Count, Rand.RandSync.Server)];
+        }
+
         public static LocationType Random(string seed = "", int? zone = null)
         {
             Debug.Assert(List.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
@@ -148,11 +166,7 @@ namespace Barotrauma
             foreach (string file in locationTypeFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
-
-                if (doc == null)
-                {
-                    return;
-                }
+                if (doc?.Root == null) continue;                
 
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -160,7 +174,6 @@ namespace Barotrauma
                     List.Add(locationType);
                 }
             }
-
         }
     }
 }

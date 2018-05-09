@@ -181,12 +181,24 @@ namespace Barotrauma.Networking
             Character orderTargetCharacter = null;
             Entity orderTargetEntity = null;
             int orderOptionIndex = -1;
+            OrderChatMessage orderMsg = null;
             if (type == ChatMessageType.Order)
             {
                 orderIndex = msg.ReadByte();
                 orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
                 orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
                 orderOptionIndex = msg.ReadByte();
+
+                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
+                {
+                    DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
+                    return;
+                }
+
+                Order order = Order.PrefabList[orderIndex];
+                string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
+                orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
+                txt = orderMsg.Text;
             }
             else
             {
@@ -205,15 +217,22 @@ namespace Barotrauma.Networking
             c.LastSentChatMessages.Add(txt);
             if (c.LastSentChatMessages.Count > 10)
             {
-                c.LastSentChatMessages.RemoveRange(0, c.LastSentChatMessages.Count-10);
+                c.LastSentChatMessages.RemoveRange(0, c.LastSentChatMessages.Count - 10);
             }
-            
+
             float similarity = 0.0f;
             for (int i = 0; i < c.LastSentChatMessages.Count; i++)
             {
                 float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+                if (string.IsNullOrEmpty(txt))
+                {
+                    similarity += closeFactor;
+                }
+                else
+                {
+                    int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
+                    similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+                }                
             }
 
             if (similarity + c.ChatSpamSpeed > 5.0f)
@@ -250,31 +269,31 @@ namespace Barotrauma.Networking
 
             if (type == ChatMessageType.Order)
             {
-                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
-                {
-                    DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
-                    return;
-                }
+                if (!c.Character.CanSpeak || c.Character.IsDead) return;
 
-                Order order = Order.PrefabList[orderIndex];
-                string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
-                
-                if (order.TargetAllCharacters)
+                ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
+                if (orderMsg.Order.TargetAllCharacters)
                 {
 #if CLIENT
-                    GameMain.GameSession?.CrewManager?.AddOrder(
-                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
-                        order.Prefab.FadeOutTime);
+                    //add the order to the crewmanager only if the host is not controlling a character 
+                    //OR the character is close enough to hear it
+                    if (Character.Controlled == null || 
+                        !string.IsNullOrEmpty(ApplyDistanceEffect(orderMsg.Text, messageType, orderMsg.Sender, Character.Controlled)))
+                    {
+                        GameMain.GameSession?.CrewManager?.AddOrder(
+                            new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()),
+                            orderMsg.Order.Prefab.FadeOutTime);
+                    }
 #endif
                 }
-                else
+                else if (orderTargetCharacter != null)
                 {
-                    orderTargetCharacter?.SetOrder(
-                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                    orderTargetCharacter.SetOrder(
+                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<ItemComponent>()), 
+                            orderMsg.OrderOption, orderMsg.Sender);                    
                 }
 
-                var orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
-                GameMain.Server.SendOrderChatMessage(orderMsg, c);
+                GameMain.Server.SendOrderChatMessage(orderMsg);
             }
             else
             {
@@ -308,6 +327,13 @@ namespace Barotrauma.Networking
             }
 
             return length;
+        }
+
+        public static bool CanUseRadio(Character sender)
+        {
+            if (sender == null) return false;
+            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+            return senderItem != null && sender.HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit();
         }
 
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c)
