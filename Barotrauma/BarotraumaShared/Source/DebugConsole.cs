@@ -1799,7 +1799,21 @@ namespace Barotrauma
                 }
             }));
 
+
+
 #if DEBUG
+            commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
+            {
+                if (Submarine.MainSub == null) return;
+                SteamManager.SteamWorkshop.SaveToWorkshop(
+                    Submarine.MainSub.Name, 
+                    Submarine.MainSub.FilePath, 
+                    Submarine.MainSub.Name, 
+                    Submarine.MainSub.Description, 
+                    new string[0]);
+            },
+            null, null));
+
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
                 foreach (Item item in Item.ItemList)
