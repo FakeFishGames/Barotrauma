@@ -27,7 +27,7 @@ namespace Barotrauma.Networking
 {
     class SteamManager
     {
-        static readonly AppId_t appID = (AppId_t)480;
+        static readonly AppId_t appID = (AppId_t)480; //602960;
 
         // UDP port for the server to do authentication on (ie, talk to Steam on)
         const ushort SERVER_AUTHENTICATION_PORT = 8766;
@@ -181,12 +181,14 @@ namespace Barotrauma.Networking
 
             MatchMakingKeyValuePair_t[] filters = new MatchMakingKeyValuePair_t[]
             {
-                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() }
+                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() },
+                new MatchMakingKeyValuePair_t { m_szKey = "gamedir", m_szValue = "barotrauma" }
             };
-
+            
             instance.m_ServerListRequest =
                 SteamMatchmakingServers.RequestInternetServerList(appID, filters, (uint)filters.Length, instance.m_ServerListResponse);
-
+                //SteamMatchmakingServers.RequestLANServerList(appID, instance.m_ServerListResponse);
+                
             return true;
         }
 
@@ -207,23 +209,24 @@ namespace Barotrauma.Networking
 
             instance.m_bInitialized = Steamworks.GameServer.Init(
                 0, SERVER_AUTHENTICATION_PORT, (ushort)server.Port, MASTER_SERVER_UPDATER_PORT, eMode, SERVER_VERSION);
+
             if (!instance.m_bInitialized)
             {
                 DebugConsole.ThrowError("SteamGameServer_Init call failed");
                 return false;
             }
-
+            
             // These fields are currently required, but will go away soon.
             // See their documentation for more info
-            SteamGameServer.SetProduct("Barotrauma");
+            SteamGameServer.SetModDir("barotrauma");
+            SteamGameServer.SetProduct(appID.ToString());
             SteamGameServer.SetGameDescription("Barotrauma v" + GameMain.Version);
 #if SERVER
             SteamGameServer.SetDedicatedServer(true);
 #endif
-            
+
             // Initiate Anonymous logon.
             SteamGameServer.LogOnAnonymous();
-
             // We want to actively update the master server with our presence so players can
             // find us via the steam matchmaking/server browser interfaces
 #if USE_GS_AUTH_API
@@ -231,6 +234,9 @@ namespace Barotrauma.Networking
 #endif
             UpdateServerDetails();
             
+            var asd = SteamGameServer.GetPublicIP();
+            var asdf = SteamGameServer.BLoggedOn();
+
             return true;
         }
 
@@ -308,7 +314,7 @@ namespace Barotrauma.Networking
         void OnSteamServersConnectFailure(SteamServerConnectFailure_t pConnectFailure)
         {
             m_bConnectedToSteam = false;
-            DebugConsole.Log("SpaceWarServer failed to connect to Steam");
+            DebugConsole.Log("Server failed to connect to Steam");
         }
 
         private void OnServerFailedToRespond(HServerListRequest hRequest, int iServer)
