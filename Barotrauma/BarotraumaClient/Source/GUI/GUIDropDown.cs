@@ -252,16 +252,12 @@ namespace Barotrauma
             if (Dropped && PlayerInput.LeftButtonClicked())
             {
                 Rectangle listBoxRect = listBox.Rect;
-                listBoxRect.Width += 20;
+                listBoxRect.Width += 20; // TODO: might vary?
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;
                 }
             }
-            
-            //button.Update(deltaTime);
-
-            //if (Dropped) listBox.Update(deltaTime);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
