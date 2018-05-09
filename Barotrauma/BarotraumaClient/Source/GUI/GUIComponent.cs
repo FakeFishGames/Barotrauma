@@ -587,12 +587,13 @@ namespace Barotrauma
             //}
         }
 
-        /// <summary>
-        /// Note: does not do anything in the new system!
-        /// </summary>
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
-            if (RectTransform != null) { return; }
+            if (RectTransform != null)
+            {
+                RectTransform.Resize(size, expandChildren);
+                return;
+            }
             rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
 
             if (expandChildren)
