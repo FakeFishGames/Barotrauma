@@ -367,8 +367,6 @@ namespace Barotrauma
             if (!Visible) return;
 
             UpdateChildrenRect(deltaTime);
-            
-            if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
             //if ((GUI.MouseOn == this || GUI.MouseOn == scrollBar || IsParentOf(GUI.MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(scrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
