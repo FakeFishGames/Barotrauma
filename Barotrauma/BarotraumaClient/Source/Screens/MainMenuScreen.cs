@@ -549,43 +549,62 @@ namespace Barotrauma
             //}
             if (PlayerInput.KeyHit(Keys.T))
             {
-                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
-                //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
+                //testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+                testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
                 //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
                 //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
                 //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
 
-                //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
+                // Dropdown/listbox scroll bar dragging is a bit bugged. Caused by [cf829b8], but cannot figure out which change causes it. 
+                // Suspect that the cause is indirect, because Scroll bar works when it's not used on a listbox (see e.g. the game settings tab -> sound level).
+                var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
 
                 //var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Dropdown");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
+
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
+                dropdown.AddItem("Test1");
+                dropdown.AddItem("Test2");
+                dropdown.AddItem("Test3");
+                dropdown.AddItem("Test4");
+                dropdown.AddItem("Test5");
 
                 //var listBox = new GUIListBox(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center));
                 //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child", color: Color.Red));
 
-                float value = 0.5f;
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Scroll bar", "", p);
-                GUIScrollBar scrollBar = new GUIScrollBar(new Rectangle(0, 60, 20, 150), "", 0.1f, p);
-                scrollBar.BarScroll = value;
-                scrollBar.OnMoved = (bar, scroll) => { value = scroll; return true; };
-                scrollBar.Step = 0.05f;
+                // plain scroll bar (old) works now both vertical and horizontal
+                //float value = 0.5f;
+                //new GUITextBlock(new Rectangle(0, 0, 100, 20), "Scroll bar", "", p);
+                //GUIScrollBar scrollBar = new GUIScrollBar(new Rectangle(0, 60, 20, 150), "", 0.1f, p);
+                //scrollBar.BarScroll = value;
+                //scrollBar.OnMoved = (bar, scroll) => { value = scroll; return true; };
+                //scrollBar.Step = 0.05f;
 
-                // scroll bar input does not work
+                // the new scroll bar input does not work
                 //float value = 0.5f;
                 //var text = new GUITextBlock(new RectTransform(new Point(500, 40), p.RectTransform, Anchor.Center), "Scroll bar");
                 //GUIScrollBar scrollBar = new GUIScrollBar(new RectTransform(Vector2.One, text.RectTransform) { AbsoluteOffset = new Point(0, text.RectTransform.NonScaledSize.Y) }, 0.1f);
