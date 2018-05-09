@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        public bool ClampMouseRectToParent = true;
+        public virtual bool ClampMouseRectToParent { get; set; } = true;
         public virtual Rectangle MouseRect
         {
             get
