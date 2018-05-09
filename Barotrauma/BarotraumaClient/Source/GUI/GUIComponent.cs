@@ -78,7 +78,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// TODO: remove this method
+        /// TODO: remove this method when all the ui elements are using the new system
         /// </summary>
         public virtual void AddChild(GUIComponent child)
         {
@@ -156,6 +156,8 @@ namespace Barotrauma
             }
         }
         #endregion
+
+        public bool AutoDraw { get; set; } = true;
 
         const float FlashDuration = 1.5f;
 
@@ -382,18 +384,18 @@ namespace Barotrauma
             GUI.RemoveFromUpdateList(this, alsoChildren);
         }
 
-        public virtual void AddToGUIUpdateList(bool ignoreChildren = false)
+        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
         {
-            GUI.AddToUpdateList(this);
+            GUI.AddToUpdateList(this, updateLast);
             if (!ignoreChildren)
             {
                 if (RectTransform != null)
                 {
-                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren));
+                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, updateLast));
                 }
                 else
                 {
-                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren));
+                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, updateLast));
                 }
             }
         }
@@ -438,7 +440,11 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, bool drawChildren = true) 
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// </summary>
+        public virtual void Draw(SpriteBatch spriteBatch) 
         {
             if (!Visible) return;
             var rect = Rect;
@@ -516,13 +522,12 @@ namespace Barotrauma
                     }
                 }
             }
-            if (drawChildren)
-            {
-                DrawChildren(spriteBatch);
-            }
         }
 
-        // TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
+        /// <summary>
+        /// Creates and draws a tooltip.
+        /// TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
+        /// </summary>
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
@@ -550,41 +555,10 @@ namespace Barotrauma
         public virtual void Update(float deltaTime)
         {
             if (!Visible) return;
-
-            if (flashTimer>0.0f) flashTimer -= deltaTime;
-
-            /*if (CanBeFocused)
+            if (flashTimer > 0.0f)
             {
-                if (rect.Contains(PlayerInput.MousePosition))
-                {
-                    MouseOn = this;
-                }
-                else
-                {
-                    if (MouseOn == this) MouseOn = null;
-                }
-
-            }*/
-
-            //use a fixed list since children can change their order in the main children list
-            //TODO: maybe find a more efficient way of handling changes in list order
-            // Note: this will create a new list per each tick -> why is the original list manipulated? keep it intact and use a copy instead?
-            //List<GUIComponent> fixedChildren = new List<GUIComponent>(Children);
-            //foreach (GUIComponent c in fixedChildren)
-            //{
-            //    if (!c.Visible) continue;
-            //    c.Update(deltaTime);
-            //}
-
-            // don't update children, because otherwise they are updated multiple times!
-            //if (RectTransform != null)
-            //{
-            //    RectTransform.Children.ForEach(c => c.Element.Update(deltaTime));
-            //}
-            //else
-            //{
-            //    children.ForEach(c => c.Update(deltaTime));
-            //}
+                flashTimer -= deltaTime;
+            }
         }
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
@@ -612,6 +586,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// todo: remove when all the ui elements are using the new system
+        /// </summary>
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
             // Don't manipulate the rect, if the component is using RectTransform component.
@@ -668,21 +645,6 @@ namespace Barotrauma
             OutlineColor = style.OutlineColor;
 
             this.style = style;
-        }
-
-        public virtual void DrawChildren(SpriteBatch spriteBatch)
-        {
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.GUIComponent.Draw(spriteBatch));
-            }
-            else
-            {
-                for (int i = 0; i < children.Count; i++)
-                {
-                    children[i].Draw(spriteBatch);
-                }
-            }
         }
     }
 }

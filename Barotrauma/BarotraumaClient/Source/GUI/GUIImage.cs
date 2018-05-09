@@ -94,7 +94,11 @@ namespace Barotrauma
             this.sprite = sprite;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// </summary>
+        public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
@@ -107,10 +111,6 @@ namespace Barotrauma
                 spriteBatch.Draw(sprite.Texture, Rect.Location.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
                     Scale, SpriteEffects.None, 0.0f);
             }          
-            if (drawChildren)
-            {
-                DrawChildren(spriteBatch);
-            }
         }
     }
 }

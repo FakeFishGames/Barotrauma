@@ -77,8 +77,19 @@ namespace Barotrauma
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
         }
 
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// </summary>
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
+            foreach (var component in updateList)
+            {
+                if (component.AutoDraw)
+                {
+                    component.Draw(spriteBatch);
+                }
+            }
+
             if (ScreenOverlayColor.A>0.0f)
             {
                 DrawRectangle(
@@ -144,7 +155,7 @@ namespace Barotrauma
 
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
-                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + componentsToUpdate.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
                 DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
                 DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
 
@@ -154,23 +165,6 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
             DrawMessages(spriteBatch, (float)deltaTime);
-
-            if (GUIMessageBox.VisibleBox != null)
-            {
-                GUIMessageBox.VisibleBox.Draw(spriteBatch);
-            }          
-
-            if (pauseMenuOpen)
-            {
-                pauseMenu.Draw(spriteBatch);
-            }
-
-            if (settingsMenuOpen)
-            {
-                GameMain.Config.SettingsFrame.Draw(spriteBatch);
-            }
-
-            DebugConsole.Draw(spriteBatch);
 
             if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
             {
@@ -184,17 +178,19 @@ namespace Barotrauma
         }
 
         #region Update list
-        private static List<GUIComponent> componentsToUpdate = new List<GUIComponent>();
+        private static List<GUIComponent> updateList = new List<GUIComponent>();
         private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
+        // Added to the update list after all other
+        private static Queue<GUIComponent> last = new Queue<GUIComponent>();
 
-        public static IEnumerable<GUIComponent> ComponentsToUpdate => componentsToUpdate;
+        public static IEnumerable<GUIComponent> ComponentsToUpdate => updateList;
 
         /// <summary>
         /// Adds the component on the addition queue.
         /// Note: does not automatically add children, because we might want to enforce a custom order for them.
         /// </summary>
-        public static void AddToUpdateList(GUIComponent component)
+        public static void AddToUpdateList(GUIComponent component, bool updateLast = false)
         {
             if (component == null)
             {
@@ -202,7 +198,11 @@ namespace Barotrauma
                 return;
             }
             if (!component.Visible) { return; }
-            if (!componentsToUpdate.Contains(component))
+            if (updateLast)
+            {
+                last.Enqueue(component);
+            }
+            else
             {
                 additions.Enqueue(component);
             }
@@ -213,7 +213,7 @@ namespace Barotrauma
         /// </summary>
         public static void RemoveFromUpdateList(GUIComponent component, bool alsoChildren = true)
         {
-            if (componentsToUpdate.Contains(component))
+            if (updateList.Contains(component))
             {
                 removals.Enqueue(component);
             }
@@ -232,16 +232,16 @@ namespace Barotrauma
 
         public static void ClearUpdateList()
         {
-            if (KeyboardDispatcher.Subscriber is GUIComponent && !componentsToUpdate.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
+            if (KeyboardDispatcher.Subscriber is GUIComponent && !updateList.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
             {
                 KeyboardDispatcher.Subscriber = null;
             }
-            componentsToUpdate.Clear();
+            updateList.Clear();
         }
 
         private static void RefreshUpdateList()
         {
-            foreach (var component in componentsToUpdate)
+            foreach (var component in updateList)
             {
                 if (!component.Visible)
                 {
@@ -251,7 +251,7 @@ namespace Barotrauma
             while (removals.Count > 0)
             {
                 var component = removals.Dequeue();
-                componentsToUpdate.Remove(component);
+                updateList.Remove(component);
                 if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
                 {
                     KeyboardDispatcher.Subscriber = null;
@@ -260,9 +260,17 @@ namespace Barotrauma
             while (additions.Count > 0)
             {
                 var component = additions.Dequeue();
-                if (!componentsToUpdate.Contains(component))
+                if (!updateList.Contains(component))
                 {
-                    componentsToUpdate.Add(component);
+                    updateList.Add(component);
+                }
+            }
+            while (last.Count > 0)
+            {
+                var component = last.Dequeue();
+                if (!updateList.Contains(component))
+                {
+                    updateList.Add(component);
                 }
             }
         }
@@ -302,9 +310,9 @@ namespace Barotrauma
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
-            for (int i = componentsToUpdate.Count - 1; i >= 0; i--)
+            for (int i = updateList.Count - 1; i >= 0; i--)
             {
-                GUIComponent c = componentsToUpdate[i];
+                GUIComponent c = updateList[i];
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
                     MouseOn = c;
@@ -320,7 +328,7 @@ namespace Barotrauma
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
-            componentsToUpdate.ForEach(c => c.Update(deltaTime));
+            updateList.ForEach(c => c.Update(deltaTime));
             //ClearUpdateList();
         }
 

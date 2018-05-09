@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -182,6 +183,8 @@ namespace Barotrauma
             scrollBarEnabled = true;
 
             scrollBar.BarScroll = 0.0f;
+
+            Children.ForEach(c => c.AutoDraw = false);
         }
 
         /// <summary>
@@ -210,6 +213,7 @@ namespace Barotrauma
             enabled = true;
             scrollBarEnabled = true;
             scrollBar.BarScroll = 0.0f;
+            rectT.Children.ForEach(c => c.GUIComponent.AutoDraw = false);
         }
 
         private bool IgnoreChild(GUIComponent child)
@@ -308,8 +312,6 @@ namespace Barotrauma
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                // TODO: not sure if we should do this.
-                //if (deltaTime>0.0f) child.Update(deltaTime);
                 if (enabled && child.CanBeFocused &&
                     (GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
@@ -335,10 +337,11 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList(bool ignoreChildren = false)
+        public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
         {
             if (!Visible) { return; }
-            GUI.AddToUpdateList(this);
+            base.AddToGUIUpdateList(true, updateLast);
+            if (ignoreChildren) { return; }
             var children = Children;
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
@@ -353,12 +356,12 @@ namespace Barotrauma
                 }
 
                 lastVisible = i;
-                child.AddToGUIUpdateList();
+                child.AddToGUIUpdateList(false, updateLast);
             }
 
             if (scrollBarEnabled && !scrollBarHidden)
             {
-                scrollBar.AddToGUIUpdateList();
+                scrollBar.AddToGUIUpdateList(false, updateLast);
             }
         }
 
@@ -450,7 +453,9 @@ namespace Barotrauma
                 rect.Height += scrollBar.Rect.Height;
             else
                 rect.Width += scrollBar.Rect.Width;
-            
+
+            child.AutoDraw = false;
+
             UpdateScrollBarSize();
             UpdateChildrenRect(0.0f);
         }
@@ -476,7 +481,11 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you call this method manually, set AutoDraw to false.
+        /// </summary>
+        public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
@@ -485,7 +494,6 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
 
-            // TODO: change?
             var children = Children;
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)

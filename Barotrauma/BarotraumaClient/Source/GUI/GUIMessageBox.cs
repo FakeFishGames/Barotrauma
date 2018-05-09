@@ -111,29 +111,34 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
-        {
-            if (RectTransform == null)
-            {
-                base.Draw(spriteBatch, drawChildren);
-            }
-            else
-            {
-                // Custom draw order so that the background is rendered behind the parent.
-                if (drawChildren)
-                {
-                    BackgroundFrame?.Draw(spriteBatch);
-                }
-                base.Draw(spriteBatch, false);
-                if (drawChildren)
-                {
-                    InnerFrame?.Draw(spriteBatch);
-                    Header?.Draw(spriteBatch);
-                    Text?.Draw(spriteBatch);
-                    Buttons.ForEach(b => b.Draw(spriteBatch));
-                }
-            }
-        }
+        //public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
+        //{
+        //    base.AddToGUIUpdateList(ignoreChildren, updateLast);
+        //}
+
+        //public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
+        //{
+        //    if (RectTransform == null)
+        //    {
+        //        base.Draw(spriteBatch, drawChildren);
+        //    }
+        //    else
+        //    {
+        //        // Custom draw order so that the background is rendered behind the parent.
+        //        if (drawChildren)
+        //        {
+        //            BackgroundFrame?.Draw(spriteBatch);
+        //        }
+        //        base.Draw(spriteBatch, false);
+        //        if (drawChildren)
+        //        {
+        //            InnerFrame?.Draw(spriteBatch);
+        //            Header?.Draw(spriteBatch);
+        //            Text?.Draw(spriteBatch);
+        //            Buttons.ForEach(b => b.Draw(spriteBatch));
+        //        }
+        //    }
+        //}
 
         public void Close()
         {
