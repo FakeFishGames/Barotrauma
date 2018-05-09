@@ -246,21 +246,5 @@ namespace Barotrauma
 
             if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
         }
-
-        public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
-        {
-            base.Draw(spriteBatch, drawChildren);
-            // Debug
-            //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
-            //GUI.DrawString(spriteBatch, new Vector2(800, 40), "child count: " + Children.Where(c => !IgnoreChild(c)).Count().ToString(), Color.White, Color.Black * 0.5f);
-            //int y = 40;
-            //foreach (var child in Children)
-            //{
-            //    if (IgnoreChild(child)) { continue; }
-            //    if (child.RectTransform == null) { continue; }
-            //    y += 40;
-            //    GUI.DrawString(spriteBatch, new Vector2(800, y), $"Location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            //}
-        }
     }
 }
