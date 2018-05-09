@@ -475,14 +475,12 @@ namespace Barotrauma
             }
             UpdateScrollBarSize();
         }
-        
+
         public override void Draw(SpriteBatch spriteBatch, bool drawChildren = true)
         {
             if (!Visible) return;
-            
-            frame.Draw(spriteBatch);
 
-            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
+            frame.Draw(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
@@ -501,11 +499,13 @@ namespace Barotrauma
                     continue;
                 }
 
-                lastVisible = i;         
+                lastVisible = i;
                 child.Draw(spriteBatch);
             }
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
+            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
 
             // Debug
             GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
