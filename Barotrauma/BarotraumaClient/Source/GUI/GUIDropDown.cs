@@ -139,9 +139,14 @@ namespace Barotrauma
             GUITextBlock textBlock = null;
             if (RectTransform != null)
             {
-                // TODO: min and max sizes
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), listBox.RectTransform), text, style: "ListBoxElement");
-                //textBlock.RectTransform.AbsoluteOffset = new Point(0, textBlock.RectTransform.NonScaledSize.Y);
+                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.RectTransform), text, style: "ListBoxElement");
+                // In the old system, this is automatically called, because it's defined in the GUIComponent level.
+                // The trick is that since the old textbox constructor calls parent.AddChild, it uses listboxes overloaded method, which is quite different from the GUIComponent method.
+                // We will want to use this method with the new system also, because it updates the scroll bar.
+                // However, we don't want to call it in the textbox constructor, because in the new system, we don't want to manually add children on just any elements.
+                // Instead, parenting is handled by assigning the parent of the rect transform.
+                // Therefore we have to call listbox.AddChild here, but not with the old elements.
+                listBox.AddChild(textBlock);
             }
             else
             {

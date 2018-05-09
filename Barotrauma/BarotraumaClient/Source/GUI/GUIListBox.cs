@@ -48,7 +48,7 @@ namespace Barotrauma
         {
             get
             {
-                return (Selected == null) ? null : Selected.UserData;
+                return Selected?.UserData;
             }
         }
 
@@ -212,12 +212,18 @@ namespace Barotrauma
             scrollBar.BarScroll = 0.0f;
         }
 
+        private bool IgnoreChild(GUIComponent child)
+        {
+            return child == scrollBar || child == frame || !child.Visible;
+        }
+
         public void Select(object userData, bool force = false)
         {
-            for (int i = 0; i < Children.Count; i++)
+            var children = Children;
+            for (int i = 0; i < children.Count; i++)
             {
-                if ((Children[i].UserData != null && Children[i].UserData.Equals(userData)) ||
-                    (Children[i].UserData == null && userData == null))
+                if ((children[i].UserData != null && children[i].UserData.Equals(userData)) ||
+                    (children[i].UserData == null && userData == null))
                 {
                     Select(i, force);
                     if (!SelectMultiple) return;
@@ -248,45 +254,64 @@ namespace Barotrauma
 
         private void UpdateChildrenRect(float deltaTime)
         {
-            int x = Rect.X, y = Rect.Y;
+            var children = Children;
 
-            if (!scrollBarHidden)
+            if (RectTransform != null)
             {
-                if (scrollBar.IsHorizontal)
+                // New elements
+                int x = 0, y = 0;
+                for (int i = 0; i < children.Count; i++)
                 {
-                    x -= (int)((totalSize - Rect.Width) * scrollBar.BarScroll);
+                    GUIComponent child = children[i];
+                    if (IgnoreChild(child)) { continue; }
+                    child.RectTransform.AbsoluteOffset = new Point(x * (child.Rect.Width + spacing), y * (child.Rect.Height + spacing));
+                    if (scrollBar.IsHorizontal)
+                    {
+                        x++;
+                    }
+                    else
+                    {
+                        y++;
+                    }
                 }
-                else
+            }
+            else
+            {
+                // Old elements
+                int x = Rect.X, y = Rect.Y;
+                if (!scrollBarHidden)
                 {
-                    y -= (int)((totalSize - Rect.Height) * scrollBar.BarScroll);
+                    if (scrollBar.IsHorizontal)
+                    {
+                        x -= (int)((totalSize - Rect.Width) * scrollBar.BarScroll);
+                    }
+                    else
+                    {
+                        y -= (int)((totalSize - Rect.Height) * scrollBar.BarScroll);
+                    }
+                }
+                for (int i = 0; i < children.Count; i++)
+                {
+                    GUIComponent child = children[i];
+                    if (IgnoreChild(child)) { continue; }
+                    child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                    if (scrollBar.IsHorizontal)
+                    {
+                        x += child.Rect.Width + spacing;
+                    }
+                    else
+                    {
+                        y += child.Rect.Height + spacing;
+                    }
                 }
             }
 
-            var children = Children;
+            // Both elements
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (child == frame || !child.Visible) continue;
-
-                if (child.RectTransform != null)
-                {
-                    child.RectTransform.AbsoluteOffset = new Point(x, y);
-                }
-                else
-                {
-                    child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
-                }
-                if (scrollBar.IsHorizontal)
-                {
-                    x += child.Rect.Width + spacing;
-                }
-                else
-                {
-                    y += child.Rect.Height + spacing;
-                }
-                
                 // TODO: not sure if we should do this.
-                if (deltaTime>0.0f) child.Update(deltaTime);
+                //if (deltaTime>0.0f) child.Update(deltaTime);
                 if (enabled && child.CanBeFocused &&
                     (GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
@@ -394,7 +419,7 @@ namespace Barotrauma
             totalSize = (int)(padding.Y + padding.W);
             foreach (GUIComponent child in children)
             {
-                if (child == frame || !child.Visible) continue;
+                if (IgnoreChild(child)) { continue; }
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
             }
 
@@ -466,14 +491,13 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
 
-
             // TODO: change?
             var children = Children;
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (child == frame || !child.Visible) continue;
+                if (IgnoreChild(child)) { continue; }
 
                 if (!IsChildVisible(child))
                 {
@@ -486,6 +510,18 @@ namespace Barotrauma
             }
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
+            // Debug
+            GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
+            GUI.DrawString(spriteBatch, new Vector2(800, 40), "child count: " + Children.Where(c => !IgnoreChild(c)).Count().ToString(), Color.White, Color.Black * 0.5f);
+            int y = 40;
+            foreach (var child in Children)
+            {
+                if (IgnoreChild(child)) { continue; }
+                if (child.RectTransform == null) { continue; }
+                y += 40;
+                GUI.DrawString(spriteBatch, new Vector2(800, y), $"Location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
+            }
         }
 
         private bool IsChildVisible(GUIComponent child)
