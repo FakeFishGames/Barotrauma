@@ -587,6 +587,9 @@ namespace Barotrauma
             //}
         }
 
+        /// <summary>
+        /// Note: does not do anything in the new system!
+        /// </summary>
         public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
             if (RectTransform != null) { return; }
