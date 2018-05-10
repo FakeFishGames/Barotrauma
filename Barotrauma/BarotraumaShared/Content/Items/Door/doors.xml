@@ -116,12 +116,18 @@
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
     </DockingPort>
-
+    
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+    
     <PowerTransfer/>
     <Wire/>
     
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Construction" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -161,7 +167,7 @@
     <Wire/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Construction" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
