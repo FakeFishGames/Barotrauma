@@ -187,7 +187,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
+            if (Character.CurrentHull != null && (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f))
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
                 newOrder = new Order(orderPrefab, Character.CurrentHull, null);
