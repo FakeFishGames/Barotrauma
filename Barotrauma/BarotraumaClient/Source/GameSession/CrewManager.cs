@@ -27,7 +27,7 @@ namespace Barotrauma
         #region UI
 
         private GUIFrame guiFrame;
-        private GUIFrame characterFrame;
+        private GUIFrame crewArea;
         private GUIListBox characterListBox;
 
         private GUIButton scrollButtonUp, scrollButtonDown;
@@ -73,13 +73,14 @@ namespace Barotrauma
             characterInfos = new List<CharacterInfo>();
 
             guiFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Transparent);
-            guiFrame.Padding = Vector4.One * 5.0f;
+            guiFrame.Padding = Vector4.Zero;
             guiFrame.CanBeFocused = false;
 
             int scrollButtonHeight = (int)(30 * GUI.Scale);
 
-            characterFrame = new GUIFrame(HUDLayoutSettings.CrewArea, null, guiFrame);
-            toggleCrewButton = new GUIButton(new Rectangle(characterFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", characterFrame);
+            crewArea = new GUIFrame(HUDLayoutSettings.CrewArea, null, guiFrame);
+            crewArea.Padding = Vector4.Zero;
+            toggleCrewButton = new GUIButton(new Rectangle(crewArea.Rect.Width + 10, 0, 25, 70), "", Alignment.CenterLeft, "GUIButtonHorizontalArrow", crewArea);
             toggleCrewButton.ClampMouseRectToParent = false;
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
@@ -91,15 +92,15 @@ namespace Barotrauma
                 return true;
             };
 
-            characterListBox = new GUIListBox(Rectangle.Empty, Color.Transparent, null, characterFrame);
-            characterListBox.Spacing = (int)(5 * GUI.Scale);
+            characterListBox = new GUIListBox(new Rectangle(0, (int)(scrollButtonHeight * 0.8f), 0, (int)(crewArea.Rect.Height - scrollButtonHeight * 1.6f)), Color.Transparent, null, crewArea);
+            characterListBox.Spacing = (int)(3 * GUI.Scale);
             characterListBox.ScrollBarEnabled = false;
             characterListBox.CanBeFocused = false;
 
-            scrollButtonUp = new GUIButton(new Rectangle(0, (int)(-scrollButtonHeight * 0.66f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonUp = new GUIButton(new Rectangle(0, 0, characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", crewArea);
             scrollButtonUp.ClampMouseRectToParent = false;
             scrollButtonUp.Visible = false;
-            scrollButtonDown = new GUIButton(new Rectangle(0, characterListBox.Rect.Height - (int)(scrollButtonHeight * 0.33f), characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", characterFrame);
+            scrollButtonDown = new GUIButton(new Rectangle(0, crewArea.Rect.Height - scrollButtonHeight, characterListBox.Rect.Width, scrollButtonHeight), "", "GUIButtonVerticalArrow", crewArea);
             scrollButtonDown.ClampMouseRectToParent = false;
             scrollButtonDown.children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
             scrollButtonDown.Visible = false;
@@ -234,17 +235,18 @@ namespace Barotrauma
                 }
             }
 
-            int height = (int)(60 * GUI.Scale);
+            int height = (int)(45 * GUI.Scale);
             int iconWidth = (int)(40 * GUI.Scale);
             int padding = (int)(8 * GUI.Scale);
 
             characterInfoWidth = (int)(170 * GUI.Scale) + height;
             crewAreaWidth = orders.Count * (iconWidth + padding) + characterInfoWidth;
 
-            var frame = new GUIFrame(new Rectangle(0, 0, 0, height), null, Alignment.TopRight, null, parent);
+            var frame = new GUIFrame(new Rectangle(0, 0, crewAreaWidth, height), null, Alignment.TopLeft, null, parent);
             frame.UserData = character;
 
-            var orderButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            var orderButtonFrame = new GUIFrame(new Rectangle(characterInfoWidth, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
+            orderButtonFrame.Padding = Vector4.Zero;
             orderButtonFrame.UserData = "orderbuttons";
 
             scrollButtonUp.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonUp.Rect.Y, crewAreaWidth, scrollButtonUp.Rect.Height);
@@ -254,13 +256,13 @@ namespace Barotrauma
             int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
             int neutralAreaWidth = neutralOrderCount * iconWidth + (neutralOrderCount - 1) * padding;
             int wrongAreaWidth = wrongOrderCount * iconWidth + (wrongOrderCount - 1) * padding;
-            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
-            new GUIFrame(new Rectangle(x - correctAreaWidth - padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
-            new GUIFrame(new Rectangle(x - correctAreaWidth - neutralAreaWidth - padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterRight, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x, 0, correctAreaWidth, 0), Color.LightGreen, Alignment.CenterLeft, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x+correctAreaWidth + padding, 0, neutralAreaWidth, 0), Color.LightGray, Alignment.CenterLeft, "InnerFrame", orderButtonFrame);
+            new GUIFrame(new Rectangle(x + correctAreaWidth + neutralAreaWidth + padding * 2, 0, wrongAreaWidth, 0), Color.Red, Alignment.CenterLeft, "InnerFrame", orderButtonFrame);
             foreach (Order order in orders)
             {
                 if (order.TargetAllCharacters) continue;
-                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterRight, null, orderButtonFrame);
+                var btn = new GUIButton(new Rectangle(x, 0, iconWidth, iconWidth), "", Alignment.CenterLeft, null, orderButtonFrame);
                 var img = new GUIImage(new Rectangle(0, 0, iconWidth, iconWidth), order.Prefab.SymbolSprite, Alignment.TopLeft, btn);
                 img.Scale = iconWidth / (float)img.SourceRect.Width;
                 img.Color = order.Color;
@@ -284,7 +286,7 @@ namespace Barotrauma
                 };
 
                 btn.ToolTip = order.Name;
-                x -= iconWidth + padding;
+                x += iconWidth + padding;
             }
 
             var reportButtonFrame = new GUIFrame(new Rectangle(0, 0, frame.Rect.Width - characterInfoWidth, 0), null, frame);
@@ -312,7 +314,7 @@ namespace Barotrauma
                 x -= iconWidth + padding;
             }
 
-            var characterArea = new GUIButton(new Rectangle(-height, 0, characterInfoWidth - padding - height, 0), null, Alignment.CenterRight, "GUITextBox", frame)
+            var characterArea = new GUIButton(new Rectangle(0, 0, characterInfoWidth - padding - (int)(height * 0.7f), 0), null, Alignment.CenterLeft, "GUITextBox", frame)
             {
                 Padding = Vector4.Zero,
                 UserData = character
@@ -579,8 +581,9 @@ namespace Barotrauma
                     characterFrame.RemoveChild(currentOrderIcon);
                 }
 
-                var img = new GUIImage(new Rectangle(0, 0, characterFrame.Rect.Height, characterFrame.Rect.Height), order.SymbolSprite, Alignment.CenterRight, characterFrame);
-                img.Scale = characterFrame.Rect.Height / (float)img.SourceRect.Width;
+                int iconSize = (int)(characterFrame.Rect.Height * 0.8f);
+                var img = new GUIImage(new Rectangle(characterInfoWidth - iconSize - 10, 0, iconSize, iconSize), order.SymbolSprite, Alignment.CenterLeft, characterFrame);
+                img.Scale = characterFrame.Rect.Height / (float)img.SourceRect.Width * 0.8f;
                 img.Color = order.Color;
                 img.UserData = "currentorder";
                 img.ToolTip = order.Name;
@@ -652,18 +655,20 @@ namespace Barotrauma
             if (chatBox != null) chatBox.Update(deltaTime);
             
             bool crewMenuOpen = toggleCrewAreaOpen || orderTargetFrame != null;
-
-            if (characterFrame.Rect.Contains(PlayerInput.MousePosition))
+            int toggleButtonX = Math.Min((int)crewAreaOffset.X + crewAreaWidth + characterInfoWidth, crewAreaWidth + toggleCrewButton.Rect.Width);
+            if (crewArea.Rect.Contains(PlayerInput.MousePosition))
             {
-                if (crewAreaOffset.X > -characterFrame.Rect.Width + characterInfoWidth + 50 || PlayerInput.MousePosition.X < 0) crewMenuOpen = true;
+                if (PlayerInput.MousePosition.X < toggleButtonX + toggleCrewButton.Rect.Width * 2) crewMenuOpen = true;
             }
 
             scrollButtonUp.Visible = characterListBox.BarScroll > 0.0f && characterListBox.BarSize < 1.0f;
+            scrollButtonUp.Rect = new Rectangle(crewArea.Rect.X, scrollButtonUp.Rect.Y, toggleButtonX - crewArea.Rect.X, scrollButtonUp.Rect.Height);
             if (GUIComponent.MouseOn == scrollButtonUp || scrollButtonUp.IsParentOf(GUIComponent.MouseOn))
             {
                 characterListBox.BarScroll -= deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
             }
             scrollButtonDown.Visible = characterListBox.BarScroll < 1.0f && characterListBox.BarSize < 1.0f;
+            scrollButtonDown.Rect = new Rectangle(crewArea.Rect.X, scrollButtonDown.Rect.Y, toggleButtonX - crewArea.Rect.X, scrollButtonDown.Rect.Height);
             if (GUIComponent.MouseOn == scrollButtonDown || scrollButtonDown.IsParentOf(GUIComponent.MouseOn))
             {
                 characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
@@ -676,11 +681,21 @@ namespace Barotrauma
 
             crewAreaOffset.X = MathHelper.Lerp(
                 crewAreaOffset.X,
-                crewMenuOpen ? -characterFrame.Rect.Width + crewAreaWidth + 40 : -characterFrame.Rect.Width + characterInfoWidth + 20, 
+                crewMenuOpen ? characterInfoWidth + crewArea.Rect.X : -crewAreaWidth, 
                 deltaTime * 10.0f);
-            crewAreaOffset.Y = characterFrame.Rect.Y;
-            characterFrame.Rect = new Rectangle(crewAreaOffset.ToPoint(), characterFrame.Rect.Size);
-            
+            //crewAreaOffset.Y = crewArea.Rect.Y;
+            //crewArea.Rect = new Rectangle(crewAreaOffset.ToPoint(), crewArea.Rect.Size);
+            foreach (GUIComponent child in characterListBox.children)
+            {
+                var orderButtons = child.GetChild("orderbuttons");
+                var reportButtons = child.GetChild("reportbuttons");
+
+                orderButtons.Rect = new Rectangle(new Point((int)crewAreaOffset.X, orderButtons.Rect.Y), orderButtons.Rect.Size);
+                reportButtons.Rect = new Rectangle(new Point((int)crewAreaOffset.X, reportButtons.Rect.Y), reportButtons.Rect.Size);
+            }
+
+            toggleCrewButton.Rect = new Rectangle(new Point(toggleButtonX, toggleCrewButton.Rect.Y), toggleCrewButton.Rect.Size);
+
             if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
                 PlayerInput.KeyHit(InputType.CrewOrders) &&
                 characters.Contains(Character.Controlled))
@@ -715,7 +730,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            characterFrame.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
+            crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
             if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
             
             guiFrame.Draw(spriteBatch);
