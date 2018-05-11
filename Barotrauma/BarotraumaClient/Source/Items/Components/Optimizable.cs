@@ -55,10 +55,10 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
             if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
-            GuiFrame.Update(1.0f / 60.0f);
+            GuiFrame.Update(deltaTime);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)

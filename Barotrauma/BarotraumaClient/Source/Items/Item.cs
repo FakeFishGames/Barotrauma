@@ -13,7 +13,7 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        List<ItemComponent> activeHUDs = new List<ItemComponent>();
+        private List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
         public override Sprite Sprite
         {
@@ -305,7 +305,7 @@ namespace Barotrauma
             return editingHUD;
         }
         
-        public virtual void UpdateHUD(Camera cam, Character character)
+        public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             if (condition <= 0.0f)
             {
@@ -345,7 +345,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.CanBeSelected) ic.UpdateHUD(character);
+                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime);
             }
         }
 

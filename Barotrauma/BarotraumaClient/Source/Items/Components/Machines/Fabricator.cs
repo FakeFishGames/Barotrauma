@@ -178,7 +178,7 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;
             if (targetItem != null)
@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
             }
 
 
-            GuiFrame.Update((float)Timing.Step);
+            GuiFrame.Update(deltaTime);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

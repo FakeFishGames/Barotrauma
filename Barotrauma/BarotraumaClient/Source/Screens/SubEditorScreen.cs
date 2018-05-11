@@ -1619,7 +1619,7 @@ namespace Barotrauma
                 {
                     if (dummyCharacter.SelectedConstruction != null)
                     {
-                        dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter);
+                        dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                     }
 
                     if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.FocusedItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;

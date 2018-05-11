@@ -143,9 +143,9 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.Update(1.0f / 60.0f);
+            GuiFrame.Update(deltaTime);
             
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
