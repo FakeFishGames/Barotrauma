@@ -402,9 +402,7 @@ namespace Barotrauma
         /// </summary>
         public IEnumerable<RectTransform> GetAllChildren()
         {
-            var childs = children.AsEnumerable();
-            children.ForEach(c => childs.Concat(c.GetAllChildren()));
-            return childs;
+            return children.SelectManyRecursive(c => c.children);
         }
 
         public bool IsParentOf(RectTransform rectT)

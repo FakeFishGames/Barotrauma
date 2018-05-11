@@ -53,9 +53,7 @@ namespace Barotrauma
             }
             else
             {
-                var childs = children.AsEnumerable();
-                children.ForEach(c => childs.Concat(c.GetAllChildren()));
-                return childs;
+                return children.SelectManyRecursive(c => c.children);
             }
         }
 
