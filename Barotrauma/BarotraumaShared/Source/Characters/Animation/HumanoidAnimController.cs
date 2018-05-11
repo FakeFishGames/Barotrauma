@@ -1008,9 +1008,15 @@ namespace Barotrauma
                             new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
                             0.0f, true, 0.0f, character);
                     }
-                    else if (GameMain.Client == null) //Serverside code
+                    if (GameMain.Client == null) //Serverside code
                     {
-                        float reviveChance = skill / 100.0f; //5% max chance for 10 skill, 100% max chance for 100 skill
+                        //0.1% chance for 10 skill
+                        //1.5% chance for 25 skill
+                        //13% chance for 50 skill
+                        //42% chance for 75 skill
+                        //100% chance for 100 skill
+                        float reviveChance = skill / 100.0f;
+                        reviveChance *= reviveChance * reviveChance;
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) <= reviveChance)
                         {
