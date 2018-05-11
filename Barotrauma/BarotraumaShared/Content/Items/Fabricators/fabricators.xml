@@ -114,6 +114,7 @@
     </Fabricator>
 		
 		<ConnectionPanel selectkey="Action" canbeselected = "true">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<output name="power_in"/>
 		</ConnectionPanel>
@@ -199,6 +200,7 @@
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>
@@ -223,6 +225,7 @@
     </Deconstructor>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
     </ConnectionPanel>

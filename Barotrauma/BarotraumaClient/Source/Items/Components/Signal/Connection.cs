@@ -16,13 +16,17 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
-            int width = 400, height = 350;
+            /*int width = 400, height = 350;
             int x = (GameMain.GraphicsWidth - width) / 2, y = (GameMain.GraphicsHeight - height) / 2;
 
             Rectangle panelRect = new Rectangle(x, y, width, height);
 
-            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White * 0.85f);
-            
+            spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 312, 400, 200), Color.White * 0.85f);*/
+
+            Rectangle panelRect = panel.GuiFrame.Rect;
+            int x = panelRect.X, y = panelRect.Y;
+            int width = panelRect.Width, height = panelRect.Height;
+
             bool mouseInRect = panelRect.Contains(PlayerInput.MousePosition);
 
             int totalWireCount = 0;
@@ -129,10 +133,8 @@ namespace Barotrauma.Items.Components
 
             //stop dragging a wire item if cursor is outside the panel
             if (mouseInRect) Inventory.draggingItem = null;
-
-
+            
             spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, 400, 200), Color.White);
-
         }
 
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)

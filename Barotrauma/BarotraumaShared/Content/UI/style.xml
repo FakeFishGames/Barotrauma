@@ -473,4 +473,12 @@
 
     <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect="532,395,75,71" tile="false"/>
   </InventorySlotSmall>
+
+  <ConnectionPanel
+    color="1.0,1.0,1.0,0.85"
+    hovercolor="1.0,1.0,1.0,0.85"
+    selectedcolor="1.0,1.0,1.0,0.85">
+
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,312,400,200" tile="false"/>
+  </ConnectionPanel>
 </style>

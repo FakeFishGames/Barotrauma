@@ -224,8 +224,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -246,8 +245,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -265,8 +263,7 @@
 
     <MotionSensor range="300" output="0"/>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
@@ -294,8 +291,7 @@
 
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0"/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="power_out"/>
     </ConnectionPanel>
   </Item>
