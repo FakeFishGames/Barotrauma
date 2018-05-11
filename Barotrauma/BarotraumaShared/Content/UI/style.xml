@@ -481,4 +481,46 @@
 
     <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,312,400,200" tile="false"/>
   </ConnectionPanel>
+
+  <ConnectionPanelFront
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,0,400,200" tile="false"/>
+  </ConnectionPanelFront>
+
+  <ConnectionPanelConnector
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="470,102,19,43" origin="0.5,0.25" tile="false"/>
+  </ConnectionPanelConnector>
+
+  <ConnectionPanelWire
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="408,1,11,102" tile="false"/>
+  </ConnectionPanelWire>
+
+  <ConnectionPanelConnection
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/Items/connectionpanel.png" state="None" sourcerect="64,256,32,32" origin="0.5,0.5" tile="false"/>
+    <Sprite texture="Content/Items/connectionpanel.png" state="Hover" sourcerect="106,250,43,43" origin="0.5,0.5" tile="false"/>
+  </ConnectionPanelConnection>
+
+  <ConnectionPanelScrew
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="0,256,32,32" origin="0.5,0.5" tile="false"/>
+    <Sprite texture="Content/Items/connectionpanel.png" sourcerect="32,256,32,32" origin="0.5,0.5" tile="false"/>
+  </ConnectionPanelScrew>
 </style>
