@@ -238,9 +238,9 @@ namespace Launcher
 
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
             
-            guiRoot.Draw(spriteBatch);
+            guiRoot.DrawManually(spriteBatch);
             
-            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.Draw(spriteBatch);            
+            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.DrawManually(spriteBatch);            
 
             spriteBatch.End();
 

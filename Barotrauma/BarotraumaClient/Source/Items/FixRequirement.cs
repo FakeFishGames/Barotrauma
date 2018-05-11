@@ -161,7 +161,7 @@ namespace Barotrauma
         {
             if (frame == null) return;
 
-            frame.Draw(spriteBatch);
+            frame.DrawManually(spriteBatch);
         }
 
         public static void AddToGUIUpdateList()

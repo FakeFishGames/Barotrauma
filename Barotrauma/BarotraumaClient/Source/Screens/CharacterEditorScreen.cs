@@ -149,7 +149,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            GUIpanel.Draw(spriteBatch);
+            GUIpanel.DrawManually(spriteBatch);
 
             EditLimb(spriteBatch);
 
@@ -318,7 +318,7 @@ namespace Barotrauma
         {
             if (editingLimb == null) return;
 
-            limbPanel.Draw(spriteBatch);
+            limbPanel.DrawManually(spriteBatch);
         }
 
         private bool TogglePhysics(GUIButton button, object selection)

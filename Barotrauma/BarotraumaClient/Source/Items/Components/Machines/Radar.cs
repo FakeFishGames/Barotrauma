@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.Draw(spriteBatch);
+            GuiFrame.DrawManually(spriteBatch);
 
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));

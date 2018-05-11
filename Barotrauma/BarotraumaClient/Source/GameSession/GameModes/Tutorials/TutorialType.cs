@@ -113,7 +113,7 @@ namespace Barotrauma.Tutorials
         public virtual void Draw(SpriteBatch spriteBatch)
         {
 
-            if (infoBox != null) infoBox.Draw(spriteBatch);
+            if (infoBox != null) infoBox.DrawManually(spriteBatch);
         }
 
 

@@ -135,7 +135,7 @@ namespace Barotrauma
         {
             if (!isOpen) return;
 
-            frame.Draw(spriteBatch);
+            frame.DrawManually(spriteBatch);
         }
 
         private static bool IsCommandPermitted(string command, GameClient client)

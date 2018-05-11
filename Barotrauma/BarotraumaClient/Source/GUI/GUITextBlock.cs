@@ -30,6 +30,8 @@ namespace Barotrauma
 
         private float textDepth;
 
+        public Vector2 TextOffset { get; set; }
+
         public override Vector4 Padding
         {
             get { return padding; }
@@ -293,22 +295,7 @@ namespace Barotrauma
             textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you call this method manually, set AutoDraw to false.
-        /// TODO: define the offset as a class field instead of function parameter and remove this overload.
-        /// </summary>
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            Draw(spriteBatch, Vector2.Zero);
-        }
-
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you call this method manually, set AutoDraw to false.
-        /// TODO: define the offset as a class field instead of function parameter.
-        /// </summary>
-        public void Draw(SpriteBatch spriteBatch, Vector2 offset)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
@@ -317,9 +304,6 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
 
             var rect = Rect;
-
-            Rectangle drawRect = rect;
-            if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
             base.Draw(spriteBatch);
             
@@ -335,7 +319,7 @@ namespace Barotrauma
             {
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    rect.Location.ToVector2() + textPos + offset,
+                    rect.Location.ToVector2() + textPos + TextOffset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
@@ -345,11 +329,6 @@ namespace Barotrauma
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             }
-
-            //if (drawChildren)
-            //{
-            //    DrawChildren(spriteBatch);
-            //}
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);
         }

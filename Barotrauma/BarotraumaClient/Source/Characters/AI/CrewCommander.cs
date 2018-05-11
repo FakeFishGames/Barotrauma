@@ -298,7 +298,7 @@ namespace Barotrauma
         {
             if (!IsOpen) return;
 
-            frame.Draw(spriteBatch);
+            frame.DrawManually(spriteBatch);
         }
     }
 }

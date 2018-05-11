@@ -114,7 +114,7 @@ namespace Barotrauma
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)

@@ -83,7 +83,9 @@ namespace Barotrauma.Items.Components
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
 
-            textBlock.Draw(spriteBatch, drawPos - textBlock.Rect.Location.ToVector2());
+            // TODO
+            //textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2();
+            textBlock.DrawManually(spriteBatch);
         }
     }
 }

@@ -1193,9 +1193,9 @@ namespace Barotrauma
                     SpriteEffects.None, 0.0f);
             }
 
-            menu.Draw(spriteBatch);
+            menu.DrawManually(spriteBatch);
 
-            if (jobInfoFrame != null) jobInfoFrame.Draw(spriteBatch);
+            if (jobInfoFrame != null) jobInfoFrame.DrawManually(spriteBatch);
             
             if (campaignContainer.Visible && campaignUI != null)
             {
@@ -1204,10 +1204,10 @@ namespace Barotrauma
 
             if (campaignSetupUI != null)
             {
-                campaignSetupUI.Draw(spriteBatch);
+                campaignSetupUI.DrawManually(spriteBatch);
             }
 
-            if (playerFrame != null) playerFrame.Draw(spriteBatch);
+            if (playerFrame != null) playerFrame.DrawManually(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 

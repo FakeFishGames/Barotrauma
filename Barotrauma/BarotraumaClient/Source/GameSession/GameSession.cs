@@ -142,10 +142,10 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            infoButton.Draw(spriteBatch);
+            infoButton.DrawManually(spriteBatch);
 
             if (GameMode != null) GameMode.Draw(spriteBatch);
-            if (infoFrame != null) infoFrame.Draw(spriteBatch);
+            if (infoFrame != null) infoFrame.DrawManually(spriteBatch);
         }
     }
 }

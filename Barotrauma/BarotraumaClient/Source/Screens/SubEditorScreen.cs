@@ -1548,8 +1548,8 @@ namespace Barotrauma
                 DrawSubmarineIndicator(spriteBatch, Submarine.MainSub, Color.LightBlue * 0.5f);
             }
 
-            leftPanel.Draw(spriteBatch);
-            topPanel.Draw(spriteBatch);
+            leftPanel.DrawManually(spriteBatch);
+            topPanel.DrawManually(spriteBatch);
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
@@ -1562,21 +1562,21 @@ namespace Barotrauma
                 
                 dummyCharacter.DrawHUD(spriteBatch, cam);
                 
-                if (wiringMode) wiringToolPanel.Draw(spriteBatch);
+                if (wiringMode) wiringToolPanel.DrawManually(spriteBatch);
             }
             else
             {
                 if (loadFrame!=null)
                 {
-                    loadFrame.Draw(spriteBatch);
+                    loadFrame.DrawManually(spriteBatch);
                 }
                 else if (saveFrame != null)
                 {
-                    saveFrame.Draw(spriteBatch);
+                    saveFrame.DrawManually(spriteBatch);
                 }
                 else if (selectedTab > -1)
                 {
-                    GUItabs[selectedTab].Draw(spriteBatch);
+                    GUItabs[selectedTab].DrawManually(spriteBatch);
                 }
 
                 MapEntity.DrawEditor(spriteBatch, cam);
