@@ -183,7 +183,7 @@ namespace Barotrauma
 
                 healItemContainer.Rect = new Rectangle(
                     HUDLayoutSettings.HealthWindowAreaLeft.Center.X, HUDLayoutSettings.HealthWindowAreaLeft.Y,
-                    HUDLayoutSettings.HealthWindowAreaLeft.Width, (int)(110 * GUI.Scale));
+                    HUDLayoutSettings.HealthWindowAreaLeft.Width, (int)(140 * GUI.Scale));
                 
                 int cprButtonSize = Math.Min((int)(80 * GUI.Scale), afflictionContainer.Rect.Y - healItemContainer.Rect.Bottom - 5);
                 cprButton.Rect = new Rectangle(healthWindow.Rect.Right, healItemContainer.Rect.Bottom + 5, cprButtonSize, cprButtonSize);
@@ -204,7 +204,7 @@ namespace Barotrauma
 
                 healItemContainer.Rect = new Rectangle(
                     HUDLayoutSettings.HealthWindowAreaRight.X - HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Y,
-                    HUDLayoutSettings.HealthWindowAreaRight.Width, (int)(110 * GUI.Scale));
+                    HUDLayoutSettings.HealthWindowAreaRight.Width, (int)(140 * GUI.Scale));
 
                 int cprButtonSize = Math.Min((int)(80 * GUI.Scale), afflictionContainer.Rect.Y - healItemContainer.Rect.Bottom - 5);
                 cprButton.Rect = new Rectangle(healthWindow.Rect.X - cprButtonSize, healItemContainer.Rect.Bottom + 5, cprButtonSize, cprButtonSize);
@@ -706,12 +706,13 @@ namespace Barotrauma
 
             healItemContainer.ClearChildren();
             
-            int itemButtonSize = (int)(80 * GUI.Scale);
+            int itemButtonSize = healItemContainer.Rect.Height - (int)(20 * GUI.Scale);
             
             if (items.Count == 0)
             {
                 var noItemsText = new GUITextBlock(Rectangle.Empty, TextManager.Get("NoAvailableMedicalItems"), "", Alignment.Center, Alignment.Center, healItemContainer, true);
                 noItemsText.UserData = "noavailableitems";
+                noItemsText.CanBeFocused = false;
                 return;
             }
             
