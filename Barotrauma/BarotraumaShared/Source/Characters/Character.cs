@@ -1516,7 +1516,11 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Select))
+            else if (focusedCharacter != null && IsKeyHit(InputType.Select) && FocusedCharacter.CanInventoryBeAccessed)
+            {
+                SelectCharacter(focusedCharacter);
+            }
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health))
             {
                 SelectCharacter(focusedCharacter);
 #if CLIENT
