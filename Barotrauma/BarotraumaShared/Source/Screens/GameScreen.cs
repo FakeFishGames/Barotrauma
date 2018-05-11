@@ -91,7 +91,7 @@ namespace Barotrauma
 #if CLIENT
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);                
+                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
             }
 #endif
 

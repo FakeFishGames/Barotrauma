@@ -272,9 +272,9 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.Update(1.0f / 60.0f);
+            GuiFrame.Update(deltaTime);
 
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 

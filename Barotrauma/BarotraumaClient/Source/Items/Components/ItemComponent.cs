@@ -40,15 +40,15 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame guiFrame;
 
-        protected GUIFrame GuiFrame
+        public GUIFrame GuiFrame
         {
             get
             {
-                if (guiFrame == null)
+                /*if (guiFrame == null)
                 {
                     DebugConsole.ThrowError("Error: the component " + name + " in " + item.Name + " doesn't have a GuiFrame component");
                     guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
-                }
+                }*/
                 return guiFrame;
             }
         }
@@ -186,7 +186,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void AddToGUIUpdateList() { }
 
-        public virtual void UpdateHUD(Character character) { }
+        public virtual void UpdateHUD(Character character, float deltaTime) { }
 
         private bool LoadElemProjSpecific(XElement subElement)
         {

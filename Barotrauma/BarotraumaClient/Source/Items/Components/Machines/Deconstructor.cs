@@ -19,9 +19,9 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.Update((float)Timing.Step);
+            GuiFrame.Update(deltaTime);
         }
 
         private bool ToggleActive(GUIButton button, object obj)

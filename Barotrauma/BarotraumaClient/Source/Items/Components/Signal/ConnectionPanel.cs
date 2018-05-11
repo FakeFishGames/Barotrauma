@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
             return character == Character.Controlled && character == user;
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
             if (character != Character.Controlled || character != user) return;
             

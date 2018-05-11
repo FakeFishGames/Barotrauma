@@ -36,13 +36,13 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.Update((float)Timing.Step);
+            GuiFrame.Update(deltaTime);
 
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {
-                radarBlips[i].FadeTimer -= (float)Timing.Step * 0.5f;
+                radarBlips[i].FadeTimer -= deltaTime * 0.5f;
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
 

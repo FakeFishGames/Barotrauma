@@ -139,6 +139,11 @@ namespace Barotrauma
             {
                 cam.OffsetAmount = 0.0f;
             }
+            else if (selectedConstruction != null &&
+                selectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUIComponent.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUIComponent.MouseOn))))
+            {
+                cam.OffsetAmount = 0.0f;
+            }
             else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
                 if (GUI.PauseMenuOpen || IsUnconscious)

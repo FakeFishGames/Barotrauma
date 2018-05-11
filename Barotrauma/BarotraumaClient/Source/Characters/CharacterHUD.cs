@@ -59,7 +59,7 @@ namespace Barotrauma
 
                         foreach (ItemComponent ic in item.components)
                         {
-                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character);
+                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime);
                         }
                     }
                 }
