@@ -43,6 +43,8 @@ namespace Barotrauma
 
         private GUIProgressBar healthWindowHealthBar;
 
+        private GUIComponent draggingMed;
+
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
 
@@ -358,6 +360,15 @@ namespace Barotrauma
                 afflictionContainer.Update(deltaTime);
                 healItemContainer.Update(deltaTime);
                 UpdateItemContainer();
+
+                if (draggingMed != null)
+                {
+                    if (!PlayerInput.LeftButtonHeld())
+                    {
+                        OnItemDropped(draggingMed.UserData as Item);
+                        draggingMed = null;
+                    }
+                }
             }
             else
             {
@@ -523,12 +534,19 @@ namespace Barotrauma
                 }
                 healthWindowHealthBar.Draw(spriteBatch);
 
-                if (Inventory.draggingItem != null && highlightedLimbIndex > -1)
+                /*if (Inventory.draggingItem != null && highlightedLimbIndex > -1)
                 {
                     GUI.DrawString(spriteBatch, PlayerInput.MousePosition + Vector2.UnitY * 40.0f, "Use item \"" + Inventory.draggingItem.Name + "\" on [insert limb name here]", Color.Green, Color.Black * 0.8f);
-                }
+                }*/
 
                 if (cprButton.Visible) cprButton.Draw(spriteBatch);
+
+                if (draggingMed != null)
+                {
+                    GUIImage itemImage = draggingMed.GetChild<GUIImage>();
+                    float scale = Math.Min(40.0f / itemImage.Sprite.size.X, 40.0f / itemImage.Sprite.size.Y);
+                    itemImage.Sprite.Draw(spriteBatch, PlayerInput.MousePosition, itemImage.Color, 0, scale);
+                }
             }
         }
 
@@ -702,20 +720,27 @@ namespace Barotrauma
                 if (item == null) continue;
                 if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
 
-                var child = new GUIButton(new Rectangle(0, 0, itemButtonSize, itemButtonSize), "", "GUIButton", healItemContainer);
+                var child = new GUIButton(new Rectangle(0, 0, itemButtonSize, itemButtonSize), "", "InventorySlotSmall", healItemContainer);
                 child.Padding = Vector4.Zero;
                 child.UserData = item;
                 child.OnClicked += OnTreatmentButtonClicked;
+                child.OnPressed += () =>
+                {
+                    if (draggingMed == null) draggingMed = child;
+                    return true;
+                };
 
                 Sprite itemSprite = item.Prefab.InventoryIcon ?? item.Sprite;
-                float scale = Math.Min(itemButtonSize / itemSprite.size.X, itemButtonSize / itemSprite.size.Y);
-                var itemIcon = new GUIImage(new Rectangle(0, 0, 0, 0), itemSprite.SourceRect, itemSprite, Alignment.Center, scale, child)
+                float scale = Math.Min(itemButtonSize / itemSprite.size.X, itemButtonSize / itemSprite.size.Y) * 0.8f;
+                var itemIcon = new GUIImage(new Rectangle(0, 0, 0, 0), itemSprite.SourceRect, itemSprite, Alignment.TopCenter, scale, child)
                 {
                     CanBeFocused = false,
-                    Color = item.SpriteColor,
+                    Color = itemSprite == item.Sprite ? item.SpriteColor : Color.White,
                     HoverColor = item.SpriteColor,
                     SelectedColor = item.SpriteColor
                 };
+
+                //new GUITextBlock(new Rectangle(0, 0, 0, (int)(20 * GUI.Scale)), item.Name, "", Alignment.BottomCenter, Alignment.BottomCenter, child, false, GUI.SmallFont);
 
                 string itemName = item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)

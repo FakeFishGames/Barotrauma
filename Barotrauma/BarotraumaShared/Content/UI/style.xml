@@ -465,4 +465,12 @@
       <Sprite texture="Content/Items/MachineInterface.png" sourcerect="473,2,37,54" slice="479,10,505,47"/>
     </GUIButtonVertical>
   </GUISlider>
+
+  <InventorySlotSmall
+    color="0.9,0.9,0.9,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/UI/inventoryAtlas.png" sourcerect="532,395,75,71" tile="false"/>
+  </InventorySlotSmall>
 </style>
