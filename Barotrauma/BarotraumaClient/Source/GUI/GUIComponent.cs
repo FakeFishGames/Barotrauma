@@ -157,6 +157,7 @@ namespace Barotrauma
         }
         #endregion
 
+        public int DrawOrder { get; set; }
         public bool AutoDraw { get; set; } = true;
 
         const float FlashDuration = 1.5f;
@@ -384,18 +385,19 @@ namespace Barotrauma
             GUI.RemoveFromUpdateList(this, alsoChildren);
         }
 
-        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
+        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
         {
-            GUI.AddToUpdateList(this, updateLast);
+            DrawOrder = drawOrder;
+            GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
                 if (RectTransform != null)
                 {
-                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, updateLast));
+                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, drawOrder));
                 }
                 else
                 {
-                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, updateLast));
+                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, drawOrder));
                 }
             }
         }

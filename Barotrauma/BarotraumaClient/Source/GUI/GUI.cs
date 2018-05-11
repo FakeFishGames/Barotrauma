@@ -181,8 +181,10 @@ namespace Barotrauma
         private static List<GUIComponent> updateList = new List<GUIComponent>();
         private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
         private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
-        // Added to the update list after all other
-        private static Queue<GUIComponent> last = new Queue<GUIComponent>();
+        // A helpers list for all elements that have a draw order less than 0.
+        private static List<GUIComponent> first = new List<GUIComponent>();
+        // A helper list for all elements that have a draw order greater than 0.
+        private static List<GUIComponent> last = new List<GUIComponent>();
 
         public static IEnumerable<GUIComponent> ComponentsToUpdate => updateList;
 
@@ -190,7 +192,7 @@ namespace Barotrauma
         /// Adds the component on the addition queue.
         /// Note: does not automatically add children, because we might want to enforce a custom order for them.
         /// </summary>
-        public static void AddToUpdateList(GUIComponent component, bool updateLast = false)
+        public static void AddToUpdateList(GUIComponent component)
         {
             if (component == null)
             {
@@ -198,9 +200,13 @@ namespace Barotrauma
                 return;
             }
             if (!component.Visible) { return; }
-            if (updateLast)
+            if (component.DrawOrder < 0)
             {
-                last.Enqueue(component);
+                first.Add(component);
+            }
+            else if (component.DrawOrder > 0)
+            {
+                last.Add(component);
             }
             else
             {
@@ -257,6 +263,7 @@ namespace Barotrauma
                     KeyboardDispatcher.Subscriber = null;
                 }
             }
+            ProcessHelperList(first);
             while (additions.Count > 0)
             {
                 var component = additions.Dequeue();
@@ -265,14 +272,21 @@ namespace Barotrauma
                     updateList.Add(component);
                 }
             }
-            while (last.Count > 0)
+            ProcessHelperList(last);
+        }
+
+        private static void ProcessHelperList(List<GUIComponent> list)
+        {
+            if (list.Count == 0) { return; }
+            list.Sort((previous, next) => next.DrawOrder.CompareTo(previous.DrawOrder));
+            foreach (var item in list)
             {
-                var component = last.Dequeue();
-                if (!updateList.Contains(component))
+                if (!updateList.Contains(item))
                 {
-                    updateList.Add(component);
+                    updateList.Add(item);
                 }
             }
+            list.Clear();
         }
 
         private static void HandlePersistingElements(float deltaTime)

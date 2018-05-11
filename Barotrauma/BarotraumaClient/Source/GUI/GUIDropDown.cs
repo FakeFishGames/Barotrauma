@@ -223,16 +223,16 @@ namespace Barotrauma
             return true;
         }
 
-        public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
+        public override void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
         {
-            base.AddToGUIUpdateList(true, updateLast);
+            base.AddToGUIUpdateList(true, drawOrder);
             if (!ignoreChildren)
             {
-                button.AddToGUIUpdateList(false, updateLast);
+                button.AddToGUIUpdateList(false, drawOrder);
                 if (Dropped)
                 {
                     // Enforces the listbox to be rendered on top of other elements.
-                    listBox.AddToGUIUpdateList(false, true);
+                    listBox.AddToGUIUpdateList(false, 1);
                 }
             }
         }
