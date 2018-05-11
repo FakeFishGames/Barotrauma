@@ -47,7 +47,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f)
+                    if (!character.LockHands && character.Stun < 0.1f && CharacterHealth.OpenHealthWindow == null)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -66,7 +66,7 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
@@ -140,7 +140,18 @@ namespace Barotrauma
                     Vector2 textPos = startPos;
                     textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
+                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black * 0.7f, 2);
+                    textPos.Y += 20;
+                    if (character.FocusedCharacter.CanInventoryBeAccessed)
+                    {
+                        GUI.DrawString(spriteBatch, textPos, "[E] Grab", Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        textPos.Y += 15;
+                    }
+                    if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
+                    {
+                        GUI.DrawString(spriteBatch, textPos, "[H] Heal", Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        textPos.Y += 15;
+                    }
                 }
                 else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
@@ -201,7 +212,7 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && CharacterHealth.OpenHealthWindow == null)
             {
                 character.Inventory.DrawOwn(spriteBatch);
             }
@@ -210,14 +221,17 @@ namespace Barotrauma
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.Inventory.Alignment = Alignment.Left;
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
                     {
+                        character.Inventory.Alignment = Alignment.Left;
                         character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
                         character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     }
-                    character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
-                    character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                    if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
+                    {
+                        character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
+                        character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                    }
                 }
                 else if (character.Inventory != null)
                 {

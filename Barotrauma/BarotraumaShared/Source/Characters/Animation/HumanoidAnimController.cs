@@ -922,7 +922,8 @@ namespace Barotrauma
 
         private void UpdateCPR(float deltaTime)
         {
-            if (character.SelectedCharacter == null)
+            if (character.SelectedCharacter == null || 
+                (!character.SelectedCharacter.IsUnconscious && !character.SelectedCharacter.IsDead && character.SelectedCharacter.Stun <= 0.0f))
             {
                 Anim = Animation.None;
                 return;
