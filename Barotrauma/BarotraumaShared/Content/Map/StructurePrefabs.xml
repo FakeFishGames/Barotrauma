@@ -94,95 +94,95 @@
   <!-- TAIL ENDS-->
 
   <!-- Straight pieces -->
-  <ExtA_90 identifier="ExtA_90" description="ExtA Vert" body="true"
+  <ExtA_90 identifier="ExtA_90" description="ExtA Vert" body="true" castshadow="true"
     width="64" height="512" resizevertical="true">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,0,64,512" depth="0.1"/>
   </ExtA_90>
 
-  <ExtA_0 identifier="ExtA_0" description="ExtA Hor" body="true"
+  <ExtA_0 identifier="ExtA_0" description="ExtA Hor" body="true" castshadow="true"
     width="512" height="64" resizehorizontal="true">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,0,512,64" depth="0.1"/>
   </ExtA_0>
 
-  <ExtA_45 identifier="ExtA_45" description="ExtA Diag" body="true"
+  <ExtA_45 identifier="ExtA_45" description="ExtA Diag" body="true" castshadow="true"
     width="512" height="576" bodywidth="725" bodyheight="64" bodyrotation="-45">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,960,512,576" depth="0.1"/>
   </ExtA_45>
 
-  <ExtA_20 identifier="ExtA_20" description="ExtA Diag-20" body="true"
+  <ExtA_20 identifier="ExtA_20" description="ExtA Diag-20" body="true" castshadow="true"
     width="512" height="320" bodywidth="571" bodyheight="64" bodyrotation="-26">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,64,512,320" depth="0.1"/>
   </ExtA_20>
 
   <!-- Curved 512 width pieces -->
-  <ExtA_conv-35 identifier="ExtA_conv-35" description="ExtA convex-35" body="true"
+  <ExtA_conv-35 identifier="ExtA_conv-35" description="ExtA convex-35" body="true" castshadow="true"
     width="512" height="448" bodywidth="640" bodyheight="64" bodyrotation="-40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,64,512,448" depth="0.1"/>
   </ExtA_conv-35>
 
-  <ExtA_conc-20 identifier="ExtA_conc-20" description="ExtA concave-20" body="true"
+  <ExtA_conc-20 identifier="ExtA_conc-20" description="ExtA concave-20" body="true" castshadow="true"
     width="512" height="192" bodywidth="528" bodyheight="64" bodyrotation="-15">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,320,512,192" depth="0.1"/>
   </ExtA_conc-20>
 
-  <ExtA_conv-25 identifier="ExtA_conv-25" description="ExtA convex-25" body="true"
+  <ExtA_conv-25 identifier="ExtA_conv-25" description="ExtA convex-25" body="true" castshadow="true"
     width="512" height="320" bodywidth="570" bodyheight="64" bodyrotation="-25">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,512,512,320" depth="0.1"/>
   </ExtA_conv-25>
 
-  <ExtA_conv-20 identifier="ExtA_conv-20" description="ExtA convex-20" body="true"
+  <ExtA_conv-20 identifier="ExtA_conv-20" description="ExtA convex-20" body="true" castshadow="true"
     width="512" height="192" bodywidth="527" bodyheight="64" bodyrotation="-14">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,512,512,192" depth="0.1"/>
   </ExtA_conv-20>
 
   <!-- Curved small pieces -->
 
-  <ExtA_curve-90 identifier="ExtA_curve-90" description="ExtA Curve-90" body="true"
+  <ExtA_curve-90 identifier="ExtA_curve-90" description="ExtA Curve-90" body="true" castshadow="true"
     width="256" height="320" bodywidth="405" bodyheight="64" bodyrotation="-50">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,0,256,320" depth="0.1"/>
   </ExtA_curve-90>
 
-  <ExtA_s-10 identifier="ExtA_s-10" description="S-curve-10" body="true"
+  <ExtA_s-10 identifier="ExtA_s-10" description="S-curve-10" body="true" castshadow="true"
     width="384" height="192" bodywidth="405" bodyheight="64" bodyrotation="25">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="128,320,384,192" depth="0.1"/>
   </ExtA_s-10>
 
-  <ExtA_conc-35 identifier="ExtA_conc-35" description="ExtA concave-35" body="true"
+  <ExtA_conc-35 identifier="ExtA_conc-35" description="ExtA concave-35" body="true" castshadow="true"
     width="384" height="320" bodywidth="450" bodyheight="64" bodyrotation="-35">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1536,0,384,320" depth="0.1"/>
   </ExtA_conc-35>
 
-  <ExtA_conc-45 identifier="ExtA_conc-45" description="ExtA concave-45" body="true"
+  <ExtA_conc-45 identifier="ExtA_conc-45" description="ExtA concave-45" body="true" castshadow="true"
     width="320" height="256" bodywidth="400" bodyheight="64" bodyrotation="-40">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,512,320,256" depth="0.1"/>
   </ExtA_conc-45>
 
-  <ExtA_conv-60mini identifier="ExtA_conv-60mini" description="ExtA concave-60 mini" body="true"
+  <ExtA_conv-60mini identifier="ExtA_conv-60mini" description="ExtA concave-60 mini" body="true" castshadow="true"
     width="127" height="192" bodywidth="230" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,832,127,192" depth="0.1"/>
   </ExtA_conv-60mini>
 
-  <ExtA_S-vert identifier="ExtA_S-vert" description="ExtA S Vertical" body="true"
+  <ExtA_S-vert identifier="ExtA_S-vert" description="ExtA S Vertical" body="true" castshadow="true"
     width="192" height="384" bodywidth="430" bodyheight="64" bodyrotation="-65">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="832,640,192,384" depth="0.1"/>
   </ExtA_S-vert>
 
-  <ExtA_conc-45Up identifier="ExtA_conc-45Up" description="ExtA concave-45 Up" body="true"
+  <ExtA_conc-45Up identifier="ExtA_conc-45Up" description="ExtA concave-45 Up" body="true" castshadow="true"
     width="472" height="384"  bodywidth="574" bodyheight="64" bodyrotation="-43">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="1024,640,472,384" depth="0.1"/>
   </ExtA_conc-45Up>
 
-  <ExtA_conv-75 identifier="ExtA_conv-75" description="ExtA concave-75" body="true"
+  <ExtA_conv-75 identifier="ExtA_conv-75" description="ExtA concave-75" body="true" castshadow="true"
     width="383" height="576" bodywidth="690" bodyheight="64" bodyrotation="-55">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="0,960,383,576" depth="0.1"/>
   </ExtA_conv-75>
 
-  <ExtA_conv-60 identifier="ExtA_conv-60" description="ExtA concave-60" body="true"
+  <ExtA_conv-60 identifier="ExtA_conv-60" description="ExtA concave-60" body="true" castshadow="true"
     width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="512,1088,256,448" depth="0.1"/>
   </ExtA_conv-60>
 
-  <ExtA_S-60 identifier="ExtA_S-60" description="ExtA S 60" body="true"
+  <ExtA_S-60 identifier="ExtA_S-60" description="ExtA S 60" body="true" castshadow="true"
     width="256" height="448" bodywidth="516" bodyheight="64" bodyrotation="-60">
     <sprite texture="Content/Map/exteriorAtlas_A_01.png" sourcerect="768,1088,256,448" depth="0.1"/>
   </ExtA_S-60>

@@ -55,9 +55,9 @@ namespace Barotrauma
 
         private static Sprite submarineIcon, arrow;
 
-        public static ScalableFont Font => Style.Font;
-        public static ScalableFont SmallFont => Style.SmallFont;
-        public static ScalableFont LargeFont => Style.LargeFont;
+        public static ScalableFont Font => Style?.Font;
+        public static ScalableFont SmallFont => Style?.SmallFont;
+        public static ScalableFont LargeFont => Style?.LargeFont;
 
         public static Sprite SubmarineIcon
         {
