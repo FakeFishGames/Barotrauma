@@ -183,8 +183,6 @@ namespace Barotrauma
             scrollBarEnabled = true;
 
             scrollBar.BarScroll = 0.0f;
-
-            Children.ForEach(c => c.EnableAutoDrawing = false);
         }
 
         /// <summary>
@@ -213,7 +211,6 @@ namespace Barotrauma
             enabled = true;
             scrollBarEnabled = true;
             scrollBar.BarScroll = 0.0f;
-            rectT.Children.ForEach(c => c.GUIComponent.EnableAutoDrawing = false);
         }
 
         private bool IgnoreChild(GUIComponent child)
@@ -343,6 +340,9 @@ namespace Barotrauma
             base.AddToGUIUpdateList(true, drawOrder);
             if (ignoreChildren) { return; }
             var children = Children;
+            // TODO: optimize, this has to be done only once, but we need to know when we get a new child
+            GetAllChildren().ForEach(c => c.AutoDraw = false);
+
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
@@ -454,8 +454,6 @@ namespace Barotrauma
             else
                 rect.Width += scrollBar.Rect.Width;
 
-            child.EnableAutoDrawing = false;
-
             UpdateScrollBarSize();
             UpdateChildrenRect(0.0f);
         }
@@ -505,6 +503,7 @@ namespace Barotrauma
 
                 lastVisible = i;
                 child.DrawManually(spriteBatch);
+                child.DrawChildren(spriteBatch);
             }
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
