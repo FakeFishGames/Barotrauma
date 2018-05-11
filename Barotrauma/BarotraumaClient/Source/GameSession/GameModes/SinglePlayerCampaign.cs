@@ -120,7 +120,7 @@ namespace Barotrauma
                 endRoundButton.Visible = false;
             }
 
-            endRoundButton.Draw(spriteBatch);
+            endRoundButton.DrawManually(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()

@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
             {
                 powerIndicator.BarSize = chargeRate;
                 powerIndicator.Color = charged ? Color.Green : Color.Red;
-                powerIndicator.Draw(spriteBatch);
+                powerIndicator.DrawManually(spriteBatch);
 
                 int requiredChargeIndicatorPos = (int)((powerConsumption / (batteryCapacity * 3600.0f)) * powerIndicator.Rect.Width);
                 GUI.DrawRectangle(spriteBatch,

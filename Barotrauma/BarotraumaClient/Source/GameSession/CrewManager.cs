@@ -349,7 +349,7 @@ namespace Barotrauma
             }
             else
             {
-                guiFrame.Draw(spriteBatch);
+                guiFrame.DrawManually(spriteBatch);
             }
         }
 

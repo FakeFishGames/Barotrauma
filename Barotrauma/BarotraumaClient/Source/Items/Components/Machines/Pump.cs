@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
-            GuiFrame.Draw(spriteBatch);
+            GuiFrame.DrawManually(spriteBatch);
 
             GUI.Font.DrawString(spriteBatch, TextManager.Get("PumpSpeed") + ": " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
 

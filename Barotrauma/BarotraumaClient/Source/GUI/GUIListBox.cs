@@ -184,7 +184,7 @@ namespace Barotrauma
 
             scrollBar.BarScroll = 0.0f;
 
-            Children.ForEach(c => c.AutoDraw = false);
+            Children.ForEach(c => c.EnableAutoDrawing = false);
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace Barotrauma
             enabled = true;
             scrollBarEnabled = true;
             scrollBar.BarScroll = 0.0f;
-            rectT.Children.ForEach(c => c.GUIComponent.AutoDraw = false);
+            rectT.Children.ForEach(c => c.GUIComponent.EnableAutoDrawing = false);
         }
 
         private bool IgnoreChild(GUIComponent child)
@@ -454,7 +454,7 @@ namespace Barotrauma
             else
                 rect.Width += scrollBar.Rect.Width;
 
-            child.AutoDraw = false;
+            child.EnableAutoDrawing = false;
 
             UpdateScrollBarSize();
             UpdateChildrenRect(0.0f);
@@ -481,15 +481,11 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you call this method manually, set AutoDraw to false.
-        /// </summary>
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            frame.Draw(spriteBatch);
+            frame.DrawManually(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
@@ -508,24 +504,24 @@ namespace Barotrauma
                 }
 
                 lastVisible = i;
-                child.Draw(spriteBatch);
+                child.DrawManually(spriteBatch);
             }
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
-            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
+            if (!scrollBarHidden) scrollBar.DrawManually(spriteBatch);
 
-            // Debug
-            GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
-            GUI.DrawString(spriteBatch, new Vector2(800, 40), "child count: " + Children.Where(c => !IgnoreChild(c)).Count().ToString(), Color.White, Color.Black * 0.5f);
-            int y = 40;
-            foreach (var child in Children)
-            {
-                if (IgnoreChild(child)) { continue; }
-                if (child.RectTransform == null) { continue; }
-                y += 40;
-                GUI.DrawString(spriteBatch, new Vector2(800, y), $"Location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            }
+            //// Debug
+            //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
+            //GUI.DrawString(spriteBatch, new Vector2(800, 40), "child count: " + Children.Where(c => !IgnoreChild(c)).Count().ToString(), Color.White, Color.Black * 0.5f);
+            //int y = 40;
+            //foreach (var child in Children)
+            //{
+            //    if (IgnoreChild(child)) { continue; }
+            //    if (child.RectTransform == null) { continue; }
+            //    y += 40;
+            //    GUI.DrawString(spriteBatch, new Vector2(800, y), $"Location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
+            //}
         }
 
         private bool IsChildVisible(GUIComponent child)

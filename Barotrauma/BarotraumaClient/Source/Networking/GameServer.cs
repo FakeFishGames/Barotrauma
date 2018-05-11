@@ -56,11 +56,11 @@ namespace Barotrauma.Networking
 
             if (settingsFrame != null)
             {
-                settingsFrame.Draw(spriteBatch);
+                settingsFrame.DrawManually(spriteBatch);
             }
             else if (log.LogFrame != null)
             {
-                log.LogFrame.Draw(spriteBatch);
+                log.LogFrame.DrawManually(spriteBatch);
             }
 
             if (!ShowNetStats) return;
@@ -116,7 +116,7 @@ namespace Barotrauma.Networking
             }
 
             clientListScrollBar.Update(1.0f / 60.0f);
-            clientListScrollBar.Draw(spriteBatch);
+            clientListScrollBar.DrawManually(spriteBatch);
 
             netStats.AddValue(NetStats.NetStatType.ResentMessages, Math.Max(resentMessages, 0));
             netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);

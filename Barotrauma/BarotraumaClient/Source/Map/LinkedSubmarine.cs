@@ -81,7 +81,7 @@ namespace Barotrauma
         {
             if (editingHUD == null) return;
 
-            editingHUD.Draw(spriteBatch);
+            //editingHUD.Draw(spriteBatch);
         }
 
 

@@ -70,7 +70,7 @@ namespace Barotrauma
 
         public static void DrawEditor(SpriteBatch spriteBatch)
         {
-            Editor.Draw(spriteBatch);
+            Editor.DrawManually(spriteBatch);
 
             if (PlayerInput.KeyDown(Keys.LeftAlt) && PlayerInput.KeyHit(Keys.S))
             {

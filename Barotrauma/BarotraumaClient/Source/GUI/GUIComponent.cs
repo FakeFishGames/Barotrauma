@@ -158,7 +158,7 @@ namespace Barotrauma
         #endregion
 
         public int DrawOrder { get; set; }
-        public bool AutoDraw { get; set; } = true;
+        public bool EnableAutoDrawing { get; set; } = true;
 
         const float FlashDuration = 1.5f;
 
@@ -442,11 +442,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you call this method manually, set AutoDraw to false.
-        /// </summary>
-        public virtual void Draw(SpriteBatch spriteBatch) 
+        protected virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             var rect = Rect;
@@ -476,7 +472,7 @@ namespace Barotrauma
                         int centerHeight = Math.Max(rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
 
                         Vector2 scale = new Vector2(
-                            MathHelper.Clamp((float)rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width),0, 1),
+                            MathHelper.Clamp((float)rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width), 0, 1),
                             MathHelper.Clamp((float)rect.Height / (uiSprite.Slices[0].Height + uiSprite.Slices[6].Height), 0, 1));
 
                         for (int x = 0; x < 3; x++)
@@ -527,6 +523,26 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Only GUI should call this method.
+        /// </summary>
+        public void DrawAuto(SpriteBatch spriteBatch)
+        {
+            if (EnableAutoDrawing)
+            {
+                Draw(spriteBatch);
+            }
+        }
+
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// </summary>
+        public void DrawManually(SpriteBatch spriteBatch) 
+        {
+            EnableAutoDrawing = false;
+            Draw(spriteBatch);
+        }
+
+        /// <summary>
         /// Creates and draws a tooltip.
         /// TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
         /// </summary>
@@ -551,7 +567,7 @@ namespace Barotrauma
                 toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);
             }
 
-            toolTipBlock.Draw(spriteBatch);
+            toolTipBlock.DrawManually(spriteBatch);
         }
 
         public virtual void Update(float deltaTime)

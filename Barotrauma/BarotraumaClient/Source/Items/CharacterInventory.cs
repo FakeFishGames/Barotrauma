@@ -318,7 +318,7 @@ namespace Barotrauma
                     if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
-                        useOnSelfButton[i - 3].Draw(spriteBatch);
+                        useOnSelfButton[i - 3].DrawManually(spriteBatch);
                     }
                 }
             }

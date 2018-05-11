@@ -117,7 +117,7 @@ namespace Barotrauma.Networking
 
             GameMain.GameSession.CrewManager.Draw(spriteBatch);
 
-            inGameHUD.Draw(spriteBatch);
+            inGameHUD.DrawManually(spriteBatch);
 
             if (EndVoteCount > 0)
             {

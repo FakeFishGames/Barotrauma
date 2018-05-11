@@ -94,11 +94,7 @@ namespace Barotrauma
             this.sprite = sprite;
         }
 
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you call this method manually, set AutoDraw to false.
-        /// </summary>
-        public override void Draw(SpriteBatch spriteBatch)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 

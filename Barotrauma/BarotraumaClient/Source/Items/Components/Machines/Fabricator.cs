@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.Draw(spriteBatch);
+            GuiFrame.DrawManually(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()

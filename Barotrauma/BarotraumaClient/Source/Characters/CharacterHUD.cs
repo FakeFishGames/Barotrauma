@@ -223,8 +223,8 @@ namespace Barotrauma
                         };
                     }
                     
-                    if (cprButton.Visible) cprButton.Draw(spriteBatch);
-                    if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
+                    if (cprButton.Visible) cprButton.DrawManually(spriteBatch);
+                    if (grabHoldButton.Visible) grabHoldButton.DrawManually(spriteBatch);
 
                     character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
@@ -339,7 +339,7 @@ namespace Barotrauma
                 }
 
                 suicideButton.Visible = true;
-                suicideButton.Draw(spriteBatch);                
+                suicideButton.DrawManually(spriteBatch);                
             }
         }
 
@@ -364,7 +364,7 @@ namespace Barotrauma
             oxygenBar.BarSize = character.Oxygen / 100.0f;
             if (oxygenBar.BarSize < 0.99f)
             {
-                oxygenBar.Draw(spriteBatch);
+                oxygenBar.DrawManually(spriteBatch);
                 if (!oxyMsgShown)
                 {
                     GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
@@ -375,7 +375,7 @@ namespace Barotrauma
             healthBar.BarSize = character.Health / character.MaxHealth;
             if (healthBar.BarSize < 1.0f)
             {
-                healthBar.Draw(spriteBatch);
+                healthBar.DrawManually(spriteBatch);
             }
 
             float bloodDropCount = character.Bleeding;

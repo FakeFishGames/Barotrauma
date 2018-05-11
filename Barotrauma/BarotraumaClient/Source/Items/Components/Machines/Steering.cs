@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
-            GuiFrame.Draw(spriteBatch);
+            GuiFrame.DrawManually(spriteBatch);
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 

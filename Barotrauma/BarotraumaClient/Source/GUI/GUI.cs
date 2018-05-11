@@ -82,13 +82,7 @@ namespace Barotrauma
         /// </summary>
         public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
         {
-            foreach (var component in updateList)
-            {
-                if (component.AutoDraw)
-                {
-                    component.Draw(spriteBatch);
-                }
-            }
+            updateList.ForEach(c => c.DrawAuto(spriteBatch));
 
             if (ScreenOverlayColor.A>0.0f)
             {

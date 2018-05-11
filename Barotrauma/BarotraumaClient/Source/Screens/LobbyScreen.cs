@@ -131,8 +131,8 @@ namespace Barotrauma
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
                 Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
             
-            topPanel.Draw(spriteBatch);
-            bottomPanel.Draw(spriteBatch);
+            topPanel.DrawManually(spriteBatch);
+            bottomPanel.DrawManually(spriteBatch);
 
             campaignUI.Draw(spriteBatch);
 

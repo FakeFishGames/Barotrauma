@@ -89,7 +89,7 @@ namespace Barotrauma
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null) editingHUD.DrawManually(spriteBatch);
         }
 
         private bool ChangeSpawnType(GUIButton button, object obj)

@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     {
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.Draw(spriteBatch);
+            GuiFrame.DrawManually(spriteBatch);
 
             GUI.Font.DrawString(spriteBatch, TextManager.Get("Force") + ": " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
         }

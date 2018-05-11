@@ -472,7 +472,7 @@ namespace Barotrauma
 
             if (highlightedListBox != null)
             {
-                highlightedListBox.Draw(spriteBatch);
+                highlightedListBox.DrawManually(spriteBatch);
             }
         }
 
