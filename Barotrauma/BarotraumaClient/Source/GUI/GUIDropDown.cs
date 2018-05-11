@@ -213,11 +213,19 @@ namespace Barotrauma
                 {
                     OnDropped?.Invoke(this, userData);
                 }
-                // Used to enforce the dropdown to be the last element, not necessary if the listbox is added last on the guiupdatelist.
+                // Used for enforcing the dropdown to be the last element, not necessary if a custom draw order is given for the updatelist.
+                // Disabled, because causes an unvanted element to be rendered in the settings tab.
                 //if (Parent != null && Parent.Children.Last() != this)
                 //{
                 //    Parent.RemoveChild(this);
-                //    Parent.AddChild(this);
+                //    if (RectTransform != null)
+                //    {
+                //        RectTransform.Parent = RectTransform;
+                //    }
+                //    else
+                //    {
+                //        Parent.AddChild(this);
+                //    }
                 //}
             }
             return true;
@@ -231,7 +239,8 @@ namespace Barotrauma
                 button.AddToGUIUpdateList(false, drawOrder);
                 if (Dropped)
                 {
-                    // Enforces the listbox to be rendered on top of other elements.
+                    // Enforces the listbox to be rendered on top of other elements. 
+                    // Changing the child order caused an artifact (see above), therefore this solution.
                     listBox.AddToGUIUpdateList(false, 1);
                 }
             }
