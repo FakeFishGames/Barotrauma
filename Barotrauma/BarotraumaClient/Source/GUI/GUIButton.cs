@@ -178,7 +178,6 @@ namespace Barotrauma
             base.ApplyStyle(style);
 
             if (frame != null) frame.ApplyStyle(style);
-            if (textBlock != null) textBlock.ApplyStyle(style);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
