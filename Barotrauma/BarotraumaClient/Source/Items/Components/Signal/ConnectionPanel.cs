@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
@@ -40,6 +41,11 @@ namespace Barotrauma.Items.Components
 
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, character);
+
+            foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
+            {
+                sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
+            }
         }
     }
 }
