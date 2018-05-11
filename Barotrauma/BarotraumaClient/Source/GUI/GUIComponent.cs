@@ -156,7 +156,7 @@ namespace Barotrauma
         #endregion
 
         public int DrawOrder { get; set; }
-        public bool EnableAutoDrawing { get; set; } = true;
+        public bool AutoDraw { get; set; } = true;
 
         const float FlashDuration = 1.5f;
 
@@ -378,11 +378,7 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
-        public void RemoveFromGUIUpdateList(bool alsoChildren = true)
-        {
-            GUI.RemoveFromUpdateList(this, alsoChildren);
-        }
-
+        #region GUI Update list
         public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
         {
             DrawOrder = drawOrder;
@@ -400,44 +396,48 @@ namespace Barotrauma
             }
         }
 
-        protected virtual void SetAlpha(float a)
+        public void RemoveFromGUIUpdateList(bool alsoChildren = true)
         {
-            color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
+            GUI.RemoveFromUpdateList(this, alsoChildren);
         }
+        #endregion
 
-        public virtual void Flash(Color? color = null)
+        #region Drawing
+        /// <summary>
+        /// Only GUI should call this method. Auto drawing follows the order of GUI update list. This order can be tweaked by changing the DrawOrder property.
+        /// </summary>
+        public void DrawAuto(SpriteBatch spriteBatch)
         {
-            flashTimer = FlashDuration;
-            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
-        }
-
-        public void FadeOut(float duration, bool removeAfter)
-        {
-            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter));
-        }
-
-        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter)
-        {
-            float t = 0.0f;
-            float startA = color.A;
-
-            while (t < duration)
+            if (AutoDraw)
             {
-                t += CoroutineManager.DeltaTime;
-
-                SetAlpha(MathHelper.Lerp(startA, to, t / duration));
-
-                yield return CoroutineStatus.Running;
+                Draw(spriteBatch);
             }
+        }
 
-            SetAlpha(to);
+        /// <summary>
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
+        /// If you draw elements manually, also the children must be handled manually. They are not automatically drawn. 
+        /// Use DrawChildren method for this.
+        /// </summary>
+        public void DrawManually(SpriteBatch spriteBatch)
+        {
+            AutoDraw = false;
+            Draw(spriteBatch);
+        }
 
-            if (removeAfter && Parent != null)
+        /// <summary>
+        /// Draws all the children manually.
+        /// </summary>
+        public void DrawChildren(SpriteBatch spriteBatch)
+        {
+            if (RectTransform != null)
             {
-                Parent.RemoveChild(this);
+                RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch));
             }
-
-            yield return CoroutineStatus.Success;
+            else
+            {
+                children.ForEach(c => c.DrawManually(spriteBatch));
+            }
         }
 
         protected virtual void Draw(SpriteBatch spriteBatch)
@@ -521,26 +521,6 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Only GUI should call this method.
-        /// </summary>
-        public void DrawAuto(SpriteBatch spriteBatch)
-        {
-            if (EnableAutoDrawing)
-            {
-                Draw(spriteBatch);
-            }
-        }
-
-        /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// </summary>
-        public void DrawManually(SpriteBatch spriteBatch) 
-        {
-            EnableAutoDrawing = false;
-            Draw(spriteBatch);
-        }
-
-        /// <summary>
         /// Creates and draws a tooltip.
         /// TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
         /// </summary>
@@ -567,6 +547,7 @@ namespace Barotrauma
 
             toolTipBlock.DrawManually(spriteBatch);
         }
+        #endregion
 
         public virtual void Update(float deltaTime)
         {
@@ -575,6 +556,46 @@ namespace Barotrauma
             {
                 flashTimer -= deltaTime;
             }
+        }
+
+        protected virtual void SetAlpha(float a)
+        {
+            color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
+        }
+
+        public virtual void Flash(Color? color = null)
+        {
+            flashTimer = FlashDuration;
+            flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
+        }
+
+        public void FadeOut(float duration, bool removeAfter)
+        {
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter));
+        }
+
+        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter)
+        {
+            float t = 0.0f;
+            float startA = color.A;
+
+            while (t < duration)
+            {
+                t += CoroutineManager.DeltaTime;
+
+                SetAlpha(MathHelper.Lerp(startA, to, t / duration));
+
+                yield return CoroutineStatus.Running;
+            }
+
+            SetAlpha(to);
+
+            if (removeAfter && Parent != null)
+            {
+                Parent.RemoveChild(this);
+            }
+
+            yield return CoroutineStatus.Success;
         }
 
         public virtual void SetDimensions(Point size, bool expandChildren = false)
