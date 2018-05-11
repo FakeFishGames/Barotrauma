@@ -50,6 +50,9 @@ namespace Barotrauma
 
         private bool openedThisFrame;
 
+        private float healthShadowSize;
+        private float healthShadowDelay;
+
         public float DamageOverlayTimer
         {
             get { return damageOverlayTimer; }
@@ -95,6 +98,7 @@ namespace Barotrauma
 
             healthBar = new GUIProgressBar(HUDLayoutSettings.HealthBarAreaLeft, Color.White, "GUIProgressBarVertical", 1.0f, Alignment.TopLeft);
             healthBar.IsHorizontal = false;
+            healthShadowSize = 1.0f;
 
             afflictionContainer = new GUIListBox(new Rectangle(0, 0, 100, 200), "");
             healthWindow = new GUIFrame(new Rectangle(0, 0, 100, 200), "");
@@ -158,6 +162,7 @@ namespace Barotrauma
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
             damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
+            if (healthShadowDelay <= 0.0f) healthShadowDelay = 1.0f;
         }
 
         private void UpdateAlignment()
@@ -252,6 +257,17 @@ namespace Barotrauma
             }
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+
+            if (healthShadowDelay > 0.0f)
+            {
+                healthShadowDelay -= deltaTime;
+            }
+            else
+            {
+                healthShadowSize = healthBar.BarSize > healthShadowSize ?
+                    Math.Min(healthShadowSize + deltaTime, healthBar.BarSize) :
+                    Math.Max(healthShadowSize - deltaTime, healthBar.BarSize);
+            }
             
             float blurStrength = 0.0f;
             float distortStrength = 0.0f;
@@ -467,6 +483,17 @@ namespace Barotrauma
                         highlightedIcon.Second,
                         Color.White * 0.8f, Color.Black * 0.5f);
                 }
+                
+                if (vitality > 0.0f)
+                {
+                    float currHealth = healthBar.BarSize;
+                    Color prevColor = healthBar.Color;
+                    healthBar.BarSize = healthShadowSize;
+                    healthBar.Color = Color.Red;
+                    healthBar.Draw(spriteBatch);
+                    healthBar.BarSize = currHealth;
+                    healthBar.Color = prevColor;
+                }
                 healthBar.Draw(spriteBatch);
             }
             else
@@ -484,6 +511,16 @@ namespace Barotrauma
                 }
 
                 healItemContainer.Draw(spriteBatch);
+                if (vitality > 0.0f)
+                {
+                    float currHealth = healthWindowHealthBar.BarSize;
+                    Color prevColor = healthWindowHealthBar.Color;
+                    healthWindowHealthBar.BarSize = healthShadowSize;
+                    healthWindowHealthBar.Color = Color.Red;
+                    healthWindowHealthBar.Draw(spriteBatch);
+                    healthWindowHealthBar.BarSize = currHealth;
+                    healthWindowHealthBar.Color = prevColor;
+                }
                 healthWindowHealthBar.Draw(spriteBatch);
 
                 if (Inventory.draggingItem != null && highlightedLimbIndex > -1)
