@@ -278,6 +278,9 @@ namespace Barotrauma.Items.Components
 
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
+            fissionRateScrollBar.Enabled = !autoTemp;
+            turbineOutputScrollBar.Enabled = !autoTemp;
+
             criticalHeatWarning.Selected = temperature > allowedTemperature.Y && lightOn;
             lowTemperatureWarning.Selected = temperature < allowedTemperature.X && lightOn;
             criticalOutputWarning.Selected = -currPowerConsumption > load * 1.5f && lightOn;
@@ -465,8 +468,8 @@ namespace Barotrauma.Items.Components
             targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
 
-            fissionRateScrollBar.BarScroll = 1.0f - targetFissionRate / 100.0f;
-            turbineOutputScrollBar.BarScroll = 1.0f - targetTurbineOutput / 100.0f;
+            fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+            turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
         }
     }
 }
