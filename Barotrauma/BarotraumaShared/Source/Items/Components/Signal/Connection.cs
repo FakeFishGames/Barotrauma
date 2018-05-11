@@ -54,6 +54,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (connector == null)
             {
+                //TODO: move to xml
                 panelTexture = Sprite.LoadTexture("Content/Items/connectionpanel.png");
 
                 connector = new Sprite(panelTexture, new Rectangle(470, 102, 19, 43), Vector2.Zero, 0.0f);
