@@ -241,7 +241,7 @@ namespace Barotrauma
                 {
                     // Enforces the listbox to be rendered on top of other elements. 
                     // Changing the child order caused an artifact (see above), therefore this solution.
-                    listBox.AddToGUIUpdateList(false, 1);
+                    listBox.AddToGUIUpdateList(false, drawOrder + 1);
                 }
             }
         }
