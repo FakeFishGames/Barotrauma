@@ -43,6 +43,11 @@ namespace Barotrauma
             set { sourceRect = value; }
         }
 
+        public Sprite Sprite
+        {
+            get { return sprite; }
+        }
+
         public GUIImage(Rectangle rect, string spritePath, Alignment alignment, GUIComponent parent = null)
             : this(rect, new Sprite(spritePath, Vector2.Zero), alignment, parent)
         {

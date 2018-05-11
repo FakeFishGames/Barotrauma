@@ -209,18 +209,19 @@ namespace Barotrauma
 
         public void MoveButton(Vector2 moveAmount)
         {
+            float newScroll = barScroll;
             if (isHorizontal)
             {
                 moveAmount.Y = 0.0f;
-                barScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
+                newScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
             }
             else
             {
                 moveAmount.X = 0.0f;
-                barScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
+                newScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
             }
 
-            BarScroll = barScroll;
+            BarScroll = newScroll;
 
             if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
         }
