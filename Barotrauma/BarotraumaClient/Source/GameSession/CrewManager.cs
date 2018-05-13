@@ -550,7 +550,7 @@ namespace Barotrauma
                 orderGiver?.Speak(
                     order.GetChatMessage(character.Name, orderGiver.CurrentHull?.RoomName, option), ChatMessageType.Order);
             }
-            else
+            else if (orderGiver != null)
             {
                 OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, orderGiver);
                 if (GameMain.Client != null)
