@@ -294,6 +294,11 @@ namespace Barotrauma
             {
                 propertyInfo.SetValue(obj, value, null);
             }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
+            }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
@@ -309,6 +314,11 @@ namespace Barotrauma
             {
                 propertyInfo.SetValue(obj, value, null);
             }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
+            }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
@@ -322,6 +332,11 @@ namespace Barotrauma
             try
             {
                 propertyInfo.SetValue(obj, value, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.TrySetValue", e.InnerException);
+                return false;
             }
             catch (Exception e)
             {
@@ -338,6 +353,11 @@ namespace Barotrauma
             try
             {
                 return propertyInfo.GetValue(obj, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
+                return false;
             }
             catch (Exception e)
             {
