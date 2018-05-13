@@ -422,6 +422,7 @@ namespace Barotrauma
                     {
                         ushort fixerID = msg.ReadUInt16();
                         FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
+                        FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                     }
                     break;
                 case NetEntityEvent.Type.Status:

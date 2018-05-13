@@ -1444,7 +1444,10 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Repair:
                     for (int i = 0; i < FixRequirements.Count; i++)
+                    {
                         msg.Write(FixRequirements[i].CurrentFixer == null ? (ushort)0 : FixRequirements[i].CurrentFixer.ID);
+                        msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
+                    }
                     break;
                 case NetEntityEvent.Type.Status:
                     //clamp to (MaxHealth / 255.0f) if condition > 0.0f
@@ -1492,9 +1495,9 @@ namespace Barotrauma
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count == 0) return;
 
-                    int requirementIndex = FixRequirements.Count == 1 ? 
+                    int requirementIndex = FixRequirements.Count == 1 ?
                         0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
-                    
+
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 

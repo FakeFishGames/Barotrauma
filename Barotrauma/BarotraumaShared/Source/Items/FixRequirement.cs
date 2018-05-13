@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -15,6 +16,8 @@ namespace Barotrauma
 
         private readonly List<Skill> RequiredSkills;
         private readonly List<string> requiredItems;
+
+        private float lastSentProgress;
         
         public bool Fixed
         {
@@ -136,6 +139,12 @@ namespace Barotrauma
             else
             {
                 FixProgress += deltaTime / fixDuration;
+                
+            }
+            if (GameMain.Server != null && Math.Abs(FixProgress - lastSentProgress) > 0.01f)
+            {
+                lastSentProgress = FixProgress;
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Repair });
             }            
         }
 
