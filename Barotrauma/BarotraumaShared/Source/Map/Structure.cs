@@ -1109,8 +1109,10 @@ namespace Barotrauma
 
             if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
             if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
-
             SerializableProperty.DeserializeProperties(s, element);
+#if CLIENT
+            if (s.FlippedX || s.FlippedY) s.GenerateConvexHull();            
+#endif
             return s;
         }
 
