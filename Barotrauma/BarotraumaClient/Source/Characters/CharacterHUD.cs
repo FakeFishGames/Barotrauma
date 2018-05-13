@@ -144,12 +144,13 @@ namespace Barotrauma
                     textPos.Y += 20;
                     if (character.FocusedCharacter.CanInventoryBeAccessed)
                     {
-                        GUI.DrawString(spriteBatch, textPos, "[E] Grab", Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("GrabHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Select).ToString()), 
+                            Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow)
                     {
-                        GUI.DrawString(spriteBatch, textPos, "[H] Heal", Color.LightGreen, Color.Black, 2, GUI.SmallFont);
+                        GUI.DrawString(spriteBatch, textPos, TextManager.Get("HealHint").Replace("[key]", GameMain.Config.KeyBind(InputType.Health).ToString()), Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += 15;
                     }
                 }
