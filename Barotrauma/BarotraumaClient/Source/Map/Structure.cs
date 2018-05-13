@@ -93,9 +93,11 @@ namespace Barotrauma
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
 
-            if (BodyRotation != 0.0f)
+            if (prefab.BodyRotation != 0.0f)
             {
-                h.Rotate(Position, -BodyRotation);
+                float rotation = MathHelper.ToRadians(prefab.BodyRotation);
+                if (FlippedX != FlippedY) rotation = -rotation;
+                h.Rotate(Position, -rotation);
             }
 
             mergedSections.ForEach(x => x.hull = h);
