@@ -743,7 +743,7 @@ namespace Barotrauma
 
         public bool IsKeyHit(InputType inputType)
         {
-            if (GameMain.Server != null && Character.Controlled != this)
+            if (GameMain.Server != null && Controlled != this)
             {
                 switch (inputType)
                 {
@@ -760,7 +760,9 @@ namespace Barotrauma
                     case InputType.Crouch:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
                     case InputType.Select:
-                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered                                                                           
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered    
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);                                                                      
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
                     case InputType.Ragdoll:
@@ -871,7 +873,7 @@ namespace Barotrauma
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if (SelectedCharacter == null &&
+                if ((SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
@@ -1524,7 +1526,7 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);
 #if CLIENT
-                CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
+                if (Controlled == this) CharacterHealth.OpenHealthWindow = focusedCharacter.CharacterHealth;
 #endif
             }
             else if (focusedItem != null)
@@ -1536,7 +1538,7 @@ namespace Barotrauma
                 if (focusedItem.TryInteract(this))
                 {
 #if CLIENT
-                    CharacterHealth.OpenHealthWindow = null;
+                    if (Controlled == this) CharacterHealth.OpenHealthWindow = null;
 #endif
                 }
             }
