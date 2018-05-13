@@ -60,6 +60,8 @@
   <Stun>Stun</Stun>
   <Disguised>(Disguised)</Disguised>
   <UseItemButton>Use</UseItemButton>
+  <GrabHint>[[key]] Grab</GrabHint>
+  <HealHint>[[key]] Heal</HealHint>
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
