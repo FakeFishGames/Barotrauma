@@ -53,8 +53,9 @@ namespace Barotrauma
             Aim = 0x200,
             Attack = 0x400,
             Ragdoll = 0x800,
+            Health = 0x1000,
 
-            MaxVal = 0xFFF
+            MaxVal = 0x1FFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -213,6 +214,7 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
                 if (IsKeyDown(InputType.Crouch))    newInput |= InputNetFlags.Crouch;
                 if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                if (IsKeyHit(InputType.Health))     newInput |= InputNetFlags.Health;
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                 if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
@@ -291,7 +293,9 @@ namespace Barotrauma
                         {
                             newAim = msg.ReadUInt16();
                         }
-                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Use))
+                        if (newInput.HasFlag(InputNetFlags.Select) || 
+                            newInput.HasFlag(InputNetFlags.Use) ||
+                            newInput.HasFlag(InputNetFlags.Health))
                         {
                             newInteract = msg.ReadUInt16();                 
                         }

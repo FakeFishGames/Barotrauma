@@ -227,6 +227,10 @@ namespace Barotrauma
                         character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
                         character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     }
+                    else
+                    {
+                        character.Inventory.Alignment = Alignment.Center;
+                    }
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
                         character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Right;
