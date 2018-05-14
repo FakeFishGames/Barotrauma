@@ -340,9 +340,6 @@ namespace Barotrauma
             base.AddToGUIUpdateList(true, drawOrder);
             if (ignoreChildren) { return; }
             var children = Children;
-            // TODO: optimize, this has to be done only once, but we need to know when we get a new child
-            GetAllChildren().ForEach(c => c.AutoDraw = false);
-
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
@@ -508,6 +505,7 @@ namespace Barotrauma
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
+            scrollBar.AutoDraw = false;
             if (!scrollBarHidden) scrollBar.DrawManually(spriteBatch);
 
             //// Debug
