@@ -692,8 +692,8 @@ namespace Barotrauma
                     element.RectTransform.LocalScale *= 1 + step;
                 }
                 Frame.GetAllChildren()
-                    .Select(b => b as GUIButton)
-                    .ForEach(b => b?.TextBlock.SetTextPos());
+                    .Select(t => t as GUITextBlock)
+                    .ForEach(t => t?.SetTextPos());
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
@@ -707,8 +707,8 @@ namespace Barotrauma
                     element.RectTransform.LocalScale *= 1 - step;
                 }
                 Frame.GetAllChildren()
-                    .Select(b => b as GUIButton)
-                    .ForEach(b => b?.TextBlock.SetTextPos());
+                    .Select(t => t as GUITextBlock)
+                    .ForEach(t => t?.SetTextPos());
             }
             // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -174,7 +175,9 @@ namespace Barotrauma
 
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
-
+            GameMain.Instance.ApplyGraphicsSettings();
+            Screen.Selected?.Frame?.RectTransform.Resize(Vector2.One, resizeChildren: true);
+            Screen.Selected?.Frame?.GetAllChildren().Select(t => t as GUITextBlock).ForEach(t => t?.SetTextPos());
             UnsavedSettings = true;
 
             return true;
