@@ -210,6 +210,7 @@ namespace Barotrauma
 
         /// <summary>
         /// Adds the component on the removal queue.
+        /// Removal list is evaluated last, and thus any item on both lists are not added to update list.
         /// </summary>
         public static void RemoveFromUpdateList(GUIComponent component, bool alsoChildren = true)
         {
@@ -249,6 +250,13 @@ namespace Barotrauma
                 }
             }
             ProcessHelperList(first);
+            ProcessAdditions();
+            ProcessHelperList(last);
+            ProcessRemovals();
+        }
+
+        private static void ProcessAdditions()
+        {
             while (additions.Count > 0)
             {
                 var component = additions.Dequeue();
@@ -257,6 +265,10 @@ namespace Barotrauma
                     updateList.Add(component);
                 }
             }
+        }
+
+        private static void ProcessRemovals()
+        {
             while (removals.Count > 0)
             {
                 var component = removals.Dequeue();
@@ -266,7 +278,6 @@ namespace Barotrauma
                     KeyboardDispatcher.Subscriber = null;
                 }
             }
-            ProcessHelperList(last);
         }
 
         private static void ProcessHelperList(List<GUIComponent> list)
