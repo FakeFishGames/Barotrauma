@@ -380,19 +380,19 @@ namespace Barotrauma
         }
 
         #region Updating
-        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
+        public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            UpdateOrder = drawOrder;
+            UpdateOrder = order;
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
                 if (RectTransform != null)
                 {
-                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, drawOrder));
+                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
                 }
                 else
                 {
-                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, drawOrder));
+                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, order));
                 }
             }
         }
