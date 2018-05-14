@@ -1,8 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -186,14 +183,7 @@ namespace Barotrauma
 
         public void SelectItem(object userData)
         {
-            // TODO: cleanup
-            //GUIComponent child = listBox.children.FirstOrDefault(c => c.UserData == userData);
-
-            //if (child == null) return;
-
             listBox.Select(userData);
-
-            //SelectItem(child, userData);
         }
 
         public void Select(int index)
