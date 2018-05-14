@@ -415,13 +415,16 @@ namespace Barotrauma
 
         /// <summary>
         /// By default, all the gui elements are updated automatically in the same order they appear on the update list. 
-        /// If you update elements manually, also the children must be handled manually. They are not automatically updated. 
-        /// Use UpdateChildren method for this.
+        /// If you update elements manually, also the children must be handled manually.
         /// </summary>
-        public void UpdateManually(float deltaTime)
+        public void UpdateManually(float deltaTime, bool alsoChildren = false, bool recursive = true)
         {
             AutoUpdate = false;
             Update(deltaTime);
+            if (alsoChildren)
+            {
+                UpdateChildren(deltaTime, recursive);
+            }
         }
 
         protected virtual void Update(float deltaTime)
@@ -436,15 +439,15 @@ namespace Barotrauma
         /// <summary>
         /// Updates all the children manually.
         /// </summary>
-        public void UpdateChildren(float deltaTime)
+        public void UpdateChildren(float deltaTime, bool recursive)
         {
             if (RectTransform != null)
             {
-                RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime));
+                RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
             }
             else
             {
-                children.ForEach(c => c.UpdateManually(deltaTime));
+                children.ForEach(c => c.UpdateManually(deltaTime, recursive, recursive));
             }
         }
         #endregion
@@ -463,27 +466,30 @@ namespace Barotrauma
 
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you draw elements manually, also the children must be handled manually. They are not automatically drawn. 
-        /// Use DrawChildren method for this.
+        /// If you draw elements manually, also the children must be handled manually.
         /// </summary>
-        public void DrawManually(SpriteBatch spriteBatch)
+        public void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
         {
             AutoDraw = false;
             Draw(spriteBatch);
+            if (alsoChildren)
+            {
+                DrawChildren(spriteBatch, recursive);
+            }
         }
 
         /// <summary>
         /// Draws all the children manually.
         /// </summary>
-        public void DrawChildren(SpriteBatch spriteBatch)
+        public void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
             if (RectTransform != null)
             {
-                RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch));
+                RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
             }
             else
             {
-                children.ForEach(c => c.DrawManually(spriteBatch));
+                children.ForEach(c => c.DrawManually(spriteBatch, recursive, recursive));
             }
         }
 

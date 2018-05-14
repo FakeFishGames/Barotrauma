@@ -324,9 +324,6 @@ namespace Barotrauma
             base.AddToGUIUpdateList(true, order);
             if (ignoreChildren) { return; }
             var children = Children;
-            // TODO: optimize, this has to be done only once, but we need to know when we get a new child
-            GetAllChildren().ForEach(c => c.AutoDraw = false);
-
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
@@ -467,7 +464,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            frame.DrawManually(spriteBatch);
+            frame.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
@@ -484,15 +481,13 @@ namespace Barotrauma
                     if (lastVisible > 0) break;
                     continue;
                 }
-
                 lastVisible = i;
-                child.DrawManually(spriteBatch);
-                child.DrawChildren(spriteBatch);
+                child.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
             }
 
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
-            if (!scrollBarHidden) scrollBar.DrawManually(spriteBatch);
+            if (!scrollBarHidden) scrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
 
             //// Debug
             //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
