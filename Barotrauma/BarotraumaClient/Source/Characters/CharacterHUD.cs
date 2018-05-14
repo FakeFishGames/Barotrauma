@@ -14,6 +14,9 @@ namespace Barotrauma
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
 
+        private static List<Item> brokenItems = new List<Item>();
+        private static float brokenItemsCheckTimer;
+
         public static void AddToGUIUpdateList(Character character)
         {
             if (GUI.DisableHUD) return;
@@ -88,6 +91,24 @@ namespace Barotrauma
                     if (focusedItemOverlayTimer <= 0.0f) focusedItem = null;
                 }
             }
+
+            if (brokenItemsCheckTimer > 0.0f)
+            {
+                brokenItemsCheckTimer -= deltaTime;
+            }
+            else
+            {
+                brokenItems.Clear();
+                brokenItemsCheckTimer = 1.0f;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Condition > 0.0f || item.FixRequirements.Count == 0 || item.CurrentHull == null) continue;
+                    if (item.CurrentHull == character.CurrentHull)
+                    {
+                        brokenItems.Add(item);
+                    }
+                }
+            }
         }
         
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
@@ -114,15 +135,26 @@ namespace Barotrauma
             {
                 if (optimizable.DegreeOfSuccess(character) < 0.5f) continue;
 
-                float dist = Vector2.Distance(character.WorldPosition, optimizable.Item.WorldPosition);
-                if (dist < 1000.0f)
+                float distSqr = Vector2.DistanceSquared(character.WorldPosition, optimizable.Item.WorldPosition);
+                if (distSqr < 1000.0f * 1000.0f)
                 {
+                    float dist = (float)Math.Sqrt(distSqr);
                     Vector2 drawPos = optimizable.Item.DrawPosition;
                     //TODO: proper icon
                     float alpha = (1000.0f - dist) / 1000.0f * 2.0f;
 
                     GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.Yellow * alpha);
                 }
+            }
+
+            foreach (Item brokenItem in brokenItems)
+            {
+                float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
+                Vector2 drawPos = brokenItem.DrawPosition;
+                //TODO: proper icon
+                float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
+                if (alpha <= 0.0f) continue;
+                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.OrangeRed * alpha);                
             }
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
