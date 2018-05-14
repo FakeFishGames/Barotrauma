@@ -27,6 +27,7 @@ namespace Barotrauma
 
         public static NetLobbyScreen NetLobbyScreen;
         public static ServerListScreen ServerListScreen;
+        public static SteamWorkshopScreen SteamWorkshopScreen;
 
         public static SubEditorScreen SubEditorScreen;
         public static CharacterEditorScreen CharacterEditorScreen;
@@ -330,6 +331,8 @@ namespace Barotrauma
             LobbyScreen             =   new LobbyScreen();
             
             ServerListScreen        =   new ServerListScreen();
+
+            SteamWorkshopScreen     = new SteamWorkshopScreen();
 
             SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();

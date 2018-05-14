@@ -12,6 +12,7 @@
   <HostServerButton>Host Server</HostServerButton>
   <SubEditorButton>Submarine Editor</SubEditorButton>
   <SettingsButton>Settings</SettingsButton>
+  <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>
 
   <!-- Host server menu -->
