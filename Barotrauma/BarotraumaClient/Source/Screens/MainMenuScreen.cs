@@ -271,8 +271,8 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
-            CreateTestElements();
-            UpdateTestElements();
+            //CreateTestElements();
+            //UpdateTestElements();
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
