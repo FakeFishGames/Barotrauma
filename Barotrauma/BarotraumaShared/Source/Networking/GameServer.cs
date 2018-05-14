@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
         {
             get { return !string.IsNullOrEmpty(password); }
         }
-        
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
@@ -537,7 +537,7 @@ namespace Barotrauma.Networking
 
             if (GameMain.Config.UseSteamMatchmaking)
             {
-                SteamManager.UpdateServerDetails();
+                SteamManager.RefreshServerDetails();
             }
             else
             {

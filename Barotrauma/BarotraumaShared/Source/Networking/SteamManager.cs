@@ -70,7 +70,9 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        public static bool GetLobbies(Action<Networking.ServerInfo> onServerFound, Action onFinished)
+        #region Connecting to servers
+
+        public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action onFinished)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -108,6 +110,8 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        #endregion
+
         #region Server
 
         public static bool CreateServer(Networking.GameServer server, int maxPlayers)
@@ -118,15 +122,14 @@ namespace Barotrauma.Steam
             }
 
             ServerInit options = new ServerInit("Barotrauma", "Barotrauma");
-            options.Secure = true;
-            options.VersionString = GameMain.Version.ToString();
-
             Instance.server = new Server(AppID, options);
+            RefreshServerDetails(server);
+            Instance.server.LogOnAnonymous();
             
             return true;
         }
 
-        public static bool UpdateServerDetails()
+        public static bool RefreshServerDetails(Networking.GameServer server)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -136,10 +139,12 @@ namespace Barotrauma.Steam
             // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
             // creation/authentication functions to maintain your player count.
-            /*SteamGameServer.SetMaxPlayerCount(GameMain.Server.MaxPlayers);
-            SteamGameServer.SetPasswordProtected(GameMain.Server.HasPassword);
-            SteamGameServer.SetServerName(GameMain.Server.Name);*/
-            //TODO: rest of the server data
+            instance.server.ServerName = server.Name;
+            instance.server.MaxPlayers = server.MaxPlayers;
+            instance.server.Passworded = server.HasPassword;
+#if SERVER
+            instance.server.DedicatedServer = true;
+#endif
 
             return true;
         }
