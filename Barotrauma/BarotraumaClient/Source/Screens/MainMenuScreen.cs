@@ -247,24 +247,23 @@ namespace Barotrauma
             return true;
         }
 
-
         private bool QuitClicked(GUIButton button, object obj)
         {
             game.Exit();
             return true;
         }
 
-
         public override void AddToGUIUpdateList()
         {
-            Frame.AddToGUIUpdateList();
-            menuTabs?.ForEach(tab => tab?.RemoveFromGUIUpdateList());
+            Frame.AddToGUIUpdateList(ignoreChildren: true);
+            buttonsParent.AddToGUIUpdateList();
+            animEditorButton?.AddToGUIUpdateList();
             if (selectedTab > 0)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
             }
-
-            //if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
+            outerElement?.AddToGUIUpdateList();
+            testElement?.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
