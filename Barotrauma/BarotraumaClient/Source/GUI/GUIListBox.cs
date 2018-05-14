@@ -26,6 +26,7 @@ namespace Barotrauma
 
         private bool scrollBarEnabled;
         private bool scrollBarHidden;
+        private bool hasBeenResized;
 
         private bool enabled;
 
@@ -169,7 +170,7 @@ namespace Barotrauma
                     new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, "");
             }
 
-            scrollBar.IsHorizontal = isHorizontal;            
+            scrollBar.IsHorizontal = isHorizontal;
 
             frame = new GUIFrame(new Rectangle(0, 0, this.rect.Width, this.rect.Height), style, this);
             if (style != null) GUI.Style.Apply(frame, style, this);
@@ -413,7 +414,7 @@ namespace Barotrauma
 
         public override void AddChild(GUIComponent child)
         {
-            if (RectTransform != null && child.RectTransform != null)
+            if (child.RectTransform != null)
             {
                 child.RectTransform.Parent = RectTransform;
             }
@@ -421,20 +422,34 @@ namespace Barotrauma
             {
                 base.AddChild(child);
             }
-
-            // TODO: cannot do this when using RectTransform
-            //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
-            if (scrollBar.IsHorizontal)
-                rect.Height -= scrollBar.Rect.Height;
-            else
-                rect.Width -= scrollBar.Rect.Width;
-
-            if (scrollBar.IsHorizontal)
-                rect.Height += scrollBar.Rect.Height;
-            else
-                rect.Width += scrollBar.Rect.Width;
-
             UpdateScrollBarSize();
+            // Handle resizing, if the scroll bar size visibility has changed
+            if (!scrollBarHidden && !hasBeenResized)
+            {
+                int x = scrollBar.IsHorizontal ? 0 : scrollBar.Rect.Width;
+                int y = scrollBar.IsHorizontal ? scrollBar.Rect.Height : 0;
+                if (frame.RectTransform != null)
+                {
+                    frame.RectTransform.Resize(new Point(Rect.Width - x, Rect.Height - y), resizeChildren: true);
+                }
+                else
+                {
+                    frame.Rect = new Rectangle(frame.Rect.X, frame.Rect.Y, Rect.Width - x, Rect.Height - y);
+                }
+                hasBeenResized = true;
+            }
+            else if (scrollBarHidden && hasBeenResized)
+            {
+                if (frame.RectTransform != null)
+                {
+                    frame.RectTransform.Resize(new Point(Rect.Width, Rect.Height), resizeChildren: true);
+                }
+                else
+                {
+                    frame.Rect = Rect;
+                }
+                hasBeenResized = false;
+            }
             UpdateChildrenRect();
         }
 
