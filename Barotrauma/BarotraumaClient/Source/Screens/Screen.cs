@@ -7,8 +7,25 @@ namespace Barotrauma
 {
     partial class Screen
     {
+        private GUIFrame frame;
+        public GUIFrame Frame
+        {
+            get
+            {
+                if (frame == null)
+                {
+                    frame = new GUIFrame(new RectTransform(Vector2.One, null, Anchor.Center), color: Color.Transparent);
+                }
+                return frame;
+            }
+        }
+
+        /// <summary>
+        /// By default, creates a new frame for the screen and adds all elements to the gui update list.
+        /// </summary>
         public virtual void AddToGUIUpdateList()
         {
+            Frame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

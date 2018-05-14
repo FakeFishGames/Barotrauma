@@ -248,15 +248,6 @@ namespace Barotrauma
                     RemoveFromUpdateList(component);
                 }
             }
-            while (removals.Count > 0)
-            {
-                var component = removals.Dequeue();
-                updateList.Remove(component);
-                if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
-                {
-                    KeyboardDispatcher.Subscriber = null;
-                }
-            }
             ProcessHelperList(first);
             while (additions.Count > 0)
             {
@@ -264,6 +255,15 @@ namespace Barotrauma
                 if (!updateList.Contains(component))
                 {
                     updateList.Add(component);
+                }
+            }
+            while (removals.Count > 0)
+            {
+                var component = removals.Dequeue();
+                updateList.Remove(component);
+                if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
+                {
+                    KeyboardDispatcher.Subscriber = null;
                 }
             }
             ProcessHelperList(last);

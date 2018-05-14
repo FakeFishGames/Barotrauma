@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
-            //animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: null, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
+            //animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: Frame.RectTransform, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
             //{
             //    Color = Color.Red * 0.8f
             //};
@@ -45,7 +45,7 @@ namespace Barotrauma
             //    return true;
             //};
 
-            buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
+            buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0, 0.1f),
                 AbsoluteOffset = new Point(50, 0)
@@ -65,15 +65,16 @@ namespace Barotrauma
             var anchor = Anchor.Center;
             var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
+            // TODO: recreate using the new system
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
             // TODO: refactor using the RectTransform
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
             campaignSetupUI.StartNewGame = StartGame;
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, null, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
             CreateHostServerFields();
 
@@ -256,11 +257,14 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            buttonsParent.AddToGUIUpdateList();
-            if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
-            testElement?.AddToGUIUpdateList();
-            outerElement?.AddToGUIUpdateList();
-            animEditorButton?.AddToGUIUpdateList();
+            Frame.AddToGUIUpdateList();
+            menuTabs?.ForEach(tab => tab?.RemoveFromGUIUpdateList());
+            if (selectedTab > 0)
+            {
+                menuTabs[(int)selectedTab].AddToGUIUpdateList();
+            }
+
+            //if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
@@ -272,7 +276,7 @@ namespace Barotrauma
                     0.1f);
 
             //CreateTestElements();
-            //UpdateTestElements();
+            UpdateTestElements();
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -672,9 +676,7 @@ namespace Barotrauma
         private void UpdateTestElements()
         {
             //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? outerElement.Children.FirstOrDefault() : outerElement;
-            //var element = buttonsParent;
-            //var element = menuTabs[(int)Tab.HostServer];
-            var element = testElement;
+            var element = Frame;
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
@@ -684,15 +686,13 @@ namespace Barotrauma
                 if (global)
                 {
                     RectTransform.globalScale *= 1 + step;
-                    element.RectTransform.RecalculateScale(true);
-                    buttonsParent.RectTransform.RecalculateScale(true);
-                    menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
+                    Frame.RectTransform.RecalculateScale(true);
                 }
                 else
                 {
                     element.RectTransform.LocalScale *= 1 + step;
                 }
-                buttonsParent.Children
+                Frame.GetAllChildren()
                     .Select(b => b as GUIButton)
                     .ForEach(b => b?.TextBlock.SetTextPos());
             }
@@ -701,15 +701,13 @@ namespace Barotrauma
                 if (global)
                 {
                     RectTransform.globalScale *= 1 - step;
-                    element.RectTransform.RecalculateScale(true);
-                    buttonsParent.RectTransform.RecalculateScale(true);
-                    menuTabs.ForEach(t => t?.RectTransform?.RecalculateScale(true));
+                    Frame.RectTransform.RecalculateScale(true);
                 }
                 else
                 {
                     element.RectTransform.LocalScale *= 1 - step;
                 }
-                buttonsParent.Children
+                Frame.GetAllChildren()
                     .Select(b => b as GUIButton)
                     .ForEach(b => b?.TextBlock.SetTextPos());
             }
@@ -788,19 +786,6 @@ namespace Barotrauma
             {
                 element.RectTransform.SetPosition(Anchor.BottomRight);
             }
-        }
-
-        public Texture2D CreateTexture(int width, int height, Color? color = null)
-        {
-            var texture = new Texture2D(GameMain.GraphicsDeviceManager.GraphicsDevice, width, height);
-            var data = new Color[width * height];
-            Color c = color ?? Color.White;
-            for (int i = 0; i < data.Length; i++)
-            {
-                data[i] = c;
-            }
-            texture.SetData(data);
-            return texture;
         }
         #endregion
     }
