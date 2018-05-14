@@ -14,7 +14,7 @@ namespace Barotrauma
             {
                 if (frame == null)
                 {
-                    frame = new GUIFrame(new RectTransform(Vector2.One, null, Anchor.Center), color: Color.Transparent);
+                    frame = new GUIFrame(new RectTransform(Vector2.One, null), color: Color.Transparent);
                 }
                 return frame;
             }
