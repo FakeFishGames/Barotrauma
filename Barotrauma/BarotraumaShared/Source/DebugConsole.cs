@@ -132,6 +132,8 @@ namespace Barotrauma
         private static int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
 
+        private static int receivedSteamworksItemCount;
+
         static DebugConsole()
         {
             commands.Add(new Command("help", "", (string[] args) =>
@@ -1799,18 +1801,41 @@ namespace Barotrauma
                 }
             }));
 
-
-
 #if DEBUG
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
             {
                 if (Submarine.MainSub == null) return;
                 SteamManager.SteamWorkshop.SaveToWorkshop(
-                    Submarine.MainSub.Name, 
-                    Submarine.MainSub.FilePath, 
-                    Submarine.MainSub.Name, 
-                    Submarine.MainSub.Description, 
+                    Submarine.MainSub.Name,
+                    Submarine.MainSub.FilePath,
+                    Submarine.MainSub.Name,
+                    Submarine.MainSub.Description,
                     new string[0]);
+            },
+            null, null));
+            
+            commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
+            {
+                if (Submarine.MainSub == null) return;
+
+                receivedSteamworksItemCount = 0;
+
+                void detailsReceived(List<Steamworks.RemoteStorageGetPublishedFileDetailsResult_t> results)
+                {
+                    for (int i = receivedSteamworksItemCount; i < results.Count; i++)
+                    {
+                        Log("*********************************");
+                        Log(results[i].m_rgchTitle);
+                        Log(results[i].m_rgchDescription);
+                    }
+                }
+
+                void itemCountReceived(int itemCount)
+                {
+                    Log("Subscribed to " + itemCount + " items.");
+                }
+
+                SteamManager.SteamWorkshop.GetSubscribedItemDetails(itemCountReceived, detailsReceived);
             },
             null, null));
 
