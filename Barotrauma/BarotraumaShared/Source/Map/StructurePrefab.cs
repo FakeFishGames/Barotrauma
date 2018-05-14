@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        private bool canSpriteFlipX;
+        private bool canSpriteFlipX, canSpriteFlipY;
 
         private float health;
         
@@ -18,6 +18,30 @@ namespace Barotrauma
         //does the structure have a physics body
         [Serialize(false, false)]
         public bool Body
+        {
+            get;
+            private set;
+        }
+
+        //rotation of the physics body in degrees
+        [Serialize(0.0f, false)]
+        public float BodyRotation
+        {
+            get;
+            private set;
+        }
+        
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyWidth
+        {
+            get;
+            private set;
+        }
+
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyHeight
         {
             get;
             private set;
@@ -56,6 +80,11 @@ namespace Barotrauma
             get { return canSpriteFlipX; }
         }
 
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
+        }
+
         [Serialize("0,0", true)]
         public Vector2 Size
         {
@@ -88,10 +117,17 @@ namespace Barotrauma
         public static StructurePrefab Load(XElement element)
         {
             StructurePrefab sp = new StructurePrefab();
-            sp.name = element.Name.ToString();
+            sp.name = element.GetAttributeString("name", "");
+            if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
+            sp.identifier = element.GetAttributeString("identifier", "");
             
-            sp.Tags = new List<string>();
-            sp.Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            sp.Tags = new HashSet<string>();
+            string joinedTags = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            foreach (string tag in joinedTags.Split(','))
+            {
+                sp.Tags.Add(tag.Trim().ToLowerInvariant());
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -110,6 +146,7 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipVertically;
                         
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         break;
                     case "backgroundsprite":
@@ -145,6 +182,21 @@ namespace Barotrauma
                 sp.size = Vector2.Zero;
                 sp.size.X = element.GetAttributeFloat("width", 0.0f);
                 sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+            }
+
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(sp.identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == sp.identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + sp.name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
             }
 
             return sp;

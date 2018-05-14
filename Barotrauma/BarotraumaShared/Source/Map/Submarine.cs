@@ -571,7 +571,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -586,6 +586,8 @@ namespace Barotrauma
                     (ignoreSensors && fixture.IsSensor) ||
                     fixture.CollisionCategories == Category.None || 
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
+
+                if (customPredicate != null && !customPredicate(fixture)) return -1;
                 
                 if (collisionCategory != null && 
                     !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
@@ -669,7 +671,7 @@ namespace Barotrauma
             get { return flippedX; }
         }
 
-        public void FlipX(List<Submarine> parents=null)
+        public void FlipX(List<Submarine> parents = null)
         {
             if (parents == null) parents = new List<Submarine>();
             parents.Add(this);
@@ -685,7 +687,7 @@ namespace Barotrauma
             foreach (MapEntity e in subEntities)
             {
                 if (e.MoveWithLevel || e is Item) continue;
-                
+
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -699,7 +701,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    e.FlipX();
+                    e.FlipX(true);
                 }
             }
 
@@ -737,7 +739,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                item.FlipX();
+                item.FlipX(true);
             }
 
             Item.UpdateHulls();
@@ -769,7 +771,7 @@ namespace Barotrauma
                 {
                     if (c.Submarine == this)
                     {
-                        c.Kill(CauseOfDeath.Pressure);
+                        c.Kill(CauseOfDeathType.Pressure, null);
                         c.Enabled = false;
                     }
                 }
@@ -1032,40 +1034,10 @@ namespace Barotrauma
             {
                 IdOffset = Math.Max(IdOffset, me.ID);
             }
-
-            foreach (XElement element in submarineElement.Elements())
-            {
-                string typeName = element.Name.ToString();
-
-                Type t;
-                try
-                {
-                    t = Type.GetType("Barotrauma." + typeName, true, true);
-                    if (t == null)
-                    {
-                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
-                        continue;
-                    }
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
-                    continue;
-                }
-
-                try
-                {
-                    MethodInfo loadMethod = t.GetMethod("Load");
-                    loadMethod.Invoke(t, new object[] { element, this });
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
-                }
-            }
+            
+            var newEntities = MapEntity.LoadAll(this, submarineElement, filePath);
 
             Vector2 center = Vector2.Zero;
-
             var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
 
             if (matchingHulls.Any())
@@ -1127,9 +1099,15 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded(this);
+            MapEntity.MapLoaded(newEntities);
 
-            //WayPoint.GenerateSubWaypoints();
+            foreach (Hull hull in matchingHulls)
+            {
+                if (string.IsNullOrEmpty(hull.RoomName))
+                {
+                    hull.RoomName = hull.CreateRoomName();
+                }
+            }
 
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();
@@ -1226,7 +1204,7 @@ namespace Barotrauma
             Unloading = true;
 
 #if CLIENT
-            Sound.OnGameEnd();
+            RemoveAllRoundSounds(); //Sound.OnGameEnd();
 
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
 #endif
@@ -1266,7 +1244,7 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World.Clear();            
 
             Unloading = false;
         }

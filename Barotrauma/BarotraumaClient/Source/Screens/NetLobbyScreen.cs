@@ -24,8 +24,16 @@ namespace Barotrauma
             }
         }
 
+        private GUIScrollBar levelDifficultyScrollBar;
+
         private GUIButton[] traitorProbabilityButtons;
         private GUITextBlock traitorProbabilityText;
+
+        private GUIButton[] botCountButtons;
+        private GUITextBlock botCountText;
+
+        private GUIButton[] botSpawnModeButtons;
+        private GUITextBlock botSpawnModeText;
 
         private GUIButton[] missionTypeButtons;
         private GUIComponent missionTypeBlock;
@@ -261,8 +269,7 @@ namespace Barotrauma
             voteText.Visible = false;
 
             columnX += columnWidth + 20;
-
-
+            
             //respawn shuttle ------------------------------------------------------------------
 
             shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
@@ -319,48 +326,62 @@ namespace Barotrauma
 
             columnX += columnWidth + 20;
 
-            //gamemode description ------------------------------------------------------------------
-
-            //var modeDescription = new GUITextBlock(
-            //    new Rectangle(columnX, 150, (int)(columnWidth * 1.2f), infoFrame.Rect.Height - 150 - 80), 
-            //    "", "", Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GUI.SmallFont);
-            //modeDescription.Color = Color.Black * 0.3f;
-
-            //modeList.UserData = modeDescription;
-
-            //columnX += modeDescription.Rect.Width + 20;
+            int columnY = 30;
 
             //seed ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 110, 180, 20),
+            new GUITextBlock(new Rectangle(columnX, columnY, 180, 20),
                 TextManager.Get("LevelSeed"), "", Alignment.Left, Alignment.TopLeft, defaultModeContainer);
 
-            seedBox = new GUITextBox(new Rectangle(columnX, 140, columnWidth / 2, 20),
+            seedBox = new GUITextBox(new Rectangle(columnX, columnY + 30, columnWidth / 2, 20),
                 Alignment.TopLeft, "", defaultModeContainer);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
+            //level difficulty ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 60, 20, 20), TextManager.Get("LevelDifficulty"), "", defaultModeContainer);
+
+            levelDifficultyScrollBar = new GUIScrollBar(new Rectangle(columnX, columnY + 90, columnWidth / 2, 20), "", 0.1f, defaultModeContainer);
+
             //traitor probability ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 170, 20, 20), TextManager.Get("Traitors"), "", defaultModeContainer);
+            new GUITextBlock(new Rectangle(columnX, columnY + 110, 20, 20), TextManager.Get("Traitors"), "", defaultModeContainer);
 
             traitorProbabilityButtons = new GUIButton[2];
 
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 195, 20, 20), "<", "", defaultModeContainer);
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 135, 20, 20), "<", "", defaultModeContainer);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, 195, 80, 20), TextManager.Get("No"), null, null, Alignment.Center, "", defaultModeContainer);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 135, 80, 20), TextManager.Get("No"), null, null, Alignment.Center, "", defaultModeContainer);
 
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 195, 20, 20), ">", "", defaultModeContainer);
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 135, 20, 20), ">", "", defaultModeContainer);
             traitorProbabilityButtons[1].UserData = 1;
 
+            //bot count ------------------------------------------------------------------
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 160, 20, 20), TextManager.Get("BotCount"), "", defaultModeContainer);
+            botCountButtons = new GUIButton[2];
+            botCountButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 185, 20, 20), "<", "", defaultModeContainer);
+            botCountButtons[0].UserData = -1;
+            botCountText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 185, 80, 20), "0", null, null, Alignment.Center, "", defaultModeContainer);
+            botCountButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 185, 20, 20), ">", "", defaultModeContainer);
+            botCountButtons[1].UserData = 1;
+
+            new GUITextBlock(new Rectangle(columnX, columnY + 205, 20, 20), TextManager.Get("BotSpawnMode"), "", defaultModeContainer);
+            botSpawnModeButtons = new GUIButton[2];
+            botSpawnModeButtons[0] = new GUIButton(new Rectangle(columnX, columnY + 230, 20, 20), "<", "", defaultModeContainer);
+            botSpawnModeButtons[0].UserData = -1;
+            botSpawnModeText = new GUITextBlock(new Rectangle(columnX + 20, columnY + 230, 80, 20), "", null, null, Alignment.Center, "", defaultModeContainer);
+            botSpawnModeButtons[1] = new GUIButton(new Rectangle(columnX + 100, columnY + 230, 20, 20), ">", "", defaultModeContainer);
+            botSpawnModeButtons[1].UserData = 1;
 
             //automatic restart ------------------------------------------------------------------
 
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, 230, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, columnY + 265, 20, 20), TextManager.Get("AutoRestart"), Alignment.TopLeft, defaultModeContainer);
             autoRestartBox.OnSelected = ToggleAutoRestart;
 
-            var restartText = new GUITextBlock(new Rectangle(columnX, 255, 20, 20), "", "", defaultModeContainer);
+            var restartText = new GUITextBlock(new Rectangle(columnX, columnY + 290, 20, 20), "", "", defaultModeContainer);
             restartText.Font = GUI.SmallFont;
             restartText.TextGetter = AutoRestartText;
 
@@ -423,11 +444,12 @@ namespace Barotrauma
             serverMessage.Enabled = GameMain.Server != null;
             autoRestartBox.Enabled = GameMain.Server != null;
 
-            traitorProbabilityButtons[0].Enabled = GameMain.Server != null;
-            traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
+            levelDifficultyScrollBar.Enabled = GameMain.Server != null;
 
-            missionTypeButtons[0].Enabled = GameMain.Server != null;
-            missionTypeButtons[1].Enabled = GameMain.Server != null;
+            traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = GameMain.Server != null;
+            missionTypeButtons[0].Enabled = missionTypeButtons[1].Enabled = GameMain.Server != null;
+            botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Server != null;
+            botSpawnModeButtons[0].Enabled = botSpawnModeButtons[1].Enabled = GameMain.Server != null;
 
             ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
 
@@ -474,8 +496,19 @@ namespace Barotrauma
 
                 shuttleList.OnSelected = SelectSub;
 
+                levelDifficultyScrollBar.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    SetLevelDifficulty(barScroll * 100.0f);
+                    return true;
+                };
+
                 traitorProbabilityButtons[0].OnClicked = ToggleTraitorsEnabled;
                 traitorProbabilityButtons[1].OnClicked = ToggleTraitorsEnabled;
+
+                botCountButtons[0].OnClicked = ChangeBotCount;
+                botCountButtons[1].OnClicked = ChangeBotCount;
+                botSpawnModeButtons[0].OnClicked = ChangeBotSpawnMode;
+                botSpawnModeButtons[1].OnClicked = ChangeBotSpawnMode;
 
                 missionTypeButtons[0].OnClicked = ToggleMissionType;
                 missionTypeButtons[1].OnClicked = ToggleMissionType;
@@ -688,9 +721,9 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
+            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
+            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
         }
 
@@ -701,8 +734,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeBlock.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = Mission.MissionTypes.Count - 1;
-            if (missionTypeIndex >= Mission.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
+            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 
@@ -710,13 +743,27 @@ namespace Barotrauma
 
             return true;
         }
-
+        
         public bool ToggleTraitorsEnabled(GUIButton button, object userData)
         {
             ToggleTraitorsEnabled((int)userData);
             return true;
         }
-        
+
+        public bool ChangeBotCount(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotCount(GameMain.Server.BotCount + (int)userData);
+            return true;
+        }
+
+        public bool ChangeBotSpawnMode(GUIButton button, object userData)
+        {
+            if (GameMain.Server == null) return false;
+            SetBotSpawnMode(GameMain.Server.BotSpawnMode == BotSpawnMode.Fill ? BotSpawnMode.Normal : BotSpawnMode.Fill);
+            return true;
+        }
+
         private bool SelectSub(GUIComponent component, object obj)
         {
             if (GameMain.Server == null) return false;
@@ -973,7 +1020,7 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, "", permissionsBox);
                     permissionTick.UserData = permission;
                     permissionTick.Selected = selectedClient.HasPermission(permission);
 
@@ -1010,7 +1057,7 @@ namespace Barotrauma
                 commandList.UserData = selectedClient;
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
-                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
+                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, "", commandList);
                     commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
                     commandTickBox.ToolTip = command.help;
                     commandTickBox.UserData = command;
@@ -1438,13 +1485,17 @@ namespace Barotrauma
                 listBox.Children[i].Color = color;
                 listBox.Children[i].HoverColor = color;
                 listBox.Children[i].SelectedColor = color;
-                
-                (listBox.Children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.Children[i].UserData as JobPrefab).Name;
+
+                (listBox.Children[i] as GUITextBlock).Text = (i + 1) + ". " + (listBox.Children[i].UserData as JobPrefab).Name;
 
                 jobNamePreferences.Add((listBox.Children[i].UserData as JobPrefab).Name);
             }
 
-            GameMain.Config.JobNamePreferences = jobNamePreferences;
+            if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
+            {
+                GameMain.Config.JobNamePreferences = jobNamePreferences;
+                GameMain.Config.Save();
+            }
         }
 
         public Pair<string, string> FailedSelectedSub;
@@ -1479,9 +1530,9 @@ namespace Barotrauma
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
                 if (subList == SubList)
-                    FailedSelectedSub = Pair<string, string>.Create(subName, md5Hash);
+                    FailedSelectedSub = new Pair<string, string>(subName, md5Hash);
                 else
-                    FailedSelectedShuttle = Pair<string, string>.Create(subName, md5Hash);
+                    FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
 
                 string errorMsg = "";
                 if (sub == null)

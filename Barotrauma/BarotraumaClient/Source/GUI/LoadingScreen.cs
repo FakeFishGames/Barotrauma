@@ -20,7 +20,7 @@ namespace Barotrauma
         public Vector2 TitlePosition;
 
         private float? loadState;
-#if !LINUX
+#if !(LINUX || OSX)
         Video splashScreenVideo;
         VideoPlayer videoPlayer;
 #endif
@@ -57,7 +57,7 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-#if !LINUX
+#if !(LINUX || OSX)
 
             if (GameMain.Config.EnableSplashScreen)
             {
@@ -87,7 +87,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
-#if !LINUX
+#if !(LINUX || OSX)
             if (GameMain.Config.EnableSplashScreen && splashScreenVideo != null)
             {
                 try
@@ -138,10 +138,10 @@ namespace Barotrauma
 
             graphics.SetRenderTarget(null);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater(deltaTime);
-                Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
+                WaterRenderer.Instance.ScrollWater(deltaTime);
+                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null, 0.0f);
             }
             
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
@@ -178,7 +178,7 @@ namespace Barotrauma
 
         }
 
-#if !LINUX
+#if !(LINUX || OSX)
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
             if (videoPlayer == null)

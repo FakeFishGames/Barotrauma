@@ -53,6 +53,11 @@ namespace Barotrauma
             get { return step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step); }
             set
             {
+                if (float.IsNaN(value))
+                {
+                    return;
+                }
+
                 barScroll = MathHelper.Clamp(value, 0.0f, 1.0f);
                 int newX = bar.Rect.X - frame.Rect.X;
                 int newY = bar.Rect.Y - frame.Rect.Y;
@@ -123,14 +128,14 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            isHorizontal = (rect.Width > rect.Height);
+            isHorizontal = (this.rect.Width > this.rect.Height);
             frame = new GUIFrame(new Rectangle(0,0,0,0), style, this);
             GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
 
             this.barSize = barSize;
 
             bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, "", this);
-            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtoneVertical", this);
+            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             
             bar.OnPressed = SelectBar;
 
@@ -229,20 +234,21 @@ namespace Barotrauma
 
         }
 
-        private void MoveButton(Vector2 moveAmount)
+        public void MoveButton(Vector2 moveAmount)
         {
+            float newScroll = barScroll;
             if (isHorizontal)
             {
                 moveAmount.Y = 0.0f;
-                barScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
+                newScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
             }
             else
             {
                 moveAmount.X = 0.0f;
-                barScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
+                newScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
             }
 
-            BarScroll = barScroll;
+            BarScroll = newScroll;
 
             if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
         }

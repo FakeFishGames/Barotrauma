@@ -7,6 +7,16 @@ namespace Barotrauma.Items.Components
 {
     partial class MiniMap : Powered
     {
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+
+        public override void UpdateHUD(Character character, float deltaTime)
+        {
+            GuiFrame.UpdateManually(deltaTime);
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (item.Submarine == null) return;

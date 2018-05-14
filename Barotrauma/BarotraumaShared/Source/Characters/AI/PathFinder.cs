@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -164,14 +165,22 @@ namespace Barotrauma
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
-                
-                float dist = System.Math.Abs(start.X - nodePos.X) +
-                    System.Math.Abs(start.Y - nodePos.Y) * 10.0f; //higher cost for vertical movement
+
+                float xDiff = System.Math.Abs(start.X - nodePos.X);
+                float yDiff = System.Math.Abs(start.Y - nodePos.Y);
+
+                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
+                {
+                    yDiff += 10.0f;
+                }
+
+                float dist = xDiff + (insideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
                 //prefer nodes that are closer to the end position
-                dist += Vector2.Distance(end, nodePos) / 10.0f;
-
-                if (dist<closestDist || startNode==null)
+                dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                if (dist < closestDist || startNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (insideSubmarine)
@@ -182,9 +191,9 @@ namespace Barotrauma
 
                         if (body != null)
                         {
+                            if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
-
                         }
                     }
 
@@ -207,6 +216,8 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 float dist = Vector2.Distance(end, nodePos);
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible

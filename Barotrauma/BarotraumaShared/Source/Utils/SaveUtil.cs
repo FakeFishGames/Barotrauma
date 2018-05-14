@@ -33,9 +33,9 @@ namespace Barotrauma
             {
                 ClearFolder(tempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
             }
-            catch
+            catch (Exception e)
             {
-
+                DebugConsole.ThrowError("Failed to clear folder", e);
             }
 
             try
@@ -48,7 +48,7 @@ namespace Barotrauma
                         Submarine.MainSub.FilePath = subPath;
                         Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
                     }
-                    else
+                    else if (Submarine.MainSub.FilePath != subPath)
                     {
                         File.Copy(Submarine.MainSub.FilePath, subPath);
                         Submarine.MainSub.FilePath = subPath;
@@ -107,8 +107,9 @@ namespace Barotrauma
             {
                 DecompressToDirectory(filePath, tempPath, null);
             }
-            catch
+            catch (Exception e)
             {
+                DebugConsole.ThrowError("Error decompressing " + filePath, e);
                 return null;
             }
 

@@ -8,8 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        public const int MaxInventoryCount = 4;
-
         private List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
@@ -18,14 +16,15 @@ namespace Barotrauma.Items.Components
         private ushort[] itemIds;
 
         //how many items can be contained
+        private int capacity;
         [Serialize(5, false)]
         public int Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1); }
         }
-        private int capacity;
 
+        private bool hideItems;
         [Serialize(true, false)]
         public bool HideItems
         {
@@ -36,44 +35,44 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-        private bool hideItems;
 
+        private bool drawInventory;
         [Serialize(false, false)]
         public bool DrawInventory
         {
             get { return drawInventory; }
             set { drawInventory = value; }
         }
-        private bool drawInventory;
 
         //the position of the first item in the container
+        private Vector2 itemPos;
         [Serialize("0.0,0.0", false)]
         public Vector2 ItemPos
         {
             get { return itemPos; }
             set { itemPos = value; }
         }
-        private Vector2 itemPos;
 
         //item[i].Pos = itemPos + itemInterval*i 
+        private Vector2 itemInterval;
         [Serialize("0.0,0.0", false)]
         public Vector2 ItemInterval
         {
             get { return itemInterval; }
             set { itemInterval = value; }
         }
-        private Vector2 itemInterval;
 
+        private float itemRotation;
         [Serialize(0.0f, false)]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
             set { itemRotation = MathHelper.ToRadians(value); }
         }
-        private float itemRotation;
 
 
-        [Serialize("0.5,0.9", false)]
+        private Vector2 hudPos;
+        [Serialize("0.5,0.5", false)]
         public Vector2 HudPos
         {
             get { return hudPos; }
@@ -82,15 +81,23 @@ namespace Barotrauma.Items.Components
                 hudPos = value;
             }
         }
-        private Vector2 hudPos;
 
+        private int slotsPerRow;
         [Serialize(5, false)]
         public int SlotsPerRow
         {
             get { return slotsPerRow; }
             set { slotsPerRow = value; }
         }
-        private int slotsPerRow;
+
+
+        private string uiLabel;
+        [Serialize(null, false)]
+        public string UILabel
+        {
+            get { return uiLabel; }
+            set { uiLabel = value; }
+        }
 
         public List<RelatedItem> ContainableItems
         {
@@ -114,6 +121,18 @@ namespace Barotrauma.Items.Components
                         containableItems.Add(containable);
 
                         break;
+
+#if CLIENT
+                    case "topsprite":
+                        inventoryTopSprite = new Sprite(subElement);
+                        break;
+                    case "backsprite":
+                        inventoryBackSprite = new Sprite(subElement);
+                        break;
+                    case "bottomsprite":
+                        inventoryBottomSprite = new Sprite(subElement);
+                        break;
+#endif
                 }
             }
 
@@ -129,7 +148,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(containedItem, effect));
+                    itemsWithStatusEffects.Add(new Pair<Item, StatusEffect>(containedItem, effect));
                 }
             }
 
@@ -219,8 +238,14 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;
-                item.Remove();
+                item.Drop();
             }
+
+#if CLIENT
+            inventoryTopSprite?.Remove();
+            inventoryBackSprite?.Remove();
+            inventoryBottomSprite?.Remove();
+#endif
         }
 
         public override void Load(XElement componentElement)

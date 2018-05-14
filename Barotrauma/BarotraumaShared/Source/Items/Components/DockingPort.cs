@@ -120,10 +120,8 @@ namespace Barotrauma.Items.Components
             list.Add(this);
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
-
             if (dockingTarget != null)
             {
                 if (joint != null)
@@ -141,6 +139,11 @@ namespace Barotrauma.Items.Components
                     dockingTarget.LinkHullsToGap();
                 }
             }
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            FlipX(relativeToSub);
         }
 
         private DockingPort FindAdjacentPort()

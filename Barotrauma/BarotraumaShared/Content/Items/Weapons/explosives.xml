@@ -2,15 +2,20 @@
 <Items>
   <Item
     name="C-4 Block"
+    identifier="c4block"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"    
-    price="100">
-
+    cargocontainername="Explosive Crate">
+    
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="City" buyprice="200"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    <Price locationtype="Research" buyprice="200"/>
+    
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="500.0" structuredamage="250" damage="200" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5"/>
@@ -21,6 +26,7 @@
 
   <Item
     name="Compound N"
+    identifier="compoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     cargocontainername="Explosive Crate"
@@ -29,7 +35,7 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
@@ -41,6 +47,7 @@
 
   <Item
     name="Volatile Compound N"
+    identifier="volcompoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    
@@ -49,7 +56,7 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="Always" target="This" Condition="-0.35"/>
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       <StatusEffect type="OnBroken" target="This">
@@ -67,6 +74,7 @@
 
   <Item
     name="IC-4 Block"
+    identifier="ic4block"
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
@@ -76,7 +84,7 @@
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="2000"/>
@@ -89,12 +97,17 @@
 
   <Item
     name="Detonator"
+    identifier="detonator"
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
-    Tags="smallitem"    
-    price="50"
+    Tags="smallitem"
     cargocontainername="Explosive Crate">
-
+    
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="0,107,14,12"/>
 
     <Body width="14" height="12"/>
@@ -107,7 +120,8 @@
       <Containable name="explosive"/>
     </ItemContainer>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="activate">
         <StatusEffect type="OnUse" target="Contained">

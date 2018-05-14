@@ -8,17 +8,10 @@ namespace Barotrauma
 {
     class Biome
     {
-        public enum MapPlacement
-        {
-            Random = 1,
-            Center = 2,
-            Edge = 4
-        }
-
         public readonly string Name;
         public readonly string Description;
 
-        public readonly MapPlacement Placement;
+        public readonly List<int> AllowedZones = new List<int>();
         
         public Biome(string name, string description)
         {
@@ -30,25 +23,31 @@ namespace Barotrauma
         {
             Name = element.GetAttributeString("name", "Biome");
             Description = element.GetAttributeString("description", "");
-            
-            string[] placementsStrs = element.GetAttributeString("MapPlacement", "Default").Split(',');
-            foreach (string placementStr in placementsStrs)
-            {
-                MapPlacement parsedPlacement;            
-                if (Enum.TryParse(placementStr.Trim(), out parsedPlacement))
-                {
-                    Placement |= parsedPlacement;
-                }
-            }
 
+            string allowedZonesStr = element.GetAttributeString("AllowedZones", "1,2,3,4,5,6,7,8,9");
+            string[] zoneIndices = allowedZonesStr.Split(',');
+            for (int i = 0; i < zoneIndices.Length; i++)
+            {
+                int zoneIndex = -1;
+                if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
+                {
+                    DebugConsole.ThrowError("Error in biome config \"" + Name + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
+                    continue;
+                }
+                AllowedZones.Add(zoneIndex);
+            }
         }
     }
 
     class LevelGenerationParams : ISerializableEntity
     {
+        public static List<LevelGenerationParams> LevelParams
+        {
+            get { return levelParams; }
+        }
+
         private static List<LevelGenerationParams> levelParams;
         private static List<Biome> biomes;
-
 
         public string Name
         {
@@ -245,6 +244,12 @@ namespace Barotrauma
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
         
+        public Sprite BackgroundSprite { get; private set; }
+        public Sprite BackgroundTopSprite { get; private set; }
+        public Sprite WallSprite { get; private set; }
+        public Sprite WallEdgeSprite { get; private set; }
+        public Sprite WaterParticles { get; private set; }
+        
         public static List<Biome> GetBiomes()
         {
             return biomes;
@@ -314,6 +319,28 @@ namespace Barotrauma
                     }
 
                     allowedBiomes.Add(matchingBiome);
+                }
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "background":
+                        BackgroundSprite = new Sprite(subElement);
+                        break;
+                    case "backgroundtop":
+                        BackgroundTopSprite = new Sprite(subElement);
+                        break;
+                    case "wall":
+                        WallSprite = new Sprite(subElement);
+                        break;
+                    case "walledge":
+                        WallEdgeSprite = new Sprite(subElement);
+                        break;
+                    case "waterparticles":
+                        WaterParticles = new Sprite(subElement);
+                        break;
                 }
             }
         }

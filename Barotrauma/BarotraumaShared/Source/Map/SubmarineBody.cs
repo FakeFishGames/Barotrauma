@@ -3,6 +3,7 @@ using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
+using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
@@ -15,6 +16,8 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        const float MaxDrag = 0.1f;
+
         public const float DamageDepth = -30000.0f;
         private const float ImpactDamageMultiplier = 10.0f;
 
@@ -109,9 +112,10 @@ namespace Barotrauma
                     Rectangle rect = wall.Rect;
 
                     FixtureFactory.AttachRectangle(
-                          ConvertUnits.ToSimUnits(rect.Width),
-                          ConvertUnits.ToSimUnits(rect.Height),
+                          ConvertUnits.ToSimUnits(wall.BodyWidth),
+                          ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
+                          -wall.BodyRotation,
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                           farseerBody, this);
                 }
@@ -129,8 +133,6 @@ namespace Barotrauma
                         farseerBody, this);
                 }
             }
-
-
 
             farseerBody.BodyType = BodyType.Dynamic;
             farseerBody.CollisionCategories = Physics.CollisionWall;
@@ -253,15 +255,27 @@ namespace Barotrauma
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();
-
+            
             if (Body.LinearVelocity.LengthSquared() > 0.000001f)
             {
-                float dragCoefficient = 0.01f;
+                //TODO: sync current drag with clients?
+                float attachedMass = 0.0f;
+                JointEdge jointEdge = Body.FarseerBody.JointList;
+                while (jointEdge != null)
+                {
+                    Body otherBody = jointEdge.Joint.BodyA == Body.FarseerBody ? jointEdge.Joint.BodyB : jointEdge.Joint.BodyA;
+                    Character character = (otherBody.UserData as Limb)?.character;
+                    if (character != null) attachedMass += character.Mass;
+
+                    jointEdge = jointEdge.Next;
+                }
+                
+                float dragCoefficient = MathHelper.Clamp(0.01f + attachedMass / 5000.0f, 0.0f, MaxDrag);
 
                 float speedLength = (Body.LinearVelocity == Vector2.Zero) ? 0.0f : Body.LinearVelocity.Length();
                 float drag = speedLength * speedLength * dragCoefficient * Body.Mass;
 
-                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;                
+                totalForce += -Vector2.Normalize(Body.LinearVelocity) * drag;
             }
 
             ApplyForce(totalForce);
@@ -476,8 +490,6 @@ namespace Barotrauma
             //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
             //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
             //but more realistic than bouncing and prevents using characters as "bumpers" that prevent all collision damage
-
-            //TODO: apply impact damage and/or gib the character that got crushed between the sub and the level?
             Vector2 avgContactNormal = Vector2.Zero;
             foreach (Contact levelContact in levelContacts)
             {
@@ -512,7 +524,8 @@ namespace Barotrauma
                 Vector2 n;
                 FixedArray2<Vector2> contactPos;
                 contact.GetWorldManifold(out n, out contactPos);
-                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, DamageType.Blunt, damageAmount, 0.0f, 0.0f, true, 0.0f);
+                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
+                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 
                 if (limb.character.IsDead)
                 {
@@ -692,7 +705,7 @@ namespace Barotrauma
                     "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
-                    MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
+                    MathHelper.Clamp(maxDamage * 4.0f, 2000.0f, 10000.0f),
                     maxDamageStructure.Tags);            
             }
 #endif

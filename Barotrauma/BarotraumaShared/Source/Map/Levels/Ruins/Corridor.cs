@@ -8,13 +8,7 @@ namespace Barotrauma.RuinGeneration
     class Corridor : RuinShape
     {
         private bool isHorizontal;
-
-        // TODO: fix implicit hiding
-        public Rectangle Rect
-        {
-            get { return rect; }
-        }
-
+        
         public bool IsHorizontal
         {
             get { return isHorizontal; }

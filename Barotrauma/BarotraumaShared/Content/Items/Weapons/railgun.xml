@@ -1,6 +1,7 @@
 ﻿<Items>
   <Item
     name="Railgun"
+    identifier="railgun"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
@@ -16,13 +17,14 @@
             hudtint="0.4,0.6,0.7,0.05">
       <StatusEffect type="OnUse" target="This">
         <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
-        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0"/>
+        <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false"/>
       </StatusEffect>
       <Crosshair texture="crosshair.png"/>
       <DisabledCrosshair texture="disabledCrosshair.png"/>
     </Turret>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="position_in"/>
@@ -32,11 +34,11 @@
 
   <Item
     name="Railgun Controller"
+    identifier="railguncontroller"
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -47,7 +49,8 @@
       <limbposition limb="RightHand" position="43,-85"/>
     </Controller>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <output name="position_out"/>
@@ -57,9 +60,9 @@
 
   <Item
     name="Railgun Loader"
+    identifier="railgunloader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -72,8 +75,13 @@
   
   <Item
     name="Railgun Shell"
-    category="Misc"    
-    price="200">
+    identifier="railgunshell"
+    category="Misc"
+    radarsize="5">
+
+    <Price locationtype="Outpost" buyprice="300"/>
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="300"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -87,14 +95,18 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
-    <Projectile launchimpulse="80.0">
-      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
-
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="100"/>
+        <affliction name="Bleeding" strength="10"/>
+      </Attack>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
 
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>      
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>  
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
@@ -104,9 +116,12 @@
 
   <Item
     name="Nuclear Shell"
-    category="Misc"    
-    price="500">
-
+    identifier="nuclearshell"
+    category="Misc"
+    radarsize="5">
+    
+    <Price locationtype="Military" buyprice="500"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Steel Bar"/>
@@ -120,12 +135,18 @@
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 
-    <Projectile launchimpulse="80.0">
-      <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
-      
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="200" severlimbsprobability="1.0">
+        <affliction name="Internal Damage" strength="100"/>
+        <affliction name="Bleeding" strength="10"/>
+      </Attack>
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg"/>
-        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"/>
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
+          <affliction name="Burn" strength="500"/>
+          <affliction name="Internal Damage" strength="500"/>
+          <affliction name="Stun" strength="10"/>          
+        </Explosion>
       </StatusEffect>
 
       <StatusEffect type="OnActive" target="This">

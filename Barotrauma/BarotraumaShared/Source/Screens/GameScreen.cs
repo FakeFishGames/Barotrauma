@@ -44,7 +44,7 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
-            Sounds.SoundManager.LowPassHFGain = 1.0f;
+            GameMain.SoundManager.SetCategoryMuffle("default",false);
 #endif
         }
 
@@ -91,7 +91,7 @@ namespace Barotrauma
 #if CLIENT
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);                
+                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
             }
 #endif
 

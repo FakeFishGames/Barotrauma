@@ -28,7 +28,7 @@ namespace Barotrauma
             MainPath=1, Cave=2, Ruin=4
         }
         
-        struct InterestingPosition
+        public struct InterestingPosition
         {
             public readonly Vector2 Position;
             public readonly PositionType PositionType;
@@ -68,10 +68,7 @@ namespace Barotrauma
         private List<InterestingPosition> positionsOfInterest;
 
         private List<Ruin> ruins;
-
-        private Color backgroundColor;
-        private Color wallColor;
-
+        
         private LevelGenerationParams generationParams;
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
@@ -122,6 +119,11 @@ namespace Barotrauma
             get { return smallTunnels; }
         }
 
+        public List<InterestingPosition> PositionsOfInterest
+        {
+            get { return positionsOfInterest; }
+        }
+
         public string Seed
         {
             get { return seed; }
@@ -154,12 +156,12 @@ namespace Barotrauma
 
         public Color BackgroundColor
         {
-            get { return backgroundColor; }
+            get { return generationParams.BackgroundColor; }
         }
 
         public Color WallColor
         {
-            get { return wallColor; }
+            get { return generationParams.WallColor; }
         }
 
         public Level(string seed, float difficulty, LevelGenerationParams generationParams)
@@ -180,7 +182,7 @@ namespace Barotrauma
             return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome));
         }
 
-        public static Level CreateRandom(string seed = "")
+        public static Level CreateRandom(string seed = "", float? difficulty = null)
         {
             if (seed == "")
             {
@@ -189,7 +191,10 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            return new Level(seed, Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), LevelGenerationParams.GetRandom(seed));
+            return new Level(
+                seed, 
+                difficulty.HasValue ? difficulty.Value : Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), 
+                LevelGenerationParams.GetRandom(seed));
         }
 
         public void Generate(bool mirror = false)
@@ -232,7 +237,7 @@ namespace Barotrauma
 #if CLIENT
             renderer = new LevelRenderer(this);
 
-            backgroundColor = generationParams.BackgroundColor;
+            var backgroundColor = generationParams.BackgroundColor;
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 #endif
@@ -485,7 +490,7 @@ namespace Barotrauma
             }
             
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
-            MapEntity.MapLoaded(null);
+            MapEntity.MapLoaded(MapEntity.mapEntityList.FindAll(me => me.Submarine == null));
 
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
@@ -700,7 +705,7 @@ namespace Barotrauma
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
             
-            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor) };
+            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.BackgroundColor) };
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
@@ -898,7 +903,7 @@ namespace Barotrauma
 
         public Vector2 GetRandomItemPos(PositionType spawnPosType, float randomSpread, float minDistFromSubs, float offsetFromWall = 10.0f)
         {
-            if (!positionsOfInterest.Any()) return Size*0.5f;
+            if (!positionsOfInterest.Any()) return Size * 0.5f;
 
             Vector2 position = Vector2.Zero;
 
@@ -911,7 +916,7 @@ namespace Barotrauma
                 Loaded.TryGetInterestingPosition(true, spawnPosType, minDistFromSubs, out startPos);
 
                 startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.Server), Rand.RandSync.Server);
-                
+
                 Vector2 endPos = startPos - Vector2.UnitY * Size.Y;
 
                 if (Submarine.PickBody(
@@ -919,7 +924,7 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(endPos),
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) +  Vector2.Normalize(startPos - endPos)*offsetFromWall;
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
                 }
 
@@ -976,9 +981,9 @@ namespace Barotrauma
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
 
-            if (Hull.renderer != null)
+            if (WaterRenderer.Instance != null)
             {
-                Hull.renderer.ScrollWater((float)deltaTime);
+                WaterRenderer.Instance.ScrollWater((float)deltaTime);
             }
 
             renderer.Update(deltaTime);

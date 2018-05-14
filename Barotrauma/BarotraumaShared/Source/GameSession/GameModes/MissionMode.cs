@@ -18,7 +18,7 @@
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
 
             MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
-            mission = Mission.LoadRandom(locations, rand, param as string);
+            mission = Mission.CreateRandom(locations, rand, false, param as string);
         }
     }
 }
