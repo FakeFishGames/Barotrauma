@@ -35,15 +35,15 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
-            animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: null, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
-            {
-                Color = Color.Red * 0.8f
-            };
-            animEditorButton.OnClicked += (button, obj) => 
-            {
-                GameMain.AnimationEditorScreen.Select();
-                return true;
-            };
+            //animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: null, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
+            //{
+            //    Color = Color.Red * 0.8f
+            //};
+            //animEditorButton.OnClicked += (button, obj) => 
+            //{
+            //    GameMain.AnimationEditorScreen.Select();
+            //    return true;
+            //};
 
             buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: null, anchor: Anchor.BottomLeft)
             {
@@ -260,7 +260,7 @@ namespace Barotrauma
             if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
             testElement?.AddToGUIUpdateList();
             outerElement?.AddToGUIUpdateList();
-            animEditorButton.AddToGUIUpdateList();
+            animEditorButton?.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
