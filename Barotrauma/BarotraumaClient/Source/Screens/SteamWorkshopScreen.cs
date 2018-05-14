@@ -11,9 +11,7 @@ namespace Barotrauma
     {
         private GUIFrame menu;
         private GUIListBox subscriptionList;
-
-        private int receivedSubscribedItemCount;
-
+        
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -41,9 +39,9 @@ namespace Barotrauma
 
         private void RefreshSubscriptionList()
         {
-            receivedSubscribedItemCount = 0;
             subscriptionList.ClearChildren();
-            SteamManager.SteamWorkshop.GetSubscribedItemDetails(OnSubscribedItemCountReceived, OnSubscribedItemDetailsReceived);
+            SteamManager.SteamWorkshop.GetSubscribedItems(OnSubscribedItemCountReceived);
+            //SteamManager.SteamWorkshop.GetSubscribedItemDetails(OnSubscribedItemCountReceived, OnSubscribedItemDetailsReceived);
         }
 
         private void OnSubscribedItemCountReceived(int itemCount)
@@ -52,24 +50,45 @@ namespace Barotrauma
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 30), "Could not find any Steam Workshop item subscriptions.", "", subscriptionList);
             }
+            else
+            {
+                for (int i = 0; i < itemCount; i++)
+                {
+                    SteamManager.SteamWorkshop.GetItemDetails(i, OnSubscribedItemDetailsReceived);
+                }
+            }
         }
 
-        private void OnSubscribedItemDetailsReceived(List<RemoteStorageGetPublishedFileDetailsResult_t> results)
+        private void OnSubscribedItemDetailsReceived(RemoteStorageGetPublishedFileDetailsResult_t itemDetails)
         {
-            for (int i = receivedSubscribedItemCount; i < results.Count; i++)
-            {
-                AddSubscribedItem(results[i]);
-            }
+            AddSubscribedItem(itemDetails);            
         }
 
         private void AddSubscribedItem(RemoteStorageGetPublishedFileDetailsResult_t itemDetails)
         {
-            var itemFrame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, "ListBoxElement", subscriptionList);
+            //PLACEHOLDER
+            var itemFrame = new GUIFrame(new Rectangle(0, 0, 0, 80), Color.Transparent, "ListBoxElement", subscriptionList);
             itemFrame.UserData = itemDetails;
 
             new GUITextBlock(new Rectangle(0, 0, 0, 20), itemDetails.m_rgchTitle, "", itemFrame);
-            new GUITextBlock(new Rectangle(0, 20, 0, 0), itemDetails.m_rgchDescription,
+            new GUITextBlock(new Rectangle(0, 20, itemFrame.Rect.Width - 150, 0), itemDetails.m_rgchDescription,
                 null, null, Alignment.TopLeft, Alignment.TopLeft, "", itemFrame, true, GUI.SmallFont);
+
+            var downloadBtn = new GUIButton(new Rectangle(0, 0, 120, 20), TextManager.Get("DownloadButton"), Alignment.CenterRight, "", itemFrame);
+            downloadBtn.UserData = itemDetails;
+            downloadBtn.OnClicked = DownloadSubscribedItem;
+        }
+
+        private bool DownloadSubscribedItem(GUIButton button, object userdata)
+        {
+            RemoteStorageGetPublishedFileDetailsResult_t itemDetails = (RemoteStorageGetPublishedFileDetailsResult_t)userdata;
+            SteamManager.SteamWorkshop.DownloadSubscribedItem(itemDetails, OnItemReceived);
+            return true;
+        }
+
+        private void OnItemReceived(RemoteStorageDownloadUGCResult_t result, byte[] data)
+        {
+            DebugConsole.Log("Received file " + result.m_pchFileName + " from Steam Workshop");
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

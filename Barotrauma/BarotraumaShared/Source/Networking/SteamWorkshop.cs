@@ -26,14 +26,14 @@ namespace Barotrauma.Networking
 
         private string lastFileName;
         
-        private List<RemoteStorageGetPublishedFileDetailsResult_t> subscribedItemDetails;
-        private Action<List<RemoteStorageGetPublishedFileDetailsResult_t>> onDetailsReceived;
+        //private List<RemoteStorageGetPublishedFileDetailsResult_t> subscribedItemDetails;
+        private Action<RemoteStorageGetPublishedFileDetailsResult_t> onItemDetailsReceived;
+        private Action<RemoteStorageDownloadUGCResult_t, byte[]> onItemDataReceived;
         private Action<int> onItemCountReceived;
 
         public SteamWorkshop()
         {
             subscribedItemList = new List<PublishedFileId_t>();
-            subscribedItemDetails = new List<RemoteStorageGetPublishedFileDetailsResult_t>();
 
             RemoteStoragePublishFileResult = CallResult<RemoteStoragePublishFileResult_t>.Create(OnRemoteStoragePublishFileResult);
             RemoteStorageEnumerateUserSubscribedFilesResult = CallResult<RemoteStorageEnumerateUserSubscribedFilesResult_t>.Create(OnRemoteStorageEnumerateUserSubscribedFilesResult);
@@ -47,23 +47,23 @@ namespace Barotrauma.Networking
             return itemContent;
         }
 
-        public void GetSubscribedItems()
+        public void GetSubscribedItems(Action<int> onItemCountReceived)
         {
-            SteamAPICall_t handle = SteamRemoteStorage.EnumerateUserSubscribedFiles(0);
-            RemoteStorageEnumerateUserSubscribedFilesResult.Set(handle);
-        }
-
-        public void GetSubscribedItemDetails(Action<int> onItemCountReceived, Action<List<RemoteStorageGetPublishedFileDetailsResult_t>> onDetailsReceived)
-        {
-            subscribedItemDetails.Clear();
-            this.onDetailsReceived = onDetailsReceived;
             this.onItemCountReceived = onItemCountReceived;
             SteamAPICall_t handle = SteamRemoteStorage.EnumerateUserSubscribedFiles(0);
             RemoteStorageEnumerateUserSubscribedFilesResult.Set(handle);
         }
 
-        public void DownloadSubscribedItem(RemoteStorageGetPublishedFileDetailsResult_t item)
+        /*public void GetSubscribedItemDetails(Action<RemoteStorageGetPublishedFileDetailsResult_t> onDetailsReceived)
         {
+            this.onItemDetailsReceived = onDetailsReceived;
+            SteamAPICall_t handle = SteamRemoteStorage.EnumerateUserSubscribedFiles(0);
+            RemoteStorageEnumerateUserSubscribedFilesResult.Set(handle);
+        }*/
+
+        public void DownloadSubscribedItem(RemoteStorageGetPublishedFileDetailsResult_t item, Action<RemoteStorageDownloadUGCResult_t, byte[]> onItemDataReceived)
+        {
+            this.onItemDataReceived = onItemDataReceived;
             UGCHandle = item.m_hFile;
             SteamAPICall_t handle = SteamRemoteStorage.UGCDownload(UGCHandle, 0);
             RemoteStorageDownloadUGCResult.Set(handle);
@@ -74,9 +74,15 @@ namespace Barotrauma.Networking
         /// When done downloading, fetchedContent will be TRUE.
         /// </summary>
         /// <param name="ItemID"></param>
-        public void GetItemContent(int ItemID)
+        public void GetItemDetails(int ItemID, Action<RemoteStorageGetPublishedFileDetailsResult_t> onItemDetailsReceived)
         {
-            FetchedContent = false;
+            if (ItemID < 0 || ItemID >= subscribedItemList.Count)
+            {
+                DebugConsole.ThrowError("Getting details of the Steam Workshop item #" + ItemID + " failed (index out of range)");
+                return;
+            }
+
+            this.onItemDetailsReceived = onItemDetailsReceived;
             publishedFileID = subscribedItemList[ItemID];
 
             SteamAPICall_t handle = SteamRemoteStorage.GetPublishedFileDetails(publishedFileID, 0);
@@ -202,21 +208,20 @@ namespace Barotrauma.Networking
         void OnRemoteStorageEnumerateUserSubscribedFilesResult(RemoteStorageEnumerateUserSubscribedFilesResult_t pCallback, bool bIOFailure)
         {
             subscribedItemList = new List<PublishedFileId_t>();
-            onItemCountReceived?.Invoke(pCallback.m_nTotalResultCount);
             for (int i = 0; i < pCallback.m_nTotalResultCount; i++)
             {
                 PublishedFileId_t f = pCallback.m_rgPublishedFileId[i];
                 DebugConsole.Log(f.ToString());
                 subscribedItemList.Add(f);
             }
+            onItemCountReceived?.Invoke(pCallback.m_nTotalResultCount);
         }
 
         private void OnRemoteStorageGetPublishedFileDetailsResult(RemoteStorageGetPublishedFileDetailsResult_t pCallback, bool bIOFailure)
         {
             if (pCallback.m_eResult == EResult.k_EResultOK)
             {
-                subscribedItemDetails.Add(pCallback);
-                onDetailsReceived?.Invoke(subscribedItemDetails);
+                onItemDetailsReceived?.Invoke(pCallback);
             }
         }
 
@@ -225,10 +230,7 @@ namespace Barotrauma.Networking
             byte[] Data = new byte[pCallback.m_nSizeInBytes];
             int ret = SteamRemoteStorage.UGCRead(UGCHandle, Data, pCallback.m_nSizeInBytes, 0, EUGCReadAction.k_EUGCRead_Close);
 
-            itemContent = System.Text.Encoding.UTF8.GetString(Data, 0, ret);
-
-            FetchedContent = true;
-            DebugConsole.Log("content:" + itemContent);
+            onItemDataReceived?.Invoke(pCallback, Data);
         }
     }
 }
