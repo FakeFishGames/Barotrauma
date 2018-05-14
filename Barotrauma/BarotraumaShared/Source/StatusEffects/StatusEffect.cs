@@ -441,9 +441,9 @@ namespace Barotrauma
 
             if (explosion != null) explosion.Explode(entity.WorldPosition);
 
-            foreach (Affliction affliction in Afflictions)
+            foreach (ISerializableEntity target in targets)
             {
-                foreach (ISerializableEntity target in targets)
+                foreach (Affliction affliction in Afflictions)
                 {
                     Affliction multipliedAffliction = affliction;
                     if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
@@ -457,9 +457,24 @@ namespace Barotrauma
                         Limb limb = (Limb)target;
                         limb.character.CharacterHealth.ApplyAffliction(limb, multipliedAffliction);
                     }
+
+                }
+
+                foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
+                {
+                    float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
+                    if (target is Character)
+                    {
+                        ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAmount);
+                    }
+                    else if (target is Limb)
+                    {
+                        Limb limb = (Limb)target;
+                        limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAmount);
+                    }
                 }
             }
-            
+
             Hull hull = null;
             if (entity is Character) 
             {

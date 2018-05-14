@@ -525,13 +525,13 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
-        <Conditional HuskInfectionState="lt 1.0"/>
-        <ReduceAffliction name="Husk infection" reduceamount="-20"/>
+        <Conditional HuskInfectionState="lt 100.0"/>
+        <ReduceAffliction name="Husk infection" reduceamount="20"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 1.0"/>
+        <Conditional HuskInfectionState="eq 100.0"/>
         <Affliction name="Internal damage" strength="3"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
