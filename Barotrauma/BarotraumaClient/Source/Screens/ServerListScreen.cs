@@ -176,7 +176,7 @@ namespace Barotrauma
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 serverList.ClearChildren();
-                if (!SteamManager.GetLobbies(AddToServerList, ServerQueryFinished))
+                if (!SteamManager.GetServers(AddToServerList, ServerQueryFinished))
                 {
                     serverList.ClearChildren();                    
                     new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("ServerListNoSteamConnection"), "", serverList);
