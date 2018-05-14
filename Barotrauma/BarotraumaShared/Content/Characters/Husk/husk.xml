@@ -24,7 +24,10 @@
     <targetpriority tag="husk" state="Attack" priority="0"/>
   </ai>
 
-  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack"/>
+  <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any, Pack" accessiblewhenalive="false">
+    <Item name="Velonaceps Calyx Eggs"/>
+    <Item name="Velonaceps Calyx Eggs"/>
+  </inventory>
   
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"
