@@ -106,7 +106,7 @@ namespace Barotrauma
 
             if (isOpen)
             {
-                frame.Update(deltaTime);
+                frame.UpdateManually(deltaTime);
 
                 Character.DisableControls = true;
 

@@ -411,7 +411,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            menu.Update((float)deltaTime);
+            menu.UpdateManually((float)deltaTime);
         }
     }
 }

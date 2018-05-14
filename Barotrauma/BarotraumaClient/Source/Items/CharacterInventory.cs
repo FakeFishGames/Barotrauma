@@ -215,7 +215,7 @@ namespace Barotrauma
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
                         //-3 because selected items are in slots 3 and 4 (hands)
-                        useOnSelfButton[i - 3].Update(deltaTime);
+                        useOnSelfButton[i - 3].UpdateManually(deltaTime);
                     }
                 }
             }

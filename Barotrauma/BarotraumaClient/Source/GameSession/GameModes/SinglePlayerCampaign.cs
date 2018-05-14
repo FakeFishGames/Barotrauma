@@ -140,7 +140,7 @@ namespace Barotrauma
 
             CrewManager.Update(deltaTime);
 
-            endRoundButton.Update(deltaTime);
+            endRoundButton.UpdateManually(deltaTime);
 
             if (!crewDead)
             {

@@ -212,7 +212,7 @@ namespace Barotrauma.Networking
 
                 if (!GUI.DisableHUD)
                 {
-                    inGameHUD.Update(deltaTime);
+                    inGameHUD.UpdateManually(deltaTime);
                     GameMain.GameSession.CrewManager.Update(deltaTime);
                 }
                 

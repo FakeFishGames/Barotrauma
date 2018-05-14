@@ -310,7 +310,7 @@ namespace Barotrauma
             return true;
         }
 
-        public override void Update(float deltaTime)
+        protected override void Update(float deltaTime)
         {
             base.Update(deltaTime);
             if (IsPressedTimerRunning)

@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character)
         {
-            GuiFrame.Update((float)Timing.Step);
+            GuiFrame.UpdateManually((float)Timing.Step);
 
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {

@@ -96,7 +96,7 @@ namespace Barotrauma
         {
             cam.MoveCamera((float)deltaTime);
 
-            GUIpanel.Update((float)deltaTime);
+            GUIpanel.UpdateManually((float)deltaTime);
 
             if (physicsEnabled)
             {

@@ -194,11 +194,11 @@ namespace Barotrauma
                 return;
             }
             if (!component.Visible) { return; }
-            if (component.DrawOrder < 0)
+            if (component.UpdateOrder < 0)
             {
                 first.Add(component);
             }
-            else if (component.DrawOrder > 0)
+            else if (component.UpdateOrder > 0)
             {
                 last.Add(component);
             }
@@ -272,7 +272,7 @@ namespace Barotrauma
         private static void ProcessHelperList(List<GUIComponent> list)
         {
             if (list.Count == 0) { return; }
-            list.Sort((previous, next) => next.DrawOrder.CompareTo(previous.DrawOrder));
+            list.Sort((previous, next) => next.UpdateOrder.CompareTo(previous.UpdateOrder));
             foreach (var item in list)
             {
                 if (!updateList.Contains(item))
@@ -336,7 +336,7 @@ namespace Barotrauma
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
-            updateList.ForEach(c => c.Update(deltaTime));
+            updateList.ForEach(c => c.UpdateAuto(deltaTime));
             //ClearUpdateList();
         }
 

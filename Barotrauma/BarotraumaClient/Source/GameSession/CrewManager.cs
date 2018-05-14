@@ -166,7 +166,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            guiFrame.Update(deltaTime);
+            guiFrame.UpdateManually(deltaTime);
             
             //TODO: implement AI commands in multiplayer?
             if (GameMain.NetworkMember == null &&
@@ -184,7 +184,7 @@ namespace Barotrauma
                 if (commander.IsOpen || characters.Any(c => c is AICharacter)) commander.ToggleGUIFrame();                
             }
 
-            if (commander.Frame != null) commander.Frame.Update(deltaTime);
+            if (commander.Frame != null) commander.Frame.UpdateManually(deltaTime);
         }
 
         public void ReviveCharacter(Character revivedCharacter)

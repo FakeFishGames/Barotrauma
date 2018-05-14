@@ -178,7 +178,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 

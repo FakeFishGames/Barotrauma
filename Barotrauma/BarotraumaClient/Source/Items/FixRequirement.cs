@@ -181,7 +181,7 @@ namespace Barotrauma
 
             if (frame == null) return;
 
-            frame.Update((float)Timing.Step);
+            frame.UpdateManually((float)Timing.Step);
         }
     }
 }

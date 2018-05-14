@@ -86,18 +86,18 @@ namespace Barotrauma
 
             if (oxygenBar != null)
             {
-                oxygenBar.Update(deltaTime);
+                oxygenBar.UpdateManually(deltaTime);
                 if (character.Oxygen < 10.0f) oxygenBar.Flash();
             }
-            if (healthBar != null) healthBar.Update(deltaTime);
+            if (healthBar != null) healthBar.UpdateManually(deltaTime);
             
             if (Inventory.SelectedSlot == null)
             {
-                if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
-                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
+                if (cprButton != null && cprButton.Visible) cprButton.UpdateManually(deltaTime);
+                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.UpdateManually(deltaTime);
             }
 
-            if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
+            if (suicideButton != null && suicideButton.Visible) suicideButton.UpdateManually(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 

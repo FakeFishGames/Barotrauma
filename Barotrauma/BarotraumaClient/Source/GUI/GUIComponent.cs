@@ -155,8 +155,9 @@ namespace Barotrauma
         }
         #endregion
 
-        public int DrawOrder { get; set; }
+        public bool AutoUpdate { get; set; } = true;
         public bool AutoDraw { get; set; } = true;
+        public int UpdateOrder { get; set; }
 
         const float FlashDuration = 1.5f;
 
@@ -378,10 +379,10 @@ namespace Barotrauma
                 GUI.Style.Apply(this, style);
         }
 
-        #region GUI Update list
+        #region Updating
         public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
         {
-            DrawOrder = drawOrder;
+            UpdateOrder = drawOrder;
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
@@ -400,11 +401,57 @@ namespace Barotrauma
         {
             GUI.RemoveFromUpdateList(this, alsoChildren);
         }
+
+        /// <summary>
+        /// Only GUI should call this method. Auto updating follows the order of GUI update list. This order can be tweaked by changing the UpdateOrder property.
+        /// </summary>
+        public void UpdateAuto(float deltaTime)
+        {
+            if (AutoUpdate)
+            {
+                Update(deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// By default, all the gui elements are updated automatically in the same order they appear on the update list. 
+        /// If you update elements manually, also the children must be handled manually. They are not automatically updated. 
+        /// Use UpdateChildren method for this.
+        /// </summary>
+        public void UpdateManually(float deltaTime)
+        {
+            AutoUpdate = false;
+            Update(deltaTime);
+        }
+
+        protected virtual void Update(float deltaTime)
+        {
+            if (!Visible) return;
+            if (flashTimer > 0.0f)
+            {
+                flashTimer -= deltaTime;
+            }
+        }
+
+        /// <summary>
+        /// Updates all the children manually.
+        /// </summary>
+        public void UpdateChildren(float deltaTime)
+        {
+            if (RectTransform != null)
+            {
+                RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime));
+            }
+            else
+            {
+                children.ForEach(c => c.UpdateManually(deltaTime));
+            }
+        }
         #endregion
 
         #region Drawing
         /// <summary>
-        /// Only GUI should call this method. Auto drawing follows the order of GUI update list. This order can be tweaked by changing the DrawOrder property.
+        /// Only GUI should call this method. Auto drawing follows the order of GUI update list. This order can be tweaked by changing the UpdateOrder property.
         /// </summary>
         public void DrawAuto(SpriteBatch spriteBatch)
         {
@@ -548,15 +595,6 @@ namespace Barotrauma
             toolTipBlock.DrawManually(spriteBatch);
         }
         #endregion
-
-        public virtual void Update(float deltaTime)
-        {
-            if (!Visible) return;
-            if (flashTimer > 0.0f)
-            {
-                flashTimer -= deltaTime;
-            }
-        }
 
         protected virtual void SetAlpha(float a)
         {
