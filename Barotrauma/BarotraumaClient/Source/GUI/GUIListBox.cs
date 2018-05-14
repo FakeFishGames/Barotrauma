@@ -211,6 +211,7 @@ namespace Barotrauma
             enabled = true;
             scrollBarEnabled = true;
             scrollBar.BarScroll = 0.0f;
+            padding = Vector4.Zero;
         }
 
         private bool IgnoreChild(GUIComponent child)
@@ -251,66 +252,49 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        private void UpdateChildrenRect(float deltaTime)
+        private void UpdateChildrenRect()
         {
             var children = Children;
-
+            int x = Rect.X, y = Rect.Y;
             if (RectTransform != null)
             {
-                // New elements
-                int x = 0, y = 0;
-                for (int i = 0; i < children.Count; i++)
-                {
-                    GUIComponent child = children[i];
-                    if (IgnoreChild(child)) { continue; }
-                    child.RectTransform.AbsoluteOffset = new Point(x * (child.Rect.Width + spacing), y * (child.Rect.Height + spacing));
-                    if (scrollBar.IsHorizontal)
-                    {
-                        x++;
-                    }
-                    else
-                    {
-                        y++;
-                    }
-                }
+                x = 0;
+                y = 0;
             }
-            else
+            if (!scrollBarHidden)
             {
-                // Old elements
-                int x = Rect.X, y = Rect.Y;
-                if (!scrollBarHidden)
+                if (scrollBar.IsHorizontal)
                 {
-                    if (scrollBar.IsHorizontal)
-                    {
-                        x -= (int)((totalSize - Rect.Width) * scrollBar.BarScroll);
-                    }
-                    else
-                    {
-                        y -= (int)((totalSize - Rect.Height) * scrollBar.BarScroll);
-                    }
+                    x -= (int)((totalSize - Rect.Width) * scrollBar.BarScroll);
                 }
-                for (int i = 0; i < children.Count; i++)
+                else
                 {
-                    GUIComponent child = children[i];
-                    if (IgnoreChild(child)) { continue; }
-                    child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
-                    if (scrollBar.IsHorizontal)
-                    {
-                        x += child.Rect.Width + spacing;
-                    }
-                    else
-                    {
-                        y += child.Rect.Height + spacing;
-                    }
+                    y -= (int)((totalSize - Rect.Height) * scrollBar.BarScroll);
                 }
             }
-
-            // Both elements
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (enabled && child.CanBeFocused &&
-                    (GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+                if (IgnoreChild(child)) { continue; }
+                if (RectTransform != null)
+                {
+                    child.RectTransform.AbsoluteOffset = new Point(x, y);
+                }
+                else
+                {
+                    child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                }
+                if (scrollBar.IsHorizontal)
+                {
+                    x += child.Rect.Width + spacing;
+                }
+                else
+                {
+                    y += child.Rect.Height + spacing;
+                }
+                // selecting
+                //(GUI.MouseOn == this || (GUI.MouseOn != null && this.IsParentOf(GUI.MouseOn))) 
+                if (enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
@@ -366,7 +350,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            UpdateChildrenRect(deltaTime);
+            UpdateChildrenRect();
 
             //if ((GUI.MouseOn == this || GUI.MouseOn == scrollBar || IsParentOf(GUI.MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(scrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
@@ -441,7 +425,7 @@ namespace Barotrauma
 
             // TODO: cannot do this when using RectTransform
             //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
-            if (scrollBar.IsHorizontal)            
+            if (scrollBar.IsHorizontal)
                 rect.Height -= scrollBar.Rect.Height;
             else
                 rect.Width -= scrollBar.Rect.Width;
@@ -452,7 +436,7 @@ namespace Barotrauma
                 rect.Width += scrollBar.Rect.Width;
 
             UpdateScrollBarSize();
-            UpdateChildrenRect(0.0f);
+            UpdateChildrenRect();
         }
 
         public override void ClearChildren()

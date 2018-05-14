@@ -134,6 +134,7 @@ namespace Barotrauma
         public override void AddChild(GUIComponent child)
         {
             listBox.AddChild(child);
+            child.ClampMouseRectToParent = false;
         }
 
         public void AddItem(string text, object userData = null, string toolTip = "")
@@ -156,6 +157,7 @@ namespace Barotrauma
             }
             textBlock.UserData = userData;
             textBlock.ToolTip = toolTip;
+            textBlock.ClampMouseRectToParent = false;
         }
 
         public override void ClearChildren()
