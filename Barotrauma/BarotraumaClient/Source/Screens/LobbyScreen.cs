@@ -101,8 +101,8 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            topPanel.Update((float)deltaTime);
-            bottomPanel.Update((float)deltaTime);
+            topPanel.UpdateManually((float)deltaTime);
+            bottomPanel.UpdateManually((float)deltaTime);
 
             campaignUI.Update((float)deltaTime);
 

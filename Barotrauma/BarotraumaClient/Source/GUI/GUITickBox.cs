@@ -126,7 +126,7 @@ namespace Barotrauma
             Enabled = true;
         }
         
-        public override void Update(float deltaTime)
+        protected override void Update(float deltaTime)
         {
             if (!Visible) return;
 

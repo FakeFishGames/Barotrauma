@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character)
         {
-            GuiFrame.Update(1.0f / 60.0f);
+            GuiFrame.UpdateManually(1.0f / 60.0f);
             
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 

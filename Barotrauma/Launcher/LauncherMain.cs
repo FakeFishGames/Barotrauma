@@ -214,7 +214,7 @@ namespace Launcher
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
                 GUI.UpdateMouseOn();
-                GUIMessageBox.VisibleBox.Update(deltaTime);
+                GUIMessageBox.VisibleBox.UpdateManually(deltaTime);
                 return;
             }
 

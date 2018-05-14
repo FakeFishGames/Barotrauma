@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
                 y += 40;
             }
 
-            clientListScrollBar.Update(1.0f / 60.0f);
+            clientListScrollBar.UpdateManually(1.0f / 60.0f);
             clientListScrollBar.DrawManually(spriteBatch);
 
             netStats.AddValue(NetStats.NetStatType.ResentMessages, Math.Max(resentMessages, 0));

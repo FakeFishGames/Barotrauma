@@ -123,13 +123,13 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             //guiRoot.Update(deltaTime);
-            infoButton.Update(deltaTime);
+            infoButton.UpdateManually(deltaTime);
 
             if (GameMode != null) GameMode.Update(deltaTime);
             if (Mission != null) Mission.Update(deltaTime);
             if (infoFrame != null)
             {
-                infoFrame.Update(deltaTime);
+                infoFrame.UpdateManually(deltaTime);
 
                 if (CrewManager != null && CrewManager.CrewCommander != null && CrewManager.CrewCommander.IsOpen)
                 {

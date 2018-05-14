@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
             }
 
 
-            GuiFrame.Update((float)Timing.Step);
+            GuiFrame.UpdateManually((float)Timing.Step);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

@@ -218,7 +218,7 @@ namespace Barotrauma
         {
             cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);
 
-            guiRoot.Update((float)deltaTime);
+            guiRoot.UpdateManually((float)deltaTime);
 
             if (selectedPrefab != null)
             {

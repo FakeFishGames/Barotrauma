@@ -205,7 +205,7 @@ namespace Barotrauma
             if (textBlock != null) textBlock.ApplyStyle(style);
         }
         
-        public override void Update(float deltaTime)
+        protected override void Update(float deltaTime)
         {
             if (!Visible) return;
             base.Update(deltaTime);

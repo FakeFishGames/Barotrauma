@@ -1147,15 +1147,15 @@ namespace Barotrauma
 
             if (jobInfoFrame != null)
             {
-                jobInfoFrame.Update((float)deltaTime);
+                jobInfoFrame.UpdateManually((float)deltaTime);
             }
             else if (playerFrame != null)
             {
-                playerFrame.Update((float)deltaTime);
+                playerFrame.UpdateManually((float)deltaTime);
             }
             else
             {
-                menu.Update((float)deltaTime);
+                menu.UpdateManually((float)deltaTime);
             }
 
             if (campaignContainer.Visible && campaignUI != null)
@@ -1171,7 +1171,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    campaignSetupUI.Update((float)deltaTime);
+                    campaignSetupUI.UpdateManually((float)deltaTime);
                 }
             }
 

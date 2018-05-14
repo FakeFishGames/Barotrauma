@@ -102,7 +102,7 @@ namespace Barotrauma.Tutorials
 
             //CrewManager.Update(deltaTime);
 
-            if (infoBox != null) infoBox.Update(deltaTime);
+            if (infoBox != null) infoBox.UpdateManually(deltaTime);
         }
 
         public virtual IEnumerable<object> UpdateState()

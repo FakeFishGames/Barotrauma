@@ -429,7 +429,7 @@ namespace Barotrauma
 
         public static void UpdateEditor(Camera cam)
         {
-            if (highlightedListBox != null) highlightedListBox.Update((float)Timing.Step);
+            if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
             if (selectedList.Count == 1)
             {

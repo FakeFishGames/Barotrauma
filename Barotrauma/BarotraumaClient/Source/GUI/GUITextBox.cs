@@ -234,7 +234,7 @@ namespace Barotrauma
             textBlock.Flash(color);
         }
         
-        public override void Update(float deltaTime)
+        protected override void Update(float deltaTime)
         {
             if (!Visible) return;
 
@@ -285,7 +285,7 @@ namespace Barotrauma
             }
 
             textBlock.State = state;
-            textBlock.Update(deltaTime);
+            //textBlock.UpdateManually(deltaTime);
         }
 
         protected override void Draw(SpriteBatch spriteBatch)

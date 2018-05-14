@@ -56,7 +56,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
 
