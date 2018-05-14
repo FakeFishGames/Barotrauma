@@ -328,6 +328,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
+      <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
+      <Name>Facepunch.Steamworks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
       <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
       <Name>Hyper.ComponentModel</Name>
@@ -343,10 +347,6 @@
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
       <Project>{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}</Project>
       <Name>Farseer Physics MonoGame</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\Steamworks.NET\Standalone\Steamworks.NET.csproj">
-      <Project>{B3543600-587C-4FDC-994A-CB0BDC629A7E}</Project>
-      <Name>Steamworks.NET</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Steam;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;

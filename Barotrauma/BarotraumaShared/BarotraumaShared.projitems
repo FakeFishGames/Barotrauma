@@ -1694,7 +1694,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\SteamWorkshop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />

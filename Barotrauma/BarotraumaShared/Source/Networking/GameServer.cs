@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.IO;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
