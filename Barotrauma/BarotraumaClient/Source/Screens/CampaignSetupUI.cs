@@ -28,25 +28,49 @@ namespace Barotrauma
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), TextManager.Get("SelectedSub") + ":", null, null, Alignment.Left, "", newGameContainer);
-            subList = new GUIListBox(new Rectangle(0, 30, 230, newGameContainer.Rect.Height - 100), "", newGameContainer);
+            // New game left side
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, minSize: new Point(100, 30))
+            {
+                AbsoluteOffset = new Point(40, 40)
+            }, TextManager.Get("SelectedSub") + ":");
+            subList = new GUIListBox(new RectTransform(new Vector2(0.35f, 0.85f), newGameContainer.RectTransform)
+            {
+                RelativeOffset = new Vector2(0, 0.1f),
+                AbsoluteOffset = new Point(40, 40)
+            });
 
             UpdateSubList();
 
-            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
-                TextManager.Get("SaveName") + ": ", "", Alignment.Left, Alignment.Left, newGameContainer);
+            // New game right side
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, Anchor.TopCenter, Pivot.TopLeft, minSize: new Point(100, 30))
+            {
+                AbsoluteOffset = new Point(40, 40)
+            }, TextManager.Get("SaveName") + ":");
 
-            saveNameBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 30, 180, 20),
-                Alignment.TopLeft, "", newGameContainer);
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, Anchor.TopCenter, Pivot.TopLeft, minSize: new Point(100, 30))
+            {
+                AbsoluteOffset = new Point(40, 40),
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, string.Empty);
 
-            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 60, 100, 20),
-                TextManager.Get("MapSeed") + ": ", "", Alignment.Left, Alignment.Left, newGameContainer);
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, Anchor.TopCenter, Pivot.TopLeft, minSize: new Point(100, 30))
+            {
+                AbsoluteOffset = new Point(40, 40),
+                RelativeOffset = new Vector2(0, 0.3f)
+            }, TextManager.Get("MapSeed") + ":");
 
-            seedBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 90, 180, 20),
-                Alignment.TopLeft, "", newGameContainer);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, Anchor.TopCenter, Pivot.TopLeft, minSize: new Point(100, 30))
+            {
+                AbsoluteOffset = new Point(40, 40),
+                RelativeOffset = new Vector2(0, 0.4f)
+            }, string.Empty);
+
             seedBox.Text = ToolBox.RandomSeed(8);
-            
-            var startButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartCampaignButton"), Alignment.BottomRight, "", newGameContainer);
+
+            var startButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), newGameContainer.RectTransform, Anchor.BottomRight, minSize: new Point(80, 30))
+            {
+                AbsoluteOffset = new Point(40, 40)
+            }, TextManager.Get("StartCampaignButton"));
             startButton.OnClicked = (GUIButton btn, object userData) =>
             {
                 if (string.IsNullOrWhiteSpace(saveNameBox.Text))
@@ -117,29 +141,40 @@ namespace Barotrauma
             foreach (Submarine sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
-                    Alignment.Left, Alignment.Left, subList)
-                {
-                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
-                    ToolTip = sub.Description,
-                    UserData = sub
-                };
+                    new RectTransform(new Vector2(1, 0.1f), subList.RectTransform)
+                    {
+                        AbsoluteOffset = new Point(10, 0)
+                    },
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
+                    {
+                        ToolTip = sub.Description,
+                        UserData = sub
+                    };
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
                     textBlock.TextColor = textBlock.TextColor * 0.85f;
 
-                    var shuttleText = new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, textBlock, false, GUI.SmallFont);
-                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
-                    shuttleText.ToolTip = textBlock.ToolTip;
+                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterLeft)
+                    {
+                        RelativeOffset = new Vector2(0.5f, 0)
+                    },
+                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
+                    {
+                        TextColor = textBlock.TextColor * 0.8f,
+                        ToolTip = textBlock.ToolTip
+                    };
                 }
 
-                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterRight, "", textBlock);
-                infoButton.UserData = sub;
+                var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 1), textBlock.RectTransform, Anchor.CenterRight), text: "?")
+                {
+                    UserData = sub
+                };
                 infoButton.OnClicked += (component, userdata) =>
                 {
+                    // TODO
                     var msgBox = new GUIMessageBox("", "", 550, 400);
+                    // TODO
                     ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
                     return true;
                 };
