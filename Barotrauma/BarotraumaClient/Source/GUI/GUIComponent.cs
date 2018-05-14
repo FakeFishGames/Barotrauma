@@ -415,7 +415,6 @@ namespace Barotrauma
 
         /// <summary>
         /// By default, all the gui elements are updated automatically in the same order they appear on the update list. 
-        /// If you update elements manually, also the children must be handled manually.
         /// </summary>
         public void UpdateManually(float deltaTime, bool alsoChildren = false, bool recursive = true)
         {
@@ -465,8 +464,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
-        /// If you draw elements manually, also the children must be handled manually.
+        /// By default, all the gui elements are drawn automatically in the same order they appear on the update list.
         /// </summary>
         public void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
         {
