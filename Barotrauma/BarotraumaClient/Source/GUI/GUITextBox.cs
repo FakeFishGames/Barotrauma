@@ -15,7 +15,8 @@ namespace Barotrauma
 
         bool caretVisible;
         float caretTimer;
-        
+
+        private GUIFrame frame;
         private GUITextBlock textBlock;
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
@@ -206,7 +207,7 @@ namespace Barotrauma
         {
             Enabled = true;
             this.color = color ?? Color.White;
-            var frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
+            frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap);
             CaretEnabled = true;
@@ -285,17 +286,18 @@ namespace Barotrauma
             }
 
             textBlock.State = state;
-            //textBlock.UpdateManually(deltaTime);
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             base.Draw(spriteBatch);
+            // Frame is not used in the old system.
+            frame?.DrawManually(spriteBatch);
+            textBlock.DrawManually(spriteBatch);
             if (caretVisible)
             {
                 Vector2 caretPos = textBlock.CaretPos;
-                // TODO: caret is rendered in the wrong order.
                 if (caretVisible && Selected)
                 {
                     GUI.DrawLine(spriteBatch,
