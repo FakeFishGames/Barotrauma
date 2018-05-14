@@ -131,9 +131,7 @@ namespace Barotrauma
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
         private static int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
-
-        private static int receivedSteamworksItemCount;
-
+        
         static DebugConsole()
         {
             commands.Add(new Command("help", "", (string[] args) =>
@@ -1816,26 +1814,23 @@ namespace Barotrauma
             
             commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
             {
-                if (Submarine.MainSub == null) return;
-
-                receivedSteamworksItemCount = 0;
-
-                void detailsReceived(List<Steamworks.RemoteStorageGetPublishedFileDetailsResult_t> results)
+                void detailsReceived(Steamworks.RemoteStorageGetPublishedFileDetailsResult_t result)
                 {
-                    for (int i = receivedSteamworksItemCount; i < results.Count; i++)
-                    {
-                        Log("*********************************");
-                        Log(results[i].m_rgchTitle);
-                        Log(results[i].m_rgchDescription);
-                    }
+                    Log("*********************************");
+                    Log(result.m_rgchTitle);
+                    Log(result.m_rgchDescription);
                 }
 
                 void itemCountReceived(int itemCount)
                 {
                     Log("Subscribed to " + itemCount + " items.");
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        SteamManager.SteamWorkshop.GetItemDetails(i, detailsReceived);
+                    }
                 }
 
-                SteamManager.SteamWorkshop.GetSubscribedItemDetails(itemCountReceived, detailsReceived);
+                SteamManager.SteamWorkshop.GetSubscribedItems(itemCountReceived);
             },
             null, null));
 
