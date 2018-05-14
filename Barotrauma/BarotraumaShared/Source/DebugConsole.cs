@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -1803,34 +1804,26 @@ namespace Barotrauma
             commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
             {
                 if (Submarine.MainSub == null) return;
-                SteamManager.SteamWorkshop.SaveToWorkshop(
-                    Submarine.MainSub.Name,
-                    Submarine.MainSub.FilePath,
-                    Submarine.MainSub.Name,
-                    Submarine.MainSub.Description,
-                    new string[0]);
+                SteamManager.SaveToWorkshop(Submarine.MainSub);
             },
             null, null));
             
             commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
             {
-                void detailsReceived(Steamworks.RemoteStorageGetPublishedFileDetailsResult_t result)
+                void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
                 {
-                    Log("*********************************");
-                    Log(result.m_rgchTitle);
-                    Log(result.m_rgchDescription);
-                }
-
-                void itemCountReceived(int itemCount)
-                {
-                    Log("Subscribed to " + itemCount + " items.");
-                    for (int i = 0; i < itemCount; i++)
+                    foreach (var item in items)
                     {
-                        SteamManager.SteamWorkshop.GetItemDetails(i, detailsReceived);
+                        Log("*********************************");
+                        Log(item.Title);
+                        Log(item.Description);
+                        Log("Size: " + item.Size / 1024 +" kB");
+                        Log("Directory: " + item.Directory);
+                        Log("Installed: " + item.Installed);
                     }
                 }
 
-                SteamManager.SteamWorkshop.GetSubscribedItems(itemCountReceived);
+                SteamManager.GetWorkshopItems(itemsReceived);
             },
             null, null));
 

@@ -1,33 +1,15 @@
-﻿// The Steamworks API's are modular, you can use some subsystems without using others
-// When USE_GS_AUTH_API is defined you get the following Steam features:
-// - Strong user authentication and authorization
-// - Game server matchmaking
-// - VAC cheat protection
-// - Access to achievement/community API's
-// - P2P networking capability
-
-// Remove this define to disable using the native Steam authentication and matchmaking system
-// You can use this as a sample of how to integrate your game without replacing an existing matchmaking system
-// When you un-define USE_GS_AUTH_API you get:
-// - Access to achievement/community API's
-// - P2P networking capability
-// You CANNOT use:
-// - VAC cheat protection
-// - Game server matchmaking
-// as these function depend on using Steam authentication
-#define USE_GS_AUTH_API
-
+﻿using Facepunch.Steamworks;
 using Microsoft.Xna.Framework;
-using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
-namespace Barotrauma.Networking
+namespace Barotrauma.Steam
 {
     class SteamManager
     {
-        static readonly AppId_t appID = (AppId_t)480; //602960;
+        const uint AppID = 602960;
 
         // UDP port for the server to do authentication on (ie, talk to Steam on)
         const ushort SERVER_AUTHENTICATION_PORT = 8766;
@@ -56,37 +38,15 @@ namespace Barotrauma.Networking
                 return Instance.isInitialized;
             }
         }
-
-        private SteamWorkshop steamWorkshop;
-        public static SteamWorkshop SteamWorkshop
-        {
-            get { return instance.steamWorkshop; }
-        }
-
-        private SteamAPIWarningMessageHook_t m_SteamAPIWarningMessageHook;
-        private static void SteamAPIDebugTextHook(int nSeverity, System.Text.StringBuilder pchDebugText)
-        {
-#if DEBUG
-            DebugConsole.NewMessage(pchDebugText.ToString(), Color.Orange);
-#endif
-        }
         
-        private HServerListRequest m_ServerListRequest;
-        private HServerQuery m_ServerQuery;
-        private ISteamMatchmakingServerListResponse m_ServerListResponse;
-        private ISteamMatchmakingPingResponse m_PingResponse;
-        private ISteamMatchmakingPlayersResponse m_PlayersResponse;
-
-        // Tells us when we have successfully connected to Steam
-        protected Callback<SteamServersConnected_t> m_CallbackSteamServersConnected;
-        // Tells us when there was a failure to connect to Steam
-        protected Callback<SteamServerConnectFailure_t> m_CallbackSteamServersConnectFailure;
-
         private bool m_bInitialized;
         private bool m_bConnectedToSteam;
 
-        private List<ServerInfo> serverList = new List<ServerInfo>();
-        private Action<List<ServerInfo>> onLobbyFound;
+        /*private List<ServerInfo> serverList = new List<ServerInfo>();
+        private Action<List<ServerInfo>> onLobbyFound;*/
+
+        private Client client;
+        private Server server;
 
         public static void Initialize()
         {
@@ -94,163 +54,81 @@ namespace Barotrauma.Networking
         }
 
         private SteamManager()
-        {            
-            if (!Packsize.Test())
-            {
-                DebugConsole.ThrowError("[Steamworks.NET] Packsize Test returned false, the wrong version of Steamworks.NET is being run in this platform.");
-            }
-
-            if (!DllCheck.Test())
-            {
-                DebugConsole.ThrowError("[Steamworks.NET] DllCheck Test returned false, One or more of the Steamworks binaries seems to be the wrong version.");
-            }
-            
-            /*try
-            {
-                // If Steam is not running or the game wasn't started through Steam, SteamAPI_RestartAppIfNecessary starts the
-                // Steam client and also launches this game again if the User owns it. This can act as a rudimentary form of DRM.
-
-                // Once you get a Steam AppID assigned by Valve, you need to replace AppId_t.Invalid with it and
-                // remove steam_appid.txt from the game depot. eg: "(AppId_t)480" or "new AppId_t(480)".
-                // See the Valve documentation for more information: https://partner.steamgames.com/doc/sdk/api#initialization_and_shutdown
-                if (SteamAPI.RestartAppIfNecessary(appID))
-                {
-                    GameMain.Instance.Exit();
-                    return;
-                }
-            }
-            catch (System.DllNotFoundException e)
-            { // We catch this exception here, as it will be the first occurence of it.
-                DebugConsole.ThrowError("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib. It's likely not in the correct location. Refer to the README for more details.", e);
-
-                GameMain.Instance.Exit();
-                return;
-            }*/
-
-            // Initializes the Steamworks API.
-            // If this returns false then this indicates one of the following conditions:
-            // [*] The Steam client isn't running. A running Steam client is required to provide implementations of the various Steamworks interfaces.
-            // [*] The Steam client couldn't determine the App ID of game. If you're running your application from the executable or debugger directly then you must have a [code-inline]steam_appid.txt[/code-inline] in your game directory next to the executable, with your app ID in it and nothing else. Steam will look for this file in the current working directory. If you are running your executable from a different directory you may need to relocate the [code-inline]steam_appid.txt[/code-inline] file.
-            // [*] Your application is not running under the same OS user context as the Steam client, such as a different user or administration access level.
-            // [*] Ensure that you own a license for the App ID on the currently active Steam account. Your game must show up in your Steam library.
-            // [*] Your App ID is not completely set up, i.e. in [code-inline]Release State: Unavailable[/code-inline], or it's missing default packages.
-            // Valve's documentation for this is located here:
-            // https://partner.steamgames.com/doc/sdk/api#initialization_and_shutdown
-            isInitialized = SteamAPI.Init();
-            if (!isInitialized)
-            {
-                DebugConsole.ThrowError("[Steamworks.NET] SteamAPI_Init() failed. Refer to Valve's documentation or the comment above this line for more information.");
-                return;
-            }
-
-            if (m_SteamAPIWarningMessageHook == null)
-            {
-                // Set up our callback to recieve warning messages from Steam.
-                // You must launch with "-debug_steamapi" in the launch args to recieve warnings.
-                m_SteamAPIWarningMessageHook = new SteamAPIWarningMessageHook_t(SteamAPIDebugTextHook);
-                SteamClient.SetWarningMessageHook(m_SteamAPIWarningMessageHook);
-            }
-
-            m_ServerListRequest = HServerListRequest.Invalid;
-            m_ServerQuery = HServerQuery.Invalid;
-
-            m_ServerListResponse = new ISteamMatchmakingServerListResponse(OnServerResponded, OnServerFailedToRespond, OnRefreshComplete);
-            m_PingResponse = new ISteamMatchmakingPingResponse(OnServerResponded, OnServerFailedToRespond);
-            m_PlayersResponse = new ISteamMatchmakingPlayersResponse(OnAddPlayerToList, OnPlayersFailedToRespond, OnPlayersRefreshComplete);
-            m_CallbackSteamServersConnected = Callback<SteamServersConnected_t>.CreateGameServer(OnSteamServersConnected);
-		    m_CallbackSteamServersConnectFailure = Callback<SteamServerConnectFailure_t>.CreateGameServer(OnSteamServersConnectFailure);
-            //m_RulesResponse = new ISteamMatchmakingRulesResponse(OnRulesResponded, OnRulesFailedToRespond, OnRulesRefreshComplete);
-
-            steamWorkshop = new SteamWorkshop();
+        {
+            client = new Client(AppID);
+            isInitialized = client.IsSubscribed && client.IsValid;
         }
         
         public static bool UnlockAchievement(string achievementName)
         {
-            if (Instance == null || !Instance.isInitialized)
+            if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
 
-            SteamUserStats.SetAchievement(achievementName);
+            instance.client.Achievements.Trigger(achievementName);
             return true;
         }
 
-
-        public static bool GetLobbies(Action<List<ServerInfo>> onLobbyFound)
+        public static bool GetLobbies(Action<Networking.ServerInfo> onServerFound, Action onFinished)
         {
-            if (Instance == null || !Instance.isInitialized)
+            if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
 
-            instance.onLobbyFound = onLobbyFound;
-            instance.serverList.Clear();
-            instance.ReleaseRequest();
-
-            MatchMakingKeyValuePair_t[] filters = new MatchMakingKeyValuePair_t[]
+            var filter = new ServerList.Filter
             {
-                new MatchMakingKeyValuePair_t { m_szKey = "appid", m_szValue = appID.ToString() },
-                new MatchMakingKeyValuePair_t { m_szKey = "gamedir", m_szValue = "barotrauma" }
+                { "appid", AppID.ToString() },
+                { "gamedir", "Barotrauma" },
+                { "secure", "1" }
             };
-            
-            instance.m_ServerListRequest =
-                SteamMatchmakingServers.RequestInternetServerList(appID, filters, (uint)filters.Length, instance.m_ServerListResponse);
-                //SteamMatchmakingServers.RequestLANServerList(appID, instance.m_ServerListResponse);
+
+            var query = instance.client.ServerList.Internet(filter);
+            query.OnUpdate += () =>
+            {
+                foreach (ServerList.Server s in query.Responded)
+                {
+                    var serverInfo = new Networking.ServerInfo()
+                    {
+                        ServerName = s.Name,
+                        Port = s.ConnectionPort.ToString(),
+                        IP = s.Address.ToString(), //TODO: check
+                        //GameStarted = serverDetails.???,
+                        PlayerCount = s.Players,
+                        MaxPlayers = s.MaxPlayers,
+                        HasPassword = s.Passworded
+                    };
+                    onServerFound(serverInfo);
+                }
+                query.Responded.Clear();
+            };
+            query.OnFinished = onFinished;
                 
             return true;
         }
 
+        #region Server
 
-        public static bool CreateServer(GameServer server, int maxPlayers)
+        public static bool CreateServer(Networking.GameServer server, int maxPlayers)
         {
-            if (Instance == null || !Instance.isInitialized)
+            if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
 
-#if USE_GS_AUTH_API
-		    EServerMode eMode = EServerMode.eServerModeAuthenticationAndSecure;
-#else
-            // Don't let Steam do authentication
-            EServerMode eMode = EServerMode.eServerModeNoAuthentication;
-#endif
+            ServerInit options = new ServerInit("Barotrauma", "Barotrauma");
+            options.Secure = true;
+            options.VersionString = GameMain.Version.ToString();
 
-            instance.m_bInitialized = Steamworks.GameServer.Init(
-                0, SERVER_AUTHENTICATION_PORT, (ushort)server.Port, MASTER_SERVER_UPDATER_PORT, eMode, SERVER_VERSION);
-
-            if (!instance.m_bInitialized)
-            {
-                DebugConsole.ThrowError("SteamGameServer_Init call failed");
-                return false;
-            }
+            Instance.server = new Server(AppID, options);
             
-            // These fields are currently required, but will go away soon.
-            // See their documentation for more info
-            SteamGameServer.SetModDir("barotrauma");
-            SteamGameServer.SetProduct(appID.ToString());
-            SteamGameServer.SetGameDescription("Barotrauma v" + GameMain.Version);
-#if SERVER
-            SteamGameServer.SetDedicatedServer(true);
-#endif
-
-            // Initiate Anonymous logon.
-            SteamGameServer.LogOnAnonymous();
-            // We want to actively update the master server with our presence so players can
-            // find us via the steam matchmaking/server browser interfaces
-#if USE_GS_AUTH_API
-            SteamGameServer.EnableHeartbeats(true);
-#endif
-            UpdateServerDetails();
-            
-            var asd = SteamGameServer.GetPublicIP();
-            var asdf = SteamGameServer.BLoggedOn();
-
             return true;
         }
 
         public static bool UpdateServerDetails()
         {
-            if (Instance == null || !Instance.isInitialized)
+            if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
@@ -258,9 +136,9 @@ namespace Barotrauma.Networking
             // These server state variables may be changed at any time.  Note that there is no lnoger a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
             // creation/authentication functions to maintain your player count.
-            SteamGameServer.SetMaxPlayerCount(GameMain.Server.MaxPlayers);
+            /*SteamGameServer.SetMaxPlayerCount(GameMain.Server.MaxPlayers);
             SteamGameServer.SetPasswordProtected(GameMain.Server.HasPassword);
-            SteamGameServer.SetServerName(GameMain.Server.Name);
+            SteamGameServer.SetServerName(GameMain.Server.Name);*/
             //TODO: rest of the server data
 
             return true;
@@ -268,121 +146,92 @@ namespace Barotrauma.Networking
 
         public static bool CloseServer()
         {
-            if (Instance == null || !Instance.isInitialized)
-            {
-                return false;
-            }
+            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+            
 
-            // Notify Steam master server we are going offline
-#if USE_GS_AUTH_API
-            SteamGameServer.EnableHeartbeats(false);
-#endif
-
-            instance.m_CallbackSteamServersConnected.Dispose();
-            // Disconnect from the steam servers
-            SteamGameServer.LogOff();
-
-            // release our reference to the steam client library
-            Steamworks.GameServer.Shutdown();
-            instance.m_bInitialized = false;
+            instance.server.Dispose();
+            instance.server = null;
             
             return true;
         }
 
-        private void OnServerResponded(HServerListRequest hRequest, int iServer)
+        #endregion
+
+        #region Workshop
+
+        public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound)
         {
-            DebugConsole.Log("OnServerResponded: " + hRequest + " - " + iServer);
-            
-            var serverDetails = SteamMatchmakingServers.GetServerDetails(hRequest, iServer);
-            var serverInfo = new ServerInfo()
+            if (instance == null || !instance.isInitialized) return;
+
+            var query = instance.client.Workshop.CreateQuery();
+            query.Order = Workshop.Order.RankedByTrend;
+            query.UploaderAppId = AppID;
+
+            query.Run();
+
+            query.OnResult += (Workshop.Query q) =>
             {
-                ServerName = serverDetails.GetServerName(),
-                Port = serverDetails.m_NetAdr.GetConnectionPort().ToString(),
-                IP = serverDetails.m_NetAdr.GetIP().ToString(),
-                //GameStarted = serverDetails.???,                
-                PlayerCount = serverDetails.m_nPlayers,
-                MaxPlayers = serverDetails.m_nMaxPlayers,
-                HasPassword = serverDetails.m_bPassword
+                onItemsFound(q.Items);
             };
-            serverList.Add(serverInfo);
-            onLobbyFound(serverList);
         }
 
-        void OnSteamServersConnected(SteamServersConnected_t pLogonSuccess)
+        public static void SaveToWorkshop(Submarine sub)
         {
-            DebugConsole.Log("Server connected to Steam successfully");
-            m_bConnectedToSteam = true;
+            if (instance == null || !instance.isInitialized) return;
+            
+            var item = instance.client.Workshop.CreateItem(Workshop.ItemType.Community);
+            item.Visibility = Workshop.Editor.VisibilityType.Public;
+            item.Description = sub.Description;
+            item.WorkshopUploadAppId = AppID;
+            item.Title = sub.Name;
 
-            // log on is not finished until OnPolicyResponse() is called
-
-            // Tell Steam about our server details
-            UpdateServerDetails();
-        }
-
-        void OnSteamServersConnectFailure(SteamServerConnectFailure_t pConnectFailure)
-        {
-            m_bConnectedToSteam = false;
-            DebugConsole.Log("Server failed to connect to Steam");
-        }
-
-        private void OnServerFailedToRespond(HServerListRequest hRequest, int iServer)
-        {
-            DebugConsole.Log("OnServerFailedToRespond: " + hRequest + " - " + iServer);
-        }
-
-        private void OnRefreshComplete(HServerListRequest hRequest, EMatchMakingServerResponse response)
-        {
-            DebugConsole.Log("OnRefreshComplete: " + hRequest + " - " + response);
-
-            onLobbyFound(serverList);
-        }
-
-        // ISteamMatchmakingPingResponse
-        private void OnServerResponded(gameserveritem_t gsi)
-        {
-            DebugConsole.Log("OnServerResponded: " + gsi);// + "\n" + GameServerItemFormattedString(gsi));
-        }
-
-        private void OnServerFailedToRespond()
-        {
-            DebugConsole.Log("OnServerFailedToRespond");
-        }
-
-        // ISteamMatchmakingPlayersResponse
-        private void OnAddPlayerToList(string pchName, int nScore, float flTimePlayed)
-        {
-            DebugConsole.Log("OnAddPlayerToList: " + pchName + " - " + nScore + " - " + flTimePlayed);
-        }
-
-        private void OnPlayersFailedToRespond()
-        {
-            DebugConsole.Log("OnPlayersFailedToRespond");
-        }
-
-        private void OnPlayersRefreshComplete()
-        {
-            DebugConsole.Log("OnPlayersRefreshComplete");
-        }
-
-        private void ReleaseRequest()
-        {
-            if (m_ServerListRequest != HServerListRequest.Invalid)
+            var tempFolder = new DirectoryInfo("Temp");
+            item.Folder = tempFolder.FullName;
+            if (tempFolder.Exists)
             {
-                SteamMatchmakingServers.ReleaseRequest(m_ServerListRequest);
-                m_ServerListRequest = HServerListRequest.Invalid;
-                DebugConsole.Log("SteamMatchmakingServers.ReleaseRequest(m_ServerListRequest)");
+                SaveUtil.ClearFolder(tempFolder.FullName);
+            }                
+            else
+            {
+                tempFolder.Create();
             }
+
+            File.Copy(sub.FilePath, Path.Combine(tempFolder.FullName, Path.GetFileName(sub.FilePath)));
+
+            CoroutineManager.StartCoroutine(instance.PublishItem(item, tempFolder));
         }
-        
+
+        private IEnumerable<object> PublishItem(Workshop.Editor item, DirectoryInfo tempFolder)
+        {
+            item.Publish();
+            while (item.Publishing)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            if (string.IsNullOrEmpty(item.Error))
+            {
+                DebugConsole.ThrowError("Published workshop item " + item.Title + " succesfully.");
+            }
+            else
+            {
+                DebugConsole.ThrowError("Publishing workshop item " + item.Title + " failed. " + item.Error);
+            }
+            
+            SaveUtil.ClearFolder(tempFolder.FullName);
+            tempFolder.Delete();
+
+            yield return CoroutineStatus.Success;
+        }
+
+#endregion
+
         public static void Update()
         {
-            if (Instance == null || !Instance.isInitialized)
-            {
-                return;
-            }
-
-            // Run Steam client callbacks
-            SteamAPI.RunCallbacks();
+            if (instance == null || !instance.isInitialized) return;
+            
+            instance.client?.Update();
+            instance.server?.Update();
         }
 
         public static void ShutDown()
@@ -392,7 +241,10 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            SteamAPI.Shutdown();
+            instance.client?.Dispose();
+            instance.client = null;
+            instance.server?.Dispose();
+            instance.server = null;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
@@ -174,7 +175,8 @@ namespace Barotrauma
             
             if (GameMain.Config.UseSteamMatchmaking)
             {
-                if (!SteamManager.GetLobbies(UpdateServerList))
+                serverList.ClearChildren();
+                if (!SteamManager.GetLobbies(AddToServerList, ServerQueryFinished))
                 {
                     serverList.ClearChildren();                    
                     new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("ServerListNoSteamConnection"), "", serverList);
@@ -235,40 +237,44 @@ namespace Barotrauma
                 serverInfos.Add(serverInfo);
             }
 
-            UpdateServerList(serverInfos);
-        }
-
-        private void UpdateServerList(IEnumerable<ServerInfo> serverInfos)
-        {
             serverList.ClearChildren();
-
             if (serverInfos.Count() == 0)
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoServers"), "", serverList);
                 return;
             }
-
-            int i = 0;
             foreach (ServerInfo serverInfo in serverInfos)
             {
-                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
-                serverFrame.UserData = serverInfo;
-
-                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
-                passwordBox.Selected = serverInfo.HasPassword;
-                passwordBox.Enabled = false;
-                passwordBox.UserData = "password";
-
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverInfo.ServerName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
-                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
-
-                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2]) / 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
-                gameStartedBox.Selected = serverInfo.GameStarted;
-                gameStartedBox.Enabled = false;
-                i++;
+                AddToServerList(serverInfo);
             }
+        }
+
+        private void AddToServerList(ServerInfo serverInfo)
+        {
+            var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (serverList.CountChildren % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
+            serverFrame.UserData = serverInfo;
+
+            var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
+            passwordBox.Selected = serverInfo.HasPassword;
+            passwordBox.Enabled = false;
+            passwordBox.UserData = "password";
+
+            new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverInfo.ServerName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+            new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+
+            var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2]) / 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
+            gameStartedBox.Selected = serverInfo.GameStarted;
+            gameStartedBox.Enabled = false;
 
             FilterServers();
+        }
+
+        private void ServerQueryFinished()
+        {
+            if (serverList.children.All(c => !c.Visible))
+            {
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoMatchingServers"), "", serverList).UserData = "noresults";
+            }
         }
 
         private IEnumerable<object> SendMasterServerRequest()
