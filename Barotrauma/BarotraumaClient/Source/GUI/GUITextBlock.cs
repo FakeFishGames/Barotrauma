@@ -304,11 +304,11 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
 
             var rect = Rect;
-            
+
             base.Draw(spriteBatch);
-            
+
             if (TextGetter != null) Text = TextGetter();
-            
+
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
