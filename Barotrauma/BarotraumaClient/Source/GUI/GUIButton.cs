@@ -130,8 +130,8 @@ namespace Barotrauma
             {
                 base.Rect = value;
 
-                frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
-                textBlock.Rect = value;
+                if (frame != null) frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
+                if (textBlock != null) textBlock.Rect = value;
             }
         }
 
@@ -170,7 +170,7 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, style, this);
             GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
 
-            textBlock = new GUITextBlock(Rectangle.Empty, text,
+            textBlock = new GUITextBlock(new Rectangle(0, 0, rect.Width, rect.Height), text,
                 Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
                 textAlignment, null, this);
             GUI.Style.Apply(textBlock, style, this);
@@ -202,7 +202,6 @@ namespace Barotrauma
             base.ApplyStyle(style);
 
             if (frame != null) frame.ApplyStyle(style);
-            if (textBlock != null) textBlock.ApplyStyle(style);
         }
         
         protected override void Update(float deltaTime)
@@ -247,7 +246,12 @@ namespace Barotrauma
             {
                 state = Selected ? ComponentState.Selected : ComponentState.None;
             }
-            frame.State = state;
+
+            foreach (GUIComponent child in Children)
+            {
+                child.State = state;
+            }
+            //frame.State = state;
         }
     }
 }

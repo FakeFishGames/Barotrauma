@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -187,7 +188,6 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-
             textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
             
             Font = GUI.Font;
@@ -273,12 +273,6 @@ namespace Barotrauma
                     Text = "";
                     OnEnterPressed(this, input);
                 }
-#if LINUX
-                else if (PlayerInput.KeyHit(Keys.Back) && Text.Length>0)
-                {
-                    Text = Text.Substring(0, Text.Length-1);
-                }
-#endif
             }
             else if (Selected)
             {

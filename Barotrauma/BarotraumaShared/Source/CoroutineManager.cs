@@ -14,10 +14,13 @@ namespace Barotrauma
         public readonly IEnumerator<object> Coroutine;
         public readonly string Name;
 
+        public Exception Exception;
+
         public CoroutineHandle(IEnumerator<object> coroutine, string name = "")
         {
             Coroutine = coroutine;
             Name = string.IsNullOrWhiteSpace(name) ? coroutine.ToString() : name;
+            Exception = null;
         }
 
     }
@@ -107,6 +110,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message + "\n" + e.StackTrace.ToString());
+                handle.Exception = e;
                 return true;
             }
         }

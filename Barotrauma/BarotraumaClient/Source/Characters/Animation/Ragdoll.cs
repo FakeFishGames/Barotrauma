@@ -17,10 +17,9 @@ namespace Barotrauma
             if (body.UserData is Limb && character.Stun <= 0f)
             {
                 Limb limb = (Limb)body.UserData;
-
-                if (impact > 3.0f && limb.SoundTimer <= 0.0f)
+                if (impact > 3.0f && limb.LastImpactSoundTime < Timing.TotalTime - Limb.SoundInterval)
                 {
-                    limb.SoundTimer = Limb.SoundInterval;
+                    limb.LastImpactSoundTime = (float)Timing.TotalTime;
                     if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
                         SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);
@@ -43,24 +42,34 @@ namespace Barotrauma
                         SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                     }
                 }
-
-                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = Math.Min(strongestImpact, 3.0f);
+            }
+            if (Character.Controlled == character)
+            {
+                GameMain.GameScreen.Cam.Shake = Math.Min(Math.Max(strongestImpact, GameMain.GameScreen.Cam.Shake), 3.0f);
             }
         }
 
         partial void Splash(Limb limb, Hull limbHull)
         {
             //create a splash particle
-            GameMain.ParticleManager.CreateParticle("watersplash",
-                new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
-                new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
-                0.0f, limbHull);
+            for (int i = 0; i <MathHelper.Clamp(Math.Abs(limb.LinearVelocity.Y), 1.0f, 5.0f); i++)
+            {
+                var splash = GameMain.ParticleManager.CreateParticle("watersplash",
+                    new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                    new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)) + Rand.Vector(Math.Abs(limb.LinearVelocity.Y * 10)),
+                    Rand.Range(0.0f, MathHelper.TwoPi), limbHull);
 
-            GameMain.ParticleManager.CreateParticle("bubbles",
+                if (splash != null)
+                {
+                    splash.Size *= MathHelper.Clamp(Math.Abs(limb.LinearVelocity.Y) * 0.1f, 1.0f, 2.0f);
+                }
+            }
+
+           GameMain.ParticleManager.CreateParticle("bubbles",
                 new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
                 limb.LinearVelocity * 0.001f,
                 0.0f, limbHull);
-
+            
             //if the Character dropped into water, create a wave
             if (limb.LinearVelocity.Y < 0.0f)
             {
@@ -69,6 +78,12 @@ namespace Barotrauma
                     SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
                     splashSoundTimer = 0.5f;
                 }
+                
+                //+ some extra bubbles to follow the character underwater
+                GameMain.ParticleManager.CreateParticle("bubbles",
+                    new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                    limb.LinearVelocity * 10.0f,
+                    0.0f, limbHull);
             }
         }
 

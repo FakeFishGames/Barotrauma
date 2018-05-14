@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -12,7 +13,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
 
         private GUIFrame buttonsParent;
 
@@ -70,6 +71,7 @@ namespace Barotrauma
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
             // TODO: refactor using the RectTransform
+
             campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
             campaignSetupUI.LoadGame = LoadGame;
             campaignSetupUI.StartNewGame = StartGame;
@@ -77,6 +79,27 @@ namespace Barotrauma
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
             CreateHostServerFields();
+
+            //----------------------------------------------------------------------
+
+            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            menuTabs[(int)Tab.Tutorials].Padding = new Vector4(20.0f, 60.0f, 20.0f, 20.0f);
+
+            //PLACEHOLDER
+            //TODO: fix
+            var tutorialList = new GUIListBox(new RectTransform(relativeSize, menuTabs[(int)Tab.Tutorials].RectTransform, anchor, pivot, null, null), false, null, "");
+            /*foreach (Tutorial tutorial in Tutorial.Tutorials)
+            {
+                var tutorialText = new GUITextBlock(new Rectangle(0, 0, 0, 35), tutorial.Name, "", Alignment.TopLeft, Alignment.Center, tutorialList, false, GUI.LargeFont);
+                tutorialText.UserData = tutorial;
+            }*/
+            tutorialList.OnSelected += (component, obj) =>
+            {
+                TutorialMode.StartTutorial(obj as Tutorial);
+                return true;
+            };
+
+            UpdateTutorialList();
 
             this.game = game;
         }
@@ -92,6 +115,8 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
+
+            UpdateTutorialList();
 
             campaignSetupUI.UpdateSubList();
 
@@ -161,9 +186,24 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateTutorialList()
+        {
+            return;
+
+            //TODO: fix
+            var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+            foreach (GUITextBlock tutorialText in tutorialList.Children)
+            {
+                if (((Tutorial)tutorialText.UserData).Completed)
+                {
+                    tutorialText.TextColor = Color.LightGreen;
+                }
+            }
+        }
+
         private bool ApplySettings(GUIButton button, object userData)
         {
-            GameMain.Config.Save("config.xml");
+            GameMain.Config.Save();
 
             if (userData is Tab) SelectTab((Tab)userData);
 
@@ -184,16 +224,7 @@ namespace Barotrauma
 
             return true;
         }
-
-
-        private bool TutorialButtonClicked(GUIButton button, object obj)
-        {
-            //!!!!!!!!!!!!!!!!!! placeholder
-            TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
-
-            return true;
-        }
-
+        
         private bool JoinServerClicked(GUIButton button, object obj)
         {
             GameMain.ServerListScreen.Select();
@@ -363,7 +394,8 @@ namespace Barotrauma
                 {
                     case 7:
                         button.Text = TextManager.Get("TutorialButton");
-                        button.OnClicked = TutorialButtonClicked;
+                        button.UserData = Tab.Settings;
+                        button.OnClicked = SelectTab;
                         break;
                     case 6:
                         button.Text = TextManager.Get("NewGameButton");

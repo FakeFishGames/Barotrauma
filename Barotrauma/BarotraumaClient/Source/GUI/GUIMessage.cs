@@ -62,17 +62,18 @@ namespace Barotrauma
 
             size = GUI.Font.MeasureString(text);
 
+            Origin = new Vector2((int)(0.5f * size.X), (int)(0.5f * size.Y));
             if (textAlignment.HasFlag(Alignment.Left))
-                Origin.X += size.X * 0.5f;
-
-            if (textAlignment.HasFlag(Alignment.Right))
                 Origin.X -= size.X * 0.5f;
 
+            if (textAlignment.HasFlag(Alignment.Right))
+                Origin.X += size.X * 0.5f;
+
             if (textAlignment.HasFlag(Alignment.Top))
-                Origin.Y += size.Y * 0.5f;
+                Origin.Y -= size.Y * 0.5f;
 
             if (textAlignment.HasFlag(Alignment.Bottom))
-                Origin.Y -= size.Y * 0.5f;
+                Origin.Y += size.Y * 0.5f;
 
             if (autoCenter)
             {

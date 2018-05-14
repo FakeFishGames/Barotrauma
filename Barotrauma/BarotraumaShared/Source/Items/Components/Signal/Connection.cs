@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -17,9 +18,7 @@ namespace Barotrauma.Items.Components
         private Item item;
 
         public readonly bool IsOutput;
-
-        private static Wire draggingConnected;
-
+        
         public readonly List<StatusEffect> effects;
 
         public readonly ushort[] wireId;
@@ -56,13 +55,12 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (connector == null)
             {
-                panelTexture = Sprite.LoadTexture("Content/Items/connectionpanel.png");
-
-                connector = new Sprite(panelTexture, new Rectangle(470, 102, 19, 43), Vector2.Zero, 0.0f);
-                connector.Origin = new Vector2(9.5f, 10.0f);
-
-                wireVertical = new Sprite(panelTexture, new Rectangle(408, 1, 11, 102), Vector2.Zero, 0.0f);
-        }
+                connector = GUI.Style.GetComponentStyle("ConnectionPanelConnector").Sprites[GUIComponent.ComponentState.None][0].Sprite;
+                wireVertical = GUI.Style.GetComponentStyle("ConnectionPanelWire").Sprites[GUIComponent.ComponentState.None][0].Sprite;
+                connectionSprite = GUI.Style.GetComponentStyle("ConnectionPanelConnection").Sprites[GUIComponent.ComponentState.None][0].Sprite;
+                connectionSpriteHighlight = GUI.Style.GetComponentStyle("ConnectionPanelConnection").Sprites[GUIComponent.ComponentState.Hover][0].Sprite;
+                screwSprites = GUI.Style.GetComponentStyle("ConnectionPanelScrew").Sprites[GUIComponent.ComponentState.None].Select(s => s.Sprite).ToList();
+            }
 #endif
 
             this.item = item;
@@ -165,9 +163,11 @@ namespace Barotrauma.Items.Components
                     ic.ReceiveSignal(stepsTaken, signal, recipient, item, sender, power);
                 }
 
+                bool broken = recipient.Item.Condition <= 0.0f;
                 foreach (StatusEffect effect in recipient.effects)
                 {
-                    recipient.item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                    if (broken && effect.type != ActionType.OnBroken) continue;
+                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                 }
             }
         }

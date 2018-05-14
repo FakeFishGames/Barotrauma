@@ -14,6 +14,14 @@ namespace Barotrauma.Items.Components
 
         private List<RadarBlip> radarBlips;
 
+        private float prevPingRadius;
+
+        float prevPassivePingRadius;
+
+        private Vector2 center;
+        private float displayRadius;
+        private float displayScale;
+
         private static Color[] blipColorGradient = 
         {
             Color.TransparentBlack,
@@ -28,13 +36,13 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually((float)Timing.Step);
+            GuiFrame.UpdateManually(deltaTime);
 
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {
-                radarBlips[i].FadeTimer -= (float)Timing.Step * 0.5f;
+                radarBlips[i].FadeTimer -= deltaTime * 0.5f;
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
 
@@ -191,6 +199,9 @@ namespace Barotrauma.Items.Components
 
         private void Ping(Vector2 pingSource, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
         {
+            float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
+            float pingRadiusSqr = pingRadius * pingRadius;
+
             //inside a hull -> only show the edges of the hull
             if (item.CurrentHull != null && DetectSubmarineWalls)
             {
@@ -296,6 +307,23 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.CurrentHull == null && item.Prefab.RadarSize > 0.0f)
+                {
+                    float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
+
+                    if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
+                    {
+                        var blip = new RadarBlip(
+                            item.WorldPosition + Rand.Vector(item.Prefab.RadarSize),
+                            MathHelper.Clamp(item.Prefab.RadarSize, 0.1f, pingStrength),
+                            MathHelper.Clamp(item.Prefab.RadarSize * 0.1f, 0.1f, 10.0f));
+                        radarBlips.Add(blip);
+                    }
+                }
+            }
+
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
@@ -303,11 +331,11 @@ namespace Barotrauma.Items.Components
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    float pointDist = (limb.WorldPosition - pingSource).Length() * displayScale;
+                    float pointDist = ((limb.WorldPosition - pingSource) * displayScale).LengthSquared();
 
-                    if (limb.SimPosition == Vector2.Zero || pointDist > displayRadius) continue;
+                    if (limb.SimPosition == Vector2.Zero || pointDist > displayRadius * displayRadius) continue;
 
-                    if (pointDist > prevPingRadius && pointDist < pingRadius)
+                    if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
                         var blip = new RadarBlip(
                             limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 

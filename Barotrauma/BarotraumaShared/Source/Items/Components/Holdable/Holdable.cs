@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
     {
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
-        
+
         private InputType prevPickKey;
         private string prevMsg;
         private List<RelatedItem> prevRequiredItems;
@@ -25,6 +25,11 @@ namespace Barotrauma.Items.Components
 
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
+        public PhysicsBody Pusher
+        {
+            get;
+            private set;
+        }
 
         //the angle in which the Character holds the item
         protected float holdAngle;
@@ -82,6 +87,18 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             body = item.body;
+
+            Pusher = null;
+            if (element.GetAttributeBool("blocksplayers",false))
+            {
+                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density);
+                Pusher.BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic;
+                Pusher.FarseerBody.FixedRotation = false;
+                Pusher.FarseerBody.GravityScale = 0.0f;
+                Pusher.CollidesWith = Physics.CollisionCharacter;
+                Pusher.CollisionCategories = Physics.CollisionItemBlocking;
+                Pusher.Enabled = false;
+            }
 
             handlePos = new Vector2[2];
 
@@ -145,7 +162,8 @@ namespace Barotrauma.Items.Components
                     item.body = body;
                 }
             }
-
+            
+            if (Pusher != null) Pusher.Enabled = false;
             if (item.body != null) item.body.Enabled = true;
             IsActive = false;
 
@@ -318,6 +336,7 @@ namespace Barotrauma.Items.Components
             if (item.body == null || !item.body.Enabled) return;
             if (picker == null || !picker.HasEquippedItem(item))
             {
+                if (Pusher != null) Pusher.Enabled = false;
                 IsActive = false;
                 return;
             }
@@ -335,17 +354,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 Limb equipLimb = null;
-                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Face) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Headset) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Head);
                 }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Torso))
+                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.InnerClothes) || 
+                    picker.Inventory.IsInLimbSlot(item, InvSlotType.OuterClothes))
                 {
                     equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
-                }
-                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Legs))
-                {
-                    equipLimb = picker.AnimController.GetLimb(LimbType.Waist);
                 }
 
                 if (equipLimb != null)
@@ -396,47 +412,48 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            if (!attachable || body == null)
-            {
-                DebugConsole.ThrowError("Sent an attachment event for an item that's not attachable.");
-            }
+            base.ServerWrite(msg, c, extraData);
+            if (!attachable || body == null) return;
 
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
             msg.Write(body.SimPosition.Y);
         }
 
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
+            if (!attachable) return;
+
             bool isAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
-            if (!attachable)
-            {
-                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
-                return;
-            }
-
             if (isAttached)
             {
-                Drop(false, null);
-                item.SetTransform(simPosition, 0.0f);
-                AttachToWall();
+                if (!attached)
+                {
+                    Drop(false, null);
+                    item.SetTransform(simPosition, 0.0f);
+                    AttachToWall();
+                }
             }
             else
             {
-                DropConnectedWires(null);
-
-                if (body != null)
+                if (attached)
                 {
-                    item.body = body;
-                    item.body.Enabled = true;
-                }
-                IsActive = false;
+                    DropConnectedWires(null);
 
-                DeattachFromWall();
+                    if (body != null)
+                    {
+                        item.body = body;
+                        item.body.Enabled = true;
+                    }
+                    IsActive = false;
+
+                    DeattachFromWall();
+                }
             }
         }
     }

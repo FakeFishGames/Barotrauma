@@ -27,8 +27,12 @@ namespace Barotrauma
 
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+        {
+            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
+            endRoundButton = new GUIButton(
+                new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), 
+                TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
+
             endRoundButton.Font = GUI.SmallFont;
             endRoundButton.OnClicked = TryEndRound;
 
@@ -55,7 +59,7 @@ namespace Barotrauma
 
             isRunning = true;
 
-            CrewManager.StartRound();
+            CrewManager.InitSinglePlayerRound();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -193,6 +197,7 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                Map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
@@ -302,7 +307,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crew":
-                        GameMain.GameSession.CrewManager = new CrewManager(subElement);
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
                         break;
                     case "map":
                         campaign.map = Map.LoadNew(subElement);

@@ -2,15 +2,15 @@
 
 namespace Barotrauma
 {
-    partial class AIController : ISteerable
+    abstract partial class AIController : ISteerable
     {
         public enum AIState { None, Attack, GoTo, Escape, Eat }
 
         public bool Enabled;
 
         public readonly Character Character;
-        
-        protected AIState state;
+
+        private AIState state;
 
         protected SteeringManager steeringManager;
 
@@ -24,7 +24,7 @@ namespace Barotrauma
             get { return Character.AnimController.TargetMovement; }
             set { Character.AnimController.TargetMovement = value; }
         }
-        
+
         public Vector2 SimPosition
         {
             get { return Character.SimPosition; }
@@ -40,10 +40,25 @@ namespace Barotrauma
             get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
+        public virtual bool CanEnterSubmarine
+        {
+            get { return true; }
+        }
+
+        public virtual AIObjectiveManager ObjectiveManager
+        {
+            get { return null; }
+        }
+
         public AIState State
         {
             get { return state; }
-            set { state = value; }
+            set
+            {
+                if (state == value) return;
+                OnStateChanged(state, value);
+                state = value;
+            }
         }
 
         public AIController (Character c)
@@ -53,13 +68,13 @@ namespace Barotrauma
             Enabled = true;
         }
 
-        public virtual void OnAttacked(Character attacker, float amount) { }
+        public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
 
         public virtual void SelectTarget(AITarget target) { }
 
         public virtual void Update(float deltaTime) { }
 
-        //protected Structure lastStructurePicked;
-        
+        protected virtual void OnStateChanged(AIState from, AIState to) { }
+             
     }
 }

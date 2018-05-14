@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class EditorTutorial : TutorialType
+    class EditorTutorial : Tutorial
     {
-        public EditorTutorial(string name)
-            : base (name)
+        public EditorTutorial(XElement element)
+            : base (element)
         {
         }
 

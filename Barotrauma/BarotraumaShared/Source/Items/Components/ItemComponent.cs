@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -140,6 +143,14 @@ namespace Barotrauma.Items.Components
         {
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
+        }
+        
+        //Can the "Use" action be triggered by characters or just other items/statuseffects
+        [Serialize(false, false)]
+        public bool CharacterUsable
+        {
+            get { return characterUsable; }
+            set { characterUsable = value; }
         }
 
         public InputType PickKey
@@ -386,9 +397,10 @@ namespace Barotrauma.Items.Components
         public void Remove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 
@@ -408,9 +420,10 @@ namespace Barotrauma.Items.Components
         public void ShallowRemove()
         {
 #if CLIENT
-            if (loopingSound != null)
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
             }
 #endif
 
@@ -435,7 +448,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Skill skill in requiredSkills)
             {
-                int characterLevel = character.GetSkillLevel(skill.Name);
+                float characterLevel = character.GetSkillLevel(skill.Name);
                 if (characterLevel < skill.Level)
                 {
                     insufficientSkill = skill;
@@ -450,25 +463,24 @@ namespace Barotrauma.Items.Components
         /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
         /// </summary>
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
-        protected float DegreeOfSuccess(Character character)
+        public float DegreeOfSuccess(Character character)
         {
-            if (requiredSkills.Count == 0) return 100.0f;
+            if (requiredSkills.Count == 0) return 1.0f;
 
-            float[] skillSuccess = new float[requiredSkills.Count];
-
+            float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
-
-                skillSuccess[i] = (characterLevel - requiredSkills[i].Level);
+                float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
+                skillSuccessSum += (characterLevel - requiredSkills[i].Level);
             }
+            float average = skillSuccessSum / requiredSkills.Count;
 
-            float average = skillSuccess.Average();
-
-            return (average + 100.0f) / 2.0f;
+            return ((average + 100.0f) / 2.0f) / 100.0f;
         }
 
-        public virtual void FlipX() { }
+        public virtual void FlipX(bool relativeToSub) { }
+
+        public virtual void FlipY(bool relativeToSub) { }
 
         public bool HasRequiredContainedItems(bool addMessage)
         {
@@ -524,16 +536,18 @@ namespace Barotrauma.Items.Components
             return true;
         }
         
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (statusEffectLists == null) return;
 
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = item.Condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                item.ApplyStatusEffect(effect, type, deltaTime, character);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, false, false);
             }
         }
         
@@ -623,12 +637,19 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Could not find the constructor of the component \"" + type + "\" (" + file + ")", e);
                 return null;
             }
+            ItemComponent ic = null;
+            try
+            {
+                object[] lobject = new object[] { item, element };
+                object component = constructor.Invoke(lobject);
 
-            object[] lobject = new object[] { item, element };
-            object component = constructor.Invoke(lobject);
-
-            ItemComponent ic = (ItemComponent)component;
-            ic.name = element.Name.ToString();
+                ic = (ItemComponent)component;
+                ic.name = element.Name.ToString();
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+            }
 
             return ic;
         }
