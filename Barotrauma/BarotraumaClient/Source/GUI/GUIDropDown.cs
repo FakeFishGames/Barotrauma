@@ -231,17 +231,17 @@ namespace Barotrauma
             return true;
         }
 
-        public override void AddToGUIUpdateList(bool ignoreChildren = false, int drawOrder = 0)
+        public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
-            base.AddToGUIUpdateList(true, drawOrder);
+            base.AddToGUIUpdateList(true, order);
             if (!ignoreChildren)
             {
-                button.AddToGUIUpdateList(false, drawOrder);
+                button.AddToGUIUpdateList(false, order);
                 if (Dropped)
                 {
                     // Enforces the listbox to be rendered on top of other elements. 
                     // Changing the child order caused an artifact (see above), therefore this solution.
-                    listBox.AddToGUIUpdateList(false, drawOrder + 1);
+                    listBox.AddToGUIUpdateList(false, order + 1);
                 }
             }
         }
