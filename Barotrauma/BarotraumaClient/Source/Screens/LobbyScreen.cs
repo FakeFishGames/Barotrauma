@@ -27,46 +27,52 @@ namespace Barotrauma
 
         public LobbyScreen()
         {
-            Rectangle panelRect = new Rectangle(
-                40, 40,
-                GameMain.GraphicsWidth - 80,
-                100);
-
-            topPanel = new GUIFrame(panelRect, "");
+            topPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.1f), Frame.RectTransform, Anchor.TopCenter, Pivot.TopCenter)
+            {
+                RelativeOffset = new Vector2(0.0f, 0.05f)
+            });
             topPanel.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-            
-            locationTitle = new GUITextBlock(new Rectangle(0, 0, 200, 25),
-                "", Color.Transparent, Color.White, Alignment.TopLeft, "", topPanel);
-            locationTitle.Font = GUI.LargeFont;
 
+            locationTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), topPanel.RectTransform)
+            {
+                RelativeOffset = new Vector2(0.02f, 0.2f)
+            }, "", Color.White, GUI.LargeFont);
 
-            GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "", "", 
-                Alignment.BottomLeft, Alignment.BottomLeft, topPanel);
+            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), topPanel.RectTransform)
+            {
+                RelativeOffset = new Vector2(0.02f, 0.6f)
+            }, "");
             moneyText.TextGetter = GetMoney;
-            
-            GUIButton button = new GUIButton(new Rectangle(-240, 0, 100, 30), TextManager.Get("Map"), null, Alignment.BottomRight, "", topPanel);
+
+            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
+            {
+                RelativeOffset = new Vector2(0.05f, 0.0f)
+            }, TextManager.Get("Map"));
             button.UserData = CampaignUI.Tab.Map;
             button.OnClicked = SelectTab;
             SelectTab(button, button.UserData);
 
-            button = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("Crew"), null, Alignment.BottomRight, "", topPanel);
+            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
+            {
+                RelativeOffset = new Vector2(0.13f, 0.0f)
+            }, TextManager.Get("Crew"));
             button.UserData = CampaignUI.Tab.Crew;
             button.OnClicked = SelectTab;
             
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("Store"), null, Alignment.BottomRight, "", topPanel);
+            button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
+            {
+                RelativeOffset = new Vector2(0.21f, 0.0f)
+            }, TextManager.Get("Store"));
             button.UserData = CampaignUI.Tab.Store;
             button.OnClicked = SelectTab;
    
             //---------------------------------------------------------------
             //---------------------------------------------------------------
-
-            panelRect = new Rectangle(
-                40,
-                panelRect.Bottom + 40,
-                panelRect.Width,
-                GameMain.GraphicsHeight - 120 - panelRect.Height);
-
-            bottomPanel = new GUIFrame(panelRect);      
+            
+            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.78f), Frame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0.0f, 0.05f)
+            });
         }
 
         public override void Select()
@@ -89,20 +95,20 @@ namespace Barotrauma
             campaignUI.UpdateCharacterLists();
         }
         
-        public override void AddToGUIUpdateList()
+        /*public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
 
-            topPanel.AddToGUIUpdateList();
-            bottomPanel.AddToGUIUpdateList();
-        }
+            //topPanel.AddToGUIUpdateList();
+            //bottomPanel.AddToGUIUpdateList();
+        }*/
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
-            topPanel.UpdateManually((float)deltaTime);
-            bottomPanel.UpdateManually((float)deltaTime);
+            //topPanel.UpdateManually((float)deltaTime);
+            //bottomPanel.UpdateManually((float)deltaTime);
 
             campaignUI.Update((float)deltaTime);
 
@@ -131,8 +137,8 @@ namespace Barotrauma
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
                 Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
             
-            topPanel.DrawManually(spriteBatch);
-            bottomPanel.DrawManually(spriteBatch);
+            //topPanel.DrawManually(spriteBatch);
+            //bottomPanel.DrawManually(spriteBatch);
 
             campaignUI.Draw(spriteBatch);
 

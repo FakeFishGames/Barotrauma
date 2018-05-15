@@ -47,48 +47,67 @@ namespace Barotrauma
 
             tabs = new GUIFrame[3];
 
-            tabs[(int)Tab.Crew] = new GUIFrame(Rectangle.Empty, null, container);
+            tabs[(int)Tab.Crew] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
             tabs[(int)Tab.Crew].Padding = Vector4.One * 10.0f;
 
             //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, "", bottomPanel[(int)PanelTab.Crew]);
 
             int crewColumnWidth = Math.Min(300, (container.Rect.Width - 40) / 2);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Crew") + ":", "", tabs[(int)Tab.Crew], GUI.LargeFont);
-            characterList = new GUIListBox(new Rectangle(0, 40, crewColumnWidth, 0), "", tabs[(int)Tab.Crew]);
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.02f)
+            }, TextManager.Get("Crew") + ":", style: "");
+            characterList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterLeft, Pivot.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.05f)
+            }, false, null, "");
             characterList.OnSelected = SelectCharacter;
 
-            hireList = new GUIListBox(new Rectangle(0, 40, 300, 0), "", Alignment.Right, tabs[(int)Tab.Crew]);
-            new GUITextBlock(new Rectangle(0, 0, 300, 20), TextManager.Get("Hire") + ":", "", Alignment.Right, Alignment.Left, tabs[(int)Tab.Crew], false, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.05f), tabs[(int)Tab.Crew].RectTransform, Anchor.TopRight, Pivot.TopRight)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.02f)
+            }, TextManager.Get("Hire") + ":", style: "");
+            hireList = new GUIListBox(new RectTransform(new Vector2(0.3f, 0.95f), tabs[(int)Tab.Crew].RectTransform, Anchor.CenterRight, Pivot.CenterRight)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.05f)
+            }, false, null, "");
             hireList.OnSelected = SelectCharacter;
 
             //---------------------------------------
 
-            tabs[(int)Tab.Map] = new GUIFrame(Rectangle.Empty, null, container);
+            tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
             tabs[(int)Tab.Map].Padding = Vector4.One * 10.0f;
 
             if (GameMain.Client == null)
             {
-                startButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartCampaignButton"),
-                    Alignment.BottomRight, "", tabs[(int)Tab.Map]);
+                startButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.04f), tabs[(int)Tab.Map].RectTransform, Anchor.BottomRight, Pivot.BottomRight)
+                {
+                    RelativeOffset = new Vector2(0.01f, 0.03f)
+                }, TextManager.Get("StartCampaignButton"));
                 startButton.OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; };
                 startButton.Enabled = false;
             }
 
             //---------------------------------------
 
-            tabs[(int)Tab.Store] = new GUIFrame(Rectangle.Empty, null, container);
+            tabs[(int)Tab.Store] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
             tabs[(int)Tab.Store].Padding = Vector4.One * 10.0f;
 
             int sellColumnWidth = (tabs[(int)Tab.Store].Rect.Width - 40) / 2 - 20;
 
-            selectedItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, "", tabs[(int)Tab.Store]);
+            selectedItemList = new GUIListBox(new RectTransform(new Vector2(0.45f, 0.95f), tabs[(int)Tab.Store].RectTransform, Anchor.CenterLeft, Pivot.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.0f)
+            }, false, null, "");
             selectedItemList.OnSelected = SellItem;
             
-            storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, Alignment.TopRight, "", tabs[(int)Tab.Store]);
+            storeItemList = new GUIListBox(new RectTransform(new Vector2(0.45f, 0.95f), tabs[(int)Tab.Store].RectTransform, Anchor.CenterRight, Pivot.CenterRight)
+            {
+                RelativeOffset = new Vector2(0.01f, 0.0f)
+            }, false, null, "");
             storeItemList.OnSelected = BuyItem;
 
-            int x = storeItemList.Rect.X - storeItemList.Parent.Rect.X;
 
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
             
@@ -96,10 +115,14 @@ namespace Barotrauma
             itemCategories.RemoveAll(c => 
                 !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
 
-            int buttonWidth = Math.Min(sellColumnWidth / itemCategories.Count, 100);
+            int x = 0;
+            int buttonWidth = storeItemList.Rect.Width / itemCategories.Count;
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new Rectangle(x, 0, buttonWidth, 20), category.ToString(), "", tabs[(int)Tab.Store]);
+                var categoryButton = new GUIButton(new RectTransform(new Point(buttonWidth, 30), tabs[(int)Tab.Store].RectTransform, Anchor.CenterRight, Pivot.BottomRight)
+                {
+                    AbsoluteOffset = new Point(x, -storeItemList.Rect.Height / 2)
+                }, category.ToString());
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
 
