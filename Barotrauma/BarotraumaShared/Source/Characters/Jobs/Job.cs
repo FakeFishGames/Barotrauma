@@ -6,7 +6,6 @@ namespace Barotrauma
 {
     class Job
     {
-
         private readonly JobPrefab prefab;
 
         private Dictionary<string, Skill> skills;
@@ -30,12 +29,7 @@ namespace Barotrauma
         {
             get { return prefab.Items; }
         }
-
-        //public List<bool> EquipSpawnItem
-        //{
-        //    get { return prefab.EquipItem; }
-        //}
-
+        
         public List<Skill> Skills
         {
             get { return skills.Values.ToList(); }
@@ -65,7 +59,7 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(name)) continue;
                 skills.Add(
                     skillName,
-                    new Skill(skillName, subElement.GetAttributeInt("level", 0)));
+                    new Skill(skillName, subElement.GetAttributeFloat("level", 0)));
             }
         }
         
@@ -76,12 +70,21 @@ namespace Barotrauma
             return new Job(prefab);
         }
 
-        public int GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillName)
         {
             Skill skill = null;
             skills.TryGetValue(skillName, out skill);
 
-            return (skill==null) ? 0 : skill.Level;
+            return (skill == null) ? 0.0f : skill.Level;
+        }
+
+        public void IncreaseSkillLevel(string skillName, float increase)
+        {
+            Skill skill = null;
+            if (skills.TryGetValue(skillName, out skill))
+            {
+                skill.Level += increase;
+            }
         }
 
         public void GiveJobItems(Character character, WayPoint spawnPoint)

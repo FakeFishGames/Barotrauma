@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,9 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static Wire HighlightedWire;
-
         public List<Connection> Connections;
 
-        Character user;
+        private Character user;
 
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
@@ -46,7 +45,13 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (user != null && user.SelectedConstruction != item) user = null;
+            if (user == null || user.SelectedConstruction != item)
+            {
+                user = null;
+                return;
+            }
+
+            user.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override bool Select(Character picker)
@@ -65,7 +70,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character!=user) return false;
+            if (character == null || character != user) return false;
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
@@ -74,7 +79,7 @@ namespace Barotrauma.Items.Components
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 50.0f) < degreeOfSuccess) return false;
+            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
 
             character.SetStun(5.0f);
 

@@ -28,13 +28,17 @@ namespace Barotrauma
         private readonly string configFile;
         
         //default size
-        protected Vector2 size;
-                
+        protected Vector2 size;                
+
+        private float impactTolerance;
+
+        private bool canSpriteFlipX, canSpriteFlipY;
+        
+        private Dictionary<string, PriceInfo> prices;
+
         //an area next to the construction
         //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
-
-        private float impactTolerance;
 
         public string ConfigFile
         {
@@ -46,8 +50,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        private bool canSpriteFlipX;
 
         public List<DeconstructItem> DeconstructItems
         {
@@ -129,6 +131,13 @@ namespace Barotrauma
             set { impactTolerance = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(0.0f, false)]
+        public float RadarSize
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool CanUseOnSelf
         {
@@ -162,9 +171,19 @@ namespace Barotrauma
             get { return canSpriteFlipX; }
         }
 
+        public bool CanSpriteFlipY
+        {
+            get { return canSpriteFlipY; }
+        }
+
         public Vector2 Size
         {
             get { return size; }
+        }
+
+        public bool CanBeBought
+        {
+            get { return prices != null && prices.Count > 0; }
         }
 
         public override void UpdatePlacing(Camera cam)
@@ -269,6 +288,7 @@ namespace Barotrauma
 
             name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+            identifier = element.GetAttributeString("identifier", "");
 
             DebugConsole.Log("    " + name);
 
@@ -289,8 +309,13 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
-            Tags = new List<string>();
-            Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            Tags = new HashSet<string>();
+            string joinedTags = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
+            foreach (string tag in joinedTags.Split(','))
+            {
+                Tags.Add(tag.Trim().ToLowerInvariant());
+            }
 
             SerializableProperty.DeserializeProperties(this, element);
 
@@ -306,6 +331,7 @@ namespace Barotrauma
                         }
 
                         canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         if (subElement.Attribute("sourcerect") == null)
@@ -314,7 +340,20 @@ namespace Barotrauma
                         }
                         size = sprite.size;
                         break;
+                    case "price":
+                        string locationType = subElement.GetAttributeString("locationtype", "");
+                        if (prices == null) prices = new Dictionary<string, PriceInfo>();
+                        prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
+                        break;
 #if CLIENT
+                    case "inventoryicon":
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+                        InventoryIcon = new Sprite(subElement, iconFolder);
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
@@ -367,8 +406,28 @@ namespace Barotrauma
                         break;
                 }
             }
-
+            
+            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            {
+                DebugConsole.ThrowError(
+                    "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+            }
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
+                if (existingPrefab != null)
+                {
+                    DebugConsole.ThrowError(
+                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
+                }
+            }
             List.Add(this);
+        }
+
+        public PriceInfo GetPrice(Location location)
+        {
+            if (prices == null || !prices.ContainsKey(location.Type.Name.ToLowerInvariant())) return null;
+            return prices[location.Type.Name.ToLowerInvariant()];
         }
     }
 }

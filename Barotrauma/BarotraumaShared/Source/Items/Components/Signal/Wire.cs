@@ -450,11 +450,20 @@ namespace Barotrauma.Items.Components
             return closestIndex;
         }
         
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {            
             for (int i = 0; i < nodes.Count; i++)
             {
                 nodes[i] = new Vector2(-nodes[i].X, nodes[i].Y);
+            }
+            UpdateSections();
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodes[i] = new Vector2(nodes[i].X, -nodes[i].Y);
             }
             UpdateSections();
         }
@@ -471,17 +480,9 @@ namespace Barotrauma.Items.Components
             {
                 float x = 0.0f, y = 0.0f;
 
-                try
-                {
-                    x = float.Parse(nodeCoords[i * 2], CultureInfo.InvariantCulture);
-                }
-                catch { x = 0.0f; }
+                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out x);
 
-                try
-                {
-                    y = float.Parse(nodeCoords[i * 2 + 1], CultureInfo.InvariantCulture);
-                }
-                catch { y = 0.0f; }
+                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out y);
 
                 nodes.Add(new Vector2(x, y));
             }
@@ -509,7 +510,7 @@ namespace Barotrauma.Items.Components
 
         protected override void ShallowRemoveComponentSpecific()
         {
-            for (int i = 0; i < 2; i++)
+            /*for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == null) continue;
                 int wireIndex = connections[i].FindWireIndex(item);
@@ -518,7 +519,7 @@ namespace Barotrauma.Items.Components
                 {
                     connections[i].AddLink(wireIndex, null);
                 }
-            }
+            }*/
         }
 
         protected override void RemoveComponentSpecific()

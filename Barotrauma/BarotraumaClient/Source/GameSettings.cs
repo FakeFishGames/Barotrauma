@@ -28,6 +28,14 @@ namespace Barotrauma
             return keyMapping[(int)inputType];
         }
         
+        private bool ChangeParticleLimit(GUIScrollBar scrollBar, float barScroll)
+        {
+            UnsavedSettings = true;
+            ParticleLimit = 200 + (int)(barScroll * 1300.0f);
+
+            return true;
+        }
+
         private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -112,6 +120,14 @@ namespace Barotrauma
             };
             vsyncTickBox.Selected = VSyncEnabled;
 
+            y += 50;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("ParticleLimit"), "", settingsFrame);
+            GUIScrollBar particleScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), "", 0.1f, settingsFrame);
+            particleScrollBar.BarScroll = ((float)(ParticleLimit-200)) / 1300.0f;
+            particleScrollBar.OnMoved = ChangeParticleLimit;
+            particleScrollBar.Step = 0.1f;
+
             y += 70;
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("SoundVolume"), "", settingsFrame);
@@ -145,15 +161,15 @@ namespace Barotrauma
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
-                new GUITextBlock(new Rectangle(x, y, 100, 18), inputNames[i] + ": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame);
-                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 18), null, null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
-
+                new GUITextBlock(new Rectangle(x, y, 100, 15), inputNames[i] + ": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame, false, GUI.SmallFont);
+                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), null, null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
+                keyBox.Font = GUI.SmallFont;
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
 
-                y += 20;
+                y += 16;
             }
 
             applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("ApplySettingsButton"), Alignment.BottomRight, "", settingsFrame);
@@ -193,8 +209,8 @@ namespace Barotrauma
         {
             yield return CoroutineStatus.Running;
 
-            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0
-                && !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked())
+            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 && 
+                !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked())
             {
                 if (Screen.Selected != GameMain.MainMenuScreen && !GUI.SettingsMenuOpen) yield return CoroutineStatus.Success;
 
@@ -215,6 +231,11 @@ namespace Barotrauma
                 keyMapping[keyIndex] = new KeyOrMouse(1);
                 keyBox.Text = "Mouse2";
             }
+            else if (PlayerInput.MidButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(2);
+                keyBox.Text = "Mouse3";
+            }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
@@ -233,7 +254,7 @@ namespace Barotrauma
         
         private bool ApplyClicked(GUIButton button, object userData)
         {
-            Save("config.xml");
+            Save();
 
             settingsFrame.Flash(Color.Green);
             

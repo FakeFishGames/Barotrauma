@@ -27,9 +27,7 @@ namespace Barotrauma
         private GUIFrame characterPreviewFrame;
         
         private Level selectedLevel;
-
-        private float mapZoom = 3.0f;
-
+        
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
 
@@ -93,8 +91,10 @@ namespace Barotrauma
             int x = storeItemList.Rect.X - storeItemList.Parent.Rect.X;
 
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            
             //don't show categories with no buyable items
-            itemCategories.RemoveAll(c => !MapEntityPrefab.List.Any(ep => ep.Price > 0.0f && ep.Category.HasFlag(c)));
+            itemCategories.RemoveAll(c => 
+                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
 
             int buttonWidth = Math.Min(sellColumnWidth / itemCategories.Count, 100);
             foreach (MapEntityCategory category in itemCategories)
@@ -115,7 +115,7 @@ namespace Barotrauma
             UpdateLocationTab(campaign.Map.CurrentLocation);
 
             campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnLocationChanged += (location) => UpdateLocationTab(location);
+            campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationTab(newLocation);
             campaign.CargoManager.OnItemsChanged += RefreshItemTab;
         }
 
@@ -152,17 +152,14 @@ namespace Barotrauma
         }
 
         public void Update(float deltaTime)
-        {
-            mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
-            
+        {            
             if (GameMain.GameSession?.Map != null)
             {
                 GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
                     tabs[(int)selectedTab].Rect.X + 20,
                     tabs[(int)selectedTab].Rect.Y + 20,
                     tabs[(int)selectedTab].Rect.Width - 310,
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                    tabs[(int)selectedTab].Rect.Height - 40));
             }
         }
 
@@ -174,7 +171,7 @@ namespace Barotrauma
                     tabs[(int)selectedTab].Rect.X + 20, 
                     tabs[(int)selectedTab].Rect.Y + 20,
                     tabs[(int)selectedTab].Rect.Width - 310, 
-                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+                    tabs[(int)selectedTab].Rect.Height - 40));
             }
         }
 
@@ -216,40 +213,40 @@ namespace Barotrauma
             OnLocationSelected?.Invoke(location, connection);
         }
 
-        private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox, int width)
+        private void CreateItemFrame(ItemPrefab ip, PriceInfo priceInfo, GUIListBox listBox, int width)
         {
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), "ListBoxElement", listBox);
-            frame.UserData = ep;
+            frame.UserData = ip;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            frame.ToolTip = ep.Description;
+            frame.ToolTip = ip.Description;
 
             ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(50, 0, 0, 25),
-                ep.Name,
+                ip.Name,
                 null, null,
                 Alignment.Left, Alignment.CenterX | Alignment.Left,
                 "", frame);
             textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-            textBlock.ToolTip = ep.Description;
+            textBlock.ToolTip = ip.Description;
 
-            if (ep.sprite != null)
+            if (ip.sprite != null)
             {
-                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
-                img.Color = ep.SpriteColor;
+                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ip.sprite, Alignment.CenterLeft, frame);
+                img.Color = ip.SpriteColor;
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
             textBlock = new GUITextBlock(
                 new Rectangle(width - 80, 0, 80, 25),
-                ep.Price.ToString(),
+                priceInfo.BuyPrice.ToString(),
                 null, null, Alignment.TopLeft,
                 Alignment.TopLeft, "", frame);
             textBlock.Font = font;
-            textBlock.ToolTip = ep.Description;
+            textBlock.ToolTip = ip.Description;
         }
 
         private bool BuyItem(GUIComponent component, object obj)
@@ -262,7 +259,8 @@ namespace Barotrauma
                 return false;
             }
 
-            if (prefab.Price > campaign.Money) return false;
+            PriceInfo priceInfo = prefab.GetPrice(campaign.Map.CurrentLocation);
+            if (priceInfo.BuyPrice > campaign.Money) return false;
             
             campaign.CargoManager.PurchaseItem(prefab);
             GameMain.Client?.SendCampaignState();
@@ -291,7 +289,7 @@ namespace Barotrauma
             selectedItemList.ClearChildren();
             foreach (ItemPrefab ip in campaign.CargoManager.PurchasedItems)
             {
-                CreateItemFrame(ip, selectedItemList, selectedItemList.Rect.Width);
+                CreateItemFrame(ip, ip.GetPrice(campaign.Map.CurrentLocation), selectedItemList, selectedItemList.Rect.Width);
             }
         }
         
@@ -309,15 +307,19 @@ namespace Barotrauma
             if (!(selection is MapEntityCategory)) return false;
 
             storeItemList.ClearChildren();
-
+            storeItemList.BarScroll = 0.0f;
+                        
             MapEntityCategory category = (MapEntityCategory)selection;
-            var items = MapEntityPrefab.List.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
-
             int width = storeItemList.Rect.Width;
-
-            foreach (MapEntityPrefab ep in items)
+            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
-                CreateItemFrame(ep, storeItemList, width);
+                var itemPrefab = mapEntityPrefab as ItemPrefab;
+                if (itemPrefab == null || !itemPrefab.Category.HasFlag(category)) continue;
+
+                PriceInfo priceInfo = itemPrefab.GetPrice(campaign.Map.CurrentLocation);
+                if (priceInfo == null) continue;
+
+                CreateItemFrame(itemPrefab, priceInfo, storeItemList, width);
             }
 
             storeItemList.Children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));

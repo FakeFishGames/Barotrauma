@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Tutorials;
 #endif
 using System;
 
@@ -17,12 +18,16 @@ namespace Barotrauma
 
     public partial class GameSettings
     {
+        const string FilePath = "config.xml";
+
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
 
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
+
+        public int ParticleLimit { get; set; }
 
         //public bool FullScreenEnabled { get; set; }
         
@@ -41,14 +46,7 @@ namespace Barotrauma
         public List<string> JobNamePreferences
         {
             get { return jobNamePreferences; }
-            set
-            {
-                // Begin saving coroutine. Remove any existing save coroutines if one is running.
-                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
-                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
-
-                jobNamePreferences = value;
-            }
+            set { jobNamePreferences = value; }
         }
 
         private bool unsavedSettings;
@@ -82,7 +80,12 @@ namespace Barotrauma
             {
                 soundVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                Sounds.SoundManager.MasterVolume = soundVolume;
+                if (GameMain.SoundManager!=null)
+                {
+                    GameMain.SoundManager.SetCategoryGainMultiplier("default",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("ui",soundVolume);
+                    GameMain.SoundManager.SetCategoryGainMultiplier("waterambience",soundVolume);
+                }
 #endif
             }
         }
@@ -117,10 +120,12 @@ namespace Barotrauma
                 if (defaultPlayerName != value)
                 {
                     defaultPlayerName = value;
-                    Save("config.xml");
+                    Save();
                 }
             }
         }
+
+        public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
@@ -128,7 +133,7 @@ namespace Barotrauma
         public GameSettings(string filePath)
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
-
+            CompletedTutorialNames = new List<string>();
             Load(filePath);
         }
 
@@ -153,10 +158,10 @@ namespace Barotrauma
 
                 SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
 
-                JobNamePreferences = new List<string>();
+                jobNamePreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
                 {
-                    JobNamePreferences.Add(job.Name);
+                    jobNamePreferences.Add(job.Name);
                 }
                 return;
             }
@@ -165,6 +170,9 @@ namespace Barotrauma
             GraphicsWidth = graphicsMode.GetAttributeInt("width", 0);
             GraphicsHeight = graphicsMode.GetAttributeInt("height", 0);
             VSyncEnabled = graphicsMode.GetAttributeBool("vsync", true);
+
+            XElement graphicsSettings = doc.Root.Element("graphicssettings");
+            ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
 
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
@@ -230,14 +238,20 @@ namespace Barotrauma
                         }
                         break;
                     case "gameplay":
-                        JobNamePreferences = new List<string>();
+                        jobNamePreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            JobNamePreferences.Add(ele.GetAttributeString("name", ""));
+                            jobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
+                        break;
+                    case "tutorials":
+                        foreach (XElement tutorialElement in subElement.Elements())
+                        {
+                            CompletedTutorialNames.Add(tutorialElement.GetAttributeString("name", ""));
+                        }
                         break;
                 }
             }
@@ -259,8 +273,7 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-
-
+                        
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
 
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
@@ -269,7 +282,7 @@ namespace Barotrauma
             }
         }
         
-        public void Save(string filePath)
+        public void Save()
         {
             UnsavedSettings = false;
 
@@ -314,6 +327,14 @@ namespace Barotrauma
                     new XAttribute("displaymode", windowMode));
             }
 
+            XElement gSettings = doc.Root.Element("graphicssettings");
+            if (gSettings == null)
+            {
+                gSettings = new XElement("graphicssettings");
+                doc.Root.Add(gSettings);
+            }
+
+            gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
 
             if (SelectedContentPackage != null)
             {
@@ -348,14 +369,26 @@ namespace Barotrauma
             playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
             doc.Root.Add(playerElement);
 
-            doc.Save(filePath);
-        }
-        
-        private IEnumerable<object> ApplyUnsavedChanges()
-        {
-            yield return new WaitForSeconds(10.0f);
+#if CLIENT
+            if (Tutorial.Tutorials != null)
+            {
+                foreach (Tutorial tutorial in Tutorial.Tutorials)
+                {
+                    if (tutorial.Completed && !CompletedTutorialNames.Contains(tutorial.Name))
+                    {
+                        CompletedTutorialNames.Add(tutorial.Name);
+                    }
+                }
+            }
+#endif
+            var tutorialElement = new XElement("tutorials");
+            foreach (string tutorialName in CompletedTutorialNames)
+            {
+                tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
+            }
+            doc.Root.Add(tutorialElement);
 
-            Save("config.xml");
+            doc.Save(FilePath);
         }
     }
 }

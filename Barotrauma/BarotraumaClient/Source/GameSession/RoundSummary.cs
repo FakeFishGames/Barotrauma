@@ -21,7 +21,6 @@ namespace Barotrauma
             selectedMission = gameSession.Mission;
         }
         
-
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
             bool singleplayer = GameMain.NetworkMember == null;
@@ -87,11 +86,15 @@ namespace Barotrauma
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
 
-
             new GUITextBlock(new Rectangle(0, 0, 0, 40), TextManager.Get("RoundSummaryCrewStatus"), "", listBox, GUI.LargeFont);
 
             GUIListBox characterListBox = new GUIListBox(new Rectangle(0, 0, listBox.Rect.Width - 20, 90), null, Alignment.TopLeft, "", null, true);
             listBox.AddChild(characterListBox);
+
+            foreach (GUIComponent child in listBox.Children)
+            {
+                child.CanBeFocused = child == characterListBox;
+            }
 
             int x = 0;
             foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())
@@ -116,7 +119,10 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.ToString());
+                    statusText = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
+                        characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
+                        TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
+                    
                     statusColor = Color.DarkRed;
                 }
                 else
@@ -126,7 +132,7 @@ namespace Barotrauma
                         statusText = TextManager.Get("Unconscious");
                         statusColor = Color.DarkOrange;
                     }
-                    else if (character.Health / character.MaxHealth < 0.8f)
+                    else if (character.Vitality / character.MaxVitality < 0.8f)
                     {
                         statusText = TextManager.Get("Injured");
                         statusColor = Color.DarkOrange;

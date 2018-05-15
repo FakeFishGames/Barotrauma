@@ -53,8 +53,9 @@ namespace Barotrauma
             Aim = 0x200,
             Attack = 0x400,
             Ragdoll = 0x800,
+            Health = 0x1000,
 
-            MaxVal = 0xFFF
+            MaxVal = 0x1FFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -103,7 +104,7 @@ namespace Barotrauma
             LastNetworkUpdateID = 0;
             LastProcessedID = 0;
         }
-
+        
         private void UpdateNetInput()
         {
             if (this != Character.Controlled)
@@ -213,6 +214,7 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
                 if (IsKeyDown(InputType.Crouch))    newInput |= InputNetFlags.Crouch;
                 if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
+                if (IsKeyHit(InputType.Health))     newInput |= InputNetFlags.Health;
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                 if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
@@ -291,7 +293,9 @@ namespace Barotrauma
                         {
                             newAim = msg.ReadUInt16();
                         }
-                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Use))
+                        if (newInput.HasFlag(InputNetFlags.Select) || 
+                            newInput.HasFlag(InputNetFlags.Use) ||
+                            newInput.HasFlag(InputNetFlags.Health))
                         {
                             newInteract = msg.ReadUInt16();                 
                         }
@@ -354,19 +358,8 @@ namespace Barotrauma
 
                             if (IsUnconscious)
                             {
-                                Kill(lastAttackCauseOfDeath);
+                                Kill(health.GetCauseOfDeath());
                             }
-                            break;
-                        case 3:
-                            LimbType grabLimb = (LimbType)msg.ReadByte();
-                            if (c.Character != this)
-                            {
-#if DEBUG
-                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
-#endif
-                                return;
-                            }
-                            AnimController.GrabLimb = grabLimb;
                             break;
                     }
                     break;
@@ -449,7 +442,6 @@ namespace Barotrauma
                     if (AnimController is HumanoidAnimController)
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
-                        tempBuffer.Write((byte)AnimController.GrabLimb);
                     }
 
                     bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
@@ -500,11 +492,15 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Client attempted to write character status to a networked message");
                 return;
             }
-
+            
             msg.Write(isDead);
             if (isDead)
             {
-                msg.Write((byte)causeOfDeath);
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)causeOfDeath.First);
+                if (causeOfDeath.First == CauseOfDeathType.Affliction)
+                {
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(causeOfDeath.Second));
+                }
 
                 if (AnimController?.LimbJoints == null)
                 {
@@ -530,29 +526,8 @@ namespace Barotrauma
             }
             else
             {
-                msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
-
-                msg.Write(oxygen < 100.0f);
-                if (oxygen < 100.0f)
-                {
-                    msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
-                }
-
-                msg.Write(bleeding > 0.0f);
-                if (bleeding > 0.0f)
-                {
-                    msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-                }
-
-                msg.Write(Stun > 0.0f);
-                if (Stun > 0.0f)
-                {
-                    msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
-                }
-
+                health.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
-
-                msg.Write(HuskInfectionState > 0.0f);
             }
         }
 
@@ -563,6 +538,7 @@ namespace Barotrauma
             msg.Write(Info == null);
             msg.Write(ID);
             msg.Write(ConfigPath);
+            msg.Write(seed);
 
             msg.Write(WorldPosition.X);
             msg.Write(WorldPosition.Y);
@@ -571,6 +547,8 @@ namespace Barotrauma
 
             //character with no characterinfo (e.g. some monster)
             if (Info == null) return;
+
+            msg.Write(info.ID);
 
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
@@ -601,7 +579,7 @@ namespace Barotrauma
                 foreach (Skill skill in info.Job.Skills)
                 {
                     msg.Write(skill.Name);
-                    msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
+                    msg.WriteRangedInteger(0, 100, (int)MathHelper.Clamp(skill.Level, 0, 100));
                 }
             }
             else

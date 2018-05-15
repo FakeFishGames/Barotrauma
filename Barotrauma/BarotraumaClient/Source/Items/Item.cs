@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private List<ItemComponent> activeHUDs = new List<ItemComponent>();
+
         public override Sprite Sprite
         {
             get { return prefab.GetActiveSprite(condition); }
@@ -131,7 +133,18 @@ namespace Barotrauma
                 staticDrawableComponents[i].Draw(spriteBatch, editing);
             }
 
-            if (GameMain.DebugDraw && aiTarget != null) aiTarget.Draw(spriteBatch);
+            if (GameMain.DebugDraw)
+            {
+                aiTarget?.Draw(spriteBatch);
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item item in containedItems)
+                    {
+                        item.AiTarget?.Draw(spriteBatch);
+                    }
+                }
+            }
 
             if (!editing || (body != null && !body.Enabled))
             {
@@ -291,8 +304,8 @@ namespace Barotrauma
 
             return editingHUD;
         }
-
-        public virtual void UpdateHUD(Camera cam, Character character)
+        
+        public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             if (condition <= 0.0f)
             {
@@ -305,9 +318,34 @@ namespace Barotrauma
                 UpdateEditing(cam);
             }
 
+            activeHUDs.Clear();
+            //the HUD of the component with the highest priority will be drawn
+            //if all components have a priority of 0, all of them are drawn
+            ItemComponent maxPriorityHUD = null;            
             foreach (ItemComponent ic in components)
             {
-                if (ic.CanBeSelected) ic.UpdateHUD(character);
+                if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
+                    (maxPriorityHUD == null || ic.HudPriority > maxPriorityHUD.HudPriority))
+                {
+                    maxPriorityHUD = ic;
+                }
+            }
+
+            if (maxPriorityHUD != null)
+            {
+                activeHUDs.Add(maxPriorityHUD);
+            }
+            else
+            {
+                foreach (ItemComponent ic in components)
+                {
+                    if (ic.CanBeSelected && ic.ShouldDrawHUD(character)) activeHUDs.Add(ic);
+                }
+            }
+
+            foreach (ItemComponent ic in activeHUDs)
+            {
+                if (ic.CanBeSelected) ic.UpdateHUD(character, deltaTime);
             }
         }
 
@@ -323,11 +361,11 @@ namespace Barotrauma
             {
                 DrawEditing(spriteBatch, cam);
             }
-
-            foreach (ItemComponent ic in components)
+            
+            foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
-            }
+            }            
         }
 
         public override void AddToGUIUpdateList()
@@ -352,7 +390,7 @@ namespace Barotrauma
                     return;
                 }
 
-                foreach (ItemComponent ic in components)
+                foreach (ItemComponent ic in activeHUDs)
                 {
                     if (ic.CanBeSelected) ic.AddToGUIUpdateList();
                 }
@@ -379,6 +417,14 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ClientRead(type, msg, sendingTime);
                     break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                    {
+                        ushort fixerID = msg.ReadUInt16();
+                        FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
+                        FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                    }
+                    break;
                 case NetEntityEvent.Type.Status:
                     condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
 
@@ -387,21 +433,24 @@ namespace Barotrauma
                         if (Condition <= 0.0f)
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = msg.ReadBoolean();
+                                FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                         }
                         else
                         {
                             for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].Fixed = true;
+                                FixRequirements[i].FixProgress = 1.0f;
                         }
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
                     ushort targetID = msg.ReadUInt16();
+                    byte targetLimbID = msg.ReadByte();
 
                     Character target = FindEntityByID(targetID) as Character;
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, true);
+                    Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+
+                    ApplyStatusEffects(actionType, (float)Timing.Step, target, targetLimb, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
@@ -437,8 +486,13 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    //no further data needed, the server applies the effect
-                    //on the character of the client who sent the message                    
+                    UInt16 characterID = (UInt16)extraData[1];
+                    Limb targetLimb = (Limb)extraData[2];
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+
+                    msg.Write(characterID);
+                    msg.Write(targetCharacter == null ? (byte)255 : (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb));               
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);

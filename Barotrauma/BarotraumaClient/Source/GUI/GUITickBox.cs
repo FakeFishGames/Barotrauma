@@ -84,11 +84,11 @@ namespace Barotrauma
         }
 
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
-            : this(rect, label, alignment, GUI.Font, parent)
+            : this(rect, label, alignment, GUI.Font, "", parent)
         {
         }
 
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, GUIComponent parent)
+        public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, string style, GUIComponent parent)
             : base(null)
         {
             if (parent != null)
@@ -99,7 +99,7 @@ namespace Barotrauma
             box.SelectedColor = Color.DarkGray;
             box.CanBeFocused = false;
 
-            GUI.Style.Apply(box, "GUITickBox");
+            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
             
             text = new GUITextBlock(new Rectangle(rect.Right, rect.Y, 20, rect.Height), label, "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, this, false, font);
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);

@@ -1,4 +1,59 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed medicines not having an effect when injected with a medical syringe.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed explosives going off when a character holds them in their hand and left clicks, causing a crash 
+if done in the submarine editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.0
+---------------------------------------------------------------------------------------------------------
+
+Items:
+	- Added searchlights.
+	- Explosives, chemicals and medical items disappear when their condition falls to 0 
+	(i.e. when they're fully used).
+	- Railguns cannot be fired when not being aimed.
+	- Removed the need for batteries in diving suits. The light stays on as long as the suit is worn 
+	by a living character.
+	- Junction boxes only take damage underwater when they're powered up.
+
+Bugfixes:
+	- Fixed a bug that occasionally caused some characters to not be removed at the end of a round, causing 
+	various bugs and crashes on successive rounds (the most common ones being server-side crashes and 
+	constant "attempted to access a potentially removed ragdoll" console errors). 
+	- Fixed camera shake continuing indefinitely if a character falls unconscious due to impact damage.
+	- Fixed item removal by right clicking not being synced with clients.
+	- Fixed being able to gain karma by welding fixed walls.
+	- Fixed crashing caused by IndoorSteeringManager.
+	- Fixed all loose items disappearing from respawn subs between respawns.
+	- Fixed items in cloned/copypasted inventories not being saved.
+	- Option to edit structure texture scales and offsets.
+	- Fixed new log messages appearing in the server log even if the type of message has been filtered out.
+	- Fixed the EndRound music clip occasionally looping forever after a round ends.
+	- Fixed player-controlled creatures being able to damage themselves.
+	- Fixed repair tools causing damage to the user regardless of the character's skills.
+	- Attempt to fix characters occasionally getting launched out of the sub at lightspeed when the sub 
+	crashes into something.
+	- Fixed StatusEffects not working on child ItemComponents.
+	- Wearables apply OnWearing StatusEffects in all the components of an item, not just the Wearable component.
+	- Fixed Equals/NotEquals conditional comparisons.
+
+Misc additions:
+	- Added console commands for giving the clients ranks, showing their current permissions and 
+	giving/revoking the permission to use specific console commands.
+	- Option to set an automatic ban duration for vote kicked players.
+	- Option to log debug console output into a text file.
+	- Ladders can be climbed by holding up/down while standing next to them without having to select them first.
+	- Name tags and healthbars are clamped inside the room a character is inside.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.5
 ---------------------------------------------------------------------------------------------------------
 

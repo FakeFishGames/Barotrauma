@@ -6,6 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using EventInput;
 using Barotrauma.Extensions;
+using Barotrauma.Sounds;
 
 namespace Barotrauma
 {
@@ -19,38 +20,94 @@ namespace Barotrauma
         PickItemFail,
         DropItem
     }
-
+    
     public static class GUI
     {
-        public static ScalableFont Font, SmallFont, LargeFont;
+        public static float Scale
+        {
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
+        }
+
+        public static GUIStyle Style;
 
         private static Texture2D t;
-        private static Sprite cursor;
+
+        private static Sprite Cursor => Style.CursorSprite;
+
+        private static GraphicsDevice graphicsDevice;
+        public static GraphicsDevice GraphicsDevice
+        {
+            get
+            {
+                return graphicsDevice;
+            }
+            set
+            {
+                graphicsDevice = value;
+            }
+        }
+
         private static List<GUIMessage> messages = new List<GUIMessage>();
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
         private static Sprite submarineIcon, arrow;
 
-        public static GraphicsDevice GraphicsDevice => GameMain.GraphicsDeviceManager.GraphicsDevice;
-        public static GUIStyle Style { get; set; }
-        public static Color ScreenOverlayColor { get; set; }
-        public static Sprite SubmarineIcon => submarineIcon;
-        public static Sprite SpeechBubbleIcon { get; private set; }
-        public static Sprite Arrow => arrow;
-        public static bool DisableHUD { get; set; }
-        public static bool PauseMenuOpen => pauseMenuOpen;
-        public static bool SettingsMenuOpen => settingsMenuOpen;
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
+
+        public static ScalableFont Font => Style?.Font;
+        public static ScalableFont SmallFont => Style?.SmallFont;
+        public static ScalableFont LargeFont => Style?.LargeFont;
+
+        public static Sprite SubmarineIcon
+        {
+            get { return submarineIcon; }
+        }
+
+        public static Sprite SpeechBubbleIcon
+        {
+            get;
+            private set;
+        }
+
+        public static Sprite Arrow
+        {
+            get { return arrow; }
+        }
+
+        public static bool SettingsMenuOpen
+        {
+            get { return settingsMenuOpen; }
+        }
+
+        public static bool PauseMenuOpen
+        {
+            get { return pauseMenuOpen; }
+        }
+
+        public static Color ScreenOverlayColor
+        {
+            get;
+            set;
+        }
+
+        public static bool DisableHUD;
 
         public static void Init(GameWindow window, ContentManager content)
         {
             KeyboardDispatcher = new KeyboardDispatcher(window);
-            Font = new ScalableFont("Content/Exo2-Medium.otf", 14, GraphicsDevice);
-            SmallFont = new ScalableFont("Content/Exo2-Light.otf", 12, GraphicsDevice);
-            LargeFont = new ScalableFont("Content/Code Pro Bold.otf", 22, GraphicsDevice);
-            cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
-            Style = new GUIStyle("Content/UI/style.xml");
+            var uiStyles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.UIStyle);
+            if (uiStyles.Count == 0)
+            {
+                DebugConsole.ThrowError("No UI styles defined in the selected content package!");
+                return;
+            }
+            else if (uiStyles.Count > 1)
+            {
+                DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
+            }
+
+            Style = new GUIStyle(uiStyles[0]);
         }
 
         public static void LoadContent(bool loadSounds = true)
@@ -58,13 +115,15 @@ namespace Barotrauma
             if (loadSounds)
             {
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
-                sounds[(int)GUISoundType.Message] = Sound.Load("Content/Sounds/UI/UImsg.ogg", false);
-                sounds[(int)GUISoundType.RadioMessage] = Sound.Load("Content/Sounds/UI/radiomsg.ogg", false);
-                sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
-                sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
-                sounds[(int)GUISoundType.PickItem] = Sound.Load("Content/Sounds/pickItem.ogg", false);
-                sounds[(int)GUISoundType.PickItemFail] = Sound.Load("Content/Sounds/pickItemFail.ogg", false);
-                sounds[(int)GUISoundType.DropItem] = Sound.Load("Content/Sounds/dropItem.ogg", false);
+
+                sounds[(int)GUISoundType.Message] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
+                sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/radiomsg.ogg", false);
+                sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/deadmsg.ogg", false);
+                sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/beep-shinymetal.ogg", false);
+
+                sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItem.ogg", false);
+                sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/pickItemFail.ogg", false);
+                sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/dropItem.ogg", false);
             }
             // create 1x1 texture for line drawing
             t = new Texture2D(GraphicsDevice, 1, 1);
@@ -84,7 +143,7 @@ namespace Barotrauma
         {
             updateList.ForEach(c => c.DrawAuto(spriteBatch));
 
-            if (ScreenOverlayColor.A>0.0f)
+            if (ScreenOverlayColor.A > 0.0f)
             {
                 DrawRectangle(
                     spriteBatch,
@@ -123,42 +182,85 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
-                for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
+                for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                 {
                     Color clr = Color.White;
-
                     string soundStr = i + ": ";
-
-                    var playingSound = Sounds.SoundManager.GetPlayingSound(i);
-
-                    if (playingSound == null)
+                    SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(i);
+                    if (playingSoundChannel == null)
                     {
                         soundStr += "none";
                         clr *= 0.5f;
                     }
                     else
                     {
-                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSound.FilePath);
+                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
 
-                        if (Sounds.SoundManager.IsLooping(i))
+#if DEBUG
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                        {
+                            if (PlayerInput.MousePosition.Y>=i*15 && PlayerInput.MousePosition.Y<=i*15+12)
+                            {
+                                GameMain.SoundManager.DebugSource(i);
+                            }
+                        }
+#endif
+
+                        if (playingSoundChannel.Looping)
                         {
                             soundStr += " (looping)";
                             clr = Color.Yellow;
                         }
+
+                        if (playingSoundChannel.IsStream)
+                        {
+                            soundStr += " (streaming)";
+                            clr = Color.Lime;
+                        }
+
+                        if (!playingSoundChannel.IsPlaying)
+                        {
+                            soundStr += " (stopped)";
+                            clr *= 0.5f;
+                        }
+
+                        //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
                     }
 
                     DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
-                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
-                DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
-                DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                HumanoidAnimParams.DrawEditor(spriteBatch);
             }
-            
+
+            if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
+
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
+            if (Character.Controlled?.Inventory != null)
+            {
+                if (!Character.Controlled.LockHands && Character.Controlled.Stun >= -0.1f)
+                {
+                    Inventory.DrawFront(spriteBatch);
+                }
+            }
+
             DrawMessages(spriteBatch, (float)deltaTime);
+
+            if (GameMain.DebugDraw && GameMain.GameSession?.EventManager != null)
+            {
+                GameMain.GameSession.EventManager.DebugDrawHUD(spriteBatch);
+            }
+
+            if (GUIMessageBox.VisibleBox != null)
+            {
+                GUIMessageBox.VisibleBox.DrawManually(spriteBatch);
+            }
+
+            DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+            DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
+            DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+            //TODO: move this somewhere else
+            //HumanoidAnimParams.DrawEditor(spriteBatch); 
 
             if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
             {
@@ -167,7 +269,7 @@ namespace Barotrauma
 
             if (!DisableHUD)
             {
-                cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
+                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
             }
         }
 
@@ -296,7 +398,8 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            HumanoidAnimParams.UpdateEditor(deltaTime);
+            //TODO: move this somewhere else
+            //HumanoidAnimParams.UpdateEditor(deltaTime);
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
@@ -352,13 +455,51 @@ namespace Barotrauma
         }
 
         #region Element drawing
+
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color)
+        {
+            Vector2 diff = worldPosition - cam.WorldViewCenter;
+            float dist = diff.Length();
+
+            if (dist > hideDist)
+            {
+                float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);                
+                float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
+                float angle = MathUtils.VectorToAngle(diff);
+
+                Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);
+
+                Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
+
+                Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
+                sprite.Draw(spriteBatch, iconPos, color * alpha);
+
+                if (unclampedDiff.Length() - 10 > iconDiff.Length())
+                {
+                    Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
+                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
+                    Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+                }
+            }
+        }
+
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        {
+            DrawLine(sb, t, start, end, clr, depth, width);
+        }
+
+        public static void DrawLine(SpriteBatch sb, Texture2D texture, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
             Vector2 edge = end - start;
             // calculate angle to rotate line
             float angle = (float)Math.Atan2(edge.Y, edge.X);
 
-            sb.Draw(t,
+            sb.Draw(texture,
                 new Rectangle(// rectangle defines shape of line and position of start of line
                     (int)start.X,
                     (int)start.Y,
@@ -367,14 +508,13 @@ namespace Barotrauma
                 null,
                 clr, //colour of line
                 angle,     //angle of line (calulated above)
-                new Vector2(0, 0), // point in line about which to rotate
+                new Vector2(0, texture.Height / 2.0f), // point in line about which to rotate
                 SpriteEffects.None,
                 depth);
         }
 
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null)
         {
-
             if (font == null) font = Font;
             if (backgroundColor != null)
             {
@@ -414,6 +554,23 @@ namespace Barotrauma
                 sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
                 sb.Draw(t, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
+        }
+
+        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
+
+            width *= 0.5f;
+            height *= 0.5f;
+            Vector2 topLeft = center + Vector2.Transform(new Vector2(-width, -height), rotate);
+            Vector2 topRight = center + Vector2.Transform(new Vector2(width, -height), rotate);
+            Vector2 bottomLeft = center + Vector2.Transform(new Vector2(-width, height), rotate);
+            Vector2 bottomRight = center + Vector2.Transform(new Vector2(width, height), rotate);
+
+            DrawLine(sb, topLeft, topRight, clr, depth, thickness);
+            DrawLine(sb, topRight, bottomRight, clr, depth, thickness);
+            DrawLine(sb, bottomRight, bottomLeft, clr, depth, thickness);
+            DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
@@ -494,7 +651,6 @@ namespace Barotrauma
                     msg.Color * alpha, 0.0f,
                     msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
 
-
                 messages[0].LifeTime -= deltaTime / i;
 
                 i++;
@@ -502,10 +658,12 @@ namespace Barotrauma
 
             if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
         }
+
         #endregion
 
         #region Element creation
-        public static Texture2D CreateCircle(int radius)
+
+        public static Texture2D CreateCircle(int radius, bool filled = false)
         {
             int outerRadius = radius * 2 + 2; // So circle doesn't go out of bounds
             Texture2D texture = new Texture2D(GraphicsDevice, outerRadius, outerRadius);
@@ -516,17 +674,36 @@ namespace Barotrauma
             for (int i = 0; i < data.Length; i++)
                 data[i] = Color.Transparent;
 
-            // Work out the minimum step necessary using trigonometry + sine approximation.
-            double angleStep = 1f / radius;
-
-            for (double angle = 0; angle < Math.PI * 2; angle += angleStep)
+            if (filled)
             {
-                // Use the parametric definition of a circle: http://en.wikipedia.org/wiki/Circle#Cartesian_coordinates
-                int x = (int)Math.Round(radius + radius * Math.Cos(angle));
-                int y = (int)Math.Round(radius + radius * Math.Sin(angle));
-
-                data[y * outerRadius + x + 1] = Color.White;
+                float diameterSqr = radius * radius;
+                for (int x = 0; x < outerRadius; x++)
+                {
+                    for (int y = 0; y < outerRadius; y++)
+                    {
+                        Vector2 pos = new Vector2(radius - x, radius - y);
+                        if (pos.LengthSquared() <= diameterSqr)
+                        {
+                            data[y * outerRadius + x + 1] = Color.White;
+                        }
+                    }
+                }
             }
+            else
+            {
+                // Work out the minimum step necessary using trigonometry + sine approximation.
+                double angleStep = 1f / radius;
+
+                for (double angle = 0; angle < Math.PI * 2; angle += angleStep)
+                {
+                    // Use the parametric definition of a circle: http://en.wikipedia.org/wiki/Circle#Cartesian_coordinates
+                    int x = (int)Math.Round(radius + radius * Math.Cos(angle));
+                    int y = (int)Math.Round(radius + radius * Math.Sin(angle));
+
+                    data[y * outerRadius + x + 1] = Color.White;
+                }
+            }
+
 
             texture.SetData(data);
             return texture;
@@ -762,7 +939,6 @@ namespace Barotrauma
                 {
                     TogglePauseMenu();
                     settingsMenuOpen = !settingsMenuOpen;
-
                     return true;
                 };
 
@@ -799,19 +975,16 @@ namespace Barotrauma
                         y += 60;
                     }
                 }
-
-
+                
                 button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
-
         }
 
         private static bool TogglePauseMenu(GUIButton button, object obj)
         {
             pauseMenuOpen = !pauseMenuOpen;
-
             return true;
         }
 
@@ -878,7 +1051,7 @@ namespace Barotrauma
             int soundIndex = (int)soundType;
             if (soundIndex < 0 || soundIndex >= sounds.Length) return;
 
-            sounds[soundIndex].Play();
+            sounds[soundIndex].Play(null, "ui");
         }
         #endregion
     }

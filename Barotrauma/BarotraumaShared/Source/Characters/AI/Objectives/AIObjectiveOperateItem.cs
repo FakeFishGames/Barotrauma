@@ -17,10 +17,14 @@ namespace Barotrauma
 
         private bool requireEquip;
 
+        private AIObjectiveGoTo gotoObjective;
+
         public override bool CanBeCompleted
         {
             get
             {
+                if (gotoObjective != null && !gotoObjective.CanBeCompleted) return false;
+
                 return canBeCompleted;
             }
         }
@@ -75,7 +79,7 @@ namespace Barotrauma
                     return;
                 }
 
-                AddSubObjective(new AIObjectiveGoTo(target.Item, character));
+                AddSubObjective(gotoObjective = new AIObjectiveGoTo(target.Item, character));
             }
             else
             {
@@ -95,10 +99,10 @@ namespace Barotrauma
                             return;
                         }
 
-                        for (int i = 0; i < CharacterInventory.limbSlots.Length; i++)
+                        for (int i = 0; i < character.Inventory.Capacity; i++)
                         {
-                            if (CharacterInventory.limbSlots[i] == InvSlotType.Any ||
-                                !holdable.AllowedSlots.Any(s => s.HasFlag(CharacterInventory.limbSlots[i])))
+                            if (character.Inventory.SlotTypes[i] == InvSlotType.Any ||
+                                !holdable.AllowedSlots.Any(s => s.HasFlag(character.Inventory.SlotTypes[i])))
                             {
                                 continue;
                             }

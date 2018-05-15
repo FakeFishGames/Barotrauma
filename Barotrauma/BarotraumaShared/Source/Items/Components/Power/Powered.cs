@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -63,22 +67,10 @@ namespace Barotrauma.Items.Components
         public Powered(Item item, XElement element)
             : base(item, element)
         {
-#if CLIENT
-            if (powerOnSound == null)
-            {
-                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg", false);
-            }
-
-            if (sparkSounds == null)
-            {
-                sparkSounds = new Sound[4];
-                for (int i = 0; i < 4; i++)
-                {
-                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
-                }
-            }
-#endif
+            InitProjectSpecific(element);
         }
+
+        partial void InitProjectSpecific(XElement element);
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
         {
@@ -103,9 +95,12 @@ namespace Barotrauma.Items.Components
             if (voltage > minVoltage)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-                if (!powerOnSoundPlayed)
+                if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
+                    if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition.X, item.WorldPosition.Y, 0.0f)) < powerOnSound.BaseFar * powerOnSound.BaseFar)
+                    {
+                        powerOnSound.Play(1.0f, powerOnSound.BaseFar, item.WorldPosition);
+                    }
                     powerOnSoundPlayed = true;
                 }
             }

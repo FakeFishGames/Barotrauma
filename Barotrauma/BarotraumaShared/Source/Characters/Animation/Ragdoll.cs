@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Spine;
 
 namespace Barotrauma
 {
@@ -18,10 +17,6 @@ namespace Barotrauma
 
         protected Hull currentHull;
         
-        public Skeleton skeleton;
-        public AnimationStateData animationStateData;
-        public AnimationState animationState;
-
         private Limb[] limbs;
         public Limb[] Limbs
         {
@@ -59,8 +54,8 @@ namespace Barotrauma
 
         protected float strongestImpact;
 
-        public float headPosition, headAngle;
-        public float torsoPosition, torsoAngle;
+        public float? headPosition, headAngle;
+        public float? torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -215,24 +210,30 @@ namespace Barotrauma
             }
         }
 
-        protected virtual float HeadPosition
+        protected virtual float? HeadPosition
         { 
             get { return headPosition; } 
         }
 
-        protected virtual float HeadAngle
+        protected virtual float? HeadAngle
         { 
             get { return headAngle; } 
         }
 
-        protected virtual float TorsoPosition
+        protected virtual float? TorsoPosition
         { 
             get { return torsoPosition; } 
         }
 
-        protected virtual float TorsoAngle
+        protected virtual float? TorsoAngle
         { 
             get { return torsoAngle; } 
+        }
+
+        public bool Draggable
+        {
+            get;
+            private set;
         }
 
         public float Dir
@@ -288,27 +289,41 @@ namespace Barotrauma
             private set;
         }
         
-        public Ragdoll(Character character, XElement element)
+        public Ragdoll(Character character, XElement element, string seed)
         {
             list.Add(this);
-
             this.character = character;
-
             dir = Direction.Right;
 
+            Random random = new MTRandom(ToolBox.StringToInt(seed));
             float scale = element.GetAttributeFloat("scale", 1.0f);
-            
+            if (element.Attribute("minscale") != null)
+            {
+                float minScale = element.GetAttributeFloat("minscale", 1.0f);
+                float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
+                scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
+            }
+
             limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
-            headPosition    = element.GetAttributeFloat("headposition", 50.0f);
-            headPosition    = ConvertUnits.ToSimUnits(headPosition);
-            headAngle       = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
-
-            torsoPosition   = element.GetAttributeFloat("torsoposition", 50.0f);
-            torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
-            torsoAngle      = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            if (element.Attribute("headposition") != null)
+            {
+                headPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("headposition", 50.0f));
+            }
+            if (element.Attribute("headangle") != null)
+            {
+                headAngle = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
+            }
+            if (element.Attribute("torsoposition") != null)
+            {
+                torsoPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("torsoposition", 50.0f));
+            }
+            if (element.Attribute("torsoangle") != null)
+            {
+                torsoAngle = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
+            }
 
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
 
@@ -316,6 +331,8 @@ namespace Barotrauma
 
             colliderHeightFromFloor = element.GetAttributeFloat("colliderheightfromfloor", 45.0f);
             colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
+
+            Draggable = element.GetAttributeBool("draggable", false);
 
             collider = new List<PhysicsBody>();
              
@@ -397,20 +414,6 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
 
             MainLimb = torso == null ? head : torso;
-
-#if CLIENT
-            if (this is HumanoidAnimController)
-            {
-                Atlas atlas = new Atlas("Content/SpineTest/stretchyman.atlas", new XnaTextureLoader(GameMain.Instance.GraphicsDevice));                
-                SkeletonJson json = new SkeletonJson(atlas);
-                json.Scale = 0.3f;
-                SkeletonData skeletonData = json.ReadSkeletonData("Content/SpineTest/stretchyman-pro.json");               
-                skeleton = new Skeleton(skeletonData);
-                animationStateData = new AnimationStateData(skeletonData);
-                animationState = new AnimationState(animationStateData);
-                animationState.SetAnimation(0, "sneak", true);
-            }
-#endif
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -577,7 +580,7 @@ namespace Barotrauma
             Vector2 velocity = f1.Body.LinearVelocity;
 
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
-                                    
+
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody)
             {
@@ -585,9 +588,13 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
-
+                        contact.GetWorldManifold(out _, out FarseerPhysics.Common.FixedArray2<Vector2> points);
+                        Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
+                        if (character.Submarine != null) impactPos += character.Submarine.Position;
+                        
+                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((impact - ImpactTolerance) * 10.0f) }, 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
+                        character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
                     }
                 }
             }
@@ -629,7 +636,8 @@ namespace Barotrauma
                     for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 10.0f); i++)
                     {
                         GameMain.ParticleManager.CreateParticle("heavygib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(50.0f, 250.0f), character.CurrentHull);
-                    }                    
+                    }
+                    character.CurrentHull?.AddDecal("blood", limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
                 }
             }
 #endif
@@ -764,7 +772,7 @@ namespace Barotrauma
             
             if (newHull == currentHull) return;
 
-            if (!CanEnterSubmarine)
+            if (!CanEnterSubmarine || (character.AIController != null && !character.AIController.CanEnterSubmarine))
             {
                 //character is inside the sub even though it shouldn't be able to enter -> teleport it out
 
@@ -862,7 +870,7 @@ namespace Barotrauma
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
                 : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
 
-            Collider.CollidesWith = collisionCategory;
+            Collider.CollidesWith = collisionCategory | Physics.CollisionItemBlocking;
 
             foreach (Limb limb in Limbs)
             {
@@ -987,13 +995,9 @@ namespace Barotrauma
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
-                            //1.0 when the limb is parallel to the surface of the water
-                            // = big splash and a large impact
-                            float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));
-                            Vector2 impulse = Vector2.Multiply(limb.LinearVelocity, -parallel * limb.Mass);
-                            //limb.body.ApplyLinearImpulse(impulse);
+                            Vector2 impulse = limb.LinearVelocity * limb.Mass;
                             int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
-                            limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
+                            limbHull.WaveVel[n] += MathHelper.Clamp(impulse.Y, -5.0f, 5.0f);
                         }
                     }
                 }
@@ -1122,7 +1126,7 @@ namespace Barotrauma
                     }
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
+                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + colliderHeightFromFloor;
                     
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {
@@ -1155,7 +1159,11 @@ namespace Barotrauma
         protected float GetFloorY(Vector2 simPosition)
         {
             Vector2 rayStart = simPosition;
-            Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
+            float height = colliderHeightFromFloor;
+            if (HeadPosition.HasValue) height = Math.Max(height, HeadPosition.Value);
+            if (TorsoPosition.HasValue) height = Math.Max(height, TorsoPosition.Value);
+
+            Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
             var lowestLimb = FindLowestLimb();
 
@@ -1332,7 +1340,10 @@ namespace Barotrauma
                         var newSelectedConstruction = (Item)character.MemState[0].Interact;
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            newSelectedConstruction.TryInteract(character, true, true);
+                            foreach (var ic in newSelectedConstruction.components)
+                            {
+                                if (ic.CanBeSelected) ic.Select(character);
+                            }
                         }
                         character.SelectedConstruction = newSelectedConstruction;
                     }

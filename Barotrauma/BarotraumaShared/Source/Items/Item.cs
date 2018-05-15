@@ -20,7 +20,8 @@ namespace Barotrauma
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
-        OnImpact
+        OnImpact,
+        OnDeath = OnBroken
     }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
@@ -58,6 +59,8 @@ namespace Barotrauma
                 
         private Inventory parentInventory;
         private Inventory ownInventory;
+
+        private Dictionary<string, Optimizable> optimizables;
 
         private Dictionary<string, Connection> connections;
 
@@ -208,7 +211,7 @@ namespace Barotrauma
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
                     {
-                        req.Fixed = false;
+                        req.FixProgress = 0.0f;
                     }
                 }
 
@@ -227,11 +230,11 @@ namespace Barotrauma
         {
             get { return condition; }
         }
-        
+
         [Editable, Serialize("", true)]
         public string Tags
         {
-            get { return string.Join(",",tags); }
+            get { return string.Join(",", tags); }
             set
             {
                 tags.Clear();
@@ -242,8 +245,7 @@ namespace Barotrauma
                 {
                     string newTag = tag.Trim();
                     if (!tags.Contains(newTag)) tags.Add(newTag);
-                }   
-
+                }
             }
         }
 
@@ -381,17 +383,19 @@ namespace Barotrauma
                         body.FarseerBody.LinearDamping  = 0.1f;
                         break;
                     case "trigger":
+                    case "inventoryicon":
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "price":
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
-                        aiTarget.SightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
-                        aiTarget.SoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
+                        aiTarget.MinSightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
+                        aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
-                        FixRequirements.Add(new FixRequirement(subElement));
+                        FixRequirements.Add(new FixRequirement(subElement, this));
                         break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
@@ -400,36 +404,39 @@ namespace Barotrauma
                         components.Add(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
-
-                        if (ic.statusEffectLists == null) continue;
-
-                        if (statusEffectLists == null) 
-                            statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
-
-                        //go through all the status effects of the component 
-                        //and add them to the corresponding statuseffect list
-                        foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
-                        {
-
-                            ActionType actionType = componentEffectList.First().type;
-
-                            List<StatusEffect> statusEffectList;
-                            if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
-                            {
-                                statusEffectList = new List<StatusEffect>();
-                                statusEffectLists.Add(actionType, statusEffectList);
-                            }
-
-                            foreach (StatusEffect effect in componentEffectList)
-                            {
-                                statusEffectList.Add(effect);
-                            }
-                        }
-
+                        
                         break;
                 }
             }
 
+            foreach (ItemComponent ic in components)
+            {
+                if (ic.statusEffectLists == null) continue;
+
+                if (statusEffectLists == null)
+                    statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                //go through all the status effects of the component 
+                //and add them to the corresponding statuseffect list
+                foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
+                {
+
+                    ActionType actionType = componentEffectList.First().type;
+
+                    List<StatusEffect> statusEffectList;
+                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    {
+                        statusEffectList = new List<StatusEffect>();
+                        statusEffectLists.Add(actionType, statusEffectList);
+                    }
+
+                    foreach (StatusEffect effect in componentEffectList)
+                    {
+                        statusEffectList.Add(effect);
+                    }
+                }
+            }
+            
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -459,6 +466,19 @@ namespace Barotrauma
                 ownInventory = itemContainer.Inventory;
             }
 
+            optimizables = new Dictionary<string, Optimizable>();
+            foreach (Optimizable optimizable in GetComponents<Optimizable>())
+            {
+                if (optimizables.ContainsKey(optimizable.OptimizationType.ToLowerInvariant()))
+                {
+                    DebugConsole.ThrowError("Error in item prefab \"" + itemPrefab.Name + "\" - multiple available optimizations with the same type.");
+                }
+                else
+                {
+                    optimizables.Add(optimizable.OptimizationType.ToLowerInvariant(), optimizable);
+                }
+            }
+
             InsertToList();
             ItemList.Add(this);
 
@@ -484,6 +504,8 @@ namespace Barotrauma
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
             }
+            if (FlippedX) clone.FlipX(false);
+            if (FlippedY) clone.FlipY(false);
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
@@ -531,8 +553,10 @@ namespace Barotrauma
         {
             if (body != null)
             {
+#if DEBUG
                 try
                 {
+#endif
                     if (body.Enabled)
                     {
                         body.SetTransform(simPosition, rotation);
@@ -541,13 +565,13 @@ namespace Barotrauma
                     {
                         body.SetTransformIgnoreContacts(simPosition, rotation);
                     }
+#if DEBUG
                 }
                 catch (Exception e)
                 {
-#if DEBUG
                     DebugConsole.ThrowError("Failed to set item transform", e);
-#endif
                 }
+#endif
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
@@ -564,8 +588,7 @@ namespace Barotrauma
 
             if (ItemList != null && body != null)
             {
-                //Vector2 pos = new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f);
-                body.SetTransform(body.SimPosition+ConvertUnits.ToSimUnits(amount), body.Rotation);
+                body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
             }
             foreach (ItemComponent ic in components)
             {
@@ -656,16 +679,18 @@ namespace Barotrauma
 
                 if (contained.body != null)
                 {
+#if DEBUG
                     try
                     {
+#endif
                         contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+#if DEBUG
                     }
                     catch (Exception e)
                     {
-#if DEBUG
                         DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
                     }
+#endif
                 }
 
                 contained.Rect =
@@ -691,7 +716,8 @@ namespace Barotrauma
         {
             if (tag == null) return true;
 
-            return (tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()));
+            return tags.Contains(tag) || tags.Contains(tag.ToLowerInvariant()) || 
+                prefab.Tags.Contains(tag) || prefab.Tags.Contains(tag.ToLowerInvariant());
         }
 
         public bool HasTag(IEnumerable<string> allowedTags)
@@ -705,22 +731,34 @@ namespace Barotrauma
             return false;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public bool IsOptimized(string optimizationType)
+        {
+            Optimizable optimizable;
+            if (optimizables.TryGetValue(optimizationType.ToLowerInvariant(),out optimizable))
+            {
+                return optimizable.IsOptimized;
+            }
+            return false;
+        }
+
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
 
             List<StatusEffect> statusEffects;
             if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
 
+            bool broken = condition <= 0.0f;
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, isNetworkEvent);
+                if (broken && effect.type != ActionType.OnBroken) continue;
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
         {
-            if (!isNetworkEvent)
+            if (!isNetworkEvent && checkCondition)
             {
                 if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
             }
@@ -782,6 +820,15 @@ namespace Barotrauma
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
 
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            {
+                targets.Add(limb);
+            }
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            {
+                targets.AddRange(character.AnimController.Limbs.ToList());
+            }
+
             if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -792,10 +839,10 @@ namespace Barotrauma
         {
             if (prefab.Indestructible) return new AttackResult();
 
-            float damageAmount = attack.GetStructureDamage(deltaTime);
+            float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
-            return new AttackResult(damageAmount, 0.0f, null);
+            return new AttackResult(damageAmount, null);
         }
 
         private bool IsInWater()
@@ -814,6 +861,13 @@ namespace Barotrauma
             {
                 Spawner.AddToRemoveQueue(this);
                 return;
+            }
+
+            //aitarget goes silent/invisible if the components don't keep it active
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange -= deltaTime * 1000.0f;
+                aiTarget.SoundRange -= deltaTime * 1000.0f;
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
@@ -848,6 +902,21 @@ namespace Barotrauma
                     ic.UpdateBroken(deltaTime, cam);
                 }
             }
+
+            if (condition <= 0.0f && FixRequirements.Count > 0)
+            {
+                bool isFixed = true;
+                foreach (FixRequirement fixRequirement in FixRequirements)
+                {
+                    fixRequirement.Update(deltaTime);
+                    if (!fixRequirement.Fixed) isFixed = false;
+                }
+                if (isFixed)
+                {
+                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                    condition = prefab.Health;
+                }
+            }
             
             if (body != null && body.Enabled)
             {
@@ -855,29 +924,7 @@ namespace Barotrauma
 
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
                 {
-                    Submarine prevSub = Submarine;
-
-                    FindHull();
-
-                    if (Submarine == null && prevSub != null)
-                    {
-                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                    }
-                    else if (Submarine != null && prevSub == null)
-                    {
-                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                    }
-                    
-                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
-
-                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                    {
-                        body.LinearVelocity = new Vector2(
-                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
-                    }
+                    UpdateTransform();
                 }
 
                 UpdateNetPosition();
@@ -891,6 +938,33 @@ namespace Barotrauma
 
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
+        }
+
+        public void UpdateTransform()
+        {
+            Submarine prevSub = Submarine;
+
+            FindHull();
+
+            if (Submarine == null && prevSub != null)
+            {
+                body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+            }
+            else if (Submarine != null && prevSub == null)
+            {
+                body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+
+            Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            {
+                body.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+            }
         }
 
         /// <summary>
@@ -948,10 +1022,10 @@ namespace Barotrauma
             return true;
         }
 
-        public override void FlipX()
+        public override void FlipX(bool relativeToSub)
         {
-            base.FlipX();
-
+            base.FlipX(relativeToSub);
+            
             if (prefab.CanSpriteFlipX)
             {
                 SpriteEffects ^= SpriteEffects.FlipHorizontally;
@@ -959,7 +1033,22 @@ namespace Barotrauma
 
             foreach (ItemComponent component in components)
             {
-                component.FlipX();
+                component.FlipX(relativeToSub);
+            }            
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            base.FlipY(relativeToSub);
+
+            if (prefab.CanSpriteFlipY)
+            {
+                SpriteEffects ^= SpriteEffects.FlipVertically;
+            }
+
+            foreach (ItemComponent component in components)
+            {
+                component.FlipY(relativeToSub);
             }
         }
 
@@ -1018,12 +1107,39 @@ namespace Barotrauma
                         connectedComponents.Add(component);
                     }
 
-                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
-
-                    
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
                 }
             }
         }
+
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        {
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+
+            return connectedComponents;
+        }
+
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        {
+            alreadySearched.Add(this);
+                        
+            var recipients = c.Recipients;
+            foreach (Connection recipient in recipients)
+            {
+                if (alreadySearched.Contains(recipient.Item)) continue;
+
+                var component = recipient.Item.GetComponent<T>();                    
+                if (component != null)
+                {
+                    connectedComponents.Add(component);
+                }
+
+                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+            }            
+        }
+
 
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
         {
@@ -1096,8 +1212,21 @@ namespace Barotrauma
                 }
                 else
                 {
-                    pickHit = (forceActionKey && ic.CanBePicked) || picker.IsKeyHit(ic.PickKey);
-                    selectHit = (forceSelectKey && ic.CanBeSelected)  || picker.IsKeyHit(ic.SelectKey);
+                    if (forceSelectKey)
+                    {
+                        if (ic.PickKey == InputType.Select) pickHit = true;
+                        if (ic.SelectKey == InputType.Select) selectHit = true;
+                    }
+                    else if (forceActionKey)
+                    {
+                        if (ic.PickKey == InputType.Use) pickHit = true;
+                        if (ic.SelectKey == InputType.Use) selectHit = true;
+                    }
+                    else
+                    {
+                        pickHit = picker.IsKeyHit(ic.PickKey);
+                        selectHit = picker.IsKeyHit(ic.SelectKey);
+                    }
                 }
 
                 if (!pickHit && !selectHit) continue;
@@ -1153,7 +1282,7 @@ namespace Barotrauma
         }
 
 
-        public void Use(float deltaTime, Character character = null)
+        public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (condition == 0.0f) return;
 
@@ -1170,7 +1299,7 @@ namespace Barotrauma
                     ic.PlaySound(ActionType.OnUse, WorldPosition);
 #endif
     
-                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) remove = true;
                 }
@@ -1313,6 +1442,13 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerWrite(msg, c, extraData);
                     break;
+                case NetEntityEvent.Type.Repair:
+                    for (int i = 0; i < FixRequirements.Count; i++)
+                    {
+                        msg.Write(FixRequirements[i].CurrentFixer == null ? (ushort)0 : FixRequirements[i].CurrentFixer.ID);
+                        msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
+                    }
+                    break;
                 case NetEntityEvent.Type.Status:
                     //clamp to (MaxHealth / 255.0f) if condition > 0.0f
                     //to prevent condition from being rounded down to 0.0 even if the item is not broken
@@ -1321,15 +1457,20 @@ namespace Barotrauma
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
-                            msg.Write(FixRequirements[i].Fixed);
+                            msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)extraData[1];
                     ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
+                    Limb targetLimb = extraData.Length > 3 ? (Limb)extraData[3] : null;
+
+                    Character targetCharacter = FindEntityByID(targetID) as Character;
+                    byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                     msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
                     msg.Write(targetID);
+                    msg.Write(targetLimbIndex);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
@@ -1354,27 +1495,30 @@ namespace Barotrauma
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count == 0) return;
 
-                    int requirementIndex = FixRequirements.Count == 1 ? 
+                    int requirementIndex = FixRequirements.Count == 1 ?
                         0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
-                    
+
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
-                    FixRequirements[requirementIndex].Fixed = true;
-                    if (condition <= 0.0f && FixRequirements.All(f => f.Fixed))
-                    {
-                        Condition = prefab.Health;
-                    }
+                    FixRequirements[requirementIndex].CurrentFixer = c.Character;
 
-                    c.Karma += 0.4f;
-
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Repair });
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    UInt16 characterID = msg.ReadUInt16();
+                    byte limbIndex = msg.ReadByte();
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+                    if (targetCharacter == null) break;
+                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
+
+                    Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, targetCharacter, targetLimb);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
@@ -1530,6 +1674,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
+            msg.Write(Prefab.Identifier);
             msg.Write(Description != prefab.Description);
             if (Description != prefab.Description)
             {
@@ -1568,6 +1713,7 @@ namespace Barotrauma
             if (GameMain.Server != null) return null;
 
             string itemName = msg.ReadString();
+            string itemIdentifier = msg.ReadString();
             bool descriptionChanged = msg.ReadBoolean();
             string itemDesc = "";
             if (descriptionChanged)
@@ -1609,7 +1755,7 @@ namespace Barotrauma
 
             //----------------------------------------
             
-            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            var itemPrefab = MapEntityPrefab.Find(itemName, itemIdentifier) as ItemPrefab;
             if (itemPrefab == null) return null;
 
             Inventory inventory = null;
@@ -1707,15 +1853,29 @@ namespace Barotrauma
             lastSentPos = SimPosition;
         }
 
-        public static void Load(XElement element, Submarine submarine)
+        public static Item Load(XElement element, Submarine submarine)
         {
-            string name = element.Attribute("name").Value;
+            string name = element.Attribute("name").Value;            
+            string identifier = element.GetAttributeString("identifier", "");
 
-            ItemPrefab prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            ItemPrefab prefab;
+            if (string.IsNullOrEmpty(identifier))
+            {
+                //legacy support: 
+                //1. attempt to find a prefab with an empty identifier and a matching name
+                prefab = MapEntityPrefab.Find(name, "") as ItemPrefab;
+                //2. not found, attempt to find a prefab with a matching name
+                if (prefab == null) prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+            }
+
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
-                return;
+                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" (identifier \"" + identifier + "\") not found.");
+                return null;
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -1760,38 +1920,40 @@ namespace Barotrauma
                 }
             }
 
+            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
-                ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-
+                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
                 if (component == null) continue;
 
                 component.Load(subElement);
+                unloadedComponents.Remove(component);
             }
+
+            if (element.GetAttributeBool("flippedx", false)) item.FlipX(false);
+            if (element.GetAttributeBool("flippedy", false)) item.FlipY(false);
+
+            return item;
         }
 
         public override XElement Save(XElement parentElement)
         {
             XElement element = new XElement("Item");
 
-            element.Add(new XAttribute("name", prefab.Name),
+            element.Add(
+                new XAttribute("name", prefab.Name),
+                new XAttribute("identifier", prefab.Identifier),
                 new XAttribute("ID", ID));
+
+            if (FlippedX) element.Add(new XAttribute("flippedx", true));
+            if (FlippedY) element.Add(new XAttribute("flippedy", true));
 
             System.Diagnostics.Debug.Assert(Submarine != null);
 
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            }
-            else
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
-            }
+            element.Add(new XAttribute("rect",
+                (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                rect.Width + "," + rect.Height));
 
             if (linkedTo != null && linkedTo.Count > 0)
             {
@@ -1860,6 +2022,13 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                return;
+            }
+            DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
+
             base.Remove();
 
             foreach (Character character in Character.CharacterList)

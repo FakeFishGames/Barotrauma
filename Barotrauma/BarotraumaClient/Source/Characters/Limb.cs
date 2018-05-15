@@ -11,6 +11,10 @@ namespace Barotrauma
 {
     partial class Limb
     {
+        //minimum duration between hit/attack sounds
+        public const float SoundInterval = 0.4f;
+        public float LastAttackSoundTime, LastImpactSoundTime;
+
         public LightSource LightSource
         {
             get;
@@ -56,7 +60,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            float brightness = 1.0f - (burnt / 100.0f) * 0.5f;
+            float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
 
             if (isSevered)
@@ -89,8 +93,12 @@ namespace Barotrauma
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
 
+            WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
+
             foreach (WearableSprite wearable in wearingItems)
             {
+                if (onlyDrawable != null && onlyDrawable != wearable) continue;
+
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
                 Vector2 origin = wearable.Sprite.Origin;
@@ -118,7 +126,7 @@ namespace Barotrauma
                     scale, spriteEffect, depth);
             }
 
-            if (damage > 0.0f && damagedSprite != null && !hideLimb)
+            if (damageOverlayStrength > 0.0f && damagedSprite != null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
@@ -126,7 +134,7 @@ namespace Barotrauma
 
                 damagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damage / 50.0f, 1.0f), sprite.Origin,
+                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), sprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }

@@ -134,12 +134,13 @@ namespace Barotrauma
 
                 if (atEndPosition)
                 {
-                    Map.MoveToNextLocation();
+                    map.MoveToNextLocation();
 
                     //select a random location to make sure we've got some destination
                     //to head towards even if the host/clients don't select anything
                     map.SelectRandomLocation(true);
                 }
+                map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
@@ -165,11 +166,15 @@ namespace Barotrauma
                     case "map":
                         if (map == null)
                         {
+                            //map not created yet, loading this campaign for the first time
                             map = Map.LoadNew(subElement);
                         }
                         else
                         {
-                            map.Load(subElement);
+                            //map already created, update it
+                            //if we're not downloading the initial save file (LastSaveID > 0), 
+                            //show notifications about location type changes
+                            map.Load(subElement, LastSaveID > 0);
                         }
                         break;
                 }

@@ -60,7 +60,7 @@ namespace Barotrauma
 
             if (prefab.SoundElement != null)
             {
-                Sound = Sound.Load(prefab.SoundElement, true);
+                Sound = Submarine.LoadRoundSound(prefab.SoundElement, false);//Sound.Load(prefab.SoundElement, true);
             }
 #endif
         }

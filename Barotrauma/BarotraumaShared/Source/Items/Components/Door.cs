@@ -30,6 +30,9 @@ namespace Barotrauma.Items.Components
 
         private bool isHorizontal;
 
+        private bool createdNewGap;
+        private bool autoOrientGap;
+
         private bool isStuck;
         
         private bool? predictedState;
@@ -102,11 +105,12 @@ namespace Barotrauma.Items.Components
                     rect.Width += 10;
                 }
 
-                linkedGap = new Gap(rect, Item.Submarine);
+                linkedGap = new Gap(rect, !isHorizontal, Item.Submarine);
                 linkedGap.Submarine = item.Submarine;
                 linkedGap.PassAmbientLight = window != Rectangle.Empty;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
+                createdNewGap = true;
                 return linkedGap;
             }
         }
@@ -150,6 +154,7 @@ namespace Barotrauma.Items.Components
         {
             isHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
+            autoOrientGap = element.GetAttributeBool("autoorientgap", false);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -197,7 +202,7 @@ namespace Barotrauma.Items.Components
         {
             base.Move(amount);
             
-            body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            body?.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();
@@ -314,6 +319,7 @@ namespace Barotrauma.Items.Components
         {
             LinkedGap.ConnectedDoor = this;
             LinkedGap.Open = openState;
+            if (createdNewGap && autoOrientGap) linkedGap.AutoOrient();
 
 #if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
@@ -477,14 +483,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
+            base.ServerWrite(msg, c, extraData);
+
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
+        public override void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            base.ClientRead(type, msg, sendingTime);
+
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             

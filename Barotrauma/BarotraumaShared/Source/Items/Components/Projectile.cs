@@ -37,14 +37,7 @@ namespace Barotrauma.Items.Components
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
-
-        [Serialize(false, false)]
-        public bool CharacterUsable
-        {
-            get { return characterUsable; }
-            set { characterUsable = value; }
-        }
-
+        
         [Serialize(false, false)]
         //backwards compatibility, can stick to anything
         public bool DoesStick
@@ -139,16 +132,18 @@ namespace Barotrauma.Items.Components
 
             if (stickTarget != null)
             {
+#if DEBUG
                 try
                 {
+#endif
                     item.body.FarseerBody.RestoreCollisionWith(stickTarget);
+#if DEBUG
                 }
                 catch (Exception e)
                 {
-#if DEBUG
                     DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-#endif
                 }
+#endif
 
                 stickTarget = null;
             }
@@ -241,29 +236,24 @@ namespace Barotrauma.Items.Components
             {
                 if (stickTarget != null)
                 {
-                    try
+                    if (GameMain.World.BodyList.Contains(stickTarget))
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch
-                    {
-                        //the body that the projectile was stuck to has been removed
-                    }
-
+                    
                     stickTarget = null;
                 }
 
-                try
+                if (stickJoint != null)
                 {
-                    GameMain.World.RemoveJoint(stickJoint);
-                }
-                catch
-                {
-                    //the body that the projectile was stuck to has been removed
-                }
+                    if (GameMain.World.JointList.Contains(stickJoint))
+                    {
+                        GameMain.World.RemoveJoint(stickJoint);
+                    }
 
-                stickJoint = null; 
-             
+                    stickJoint = null;
+                }
+                
                 if (!item.body.FarseerBody.IsBullet) IsActive = false; 
             }           
         }

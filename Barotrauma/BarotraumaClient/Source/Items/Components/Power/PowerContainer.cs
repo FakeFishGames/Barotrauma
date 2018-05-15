@@ -83,9 +83,9 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(1.0f / 60.0f);
+            GuiFrame.UpdateManually(deltaTime);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData)
