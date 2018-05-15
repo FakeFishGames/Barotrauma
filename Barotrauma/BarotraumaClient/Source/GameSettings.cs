@@ -176,8 +176,7 @@ namespace Barotrauma
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
             GameMain.Instance.ApplyGraphicsSettings();
-            Screen.Selected?.Frame?.RectTransform.Resize(Vector2.One, resizeChildren: true);
-            Screen.Selected?.Frame?.GetAllChildren().Select(t => t as GUITextBlock).ForEach(t => t?.SetTextPos());
+            GUICanvas.RecalculateSize();
             UnsavedSettings = true;
 
             return true;

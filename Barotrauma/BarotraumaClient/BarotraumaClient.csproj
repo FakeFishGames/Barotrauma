@@ -84,6 +84,7 @@
     <Compile Include="Source\Extensions\PointExtensions.cs" />
     <Compile Include="Source\Extensions\RectangleExtensions.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GUI\GUICanvas.cs" />
     <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
