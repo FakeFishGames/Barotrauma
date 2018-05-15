@@ -170,6 +170,7 @@ namespace Barotrauma
         protected object userData;
 
         // TODO: remove when the old system is not needed.
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         protected Rectangle rect;
 
         public bool CanBeFocused;

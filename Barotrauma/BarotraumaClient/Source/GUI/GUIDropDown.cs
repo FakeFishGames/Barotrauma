@@ -88,11 +88,13 @@ namespace Barotrauma
             }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
             : this(rect, text, style, Alignment.TopLeft, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIDropDown(Rectangle rect, string text, string style, Alignment alignment, GUIComponent parent = null)
             : base(style)
         {

@@ -128,18 +128,21 @@ namespace Barotrauma
         {
             get { return caretPos; }
         }
-        
+
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent, ScalableFont font)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
         {
         }
 
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent = null, bool wrap = false)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
             : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
         {
