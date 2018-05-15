@@ -86,13 +86,16 @@ namespace Barotrauma
             menuTabs[(int)Tab.Tutorials].Padding = new Vector4(20.0f, 60.0f, 20.0f, 20.0f);
 
             //PLACEHOLDER
-            //TODO: fix
-            var tutorialList = new GUIListBox(new RectTransform(relativeSize, menuTabs[(int)Tab.Tutorials].RectTransform, anchor, pivot, null, null), false, null, "");
-            /*foreach (Tutorial tutorial in Tutorial.Tutorials)
+            var tutorialList = new GUIListBox(
+                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[(int)Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) }, 
+                false, null, "");
+            foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                var tutorialText = new GUITextBlock(new Rectangle(0, 0, 0, 35), tutorial.Name, "", Alignment.TopLeft, Alignment.Center, tutorialList, false, GUI.LargeFont);
-                tutorialText.UserData = tutorial;
-            }*/
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(0.0f, 0.15f), tutorialList.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                {
+                    UserData = tutorial
+                };
+            }
             tutorialList.OnSelected += (component, obj) =>
             {
                 TutorialMode.StartTutorial(obj as Tutorial);
@@ -394,7 +397,7 @@ namespace Barotrauma
                 {
                     case 7:
                         button.Text = TextManager.Get("TutorialButton");
-                        button.UserData = Tab.Settings;
+                        button.UserData = Tab.Tutorials;
                         button.OnClicked = SelectTab;
                         break;
                     case 6:
