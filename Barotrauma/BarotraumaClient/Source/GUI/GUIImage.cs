@@ -48,16 +48,19 @@ namespace Barotrauma
             get { return sprite; }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIImage(Rectangle rect, string spritePath, Alignment alignment, GUIComponent parent = null)
             : this(rect, new Sprite(spritePath, Vector2.Zero), alignment, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
             : this(rect, sprite == null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, 1.0f, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, float spriteScale, GUIComponent parent = null)
             : base(null)
         {

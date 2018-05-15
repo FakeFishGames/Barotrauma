@@ -89,11 +89,13 @@ namespace Barotrauma
         private float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUINumberInput(Rectangle rect, string style, NumberType inputType, GUIComponent parent = null)
             : this(rect, style, inputType, Alignment.TopLeft, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUINumberInput(Rectangle rect, string style, NumberType inputType, Alignment alignment, GUIComponent parent = null)
             : base(style)
         {

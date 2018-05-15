@@ -29,17 +29,20 @@ namespace Barotrauma
             }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIProgressBar(Rectangle rect, Color color, float barSize, GUIComponent parent = null)
             : this(rect, color, barSize, (Alignment.Left | Alignment.Top), parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIProgressBar(Rectangle rect, Color color, float barSize, Alignment alignment, GUIComponent parent = null)
             : this(rect, color, null, barSize, alignment, parent)
         {
 
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIProgressBar(Rectangle rect, Color color, string style, float barSize, Alignment alignment, GUIComponent parent = null)
             : base(style)
         {

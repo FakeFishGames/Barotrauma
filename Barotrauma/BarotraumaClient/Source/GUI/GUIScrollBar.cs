@@ -106,17 +106,19 @@ namespace Barotrauma
             }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIScrollBar(Rectangle rect, string style, float barSize, GUIComponent parent = null)
             : this(rect, null, barSize, style, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIScrollBar(Rectangle rect, Color? color, float barSize, string style = "", GUIComponent parent = null)
             : this(rect, color, barSize, Alignment.TopLeft, style, parent)
         {
         }
-
-
+        
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIScrollBar(Rectangle rect, Color? color, float barSize, Alignment alignment, string style = "", GUIComponent parent = null)
             : base(style)
         {

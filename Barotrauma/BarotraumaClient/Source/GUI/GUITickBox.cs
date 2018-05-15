@@ -83,11 +83,13 @@ namespace Barotrauma
             }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : this(rect, label, alignment, GUI.Font, "", parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, string style, GUIComponent parent)
             : base(null)
         {

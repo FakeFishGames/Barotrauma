@@ -162,18 +162,21 @@ namespace Barotrauma
             }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBox(Rectangle rect, string style = null, GUIComponent parent = null)
             : this(rect, null, null, Alignment.Left, Alignment.Left, style, parent)
         {
 
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, string style = null, GUIComponent parent = null)
             : this(rect, null, null, alignment, Alignment.Left, style, parent)
         {
 
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.CenterLeft, string style = null, GUIComponent parent = null)
             : base(style)
         {

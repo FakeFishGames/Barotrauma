@@ -137,27 +137,32 @@ namespace Barotrauma
 
         public bool Selected { get; set; }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIButton(Rectangle rect, string text, string style, GUIComponent parent = null)
             : this(rect, text, null, Alignment.Left, style, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIButton(Rectangle rect, string text, Alignment alignment, string style, GUIComponent parent = null)
             : this(rect, text, null, alignment, style, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIButton(Rectangle rect, string text, Color? color, string style, GUIComponent parent = null)
             : this(rect, text, color, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
             : this(rect, text, color, alignment, Alignment.Center, style, parent)
         {
 
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, string style = "", GUIComponent parent = null)
             : base(style)
         {
