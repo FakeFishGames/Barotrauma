@@ -685,30 +685,26 @@ namespace Barotrauma
                 if (global)
                 {
                     RectTransform.globalScale *= 1 + step;
-                    Frame.RectTransform.RecalculateScale(true);
+                    GUICanvas.Instance.RecalculateScale(true);
                 }
                 else
                 {
                     element.RectTransform.LocalScale *= 1 + step;
                 }
-                Frame.GetAllChildren()
-                    .Select(t => t as GUITextBlock)
-                    .ForEach(t => t?.SetTextPos());
+                GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
                 if (global)
                 {
                     RectTransform.globalScale *= 1 - step;
-                    Frame.RectTransform.RecalculateScale(true);
+                    GUICanvas.Instance.RecalculateScale(true);
                 }
                 else
                 {
                     element.RectTransform.LocalScale *= 1 - step;
                 }
-                Frame.GetAllChildren()
-                    .Select(t => t as GUITextBlock)
-                    .ForEach(t => t?.SetTextPos());
+                GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
             }
             // Size
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
