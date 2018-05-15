@@ -193,7 +193,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = null) : base(style, rectT)
+        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             selected = new List<GUIComponent>();
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);

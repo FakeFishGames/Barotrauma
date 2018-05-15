@@ -312,6 +312,7 @@ namespace Barotrauma
             set { userData = value; }
         }
 
+        [Obsolete]
         public virtual Vector4 Padding
         {
             get { return padding; }
@@ -385,6 +386,8 @@ namespace Barotrauma
         #region Updating
         public virtual void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
+            if (!Visible) return;
+
             UpdateOrder = order;
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
