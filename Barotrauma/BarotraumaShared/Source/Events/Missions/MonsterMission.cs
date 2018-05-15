@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -18,11 +17,10 @@ namespace Barotrauma
             get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
         }
 
-        public MonsterMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public MonsterMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            monsterFile = element.GetAttributeString("monsterfile", "");
-
+            monsterFile = prefab.XmlConfig.GetAttributeString("monsterfile", "");
         }
         
         public override void Start(Level level)
@@ -30,7 +28,7 @@ namespace Barotrauma
             Vector2 spawnPos;
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out spawnPos);
 
-            monster = Character.Create(monsterFile, spawnPos, null, GameMain.Client != null, true, false);
+            monster = Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, GameMain.Client != null, true, false);
             monster.Enabled = false;
             radarPosition = spawnPos;
         }

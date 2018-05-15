@@ -309,6 +309,54 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("Crew AI enabled", client);
             }));
 
+            commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("Set the number of bots to " + botCount, Color.White);
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage("\"" + client.Name + "\" set the number of bots to " + botCount, Color.White);
+                GameMain.Server.SendConsoleMessage("Set the number of bots to " + botCount, client);
+            }));
+
+            commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("Set bot spawn mode to " + spawnMode, Color.White);
+                }
+                else
+                {
+                    NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage("\"" + client.Name + "\" set bot spawn mode to " + spawnMode, Color.White);
+                    GameMain.Server.SendConsoleMessage("Set bot spawn mode to " + spawnMode, client);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                }
+            }));
+
             commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
@@ -1248,9 +1296,9 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
+                    healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
                 }
             },
@@ -1269,9 +1317,9 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
+                    healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
                 }
             },
@@ -1387,6 +1435,23 @@ namespace Barotrauma
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             }));
 
+            commands.Add(new Command("eventmanager", "eventmanager: Toggle event manager on/off. No new random events are created when the event manager is disabled.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            },
+            null, (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.Enabled = !GameMain.GameSession.EventManager.Enabled;
+                    NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
+                }
+            }));
+
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 if (GameMain.Client == null)
@@ -1429,6 +1494,21 @@ namespace Barotrauma
                 new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
             }));
 
+#if DEBUG
+            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            {
+                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
+                if (args.Length > 0) float.TryParse(args[0], out stiffness);
+                if (args.Length > 1) float.TryParse(args[1], out spread);
+                if (args.Length > 2) float.TryParse(args[2], out damp);
+                Hull.WaveStiffness = stiffness;
+                Hull.WaveSpread = spread;
+                Hull.WaveDampening = damp;
+            },
+            null, null));
+#endif
+
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
                 foreach (Item it in Item.ItemList)
@@ -1453,14 +1533,14 @@ namespace Barotrauma
                 Item reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
                 if (reactorItem == null) return;
 
-                float power = 5000.0f;
+                float power = 1000.0f;
                 if (args.Length > 0) float.TryParse(args[0], out power);
 
                 var reactor = reactorItem.GetComponent<Reactor>();
-                reactor.ShutDownTemp = power == 0 ? 0 : 7000.0f;
+                reactor.TurbineOutput = power / reactor.MaxPowerOutput * 100.0f;
+                reactor.FissionRate = power / reactor.MaxPowerOutput * 100.0f;
                 reactor.AutoTemp = true;
-                reactor.Temperature = power;
-
+                
                 if (GameMain.Server != null)
                 {
                     reactorItem.CreateServerEvent(reactor);
@@ -1489,7 +1569,7 @@ namespace Barotrauma
 
                 if (killedCharacter != null)
                 {
-                    killedCharacter.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);
+                    killedCharacter.SetAllDamage(killedCharacter.MaxVitality, 0.0f, 0.0f);
                 }
             }));
 
@@ -1498,7 +1578,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-                    c.AddDamage(CauseOfDeath.Damage, c.MaxHealth * 2, null);
+                    c.SetAllDamage(c.MaxVitality, 0.0f, 0.0f);
                 }
             }, null, null));
 
@@ -1685,6 +1765,38 @@ namespace Barotrauma
                 Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                 campaign.Map.SelectLocation(location);
                 GameMain.Server.SendConsoleMessage(location.Name + " selected.", senderClient);
+            }));
+
+            commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", (string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    NewMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null || args.Length < 1) return;
+
+                if (float.TryParse(args[0], out float difficulty))
+                {
+                    GameMain.Server.SendConsoleMessage("Set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), client);
+                    NewMessage("Client \""+client.Name+"\" set level difficulty setting to " + MathHelper.Clamp(difficulty, 0.0f, 100.0f), Color.White);
+                    GameMain.NetLobbyScreen.SetLevelDifficulty(difficulty);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", client);
+                    NewMessage(args[0] + " is not a valid difficulty setting (enter a value between 0-100)", Color.Red);
+                }
             }));
 
 #if DEBUG
@@ -2082,20 +2194,18 @@ namespace Barotrauma
 
             if (args[0].ToLowerInvariant() == "human")
             {
-                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
-
-#if CLIENT
+                spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
-                    SinglePlayerCampaign mode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
-                    if (mode != null)
+                    if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
                     {
-                        Character.Controlled = spawnedCharacter;
-                        GameMain.GameSession.CrewManager.AddCharacter(Character.Controlled);
-                        GameMain.GameSession.CrewManager.SelectCharacter(null, Character.Controlled);
+                        //TODO: a way to select which team to spawn to?
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : (byte)1;
                     }
-                }
+#if CLIENT
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
+                }
             }
             else
             {
@@ -2105,7 +2215,7 @@ namespace Barotrauma
                 {
                     if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
                     {
-                        Character.Create(characterFile, spawnPosition);
+                        Character.Create(characterFile, spawnPosition, ToolBox.RandomSeed(8));
                         return;
                     }
                 }
@@ -2116,7 +2226,7 @@ namespace Barotrauma
                 string configPath = "Content/Characters/"
                     + args[0].First().ToString().ToUpper() + args[0].Substring(1)
                     + "/" + args[0].ToLower() + ".xml";
-                Character.Create(configPath, spawnPosition);
+                Character.Create(configPath, spawnPosition, ToolBox.RandomSeed(8));
             }
         }
 

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
 <Item
-	name="ID Card"
+  name="ID Card"
+  identifier="idcard"
   category="Equipment"
-	Tags="smallitem"
+  Tags="smallitem"
   cargocontainername="Metal Crate">
 
 	<Sprite texture ="idcard.png" depth="0.8" sourcerect="0,0,16,16"/>

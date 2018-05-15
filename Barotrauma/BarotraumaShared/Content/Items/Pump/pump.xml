@@ -1,17 +1,19 @@
 ﻿<Items>
   <Item
-  name="Pump"
-  linkable="true"
-  category="Machine">
+    name="Pump"
+    identifier="pump"
+    linkable="true"
+    category="Machine">
 
-    <Sprite texture ="pump.png" depth="0.8" sourcerect="0,0,128,128"/>
+    <Sprite texture ="FF_Pump.png" depth="0.8" sourcerect="0,0,460,224"/>
 
     <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
       <GuiFrame rect="0,0,330,145" alignment="Center" style="ItemUI"/>
       <sound file="pump.ogg" type="OnActive" range="800.0" volume="CurrFlow" volumemultiplier="0.01" loop="true"/>
     </Pump>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="toggle"/>
@@ -19,21 +21,33 @@
       <input name="set_speed"/>
       <input name="set_targetlevel"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical" description="Clean pump intakes to increase the flow rate of the pump.">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the pump.">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
   
   <Item
-  name="Small Pump"
-  linkable="true"
-  category="Machine">
+    name="Small Pump"
+    identifier="smallpump"
+    linkable="true"
+    category="Machine">
 
-    <Sprite texture ="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
+    <Sprite texture ="FF_smallPump.png" depth="0.8" sourcerect="0,0,303,200"/>
 
     <Pump canbeselected = "true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3">
       <GuiFrame rect="0,0,330,145" alignment="Center" style="ItemUI"/>
       <sound file="pump.ogg" type="OnActive" range="500.0" volume="CurrFlow" volumemultiplier="0.01" loop="true"/>
     </Pump>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="toggle"/>
@@ -41,5 +55,15 @@
       <input name="set_speed"/>
       <input name="set_targetlevel"/>
     </ConnectionPanel>
+
+    <Optimizable optimizationtype="mechanical" description="Clean pump intakes to increase the flow rate of the pump.">
+      <requiredskill name="Mechanical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>
+
+    <Optimizable optimizationtype="electrical" description="Secure all wire connections and adjust settings to decrease the power consumption of the pump.">
+      <requiredskill name="Electrical Engineering" level="50" optimizationduration="360.0"/>
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+    </Optimizable>
   </Item>
 </Items>

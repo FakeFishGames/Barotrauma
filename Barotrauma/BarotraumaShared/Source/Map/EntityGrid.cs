@@ -73,37 +73,17 @@ namespace Barotrauma
                 }
             }
         }
-
-        public static List<MapEntity> GetEntities(List<EntityGrid> entityGrids, Vector2 position, bool useWorldCoordinates = true)
-        {
-            List<MapEntity> entities = new List<MapEntity>();
-            foreach (EntityGrid entityGrid in entityGrids)
-            {
-                Vector2 transformedPosition = position;
-                if (useWorldCoordinates)
-                {
-                    transformedPosition -= entityGrid.Submarine.Position;
-                }
-
-                entities.AddRange(entityGrid.GetEntities(transformedPosition));
-            }
-
-            return entities;
-        }
-
+        
         public List<MapEntity> GetEntities(Vector2 position)
         {
-            if (!MathUtils.IsValid(position)) new List<MapEntity>();
+            if (!MathUtils.IsValid(position)) return null;
 
             if (Submarine != null) position -= Submarine.HiddenSubPosition;
-
             Point indices = GetIndices(position);
-
             if (indices.X < 0 || indices.Y < 0 || indices.X >= entities.GetLength(0) || indices.Y >= entities.GetLength(1))
             {
-                return new List<MapEntity>();
+                return null;
             }
-
             return entities[indices.X, indices.Y];
         }
 

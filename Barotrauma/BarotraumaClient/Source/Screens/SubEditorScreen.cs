@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -37,6 +38,8 @@ namespace Barotrauma
         private GUITextBox nameBox;
 
         private GUIFrame hullVolumeFrame;
+
+        private GUIFrame saveAssemblyFrame;
 
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
@@ -131,10 +134,10 @@ namespace Barotrauma
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-#if LINUX
-            var blurEffect = content.Load<Effect>("blurshader_opengl");
+#if LINUX || OSX
+            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
 #else
-            var blurEffect = content.Load<Effect>("blurshader");
+            var blurEffect = content.Load<Effect>("Effects/blurshader");
 #endif
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
 
@@ -143,7 +146,7 @@ namespace Barotrauma
             topPanel = new GUIFrame(new Rectangle(0, 0, 0, 35), "GUIFrameTop");
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), "", topPanel);
+            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 300, 90), "InnerFrame", topPanel);
             hullVolumeFrame.Visible = false;
             hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
 
@@ -152,7 +155,18 @@ namespace Barotrauma
 
             GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
-            
+
+            saveAssemblyFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth - 170, 26, 170, 30), "InnerFrame", topPanel);
+            saveAssemblyFrame.Visible = false;
+            saveAssemblyFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
+            var saveAssemblyButton = new GUIButton(new Rectangle(0, 0, 0, 0), "Save as item assembly", Alignment.Center, "", saveAssemblyFrame);
+            saveAssemblyFrame.Font = GUI.SmallFont;
+            saveAssemblyButton.OnClicked += (btn, userdata) =>
+            {
+                CreateSaveAssemblyScreen();
+                return true;
+            };
+
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), TextManager.Get("OpenSubButton"), "", topPanel);
             button.OnClicked = (GUIButton btn, object data) =>
             {
@@ -172,7 +186,7 @@ namespace Barotrauma
 
                 return true;
             };
-
+            
             var nameLabel = new GUITextBlock(new Rectangle(170, 0, 150, 20), "", "", Alignment.TopLeft, Alignment.CenterLeft, topPanel, false, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
@@ -225,38 +239,11 @@ namespace Barotrauma
                 clearButton.UserData = searchBox;
 
                 GUIListBox itemList = new GUIListBox(new Rectangle(0, 20, 0, 0), Color.White * 0.7f, "", GUItabs[i]);
+                itemList.UserData = category;
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
-                {
-                    if (!ep.Category.HasFlag(category)) continue;
-                    
-                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, "ListBoxElement", itemList);
-                    frame.UserData = ep;
-                    frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(40, 0, 0, 25),
-                        ep.Name, "", 
-                        Alignment.Top, Alignment.CenterLeft, 
-                        frame);
-                    textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-
-                    if (!string.IsNullOrWhiteSpace(ep.Description))
-                    {
-                        textBlock.ToolTip = ep.Description;
-                    }
-
-                    if (ep.sprite != null)
-                    {
-                        GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
-                        img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                        img.Color = ep.SpriteColor;
-                    }
-                }
-
-                itemList.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+                UpdateEntityList(category);
 
                 i++;
             }
@@ -307,15 +294,80 @@ namespace Barotrauma
                 previouslyUsedList = new GUIListBox(new Rectangle(0, y + 20, 0, Math.Min(GameMain.GraphicsHeight - y - 80, 150)), "", leftPanel);
                 previouslyUsedList.OnSelected = SelectPrefab;
             }
-
         }
 
-        public void StartTutorial()
+        private void UpdateEntityList(MapEntityCategory category)
+        {
+            GUIListBox entityList = null;
+            foreach (var guiTab in GUItabs)
+            {
+                GUIListBox listBox = guiTab.GetChild<GUIListBox>();
+                if (listBox.UserData?.GetType() == typeof(MapEntityCategory) &&
+                    (MapEntityCategory)listBox.UserData == category)
+                {
+                    entityList = listBox;
+                    break;
+                }
+            }
+
+            if (entityList == null)
+            {
+                DebugConsole.ThrowError("Listbox for entity category \""+category+"\" not found.");
+                return;
+            }
+
+            entityList.ClearChildren();
+
+            foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+            {
+                if (!ep.Category.HasFlag(category)) continue;
+
+                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, "ListBoxElement", entityList);
+                frame.UserData = ep;
+                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(40, 0, 0, 25),
+                    ep.Name, "",
+                    Alignment.Top, Alignment.CenterLeft,
+                    frame);
+                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+
+                if (!string.IsNullOrWhiteSpace(ep.Description))
+                {
+                    textBlock.ToolTip = ep.Description;
+                }
+
+                if (ep.sprite != null)
+                {
+                    GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
+                    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
+                    img.Color = ep.SpriteColor;
+                }
+
+                if (category == MapEntityCategory.ItemAssembly)
+                {
+                    var deleteButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Delete"), Alignment.CenterRight, "", textBlock);
+                    deleteButton.UserData = ep;
+                    deleteButton.OnClicked = (btn, userData) =>
+                    {
+                        ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
+                        assemblyPrefab.Delete();
+                        UpdateEntityList(MapEntityCategory.ItemAssembly);
+                        return true;
+                    };
+                }
+            }
+
+            entityList.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+        }
+
+        /*public void StartTutorial()
         {
             tutorial = new Tutorials.EditorTutorial("EditorTutorial");
 
             CoroutineManager.StartCoroutine(tutorial.UpdateState());
-        }
+        }*/
 
         public override void Select()
         {
@@ -336,10 +388,8 @@ namespace Barotrauma
 
             SoundPlayer.OverrideMusicType = "none";
             SoundPlayer.OverrideMusicDuration = null;
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Pause(i);
-            }
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
 
             linkedSubBox.ClearChildren();
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -360,15 +410,13 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
 
-            if (characterMode) ToggleCharacterMode();            
+            if (characterMode) ToggleCharacterMode();
 
             if (wiringMode) ToggleWiringMode();
 
             SoundPlayer.OverrideMusicType = null;
-            for (int i = 0; i < Sounds.SoundManager.DefaultSourceCount; i++)
-            {
-                Sounds.SoundManager.Resume(i);
-            }
+            GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
+            GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", GameMain.Config.SoundVolume);
 
             if (dummyCharacter != null)
             {
@@ -382,7 +430,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
+            dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero, "");
 
             for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
@@ -532,7 +580,7 @@ namespace Barotrauma
 
             foreach (string contentPackageName in contentPacks)
             {
-                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, contentPackList);
+                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, "", contentPackList);
                 cpTickBox.Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName);
                 cpTickBox.UserData = contentPackageName;
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>
@@ -624,7 +672,80 @@ namespace Barotrauma
                 saveFrame = null;
                 return true;
             };
+        }
 
+
+        private void CreateSaveAssemblyScreen()
+        {
+            if (characterMode) ToggleCharacterMode();
+            if (wiringMode) ToggleWiringMode();
+
+            int width = 400, height = 210;
+            int y = 0;
+
+            saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
+            saveFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+
+            new GUITextBlock(new Rectangle(0, 0, 200, 30), TextManager.Get("SaveItemAssemblyDialogHeader"), "", saveFrame, GUI.LargeFont);
+            y += 30;
+
+            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveItemAssemblyDialogName"), "", saveFrame);
+            y += 20;
+
+            nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), "", saveFrame);
+            y += 30;
+
+            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveItemAssemblyDialogDescription"), "", saveFrame);
+            y += 20;
+
+            var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 80), null, null, Alignment.TopLeft,
+                Alignment.TopLeft, "", saveFrame);
+            descriptionBox.UserData = "description";
+            descriptionBox.Wrap = true;
+            descriptionBox.Text = "";
+                        
+            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
+            saveButton.OnClicked = SaveAssembly;
+
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", saveFrame);
+            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
+            {
+                saveFrame = null;
+                return true;
+            };
+        }
+
+        private bool SaveAssembly(GUIButton button, object obj)
+        {
+            if (string.IsNullOrWhiteSpace(nameBox.Text))
+            {
+                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red, 3.0f);
+
+                nameBox.Flash();
+                return false;
+            }
+
+            foreach (char illegalChar in Path.GetInvalidFileNameChars())
+            {
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    nameBox.Flash();
+                    return false;
+                }
+            }
+
+            string description = ((GUITextBox)saveFrame.GetChild("description")).Text;
+
+            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
+            XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
+            string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
+            doc.Save(filePath);
+
+            new ItemAssemblyPrefab(filePath);
+            UpdateEntityList(MapEntityCategory.ItemAssembly);
+            saveFrame = null;
+            return false;
         }
 
         private bool CreateLoadScreen()
@@ -1384,8 +1505,15 @@ namespace Barotrauma
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
-
-            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);            
+            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
+            
+            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);       
+            if (PlayerInput.MidButtonHeld())
+            {
+                Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
+                moveSpeed.X = -moveSpeed.X;
+                cam.Position += moveSpeed;
+            }
 
             if (characterMode || wiringMode)
             {
@@ -1429,7 +1557,7 @@ namespace Barotrauma
                     cam.TargetPos = Vector2.Zero;
                 }
             }
-            else
+            else if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition))
             {
                 MapEntity.UpdateSelecting(cam);
             }
@@ -1480,15 +1608,19 @@ namespace Barotrauma
                     if (item == null) continue;
 
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
-                    item.Update((float)deltaTime, cam);
+                    item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
+
+                    //wires need to be updated for the last node to follow the player during rewiring
+                    Wire wire = item.GetComponent<Wire>();
+                    if (wire != null) wire.Update((float)deltaTime, cam);
                 }
 
                 if (dummyCharacter.SelectedConstruction != null)
                 {
                     if (dummyCharacter.SelectedConstruction != null)
                     {
-                        dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter);
+                        dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                     }
 
                     if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.FocusedItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
@@ -1545,28 +1677,24 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
-                DrawSubmarineIndicator(spriteBatch, Submarine.MainSub, Color.LightBlue * 0.5f);
+                GUI.DrawIndicator(
+                    spriteBatch, Submarine.MainSub.WorldPosition, cam,
+                    cam.WorldView.Width,
+                    GUI.SubmarineIcon, Color.LightBlue * 0.5f);
             }
-
+            
             leftPanel.DrawManually(spriteBatch);
             topPanel.DrawManually(spriteBatch);
-
-            //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
             
             if ((characterMode || wiringMode) && dummyCharacter != null)                     
             {
-                if (dummyCharacter.SelectedConstruction != null)
-                {
-                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, cam, dummyCharacter);
-                }
-                
-                dummyCharacter.DrawHUD(spriteBatch, cam);
+                dummyCharacter.DrawHUD(spriteBatch, cam, false);
                 
                 if (wiringMode) wiringToolPanel.DrawManually(spriteBatch);
             }
             else
             {
-                if (loadFrame!=null)
+                if (loadFrame != null)
                 {
                     loadFrame.DrawManually(spriteBatch);
                 }
@@ -1614,9 +1742,13 @@ namespace Barotrauma
             GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
             SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice);
 
-            spriteBatch.Begin();
-            LevelRenderer.BackgroundTop.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
-            spriteBatch.End();
+            Sprite backgroundSprite = LevelGenerationParams.LevelParams.Find(l => l.BackgroundTopSprite != null).BackgroundTopSprite;
+            if (backgroundSprite != null)
+            {
+                spriteBatch.Begin();
+                backgroundSprite.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+                spriteBatch.End();
+            }
             
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
             Submarine.Draw(spriteBatch, false);

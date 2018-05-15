@@ -5,29 +5,29 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Spine;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = true;
+        public static bool ShowFPS = false;
         public static bool DebugDraw;
-        
+
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-        
-        public static GameScreen            GameScreen;
-        public static MainMenuScreen        MainMenuScreen;
-        public static LobbyScreen           LobbyScreen;
 
-        public static NetLobbyScreen        NetLobbyScreen;
-        public static ServerListScreen      ServerListScreen;
+        public static GameScreen GameScreen;
+        public static MainMenuScreen MainMenuScreen;
+        public static LobbyScreen LobbyScreen;
+
+        public static NetLobbyScreen NetLobbyScreen;
+        public static ServerListScreen ServerListScreen;
 
         public static SubEditorScreen         SubEditorScreen;
         public static CharacterEditorScreen   CharacterEditorScreen;
@@ -35,19 +35,21 @@ namespace Barotrauma
         public static AnimationEditorScreen AnimationEditorScreen;
 
         public static Lights.LightManager LightManager;
-        
+
+        public static Sounds.SoundManager SoundManager;
+
         public static ContentPackage SelectedPackage
         {
             get { return Config.SelectedContentPackage; }
         }
-        
+
         public static GameSession GameSession;
 
         public static NetworkMember NetworkMember;
 
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
-        
+
         public static World World;
 
         public static LoadingScreen TitleScreen;
@@ -75,7 +77,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public static WindowMode WindowMode
         {
             get;
@@ -108,7 +110,7 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
-        
+
         public static RasterizerState ScissorTestEnable
         {
             get;
@@ -120,18 +122,12 @@ namespace Barotrauma
             get { return loadingScreenOpen; }
         }
 
-
-
-        public static Effect spineEffect;
-
-        public static SkeletonRenderer skeletonRenderer;
-
         public GameMain()
         {
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
 
             Window.Title = "Barotrauma";
-            
+
             Instance = this;
 
             Config = new GameSettings("config.xml");
@@ -139,7 +135,7 @@ namespace Barotrauma
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("config.xml");
+                Config.Save();
             }
 
             ApplyGraphicsSettings();
@@ -147,7 +143,7 @@ namespace Barotrauma
             Content.RootDirectory = "Content";
 
             FrameCounter = new FrameCounter();
-            
+
             IsFixedTimeStep = false;
 
             Timing.Accumulator = 0.0f;
@@ -189,7 +185,12 @@ namespace Barotrauma
         public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
+#if !(OSX)
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+#else
+            // Force borderless on macOS.
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed && Config.WindowMode != WindowMode.Fullscreen;
+#endif
             GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             
             GraphicsDeviceManager.ApplyChanges();
@@ -227,13 +228,6 @@ namespace Barotrauma
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
 
-            spineEffect = Content.Load<Effect>("SpineEffect");
-            skeletonRenderer = new SkeletonRenderer(GraphicsDevice);
-            skeletonRenderer.PremultipliedAlpha = false;
-            skeletonRenderer.Effect = spineEffect;
-
-            Sound.Init();
-
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -251,14 +245,23 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
+            GUI.GraphicsDevice = base.GraphicsDevice;
+
+            SoundManager = new Sounds.SoundManager();
+            SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
+            SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
+
             GUI.Init(Window, Content);
             DebugConsole.Init();
+
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
-            Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -266,9 +269,12 @@ namespace Barotrauma
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
+            Tutorials.Tutorial.Init();
             LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
+            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
@@ -278,12 +284,19 @@ namespace Barotrauma
             {
                 if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
             }
+
+            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
+
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;
 
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
             TitleScreen.LoadState = 30.0f;
+        yield return CoroutineStatus.Running;
+
+            ItemAssemblyPrefab.LoadAll();
+            TitleScreen.LoadState = 35.0f;
         yield return CoroutineStatus.Running;
 
             Debug.WriteLine("sounds");
@@ -348,7 +361,7 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
-            Sound.Dispose();
+            SoundManager.Dispose();
         }
         
         /// <summary>
@@ -360,6 +373,13 @@ namespace Barotrauma
         {
             Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
+            if (Timing.Accumulator > Timing.Step * 6.0)
+            {
+                //if the game's running too slowly then we have no choice
+                //but to skip a bunch of steps
+                //otherwise it snowballs and becomes unplayable
+                Timing.Accumulator = Timing.Step;
+            }
             PlayerInput.UpdateVariable();
 
             bool paused = true;
@@ -392,7 +412,12 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        throw new Exception("Loading was interrupted due to an error");
+                        string errMsg = "Loading was interrupted due to an error";
+                        if (loadingCoroutine.Exception != null)
+                        {
+                            errMsg += ": " + loadingCoroutine.Exception.Message + "\n" + loadingCoroutine.Exception.StackTrace;
+                        }
+                        throw new Exception(errMsg);
                     }
                 }
                 else if (hasLoaded)

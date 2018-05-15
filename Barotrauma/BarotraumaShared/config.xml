@@ -3,7 +3,7 @@
   <graphicsmode fullscreen="true" vsync="true" />
   <contentpackage path="Data/ContentPackages/Vanilla 0.8.xml" />
   <player name=""/>
-  <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" RadioChat="OemTilde" CrewOrders="C" Ragdoll="Space" /> />
+  <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" RadioChat="OemTilde" CrewOrders="C" Ragdoll="Space" Health="H"/> />
   <gameplay>
     <jobpreferences>
       <job name="Engineer" />

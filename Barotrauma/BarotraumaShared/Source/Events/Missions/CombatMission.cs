@@ -29,7 +29,9 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.NetworkMember==null || GameMain.NetworkMember.Character==null)
+                if (descriptions == null) return "";
+
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.Character == null)
                 {
                     //non-team-specific description
                     return descriptions[0];
@@ -47,20 +49,20 @@ namespace Barotrauma
             {
                 if (winner == -1) return "";
 
-                return successMessage
+                return base.SuccessMessage
                     .Replace("[loser]", teamNames[1 - winner])
                     .Replace("[winner]", teamNames[winner]);
             }
         }
 
-        public CombatMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public CombatMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
             descriptions = new string[]
             {
-                element.GetAttributeString("descriptionneutral", ""),
-                element.GetAttributeString("description1", ""),
-                element.GetAttributeString("description2", "")
+                prefab.XmlConfig.GetAttributeString("descriptionneutral", ""),
+                prefab.XmlConfig.GetAttributeString("description1", ""),
+                prefab.XmlConfig.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -73,8 +75,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                element.GetAttributeString("teamname1", "Team A"),
-                element.GetAttributeString("teamname2", "Team B")
+                prefab.XmlConfig.GetAttributeString("teamname1", "Team A"),
+                prefab.XmlConfig.GetAttributeString("teamname2", "Team B")
             };
         }
 
@@ -192,7 +194,7 @@ namespace Barotrauma
                     if (!teamDead[i] && teamDead[1-i])
                     {
                         //make sure nobody in the other team can be revived because that would be pretty weird
-                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); });
+                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
                         winner = i;
 

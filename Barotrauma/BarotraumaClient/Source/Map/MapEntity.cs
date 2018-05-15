@@ -15,6 +15,9 @@ namespace Barotrauma
 
         protected static Vector2 startMovingPos = Vector2.Zero;
 
+        private static bool resizing;
+        private int resizeDirX, resizeDirY;
+
         //which entities have been selected for editing
         private static List<MapEntity> selectedList = new List<MapEntity>();
         public static List<MapEntity> SelectedList
@@ -431,16 +434,6 @@ namespace Barotrauma
         {
             if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
-            if (selectedList.Count == 1)
-            {
-                selectedList[0].UpdateEditing(cam);
-
-                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
-                {
-                    selectedList[0].UpdateResizing(cam);
-                }
-            }
-
             if (editingHUD != null)
             {
                 if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
@@ -449,11 +442,57 @@ namespace Barotrauma
                     {
                         var textBox = component as GUITextBox;
                         if (textBox == null) continue;
-
                         textBox.Deselect();
                     }
-
                     editingHUD = null;
+                }
+            }
+
+            if (selectedList.Count == 0) return;
+
+            if (selectedList.Count == 1)
+            {
+                selectedList[0].UpdateEditing(cam);
+                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                {
+                    selectedList[0].UpdateResizing(cam);
+                }
+            }
+
+            if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
+            {
+                //TODO: a UI button for flipping entities
+                if (PlayerInput.KeyHit(Keys.N))
+                {
+                    float minX = selectedList[0].WorldRect.X, maxX = selectedList[0].WorldRect.Right;
+                    for (int i = 0; i < selectedList.Count; i++)
+                    {
+                        minX = Math.Min(minX, selectedList[i].WorldRect.X);
+                        maxX = Math.Max(maxX, selectedList[i].WorldRect.Right);
+                    }
+
+                    float centerX = (minX + maxX) / 2.0f;
+                    foreach (MapEntity me in selectedList)
+                    {
+                        me.FlipX(false);
+                        me.Move(new Vector2((centerX - me.WorldPosition.X) * 2.0f, 0.0f));
+                    }
+                }
+                else if (PlayerInput.KeyHit(Keys.M))
+                {
+                    float minY = selectedList[0].WorldRect.Y - selectedList[0].WorldRect.Height, maxY = selectedList[0].WorldRect.Y;
+                    for (int i = 0; i < selectedList.Count; i++)
+                    {
+                        minY = Math.Min(minY, selectedList[i].WorldRect.Y - selectedList[i].WorldRect.Height);
+                        maxY = Math.Max(maxY, selectedList[i].WorldRect.Y);
+                    }
+
+                    float centerY = (minY + maxY) / 2.0f;
+                    foreach (MapEntity me in selectedList)
+                    {
+                        me.FlipY(false);
+                        me.Move(new Vector2(0.0f, (centerY - me.WorldPosition.Y) * 2.0f));
+                    }
                 }
             }
         }
@@ -492,7 +531,7 @@ namespace Barotrauma
         /// <summary>
         /// copies a list of entities to the "clipboard" (copiedList)
         /// </summary>
-        private static void CopyEntities(List<MapEntity> entities)
+        public static List<MapEntity> CopyEntities(List<MapEntity> entities)
         {
             List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
 
@@ -504,6 +543,8 @@ namespace Barotrauma
             //do a "shallow remove" (removes the entities from the game without removing links between them)
             //  -> items will stay in their containers
             newEntities.ForEach(e => e.ShallowRemove());
+
+            return newEntities;
         }
 
         public virtual void AddToGUIUpdateList()

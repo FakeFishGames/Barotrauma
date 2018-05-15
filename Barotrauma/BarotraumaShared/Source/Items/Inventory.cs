@@ -14,27 +14,41 @@ namespace Barotrauma
         protected int capacity;
 
         public Item[] Items;
-
-        private bool isSubInventory;
-
+        protected bool[] hideEmptySlot;
+        
         public bool Locked;
 
         private ushort[] receivedItemIDs;
         private float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
+        public int Capacity
+        {
+            get { return capacity; }
+        }
+
+        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
             this.Owner = owner;
 
-
             Items = new Item[capacity];
+            hideEmptySlot = new bool[capacity];
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+            CenterPos = (centerPos == null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+
+            if (slotSpriteSmall == null)
+            {
+                slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
+                slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
+                slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
+                slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
+                EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), null, 0);
+                EquipIndicatorOn = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), null, 0);
+            }
 #endif
         }
 
@@ -193,7 +207,7 @@ namespace Barotrauma
             syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -203,6 +217,12 @@ namespace Barotrauma
                 newItemIDs[i] = msg.ReadUInt16();
             }
 
+            if (this is CharacterInventory)
+            {
+                if (Owner == null || !(Owner is Character)) return;
+                if (!((CharacterInventory)this).AccessibleWhenAlive && !((Character)Owner).IsDead) return;
+            }
+
             if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
             {
                 return;
@@ -210,12 +230,17 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == 0)
+                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(c.Character);
-                    System.Diagnostics.Debug.Assert(Items[i]==null);
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
-                else
+            }
+
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (newItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
                     if (item == null || item == Items[i]) continue;
@@ -312,11 +337,15 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (receivedItemIDs[i] == 0)
+                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
                 }
-                else
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
                     if (item == null) continue;

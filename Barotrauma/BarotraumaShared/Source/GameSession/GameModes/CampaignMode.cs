@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public void GenerateMap(string seed)
         {
-            map = new Map(seed, 1000);
+            map = new Map(seed, Map.DefaultSize);
         }
 
         protected List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)

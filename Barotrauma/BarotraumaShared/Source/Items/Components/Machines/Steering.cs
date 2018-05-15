@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         private Vector2 currVelocity;
         private Vector2 targetVelocity;
 
+        private Vector2 steeringInput;
+
         private bool autoPilot;
 
         private Vector2? posToMaintain;
@@ -31,6 +33,12 @@ namespace Barotrauma.Items.Components
         private Vector2 avoidStrength;
 
         private float neutralBallastLevel;
+
+        private float steeringAdjustSpeed = 1.0f;
+
+        private Character user;
+
+        private Radar radar;
                 
         public bool AutoPilot
         {
@@ -88,10 +96,27 @@ namespace Barotrauma.Items.Components
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
         }
-        
+
+        public Vector2 SteeringInput
+        {
+            get { return steeringInput; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                steeringInput.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
+            }
+        }
+
         public SteeringPath SteeringPath
         {
             get { return steeringPath; }
+        }
+
+        public Vector2? PosToMaintain
+        {
+            get { return posToMaintain; }
+            set { posToMaintain = value; }
         }
 
         public Steering(Item item, XElement element)
@@ -102,6 +127,19 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific();
+
+        public override void OnItemLoaded()
+        {
+            radar = item.GetComponent<Radar>();
+        }
+
+        public override bool Select(Character character)
+        {
+            if (!CanBeSelected) return false;
+
+            user = character;
+            return true;
+        }
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -129,6 +167,7 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
@@ -137,6 +176,30 @@ namespace Barotrauma.Items.Components
             if (autoPilot)
             {
                 UpdateAutoPilot(deltaTime);
+            }
+            else
+            {
+                if (user != null && user.Info != null && user.SelectedConstruction == item)
+                {
+                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime);
+                }
+
+                Vector2 velocityDiff = steeringInput - targetVelocity;
+                if (velocityDiff != Vector2.Zero)
+                {
+                    if (steeringAdjustSpeed >= 0.99f)
+                    {
+                        TargetVelocity = steeringInput;
+                    }
+                    else
+                    {
+                        float steeringChange = 1.0f / (1.0f - steeringAdjustSpeed);
+                        steeringChange *= steeringChange * 10.0f;
+
+                        TargetVelocity += Vector2.Normalize(velocityDiff) * 
+                            Math.Min(steeringChange * deltaTime, velocityDiff.Length());
+                    }
+                }
             }
 
             item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", null);
@@ -195,11 +258,14 @@ namespace Barotrauma.Items.Components
                 SteerTowardsPosition(steeringPath.CurrentNode.WorldPosition);
             }
 
-            float avoidRadius = Math.Max(item.Submarine.Borders.Width, item.Submarine.Borders.Height) * 2.0f;
-            avoidRadius = Math.Max(avoidRadius, 2000.0f);
+            Vector2 avoidDist = new Vector2(
+                Math.Max(1000.0f * Math.Abs(item.Submarine.Velocity.X), item.Submarine.Borders.Width * 1.5f),
+                Math.Max(1000.0f * Math.Abs(item.Submarine.Velocity.Y), item.Submarine.Borders.Height * 1.5f));
+
+            float avoidRadius = avoidDist.Length();
 
             Vector2 newAvoidStrength = Vector2.Zero;
-
+            
             //steer away from nearby walls
             var closeCells = Level.Loaded.GetCells(item.Submarine.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
@@ -210,9 +276,9 @@ namespace Barotrauma.Items.Components
                     if (intersection != null)
                     {
                         Vector2 diff = item.Submarine.WorldPosition - (Vector2)intersection;
-
+                        
                         //far enough -> ignore
-                        if (diff.Length() > avoidRadius) continue;
+                        if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y) continue;
 
                         float dot = item.Submarine.Velocity == Vector2.Zero ?
                             0.0f : Vector2.Dot(item.Submarine.Velocity, -Vector2.Normalize(diff));
@@ -288,12 +354,9 @@ namespace Barotrauma.Items.Components
         public void SetDestinationLevelStart()
         {
             AutoPilot = true;
-
             MaintainPos = false;
             posToMaintain = null;
-
             LevelEndSelected = false;
-
             if (!LevelStartSelected)
             {
                 LevelStartSelected = true;
@@ -303,13 +366,10 @@ namespace Barotrauma.Items.Components
 
         public void SetDestinationLevelEnd()
         {
-            AutoPilot = false;
-
+            AutoPilot = true;
             MaintainPos = false;
             posToMaintain = null;
-
             LevelStartSelected = false;
-
             if (!LevelEndSelected)
             {
                 LevelEndSelected = true;
@@ -323,7 +383,7 @@ namespace Barotrauma.Items.Components
             Vector2 futurePosition = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity) * prediction;
             Vector2 targetSpeed = ((worldPosition - item.Submarine.WorldPosition) - futurePosition);
 
-            if (targetSpeed.Length()>500.0f)
+            if (targetSpeed.Length() > 500.0f)
             {
                 targetSpeed = Vector2.Normalize(targetSpeed);
                 TargetVelocity = targetSpeed * 100.0f;
@@ -333,7 +393,44 @@ namespace Barotrauma.Items.Components
                 TargetVelocity = targetSpeed / 5.0f;
             }
         }
-        
+
+        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        {
+            switch (objective.Option.ToLowerInvariant())
+            {
+                case "maintain position":
+                    if (!posToMaintain.HasValue)
+                    {
+                        unsentChanges = true;
+                        posToMaintain = item.Submarine.WorldPosition;
+                    }
+
+                    if (!AutoPilot || !MaintainPos) unsentChanges = true;
+
+                    AutoPilot = true;
+                    MaintainPos = true;
+                    break;
+                case "navigate back":
+                    if (!AutoPilot || MaintainPos || LevelEndSelected || !LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
+                    SetDestinationLevelStart();
+                    break;
+                case "navigate to destination":
+                    if (!AutoPilot || MaintainPos || !LevelEndSelected || LevelStartSelected)
+                    {
+                        unsentChanges = true;
+                    }
+                    SetDestinationLevelEnd();
+                    break;
+            }
+
+            radar?.AIOperate(deltaTime, character, objective);
+
+            return false;
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             if (connection.Name == "velocity_in")
@@ -349,7 +446,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
-            Vector2 newTargetVelocity   = targetVelocity;
+            Vector2 newSteeringInput    = targetVelocity;
             bool maintainPos            = false;
             Vector2? newPosToMaintain   = null;
             bool headingToStart         = false;
@@ -370,7 +467,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                newSteeringInput = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
 
             if (!item.CanClientAccess(c)) return; 
@@ -379,11 +476,11 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                targetVelocity = newTargetVelocity;
+                steeringInput = newSteeringInput;
+                steeringAdjustSpeed = MathHelper.Lerp(0.2f, 1.0f, c.Character.GetSkillLevel("Helm") / 100.0f);
             }
             else
             {
-
                 MaintainPos = newPosToMaintain != null;
                 posToMaintain = newPosToMaintain;
 
@@ -411,8 +508,11 @@ namespace Barotrauma.Items.Components
             if (!autoPilot)
             {
                 //no need to write steering info if autopilot is controlling
+                msg.Write(steeringInput.X);
+                msg.Write(steeringInput.Y);
                 msg.Write(targetVelocity.X);
                 msg.Write(targetVelocity.Y);
+                msg.Write(steeringAdjustSpeed);
             }
             else
             {

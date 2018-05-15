@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    static class Rand
+    public static class Rand
     {
         public enum RandSync
         {
@@ -16,6 +16,11 @@ namespace Barotrauma
         private static Random[] syncedRandom = new MTRandom[] {
             new MTRandom(), new MTRandom()
         };
+
+        public static Random GetRNG(RandSync randSync)
+        {
+            return randSync == RandSync.Unsynced ? localRandom : syncedRandom[(int)randSync];
+        }
 
         public static void SetSyncedSeed(int seed)
         {

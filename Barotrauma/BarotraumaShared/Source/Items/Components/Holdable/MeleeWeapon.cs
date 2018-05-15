@@ -178,14 +178,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb limb in user.AnimController.Limbs)
                 {
-                    try
+                    if (limb.body.FarseerBody != null)
                     {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                    }
-
-                    catch
-                    {
-                        continue;
+                        if (GameMain.World.BodyList.Contains(limb.body.FarseerBody))
+                        {
+                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                        }
                     }
                 }
             }
@@ -274,7 +272,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
+                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID, targetLimb });
 
                 string logStr = picker?.LogName + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)
@@ -284,9 +282,11 @@ namespace Barotrauma.Items.Components
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
-            
+
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
+            }
 
             if (DeleteOnUse)
             {

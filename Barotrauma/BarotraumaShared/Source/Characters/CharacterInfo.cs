@@ -7,10 +7,14 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public enum Gender { None, Male, Female };        
-
+    public enum Gender { None, Male, Female };
+    
     partial class CharacterInfo
     {
+        private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
+
+        private static ushort idCounter;
+
         public string Name;
         public string DisplayName
         {
@@ -44,6 +48,7 @@ namespace Barotrauma
                 return disguiseName;
             }
         }
+
         public Character Character;
 
         public readonly string File;
@@ -54,20 +59,26 @@ namespace Barotrauma
 
         public ushort? HullID = null;
 
-        private Vector2[] headSpriteRange;
-
         private Gender gender;
 
         public int Salary;
+
+        private Vector2[] headSpriteRange;
 
         private int headSpriteId;
         private Sprite headSprite;
 
         public bool StartItemsGiven;
 
-        public CauseOfDeath CauseOfDeath;
+        public Pair<CauseOfDeathType, AfflictionPrefab> CauseOfDeath;
 
         public byte TeamID;
+
+        private NPCPersonalityTrait personalityTrait;
+
+        //unique ID given to character infos in MP
+        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+        public ushort ID;
 
         public List<ushort> PickedItemIDs
         {
@@ -87,6 +98,11 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public NPCPersonalityTrait PersonalityTrait
+        {
+            get { return personalityTrait; }
         }
 
         public int HeadSpriteId
@@ -130,18 +146,27 @@ namespace Barotrauma
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
         {
+            ID = idCounter;
+            idCounter++;
+
             this.File = file;
 
             headSpriteRange = new Vector2[2];
-
             pickedItems = new List<ushort>();
-
             SpriteTags = new List<string>();
 
-            //ID = -1;
+            XDocument doc = null;
+            if (cachedConfigs.ContainsKey(file))
+            {
+                doc = cachedConfigs[file];
+            }
+            else
+            {
+                doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null) return;
+                cachedConfigs.Add(file, doc);
+            }
 
             if (doc.Root.GetAttributeBool("genders", false))
             {
@@ -197,8 +222,56 @@ namespace Barotrauma
                     this.Name += ToolBox.GetRandomLine(lastNamePath);
                 }
             }
+
+            personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
+        }
+
+
+        public CharacterInfo(XElement element)
+        {
+            ID = idCounter;
+            idCounter++;
+
+            Name = element.GetAttributeString("name", "unnamed");
+
+            string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
+            gender = (genderStr == "m") ? Gender.Male : Gender.Female;
+
+            File = element.GetAttributeString("file", "");
+            Salary = element.GetAttributeInt("salary", 1000);
+            headSpriteId = element.GetAttributeInt("headspriteid", 1);
+            StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
+
+            string personalityName = element.GetAttributeString("personality", "");
+            if (!string.IsNullOrEmpty(personalityName))
+            {
+                personalityTrait = NPCPersonalityTrait.List.Find(p => p.Name == personalityName);
+            }
+
+            int hullId = element.GetAttributeInt("hull", -1);
+            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;
+
+            pickedItems = new List<ushort>();
+
+            string pickedItemString = element.GetAttributeString("items", "");
+            if (!string.IsNullOrEmpty(pickedItemString))
+            {
+                string[] itemIds = pickedItemString.Split(',');
+                foreach (string s in itemIds)
+                {
+                    pickedItems.Add((ushort)int.Parse(s));
+                }
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
+
+                Job = new Job(subElement);
+                break;
+            }
         }
 
         private void LoadHeadSprite()
@@ -253,43 +326,7 @@ namespace Barotrauma
                 pickedItems.Add(item == null ? (ushort)0 : item.ID);
             }
         }
-
-        public CharacterInfo(XElement element)
-        {
-            Name = element.GetAttributeString("name", "unnamed");
-
-            string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
-            gender = (genderStr == "m") ? Gender.Male : Gender.Female;
-
-            File            = element.GetAttributeString("file", "");
-            Salary          = element.GetAttributeInt("salary", 1000);
-            headSpriteId    = element.GetAttributeInt("headspriteid", 1);
-            StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
-            
-            int hullId = element.GetAttributeInt("hull", -1);
-            if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;            
-
-            pickedItems = new List<ushort>();
-
-            string pickedItemString = element.GetAttributeString("items", "");
-            if (!string.IsNullOrEmpty(pickedItemString))
-            {
-                string[] itemIds = pickedItemString.Split(',');
-                foreach (string s in itemIds)
-                {
-                    pickedItems.Add((ushort)int.Parse(s));
-                }
-            }
-
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
-
-                Job = new Job(subElement);
-                break;
-            }
-        }
-
+        
         private int CalculateSalary()
         {
             if (Name == null || Job == null) return 0;
@@ -298,10 +335,26 @@ namespace Barotrauma
 
             foreach (Skill skill in Job.Skills)
             {
-                salary += skill.Level * 10;
+                salary += (int)skill.Level * 10;
             }
 
             return salary;
+        }
+
+        public void IncreaseSkillLevel(string skillName, float increase)
+        {
+            if (Job == null) return;
+
+            int prevLevel = (int)Job.GetSkillLevel(skillName);
+            Job.IncreaseSkillLevel(skillName, increase);
+
+#if CLIENT
+            int newLevel = (int)Job.GetSkillLevel(skillName);
+            if (newLevel > prevLevel)
+            {
+                new GUIMessageBox("Skill level increased!", Name + "'s " + skillName + " skill increased to " + newLevel + "!");
+            }
+#endif
         }
 
         public virtual XElement Save(XElement parentElement)
@@ -314,7 +367,8 @@ namespace Barotrauma
                 new XAttribute("gender", gender == Gender.Male ? "m" : "f"),
                 new XAttribute("salary", Salary),
                 new XAttribute("headspriteid", HeadSpriteId),
-                new XAttribute("startitemsgiven", StartItemsGiven));
+                new XAttribute("startitemsgiven", StartItemsGiven),
+                new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
             
             if (Character != null)
             {

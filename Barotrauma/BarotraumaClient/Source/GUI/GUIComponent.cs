@@ -295,6 +295,8 @@ namespace Barotrauma
 
         public Dictionary<ComponentState, List<UISprite>> sprites;
 
+        public SpriteEffects SpriteEffects;
+
         public virtual Color OutlineColor { get; set; }
 
         public ComponentState State
@@ -513,60 +515,7 @@ namespace Barotrauma
             {
                 foreach (UISprite uiSprite in sprites[state])
                 {
-                    if (uiSprite.Slice)
-                    {
-                        Vector2 pos = new Vector2(rect.X, rect.Y);
-
-                        int centerWidth = Math.Max(rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width, 0);
-                        int centerHeight = Math.Max(rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
-
-                        Vector2 scale = new Vector2(
-                            MathHelper.Clamp((float)rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width), 0, 1),
-                            MathHelper.Clamp((float)rect.Height / (uiSprite.Slices[0].Height + uiSprite.Slices[6].Height), 0, 1));
-
-                        for (int x = 0; x < 3; x++)
-                        {
-                            float width = (x == 1 ? centerWidth : uiSprite.Slices[x].Width) * scale.X;
-                            for (int y = 0; y < 3; y++)
-                            {
-                                float height = (y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height) * scale.Y;
-
-                                spriteBatch.Draw(uiSprite.Sprite.Texture,
-                                    new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
-                                    uiSprite.Slices[x + y * 3],
-                                    currColor * (currColor.A / 255.0f));
-
-                                pos.Y += height;
-                            }
-                            pos.X += width;
-                            pos.Y = rect.Y;
-                        }
-                    }
-                    else if (uiSprite.Tile)
-                    {
-                        Vector2 startPos = new Vector2(rect.X, rect.Y);
-                        Vector2 size = new Vector2(Math.Min(uiSprite.Sprite.SourceRect.Width, rect.Width), Math.Min(uiSprite.Sprite.SourceRect.Height, rect.Height));
-
-                        if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
-                        if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
-
-                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, color: currColor * (currColor.A / 255.0f));
-                    }
-                    else
-                    {
-                        if (uiSprite.MaintainAspectRatio)
-                        {
-                            float scale = (float)(rect.Width) / uiSprite.Sprite.SourceRect.Width;
-
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect,
-                                new Rectangle(uiSprite.Sprite.SourceRect.X, uiSprite.Sprite.SourceRect.Y, (int)(uiSprite.Sprite.SourceRect.Width), (int)(rect.Height / scale)),
-                                currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
-                        }
-                        else
-                        {
-                            spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
-                        }
-                    }
+                    uiSprite.Draw(spriteBatch, rect, currColor * (currColor.A / 255.0f), SpriteEffects);
                 }
             }
         }

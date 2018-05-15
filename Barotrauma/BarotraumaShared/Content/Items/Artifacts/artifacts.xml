@@ -2,9 +2,10 @@
 <Items>
   <Item
     name="Skyholder Artifact"
+    identifier="skyholderartifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
@@ -24,9 +25,10 @@
 
   <Item
     name="Thermal Artifact"
+    identifier="thermalartifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
@@ -48,9 +50,10 @@
 
   <Item
     name="Faraday Artifact"
+    identifier="faradayartifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
@@ -67,11 +70,13 @@
   </Item>
 
   <Item
-    name="Nasonov Artifact"
+    name="Nasonov Artifact"    
+    identifier="nasonovartifact"
     category="Alien"
-    Tags="alien"
+    Tags="alien,nasonov"
     pickdistance="150"
-    indestructible="true">
+    indestructible="true"
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
 
@@ -90,7 +95,8 @@
   </Item>
 
   <Item
-    name="Oxygenite Shard"
+    name="Oxygenite Shard"    
+    identifier="oxygeniteshard"
     category="Alien"    
     tags="alien,smallitem,oxygensource"
     impacttolerance="8">
@@ -111,15 +117,18 @@
 
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0"/>
+        <Explosion range="600.0" structuredamage="400" force="20.0">
+          <affliction name="Internal Damage" strength="300"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
     </Throwable>
   </Item>
 
   <Item
-    name="Sulphurite Shard"
+    name="Sulphurite Shard"    
+    identifier="sulphuriteshard"
     category="Alien"
-
     tags="alien,smallitem"
     impacttolerance="8"
     spritecolor="1.0,0.0,0.0,1.0">
@@ -141,10 +150,10 @@
   </Item>
 
   <Item
-   name="Ancient Weapon"
+   name="Ancient Weapon"   
+   identifier="ancientweapon"
    category="Alien"
-   Tags="alien,smallitem"
-   >
+   Tags="alien,smallitem">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -179,12 +188,15 @@
     
     <Propulsion force="-40" usablein="both"/>
 
-    <Projectile launchimpulse="80.0">
+    <Projectile characterusable="false" launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Artifacts/alienweapon.ogg"/>
-        <Explosion range="1000.0" structuredamage="5000" damage="1000" stun="10" force="50.0"/>
+        <Explosion range="1000.0" structuredamage="5000" force="50.0">
+          <affliction name="Burn" strength="50"/>
+          <affliction name="Stun" strength="10"/>
+        </Explosion>
       </StatusEffect>
 
       <StatusEffect type="OnActive" target="This">
@@ -199,11 +211,11 @@
   </Item>
 
   <Item
-    name="Alien Hatch"
+    name="Alien Hatch"    
+    identifier="alienhatch"
     category="Alien"
     Tags="alien"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
@@ -212,8 +224,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -221,11 +232,11 @@
   </Item>
 
   <Item
-   name="Alien Door"
+   name="Alien Door"   
+   identifier="aliendoor"
    category="Alien"
    linkable="true"
-   Tags="alien"
-   >
+   Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
 
@@ -234,8 +245,7 @@
       <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <input name="toggle"/>
       <input name="set_state"/>
       <output name="state_out"/>
@@ -243,24 +253,24 @@
   </Item>
 
   <Item
-   name="Alien Motion Sensor"
+   name="Alien Motion Sensor"   
+   identifier="alienmotionsensor"
    linkable="true"
    category="Alien"
-   Tags="alien"
-   >
+   Tags="alien">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5"/>
 
     <MotionSensor range="300" output="0"/>
 
-    <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
 
   <Item
-   name="Artifact Holder"
+   name="Artifact Holder"   
+   identifier="artifactholder"
    linkable="true"
    category="Alien"
    Tags="alien">
@@ -281,8 +291,7 @@
 
     <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0"/>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+    <ConnectionPanel canbeselected="false" hudpriority="10">
       <output name="power_out"/>
     </ConnectionPanel>
   </Item>

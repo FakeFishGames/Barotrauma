@@ -33,7 +33,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                CrashDump(game, "servercrashreport.txt", e);
+                CrashDump(game, "servercrashreport.log", e);
                 inputThread.Abort(); inputThread.Join();
             }
         }
@@ -46,7 +46,7 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma Dedicated Server crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
+            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/.");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version);
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);

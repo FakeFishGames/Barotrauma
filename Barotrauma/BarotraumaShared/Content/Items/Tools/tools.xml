@@ -2,12 +2,17 @@
 <Items>
   <Item
     name="Welding Tool"
+    identifier="weldingtool"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar and a steel bar -->
@@ -47,7 +52,7 @@
       <Fixable name="structure"/>
 
       <!-- construction skill 20 required to use the item -->
-      <RequiredSkill name="Construction" level="20"/>
+      <RequiredSkill name="Mechanical Engineering" level="20"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
@@ -65,12 +70,17 @@
 
   <Item
     name="Plasma Cutter"
+    identifier="plasmacutter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
+    
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
@@ -100,7 +110,7 @@
 
       <Fixable name="structure"/>
 
-      <RequiredSkill name="Construction" level="30"/>
+      <RequiredSkill name="Mechanical Engineering" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
@@ -117,10 +127,15 @@
 
   <Item
     name="Welding Fuel Tank"
+    identifier="weldingfueltank"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="50">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -133,32 +148,40 @@
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
+        <Explosion range="250.0" structuredamage="15" force="3.0">
+          <affliction name="Burn" strength="25"/>
+          <affliction name="Stun" strength="5"/>
+        </Explosion>
       </StatusEffect>
     </Holdable>
   </Item>
   
   <Item
     name="Fire Extinguisher"
+    identifier="extinguisher"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="100"
+    cargocontainername="Metal Crate"
     description="A handheld carbon dioxide extinguisher.">
+
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Research" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="extinguisher.png"  depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
     <Body radius="10" height="45" density="5"/>
 
     <Holdable slots="Any,RightHand+LeftHand" controlpose="false"
               aimpos="40,-20" handle1="-2,30"/>
 
-    <RepairTool extinquishamount="60.0" range="500" barrelpos="21,25">
+    <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50"/>
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
       <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
@@ -170,11 +193,20 @@
 
   <Item
     name="Screwdriver"
+    identifier="screwdriver"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
-       
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
 
     <Body width="31" height="6" density="50"/>
@@ -185,10 +217,19 @@
 
   <Item
     name="Wrench"
+    identifier="wrench"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
@@ -196,16 +237,25 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" structuredamage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
   <Item
     name="Crowbar"
+    identifier="crowbar"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="15">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="15"/>
+    <Price locationtype="Research" buyprice="15"/>
+    <Price locationtype="Military" buyprice="15"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
@@ -213,31 +263,43 @@
 
     <MeleeWeapon slots="RightHand+LeftHand,Any"
           controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack damage="20" structuredamage="10" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack bluntdamage="20" structuredamage="10" stun="0.6" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
   <Item
     name="Handheld Sonar"
+    identifier="handheldsonar"
     category="Equipment"
-    Tags="smallitem"
-    cargocontainername="Metal Crate"    
-    price="10">
+    Tags="smallitem,sonar"
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <Deconstruct time="15">
+      <Item name="Copper Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
 
     <Body width="31" height="6" density="40"/>
+
+    <AiTarget/>
 
     <Holdable slots="Any,RightHand,LeftHand"
               holdangle="30" handle1="-10,0"/>
 
     <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
-      <sound file="Content/Items/Engine/radarPing.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Command/radarPing.ogg" type="OnUse" range="1000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
-      <PingCircle texture="Content/Items/Engine/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Engine/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Engine/radarBlip.png" origin="0.5,0.5"/>
+      <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
+      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
     </Radar>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -249,10 +311,15 @@
 
   <Item
     name="Flashlight"
+    identifier="flashlight"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="40"/>
 
     <Deconstruct time="15">
       <Item name="Copper Bar"/>
@@ -263,7 +330,7 @@
 
     <Body width="27" height="10" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand,Face" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
+    <Holdable slots="Any,RightHand,LeftHand,Head" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
     </Holdable>
 
@@ -280,11 +347,16 @@
 
   <Item
     name="Flare"
+    identifier="flare"
     category="Equipment"
-    cargocontainername="Metal Crate"    
-    price="5"
+    cargocontainername="Metal Crate"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
       <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
@@ -292,7 +364,6 @@
       <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
       <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
-
 
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>
 

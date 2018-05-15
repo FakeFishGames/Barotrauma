@@ -19,9 +19,9 @@ namespace Barotrauma.Items.Components
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually((float)Timing.Step);
+            GuiFrame.UpdateManually(deltaTime);
         }
 
         private bool ToggleActive(GUIButton button, object obj)
@@ -29,6 +29,7 @@ namespace Barotrauma.Items.Components
             SetActive(!IsActive, Character.Controlled);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (GameMain.Server != null)
             {

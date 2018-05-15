@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -69,7 +70,7 @@ namespace Barotrauma
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("config.xml");
+                Config.Save();
             }
 
             GameScreen = new GameScreen();
@@ -77,17 +78,18 @@ namespace Barotrauma
 
         public void Init()
         {
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
+            ScriptedEventSet.LoadPrefabs();
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
+            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
+            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
-
             LocationType.Init();
 
             Submarine.RefreshSavedSubs();

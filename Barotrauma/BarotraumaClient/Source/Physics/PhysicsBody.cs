@@ -85,6 +85,7 @@ namespace Barotrauma
                             break;
                         }
                     case Shape.Capsule:
+                    case Shape.HorizontalCapsule:
                         {
                             float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(radius), ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
                             if (maxSize > 128.0f)
@@ -112,11 +113,13 @@ namespace Barotrauma
                         }
                         bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale));
                         break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
 
             float rot = -DrawRotation;
-            if (bodyShape == Shape.Capsule && width > height)
+            if (bodyShape == Shape.HorizontalCapsule)
             {
                 rot -= MathHelper.PiOver2;
             }

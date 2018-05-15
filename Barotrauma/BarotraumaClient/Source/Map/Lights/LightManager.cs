@@ -80,9 +80,9 @@ namespace Barotrauma.Lights
             
 
 #if WINDOWS
-            LosEffect = content.Load<Effect>("losshader");
+            LosEffect = content.Load<Effect>("Effects/losshader");
 #else
-            LosEffect = content.Load<Effect>("losshader_opengl");
+            LosEffect = content.Load<Effect>("Effects/losshader_opengl");
 #endif
 
             if (lightEffect == null)
