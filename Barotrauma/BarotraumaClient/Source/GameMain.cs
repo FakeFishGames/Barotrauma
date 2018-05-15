@@ -225,8 +225,6 @@ namespace Barotrauma
         /// </summary>
         protected override void LoadContent()
         {
-            SteamManager.Initialize();
-
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
             
@@ -256,9 +254,11 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 
             GUI.Init(Content);
-
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
+
+            SteamManager.Initialize();
+
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
