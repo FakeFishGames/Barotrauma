@@ -108,6 +108,7 @@
     <Compile Include="Source\GUI\Graph.cs" />
     <Compile Include="Source\Characters\CharacterHealth.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GUI\GUICanvas.cs" />
     <Compile Include="Source\GUI\HUDLayoutSettings.cs" />
     <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
