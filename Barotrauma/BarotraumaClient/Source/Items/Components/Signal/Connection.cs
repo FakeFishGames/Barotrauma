@@ -145,7 +145,8 @@ namespace Barotrauma.Items.Components
 
                 Connection recipient = Wires[i].OtherConnection(this);
 
-                string label = Wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
+                string label = recipient == null ? "" :
+                    Wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
                 DrawWire(spriteBatch, Wires[i], (recipient == null) ? Wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, label);
 
                 wirePosition.Y += wireInterval;
