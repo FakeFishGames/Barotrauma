@@ -537,7 +537,7 @@ namespace Barotrauma.Networking
 
             if (GameMain.Config.UseSteamMatchmaking)
             {
-                SteamManager.RefreshServerDetails();
+                SteamManager.RefreshServerDetails(this);
             }
             else
             {

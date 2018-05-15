@@ -55,8 +55,20 @@ namespace Barotrauma.Steam
 
         private SteamManager()
         {
-            client = new Client(AppID);
-            isInitialized = client.IsSubscribed && client.IsValid;
+            try
+            {
+                client = new Client(AppID);
+                isInitialized = client.IsSubscribed && client.IsValid;
+            }
+            catch (Exception e)
+            {
+                isInitialized = false;
+#if CLIENT
+                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed. Please make sure Steam is running and you are logged in to an account.");
+#else
+                DebugConsole.ThrowError("Initializing Steam client failed.", e);
+#endif
+            }
         }
         
         public static bool UnlockAchievement(string achievementName)
@@ -70,7 +82,7 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        #region Connecting to servers
+#region Connecting to servers
 
         public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action onFinished)
         {
@@ -110,9 +122,9 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        #endregion
+#endregion
 
-        #region Server
+#region Server
 
         public static bool CreateServer(Networking.GameServer server, int maxPlayers)
         {
@@ -160,9 +172,9 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        #endregion
+#endregion
 
-        #region Workshop
+#region Workshop
 
         public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound)
         {
