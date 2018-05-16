@@ -190,6 +190,7 @@ namespace Barotrauma
 
         /// <summary>
         /// This is the new constructor.
+        /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
@@ -204,9 +205,13 @@ namespace Barotrauma
                 this.textColor = textColor.Value;
             }
             this.Font = font ?? GUI.Font;
-            this.text = text;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
+            this.Text = text;
+            if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
+            {
+                rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+            }
             SetTextPos();
         }
 
