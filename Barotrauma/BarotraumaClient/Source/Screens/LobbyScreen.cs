@@ -98,7 +98,7 @@ namespace Barotrauma
             //bottomPanel.AddToGUIUpdateList();
         }*/
 
-        public override void Update(double deltaTime)
+        /*public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
@@ -107,15 +107,15 @@ namespace Barotrauma
 
             campaignUI.Update((float)deltaTime);
 
-           /* mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
+            mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
             mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
 
             GameMain.GameSession.Map.Update((float)deltaTime, new Rectangle(
                 bottomPanel[selectedRightPanel].Rect.X + 20,
                 bottomPanel[selectedRightPanel].Rect.Y + 20,
                 bottomPanel[selectedRightPanel].Rect.Width - 310,
-                bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);*/
-        }
+                bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
+        }*/
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -135,7 +135,7 @@ namespace Barotrauma
             //topPanel.DrawManually(spriteBatch);
             //bottomPanel.DrawManually(spriteBatch);
 
-            campaignUI.Draw(spriteBatch);
+            //campaignUI.Draw(spriteBatch);
 
            /* if (selectedRightPanel == (int)PanelTab.Map)
             {
