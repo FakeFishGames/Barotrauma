@@ -52,6 +52,12 @@ namespace Barotrauma.Items.Components
             }
 
             user.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+
+            if (user.IsKeyHit(InputType.Aim))
+            {
+                user.DeselectItem(item);
+                user = null;
+            }
         }
 
         public override bool Select(Character picker)
