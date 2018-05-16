@@ -73,6 +73,15 @@ namespace Barotrauma
 
         private float autoRestartTimer;
 
+        private bool AllowSubSelection
+        {
+            get
+            {
+                return GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
+                    (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
+            }
+        }
+
         public GUITextBox ServerMessage
         {
             get { return serverMessage; }
@@ -432,9 +441,8 @@ namespace Barotrauma
             Character.Controlled = null;
             //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            subList.Enabled = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
-                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-            shuttleList.Enabled = subList.Enabled;
+            subList.Enabled = AllowSubSelection;
+            shuttleList.Enabled = AllowSubSelection;
 
             modeList.Enabled = 
                 GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting || 
@@ -1373,9 +1381,9 @@ namespace Barotrauma
         {
             ToggleCampaignView(enabled);
 
-            subList.Enabled = !enabled;
-            shuttleList.Enabled = !enabled;
-            seedBox.Enabled = !enabled;
+            subList.Enabled = !enabled && AllowSubSelection;
+            shuttleList.Enabled = !enabled && AllowSubSelection;
+            seedBox.Enabled = !enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
             if (StartButton != null) StartButton.Visible = !enabled;            
