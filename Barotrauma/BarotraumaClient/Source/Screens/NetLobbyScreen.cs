@@ -1204,12 +1204,7 @@ namespace Barotrauma
             {
                 menu.UpdateManually((float)deltaTime);
             }
-
-            if (campaignContainer.Visible && campaignUI != null)
-            {
-                campaignUI.Update((float)deltaTime);
-            }
-
+            
             if (campaignSetupUI != null)
             {
                 if (!campaignSetupUI.Visible)
@@ -1244,11 +1239,6 @@ namespace Barotrauma
 
             if (jobInfoFrame != null) jobInfoFrame.DrawManually(spriteBatch);
             
-            if (campaignContainer.Visible && campaignUI != null)
-            {
-                campaignUI.Draw(spriteBatch);
-            }
-
             if (campaignSetupUI != null)
             {
                 campaignSetupUI.DrawManually(spriteBatch);

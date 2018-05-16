@@ -24,7 +24,8 @@ namespace Barotrauma
 
         private CampaignMode campaign;
 
-        private GUIFrame mapContainer, locationInfoContainer;
+        private GUICustomComponent mapContainer;
+        private GUIFrame locationInfoContainer;
 
         private GUIFrame characterPreviewFrame;
         
@@ -80,7 +81,7 @@ namespace Barotrauma
             tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
 
             GUIFrame paddedMapFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Map].RectTransform), style: null);
-            mapContainer = new GUIFrame(new RectTransform(new Vector2(0.74f, 1.0f), paddedMapFrame.RectTransform), style: null);
+            mapContainer = new GUICustomComponent(new RectTransform(new Vector2(0.74f, 1.0f), paddedMapFrame.RectTransform), DrawMap, UpdateMap);
             locationInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), paddedMapFrame.RectTransform, Anchor.TopRight), style: null);
 
             if (GameMain.Client == null)
@@ -171,23 +172,17 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
             }
         }
-
-        public void Update(float deltaTime)
-        {            
-            if (selectedTab == Tab.Map && GameMain.GameSession?.Map != null)
-            {
-                GameMain.GameSession.Map.Update(deltaTime, mapContainer.Rect);
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch)
+        
+        private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
-            if (selectedTab == Tab.Map && GameMain.GameSession?.Map != null)
-            {
-                GameMain.GameSession.Map.Draw(spriteBatch, mapContainer.Rect);
-            }
+            GameMain.GameSession.Map.Draw(spriteBatch, mapContainer.Rect);
         }
 
+        private void UpdateMap(float deltaTime, GUICustomComponent mapContainer)
+        {
+            GameMain.GameSession.Map.Update(deltaTime, mapContainer.Rect);
+        }
+        
         public void UpdateCharacterLists()
         {
             characterList.ClearChildren();
