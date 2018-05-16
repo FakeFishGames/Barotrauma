@@ -66,6 +66,8 @@ namespace Barotrauma
 
         private Viewport defaultViewport;
 
+        public event Action OnResolutionChanged;
+
         public static GameMain Instance
         {
             get;
@@ -180,6 +182,8 @@ namespace Barotrauma
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
+
+            OnResolutionChanged?.Invoke();
         }
 
         public void SetWindowMode(WindowMode windowMode)
