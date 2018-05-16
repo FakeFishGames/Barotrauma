@@ -446,12 +446,10 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            //ClearUpdateList();
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
-            //ClearUpdateList();
         }
 
         #region Element drawing
