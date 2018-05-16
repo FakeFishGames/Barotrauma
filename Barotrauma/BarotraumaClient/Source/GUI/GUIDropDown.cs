@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -109,6 +110,9 @@ namespace Barotrauma
 
             listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
             listBox.OnSelected = SelectItem;
+            // In the old system the GUIDropDown seems to be drawn in a wrong place, so let's disable drawing.
+            // Seems to not happen in the new system.
+            AutoDraw = false;
         }
 
         /// <summary>
@@ -207,20 +211,18 @@ namespace Barotrauma
                 {
                     OnDropped?.Invoke(this, userData);
                 }
-                // Used for enforcing the dropdown to be the last element, not necessary if a custom draw order is given for the updatelist.
-                // Disabled, because causes an unvanted element to be rendered in the settings tab.
-                //if (Parent != null && Parent.Children.Last() != this)
-                //{
-                //    Parent.RemoveChild(this);
-                //    if (RectTransform != null)
-                //    {
-                //        RectTransform.Parent = RectTransform;
-                //    }
-                //    else
-                //    {
-                //        Parent.AddChild(this);
-                //    }
-                //}
+                if (RectTransform != null)
+                {
+                    RectTransform.SetAsLastChild();
+                }
+                else
+                {
+                    if (Parent != null && Parent.Children.Last() != this)
+                    {
+                        Parent.RemoveChild(this);
+                        Parent.AddChild(this);
+                    }
+                }
             }
             return true;
         }
@@ -233,9 +235,7 @@ namespace Barotrauma
                 button.AddToGUIUpdateList(false, order);
                 if (Dropped)
                 {
-                    // Enforces the listbox to be rendered on top of other elements. 
-                    // Changing the child order caused an artifact (see above), therefore this solution.
-                    listBox.AddToGUIUpdateList(false, order + 1);
+                    listBox.AddToGUIUpdateList(false, order);
                 }
             }
         }
