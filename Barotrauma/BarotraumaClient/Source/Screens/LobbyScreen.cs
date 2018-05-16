@@ -31,17 +31,12 @@ namespace Barotrauma
             {
                 RelativeOffset = new Vector2(0.0f, 0.05f)
             });
-            topPanel.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            locationTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), topPanel.RectTransform)
-            {
-                RelativeOffset = new Vector2(0.02f, 0.2f)
-            }, "", Color.White, GUI.LargeFont);
+            GUIFrame paddedToPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.6f), topPanel.RectTransform, Anchor.Center), style: null);
 
-            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), topPanel.RectTransform)
-            {
-                RelativeOffset = new Vector2(0.02f, 0.6f)
-            }, "");
+            locationTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), paddedToPanel.RectTransform), "", Color.White, GUI.LargeFont);
+
+            GUITextBlock moneyText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), paddedToPanel.RectTransform, Anchor.BottomLeft), "");
             moneyText.TextGetter = GetMoney;
 
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.07f, 0.3f), topPanel.RectTransform, Anchor.CenterRight, Pivot.CenterRight)
