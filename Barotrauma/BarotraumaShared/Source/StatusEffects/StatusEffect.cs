@@ -246,7 +246,7 @@ namespace Barotrauma
                         break;
                     case "affliction":
                         string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        float afflictionStrength = subElement.GetAttributeFloat("strength", 1.0f);
+                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
 
                         AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
                         if (afflictionPrefab == null)
@@ -261,7 +261,7 @@ namespace Barotrauma
                     case "reduceaffliction":
                         ReduceAffliction.Add(new Pair<string, float>(
                             subElement.GetAttributeString("name", "").ToLowerInvariant(),
-                            subElement.GetAttributeFloat("reduceamount", 1.0f)));
+                            subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
                         break;
 #if CLIENT
                     case "particleemitter":

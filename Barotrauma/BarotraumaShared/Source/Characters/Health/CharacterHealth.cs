@@ -434,6 +434,7 @@ namespace Barotrauma
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
                     affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
+                    if (affliction == stunAffliction) character.SetStun(affliction.Strength, true, true);
                     CalculateVitality();
                     if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
                     return;

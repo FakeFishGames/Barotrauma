@@ -67,8 +67,8 @@
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="This, Limb" duration="5.0">
         <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
-        <ReduceAffliction name="bleeding" reduceamount="2"/>
-        <ReduceAffliction name="burn" reduceamount="3"/>
+        <ReduceAffliction name="bleeding" amount="2"/>
+        <ReduceAffliction name="burn" amount="3"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -126,7 +126,7 @@
     
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="20">
-        <ReduceAffliction name="damage" reduceamount="0.1"/>
+        <ReduceAffliction name="damage" amount="0.1"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
     </ItemComponent>
@@ -134,9 +134,9 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
-        <ReduceAffliction name="damage" reduceamount="1"/>
-        <ReduceAffliction name="bloodloss" reduceamount="1"/>
-        <ReduceAffliction name="oxygenlow" reduceamount="2"/>
+        <ReduceAffliction name="damage" amount="1"/>
+        <ReduceAffliction name="bloodloss" amount="1"/>
+        <ReduceAffliction name="oxygenlow" amount="2"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -164,7 +164,7 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="poison,chlorine" type="OnUse" target="Character" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
-        <Affliction name="Internal damage" strength="0.5"/>
+        <Affliction name="Internal damage" amount="0.5"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -190,7 +190,7 @@
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="Character" delay="10">
-        <Affliction name="drunk" strength="10"/>
+        <Affliction name="drunk" amount="10"/>
       </StatusEffect>
     </ItemComponent>
 
@@ -201,7 +201,7 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" delay="5">
         <RequiredItem name="Medical Syringe" type="Container"/>
-        <Affliction name="drunk" strength="20"/>
+        <Affliction name="drunk" amount="20"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -228,7 +228,7 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction name="Internal damage" strength="10.0"/>
+        <Affliction name="Internal damage" amount="10.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -256,14 +256,14 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction name="Internal damage" strength="10.0"/>
+        <Affliction name="Internal damage" amount="10.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" force="5.0">
-          <affliction name="Burn" strength="20"/>
-          <affliction name="Stun" strength="3"/>
+          <affliction name="Burn" amount="20"/>
+          <affliction name="Stun" amount="3"/>
         </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -291,7 +291,7 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Limb" disabledeltatime="true">
-        <Affliction name="Internal damage" strength="20.0"/>
+        <Affliction name="Internal damage" amount="20.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -324,9 +324,9 @@
         <!-- Rapidly removes bleeding and stabilizes oxygen intake while also counteracting crit damage so they won't die. Doesn't prevent poisons.
             EXTREMELY useful to follow up with CPR, especially if they were bleeding before. -->
         <Conditional Vitality="lt 0.1"/>
-        <ReduceAffliction name="damage" reduceamount="1.0"/>
-        <ReduceAffliction name="bleeding" reduceamount="-0.1"/>
-        <ReduceAffliction name="oxygenlow" reduceamount="-1.0"/>
+        <ReduceAffliction name="damage" amount="1.0"/>
+        <ReduceAffliction name="bleeding" amount="-0.1"/>
+        <ReduceAffliction name="oxygenlow" amount="-1.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -356,14 +356,14 @@
 
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
-        <ReduceAffliction name="oxygenlow" reduceamount="1"/>
+        <ReduceAffliction name="oxygenlow" amount="1"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
     </ItemComponent>
     
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
-        <ReduceAffliction name="oxygenlow" reduceamount="2"/>
+        <ReduceAffliction name="oxygenlow" amount="2"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -394,7 +394,7 @@
 
     <ItemComponent>
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10.0">
-        <ReduceAffliction name="bleeding" reduceamount="1"/>
+        <ReduceAffliction name="bleeding" amount="1"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <!-- Remove the item when fully used -->
@@ -405,7 +405,7 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="5.0">
-        <ReduceAffliction name="bleeding" reduceamount="2"/>
+        <ReduceAffliction name="bleeding" amount="2"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -433,7 +433,7 @@
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction name="damage" reduceamount="1"/>
+        <ReduceAffliction name="damage" amount="1"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -443,7 +443,7 @@
 
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
-        <ReduceAffliction name="damage" reduceamount="5"/>
+        <ReduceAffliction name="damage" amount="5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -468,9 +468,9 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
-        <ReduceAffliction name="damage" reduceamount="0.5"/>
-        <ReduceAffliction name="oxygenlow" reduceamount="0.5"/>
-        <ReduceAffliction name="bloodloss" reduceamount="0.5"/>
+        <ReduceAffliction name="damage" amount="0.5"/>
+        <ReduceAffliction name="oxygenlow" amount="0.5"/>
+        <ReduceAffliction name="bloodloss" amount="0.5"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -526,18 +526,18 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
         <Conditional HuskInfectionState="lt 100.0"/>
-        <ReduceAffliction name="Husk infection" reduceamount="20"/>
+        <ReduceAffliction name="Husk infection" amount="20"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
         <Conditional HuskInfectionState="eq 100.0"/>
-        <Affliction name="Internal damage" strength="3"/>
+        <Affliction name="Internal damage" amount="3"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <StatusEffect tags="poison,calyxanide" type="OnUse" target="Character" duration="10.0">
         <Conditional SpeciesName="husk"/>
-        <Affliction name="Internal damage" strength="4"/>
+        <Affliction name="Internal damage" amount="4"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -591,14 +591,14 @@
     <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60">
         <Affliction name="Internal damage" amount="0.5"/>
-        <ReduceAffliction name="oxygenlow" reduceamount="10.0"/>
+        <ReduceAffliction name="oxygenlow" amount="10.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="300.0" structuredamage="50" force="10.0">
-          <affliction name="Burn" strength="30"/>
-          <affliction name="Stun" strength="2"/>
+          <affliction name="Burn" amount="30"/>
+          <affliction name="Stun" amount="2"/>
         </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -631,10 +631,10 @@
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction name="damage" reduceamount="1"/>
+        <ReduceAffliction name="damage" amount="1"/>
         <Affliction name="Oxygen low" amount="2"/>
         <Affliction name="Morphine addiction" amount="0.15"/>
-        <ReduceAffliction name="Morphine withdrawal" reduceamount="1.0"/>
+        <ReduceAffliction name="Morphine withdrawal" amount="1.0"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -642,12 +642,12 @@
       </StatusEffect>
     </ItemComponent>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
-        <ReduceAffliction name="damage" reduceamount="5"/>
+        <ReduceAffliction name="damage" amount="5"/>
         <Affliction name="Oxygen low" amount="2"/>
         <Affliction name="Morphine addiction" amount="0.3"/>
-        <ReduceAffliction name="Morphine withdrawal" reduceamount="2.0"/>
+        <ReduceAffliction name="Morphine withdrawal" amount="2.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -673,11 +673,11 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent>
+    <ItemComponent characterusable="true">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction name="damage" reduceamount="1"/>
-        <ReduceAffliction name="burn" reduceamount="1"/>
+        <ReduceAffliction name="damage" amount="1"/>
+        <ReduceAffliction name="burn" amount="1"/>
         <Affliction name="Oxygen low" amount="2"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -686,10 +686,10 @@
       </StatusEffect>
     </ItemComponent>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="10.0">
-        <ReduceAffliction name="damage" reduceamount="5"/>
-        <ReduceAffliction name="burn" reduceamount="5"/>
+        <ReduceAffliction name="damage" amount="5"/>
+        <ReduceAffliction name="burn" amount="5"/>
         <Affliction name="Oxygen low" amount="5"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -715,11 +715,11 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent>
+    <ItemComponent characterusable="true">
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="15">
         <Affliction name="Internal damage" amount="1"/>
-        <ReduceAffliction name="bleeding" reduceamount="1"/>
+        <ReduceAffliction name="bleeding" amount="1"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -727,10 +727,10 @@
       </StatusEffect>
     </ItemComponent>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="20.0">
         <Affliction name="Internal damage" amount="1"/>
-        <ReduceAffliction name="bleeding" reduceamount="4"/>
+        <ReduceAffliction name="bleeding" amount="4"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -757,10 +757,10 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <ItemComponent>
+    <ItemComponent characterusable="true">
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction name="bloodloss" reduceamount="1"/>
+        <ReduceAffliction name="bloodloss" amount="1"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -768,9 +768,9 @@
       </StatusEffect>
     </ItemComponent>
 
-    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable characterusable="true" canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="5.0">
-        <ReduceAffliction name="bloodloss" reduceamount="4"/>
+        <ReduceAffliction name="bloodloss" amount="4"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -799,8 +799,8 @@
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true"/>
       <StatusEffect tags="medical" type="OnUse" target="Limb, This" duration="10">
-        <ReduceAffliction name="Morphine withdrawal" reduceamount="1.0"/>
-        <ReduceAffliction name="Morphine addiction" reduceamount="1.0"/>
+        <ReduceAffliction name="Morphine withdrawal" amount="1.0"/>
+        <ReduceAffliction name="Morphine addiction" amount="1.0"/>
       </StatusEffect>
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
@@ -810,8 +810,8 @@
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Limb" duration="30.0">
-        <ReduceAffliction name="Morphine withdrawal" reduceamount="2.0"/>
-        <ReduceAffliction name="Morphine addiction" reduceamount="2.0"/>
+        <ReduceAffliction name="Morphine withdrawal" amount="2.0"/>
+        <ReduceAffliction name="Morphine addiction" amount="2.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -840,15 +840,15 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="500" force="0.1">
-          <affliction name="Burn" strength="5"/>
-          <affliction name="Stun" strength="3"/>
+          <affliction name="Burn" amount="5"/>
+          <affliction name="Stun" amount="3"/>
         </Explosion>
       </StatusEffect>
       <StatusEffect type="OnUse" target="This" Condition="-100.0">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="500" force="0.1">
-          <affliction name="Burn" strength="5"/>
-          <affliction name="Stun" strength="3"/>
+          <affliction name="Burn" amount="5"/>
+          <affliction name="Stun" amount="3"/>
         </Explosion>
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -1019,9 +1019,9 @@
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
         <sound file="Content/Items/Reactor/explosion.ogg" range="3000"/>
         <Explosion range="600.0" structuredamage="400" force="20.0" severlimbsprobability="0.4" decal="explosion" decalsize="0.5">
-          <affliction name="Burn" strength="100"/>
-          <affliction name="Internal Damage" strength="200"/>
-          <affliction name="Stun" strength="5"/>
+          <affliction name="Burn" amount="100"/>
+          <affliction name="Internal Damage" amount="200"/>
+          <affliction name="Stun" amount="5"/>
         </Explosion>
         <Remove/>
       </StatusEffect>
