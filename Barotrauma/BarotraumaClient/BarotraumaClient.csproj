@@ -110,6 +110,7 @@
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\GUI\GUICanvas.cs" />
     <Compile Include="Source\GUI\GUICustomComponent.cs" />
+    <Compile Include="Source\GUI\GUILayoutGroup.cs" />
     <Compile Include="Source\GUI\HUDLayoutSettings.cs" />
     <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />

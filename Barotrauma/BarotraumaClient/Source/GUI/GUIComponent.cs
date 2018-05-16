@@ -36,7 +36,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in Children)
             {
-                if (child.UserData == obj) return child;
+                if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) return child;
             }
             return null;
         }
