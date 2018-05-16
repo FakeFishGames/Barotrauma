@@ -431,10 +431,7 @@ namespace Barotrauma
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-                    if (!paused)
-                    {
-                        Screen.Selected.AddToGUIUpdateList();
-                    }
+                    Screen.Selected.AddToGUIUpdateList();
 
                     if (NetworkMember != null)
                     {
