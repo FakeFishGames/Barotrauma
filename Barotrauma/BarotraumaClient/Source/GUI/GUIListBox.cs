@@ -472,7 +472,7 @@ namespace Barotrauma
             if (child == null) return;
             if (RectTransform != null)
             {
-                child.RectTransform.RemoveFromHierarchy();
+                child.RectTransform.Parent = null;
             }
             else
             {
