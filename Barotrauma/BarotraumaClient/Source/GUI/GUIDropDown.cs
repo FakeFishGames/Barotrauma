@@ -53,7 +53,7 @@ namespace Barotrauma
             get
             {
                 if (listBox.Selected == null) return -1;
-                return listBox.Frame.Children.FindIndex(x => x == listBox.Selected);
+                return listBox.Content.Children.FindIndex(x => x == listBox.Selected);
             }
         }
 
@@ -143,7 +143,7 @@ namespace Barotrauma
             GUITextBlock textBlock = null;
             if (RectTransform != null)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Frame.RectTransform), text, style: "ListBoxElement");
+                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform), text, style: "ListBoxElement");
                 // In the old system, this is automatically called, because it's defined in the GUIComponent level.
                 // The trick is that since the old textbox constructor calls parent.AddChild, it uses listboxes overloaded method, which is quite different from the GUIComponent method.
                 // We will want to use this method with the new system also, because it updates the scroll bar.
@@ -154,7 +154,7 @@ namespace Barotrauma
             }
             else
             {
-                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox.Frame);
+                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox.Content);
             }
             textBlock.UserData = userData;
             textBlock.ToolTip = toolTip;
@@ -168,7 +168,7 @@ namespace Barotrauma
 
         public List<GUIComponent> GetChildren()
         {
-            return listBox.Frame.Children;
+            return listBox.Content.Children;
         }
 
         private bool SelectItem(GUIComponent component, object obj)

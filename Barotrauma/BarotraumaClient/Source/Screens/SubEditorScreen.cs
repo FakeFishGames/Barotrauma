@@ -326,11 +326,11 @@ namespace Barotrauma
 
         private void UpdateEntityList()
         {
-            entityList.Frame.ClearChildren();
+            entityList.Content.ClearChildren();
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), entityList.Frame.RectTransform) { MinSize = new Point(0, 50) },
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
                     style: "ListBoxElement")
                 {
                     UserData = ep,
@@ -368,7 +368,7 @@ namespace Barotrauma
                 }
             }
 
-            entityList.Frame.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+            entityList.Content.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
         }
 
         /*public void StartTutorial()
@@ -546,7 +546,7 @@ namespace Barotrauma
 
                 string tagStr = attributes.Length > 0 ? attributes[0].Description : "";
 
-                var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Frame.RectTransform),
+                var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
                     tagStr, font: GUI.SmallFont)
                 {
                     Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag),
@@ -584,7 +584,7 @@ namespace Barotrauma
 
             foreach (string contentPackageName in contentPacks)
             {
-                var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Frame.RectTransform), contentPackageName, font: GUI.SmallFont)
+                var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
                     Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName),
                     UserData = contentPackageName
@@ -883,7 +883,7 @@ namespace Barotrauma
             entityFilterBox.Text = "";
             entityFilterBox.Select();
 
-            foreach (GUIComponent child in entityList.Frame.Children)
+            foreach (GUIComponent child in entityList.Content.Children)
             {
                 child.Visible = ((MapEntityPrefab)child.UserData).Category == selectedCategory;
             }
@@ -897,12 +897,12 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(filter))
             {
-                entityList.Frame.Children.ForEach(c => c.Visible = true);
+                entityList.Content.Children.ForEach(c => c.Visible = true);
                 return true;
             }
 
             filter = filter.ToLower();
-            foreach (GUIComponent child in entityList.Frame.Children)
+            foreach (GUIComponent child in entityList.Content.Children)
             {
                 var textBlock = child.GetChild<GUITextBlock>();
                 child.Visible = ((MapEntityPrefab)child.UserData).Name.ToLower().Contains(filter);
@@ -1128,20 +1128,20 @@ namespace Barotrauma
 
             if (previouslyUsedList.CountChildren == PreviouslyUsedCount)
             {
-                previouslyUsedList.RemoveChild(previouslyUsedList.Frame.Children.Last());
+                previouslyUsedList.RemoveChild(previouslyUsedList.Content.Children.Last());
             }
 
-            var existing = previouslyUsedList.Frame.FindChild(mapEntityPrefab);
-            if (existing != null) previouslyUsedList.Frame.RemoveChild(existing);
+            var existing = previouslyUsedList.Content.FindChild(mapEntityPrefab);
+            if (existing != null) previouslyUsedList.Content.RemoveChild(existing);
 
             string name = ToolBox.LimitString(mapEntityPrefab.Name,15);
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), previouslyUsedList.Frame.RectTransform) { MinSize = new Point(0, 15) }, 
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), previouslyUsedList.Content.RectTransform) { MinSize = new Point(0, 15) }, 
                 ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), font: GUI.SmallFont);
 
             textBlock.UserData = mapEntityPrefab;
-            
-            previouslyUsedList.Frame.RemoveChild(textBlock);
+
+            previouslyUsedList.Content.RemoveChild(textBlock);
             textBlock.RectTransform.SetAsFirstChild();
         }
         
