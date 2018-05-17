@@ -21,18 +21,21 @@ namespace Barotrauma
             get { return MessageBoxes.Count == 0 ? null : MessageBoxes[0]; }
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIMessageBox(string headerText, string text)
             : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
         {
             this.Buttons[0].OnClicked = Close;
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIMessageBox(string headerText, string text, int width, int height)
             : this(headerText, text, new string[] { "OK" }, width, height)
         {
             this.Buttons[0].OnClicked = Close;
         }
 
+        [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null)
             : base(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Black * 0.5f, Alignment.TopLeft, null, parent)
