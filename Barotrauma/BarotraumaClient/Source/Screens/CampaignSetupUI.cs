@@ -31,12 +31,11 @@ namespace Barotrauma
             // New game left side
             new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), newGameContainer.RectTransform, minSize: new Point(100, 30))
             {
-                AbsoluteOffset = new Point(40, 40)
+                RelativeOffset = new Vector2(0.05f, 0.1f)
             }, TextManager.Get("SelectedSub") + ":");
-            subList = new GUIListBox(new RectTransform(new Vector2(0.35f, 0.85f), newGameContainer.RectTransform)
+            subList = new GUIListBox(new RectTransform(new Vector2(0.35f, 0.65f), newGameContainer.RectTransform)
             {
-                RelativeOffset = new Vector2(0, 0.1f),
-                AbsoluteOffset = new Point(40, 40)
+                RelativeOffset = new Vector2(0.05f, 0.25f)
             });
 
             UpdateSubList();
@@ -150,6 +149,7 @@ namespace Barotrauma
                         ToolTip = sub.Description,
                         UserData = sub
                     };
+                subList.AddChild(textBlock);
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {

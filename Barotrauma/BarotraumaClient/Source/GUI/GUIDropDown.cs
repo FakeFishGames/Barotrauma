@@ -141,7 +141,7 @@ namespace Barotrauma
             GUITextBlock textBlock = null;
             if (RectTransform != null)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.RectTransform), text, style: "ListBoxElement");
+                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Frame.RectTransform), text, style: "ListBoxElement");
                 // In the old system, this is automatically called, because it's defined in the GUIComponent level.
                 // The trick is that since the old textbox constructor calls parent.AddChild, it uses listboxes overloaded method, which is quite different from the GUIComponent method.
                 // We will want to use this method with the new system also, because it updates the scroll bar.
@@ -152,7 +152,7 @@ namespace Barotrauma
             }
             else
             {
-                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
+                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox.Frame);
             }
             textBlock.UserData = userData;
             textBlock.ToolTip = toolTip;
