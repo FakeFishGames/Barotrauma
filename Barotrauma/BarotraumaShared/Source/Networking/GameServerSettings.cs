@@ -254,6 +254,12 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public List<string> AllowedRandomMissionTypes
+        {
+            get;
+            set;
+        }
+
         [Serialize(60f, true)]
         public float AutoBanTime
         {
@@ -286,6 +292,8 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
 
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
+
+            doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
@@ -334,17 +342,21 @@ namespace Barotrauma.Networking
 #endif
 
             subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
             var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
+            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+
+            AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
+                "AllowedRandomMissionTypes",
+                MissionPrefab.MissionTypes.ToArray()).ToList();
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
