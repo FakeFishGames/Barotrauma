@@ -225,7 +225,7 @@
     </Items>
   </CargoMission> 
   
-  <CombatMission
+  <!--<CombatMission
     name="Search and Destroy"
     
     descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
@@ -244,5 +244,5 @@
     
     <message header="Crew eliminated" text="The renegade crew has been defeated! The Coalition vessel has to make its way back to [location1]."/>
     <message header="Crew eliminated" text="The Coalition crew has been defeated! The renegade vessel has to make its way back to [location2]."/>
-  </CombatMission>
+  </CombatMission> -->
 </Missions>
