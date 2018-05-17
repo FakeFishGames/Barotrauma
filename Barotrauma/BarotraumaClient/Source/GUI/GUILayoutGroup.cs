@@ -29,6 +29,7 @@ namespace Barotrauma
             int pos = 0;
             foreach (RectTransform child in RectTransform.Children)
             {
+                if (child.GUIComponent.IgnoreLayoutGroups) continue;
                 child.Anchor = childAnchor;
 
                 if (isHorizontal)

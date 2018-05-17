@@ -156,11 +156,10 @@ namespace Barotrauma
                 TextGetter = GetSelectedHullVolume
             };
 
-            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.03f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight), "InnerFrame")
+            saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
             {
                 Visible = false
             };
-
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
             saveAssemblyFrame.Font = GUI.SmallFont;
             saveAssemblyButton.OnClicked += (btn, userdata) =>
@@ -195,8 +194,8 @@ namespace Barotrauma
                 TextGetter = GetSubName
             };
 
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.1f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.4f, 0.0f) },
-                TextManager.Get("AddSubButton"))
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform) { RelativeOffset = new Vector2(0.4f, 0.0f) },
+                TextManager.Get("AddSubButton"), elementCount: 20)
             {
                 ToolTip = TextManager.Get("AddSubToolTip")
             };
@@ -672,15 +671,26 @@ namespace Barotrauma
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
             }
 
-            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
-            saveButton.OnClicked = SaveSub;
+            //TODO: fix button positioning & figure out why they aren't working
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter), 
+                isHorizontal: true, childAnchor: Anchor.BottomRight, spacing: 5);
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", saveFrame);
-            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                TextManager.Get("Cancel"))
             {
-                saveFrame = null;
-                return true;
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    saveFrame = null;
+                    return true;
+                }
             };
+
+            var saveButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                TextManager.Get("SaveSubButton"))
+            {
+                OnClicked = SaveSub
+            };
+
         }
 
 
@@ -688,39 +698,41 @@ namespace Barotrauma
         {
             if (characterMode) ToggleCharacterMode();
             if (wiringMode) ToggleWiringMode();
+            
+            saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center), spacing: 5);
 
-            int width = 400, height = 210;
-            int y = 0;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
+                TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
+                TextManager.Get("SaveItemAssemblyDialogName"));
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedSaveFrame.RectTransform));
 
-            saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
-            saveFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            new GUITextBlock(new Rectangle(0, 0, 200, 30), TextManager.Get("SaveItemAssemblyDialogHeader"), "", saveFrame, GUI.LargeFont);
-            y += 30;
-
-            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveItemAssemblyDialogName"), "", saveFrame);
-            y += 20;
-
-            nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), "", saveFrame);
-            y += 30;
-
-            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveItemAssemblyDialogDescription"), "", saveFrame);
-            y += 20;
-
-            var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 80), null, null, Alignment.TopLeft,
-                Alignment.TopLeft, "", saveFrame);
-            descriptionBox.UserData = "description";
-            descriptionBox.Wrap = true;
-            descriptionBox.Text = "";
-                        
-            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
-            saveButton.OnClicked = SaveAssembly;
-
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", saveFrame);
-            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
+                TextManager.Get("SaveItemAssemblyDialogDescription"));
+            new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedSaveFrame.RectTransform))
             {
-                saveFrame = null;
-                return true;
+                UserData = "description",
+                Wrap = true,
+                Text = ""
+            };
+            
+            //TODO: fix button positioning & figure out why they aren't working
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
+                isHorizontal: true, childAnchor: Anchor.BottomRight, spacing: 5);
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                TextManager.Get("Cancel"))
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    saveFrame = null;
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                TextManager.Get("SaveSubButton"))
+            {
+                OnClicked = SaveAssembly
             };
         }
 
@@ -763,42 +775,45 @@ namespace Barotrauma
             if (wiringMode) ToggleWiringMode();
 
             Submarine.RefreshSavedSubs();
+            
+            loadFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(300, 400) });
+            GUIFrame paddedLoadFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), loadFrame.RectTransform, Anchor.Center), style: null);
 
-            int width = 300, height = 400;
-            loadFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
-            loadFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            var subList = new GUIListBox(new Rectangle(0, 0, 0, height - 50), Color.White, "", loadFrame);
-            subList.OnSelected = (GUIComponent selected, object userData) =>
-                {
-                    var deleteBtn = loadFrame.FindChild("delete") as GUIButton;
-                    if (deleteBtn != null) deleteBtn.Enabled = true;
-
-                    return true;
-                };
+            var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
+            {
+                OnSelected = (GUIComponent selected, object userData) =>
+                    {
+                        if (loadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                        return true;
+                    }
+            };
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 80),
-                    "",
-                    Alignment.Left, Alignment.CenterY | Alignment.Left, subList);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = sub;
-                textBlock.ToolTip = sub.FilePath;
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 80))
+                    {
+                        UserData = sub,
+                        ToolTip = sub.FilePath
+                    };
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
-                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
-                    shuttleText.ToolTip = textBlock.ToolTip;
+                    var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
+                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
+                        {
+                            TextColor = textBlock.TextColor * 0.8f,
+                            ToolTip = textBlock.ToolTip
+                        };
                 }
             }
 
-            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), TextManager.Get("Delete"), Alignment.BottomLeft, "", loadFrame);
-            deleteButton.Enabled = false;
-            deleteButton.UserData = "delete";
+            var deleteButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Delete"))
+            {
+                Enabled = false,
+                UserData = "delete"
+            };
             deleteButton.OnClicked = (btn, userdata) =>
             {
                 if (subList.Selected != null)
@@ -811,15 +826,21 @@ namespace Barotrauma
                 return true;
             };
 
-            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("Load"), Alignment.Right | Alignment.Bottom, "", loadFrame);
-            loadButton.OnClicked = LoadSub;
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.26f, 0.0f) },
+                TextManager.Get("Load"))
+            {
+                OnClicked = LoadSub
+            };
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", loadFrame);
-            cancelButton.OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    loadFrame = null;
-                    return true;
-                };
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedLoadFrame.RectTransform, Anchor.BottomRight),
+                TextManager.Get("Cancel"))
+            {
+                OnClicked = (GUIButton btn, object userdata) =>
+                    {
+                        loadFrame = null;
+                        return true;
+                    }
+            };
 
             return true;
         }
@@ -996,25 +1017,31 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 65, 300), null, Alignment.Right | Alignment.CenterY, "GUIFrameRight");
-            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.27f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(65, 300) },
+                style: "GUIFrameRight");
 
-            GUIListBox listBox = new GUIListBox(Rectangle.Empty, "", frame);
-            listBox.OnSelected = SelectWire;
-            
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.95f), frame.RectTransform, Anchor.Center))
+            {
+                OnSelected = SelectWire
+            };
+
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
                 var itemPrefab = ep as ItemPrefab;
                 if (itemPrefab == null || itemPrefab.Name == null) continue;
                 if (!itemPrefab.Name.Contains("Wire") && (itemPrefab.Aliases == null || !itemPrefab.Aliases.Any(a => a.Contains("Wire")))) continue;
 
-                GUIFrame imgFrame = new GUIFrame(new Rectangle(0, 0, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), null, listBox);
-                imgFrame.UserData = itemPrefab;
-                imgFrame.HoverColor = Color.White * 0.5f;
-                imgFrame.SelectedColor = Color.Gold * 0.7f;
+                GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, listBox.Rect.Width), listBox.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = itemPrefab,
+                    HoverColor = Color.White * 0.5f,
+                    SelectedColor = Color.Gold * 0.7f
+                };
 
-                var img = new GUIImage(new Rectangle(0, 0, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), itemPrefab.sprite, Alignment.TopLeft, imgFrame);
-                img.Color = ep.SpriteColor;
+                var img = new GUIImage(new RectTransform(Vector2.One, imgFrame.RectTransform), itemPrefab.sprite)
+                {
+                    Color = ep.SpriteColor
+                };
             }
 
             return frame;
@@ -1140,8 +1167,6 @@ namespace Barotrauma
                 ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), font: GUI.SmallFont);
 
             textBlock.UserData = mapEntityPrefab;
-
-            previouslyUsedList.Content.RemoveChild(textBlock);
             textBlock.RectTransform.SetAsFirstChild();
         }
         
