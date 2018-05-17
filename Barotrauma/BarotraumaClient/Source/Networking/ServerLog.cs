@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
         {
             string filter = msgFilter == null ? "" : msgFilter.ToLower();
 
-            foreach (GUIComponent child in listBox.Frame.Children)
+            foreach (GUIComponent child in listBox.Content.Children)
             {
                 var textBlock = child as GUITextBlock;
                 if (textBlock == null) continue;
