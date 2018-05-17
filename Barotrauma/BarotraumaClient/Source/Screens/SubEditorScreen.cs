@@ -330,12 +330,13 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), entityList.RectTransform) { MinSize = new Point(0, 50) },
+                GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), entityList.Content.RectTransform) { MinSize = new Point(0, 50) },
                     style: "ListBoxElement")
                 {
                     UserData = ep,
                     ToolTip = ep.Description
                 };
+                entityList.AddChild(frame);
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.0f), frame.RectTransform) { AbsoluteOffset = new Point(frame.Rect.Height + 5, 0) }, 
                     text: ep.Name, textAlignment: Alignment.CenterLeft);
