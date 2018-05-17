@@ -34,17 +34,19 @@ namespace Barotrauma
             get { return parent; }
             set
             {
-                if (parent != value)
-                {
-                    parent?.children.Remove(this);
-                }
+                if (parent == value) { return; }
+                // Remove the child from the old parent
+                parent?.RemoveChild(this);
                 parent = value;
-                parent?.children.Add(this);
+                if (parent != null && !parent.children.Contains(this))
+                {
+                    parent.children.Add(this);
+                }
                 RecalculateAll(false, true, true);
             }
         }
 
-        private HashSet<RectTransform> children = new HashSet<RectTransform>();
+        private List<RectTransform> children = new List<RectTransform>();
         public IEnumerable<RectTransform> Children => children;
 
         private Vector2 relativeSize = Vector2.One;
@@ -417,7 +419,27 @@ namespace Barotrauma
 
         public bool RemoveChild(RectTransform child)
         {
-            return children.Remove(child);
+            bool success = children.Remove(child);
+            if (success)
+            {
+                RecalculateAll(false, true, true);
+            }
+            return success;
+        }
+
+        public void SetAsLastChild()
+        {
+            if (Parent == null) { return; }
+            var last = Parent.Children.LastOrDefault();
+            if (last == this || last == null) { return; }
+            if (!Parent.children.Contains(this))
+            {
+                DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible!");
+                return;
+            }
+            Parent.children.Remove(this);
+            Parent.children.Add(this);
+            Parent.RecalculateAll(false, true, true);
         }
         #endregion
 

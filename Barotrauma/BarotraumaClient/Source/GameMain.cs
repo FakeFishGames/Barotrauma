@@ -66,6 +66,8 @@ namespace Barotrauma
 
         private Viewport defaultViewport;
 
+        public event Action OnResolutionChanged;
+
         public static GameMain Instance
         {
             get;
@@ -180,6 +182,8 @@ namespace Barotrauma
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
+
+            OnResolutionChanged?.Invoke();
         }
 
         public void SetWindowMode(WindowMode windowMode)
@@ -426,15 +430,11 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    // TODO: this should be done automatically in GUI update loop.
                     GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-                    if (!paused)
-                    {
-                        Screen.Selected.AddToGUIUpdateList();
-                    }
+                    Screen.Selected.AddToGUIUpdateList();
 
                     if (NetworkMember != null)
                     {

@@ -18,12 +18,14 @@ namespace Barotrauma
                 if (_instance == null)
                 {
                     _instance = new GUICanvas();
+                    GameMain.Instance.OnResolutionChanged += RecalculateSize;
                 }
                 return _instance;
             }
         }
 
-        public static void RecalculateSize()
+        // Turn public, if there is a need to call this manually.
+        private static void RecalculateSize()
         {
             Instance.Resize(Vector2.One, resizeChildren: true);
             Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());

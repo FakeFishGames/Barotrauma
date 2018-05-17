@@ -12,9 +12,9 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            infoBox = CreateInfoFrame("Use the mouse wheel to zoom in and out, and WASD to move the camera around.", true);
+            /*infoBox = CreateInfoFrame("Use the mouse wheel to zoom in and out, and WASD to move the camera around.", true);
 
-            while (infoBox!=null)
+            while (infoBox != null)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -33,7 +33,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("You can now create a horizontal wall by clicking and dragging. When you're done, right click to stop creating walls.");
+            infoBox = CreateInfoFrame("You can now create a horizontal wall by clicking and dragging. When you're done, right click to stop creating walls.");*/
 
 
 

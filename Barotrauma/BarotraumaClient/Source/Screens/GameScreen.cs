@@ -10,10 +10,10 @@ namespace Barotrauma
     {
         private BlurEffect lightBlur;
         
-        readonly RenderTarget2D renderTargetBackground;
-        readonly RenderTarget2D renderTarget;
-        readonly RenderTarget2D renderTargetWater;
-        readonly RenderTarget2D renderTargetFinal;
+        private RenderTarget2D renderTargetBackground;
+        private RenderTarget2D renderTarget;
+        private RenderTarget2D renderTargetWater;
+        private RenderTarget2D renderTargetFinal;
 
         private Effect damageEffect;
 
@@ -28,10 +28,11 @@ namespace Barotrauma
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
-            renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
+            CreateRenderTargets(graphics);
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                CreateRenderTargets(graphics);
+            };
 
 #if LINUX || OSX
             var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
@@ -49,7 +50,19 @@ namespace Barotrauma
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
-        
+
+        private void CreateRenderTargets(GraphicsDevice graphics)
+        {
+            renderTarget?.Dispose();
+            renderTargetBackground?.Dispose();
+            renderTargetWater?.Dispose();
+            renderTargetFinal?.Dispose();
+            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
+        }
+
         public override void AddToGUIUpdateList()
         {
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
@@ -214,7 +227,7 @@ namespace Barotrauma
 			if (GameMain.LightManager.LightingEnabled)
 			{
 				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
-				spriteBatch.Draw(GameMain.LightManager.lightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+				spriteBatch.Draw(GameMain.LightManager.LightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 				spriteBatch.End();
 			}
 
@@ -233,7 +246,7 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
-                GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
 
 
                 //convert the los color to HLS and make sure the luminance of the color is always the same regardless
