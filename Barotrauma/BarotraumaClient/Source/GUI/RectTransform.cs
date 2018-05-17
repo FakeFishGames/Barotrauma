@@ -41,7 +41,7 @@ namespace Barotrauma
                 if (parent != null && !parent.children.Contains(this))
                 {
                     parent.children.Add(this);
-                    RecalculateAll(false, true, true);
+                    Parent.RecalculateAll(false, true, true);
                 }
             }
         }
