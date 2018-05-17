@@ -197,6 +197,7 @@ namespace Barotrauma
             selected = new List<GUIComponent>();
 
             Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            Content.CanBeFocused = false;
             if (style != null) GUI.Style.Apply(Content, "", this);
 
             if (color.HasValue)
