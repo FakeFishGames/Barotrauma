@@ -193,7 +193,7 @@ namespace Barotrauma
                 this.color = color.Value;
             }
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            GUI.Style.Apply(frame, string.IsNullOrEmpty(style) ? "GUIButton" : style);
+            GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment)
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor
@@ -208,7 +208,12 @@ namespace Barotrauma
 
             if (frame != null) frame.ApplyStyle(style);
         }
-        
+
+        protected override void Draw(SpriteBatch spriteBatch)
+        {
+            //do nothing
+        }
+
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;

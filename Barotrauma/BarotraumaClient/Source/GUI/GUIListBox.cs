@@ -195,8 +195,10 @@ namespace Barotrauma
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             selected = new List<GUIComponent>();
+
             Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            if (style != null) GUI.Style.Apply(Content, style, this);
+            if (style != null) GUI.Style.Apply(Content, "", this);
+
             if (color.HasValue)
             {
                 this.color = color.Value;
@@ -327,7 +329,8 @@ namespace Barotrauma
             for (int i = 0; i < children.Count; i++)
             {
                 var child = children[i];
-                if (!IsChildVisible(child))
+                if (!child.Visible) continue;
+                if (!IsChildInsideFrame(child))
                 {
                     if (lastVisible > 0) break;
                     continue;
@@ -492,7 +495,8 @@ namespace Barotrauma
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (!IsChildVisible(child))
+                if (!child.Visible) continue;
+                if (!IsChildInsideFrame(child))
                 {
                     if (lastVisible > 0) break;
                     continue;
@@ -522,10 +526,9 @@ namespace Barotrauma
             //}
         }
 
-        private bool IsChildVisible(GUIComponent child)
+        private bool IsChildInsideFrame(GUIComponent child)
         {
             if (child == null) return false;
-            if (!child.Visible) return false;
 
             if (ScrollBar.IsHorizontal)
             {

@@ -124,10 +124,8 @@ namespace Barotrauma
             {
                 OnClicked = OnClicked
             };
-            if (!string.IsNullOrEmpty(style))
-            {
-                GUI.Style.Apply(button, style, this);
-            }
+            GUI.Style.Apply(button, style, this);
+            
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft), style: style)
             {
                 OnSelected = SelectItem
