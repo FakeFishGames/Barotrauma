@@ -13,12 +13,12 @@ namespace Barotrauma
 
         private int requiredDeliveryAmount;
 
-        public CargoMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public CargoMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            itemConfig = element.Element("Items");
+            itemConfig = prefab.ConfigElement.Element("Items");
 
-            requiredDeliveryAmount = element.GetAttributeInt("requireddeliveryamount", 0);
+            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
         }
 
         private void InitItems()
