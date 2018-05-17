@@ -207,6 +207,8 @@ namespace Barotrauma
         protected Color flashColor;
         protected float flashTimer;
 
+        public bool IgnoreLayoutGroups;
+
         public virtual ScalableFont Font
         {
             get;
