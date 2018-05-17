@@ -76,6 +76,14 @@ namespace Barotrauma
             CreateAreas();
         }
 
+        public static RectTransform ToRectTransform(Rectangle rect, RectTransform parent)
+        {
+            return new RectTransform(new Vector2(rect.Width / (float)GameMain.GraphicsWidth, rect.Height / (float)GameMain.GraphicsHeight), parent)
+            {
+                RelativeOffset = new Vector2(rect.X / (float)GameMain.GraphicsWidth, rect.Y / (float)GameMain.GraphicsHeight)
+            };
+        }
+
         public static void CreateAreas()
         {
             int padding = (int)(10 * GUI.Scale);
