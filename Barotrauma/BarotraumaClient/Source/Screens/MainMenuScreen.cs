@@ -195,7 +195,7 @@ namespace Barotrauma
 
             //TODO: fix
             var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
-            foreach (GUITextBlock tutorialText in tutorialList.Children)
+            foreach (GUITextBlock tutorialText in tutorialList.Frame.Children)
             {
                 if (((Tutorial)tutorialText.UserData).Completed)
                 {
@@ -308,7 +308,7 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
-            //CreateTestElements();
+            CreateTestElements();
             UpdateTestElements();
         }
 
@@ -565,19 +565,17 @@ namespace Barotrauma
         #endregion
 
         #region UI Test
+        private GUIDropDown dropdown;
         private void CreateTestElements()
         {
-            //if (Keyboard.GetState().IsKeyDown(Keys.T))
-            //{
-            //    //outerElement.RectTransform.GetChildren().ForEachMod(c => outerElement.RectTransform.RemoveChild(c));
-            //    outerElement.RectTransform.GetChildren().ForEachMod(c =>
-            //    {
-            //        if (outerElement.RectTransform.IsParentOf(c))
-            //        {
-            //            outerElement.RectTransform.RemoveChild(c);
-            //        }
-            //    });
-            //}
+            if (PlayerInput.KeyHit(Keys.Q))
+            {
+                dropdown.ListBox.RemoveChild(dropdown.ListBox.Frame.Children.LastOrDefault());
+            }
+            if (PlayerInput.KeyHit(Keys.E))
+            {
+                dropdown.AddItem("Extra");
+            }
             if (PlayerInput.KeyHit(Keys.T))
             {
                 testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
@@ -592,7 +590,7 @@ namespace Barotrauma
                 //new GUITextBlock(new Rectangle(500, 350, 100, 20), text: "TEST", style: "", parent: p, color: null, textColor: null);
                 //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
 
-                var dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.CenterLeft), "Dropdown");
+                dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.CenterLeft), "Dropdown");
 
                 dropdown.AddItem("Test1");
                 dropdown.AddItem("Test2");
@@ -601,10 +599,10 @@ namespace Barotrauma
                 dropdown.AddItem("Test5");
 
                 // colors don't work
-                var listBox = new GUIListBox(new RectTransform(new Point(100, 60), p.RectTransform, Anchor.CenterRight));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
-                listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
+                //var listBox = new GUIListBox(new RectTransform(new Point(100, 60), p.RectTransform, Anchor.CenterRight));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
+                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
 
                 // old list box works
                 //var listBox = new GUIListBox(new Rectangle(600, 200, 100, 40), "", p);

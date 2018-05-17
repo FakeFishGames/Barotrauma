@@ -168,9 +168,9 @@ namespace Barotrauma
 
         public void AddMessage(ChatMessage message)
         {
-            while (chatBox.CountChildren > 20)
+            while (chatBox.Frame.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.Children[0]);
+                chatBox.RemoveChild(chatBox.Frame.Children[0]);
             }
 
             string displayedText = message.Text;

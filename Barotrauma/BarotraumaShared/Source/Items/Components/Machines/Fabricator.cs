@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
         private void CheckFabricableItems(Character character)
         {
 #if CLIENT
-            foreach (GUIComponent child in itemList.Children)
+            foreach (GUIComponent child in itemList.Frame.Children)
             {
                 var itemPrefab = child.UserData as FabricableItem;
                 if (itemPrefab == null) continue;

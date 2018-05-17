@@ -91,7 +91,7 @@ namespace Barotrauma
             GUIListBox characterListBox = new GUIListBox(new Rectangle(0, 0, listBox.Rect.Width - 20, 90), null, Alignment.TopLeft, "", null, true);
             listBox.AddChild(characterListBox);
 
-            foreach (GUIComponent child in listBox.Children)
+            foreach (GUIComponent child in listBox.Frame.Children)
             {
                 child.CanBeFocused = child == characterListBox;
             }
