@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,10 +17,7 @@ namespace Barotrauma
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
 
-        public static GUIComponent VisibleBox
-        {
-            get { return MessageBoxes.Count == 0 ? null : MessageBoxes[0]; }
-        }
+        public static GUIComponent VisibleBox => MessageBoxes.FirstOrDefault();
 
         [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIMessageBox(string headerText, string text)
