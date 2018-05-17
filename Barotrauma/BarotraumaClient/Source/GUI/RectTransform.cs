@@ -472,11 +472,6 @@ namespace Barotrauma
             children.Clear();
         }
 
-        public bool RemoveFromHierarchy()
-        {
-            return RemoveFromHierarchy(displayErrors: true, recalculate: true);
-        }
-
         public void SetAsLastChild()
         {
             if (IsLastChild) { return; }
