@@ -505,18 +505,21 @@ namespace Barotrauma
 
            if (!scrollBarHidden) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
 
-            // Debug
-            GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
-            GUI.DrawString(spriteBatch, new Vector2(800, 40), $"Frame location: {Frame.Rect.Location}, Size: {Frame.Rect.Size}, Offset: {Frame.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            GUI.DrawString(spriteBatch, new Vector2(800, 80), "child count: " + Frame.Children.Count().ToString(), Color.White, Color.Black * 0.5f);
+            //// Debug
+            //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
+            //if (Frame != null && Frame.RectTransform != null)
+            //{
+            //    GUI.DrawString(spriteBatch, new Vector2(800, 40), $"Frame location: {Frame.Rect.Location}, Size: {Frame.Rect.Size}, Offset: {Frame.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
+            //    GUI.DrawString(spriteBatch, new Vector2(800, 80), "child count: " + Frame.Children.Count().ToString(), Color.White, Color.Black * 0.5f);
 
-            int y = 80;
-            foreach (var child in Frame.Children)
-            {
-                if (child.RectTransform == null) { continue; }
-                y += 30;
-                GUI.DrawString(spriteBatch, new Vector2(800, y), $"Child location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            }
+            //    int y = 80;
+            //    foreach (var child in Frame.Children)
+            //    {
+            //        if (child.RectTransform == null) { continue; }
+            //        y += 30;
+            //        GUI.DrawString(spriteBatch, new Vector2(800, y), $"Child location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
+            //    }
+            //}
         }
 
         private bool IsChildVisible(GUIComponent child)
