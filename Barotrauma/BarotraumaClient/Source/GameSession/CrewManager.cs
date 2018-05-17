@@ -364,7 +364,7 @@ namespace Barotrauma
             if (character != null && !characters.Contains(character)) return;
             
             GUIComponent selectedCharacterFrame = null;
-            foreach (GUIComponent child in characterListBox.Children)
+            foreach (GUIComponent child in characterListBox.Frame.Children)
             {
                 GUIButton button = child.Children.Find(c => c.UserData is Character) as GUIButton;
                 if (button == null) continue;
@@ -383,9 +383,17 @@ namespace Barotrauma
 
             if (selectedCharacterFrame != null)
             {
-                //move the selected character to the top of the list
-                characterListBox.RemoveChild(selectedCharacterFrame);
-                characterListBox.Children.Insert(0, selectedCharacterFrame);
+                if (selectedCharacterFrame.RectTransform != null)
+                {
+                    selectedCharacterFrame.RectTransform.SetAsFirstChild();
+                }
+                else
+                {
+                    //move the selected character to the top of the list
+                    characterListBox.RemoveChild(selectedCharacterFrame);
+                    characterListBox.Frame.Children.Insert(0, selectedCharacterFrame);
+                }
+
                 characterListBox.BarScroll = 0.0f; 
             }      
         }
@@ -570,7 +578,7 @@ namespace Barotrauma
         /// </summary>
         public void DisplayCharacterOrder(Character character, Order order)
         {
-            foreach (GUIComponent child in characterListBox.Children)
+            foreach (GUIComponent child in characterListBox.Frame.Children)
             {
                 var characterFrame = characterListBox.FindChild(character);
                 if (characterFrame == null) continue;
@@ -674,7 +682,7 @@ namespace Barotrauma
                 characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
             }
 
-            foreach (GUIComponent child in characterListBox.Children)
+            foreach (GUIComponent child in characterListBox.Frame.Children)
             {
                 child.Visible = Character.Controlled != null && Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
             }
@@ -685,7 +693,7 @@ namespace Barotrauma
                 deltaTime * 10.0f);
             //crewAreaOffset.Y = crewArea.Rect.Y;
             //crewArea.Rect = new Rectangle(crewAreaOffset.ToPoint(), crewArea.Rect.Size);
-            foreach (GUIComponent child in characterListBox.Children)
+            foreach (GUIComponent child in characterListBox.Frame.Children)
             {
                 var orderButtons = child.GetChild("orderbuttons");
                 var reportButtons = child.GetChild("reportbuttons");

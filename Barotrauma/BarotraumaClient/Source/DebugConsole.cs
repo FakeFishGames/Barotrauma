@@ -82,12 +82,7 @@ namespace Barotrauma
                 }
             }
 
-            if (activeQuestionText != null &&
-                (listBox.Children.Count == 0 || listBox.Children[listBox.Children.Count - 1] != activeQuestionText))
-            {
-                listBox.Children.Remove(activeQuestionText);
-                listBox.Children.Add(activeQuestionText);
-            }
+            activeQuestionText?.SetAsLastChild();
 
             if (PlayerInput.KeyHit(Keys.F3))
             {
@@ -174,9 +169,11 @@ namespace Barotrauma
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
 
-            if (listBox.Children.Count > MaxMessages)
+            if (listBox.Frame.Children.Count > MaxMessages)
             {
-                listBox.Children.RemoveRange(0, listBox.Children.Count - MaxMessages);
+                // TODO: does not work wit RectTransforms, because currently it maps the hierarchy to new list.
+                // In principle we could use the RectTransform list, but it might cause issues. Better to implement the required method in RectTransform and use it.
+                listBox.Frame.Children.RemoveRange(0, listBox.Frame.Children.Count - MaxMessages);
             }
 
             Messages.Add(msg);

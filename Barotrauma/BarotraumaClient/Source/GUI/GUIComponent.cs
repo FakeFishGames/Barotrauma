@@ -113,7 +113,7 @@ namespace Barotrauma
             if (child == null) return;
             if (RectTransform != null)
             {
-                RectTransform.RemoveChild(child.RectTransform);
+                child.RectTransform.RemoveFromHierarchy();
             }
             else
             {
@@ -151,6 +151,27 @@ namespace Barotrauma
             else
             {
                 children.Clear();
+            }
+        }
+
+        public void SetAsLastChild()
+        {
+            if (RectTransform != null)
+            {
+                RectTransform.SetAsLastChild();
+            }
+            else
+            {
+                if (parent == null) { return; }
+                var last = parent.Children.LastOrDefault();
+                if (last == this || last == null) { return; }
+                if (!parent.children.Contains(this))
+                {
+                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible!");
+                    return;
+                }
+                parent.RemoveChild(this);
+                parent.AddChild(this);
             }
         }
         #endregion

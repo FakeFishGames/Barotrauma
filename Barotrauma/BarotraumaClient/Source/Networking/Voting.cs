@@ -44,7 +44,7 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
 
                 //gray out modes that can't be voted
-                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.Children)
+                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.Frame.Children)
                 {
                     comp.TextColor =
                         new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
@@ -69,7 +69,7 @@ namespace Barotrauma
             GUIListBox listBox = (voteType == VoteType.Sub) ?
                 GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            foreach (GUIComponent comp in listBox.Children)
+            foreach (GUIComponent comp in listBox.Frame.Children)
             {
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText != null) comp.RemoveChild(voteText);
@@ -88,7 +88,7 @@ namespace Barotrauma
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
             if (userData == null) return;
-            foreach (GUIComponent comp in listBox.Children)
+            foreach (GUIComponent comp in listBox.Frame.Children)
             {
                 if (comp.UserData != userData) continue;
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;

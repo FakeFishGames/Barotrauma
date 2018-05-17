@@ -72,9 +72,9 @@ namespace Barotrauma
             {
                 background.Visible = false;
                 int otherModeIndex = 0;
-                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Children.Count; otherModeIndex++)
+                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Frame.Children.Count; otherModeIndex++)
                 {
-                    if (GameMain.NetLobbyScreen.ModeList.Children[otherModeIndex].UserData is MultiPlayerCampaign) continue;
+                    if (GameMain.NetLobbyScreen.ModeList.Frame.Children[otherModeIndex].UserData is MultiPlayerCampaign) continue;
                     break;
                 }
 

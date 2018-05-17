@@ -592,15 +592,15 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = afflictionContainer.CountChildren - 1; i>= 0; i--)
+            for (int i = afflictionContainer.Frame.CountChildren - 1; i>= 0; i--)
             {
-                if (!currentChildren.Contains(afflictionContainer.Children[i]))
+                if (!currentChildren.Contains(afflictionContainer.Frame.Children[i]))
                 {
-                    afflictionContainer.RemoveChild(afflictionContainer.Children[i]);
+                    afflictionContainer.RemoveChild(afflictionContainer.Frame.Children[i]);
                 }
             }
 
-            afflictionContainer.Children.Sort((c1, c2) =>
+            afflictionContainer.Frame.Children.Sort((c1, c2) =>
             {
                 Affliction affliction1 = c1.UserData as Affliction;
                 Affliction affliction2 = c2.UserData as Affliction;
