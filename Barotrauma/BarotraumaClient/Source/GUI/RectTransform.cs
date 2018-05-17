@@ -41,7 +41,7 @@ namespace Barotrauma
                 if (parent != null && !parent.children.Contains(this))
                 {
                     parent.children.Add(this);
-                    RecalculateAll(false, true, true);
+                    Parent.RecalculateAll(false, true, true);
                 }
             }
         }
@@ -225,6 +225,7 @@ namespace Barotrauma
             get { return pivot; }
             set
             {
+                if (pivot == value) { return; }
                 pivot = value;
                 RecalculatePivotOffset();
             }
@@ -236,6 +237,7 @@ namespace Barotrauma
             get { return anchor; }
             set
             {
+                if (anchor == value) { return; }
                 anchor = value;
                 RecalculateAnchorPoint();
             }
@@ -470,11 +472,6 @@ namespace Barotrauma
         public void ClearChildren()
         {
             children.Clear();
-        }
-
-        public bool RemoveFromHierarchy()
-        {
-            return RemoveFromHierarchy(displayErrors: true, recalculate: true);
         }
 
         public void SetAsLastChild()
