@@ -164,7 +164,7 @@ namespace Barotrauma
             get
             {
                 List<JobPrefab> jobPreferences = new List<JobPrefab>();
-                foreach (GUIComponent child in jobList.Frame.Children)
+                foreach (GUIComponent child in jobList.Content.Children)
                 {
                     JobPrefab jobPrefab = child.UserData as JobPrefab;
                     if (jobPrefab == null) continue;
@@ -563,7 +563,7 @@ namespace Barotrauma
             if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
             if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = subList.Frame.Children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                var nonShuttles = subList.Content.Children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
                 subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
@@ -937,7 +937,7 @@ namespace Barotrauma
 
         public void RemovePlayer(string name)
         {
-            GUIComponent child = playerList.Frame.Children.Find(c => c.UserData as string == name);
+            GUIComponent child = playerList.Content.Children.Find(c => c.UserData as string == name);
 
             if (child != null) playerList.RemoveChild(child);
 
@@ -1180,7 +1180,7 @@ namespace Barotrauma
         public List<Submarine> GetSubList()
         {
             List<Submarine> subs = new List<Submarine>();
-            foreach (GUIComponent component in subList.Frame.Children)
+            foreach (GUIComponent component in subList.Content.Children)
             {
                 if (component.UserData is Submarine) subs.Add((Submarine)component.UserData);
             }
@@ -1255,9 +1255,9 @@ namespace Barotrauma
         {
             float prevSize = chatBox.BarSize;
 
-            while (chatBox.Frame.CountChildren > 20)
+            while (chatBox.Content.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.Frame.Children[1]);
+                chatBox.RemoveChild(chatBox.Content.Children[1]);
             }
 
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0),
@@ -1306,9 +1306,9 @@ namespace Barotrauma
 
         public void SelectMode(int modeIndex)
         {
-            if (modeIndex < 0 || modeIndex >= modeList.Frame.Children.Count || modeList.SelectedIndex == modeIndex) return;
+            if (modeIndex < 0 || modeIndex >= modeList.Content.Children.Count || modeList.SelectedIndex == modeIndex) return;
 
-            if (((GameModePreset)modeList.Frame.Children[modeIndex].UserData).Name == "Campaign")
+            if (((GameModePreset)modeList.Content.Children[modeIndex].UserData).Name == "Campaign")
             {
                 if (GameMain.Server != null)
                 {
@@ -1448,13 +1448,13 @@ namespace Barotrauma
             GUIComponent jobText = button.Parent;
             GUIListBox jobList = jobText.Parent as GUIListBox;
 
-            int index = jobList.Frame.Children.IndexOf(jobText);
+            int index = jobList.Content.Children.IndexOf(jobText);
             int newIndex = index + (int)obj;
-            if (newIndex < 0 || newIndex > jobList.Frame.Children.Count - 1) return false;
+            if (newIndex < 0 || newIndex > jobList.Content.Children.Count - 1) return false;
 
-            GUIComponent temp = jobList.Frame.Children[newIndex];
-            jobList.Frame.Children[newIndex] = jobText;
-            jobList.Frame.Children[index] = temp;
+            GUIComponent temp = jobList.Content.Children[newIndex];
+            jobList.Content.Children[newIndex] = jobText;
+            jobList.Content.Children[index] = temp;
 
             UpdateJobPreferences(jobList);
 
@@ -1466,19 +1466,19 @@ namespace Barotrauma
             listBox.Deselect();
             List<string> jobNamePreferences = new List<string>();
 
-            for (int i = 0; i < listBox.Frame.Children.Count; i++)
+            for (int i = 0; i < listBox.Content.Children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
                 a = Math.Min(a, 3);
                 Color color = new Color(1.0f - a, (1.0f - a) * 0.6f, 0.0f, 0.3f);
 
-                listBox.Frame.Children[i].Color = color;
-                listBox.Frame.Children[i].HoverColor = color;
-                listBox.Frame.Children[i].SelectedColor = color;
+                listBox.Content.Children[i].Color = color;
+                listBox.Content.Children[i].HoverColor = color;
+                listBox.Content.Children[i].SelectedColor = color;
 
-                (listBox.Frame.Children[i] as GUITextBlock).Text = (i + 1) + ". " + (listBox.Frame.Children[i].UserData as JobPrefab).Name;
+                (listBox.Content.Children[i] as GUITextBlock).Text = (i + 1) + ". " + (listBox.Content.Children[i].UserData as JobPrefab).Name;
 
-                jobNamePreferences.Add((listBox.Frame.Children[i].UserData as JobPrefab).Name);
+                jobNamePreferences.Add((listBox.Content.Children[i].UserData as JobPrefab).Name);
             }
 
             if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
@@ -1504,11 +1504,11 @@ namespace Barotrauma
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
             if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
 
-            var matchingListSub = subList.Frame.Children.Find(c => c.UserData == sub);
+            var matchingListSub = subList.Content.Children.Find(c => c.UserData == sub);
             if (matchingListSub != null)
             {
                 subList.OnSelected -= VotableClicked;
-                subList.Select(subList.Frame.Children.IndexOf(matchingListSub), true);
+                subList.Select(subList.Content.Children.IndexOf(matchingListSub), true);
                 subList.OnSelected += VotableClicked;
 
                 if (subList == SubList)

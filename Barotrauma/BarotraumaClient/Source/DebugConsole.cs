@@ -169,11 +169,11 @@ namespace Barotrauma
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
 
-            if (listBox.Frame.Children.Count > MaxMessages)
+            if (listBox.Content.Children.Count > MaxMessages)
             {
                 // TODO: does not work wit RectTransforms, because currently it maps the hierarchy to new list.
                 // In principle we could use the RectTransform list, but it might cause issues. Better to implement the required method in RectTransform and use it.
-                listBox.Frame.Children.RemoveRange(0, listBox.Frame.Children.Count - MaxMessages);
+                listBox.Content.Children.RemoveRange(0, listBox.Content.Children.Count - MaxMessages);
             }
 
             Messages.Add(msg);

@@ -883,7 +883,7 @@ namespace Barotrauma
             entityFilterBox.Text = "";
             entityFilterBox.Select();
 
-            foreach (GUIComponent child in entityList.Frame.Children)
+            foreach (GUIComponent child in entityList.Content.Children)
             {
                 child.Visible = ((MapEntityPrefab)child.UserData).Category == selectedCategory;
             }
@@ -895,12 +895,12 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(filter))
             {
-                entityList.Frame.Children.ForEach(c => c.Visible = true);
+                entityList.Content.Children.ForEach(c => c.Visible = true);
                 return true;
             }
 
             filter = filter.ToLower();
-            foreach (GUIComponent child in entityList.Frame.Children)
+            foreach (GUIComponent child in entityList.Content.Children)
             {
                 var textBlock = child.GetChild<GUITextBlock>();
                 child.Visible = ((MapEntityPrefab)child.UserData).Name.ToLower().Contains(filter);
@@ -1125,7 +1125,7 @@ namespace Barotrauma
 
             if (previouslyUsedList.CountChildren == PreviouslyUsedCount)
             {
-                previouslyUsedList.RemoveChild(previouslyUsedList.Frame.Children.Last());
+                previouslyUsedList.RemoveChild(previouslyUsedList.Content.Children.Last());
             }
 
             var existing = previouslyUsedList.FindChild(mapEntityPrefab);
@@ -1148,7 +1148,7 @@ namespace Barotrauma
             else
             {
                 previouslyUsedList.RemoveChild(textBlock);
-                previouslyUsedList.Frame.Children.Insert(0, textBlock);
+                previouslyUsedList.Content.Children.Insert(0, textBlock);
             }
         }
         
