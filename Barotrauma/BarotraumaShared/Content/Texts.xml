@@ -229,6 +229,7 @@
   <TotalHullVolume>Total hull volume</TotalHullVolume>
   <SelectedHullVolume>Selected hull volume</SelectedHullVolume>
   <OptimalBallastLevel>optimal neutral ballast level is [value]</OptimalBallastLevel>
+  <SaveItemAssembly>Save as item assembly</SaveItemAssembly>
   <InsufficientBallast>insufficient volume for buoyancy control</InsufficientBallast>
   <PhysicsBodies>Physics bodies</PhysicsBodies>
   <OpenSubButton>Open...</OpenSubButton>

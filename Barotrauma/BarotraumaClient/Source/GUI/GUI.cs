@@ -23,6 +23,9 @@ namespace Barotrauma
     
     public static class GUI
     {
+        public static GUICanvas Canvas => GUICanvas.Instance;
+
+        // TODO: obsolate?
         public static float Scale
         {
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f; }
@@ -446,12 +449,10 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            //ClearUpdateList();
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
-            //ClearUpdateList();
         }
 
         #region Element drawing

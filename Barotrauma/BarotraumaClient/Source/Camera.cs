@@ -104,14 +104,8 @@ namespace Barotrauma
             rotation = 0.0f;
             position = Vector2.Zero;
 
-            worldView = new Rectangle(0,0, 
-                GameMain.GraphicsWidth,
-                GameMain.GraphicsHeight);
-
-            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-
-            viewMatrix = 
-                Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
+            CreateMatrices();
+            GameMain.Instance.OnResolutionChanged += () => { CreateMatrices(); };
 
             UpdateTransform();
         }
@@ -126,7 +120,13 @@ namespace Barotrauma
         public void Translate(Vector2 amount)
         {
             position += amount;
+        }
 
+        private void CreateMatrices()
+        {
+            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            worldView = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            viewMatrix = Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
         }
 
         public void UpdateTransform(bool interpolate = true)

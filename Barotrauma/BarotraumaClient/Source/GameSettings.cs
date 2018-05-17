@@ -192,7 +192,6 @@ namespace Barotrauma
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
             GameMain.Instance.ApplyGraphicsSettings();
-            GUICanvas.RecalculateSize();
             UnsavedSettings = true;
 
             return true;
