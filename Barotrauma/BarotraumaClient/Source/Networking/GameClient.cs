@@ -1232,8 +1232,8 @@ namespace Barotrauma.Networking
                     for (int i = 0; i < 2; i++)
                     {
                         List<GUIComponent> subListChildren = (i == 0) ? 
-                            GameMain.NetLobbyScreen.ShuttleList.ListBox.Frame.Children : 
-                            GameMain.NetLobbyScreen.SubList.Frame.Children;
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.Content.Children : 
+                            GameMain.NetLobbyScreen.SubList.Content.Children;
 
                         var subElement = subListChildren.Find(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 

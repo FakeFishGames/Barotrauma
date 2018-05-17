@@ -195,7 +195,7 @@ namespace Barotrauma
 
             //TODO: fix
             var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
-            foreach (GUITextBlock tutorialText in tutorialList.Frame.Children)
+            foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
                 if (((Tutorial)tutorialText.UserData).Completed)
                 {
@@ -570,7 +570,7 @@ namespace Barotrauma
         {
             if (PlayerInput.KeyHit(Keys.Q))
             {
-                dropdown.ListBox.RemoveChild(dropdown.ListBox.Frame.Children.LastOrDefault());
+                dropdown.ListBox.RemoveChild(dropdown.ListBox.Content.Children.LastOrDefault());
             }
             if (PlayerInput.KeyHit(Keys.E))
             {
