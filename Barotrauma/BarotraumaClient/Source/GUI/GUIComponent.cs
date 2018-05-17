@@ -447,6 +447,8 @@ namespace Barotrauma
         /// </summary>
         public void UpdateManually(float deltaTime, bool alsoChildren = false, bool recursive = true)
         {
+            if (!Visible) return;
+
             AutoUpdate = false;
             Update(deltaTime);
             if (alsoChildren)
@@ -497,6 +499,8 @@ namespace Barotrauma
         /// </summary>
         public void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
         {
+            if (!Visible) return;
+
             AutoDraw = false;
             Draw(spriteBatch);
             if (alsoChildren)

@@ -99,7 +99,7 @@ namespace Barotrauma
                 System.Diagnostics.Debug.Assert(sprite.SourceRect.Width > 0 && sprite.SourceRect.Height > 0);
                 Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ? 
                     1.0f :
-                    Math.Min(rectT.Rect.Width / sprite.SourceRect.Width, rectT.Rect.Height / sprite.SourceRect.Height);
+                    Math.Min(rectT.Rect.Width / (float)sprite.SourceRect.Width, rectT.Rect.Height / (float)sprite.SourceRect.Height);
             }
             else
             {
