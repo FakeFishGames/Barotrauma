@@ -36,13 +36,13 @@ namespace Barotrauma
             {
                 if (parent == value) { return; }
                 // Remove the child from the old parent
-                parent?.RemoveChild(this);
+                RemoveFromHierarchy(displayErrors: false, recalculate: true);
                 parent = value;
                 if (parent != null && !parent.children.Contains(this))
                 {
                     parent.children.Add(this);
+                    RecalculateAll(false, true, true);
                 }
-                RecalculateAll(false, true, true);
             }
         }
 
@@ -324,6 +324,61 @@ namespace Barotrauma
         {
             children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
         }
+
+        private bool RemoveFromHierarchy(bool displayErrors = true, bool recalculate = true)
+        {
+            if (Parent == null)
+            {
+                if (displayErrors)
+                {
+                    DebugConsole.ThrowError("Parent null" + Environment.StackTrace);
+                }
+                return false;
+            }
+            if (!Parent.children.Contains(this))
+            {
+                if (displayErrors)
+                {
+                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible! " + Environment.StackTrace);
+                }
+                return false;
+            }
+            if (!Parent.children.Remove(this))
+            {
+                if (displayErrors)
+                {
+                    DebugConsole.ThrowError("Unable to remove the child from the parent. " + Environment.StackTrace);
+                }
+                return false;
+            }
+            if (recalculate)
+            {
+                Parent.RecalculateAll(false, true, true);
+            }
+            return true;
+        }
+
+        public bool IsLastChild
+        {
+            get
+            {
+                if (Parent == null) { return false; }
+                var last = Parent.Children.LastOrDefault();
+                if (last == null) { return false; }
+                return last == this;
+            }
+        }
+
+        public bool IsFirstChild
+        {
+            get
+            {
+                if (Parent == null) { return false; }
+                var first = Parent.Children.FirstOrDefault();
+                if (first == null) { return false; }
+                return first == this;
+            }
+        }
         #endregion
 
         #region Public instance methods
@@ -417,29 +472,39 @@ namespace Barotrauma
             children.Clear();
         }
 
-        public bool RemoveChild(RectTransform child)
+        public bool RemoveFromHierarchy()
         {
-            bool success = children.Remove(child);
-            if (success)
-            {
-                RecalculateAll(false, true, true);
-            }
-            return success;
+            return RemoveFromHierarchy(displayErrors: true, recalculate: true);
         }
 
         public void SetAsLastChild()
         {
-            if (Parent == null) { return; }
-            var last = Parent.Children.LastOrDefault();
-            if (last == this || last == null) { return; }
-            if (!Parent.children.Contains(this))
-            {
-                DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible!");
-                return;
-            }
-            Parent.children.Remove(this);
+            if (IsLastChild) { return; }
+            if (!RemoveFromHierarchy(displayErrors: true, recalculate: false)) { return; }
             Parent.children.Add(this);
             Parent.RecalculateAll(false, true, true);
+        }
+
+        public void SetAsFirstChild()
+        {
+            if (IsFirstChild) { return; }
+            RepositionChildInHierarchy(0);
+        }
+
+        public bool RepositionChildInHierarchy(int index)
+        {
+            if (!RemoveFromHierarchy(displayErrors: true, recalculate: false)) { return false; }
+            try
+            {
+                Parent.children.Insert(index, this);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                DebugConsole.ThrowError(e.ToString());
+                return false;
+            }
+            Parent.RecalculateAll(false, true, true);
+            return true;
         }
         #endregion
 
