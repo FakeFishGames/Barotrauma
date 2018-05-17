@@ -29,12 +29,12 @@ namespace Barotrauma
             : base(preset, param)
         {
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
-            endRoundButton = new GUIButton(
-                new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), 
-                TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
-
-            endRoundButton.Font = GUI.SmallFont;
-            endRoundButton.OnClicked = TryEndRound;
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("EndRound"), textAlignment: Alignment.Center)
+            {
+                Font = GUI.SmallFont,
+                OnClicked = TryEndRound
+            };
 
             foreach (JobPrefab jobPrefab in JobPrefab.List)
             {
@@ -201,7 +201,6 @@ namespace Barotrauma
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
-
 
             if (!success)
             {
