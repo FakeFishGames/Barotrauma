@@ -114,16 +114,16 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null) : base(null, rectT)
+        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
-            box = new GUIFrame(new RectTransform(new Point(size, size), rectT, Anchor.CenterLeft), string.Empty, Color.DarkGray)
+            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft), string.Empty, Color.DarkGray)
             {
                 HoverColor = Color.Gray,
                 SelectedColor = Color.DarkGray,
                 CanBeFocused = false
             };
-            GUI.Style.Apply(box, "GUITickBox");
-            text = new GUITextBlock(new RectTransform(new Vector2(1 - box.RectTransform.RelativeSize.X, 1), rectT, Anchor.CenterRight), label, font: font, textAlignment: Alignment.CenterRight);
+            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
+            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft);
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
         }
