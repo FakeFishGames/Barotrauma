@@ -225,6 +225,7 @@ namespace Barotrauma
             get { return pivot; }
             set
             {
+                if (pivot == value) { return; }
                 pivot = value;
                 RecalculatePivotOffset();
             }
@@ -236,6 +237,7 @@ namespace Barotrauma
             get { return anchor; }
             set
             {
+                if (anchor == value) { return; }
                 anchor = value;
                 RecalculateAnchorPoint();
             }
