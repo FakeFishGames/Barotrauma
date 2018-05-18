@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,40 +13,38 @@ namespace Barotrauma
         public const int DefaultWidth = 400, DefaultHeight = 250;
         
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
-        public GUIFrame BackgroundFrame { get; private set; }
+        //public GUIFrame BackgroundFrame { get; private set; }
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
 
         public static GUIComponent VisibleBox => MessageBoxes.FirstOrDefault();
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
+        
         public GUIMessageBox(string headerText, string text)
             : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
         {
             this.Buttons[0].OnClicked = Close;
         }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
+        
         public GUIMessageBox(string headerText, string text, int width, int height)
             : this(headerText, text, new string[] { "OK" }, width, height)
         {
             this.Buttons[0].OnClicked = Close;
         }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null)
-            : base(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                Color.Black * 0.5f, Alignment.TopLeft, null, parent)
+        
+        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft)
+            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null, color: Color.Black * 0.5f)
         {
             int headerHeight = 30;
 
-            var frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", this);
+            var frame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center), style: null);
             GUI.Style.Apply(frame, "", this);
             
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), frame.RectTransform, Anchor.Center), spacing: 5);
+
             if (height == 0)
             {
-                string wrappedText = ToolBox.WrapText(text, frame.Rect.Width - frame.Padding.X - frame.Padding.Z, GUI.Font);
+                string wrappedText = ToolBox.WrapText(text, content.Rect.Width, GUI.Font);
                 string[] lines = wrappedText.Split('\n');
                 foreach (string line in lines)
                 {
@@ -53,25 +52,30 @@ namespace Barotrauma
                 }
                 height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
             }
-            frame.Rect = new Rectangle(frame.Rect.X, GameMain.GraphicsHeight / 2 - height/2, frame.Rect.Width, height);
+            frame.RectTransform.NonScaledSize = new Point(frame.Rect.Width, height);
 
-            var header = new GUITextBlock(new Rectangle(0, 0, 0, headerHeight), headerText, null, null, textAlignment, "", frame, true);
+            var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), 
+                headerText, textAlignment: Alignment.Center, wrap: true);
             GUI.Style.Apply(header, "", this);            
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, string.IsNullOrWhiteSpace(headerText) ? 0 : headerHeight, 0, height - 70), text,
-                    null, null, textAlignment, "", frame, true);
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), 
+                    text, textAlignment: textAlignment, wrap: true);
                 GUI.Style.Apply(textBlock, "", this);
             }
 
-            int x = 0;
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform, Anchor.BottomCenter), 
+                isHorizontal: true, childAnchor: Anchor.BottomLeft, spacing: 5)
+            {
+                IgnoreLayoutGroups = true
+            };
+            
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
-                var button = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, "", frame);
+                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i]);
                 Buttons.Add(button);
-                x += button.Rect.Width + 20;
             }
 
             MessageBoxes.Add(this);
@@ -82,10 +86,10 @@ namespace Barotrauma
         /// TODO: for some reason the background does not prohibit input on the elements that are behind the box
         /// TODO: allow providing buttons in the constructor
         /// </summary>
-        public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
+        /*public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
             : base(rectT, "")
         {
-            BackgroundFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), rectT, Anchor.Center), null, Color.Black * 0.5f);
+            //BackgroundFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), rectT, Anchor.Center), null, Color.Black * 0.5f);
             float headerHeight = 0.2f;
             float margin = 0.05f;
             InnerFrame = new GUIFrame(rectT);
@@ -110,7 +114,7 @@ namespace Barotrauma
                 GUI.Style.Apply(Text, "", this);
             }
             MessageBoxes.Add(this);
-        }
+        }*/
 
         //public override void AddToGUIUpdateList(bool ignoreChildren = false, bool updateLast = false)
         //{
@@ -140,7 +144,7 @@ namespace Barotrauma
         //        }
         //    }
         //}
-
+        
         public void Close()
         {
             if (Parent != null) Parent.RemoveChild(this);
