@@ -604,9 +604,7 @@ namespace Launcher
 
         private void ShowError(string header, string message)
         {
-            GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
-            dummyFrame.Padding = Vector4.Zero;
-            GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.Center, dummyFrame);
+            GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.Center);
             errorBox.Buttons[0].OnClicked = errorBox.Close;
             errorBox.InnerFrame.Rect = new Rectangle(
                 (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
@@ -628,10 +626,8 @@ namespace Launcher
                     updateInfoBox, true, GUI.SmallFont);
                 textBlock.TextColor = Color.Red;
 
-                GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
-                dummyFrame.Padding = Vector4.Zero;
                 GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
-                    new string[] { "Retry", "Cancel" }, 400, 200, Alignment.Center, dummyFrame);
+                    new string[] { "Retry", "Cancel" }, 400, 200, Alignment.Center);
                 errorBox.InnerFrame.Rect = new Rectangle(
                     (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
                     (graphicsHeight - errorBox.InnerFrame.Rect.Height) / 2,
