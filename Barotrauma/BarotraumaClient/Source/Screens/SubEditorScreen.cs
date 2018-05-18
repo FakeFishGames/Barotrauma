@@ -158,6 +158,7 @@ namespace Barotrauma
 
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
             {
+                ClampMouseRectToParent = false,
                 Visible = false
             };
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
@@ -698,25 +699,25 @@ namespace Barotrauma
             if (characterMode) ToggleCharacterMode();
             if (wiringMode) ToggleWiringMode();
 
-            saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
+            saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 200) });
             GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogName"));
-            nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedSaveFrame.RectTransform));
+            nameBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.1f), paddedSaveFrame.RectTransform));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
                 TextManager.Get("SaveItemAssemblyDialogDescription"));
-            new GUITextBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedSaveFrame.RectTransform))
+            new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
             {
                 UserData = "description",
                 Wrap = true,
                 Text = ""
             };
             
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
                 isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
             new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("Cancel"))

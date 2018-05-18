@@ -79,7 +79,7 @@ namespace Barotrauma.Networking
             this.isPublic = isPublic;
             this.maxPlayers = maxPlayers;
             this.password = "";
-            if (password.Length > 0)
+            if (password != null && password.Length > 0)
             {
                 SetPassword(password);
             }
