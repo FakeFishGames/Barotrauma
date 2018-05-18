@@ -94,7 +94,7 @@
     <Body width="87" height="18" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-    
+
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack structuredamage="200" severlimbsprobability="1.0">
         <affliction name="Internal Damage" strength="100"/>
@@ -106,7 +106,7 @@
 
       <StatusEffect type="OnImpact" target="Contained">
         <Use/>
-      </StatusEffect>  
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
