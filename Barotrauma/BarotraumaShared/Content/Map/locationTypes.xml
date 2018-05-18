@@ -3,7 +3,7 @@
     name="Natural Formation"
     namefile="Content/Map/locationNames.txt"
     commonness="5"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9">
     
     <nameformats f0="[name]"/>
@@ -35,7 +35,7 @@
     name="Colony"
     namefile="Content/Map/cityNames.txt"
     commonness="5"
-    background="Content/Map/citybackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCamp_Mining1.jpg"
     allowedzones="1,2"
     halo="0,1,0,0.3">
 
@@ -59,7 +59,7 @@
     name="Habitation Outpost"
     namefile="Content/Map/cityNames.txt"
     commonness="5"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/HabitationOutpost.jpg"
     allowedzones="1,2,3"
     halo="0,1,0,0.2">
 
@@ -87,7 +87,7 @@
     name="Military Outpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/militarybackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCampMilitary.jpg"
     allowedzones="1,2,3,4"
     halo="0,1,0,0.4">
 
@@ -111,7 +111,7 @@
     name="Research Outpost"
     namefile="Content/Map/locationNames.txt"
     commonness="3"
-    background="Content/Map/researchbackground.jpg"
+    background="Content/Map/LocationPortraits/WorkCampResearchFacility.jpg"
     allowedzones="1,2,3"
     halo="0,1,0,0.2">
 
@@ -135,7 +135,7 @@
     name="Breeding Grounds"
     namefile="Content/Map/alienNames.txt"
     commonness="2"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="1,2,3,4,5,6,7,8,9"
     halo="1,0,0,0.4">
 
@@ -155,7 +155,7 @@
     name="Alien Ruins"
     namefile="Content/Map/alienNames.txt"
     commonness="3"
-    background="Content/Map/beaconbackground.jpg"
+    background="Content/Map/LocationPortraits/BeaconBackground.jpg"
     allowedzones="3,4,5,6,7,8,9"
     halo="1,0,0,0.2">
 
