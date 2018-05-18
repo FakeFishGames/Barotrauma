@@ -220,6 +220,11 @@ namespace Barotrauma
         protected Rectangle ScreenRect => new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
         private Pivot pivot;
+        /// <summary>
+        /// Does not automatically calculate children.
+        /// Note also that if you change the pivot point with this property, the pivot does not automatically match the anchor.
+        /// You can use SetPosition to change everything automatcally or MatchPivotToAnchor to match the pivot to anchor.
+        /// </summary>
         public Pivot Pivot
         {
             get { return pivot; }
@@ -232,6 +237,11 @@ namespace Barotrauma
         }
 
         private Anchor anchor;
+        /// <summary>
+        /// Does not automatically calculate children.
+        /// Note also that if you change the anchor point with this property, the pivot does not automatically match the anchor.
+        /// You can use SetPosition to change everything automatcally or MatchPivotToAnchor to match the pivot to anchor.
+        /// </summary>
         public Anchor Anchor
         {
             get { return anchor; }
