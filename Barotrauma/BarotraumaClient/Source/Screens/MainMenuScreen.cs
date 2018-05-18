@@ -570,6 +570,14 @@ namespace Barotrauma
             {
                 GUI.Canvas.ResetScale();
             }
+            if (PlayerInput.KeyHit(Keys.Z))
+            {
+                layoutGroup.Stretch = !layoutGroup.Stretch;
+            }
+            if (PlayerInput.KeyHit(Keys.X))
+            {
+                layoutGroup.IsHorizontal = !layoutGroup.IsHorizontal;
+            }
             if (PlayerInput.KeyHit(Keys.Q))
             {
                 //dropdown.ListBox.RemoveChild(dropdown.ListBox.Content.Children.LastOrDefault());
@@ -598,7 +606,7 @@ namespace Barotrauma
                 //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
 
-                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopCenter, relativeSpacing: 0, absoluteSpacing: 0);
+                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopCenter);
 
                 new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
 

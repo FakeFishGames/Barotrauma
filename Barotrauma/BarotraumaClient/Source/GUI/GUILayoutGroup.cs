@@ -16,6 +16,9 @@ namespace Barotrauma
         }
 
         private bool stretch;
+        /// <summary>
+        /// Note that stretching cannot be undone, because the previous child sizes are not stored.
+        /// </summary>
         public bool Stretch
         {
             get { return stretch; }
