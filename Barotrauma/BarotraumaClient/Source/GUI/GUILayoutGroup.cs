@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class GUILayoutGroup : GUIComponent
+    public class GUILayoutGroup : GUIComponent
     {
         private bool isHorizontal;
         public bool IsHorizontal
