@@ -36,12 +36,12 @@ namespace Barotrauma
             {
                 if (parent == value) { return; }
                 // Remove the child from the old parent
-                RemoveFromHierarchy(displayErrors: false, recalculate: true);
+                RemoveFromHierarchy(displayErrors: false);
                 parent = value;
                 if (parent != null && !parent.children.Contains(this))
                 {
                     parent.children.Add(this);
-                    Parent.RecalculateAll(false, true, true);
+                    RecalculateAll(false, true, true);
                 }
             }
         }
@@ -353,10 +353,6 @@ namespace Barotrauma
                 }
                 return false;
             }
-            if (recalculate)
-            {
-                Parent.RecalculateAll(false, true, true);
-            }
             return true;
         }
 
@@ -477,9 +473,9 @@ namespace Barotrauma
         public void SetAsLastChild()
         {
             if (IsLastChild) { return; }
-            if (!RemoveFromHierarchy(displayErrors: true, recalculate: false)) { return; }
+            if (!RemoveFromHierarchy(displayErrors: true)) { return; }
             Parent.children.Add(this);
-            Parent.RecalculateAll(false, true, true);
+            RecalculateAll(false, true, true);
         }
 
         public void SetAsFirstChild()
@@ -490,7 +486,7 @@ namespace Barotrauma
 
         public bool RepositionChildInHierarchy(int index)
         {
-            if (!RemoveFromHierarchy(displayErrors: true, recalculate: false)) { return false; }
+            if (!RemoveFromHierarchy(displayErrors: true)) { return false; }
             try
             {
                 Parent.children.Insert(index, this);
@@ -500,7 +496,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(e.ToString());
                 return false;
             }
-            Parent.RecalculateAll(false, true, true);
+            RecalculateAll(false, true, true);
             return true;
         }
         #endregion
