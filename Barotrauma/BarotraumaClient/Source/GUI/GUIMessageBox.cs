@@ -14,6 +14,7 @@ namespace Barotrauma
         
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
         //public GUIFrame BackgroundFrame { get; private set; }
+        public GUILayoutGroup Content { get; private set; }
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
@@ -37,14 +38,14 @@ namespace Barotrauma
         {
             int headerHeight = 30;
 
-            var frame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center), style: null);
-            GUI.Style.Apply(frame, "", this);
+            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center), style: null);
+            GUI.Style.Apply(InnerFrame, "", this);
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), frame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
+            Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             if (height == 0)
             {
-                string wrappedText = ToolBox.WrapText(text, content.Rect.Width, GUI.Font);
+                string wrappedText = ToolBox.WrapText(text, Content.Rect.Width, GUI.Font);
                 string[] lines = wrappedText.Split('\n');
                 foreach (string line in lines)
                 {
@@ -52,20 +53,20 @@ namespace Barotrauma
                 }
                 height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
             }
-            frame.RectTransform.NonScaledSize = new Point(frame.Rect.Width, height);
+            InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, height);
 
-            var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), 
+            Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                 headerText, textAlignment: Alignment.Center, wrap: true);
-            GUI.Style.Apply(header, "", this);            
+            GUI.Style.Apply(Header, "", this);            
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), 
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
                 GUI.Style.Apply(textBlock, "", this);
             }
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform, Anchor.BottomCenter),
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter),
                 isHorizontal: true, childAnchor: Anchor.BottomLeft)
             {
                 AbsoluteSpacing = 5,
