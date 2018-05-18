@@ -732,6 +732,7 @@ namespace Barotrauma.Networking
             string shuttleHash      = inc.ReadString();
 
             string modeName         = inc.ReadString();
+            int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
@@ -791,7 +792,7 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else

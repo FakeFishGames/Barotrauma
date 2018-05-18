@@ -25,7 +25,7 @@ namespace Barotrauma
         private CampaignMode campaign;
 
         private GUICustomComponent mapContainer;
-        private GUIFrame locationInfoContainer;
+        private GUILayoutGroup locationInfoContainer;
 
         private GUIFrame characterPreviewFrame;
         
@@ -80,9 +80,8 @@ namespace Barotrauma
 
             tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
 
-            GUIFrame paddedMapFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.95f), tabs[(int)Tab.Map].RectTransform), style: null);
-            mapContainer = new GUICustomComponent(new RectTransform(new Vector2(0.74f, 1.0f), paddedMapFrame.RectTransform), DrawMap, UpdateMap);
-            locationInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), paddedMapFrame.RectTransform, Anchor.TopRight), style: null);
+            mapContainer = new GUICustomComponent(new RectTransform(new Vector2(0.74f, 1.0f), tabs[(int)Tab.Map].RectTransform), DrawMap, UpdateMap);
+            locationInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), tabs[(int)Tab.Map].RectTransform, Anchor.TopRight), spacing: 5);
 
             if (GameMain.Client == null)
             {
@@ -175,12 +174,12 @@ namespace Barotrauma
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession.Map.Draw(spriteBatch, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Draw(spriteBatch, mapContainer.Rect);
         }
 
         private void UpdateMap(float deltaTime, GUICustomComponent mapContainer)
         {
-            GameMain.GameSession.Map.Update(deltaTime, mapContainer.Rect);
+            GameMain.GameSession?.Map?.Update(deltaTime, mapContainer.Rect);
         }
         
         public void UpdateCharacterLists()
@@ -200,20 +199,23 @@ namespace Barotrauma
 
             var titleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter), location.Name, font: GUI.LargeFont);
 
+            Sprite portrait = location.Type.Background;
+            new GUIImage(new RectTransform(
+                new Point(locationInfoContainer.Rect.Width, (int)(portrait.size.Y * (locationInfoContainer.Rect.Width / portrait.size.X))), 
+                locationInfoContainer.RectTransform), portrait, scaleToFit: true);
+
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Mission != null)
             {
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) },
-                    TextManager.Get("Reward") + ": " + mission.Reward + " " + TextManager.Get("Credits"));
-
-                new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
                     TextManager.Get("Mission") + ": " + mission.Name);
-
                 new GUITextBlock(
-                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.15f) },
+                    new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
+                    TextManager.Get("Reward") + ": " + mission.Reward + " " + TextManager.Get("Credits"));
+                new GUITextBlock(
+                    new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform, Anchor.TopCenter),
                     mission.Description, wrap: true);
             }
 

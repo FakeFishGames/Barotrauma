@@ -193,7 +193,7 @@ namespace Barotrauma
                 this.color = color.Value;
             }
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
+            if (style != null) GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, style: null)
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor

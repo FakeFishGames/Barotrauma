@@ -16,8 +16,8 @@ namespace Barotrauma
         public CargoMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            itemConfig = prefab.XmlConfig.Element("Items");
-            requiredDeliveryAmount = prefab.XmlConfig.GetAttributeInt("requireddeliveryamount", 0);
+            itemConfig = prefab.ConfigElement.Element("Items");
+            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
         }
 
         private void InitItems()

@@ -127,7 +127,10 @@ namespace Barotrauma
                 {
                     ClampMouseRectToParent = false
                 };
-                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
+                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
+                {
+                    Color = Color.White * 0.8f
+                };
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {
                     GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = !GameMain.GameSession.CrewManager.ToggleCrewAreaOpen;
