@@ -32,7 +32,7 @@ namespace Barotrauma
 
                     MTRandom rand = new MTRandom((int)((seed + MissionsCompleted) % int.MaxValue));
 
-                    mission = Mission.CreateRandom(locations, rand, true, "", true);
+                    mission = Mission.LoadRandom(locations, rand, true, "", true);
                     if (GameSettings.VerboseLogging && mission != null)
                     {
                         DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed + ", type: " + mission.Name + ")", Color.White);

@@ -60,9 +60,9 @@ namespace Barotrauma
         {
             descriptions = new string[]
             {
-                prefab.XmlConfig.GetAttributeString("descriptionneutral", ""),
-                prefab.XmlConfig.GetAttributeString("description1", ""),
-                prefab.XmlConfig.GetAttributeString("description2", "")
+                prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
+                prefab.ConfigElement.GetAttributeString("description1", ""),
+                prefab.ConfigElement.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -75,8 +75,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                prefab.XmlConfig.GetAttributeString("teamname1", "Team A"),
-                prefab.XmlConfig.GetAttributeString("teamname2", "Team B")
+                prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
+                prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
             };
         }
 

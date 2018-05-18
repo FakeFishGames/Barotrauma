@@ -93,6 +93,8 @@ namespace Barotrauma
                this.sourceRect = sprite == null ? Rectangle.Empty : sprite.SourceRect;
             }
             color = Color.White;
+            hoverColor = Color.White;
+            selectedColor = Color.White;
             this.sprite = sprite;
             if (scaleToFit)
             {
