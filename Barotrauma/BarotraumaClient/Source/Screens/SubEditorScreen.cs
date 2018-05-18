@@ -214,8 +214,7 @@ namespace Barotrauma
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(130, 0) }, "GUIFrameLeft");
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
                 new Point((int)(leftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - topPanel.Rect.Height * 0.95f)),
-                leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }, 
-                spacing: 5);
+                leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }) { AbsoluteSpacing = 5 };
 
             GUITextBlock itemCount = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), "ItemCount")
             {
@@ -242,8 +241,9 @@ namespace Barotrauma
 
             entityMenu = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.4f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
             var paddedTab = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), entityMenu.RectTransform, Anchor.Center), style: null);
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedTab.RectTransform), isHorizontal: true, spacing: 5)
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedTab.RectTransform), isHorizontal: true)
             {
+                AbsoluteSpacing = 5,
                 UserData = "filterarea"
             };
             new GUITextBlock(new RectTransform(new Vector2(0.25f, 1.0f), filterArea.RectTransform), TextManager.Get("FilterMapEntities"), font: GUI.SmallFont);
@@ -507,7 +507,7 @@ namespace Barotrauma
             if (wiringMode) ToggleWiringMode();
             
             saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center), spacing: 5);
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), TextManager.Get("SaveSubDialogHeader"), font: GUI.LargeFont);
             
@@ -602,7 +602,7 @@ namespace Barotrauma
                 };
             }
             
-            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true, spacing: 5);
+            var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewSizeArea.RectTransform), 
                 TextManager.Get("RecommendedCrewSize"), font: GUI.SmallFont);
@@ -632,7 +632,7 @@ namespace Barotrauma
                 Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
             };
             
-            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true, spacing: 5);
+            var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewExpArea.RectTransform), 
                 TextManager.Get("RecommendedCrewExperience"), font: GUI.SmallFont);
@@ -671,9 +671,8 @@ namespace Barotrauma
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
             }
 
-            //TODO: fix button positioning & figure out why they aren't working
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter), 
-                isHorizontal: true, childAnchor: Anchor.BottomRight, spacing: 5);
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
+                isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
 
             var cancelButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("Cancel"))
@@ -698,9 +697,9 @@ namespace Barotrauma
         {
             if (characterMode) ToggleCharacterMode();
             if (wiringMode) ToggleWiringMode();
-            
+
             saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
-            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center), spacing: 5);
+            GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform),                 
                 TextManager.Get("SaveItemAssemblyDialogHeader"), font: GUI.LargeFont);
@@ -717,9 +716,8 @@ namespace Barotrauma
                 Text = ""
             };
             
-            //TODO: fix button positioning & figure out why they aren't working
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),
-                isHorizontal: true, childAnchor: Anchor.BottomRight, spacing: 5);
+                isHorizontal: true, childAnchor: Anchor.BottomRight) { AbsoluteSpacing = 5 };
             new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("Cancel"))
             {

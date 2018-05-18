@@ -39,8 +39,8 @@ namespace Barotrauma
 
             var frame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center), style: null);
             GUI.Style.Apply(frame, "", this);
-            
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), frame.RectTransform, Anchor.Center), spacing: 5);
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), frame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
 
             if (height == 0)
             {
@@ -65,9 +65,10 @@ namespace Barotrauma
                 GUI.Style.Apply(textBlock, "", this);
             }
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform, Anchor.BottomCenter), 
-                isHorizontal: true, childAnchor: Anchor.BottomLeft, spacing: 5)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform, Anchor.BottomCenter),
+                isHorizontal: true, childAnchor: Anchor.BottomLeft)
             {
+                AbsoluteSpacing = 5,
                 IgnoreLayoutGroups = true
             };
             
