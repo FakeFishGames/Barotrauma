@@ -204,7 +204,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUITextBox(RectTransform rectT, string text = null, Color? textColor = null, ScalableFont font = null,
+        public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
