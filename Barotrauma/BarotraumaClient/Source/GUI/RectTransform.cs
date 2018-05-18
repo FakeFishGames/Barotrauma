@@ -138,6 +138,7 @@ namespace Barotrauma
             {
                 localScale = value;
                 RecalculateAll(resize: false, scale: true, withChildren: true);
+                ScaleChanged?.Invoke();
             }
         }
 
@@ -286,6 +287,8 @@ namespace Barotrauma
         /// The element provided as the argument is the changed child. It may be new in the hierarchy or just repositioned.
         /// </summary>
         public event Action<RectTransform> ChildrenChanged;
+        public event Action ScaleChanged;
+        public event Action SizeChanged;
         #endregion
 
         #region Initialization
@@ -328,6 +331,7 @@ namespace Barotrauma
             var scale = LocalScale * globalScale;
             var parents = GetParents();
             Scale = parents.Any() ? parents.Select(rt => rt.LocalScale).Aggregate((parent, child) => parent * child) * scale : scale;
+            ScaleChanged?.Invoke();
         }
 
         protected void RecalculatePivotOffset()
@@ -348,6 +352,7 @@ namespace Barotrauma
         protected void RecalculateAbsoluteSize()
         {
             nonScaledSize = NonScaledParentRect.Size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
+            SizeChanged?.Invoke();
         }
 
         protected void RecalculateAll(bool resize, bool scale = true, bool withChildren = true)
