@@ -1474,6 +1474,8 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
             msg.Write(selectedMode.Name);
+            msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ? 
+                -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 

@@ -506,7 +506,7 @@ namespace Barotrauma
             return wayPoints[Rand.Int(wayPoints.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))];
         }
 
-        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine, bool tryAssignWayPoint = true)
+        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
         {
             List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
 
@@ -540,29 +540,24 @@ namespace Barotrauma
                     assignedWayPoints[i] = wp;
                     break;
                 }
-
                 if (assignedWayPoints[i] != null) continue;
 
-                if (tryAssignWayPoint)
+                //try to assign a spawnpoint that isn't meant for any specific job
+                var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
+                if (nonJobSpecificPoints.Any())
                 {
-                    //try to assign a spawnpoint that isn't meant for any specific job
-                    var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
-
-                    if (nonJobSpecificPoints.Any())
-                    {
-                        assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
-                    }
+                    assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
                 }
 
                 if (assignedWayPoints[i] != null) continue;
 
-                //everything else failed -> just give a random spawnpoint
-                assignedWayPoints[i] = GetRandom(SpawnType.Human);
+                //everything else failed -> just give a random spawnpoint inside the sub
+                assignedWayPoints[i] = GetRandom(SpawnType.Human, null, submarine, true);
             }
 
-            for (int i = 0; i < assignedWayPoints.Length; i++ )
+            for (int i = 0; i < assignedWayPoints.Length; i++)
             {
-                if (assignedWayPoints[i]==null)
+                if (assignedWayPoints[i] == null)
                 {
                     DebugConsole.ThrowError("Couldn't find a waypoint for " + crew[i].Name + "!");
                     assignedWayPoints[i] = WayPointList[0];

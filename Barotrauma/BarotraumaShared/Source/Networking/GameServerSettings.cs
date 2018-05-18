@@ -287,6 +287,12 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public List<string> AllowedRandomMissionTypes
+        {
+            get;
+            set;
+        }
+
         [Serialize(60f, true)]
         public float AutoBanTime
         {
@@ -323,7 +329,8 @@ namespace Barotrauma.Networking
             /*doc.Root.SetAttributeValue("BotCount", BotCount);
             doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
             doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
-
+            
+            doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
@@ -386,10 +393,14 @@ namespace Barotrauma.Networking
             Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-
+            
             var botSpawnMode = BotSpawnMode.Fill;
             Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Fill"), out botSpawnMode);
             BotSpawnMode = botSpawnMode;
+
+            AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
+                "AllowedRandomMissionTypes",
+                MissionPrefab.MissionTypes.ToArray()).ToList();
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
