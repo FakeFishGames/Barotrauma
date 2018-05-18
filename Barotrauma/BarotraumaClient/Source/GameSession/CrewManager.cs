@@ -97,12 +97,12 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            scrollButtonUp = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.TopCenter, Pivot.Center), "", Alignment.Center, "GUIButtonVerticalArrow")
+            scrollButtonUp = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
             {
                 ClampMouseRectToParent = false,
                 Visible = false
             };
-            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomCenter, Pivot.Center), "", Alignment.Center, "GUIButtonVerticalArrow")
+            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
             {
                 ClampMouseRectToParent = false
             };
@@ -260,11 +260,8 @@ namespace Barotrauma
             }, style: null);
             orderButtonFrame.UserData = "orderbuttons";
             orderButtonFrame.CanBeFocused = false;
-
-            scrollButtonUp.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonUp.Rect.Y, crewAreaWidth, scrollButtonUp.Rect.Height);
-            scrollButtonDown.Rect = new Rectangle(frame.Rect.Right - crewAreaWidth, scrollButtonDown.Rect.Y, crewAreaWidth, scrollButtonDown.Rect.Height);
-
-            int x = 0;// -characterInfoWidth;
+            
+            int x = 0;
             int correctAreaWidth = correctOrderCount * iconWidth + (correctOrderCount - 1) * padding;
             int neutralAreaWidth = neutralOrderCount * iconWidth + (neutralOrderCount - 1) * padding;
             int wrongAreaWidth = wrongOrderCount * iconWidth + (wrongOrderCount - 1) * padding;
@@ -621,13 +618,15 @@ namespace Barotrauma
                     order.SymbolSprite, scaleToFit: true)
                 {
                     Color = order.Color,
+                    HoverColor = order.Color,
+                    SelectedColor = order.Color,
                     CanBeFocused = false,
                     UserData = "currentorder",
                     ToolTip = order.Name
                 };
             }
         }
-        
+
         /// <summary>
         /// Create the UI panel that's used to select the target and options for a given order 
         /// (which railgun to use, whether to power up the reactor or shut it down...)
@@ -697,14 +696,16 @@ namespace Barotrauma
             }
 
             scrollButtonUp.Visible = characterListBox.BarScroll > 0.0f && characterListBox.BarSize < 1.0f;
-            scrollButtonUp.Rect = new Rectangle(crewArea.Rect.X, scrollButtonUp.Rect.Y, toggleButtonX - crewArea.Rect.X, scrollButtonUp.Rect.Height);
+            scrollButtonUp.RectTransform.NonScaledSize = new Point(crewAreaWidth, scrollButtonUp.Rect.Height);
+            scrollButtonUp.RectTransform.AbsoluteOffset = new Point(toggleButtonX - crewAreaWidth, 0);
             if (GUI.MouseOn == scrollButtonUp || scrollButtonUp.IsParentOf(GUI.MouseOn))
             {
                 characterListBox.BarScroll -= deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
             }
-            scrollButtonDown.Visible = characterListBox.BarScroll < 1.0f && characterListBox.BarSize < 1.0f;
             
-            scrollButtonDown.Rect = new Rectangle(crewArea.Rect.X, scrollButtonDown.Rect.Y, toggleButtonX - crewArea.Rect.X, scrollButtonDown.Rect.Height);
+            scrollButtonDown.Visible = characterListBox.BarScroll < 1.0f && characterListBox.BarSize < 1.0f;
+            scrollButtonDown.RectTransform.NonScaledSize = new Point(crewAreaWidth, scrollButtonDown.Rect.Height);
+            scrollButtonDown.RectTransform.AbsoluteOffset = new Point(toggleButtonX - crewAreaWidth, 0);
             if (GUI.MouseOn == scrollButtonDown || scrollButtonDown.IsParentOf(GUI.MouseOn))
             {
                 characterListBox.BarScroll += deltaTime * 2.0f * (float)Math.Sqrt(characterListBox.BarSize);
@@ -753,7 +754,7 @@ namespace Barotrauma
             if (orderTargetFrame != null)
             {
                 Rectangle hoverArea = orderTargetFrame.Rect;
-                hoverArea.Inflate(100,100);
+                hoverArea.Inflate(100, 100);
                 if (!hoverArea.Contains(PlayerInput.MousePosition))
                 {
                     orderTargetFrame = null;

@@ -91,7 +91,7 @@ namespace Barotrauma
                 false, null, "");
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
-                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(0.0f, 0.15f), tutorialList.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.Name, textAlignment: Alignment.Center, font: GUI.LargeFont)
                 {
                     UserData = tutorial
                 };
@@ -191,9 +191,6 @@ namespace Barotrauma
 
         private void UpdateTutorialList()
         {
-            return;
-
-            //TODO: fix
             var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
             foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
