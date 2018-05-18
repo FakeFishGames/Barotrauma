@@ -91,29 +91,38 @@ namespace Barotrauma
             set { savePath = value; }
         }
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+            : this(submarine, savePath)
+        {
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = gameModePreset.Instantiate(missionType);
+        }
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionPrefab missionPrefab)
+            : this(submarine, savePath)
+        {
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = gameModePreset.Instantiate(missionPrefab);
+        }
+
+        private GameSession(Submarine submarine, string savePath)
         {
             Submarine.MainSub = submarine;
-
+            this.submarine = submarine;
             GameMain.GameSession = this;
-            
             EventManager = new EventManager(this);
-            
             this.savePath = savePath;
             
-            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-
 #if CLIENT
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
             infoButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), GUICanvas.Instance),
                 TextManager.Get("InfoButton"), textAlignment: Alignment.Center);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
-
-            if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
-            this.submarine = submarine;
         }
-        
+
+
         public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {
@@ -121,8 +130,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
-
-
+            
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -130,16 +138,16 @@ namespace Barotrauma
 #if CLIENT
                     case "gamemode": //legacy support
                     case "singleplayercampaign":
+                        CrewManager = new CrewManager(true);
                         GameMode = SinglePlayerCampaign.Load(subElement);
                         break;
 #endif
                     case "multiplayercampaign":
-                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
                         CrewManager = new CrewManager(false);
+                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
                         break;
                 }
             }
-
         }
 
         private void CreateDummyLocations()
