@@ -187,23 +187,25 @@ namespace Barotrauma
 
             string[] saveFiles = SaveUtil.GetSaveFiles(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
 
-            saveList = new GUIListBox(new Rectangle(0, 0, 200, loadGameContainer.Rect.Height - 80), Color.White, "", loadGameContainer);
-            saveList.OnSelected = SelectSaveFile;
+            saveList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.8f), loadGameContainer.RectTransform, Anchor.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0.075f, 0)
+            })
+            {
+                OnSelected = SelectSaveFile
+            };
 
             foreach (string saveFile in saveFiles)
             {
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    Path.GetFileNameWithoutExtension(saveFile),
-                    "ListBoxElement",
-                    Alignment.Left,
-                    Alignment.Left,
-                    saveList);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = saveFile;
+                saveList.AddChild(new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), saveList.RectTransform),
+                    text: Path.GetFileNameWithoutExtension(saveFile), style: "ListBoxElement")
+                    { UserData = saveFile });     
             }
 
-            loadGameButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("LoadButton"), Alignment.Right | Alignment.Bottom, "", loadGameContainer);
+            loadGameButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), loadGameContainer.RectTransform, Anchor.BottomRight)
+            {
+                RelativeOffset = new Vector2(0.075f, 0.1f)
+            }, TextManager.Get("LoadButton"));
             loadGameButton.OnClicked = (btn, obj) => 
             {
                 if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
@@ -233,24 +235,37 @@ namespace Barotrauma
             string saveTime = doc.Root.GetAttributeString("savetime", "unknown");
             string mapseed = doc.Root.GetAttributeString("mapseed", "unknown");
 
-            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black * 0.4f, "", loadGameContainer);
-            saveFileFrame.UserData = "savefileframe";
-            saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            var saveFileFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)
+            {
+                RelativeOffset = new Vector2(0.075f, 0.1f)
+            }, color: Color.Black)
+            {
+                UserData = "savefileframe"
+            };
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), Path.GetFileNameWithoutExtension(fileName), "", Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.05f)
+            }, 
+            Path.GetFileNameWithoutExtension(fileName), font: GUI.LargeFont, textAlignment: Alignment.Center);
 
-            new GUITextBlock(new Rectangle(0, 35, 0, 20), TextManager.Get("Submarine") + ":", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, "", saveFileFrame).Font = GUI.SmallFont;
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.5f), saveFileFrame.RectTransform, Anchor.Center)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            });
 
-            new GUITextBlock(new Rectangle(0, 70, 0, 20), TextManager.Get("LastSaved") + ":", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("Submarine")} : {subName}", font: GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(0, 105, 0, 20), TextManager.Get("MapSeed") + ":", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, "", saveFileFrame).Font = GUI.SmallFont;
-
-            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Delete"), Alignment.BottomCenter, "", saveFileFrame);
-            deleteSaveButton.UserData = fileName;
-            deleteSaveButton.OnClicked = DeleteSave;
+            new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), saveFileFrame.RectTransform, Anchor.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, TextManager.Get("Delete"))
+            {
+                UserData = fileName,
+                OnClicked = DeleteSave
+            };
 
             return true;
         }
