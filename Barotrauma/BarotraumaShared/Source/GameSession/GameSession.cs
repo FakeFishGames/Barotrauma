@@ -105,7 +105,8 @@ namespace Barotrauma
 
 #if CLIENT
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
-            infoButton = new GUIButton(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), "Info", "", null);
+            infoButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.X, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 100, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("InfoButton"), textAlignment: Alignment.Center);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
 

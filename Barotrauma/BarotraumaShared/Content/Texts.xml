@@ -157,6 +157,7 @@
   <Credits>Credits</Credits>
 
   <!-- Ingame menus -->
+  <InfoButton>Info</InfoButton>
   <EndRound>End round</EndRound>
   <EnterLocation>Enter [locationname]</EnterLocation>
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
