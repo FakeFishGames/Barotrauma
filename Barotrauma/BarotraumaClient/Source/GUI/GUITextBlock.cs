@@ -207,7 +207,7 @@ namespace Barotrauma
             this.Font = font ?? GUI.Font;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
-            this.Text = text;
+            this.Text = text ?? "";
             if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
             {
                 rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
