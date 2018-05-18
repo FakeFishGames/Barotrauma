@@ -29,6 +29,8 @@ namespace Barotrauma
         {
             get
             {
+                if (descriptions == null) return "";
+
                 if (GameMain.NetworkMember==null || GameMain.NetworkMember.Character==null)
                 {
                     //non-team-specific description
@@ -47,7 +49,7 @@ namespace Barotrauma
             {
                 if (winner == -1) return "";
 
-                return SuccessMessage
+                return base.SuccessMessage
                     .Replace("[loser]", teamNames[1 - winner])
                     .Replace("[winner]", teamNames[winner]);
             }
