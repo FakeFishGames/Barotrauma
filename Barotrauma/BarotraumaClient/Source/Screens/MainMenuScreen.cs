@@ -563,21 +563,49 @@ namespace Barotrauma
 
         #region UI Test
         private GUIDropDown dropdown;
+        private GUILayoutGroup layoutGroup;
         private void CreateTestElements()
         {
+            if (PlayerInput.KeyHit(Keys.R))
+            {
+                GUI.Canvas.ResetScale();
+            }
             if (PlayerInput.KeyHit(Keys.Q))
             {
-                dropdown.ListBox.RemoveChild(dropdown.ListBox.Content.Children.LastOrDefault());
+                //dropdown.ListBox.RemoveChild(dropdown.ListBox.Content.Children.LastOrDefault());
+                var last = layoutGroup.RectTransform.Children.LastOrDefault();
+                if (last != null)
+                {
+                    last.Parent = null;
+                }
             }
             if (PlayerInput.KeyHit(Keys.E))
             {
-                dropdown.AddItem("Extra");
+                //dropdown.AddItem("Extra");
+                new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
+            }
+            if (PlayerInput.KeyHit(Keys.PageUp))
+            {
+                layoutGroup.AbsoluteSpacing++;
+            }
+            if (PlayerInput.KeyHit(Keys.PageDown))
+            {
+                layoutGroup.AbsoluteSpacing--;
             }
             if (PlayerInput.KeyHit(Keys.T))
             {
-                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: null, anchor: Anchor.Center));
+                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: GUI.Canvas, anchor: Anchor.Center));
                 //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
+
+                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopCenter, relativeSpacing: 0, absoluteSpacing: 0);
+
+                new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
+
+                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 30)});
+                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 60) });
+                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 90) });
+
 
                 //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
                 //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
@@ -587,21 +615,21 @@ namespace Barotrauma
                 //new GUITextBlock(new Rectangle(500, 350, 100, 20), text: "TEST", style: "", parent: p, color: null, textColor: null);
                 //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
 
-                dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.CenterLeft), "Dropdown");
+                //dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.CenterLeft), "Dropdown");
 
-                dropdown.AddItem("Test1");
-                dropdown.AddItem("Test2");
-                dropdown.AddItem("Test3");
-                dropdown.AddItem("Test4");
-                dropdown.AddItem("Test5");
+                //dropdown.AddItem("Test1");
+                //dropdown.AddItem("Test2");
+                //dropdown.AddItem("Test3");
+                //dropdown.AddItem("Test4");
+                //dropdown.AddItem("Test5");
 
-                // colors don't work
+                // new list box
                 //var listBox = new GUIListBox(new RectTransform(new Point(100, 60), p.RectTransform, Anchor.CenterRight));
                 //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
                 //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
                 //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
 
-                // old list box works
+                // old list box
                 //var listBox = new GUIListBox(new Rectangle(600, 200, 100, 40), "", p);
                 //listBox.AddChild(new GUITextBlock(new Rectangle(0, 0, 0, 0), "Child1", null, textColor: Color.White));
                 //listBox.AddChild(new GUITextBlock(new Rectangle(0, 0, 0, 0), "Child2", null, textColor: Color.White));
@@ -644,68 +672,67 @@ namespace Barotrauma
                 //    return true;
                 //});
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.R))
-            {
-                innerElements.Clear();
-                outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
-                bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
-                if (global)
-                {
-                    RectTransform.ResetGlobalScale();
-                }
-                else
-                {
-                    //outerElement.RectTransform.ResetScale();
-                    //outerElement.RectTransform.ClearChildren();
-                }
-                for (int i = 0; i < 5; i++)
-                {
-                    //var parent = innerElements.LastOrDefault();
-                    //if (parent == null)
-                    //{
-                    //    parent = outerElement;
-                    //}
-                    var parent = outerElement;
-                    GUIFrame element;
-                    switch (i)
-                    {
-                        case 0:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
-                            break;
-                        case 1:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
-                            break;
-                        case 2:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
-                            break;
-                        case 3:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
-                            break;
-                        case 4:
-                            // absolute element
-                            element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-                            break;
-                        default:
-                            element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-                            break;
-                    }
-                    if (i < 4)
-                    {
-                        // offsets are cumulative
-                        element.RectTransform.AbsoluteOffset = new Point(10, 10);
-                        element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
-                        element.RectTransform.MinSize = new Point(200, 200);
-                        element.RectTransform.MaxSize = new Point(400, 400);
-                    }
-                    innerElements.Add(element);
-                }
-            }
+            //if (Keyboard.GetState().IsKeyDown(Keys.R))
+            //{
+            //    innerElements.Clear();
+            //    outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
+            //    bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
+            //    if (global)
+            //    {
+            //        RectTransform.ResetGlobalScale();
+            //    }
+            //    else
+            //    {
+            //        //outerElement.RectTransform.ResetScale();
+            //        //outerElement.RectTransform.ClearChildren();
+            //    }
+            //    for (int i = 0; i < 5; i++)
+            //    {
+            //        //var parent = innerElements.LastOrDefault();
+            //        //if (parent == null)
+            //        //{
+            //        //    parent = outerElement;
+            //        //}
+            //        var parent = outerElement;
+            //        GUIFrame element;
+            //        switch (i)
+            //        {
+            //            case 0:
+            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
+            //                break;
+            //            case 1:
+            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
+            //                break;
+            //            case 2:
+            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
+            //                break;
+            //            case 3:
+            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
+            //                break;
+            //            case 4:
+            //                // absolute element
+            //                element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
+            //                break;
+            //            default:
+            //                element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
+            //                break;
+            //        }
+            //        if (i < 4)
+            //        {
+            //            // offsets are cumulative
+            //            element.RectTransform.AbsoluteOffset = new Point(10, 10);
+            //            element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
+            //            element.RectTransform.MinSize = new Point(200, 200);
+            //            element.RectTransform.MaxSize = new Point(400, 400);
+            //        }
+            //        innerElements.Add(element);
+            //    }
+            //}
         }
 
         private void UpdateTestElements()
         {
-            //var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? outerElement.Children.FirstOrDefault() : outerElement;
-            var element = Frame;
+            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? GUI.Canvas.Children.FirstOrDefault() : GUI.Canvas;
             if (element == null) { return; }
             bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
             // Scaling
@@ -719,7 +746,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    element.RectTransform.LocalScale *= 1 + step;
+                    element.LocalScale *= 1 + step;
                 }
                 GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
             }
@@ -732,7 +759,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    element.RectTransform.LocalScale *= 1 - step;
+                    element.LocalScale *= 1 - step;
                 }
                 GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
             }
@@ -740,76 +767,76 @@ namespace Barotrauma
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
             {
                 //element.RectTransform.NonScaledSize -= new Point(1, 0);
-                element.RectTransform.RelativeSize -= new Vector2(step, 0);
+                element.RelativeSize -= new Vector2(step, 0);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Right))
             {
                 //element.RectTransform.NonScaledSize += new Point(1, 0);
-                element.RectTransform.RelativeSize += new Vector2(step, 0);
+                element.RelativeSize += new Vector2(step, 0);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Up))
             {
                 //element.RectTransform.NonScaledSize += new Point(0, 1);
-                element.RectTransform.RelativeSize += new Vector2(0, step);
+                element.RelativeSize += new Vector2(0, step);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Down))
             {
                 //element.RectTransform.NonScaledSize -= new Point(0, 1);
-                element.RectTransform.RelativeSize -= new Vector2(0, step);
+                element.RelativeSize -= new Vector2(0, step);
             }
             // Translation
             if (Keyboard.GetState().IsKeyDown(Keys.A))
             {
-                element.RectTransform.Translate(new Point(-1, 0));
+                element.Translate(new Point(-1, 0));
             }
             if (Keyboard.GetState().IsKeyDown(Keys.D))
             {
-                element.RectTransform.Translate(new Point(1, 0));
+                element.Translate(new Point(1, 0));
             }
             if (Keyboard.GetState().IsKeyDown(Keys.W))
             {
-                element.RectTransform.Translate(new Point(0, -1));
+                element.Translate(new Point(0, -1));
             }
             if (Keyboard.GetState().IsKeyDown(Keys.S))
             {
-                element.RectTransform.Translate(new Point(0, 1));
+                element.Translate(new Point(0, 1));
             }
             // Positioning (with matching anchors and pivots)
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad7))
             {
-                element.RectTransform.SetPosition(Anchor.TopLeft);
+                element.SetPosition(Anchor.TopLeft);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad8))
             {
-                element.RectTransform.SetPosition(Anchor.TopCenter);
+                element.SetPosition(Anchor.TopCenter);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad9))
             {
-                element.RectTransform.SetPosition(Anchor.TopRight);
+                element.SetPosition(Anchor.TopRight);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad4))
             {
-                element.RectTransform.SetPosition(Anchor.CenterLeft);
+                element.SetPosition(Anchor.CenterLeft);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad5))
             {
-                element.RectTransform.SetPosition(Anchor.Center);
+                element.SetPosition(Anchor.Center);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad6))
             {
-                element.RectTransform.SetPosition(Anchor.CenterRight);
+                element.SetPosition(Anchor.CenterRight);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad1))
             {
-                element.RectTransform.SetPosition(Anchor.BottomLeft);
+                element.SetPosition(Anchor.BottomLeft);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad2))
             {
-                element.RectTransform.SetPosition(Anchor.BottomCenter);
+                element.SetPosition(Anchor.BottomCenter);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.NumPad3))
             {
-                element.RectTransform.SetPosition(Anchor.BottomRight);
+                element.SetPosition(Anchor.BottomRight);
             }
         }
         #endregion
