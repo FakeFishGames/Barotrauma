@@ -197,6 +197,7 @@ namespace Barotrauma
             selected = new List<GUIComponent>();
 
             Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
+            Content.CanBeFocused = false;
             if (style != null) GUI.Style.Apply(Content, "", this);
 
             if (color.HasValue)
@@ -507,7 +508,7 @@ namespace Barotrauma
             
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
-           if (!scrollBarHidden) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+           if (ScrollBarEnabled && !scrollBarHidden) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
 
             //// Debug
             //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);

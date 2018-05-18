@@ -82,7 +82,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null) : base(null, rectT)
+        public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) : base(null, rectT)
         {
             if (sourceRect.HasValue)
             {
@@ -93,8 +93,18 @@ namespace Barotrauma
                this.sourceRect = sprite == null ? Rectangle.Empty : sprite.SourceRect;
             }
             color = Color.White;
-            Scale = 1.0f;
             this.sprite = sprite;
+            if (scaleToFit)
+            {
+                System.Diagnostics.Debug.Assert(sprite.SourceRect.Width > 0 && sprite.SourceRect.Height > 0);
+                Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ? 
+                    1.0f :
+                    Math.Min(rectT.Rect.Width / (float)sprite.SourceRect.Width, rectT.Rect.Height / (float)sprite.SourceRect.Height);
+            }
+            else
+            {
+                Scale = 1.0f;
+            }
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
@@ -107,7 +117,7 @@ namespace Barotrauma
 
             if (sprite != null && sprite.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, Rect.Location.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
             }          
         }

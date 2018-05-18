@@ -1020,7 +1020,7 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.27f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(65, 300) },
                 style: "GUIFrameRight");
 
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.95f), frame.RectTransform, Anchor.Center))
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })
             {
                 OnSelected = SelectWire
             };
@@ -1033,9 +1033,7 @@ namespace Barotrauma
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, listBox.Rect.Width), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
-                    UserData = itemPrefab,
-                    HoverColor = Color.White * 0.5f,
-                    SelectedColor = Color.Gold * 0.7f
+                    UserData = itemPrefab
                 };
 
                 var img = new GUIImage(new RectTransform(Vector2.One, imgFrame.RectTransform), itemPrefab.sprite)
