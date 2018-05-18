@@ -24,7 +24,9 @@ namespace Barotrauma
     {
         #region Fields and Properties
         /// <summary>
-        /// Should be assigned only by GUIComponent. TODO: consider protecting.
+        /// Should be assigned only by GUIComponent.
+        /// Note that RectTransform is created first and the GUIComponent after that.
+        /// This means the GUIComponent is not set before the GUIComponent is initialized.
         /// </summary>
         public GUIComponent GUIComponent { get; set; }
 
@@ -42,6 +44,8 @@ namespace Barotrauma
                 {
                     parent.children.Add(this);
                     RecalculateAll(false, true, true);
+                    ParentChanged?.Invoke(parent);
+                    Parent.ChildrenChanged?.Invoke(this);
                 }
             }
         }
@@ -252,6 +256,36 @@ namespace Barotrauma
                 RecalculateAnchorPoint();
             }
         }
+
+        public bool IsLastChild
+        {
+            get
+            {
+                if (Parent == null) { return false; }
+                var last = Parent.Children.LastOrDefault();
+                if (last == null) { return false; }
+                return last == this;
+            }
+        }
+
+        public bool IsFirstChild
+        {
+            get
+            {
+                if (Parent == null) { return false; }
+                var first = Parent.Children.FirstOrDefault();
+                if (first == null) { return false; }
+                return first == this;
+            }
+        }
+        #endregion
+
+        #region Events
+        public event Action<RectTransform> ParentChanged;
+        /// <summary>
+        /// The element provided as the argument is the changed child. It may be new in the hierarchy or just repositioned.
+        /// </summary>
+        public event Action<RectTransform> ChildrenChanged;
         #endregion
 
         #region Initialization
@@ -265,6 +299,7 @@ namespace Barotrauma
             RecalculateAbsoluteSize();
             RecalculateAnchorPoint();
             RecalculatePivotOffset();
+            parent?.ChildrenChanged?.Invoke(this);
         }
 
         public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
@@ -275,6 +310,7 @@ namespace Barotrauma
             RecalculateRelativeSize();            
             RecalculateAnchorPoint();
             RecalculatePivotOffset();
+            parent?.ChildrenChanged?.Invoke(this);
         }
 
         private void Init(RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
@@ -332,11 +368,6 @@ namespace Barotrauma
             }
         }
 
-        public void RecalculateChildren(bool resize, bool scale = true)
-        {
-            children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
-        }
-
         private bool RemoveFromHierarchy(bool displayErrors = true, bool recalculate = true)
         {
             if (Parent == null)
@@ -364,28 +395,6 @@ namespace Barotrauma
                 return false;
             }
             return true;
-        }
-
-        public bool IsLastChild
-        {
-            get
-            {
-                if (Parent == null) { return false; }
-                var last = Parent.Children.LastOrDefault();
-                if (last == null) { return false; }
-                return last == this;
-            }
-        }
-
-        public bool IsFirstChild
-        {
-            get
-            {
-                if (Parent == null) { return false; }
-                var first = Parent.Children.FirstOrDefault();
-                if (first == null) { return false; }
-                return first == this;
-            }
         }
         #endregion
 
@@ -477,15 +486,16 @@ namespace Barotrauma
 
         public void ClearChildren()
         {
-            children.Clear();
+            children.ForEachMod(c => c.Parent = null);
         }
 
         public void SetAsLastChild()
         {
             if (IsLastChild) { return; }
             if (!RemoveFromHierarchy(displayErrors: true)) { return; }
-            Parent.children.Add(this);
+            parent.children.Add(this);
             RecalculateAll(false, true, true);
+            parent.ChildrenChanged?.Invoke(this);
         }
 
         public void SetAsFirstChild()
@@ -507,7 +517,13 @@ namespace Barotrauma
                 return false;
             }
             RecalculateAll(false, true, true);
+            Parent.ChildrenChanged?.Invoke(this);
             return true;
+        }
+
+        public void RecalculateChildren(bool resize, bool scale = true)
+        {
+            children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
         }
         #endregion
 
