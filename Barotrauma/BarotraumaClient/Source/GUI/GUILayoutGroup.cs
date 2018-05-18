@@ -5,7 +5,37 @@ namespace Barotrauma
     class GUILayoutGroup : GUIComponent
     {
         private bool isHorizontal;
-        private int spacing;
+        public bool IsHorizontal
+        {
+            get { return isHorizontal; }
+            set
+            {
+                isHorizontal = value;
+                needsToRecalculate = true;
+            }
+        }
+
+        private int absoluteSpacing;
+        public int AbsoluteSpacing
+        {
+            get { return absoluteSpacing; }
+            set
+            {
+                absoluteSpacing = MathHelper.Clamp(value, 0, int.MaxValue);
+                needsToRecalculate = true;
+            }
+        }
+
+        private float relativeSpacing;
+        public float RelativeSpacing
+        {
+            get { return relativeSpacing; }
+            set
+            {
+                relativeSpacing = MathHelper.Clamp(value, 0, float.MaxValue);
+                needsToRecalculate = true;
+            }
+        }
 
         private Anchor childAnchor;
         public Anchor ChildAnchor
@@ -14,45 +44,46 @@ namespace Barotrauma
             set
             {
                 childAnchor = value;
-                Recalculate();
+                needsToRecalculate = true;
             }
         }
 
-        public GUILayoutGroup(RectTransform rectT, bool isHorizontal = false, Anchor childAnchor = Anchor.TopLeft, int spacing = 0) : base(null, rectT)
+        public GUILayoutGroup(RectTransform rectT, bool isHorizontal = false, Anchor childAnchor = Anchor.TopLeft, int absoluteSpacing = 0, float relativeSpacing = 0) : base(null, rectT)
         {
             this.isHorizontal = isHorizontal;
             this.childAnchor = childAnchor;
-            this.spacing = spacing;
-            rectT.ChildrenChanged += (child) => Recalculate();
+            this.absoluteSpacing = MathHelper.Clamp(absoluteSpacing, 0, int.MaxValue);
+            this.relativeSpacing = MathHelper.Clamp(relativeSpacing, 0, float.MaxValue);
+            rectT.ChildrenChanged += (child) => needsToRecalculate = true;
+            rectT.ScaleChanged += () => needsToRecalculate = true;
+            rectT.SizeChanged += () => needsToRecalculate = true;
         }
 
         private bool needsToRecalculate;
-        public void Recalculate()
+        protected void Recalculate()
         {
             //TODO: option to stretch the children to fit the layout group?
-            int pos = 0;
+            int absPos = 0;
+            float relPos = 0;
             foreach (var child in RectTransform.Children)
             {
-                if (child.GUIComponent == null)
-                {
-                    // GUIComponent not yet set -> evaluate on the next frame
-                    // This happens when the event is launched in the RectTransform constructor, before the GUIComponent constructor is ready.
-                    needsToRecalculate = true;
-                    break;
-                }
                 if (child.GUIComponent.IgnoreLayoutGroups) { continue; }
                 child.SetPosition(childAnchor);
                 if (isHorizontal)
                 {
-                    child.AbsoluteOffset = new Point(pos, 0);
-                    pos += child.Rect.Width + spacing;
+                    child.RelativeOffset = new Vector2(relPos, 0);
+                    child.AbsoluteOffset = new Point(absPos, 0);
+                    absPos += child.Rect.Width + absoluteSpacing;
                 }
                 else
                 {
-                    child.AbsoluteOffset = new Point(0, pos);
-                    pos += child.Rect.Height + spacing;
+                    child.RelativeOffset = new Vector2(0, relPos);
+                    child.AbsoluteOffset = new Point(0, absPos);
+                    absPos += child.Rect.Height + absoluteSpacing;
                 }
+                relPos += relativeSpacing;
             }
+            needsToRecalculate = false;
         }
 
         protected override void Update(float deltaTime)
@@ -61,7 +92,6 @@ namespace Barotrauma
             if (needsToRecalculate)
             {
                 Recalculate();
-                needsToRecalculate = false;
             }
         }
     }
