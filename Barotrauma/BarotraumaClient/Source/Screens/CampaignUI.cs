@@ -81,7 +81,7 @@ namespace Barotrauma
             tabs[(int)Tab.Map] = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), container.RectTransform, Anchor.Center, Pivot.Center), null);
 
             mapContainer = new GUICustomComponent(new RectTransform(new Vector2(0.74f, 1.0f), tabs[(int)Tab.Map].RectTransform), DrawMap, UpdateMap);
-            locationInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), tabs[(int)Tab.Map].RectTransform, Anchor.TopRight), spacing: 5);
+            locationInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), tabs[(int)Tab.Map].RectTransform, Anchor.TopRight)) { AbsoluteSpacing = 5 };
 
             if (GameMain.Client == null)
             {
