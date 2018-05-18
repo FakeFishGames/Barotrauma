@@ -252,12 +252,7 @@ namespace Barotrauma
             {
                 GameMain.GameSession.EventManager.DebugDrawHUD(spriteBatch);
             }
-
-            if (GUIMessageBox.VisibleBox != null)
-            {
-                GUIMessageBox.VisibleBox.DrawManually(spriteBatch);
-            }
-
+            
             DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
             DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
             DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
