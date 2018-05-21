@@ -562,19 +562,19 @@ namespace Barotrauma
             int width = 400;
             if (toolTipBlock == null || (string)toolTipBlock.userData != ToolTip)
             {
-                toolTipBlock = new GUITextBlock(new Rectangle(0, 0, width, 18), ToolTip, "GUIToolTip", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
-                toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20);
-                toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18 + 7;
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, 18), null), ToolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock.RectTransform.NonScaledSize = new Point(
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20),
+                    toolTipBlock.WrappedText.Split('\n').Length * 18 + 7);
                 toolTipBlock.userData = ToolTip;
-
             }
 
-            toolTipBlock.rect = new Rectangle(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.Rect.Bottom, toolTipBlock.Rect.Width, toolTipBlock.Rect.Height);
-            if (toolTipBlock.rect.Right > GameMain.GraphicsWidth - 10)
+            toolTipBlock.RectTransform.AbsoluteOffset = new Point(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.Rect.Bottom);
+            if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
-                toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Right - (GameMain.GraphicsWidth - 10), 0);
             }
+            toolTipBlock.SetTextPos();
 
             toolTipBlock.DrawManually(spriteBatch);
         }
