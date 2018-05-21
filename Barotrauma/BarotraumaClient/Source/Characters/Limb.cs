@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -17,12 +18,16 @@ namespace Barotrauma
             private set;
         }
 
-        private string hitSoundTag;
+        private float damage, burnt, wetTimer;
+        private float dripParticleTimer;
 
-        public string HitSoundTag
+        public float Burnt
         {
-            get { return hitSoundTag; }
+            get { return burnt; }
+            protected set { burnt = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+
+        public string HitSoundTag { get; private set; }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -34,19 +39,97 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         break;
                     case "sound":
-                        hitSoundTag = subElement.GetAttributeString("tag", "");
-                        if (string.IsNullOrWhiteSpace(hitSoundTag))
+                        HitSoundTag = subElement.GetAttributeString("tag", "");
+                        if (string.IsNullOrWhiteSpace(HitSoundTag))
                         {
                             //legacy support
-                            hitSoundTag = subElement.GetAttributeString("file", "");
+                            HitSoundTag = subElement.GetAttributeString("file", "");
                         }
                         break;
                 }
             }
         }
 
-        partial void UpdateProjSpecific()
+        partial void AddDamageProjSpecific(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
+            if (playSound)
+            {
+                string damageSoundType = (damageType == DamageType.Blunt) ? "LimbBlunt" : "LimbSlash";
+
+                foreach (DamageModifier damageModifier in appliedDamageModifiers)
+                {
+                    if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
+                    {
+                        damageSoundType = damageModifier.DamageSound;
+                        break;
+                    }
+                }
+
+                SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
+            }
+
+            if (character.UseBloodParticles)
+            {
+                float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
+                float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
+
+                for (int i = 0; i < bloodParticleAmount; i++)
+                {
+                    var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
+                    if (blood != null)
+                    {
+                        blood.Size *= bloodParticleSize;
+                    }
+                }
+
+                if (bloodParticleAmount > 0 && character.CurrentHull != null)
+                {
+                    character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+                }
+            }
+
+            if (damageType == DamageType.Burn)
+            {
+                Burnt += amount * 10.0f;
+            }
+
+            damage += Math.Max(amount, bleedingAmount) / character.MaxHealth * 100.0f;
+
+        }
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            if (!body.Enabled) return;
+
+            if (!character.IsDead)
+            {
+                damage = Math.Max(0.0f, damage - deltaTime * 0.1f);
+                Burnt -= deltaTime;
+            }
+
+            if (inWater)
+            {
+                wetTimer = 1.0f;
+            }
+            else
+            {
+                wetTimer -= deltaTime * 0.1f;
+                if (wetTimer > 0.0f)
+                {
+                    dripParticleTimer += wetTimer * deltaTime * Mass * (wetTimer > 0.9f ? 50.0f : 5.0f);
+                    if (dripParticleTimer > 1.0f)
+                    {
+                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.width, body.height) : body.radius;
+                        GameMain.ParticleManager.CreateParticle(
+                            "waterdrop", 
+                            WorldPosition + Rand.Vector(Rand.Range(0.0f, ConvertUnits.ToDisplayUnits(dropRadius))), 
+                            ConvertUnits.ToDisplayUnits(body.LinearVelocity), 
+                            0, character.CurrentHull);
+                        dripParticleTimer = 0.0f;
+                    }
+                }
+            }
+
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
@@ -73,10 +156,10 @@ namespace Barotrauma
 
             body.Dir = Dir;
 
-            bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
+            bool hideLimb = WearingItems.Any(w => w != null && w.HideLimb);
             if (!hideLimb)
             {
-                body.Draw(spriteBatch, sprite, color, null, scale);
+                body.Draw(spriteBatch, sprite, color, null, Scale);
             }
             else
             {
@@ -89,7 +172,7 @@ namespace Barotrauma
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
 
-            foreach (WearableSprite wearable in wearingItems)
+            foreach (WearableSprite wearable in WearingItems)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
@@ -115,7 +198,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color, origin,
                     -body.DrawRotation,
-                    scale, spriteEffect, depth);
+                    Scale, spriteEffect, depth);
             }
 
             if (damage > 0.0f && damagedSprite != null && !hideLimb)
