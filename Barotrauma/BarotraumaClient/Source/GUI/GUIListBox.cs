@@ -89,6 +89,7 @@ namespace Barotrauma
             }
         }
         
+        [Obsolete("Use RectTransform instead of Rect")]
         public override Rectangle Rect
         {
             get
