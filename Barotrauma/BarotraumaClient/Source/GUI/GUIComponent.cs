@@ -570,7 +570,7 @@ namespace Barotrauma
 
             }
 
-            toolTipBlock.rect = new Rectangle(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
+            toolTipBlock.rect = new Rectangle(GUI.MouseOn.Rect.Center.X, GUI.MouseOn.Rect.Bottom, toolTipBlock.Rect.Width, toolTipBlock.Rect.Height);
             if (toolTipBlock.rect.Right > GameMain.GraphicsWidth - 10)
             {
                 toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);

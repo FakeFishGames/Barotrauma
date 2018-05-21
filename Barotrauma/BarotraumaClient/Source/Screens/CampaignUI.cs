@@ -128,6 +128,7 @@ namespace Barotrauma
                 }, category.ToString());
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
+                categoryButton.ClampMouseRectToParent = false;
 
                 if (category == MapEntityCategory.Equipment)
                 {
@@ -155,19 +156,19 @@ namespace Barotrauma
 
             if (location.HireManager == null)
             {
-                hireList.ClearChildren();
+                hireList.Content.ClearChildren();
                 hireList.Enabled = false;
 
-                new GUITextBlock(new RectTransform(Vector2.One, hireList.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(Vector2.One, hireList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center);
                 return;
             }
 
             hireList.Enabled = true;
-            hireList.ClearChildren();
+            hireList.Content.ClearChildren();
 
             foreach (CharacterInfo c in location.HireManager.availableCharacters)
             {
-                var frame = c.CreateCharacterFrame(hireList, c.Name + " (" + c.Job.Name + ")", c);
+                var frame = c.CreateCharacterFrame(hireList.Content, c.Name + " (" + c.Job.Name + ")", c);
                 new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
             }
         }
@@ -184,10 +185,10 @@ namespace Barotrauma
         
         public void UpdateCharacterLists()
         {
-            characterList.ClearChildren();
+            characterList.Content.ClearChildren();
             foreach (CharacterInfo c in GameMain.GameSession.CrewManager.GetCharacterInfos())
             {
-                c.CreateCharacterFrame(characterList, c.Name + " (" + c.Job.Name + ") ", c);
+                c.CreateCharacterFrame(characterList.Content, c.Name + " (" + c.Job.Name + ") ", c);
             }
         }
 
@@ -228,7 +229,7 @@ namespace Barotrauma
 
         private void CreateItemFrame(ItemPrefab ip, PriceInfo priceInfo, GUIListBox listBox, int width)
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, 50), listBox.RectTransform), style: "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, 50), listBox.Content.RectTransform), style: "ListBoxElement")
             {
                 UserData = ip,
                 ToolTip = ip.Description
@@ -296,7 +297,7 @@ namespace Barotrauma
 
         private void RefreshItemTab()
         {
-            selectedItemList.ClearChildren();
+            selectedItemList.Content.ClearChildren();
             foreach (ItemPrefab ip in campaign.CargoManager.PurchasedItems)
             {
                 CreateItemFrame(ip, ip.GetPrice(campaign.Map.CurrentLocation), selectedItemList, selectedItemList.Rect.Width);
@@ -384,7 +385,7 @@ namespace Barotrauma
                 characterInfo.CreateInfoFrame(characterPreviewFrame);
             }
 
-            if (component.Parent == hireList)
+            if (component.Parent == hireList.Content)
             {
                 GUIButton hireButton = new GUIButton(new RectTransform(new Point(100, 20), characterPreviewFrame.RectTransform, Anchor.BottomCenter), TextManager.Get("HireButton"));
                 hireButton.Enabled = campaign.Money >= characterInfo.Salary;
