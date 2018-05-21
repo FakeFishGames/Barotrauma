@@ -553,7 +553,6 @@ namespace Barotrauma
 
         /// <summary>
         /// Creates and draws a tooltip.
-        /// TODO: use the RectTransform rect? Needs refactoring, because the setter is not accessible.
         /// </summary>
         public void DrawToolTip(SpriteBatch spriteBatch)
         {

@@ -65,10 +65,6 @@ namespace Barotrauma.Networking
             {
                 settingsFrame.DrawManually(spriteBatch);
             }
-            else if (log.LogFrame != null)
-            {
-                log.LogFrame.DrawManually(spriteBatch);
-            }
 
             if (!ShowNetStats) return;
 

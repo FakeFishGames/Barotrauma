@@ -342,7 +342,6 @@ namespace Barotrauma.Networking
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.UpdateManually(deltaTime);
-            if (log.LogFrame != null) log.LogFrame.UpdateManually(deltaTime);
 #endif
             
             if (!started) return;
