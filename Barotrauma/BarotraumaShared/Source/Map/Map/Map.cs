@@ -81,13 +81,18 @@ namespace Barotrauma
 
             connections = new List<LocationConnection>();
 
-#if CLIENT
+#if CLIENT       
             if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
             if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
 
             if (circleTexture == null) circleTexture = GUI.CreateCircle(512, true);
-     
+
+            //TODO: move this to xml
+            for (int i = 1; i < 17; i++)
+            {
+                mapPieces.Add(new Sprite("Content/Map/MapPieces/btMAP_Test_" + i.ToString().PadLeft(2, '0') + ".png", Vector2.Zero));
+            }     
 #endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 

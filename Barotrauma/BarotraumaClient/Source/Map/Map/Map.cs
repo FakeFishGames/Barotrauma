@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private static Texture2D circleTexture;
 
+        private static List<Sprite> mapPieces = new List<Sprite>();
+
         class MapAnim
         {
             public Location StartLocation;
@@ -52,6 +54,23 @@ namespace Barotrauma
         private float zoom = 3.0f;
 
         private Rectangle borders;
+
+        static Vector2 MapTileSpriteSize = new Vector2(200.0f, 200.0f);
+        static Vector2 MapTileSize = new Vector2(MapTileSpriteSize.X * 1.4f, MapTileSpriteSize.Y * 4.0f);
+
+        private MapTile[,] mapTiles;
+
+        struct MapTile
+        {
+            public readonly Sprite Sprite;
+            public SpriteEffects SpriteEffect;
+
+            public MapTile(Sprite sprite, SpriteEffects spriteEffect)
+            {
+                Sprite = sprite;
+                SpriteEffect = spriteEffect;
+            }
+        }
         
         partial void InitProjectSpecific()
         {
@@ -64,6 +83,18 @@ namespace Barotrauma
                 (int)locations.Max(l => l.MapPosition.Y));
             borders.Width = borders.Width - borders.X;
             borders.Height = borders.Height - borders.Y;
+
+            mapTiles = new MapTile[(int)Math.Ceiling(borders.Width / MapTileSize.X), (int)Math.Ceiling(borders.Width / MapTileSize.Y)];
+
+            for (int x = 0; x < mapTiles.GetLength(0); x++)
+            {
+                for (int y = 0; y < mapTiles.GetLength(1); y++)
+                {
+                    mapTiles[x, y] = new MapTile(
+                        mapPieces[Rand.Int(mapPieces.Count)], Rand.Range(0.0f, 1.0f) < 0.5f ? 
+                        SpriteEffects.FlipVertically : SpriteEffects.None);
+                }
+            }
 
             drawOffset = -currentLocation.MapPosition;
         }
@@ -204,14 +235,31 @@ namespace Barotrauma
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
 
-            Vector2 iceTextureOffset = new Vector2(-drawOffset.X * zoom - rect.Width / 2, -drawOffset.Y * zoom - rect.Height / 2);
+            /*Vector2 iceTextureOffset = new Vector2(-drawOffset.X * zoom - rect.Width / 2, -drawOffset.Y * zoom - rect.Height / 2);
             while (iceTextureOffset.X < 0) iceTextureOffset.X += iceTexture.SourceRect.Width;
             while (iceTextureOffset.Y < 0) iceTextureOffset.Y += iceTexture.SourceRect.Height;
 
             iceTexture.DrawTiled(spriteBatch,
                 new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height),
                 color: Color.White * 0.8f, startOffset: iceTextureOffset.ToPoint(),
-                textureScale: new Vector2(zoom, zoom) * 0.3f);
+                textureScale: new Vector2(zoom, zoom) * 0.3f);*/
+
+            GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.CadetBlue, true);
+
+            for (int x = 0; x < mapTiles.GetLength(0); x++)
+            {
+                for (int y = 0; y < mapTiles.GetLength(1); y++)
+                {
+                    Vector2 mapPos = new Vector2(
+                        borders.Location.X + x * MapTileSize.X + ((y % 2 == 0) ? 0.0f : MapTileSize.X * 0.5f), 
+                        borders.Location.Y + y * MapTileSize.Y);
+                    Vector2 scale = new Vector2(
+                        MapTileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
+                        MapTileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
+                    mapTiles[x, y].Sprite.Draw(spriteBatch, rectCenter + (mapPos + drawOffset) * zoom, Color.White,
+                        origin: new Vector2(256.0f, 256.0f), rotate: 0, scale: scale * zoom, spriteEffect: mapTiles[x, y].SpriteEffect);
+                }
+            }
 
             for (int i = 0; i < locations.Count; i++)
             {

@@ -433,6 +433,54 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\LocationPortraits\WorkCamp_Mining1.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_01.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_02.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_03.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_04.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_05.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_06.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_07.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_08.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_09.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_10.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_11.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_12.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_13.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_14.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_15.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Map\MapPieces\btMAP_Test_16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\SubRearBow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1816,7 +1864,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntityPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Location.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationType.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Map.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Md5Hash.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Structure.cs" />
