@@ -645,14 +645,12 @@ namespace Barotrauma
                     infoButton.OnClicked += ViewJobInfo;
 
                     GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "", "", jobText);
-                    //TODO: make GUIImages align correctly when scaled/rotated 
-                    //so there's no need to do this ↓
-                    new GUIImage(new Rectangle(3, 2, 0, 0), GUI.Arrow, Alignment.Center, upButton).Scale = 0.6f;
+                    new GUIImage(new Rectangle(0, 0, 0, 0), GUI.Arrow, Alignment.Center, upButton).Scale = 0.6f;
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
                     GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "", "", jobText);
-                    var downArrow = new GUIImage(new Rectangle(13, 14, 0, 0), GUI.Arrow, Alignment.Center, downButton);
+                    var downArrow = new GUIImage(new Rectangle(0, 0, 0, 0), GUI.Arrow, Alignment.Center, downButton);
                     downArrow.Rotation = MathHelper.Pi;
                     downArrow.Scale = 0.6f;
 
@@ -1171,10 +1169,6 @@ namespace Barotrauma
             {
                 campaignSetupUI.AddToGUIUpdateList();
             }
-            else if (jobInfoFrame != null)
-            {
-                jobInfoFrame.AddToGUIUpdateList();
-            }
             else if (playerFrame != null)
             {
                 playerFrame.AddToGUIUpdateList();
@@ -1183,6 +1177,8 @@ namespace Barotrauma
             {
                 menu.AddToGUIUpdateList();
             }
+
+            jobInfoFrame?.AddToGUIUpdateList();
         }
         
         public List<Submarine> GetSubList()
@@ -1200,11 +1196,7 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (jobInfoFrame != null)
-            {
-                jobInfoFrame.UpdateManually((float)deltaTime);
-            }
-            else if (playerFrame != null)
+            if (playerFrame != null)
             {
                 playerFrame.UpdateManually((float)deltaTime);
             }
@@ -1244,9 +1236,7 @@ namespace Barotrauma
             }
 
             menu.DrawManually(spriteBatch);
-
-            if (jobInfoFrame != null) jobInfoFrame.DrawManually(spriteBatch);
-            
+                        
             if (campaignSetupUI != null)
             {
                 campaignSetupUI.DrawManually(spriteBatch);
@@ -1440,8 +1430,11 @@ namespace Barotrauma
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", jobInfoFrame.Children[0]);
-            closeButton.OnClicked = CloseJobInfo;
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.Children[0].Children[0].RectTransform, Anchor.BottomRight),
+                TextManager.Get("Close"))
+            {
+                OnClicked = CloseJobInfo
+            };
             return true;
         }
 
