@@ -35,8 +35,7 @@
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -55,13 +54,12 @@
     </ConnectionPanel>
   </Item>
 
-  	    <Item
+  <Item
     name="Rear Railgun Controller"
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true" >
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="188,0,57,96"/>
     
@@ -83,8 +81,7 @@
   <Item
     name="Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -95,11 +92,10 @@
     </ItemContainer>      
   </Item>
 
-<Item
+  <Item
     name="Railgun Single Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
 
@@ -110,11 +106,10 @@
     </ItemContainer>      
   </Item>
   
-    <Item
+  <Item
     name="Forward Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
 
@@ -125,11 +120,10 @@
     </ItemContainer>      
   </Item>
   
-      <Item
+  <Item
     name="Rear Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
 
