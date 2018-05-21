@@ -139,25 +139,27 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
             }
-            
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
             {
                 long currTicks = stopwatch.ElapsedTicks;
-                Timing.Accumulator += (double)(currTicks - prevTicks) / frequency;
+                double elapsedTime = (currTicks - prevTicks) / frequency;
+                Timing.Accumulator += elapsedTime;
+                Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
-                while (Timing.Accumulator>=Timing.Step)
+                while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
                     if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
-            
+
                     Timing.Accumulator -= Timing.Step;
                 }
-                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency)*1000.0);
-                Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime)/2,0));
+                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
+                Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime) / 2, 0));
             }
             stopwatch.Stop();
 
