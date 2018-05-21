@@ -54,14 +54,12 @@ namespace Barotrauma.Items.Components
             {
                 if (textBlock == null)
                 {
-                    textBlock = new GUITextBlock(new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height), "",
-                        Color.Transparent, textColor,
-                        Alignment.TopLeft, Alignment.Center,
-                        null, null, true);
-                    textBlock.Font = GUI.SmallFont;
-                    textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                    textBlock.TextDepth = item.Sprite.Depth - 0.0001f;
-                    textBlock.TextScale = TextScale;
+                    textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
+                        textColor: textColor, font: GUI.SmallFont, textAlignment: Alignment.Center, wrap: true, style: null)
+                    {
+                        TextDepth = item.Sprite.Depth - 0.0001f,
+                        TextScale = TextScale
+                    };
                 }
                 return textBlock;
             }
@@ -91,9 +89,8 @@ namespace Barotrauma.Items.Components
             {
                 return;
             }
-
-            // TODO
-            //textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2();
+            
+            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2();
             textBlock.DrawManually(spriteBatch);
         }
     }
