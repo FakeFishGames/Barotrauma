@@ -486,11 +486,11 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-            
+
             Content.DrawManually(spriteBatch, alsoChildren: false);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
+            if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, Content.Rect);
 
             var children = Content.Children;
             int lastVisible = 0;
@@ -506,10 +506,10 @@ namespace Barotrauma
                 lastVisible = i;
                 child.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
             }
-            
-            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
-           if (ScrollBarEnabled && !scrollBarHidden) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+            if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
+            if (ScrollBarEnabled && !scrollBarHidden) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
 
             //// Debug
             //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
