@@ -639,24 +639,27 @@ namespace Barotrauma
                 matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
                     Item.ItemList.FindAll(it => it.Name == order.ItemName) :
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
-                orderTargetFrame = new GUIFrame(new Rectangle(orderButton.Rect.Center.X, orderButton.Rect.Center.Y, 200, matchingItems.Count * (order.Options.Length + 1) * 30 + 20), "InnerFrame", null);
             }
             else
             {
                 matchingItems.Add(null);
-                orderTargetFrame = new GUIFrame(new Rectangle(orderButton.Rect.Center.X, orderButton.Rect.Center.Y, 200, (order.Options.Length + 1) * 30 + 20), "InnerFrame", null);
             }
-            orderTargetFrame.Padding = Vector4.One * 10;
+            orderTargetFrame = new GUIFrame(new RectTransform(new Point(200, matchingItems.Count * (order.Options.Length + 1) * 20 + 10), GUI.Canvas) { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
+                style: "InnerFrame");
 
-            int y = 0;
+            var orderContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), orderTargetFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
             foreach (Item item in matchingItems)
             {
-                new GUITextBlock(new Rectangle(0, y, 0, 20), item != null ? item.Name : order.Name, "", Alignment.TopLeft, Alignment.CenterLeft, orderTargetFrame);
-                y += 20;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), orderContainer.RectTransform), item != null ? item.Name : order.Name);
                 
                 foreach (string orderOption in order.Options)
                 {
-                    var optionButton = new GUIButton(new Rectangle(10, y, 0, 30), orderOption, null, Alignment.TopLeft, Alignment.TopLeft, "GUITextBox", orderTargetFrame);
+                    var optionButton = new GUIButton(new RectTransform(new Point(orderContainer.Rect.Width, 20), orderContainer.RectTransform),
+                        orderOption, style: "GUITextBox");
 
                     optionButton.UserData = item == null ? order : new Order(order, item, item.components.Find(ic => ic.GetType() == order.ItemComponentType));
                     optionButton.OnClicked += (btn, userData) =>
@@ -666,9 +669,6 @@ namespace Barotrauma
                         orderTargetFrame = null;
                         return true;
                     };
-
-                    orderButton.Padding = Vector4.Zero;
-                    y += 30;
                 }
             }
         }
@@ -678,16 +678,19 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             guiFrame.AddToGUIUpdateList();
-            if (orderTargetFrame != null) orderTargetFrame.AddToGUIUpdateList();
+            orderTargetFrame?.AddToGUIUpdateList();
 
-            reportButtonContainer.Visible = reportButtonContainer.CountChildren > 0 && ReportButtonsVisible();
+            reportButtonContainer.Visible = reportButtonContainer.Content.CountChildren > 0 && ReportButtonsVisible();
         }
 
         partial void UpdateProjectSpecific(float deltaTime)
         {
             //guiFrame.UpdateManually(deltaTime);
             if (chatBox != null) chatBox.Update(deltaTime);
-            
+
+            crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
+            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
+
             bool crewMenuOpen = toggleCrewAreaOpen || orderTargetFrame != null;
             int toggleButtonX = Math.Min((int)crewAreaOffset.X + crewAreaWidth + characterInfoWidth, crewAreaWidth + toggleCrewButton.Rect.Width);
             if (crewArea.Rect.Contains(PlayerInput.MousePosition))
@@ -755,27 +758,10 @@ namespace Barotrauma
             {
                 Rectangle hoverArea = orderTargetFrame.Rect;
                 hoverArea.Inflate(100, 100);
-                if (!hoverArea.Contains(PlayerInput.MousePosition))
-                {
-                    orderTargetFrame = null;
-                }
-                else
-                {
-                    orderTargetFrame.UpdateManually(deltaTime);
-                }
+                if (!hoverArea.Contains(PlayerInput.MousePosition)) orderTargetFrame = null;                
             }
         }
-
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
-            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
-            
-            //guiFrame.DrawManually(spriteBatch);
-
-            if (orderTargetFrame != null) orderTargetFrame.DrawManually(spriteBatch);
-        }
-
+        
         #endregion
 
         /// <summary>
@@ -897,20 +883,23 @@ namespace Barotrauma
             return CharacterHealth.OpenHealthWindow == null;
         }
 
-        private GUIButton CreateReportButton(Rectangle rect, Order order, GUIComponent parent, bool createSymbol = true)
+        private GUIButton CreateReportButton(Order order, GUIComponent parent, bool createSymbol = true)
         {
-            var orderButton = new GUIButton(rect, order.Name, null, Alignment.TopCenter, Alignment.Center, "GUITextBox", parent);
-            orderButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            orderButton.UserData = order;
-            orderButton.OnClicked = ReportButtonClicked;
+            var orderButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform),
+                 order.Name, style: "GUITextBox")
+            {
+                UserData = order,
+                OnClicked = ReportButtonClicked
+            };
 
             if (createSymbol)
             {
-                var symbol = new GUIImage(new Rectangle(0, -60, 64, 64), order.SymbolSprite, Alignment.TopCenter, orderButton);
-                symbol.Color = order.Color;
-
-                orderButton.Children.Insert(0, symbol);
-                orderButton.Children.RemoveAt(orderButton.Children.Count - 1);
+                var symbol = new GUIImage(new RectTransform(new Point(64, 64), orderButton.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(-50, 0) },
+                    order.SymbolSprite)
+                {
+                    Color = order.Color
+                };
+                orderButton.RectTransform.SetAsFirstChild();
             }
 
             return orderButton;
@@ -932,7 +921,7 @@ namespace Barotrauma
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {
             Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
-            var existingButton = reportButtonContainer.GetChild(order);
+            var existingButton = reportButtonContainer.Content.GetChild(order);
 
             //already reported, disable the button
             if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
@@ -946,12 +935,12 @@ namespace Barotrauma
             {
                 if (existingButton == null)
                 {
-                    CreateReportButton(new Rectangle(0, 0, 0, 20), order, reportButtonContainer, true);
+                    CreateReportButton(order, reportButtonContainer.Content, true);
                 }
             }
             else
             {
-                if (existingButton != null) reportButtonContainer.RemoveChild(existingButton);
+                if (existingButton != null) reportButtonContainer.Content.RemoveChild(existingButton);
             }
         }
 

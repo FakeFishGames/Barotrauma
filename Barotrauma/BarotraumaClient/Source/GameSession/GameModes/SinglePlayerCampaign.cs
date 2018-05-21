@@ -96,9 +96,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!isRunning|| GUI.DisableHUD) return;
-
-            CrewManager.Draw(spriteBatch);
-
+            
             if (Submarine.MainSub == null) return;
 
             Submarine leavingSub = GetLeavingSub();
