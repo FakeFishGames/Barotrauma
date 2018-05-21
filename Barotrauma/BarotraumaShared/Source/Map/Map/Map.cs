@@ -91,7 +91,7 @@ namespace Barotrauma
             //TODO: move this to xml
             for (int i = 1; i < 17; i++)
             {
-                mapPieces.Add(new Sprite("Content/Map/MapPieces/btMAP_Test_" + i.ToString().PadLeft(2, '0') + ".png", Vector2.Zero));
+                mapPieces.Add(new Sprite("Content/Map/MapPieces/btMAP_Test_" + i.ToString().PadLeft(2, '0') + ".png", Vector2.Zero, preMultiplyAlpha: false));
             }     
 #endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
