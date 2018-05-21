@@ -205,9 +205,7 @@ namespace Barotrauma.Items.Components
                     if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
 
                     string style = subElement.GetAttributeString("style", "");
-
-                    Vector4 color = subElement.GetAttributeVector4("color", Vector4.One);
-
+                    
                     Alignment alignment = Alignment.Center;
                     try
                     {
@@ -219,9 +217,12 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Error in " + subElement.Parent + "! \"" + subElement.Parent.Attribute("type").Value + "\" is not a valid alignment");
                     }
 
+                    Color? color = null;                        
+                    if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
+
                     guiFrame = new GUIFrame(
                         new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W),
-                        new Color(color.X, color.Y, color.Z) * color.W,
+                        color,
                         alignment, style);
 
                     break;
