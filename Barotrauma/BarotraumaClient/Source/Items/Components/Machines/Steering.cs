@@ -82,18 +82,13 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            //if (voltage < minVoltage) return;
-
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-
-            GuiFrame.DrawManually(spriteBatch);
-
+            
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
-            //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
 
             if (item.Submarine != null && Level.Loaded != null)
             {
