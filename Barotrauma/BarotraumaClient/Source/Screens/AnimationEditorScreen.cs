@@ -15,7 +15,6 @@ namespace Barotrauma
     {
         private Camera cam;
         public override Camera Cam => cam;
-        private GUIFrame gui;
         private Character character;
 
         public override void Select()
@@ -39,26 +38,31 @@ namespace Barotrauma
             };
             cam.UpdateTransform(true);
 
-            gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
+            var frame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
 
-            var buttons = GUI.CreateButtons(1, new Vector2(0.9f, 0.1f), gui.RectTransform, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 30);
-            for (int i = 0; i < buttons.Count; i++)
+            // TODO: use tick boxes?
+            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Swim");
+            swimButton.OnClicked += (b, obj) =>
             {
-                var button = buttons[i];
-                switch (i)
-                {
-                    case 0:
-                        button.Text = "Swim";
-                        button.OnClicked += (b, obj) =>
-                        {
-                            character.AnimController.forceStanding = !character.AnimController.forceStanding;
-                            button.Text = character.AnimController.forceStanding ? "Swim" : "Stand";
-                            return true;
-                        };
-                        break;
-                }
-
-            }
+                character.AnimController.forceStanding = !character.AnimController.forceStanding;
+                swimButton.Text = character.AnimController.forceStanding ? "Swim" : "Stand";
+                return true;
+            };
+            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Move");
+            moveButton.OnClicked += (b, obj) =>
+            {
+                character.OverrideMovement = character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
+                moveButton.Text = character.OverrideMovement.HasValue ? "Stop" : "Move";
+                return true;
+            };
+            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Walk");
+            runButton.OnClicked += (b, obj) =>
+            {
+                character.ForceRun = !character.ForceRun;
+                runButton.Text = character.ForceRun ? "Walk" : "Run";
+                return true;
+            };
         }
 
         public override void AddToGUIUpdateList()

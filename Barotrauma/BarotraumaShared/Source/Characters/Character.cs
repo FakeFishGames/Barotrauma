@@ -851,13 +851,24 @@ namespace Barotrauma
 
         float findFocusedTimer;
 
+        // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
+        public Vector2? OverrideMovement { get; set; }
+        public bool ForceRun { get; set; }
+
         public Vector2 GetTargetMovement()
         {
             Vector2 targetMovement = Vector2.Zero;
-            if (IsKeyDown(InputType.Left))  targetMovement.X -= 1.0f;
-            if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
-            if (IsKeyDown(InputType.Up))    targetMovement.Y += 1.0f;
-            if (IsKeyDown(InputType.Down))  targetMovement.Y -= 1.0f;
+            if (OverrideMovement.HasValue)
+            {
+                targetMovement = OverrideMovement.Value;
+            }
+            else
+            {
+                if (IsKeyDown(InputType.Left)) targetMovement.X -= 1.0f;
+                if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
+                if (IsKeyDown(InputType.Up)) targetMovement.Y += 1.0f;
+                if (IsKeyDown(InputType.Down)) targetMovement.Y -= 1.0f;
+            }
 
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
             //so the movement can't be normalized or the Character would walk slower when pressing down/up
@@ -867,7 +878,7 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (IsKeyDown(InputType.Run))
+            if (IsKeyDown(InputType.Run) || ForceRun)
             {
                 //can't run if
                 //  - dragging someone
