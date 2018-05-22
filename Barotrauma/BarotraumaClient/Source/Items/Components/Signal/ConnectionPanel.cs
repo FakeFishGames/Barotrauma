@@ -21,8 +21,6 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             if (character != Character.Controlled || character != user) return;
-
-            GuiFrame?.UpdateManually(deltaTime);
             
             if (HighlightedWire != null)
             {
@@ -36,9 +34,7 @@ namespace Barotrauma.Items.Components
         {
             if (character != Character.Controlled || character != user) return;
             if (GuiFrame == null) return;
-
-            GuiFrame.DrawManually(spriteBatch);
-
+            
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, character);
 

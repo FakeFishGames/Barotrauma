@@ -19,12 +19,12 @@ namespace Barotrauma
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (Visible) onDraw(spriteBatch, this);
+            if (Visible) onDraw?.Invoke(spriteBatch, this);
         }
 
         protected override void Update(float deltaTime)
         {
-            if (Visible) onUpdate(deltaTime, this);
+            if (Visible) onUpdate?.Invoke(deltaTime, this);
         }
     }
 }

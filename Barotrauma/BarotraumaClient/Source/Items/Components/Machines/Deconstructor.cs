@@ -6,24 +6,14 @@ namespace Barotrauma.Items.Components
 {
     partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
-        GUIProgressBar progressBar;
-        GUIButton activateButton;
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            GuiFrame.DrawManually(spriteBatch);
-        }
-
+        private GUIProgressBar progressBar;
+        private GUIButton activateButton;
+        
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
-        }
-
+        
         private bool ToggleActive(GUIButton button, object obj)
         {
             SetActive(!IsActive, Character.Controlled);

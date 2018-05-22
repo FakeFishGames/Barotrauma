@@ -72,9 +72,11 @@ namespace Barotrauma
 
             // TODO: refactor using the RectTransform
 
-            campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
-            campaignSetupUI.LoadGame = LoadGame;
-            campaignSetupUI.StartNewGame = StartGame;
+            campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame])
+            {
+                LoadGame = LoadGame,
+                StartNewGame = StartGame
+            };
 
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
 
@@ -83,7 +85,6 @@ namespace Barotrauma
             //----------------------------------------------------------------------
 
             menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
-            menuTabs[(int)Tab.Tutorials].Padding = new Vector4(20.0f, 60.0f, 20.0f, 20.0f);
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
@@ -233,9 +234,7 @@ namespace Barotrauma
 
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
-            int currMaxPlayers = 8;
-
-            int.TryParse(maxPlayersBox.Text, out currMaxPlayers);
+            int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
             currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers + (int)button.UserData, 1, NetConfig.MaxPlayers);
 
             maxPlayersBox.Text = currMaxPlayers.ToString();
@@ -252,8 +251,7 @@ namespace Barotrauma
                 return false;
             }
 
-            int port;
-            if (!int.TryParse(portBox.Text, out port) || port < 0 || port > 65535)
+            if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
             {
                 portBox.Text = NetConfig.DefaultPort.ToString();
                 portBox.Flash();
@@ -262,7 +260,6 @@ namespace Barotrauma
             }
 
             GameMain.NetLobbyScreen = new NetLobbyScreen();
-
             try
             {
                 GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
@@ -274,7 +271,6 @@ namespace Barotrauma
             }
 
             GameMain.NetLobbyScreen.IsServer = true;
-            //Game1.NetLobbyScreen.Select();
             return true;
         }
 
@@ -320,7 +316,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            GUI.Draw((float)deltaTime, spriteBatch, null);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             //GUI.DrawString(spriteBatch, new Vector2(500, 100), "selected tab " + selectedTab, Color.White);
 

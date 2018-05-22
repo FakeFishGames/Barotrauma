@@ -74,9 +74,7 @@ namespace Barotrauma.Items.Components
         {
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-
-            GuiFrame.DrawManually(spriteBatch);
-
+            
             GUI.Font.DrawString(spriteBatch, TextManager.Get("PumpSpeed") + ": " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
 
         }
@@ -85,12 +83,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
-        }
-
+        
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this

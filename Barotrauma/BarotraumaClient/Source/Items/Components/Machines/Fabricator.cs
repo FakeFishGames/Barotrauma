@@ -208,8 +208,6 @@ namespace Barotrauma.Items.Components
 
                 if (itemsChanged) CheckFabricableItems(character);
             }
-
-            GuiFrame.UpdateManually(deltaTime);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

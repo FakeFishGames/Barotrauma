@@ -156,7 +156,7 @@ namespace Barotrauma
             GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
             bar = new GUIButton(new RectTransform(Vector2.One, rectT), color: color);
-            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtoneVertical", this);
+            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();

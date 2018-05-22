@@ -1739,7 +1739,7 @@ namespace Barotrauma
 
             if (tutorial != null) tutorial.Draw(spriteBatch);
 
-            GUI.Draw((float)deltaTime, spriteBatch, cam);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
                                               
