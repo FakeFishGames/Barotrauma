@@ -2,10 +2,12 @@
 using System;
 using System.Globalization;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Engine : Powered
+    partial class Engine : Powered, IServerSerializable, IClientSerializable
     {
         private float force;
 
@@ -16,6 +18,8 @@ namespace Barotrauma.Items.Components
         private Attack propellerDamage;
 
         private float damageTimer;
+
+        private bool hasPower;
         
         [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
         Serialize(2000.0f, true)]
@@ -50,36 +54,7 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-
-#if CLIENT
-            var button = new GUIButton(new Rectangle(160, 50, 30, 30), "-", "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
-            {
-                targetForce -= 1.0f;
-                
-                return true;
-            };
-
-            button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
-            {
-                targetForce += 1.0f;
-                
-                return true;
-            };
-
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "propellersprite":
-                        propellerSprite = new SpriteSheet(subElement);
-                        AnimSpeed = subElement.GetAttributeFloat("animspeed", 1.0f);
-                        break;
-                }
-            }
-#endif
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -89,7 +64,11 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
     
         public override void Update(float deltaTime, Camera cam)
         {
@@ -101,7 +80,9 @@ namespace Barotrauma.Items.Components
             if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
-            
+
+            hasPower = voltage > minVoltage;
+
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
@@ -162,12 +143,35 @@ namespace Barotrauma.Items.Components
 
             if (connection.Name == "set_force")
             {
-                float tempForce;
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out tempForce))
+                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                 }
             }  
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            //force can only be adjusted at 10% intervals -> no need for more accuracy than this
+            msg.WriteRangedInteger(-10, 10, (int)(targetForce / 10.0f));
+        }
+
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        {
+            float newTargetForce = msg.ReadRangedInteger(-10, 10) * 10.0f;
+
+            if (item.CanClientAccess(c))
+            {
+                if (Math.Abs(newTargetForce - targetForce) > 0.01f)
+                {
+                    GameServer.Log(c.Character.LogName + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
+                }
+
+                targetForce = newTargetForce;
+            }
+
+            //notify all clients of the changed state
+            item.CreateServerEvent(this);
         }
     }
 }

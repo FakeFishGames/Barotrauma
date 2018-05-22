@@ -25,8 +25,7 @@ namespace Barotrauma.Items.Components
             var sliderHandle = isActiveSlider.GetChild<GUIButton>();
             sliderHandle.RectTransform.AbsoluteOffset -= new Point((88 - sliderHandle.Rect.Width) / 2, 0);
             sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
-
-            //new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PumpRunning"), Alignment.TopLeft, GuiFrame);
+            
             isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 bool active = scrollBar.BarScroll < 0.5f;
