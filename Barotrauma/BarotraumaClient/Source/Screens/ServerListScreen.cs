@@ -399,7 +399,7 @@ namespace Barotrauma
 
             menu.DrawManually(spriteBatch);
             
-            GUI.Draw((float)deltaTime, spriteBatch, null);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
         }

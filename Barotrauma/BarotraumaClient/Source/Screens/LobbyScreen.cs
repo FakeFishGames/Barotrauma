@@ -151,7 +151,7 @@ namespace Barotrauma
                 UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
             }*/
 
-            GUI.Draw((float)deltaTime, spriteBatch, null);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
 
