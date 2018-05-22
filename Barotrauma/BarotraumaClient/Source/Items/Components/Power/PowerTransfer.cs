@@ -1,36 +1,69 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        private GUITickBox powerIndicator;
+        private GUITickBox highVoltageIndicator;
+        private GUITickBox lowVoltageIndicator;
+
+        partial void InitProjectSpecific(XElement element)
         {
-            if (!canBeSelected) return;
+            if (GuiFrame == null) return;
 
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.7f), GuiFrame.RectTransform, Anchor.Center), style: null);
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform),
+                TextManager.Get("PowerTransferPowered"), style: "IndicatorLightGreen")
+            {
+                CanBeFocused = false
+            };
+            highVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 40) },
+                TextManager.Get("PowerTransferHighVoltage"), style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            lowVoltageIndicator = new GUITickBox(new RectTransform(new Point(30, 30), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 80) },
+                TextManager.Get("PowerTransferLowVoltage"), style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
 
-            GuiFrame.DrawManually(spriteBatch);
+            var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight));
 
-            GUI.Font.DrawString(spriteBatch, 
-                TextManager.Get("PowerTransferPower").Replace("[power]", ((int)(-currPowerConsumption)).ToString()), 
-                new Vector2(x + 30, y + 30), Color.White);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContainer.RectTransform),
+                TextManager.Get("PowerTransferPowerLabel"), font: GUI.LargeFont);
+            string powerStr = TextManager.Get("PowerTransferPower");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightGreen)
+            {
+                TextGetter = () => { return powerStr.Replace("[power]", ((int)(-currPowerConsumption)).ToString()); }
+            };
 
-            GUI.Font.DrawString(spriteBatch,
-                 TextManager.Get("PowerTransferLoad").Replace("[load]", ((int)powerLoad).ToString()),
-                new Vector2(x + 30, y + 100),  Color.White);
-        }
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContainer.RectTransform),
+                TextManager.Get("PowerTransferLoadLabel"), font: GUI.LargeFont);
 
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
+            string loadStr = TextManager.Get("PowerTransferLoad");
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), textContainer.RectTransform), "", textColor: Color.LightBlue)
+            {
+                TextGetter = () => { return loadStr.Replace("[load]", ((int)(powerLoad)).ToString()); }
+            };
         }
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(deltaTime);
+            if (GuiFrame == null) return;
+
+            float voltage = powerLoad <= 0.0f ? 1.0f : -currPowerConsumption / powerLoad;
+            powerIndicator.Selected = IsActive && currPowerConsumption < -0.1f;
+            highVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage > 1.2f;
+            lowVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage < 0.8f;
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame?.AddToGUIUpdateList();
         }
     }
 }

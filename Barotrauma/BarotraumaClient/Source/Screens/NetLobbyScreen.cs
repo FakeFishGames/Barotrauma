@@ -850,8 +850,7 @@ namespace Barotrauma
                 infoButton.UserData = sub;
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    var msgBox = new GUIMessageBox("", "", 550, 400);
-                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                     return true;
                 };
             }
@@ -1244,7 +1243,7 @@ namespace Barotrauma
 
             if (playerFrame != null) playerFrame.DrawManually(spriteBatch);
 
-            GUI.Draw((float)deltaTime, spriteBatch, null);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
         }

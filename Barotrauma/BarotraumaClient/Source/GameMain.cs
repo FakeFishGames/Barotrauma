@@ -249,7 +249,6 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-            GUI.GraphicsDevice = base.GraphicsDevice;
 
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
@@ -257,7 +256,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 
-            GUI.Init(Window, Content);
+            GUI.Init(Window, Config.SelectedContentPackage, GraphicsDevice);
             DebugConsole.Init();
 
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");

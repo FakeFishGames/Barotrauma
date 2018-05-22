@@ -1253,8 +1253,7 @@ namespace Barotrauma.Networking
                         infoButton.UserData = newSub;
                         infoButton.OnClicked = (component, userdata) =>
                         {
-                            var msgBox = new GUIMessageBox("", "", 550, 400);
-                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                             return true;
                         };
                     }

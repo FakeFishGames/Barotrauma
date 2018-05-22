@@ -325,19 +325,23 @@
 
 
   <!-- Item HUDs -->
-  <Force>Force</Force>
+  <EngineForce>Thrust</EngineForce>
+  <EngineBackwards>Backwards</EngineBackwards>
+  <EngineForwards>Forwards</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
+  <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
   <MiniMapWaterLevelUnavailable>Water level data not available</MiniMapWaterLevelUnavailable>
   <MiniMapAirQuality>Air quality</MiniMapAirQuality>
   <MiniMapAirQualityUnavailable>Air quality data not available</MiniMapAirQualityUnavailable>
-  <PumpRunning>Running</PumpRunning>
+  <PumpPowered>Powered</PumpPowered>
   <PumpIn>IN</PumpIn>
   <PumpOut>OUT</PumpOut>
   <PumpSpeed>Pumping speed</PumpSpeed>
@@ -365,27 +369,32 @@
   <SteeringDepth>Depth: [m] m</SteeringDepth>
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
   <PowerContainerRechargeRate>Recharge rate</PowerContainerRechargeRate>
-  <PowerTransferPower>Power: [power] kW</PowerTransferPower>
-  <PowerTransferLoad>Load: [load] kW</PowerTransferLoad>
+  <PowerTransferPowered>Powered</PowerTransferPowered>
+  <PowerTransferHighVoltage>Overvoltage</PowerTransferHighVoltage>
+  <PowerTransferLowVoltage>Low voltage</PowerTransferLowVoltage>
+  <PowerTransferPowerLabel>Power</PowerTransferPowerLabel>
+  <PowerTransferPower>[power] kW</PowerTransferPower>
+  <PowerTransferLoadLabel>Load</PowerTransferLoadLabel>
+  <PowerTransferLoad>[load] kW</PowerTransferLoad>
   <ConnectionLocked>(Locked)</ConnectionLocked>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
   <FixButton>Fix</FixButton>
-  
+
   <!-- Traitors -->
   <NewTraitor>New traitor</NewTraitor>
   <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
   <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
   <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
-  
+
   <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
   <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
   <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
   <TraitorEndMessageFailure>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
   <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname], but [genderpronoun] got [genderpronounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
   <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed - [genderpronoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
-  
+
   <!-- Causes of death -->
   <CauseOfDeath>Cause of death</CauseOfDeath>
   <CauseOfDeath.Damage>Damage</CauseOfDeath.Damage>
@@ -396,7 +405,7 @@
   <CauseOfDeath.Burn>Burn</CauseOfDeath.Burn>
   <CauseOfDeath.Husk>Husk infection</CauseOfDeath.Husk>
   <CauseOfDeath.Disconnected>Braindead</CauseOfDeath.Disconnected>
-  
+
   <CauseOfDeathDescription.Damage>Succumbed to their injuries</CauseOfDeathDescription.Damage>
   <CauseOfDeathDescription.Bloodloss>Bled out</CauseOfDeathDescription.Bloodloss>
   <CauseOfDeathDescription.Drowning>Drowned</CauseOfDeathDescription.Drowning>
@@ -499,6 +508,7 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
 
 
 

@@ -220,10 +220,8 @@ namespace Barotrauma.Items.Components
                     Color? color = null;                        
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
 
-                    guiFrame = new GUIFrame(
-                        new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W),
-                        color,
-                        alignment, style);
+                    guiFrame = new GUIFrame(new RectTransform(new Point((int)rect.Z, (int)rect.W), GUI.Canvas, Anchor.Center)
+                        { AbsoluteOffset = new Point((int)rect.X, (int)rect.Y) }, style, color);
 
                     break;
                 case "sound":

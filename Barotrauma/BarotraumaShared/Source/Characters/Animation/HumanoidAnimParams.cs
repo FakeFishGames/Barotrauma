@@ -50,8 +50,8 @@ namespace Barotrauma
                 {
                     editor = new GUIListBox(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "", null);
                     editor.Padding = Vector4.One * 5.0f;
-                    new SerializableEntityEditor(WalkInstance, false, editor, true);
-                    new SerializableEntityEditor(RunInstance, false, editor, true);
+                    new SerializableEntityEditor(editor.RectTransform, WalkInstance, inGame: false, showName: true);
+                    new SerializableEntityEditor(editor.RectTransform, RunInstance, inGame: false, showName: true);
                 }
                 return editor;
             }

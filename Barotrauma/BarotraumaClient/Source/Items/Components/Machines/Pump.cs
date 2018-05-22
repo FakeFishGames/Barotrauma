@@ -1,20 +1,38 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        private GUITickBox isActiveTickBox;
+        private GUIScrollBar isActiveSlider;
+        private GUIScrollBar pumpSpeedSlider;
+        private GUITickBox powerIndicator;
 
         partial void InitProjSpecific()
         {
-            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PumpRunning"), Alignment.TopLeft, GuiFrame);
-            isActiveTickBox.OnSelected = (GUITickBox box) =>
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
+
+            isActiveSlider = new GUIScrollBar(new RectTransform(new Point(50, 100), paddedFrame.RectTransform, Anchor.CenterLeft),
+                barSize: 0.2f, style: "OnOffLever")
             {
+                IsBooleanSwitch = true,
+                MinValue = 0.25f,
+                MaxValue = 0.75f
+            };
+            var sliderHandle = isActiveSlider.GetChild<GUIButton>();
+            sliderHandle.RectTransform.AbsoluteOffset -= new Point((88 - sliderHandle.Rect.Width) / 2, 0);
+            sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
+            
+            isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                bool active = scrollBar.BarScroll < 0.5f;
+                if (active == IsActive) return false;
+
                 targetLevel = null;
-                IsActive = !IsActive;
+                IsActive = active;
                 if (!IsActive) currPowerConsumption = 0.0f;
 
                 if (GameMain.Server != null)
@@ -31,66 +49,74 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            var button = new GUIButton(new Rectangle(160, 40, 35, 30), TextManager.Get("PumpOut"), "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
+            var rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), paddedFrame.RectTransform, Anchor.CenterRight)) { RelativeSpacing = 0.1f };
+
+            powerIndicator = new GUITickBox(new RectTransform(new Point(30, 30), rightArea.RectTransform), TextManager.Get("PumpPowered"), style: "IndicatorLightGreen")
             {
-                FlowPercentage -= 10.0f;
-
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
-                {
-                    correctionTimer = CorrectionDelay;
-                    item.CreateClientEvent(this);
-                }
-
-                return true;
+                CanBeFocused = false
             };
 
-            button = new GUIButton(new Rectangle(210, 40, 35, 30), TextManager.Get("PumpIn"), "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
+            var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), rightArea.RectTransform) { RelativeOffset = new Vector2(0.25f, 0.0f) },
+                "", textAlignment: Alignment.BottomLeft);
+            string pumpSpeedStr = TextManager.Get("PumpSpeed");
+            pumpSpeedText.TextGetter = () => { return pumpSpeedStr + ": " + (int)flowPercentage + " %"; };
+
+            var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), rightArea.RectTransform, Anchor.CenterLeft), isHorizontal: true)
             {
-                FlowPercentage += 10.0f;
-
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
-                {
-                    correctionTimer = CorrectionDelay;
-                    item.CreateClientEvent(this);
-                }
-
-                return true;
+                Stretch = true,
+                RelativeSpacing = 0.05f
             };
-        }
-        
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
 
-            GuiFrame.DrawManually(spriteBatch);
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpOut"), textAlignment: Alignment.Center);
+            pumpSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
+            {
+                Step = 0.05f,
+                OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    float newValue = barScroll * 200.0f - 100.0f;
+                    if (Math.Abs(newValue - FlowPercentage) < 0.1f) return false;
 
-            GUI.Font.DrawString(spriteBatch, TextManager.Get("PumpSpeed") + ": " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
+                    FlowPercentage = newValue;
+                    if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                        GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        correctionTimer = CorrectionDelay;
+                        item.CreateClientEvent(this);
+                    }
+                    return true;
+                }
+            };
 
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform), 
+                TextManager.Get("PumpIn"), textAlignment: Alignment.Center);            
         }
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(deltaTime);
-        }
+            powerIndicator.Selected = hasPower && IsActive;
 
+            if (!PlayerInput.LeftButtonHeld())
+            {
+                isActiveSlider.BarScroll += (IsActive ? -10.0f : 10.0f) * deltaTime;
+
+                float pumpSpeedScroll = (FlowPercentage + 100.0f) / 200.0f;
+                if (Math.Abs(pumpSpeedScroll - pumpSpeedSlider.BarScroll) > 0.01f)
+                {
+                    pumpSpeedSlider.BarScroll = pumpSpeedScroll;
+                }
+            }
+        }
+        
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+        
         public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
