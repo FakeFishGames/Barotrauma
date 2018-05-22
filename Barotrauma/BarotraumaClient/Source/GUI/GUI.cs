@@ -922,57 +922,58 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, "");
+                pauseMenu = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), Canvas, Anchor.Center) { MinSize = new Point(200, 300) });
 
-                int y = 0;
-                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, "", pauseMenu);
-                button.OnClicked = TogglePauseMenu;
-
-                y += 60;
-
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, "", pauseMenu);
-                button.OnClicked = (btn, userData) =>
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenu.RectTransform, Anchor.Center))
                 {
-                    TogglePauseMenu();
-                    settingsMenuOpen = !settingsMenuOpen;
-                    return true;
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
                 };
 
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume")
+                {
+                    OnClicked = TogglePauseMenu
+                };
 
-                y += 60;
-
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings")
+                {
+                    OnClicked = (btn, userData) =>
+                    {
+                        TogglePauseMenu();
+                        settingsMenuOpen = !settingsMenuOpen;
+                        return true;
+                    }
+                };
+                
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
-                    SinglePlayerCampaign spMode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
-                    if (spMode != null)
+                    if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, "", pauseMenu);
+                        //TODO: communicate more clearly what this button does
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous");
                         button.OnClicked += (btn, userData) =>
                         {
                             TogglePauseMenu(btn, userData);
                             GameMain.GameSession.LoadPrevious();
                             return true;
                         };
-
-                        y += 60;
                     }
                 }
 
                 if (Screen.Selected == GameMain.LobbyScreen)
                 {
-                    SinglePlayerCampaign spMode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
-                    if (spMode != null)
+                    if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, "", pauseMenu);
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit")
+                        {
+                            UserData = "save"
+                        };
                         button.OnClicked += QuitClicked;
                         button.OnClicked += TogglePauseMenu;
-                        button.UserData = "save";
-
-                        y += 60;
                     }
                 }
                 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, "", pauseMenu);
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit");
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
