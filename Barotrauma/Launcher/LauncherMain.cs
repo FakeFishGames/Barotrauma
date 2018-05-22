@@ -75,14 +75,12 @@ namespace Launcher
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             ContentPackage.LoadAll(ContentPackage.Folder);
             settings = new GameSettings(configPath);
 
             base.Initialize();
         }
-
-        // TODO: this method is never called.
+        
         protected override void LoadContent()
         {
             graphicsWidth = GraphicsDevice.Viewport.Width;
@@ -149,7 +147,7 @@ namespace Launcher
 
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
-                if (supportedModes.FirstOrDefault(m => m.Width == mode.Width && m.Height == mode.Height)!=null) continue;
+                if (supportedModes.FirstOrDefault(m => m.Width == mode.Width && m.Height == mode.Height) != null) continue;
 
                 resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 supportedModes.Add(mode);
@@ -157,7 +155,7 @@ namespace Launcher
                 if (settings.GraphicsWidth == mode.Width && settings.GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
             }
 
-            if (resolutionDD.SelectedItemData==null)
+            if (resolutionDD.SelectedItemData == null)
             {
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
@@ -171,9 +169,7 @@ namespace Launcher
 
                 if (settings.SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
-
-            //new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
-
+            
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 130) }, "Display mode");
             displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 150) });
 #if !OSX
@@ -196,6 +192,8 @@ namespace Launcher
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            GUI.ClearUpdateList();
+
             if (settings.AutoCheckUpdates)
             {
                 if (updateCheckState == 0)
@@ -215,24 +213,8 @@ namespace Launcher
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             PlayerInput.Update(deltaTime);
-
-            // TODO: Currently GUI updates the visible box automatically when it's active. 
-            // Not sure what's intended here, or if this is necessary any more.
-            // Updating the box manually leads to double updates.
-            /*if (GUIMessageBox.VisibleBox != null)
-            {
-                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-                GUI.RefreshUpdateList();
-                GUI.UpdateMouseOn();
-                GUIMessageBox.VisibleBox.UpdateManually(deltaTime);
-                return;
-            }*/
-
-            //GUI.ClearUpdateList();
+            
             guiRoot.AddToGUIUpdateList();
-            /*GUI.RefreshUpdateList();
-            GUI.UpdateMouseOn();
-            guiRoot.UpdateManually(deltaTime, true);*/
             GUI.Update(deltaTime);
         }
 
@@ -248,10 +230,7 @@ namespace Launcher
                 Color.White);
 
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
-
-            /*guiRoot.DrawManually(spriteBatch, true);
-            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.DrawManually(spriteBatch, true);*/
-
+            
             GUI.Draw((float)(gameTime.ElapsedGameTime.TotalMilliseconds / 1000.0f), spriteBatch);
 
             spriteBatch.End();
@@ -520,11 +499,6 @@ namespace Launcher
             filesToDownloadCount = filesToDownload.Count;
             if (filesToDownloadCount > 0)
             {
-                //WebClient webClient = new WebClient();
-                //webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
-                ////webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
-
-                //webClient.DownloadFileAsync(new Uri(latestVersionFolder + filesToDownload[0]), dir);
                 DownloadNextFile();
             }
 
@@ -567,8 +541,7 @@ namespace Launcher
 
                 updateInfoText.Text = "The game was updated succesfully!";
                 launchButton.Enabled = true;
-
-                //MessageBox.Show("Download completed!");
+                
                 return;
             }
 
