@@ -25,11 +25,17 @@ namespace Barotrauma
 
         public T GetChild<T>() where T : GUIComponent
         {
-            foreach (GUIComponent child in Children)
-            {
-                if (child is T) return child as T;
-            }
-            return default(T);
+            //foreach (GUIComponent child in Children)
+            //{
+            //    if (child is T) return child as T;
+            //}
+            //return default(T);
+            return Children.FirstOrDefault(c => c is T) as T;
+        }
+
+        public T GetAnyChild<T>() where T : GUIComponent
+        {
+            return GetAllChildren().FirstOrDefault(c => c is T) as T;
         }
 
         public GUIComponent GetChild(object obj)
