@@ -61,24 +61,21 @@ namespace Launcher
         public LauncherMain()
             : base()
         {
-            graphics = new GraphicsDeviceManager(this);
-            graphics.PreferredBackBufferWidth = 640;
-            graphics.PreferredBackBufferHeight = 400;
+            graphics = new GraphicsDeviceManager(this)
+            {
+                PreferredBackBufferWidth = 640,
+                PreferredBackBufferHeight = 400
+            };
 
             scissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
-
-            IsMouseVisible = true;
-
             supportedModes = new List<DisplayMode>();
-
             Content.RootDirectory = "Content";
+            IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-
-
             ContentPackage.LoadAll(ContentPackage.Folder);
             settings = new GameSettings(configPath);
 
@@ -99,7 +96,7 @@ namespace Launcher
 
             TextureLoader.Init(GraphicsDevice);
 
-            GUI.Init(Window, Content);
+            GUI.Init(Window, settings.SelectedContentPackage, GraphicsDevice);
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -109,41 +106,52 @@ namespace Launcher
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
 
-            guiRoot = new GUIFrame(new Rectangle(0,0,graphicsWidth, graphicsHeight), Color.Transparent);
-            guiRoot.Padding = new Vector4(40.0f, 40.0f, 40.0f, 40.0f);
+            guiRoot = new GUIFrame(new RectTransform(new Point(graphicsWidth, graphicsHeight), null), style: null);
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.75f), guiRoot.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 25) },
+                style: null);
 
-            launchButton = new GUIButton(new Rectangle(0,0,100,30), "START", Alignment.BottomRight, "", guiRoot);
-            launchButton.OnClicked = LaunchClick;
+            launchButton = new GUIButton(new RectTransform(new Point(100, 30), paddedFrame.RectTransform, Anchor.BottomRight), "START")
+            {
+                OnClicked = LaunchClick
+            };
 
-            int y = 50;
+            int y = 0;
+            var checkForUpdates = new GUITickBox(new RectTransform(new Point(20, 20), paddedFrame.RectTransform), "Automatically check for updates")
+            {
+                Selected = settings.AutoCheckUpdates
+            };
 
-            var checkForUpdates = new GUITickBox(new Rectangle(0, y, 20, 20), "Automatically check for updates", Alignment.TopLeft, guiRoot);
-            checkForUpdates.Selected = settings.AutoCheckUpdates;
-            
-            updateInfoText = new GUITextBlock(new Rectangle(0,y+30,100,20), "", "", guiRoot);
+            updateInfoText = new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0,30) }, "");
 
-            updateInfoBox = new GUIListBox(new Rectangle(0, y + 55, 330, graphicsHeight-y-55-30-80), "", guiRoot);
-            updateInfoBox.Visible = false;
+            updateInfoBox = new GUIListBox(new RectTransform(new Point(330, 210), paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, 55) })
+            {
+                Visible = false
+            };
 
-            progressBar = new GUIProgressBar(new Rectangle(110,0,220,20), Color.Green, 0.0f, Alignment.BottomLeft, guiRoot);
-            progressBar.Visible = false;
+            progressBar = new GUIProgressBar(new RectTransform(new Point(220, 20), paddedFrame.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(110, 0) },
+                0.0f, Color.Green)
+            {
+                Visible = false
+            };
 
-            downloadButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Download", Alignment.BottomLeft, "", guiRoot);
-            downloadButton.OnClicked = DownloadButtonClicked;
-            downloadButton.Visible = false;
+            downloadButton = new GUIButton(new RectTransform(new Point(100, 20), paddedFrame.RectTransform, Anchor.BottomLeft), "Download")
+            {
+                OnClicked = DownloadButtonClicked,
+                Visible = false
+            };
 
             //-----------------------------------------------------------------
             //-----------------------------------------------------------------
 
             int x = 360;
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Resolution", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            resolutionDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", "", guiRoot);
+            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) }, "Resolution");
+            resolutionDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 20) });
 
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
                 if (supportedModes.FirstOrDefault(m => m.Width == mode.Width && m.Height == mode.Height)!=null) continue;
 
-                resolutionDD.AddItem(mode.Width+"x"+mode.Height, mode);
+                resolutionDD.AddItem(mode.Width + "x" + mode.Height, mode);
                 supportedModes.Add(mode);
 
                 if (settings.GraphicsWidth == mode.Width && settings.GraphicsHeight == mode.Height) resolutionDD.SelectItem(mode);
@@ -154,8 +162,8 @@ namespace Launcher
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
 
-            new GUITextBlock(new Rectangle(x, y + 50, 20, 20), "Content package", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            contentPackageDD = new GUIDropDown(new Rectangle(x, y + 70, 200, 20), "", "", guiRoot);
+            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Content package");
+            contentPackageDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
 
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
@@ -166,8 +174,8 @@ namespace Launcher
 
             //new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
 
-            new GUITextBlock(new Rectangle(x, y + 130, 20, 20), "Display mode", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            displayModeDD = new GUIDropDown(new Rectangle(x, y + 150, 200, 20), "", "", guiRoot);
+            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 130) }, "Display mode");
+            displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 150) });
 #if !OSX
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
@@ -180,18 +188,13 @@ namespace Launcher
 
             displayModeDD.SelectItem(settings.WindowMode);
 
-            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };
-
-            //var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
-            //fullScreenTick.OnSelected = ToggleFullScreen;
-            //fullScreenTick.Selected = settings.FullScreenEnabled;
+            displayModeDD.OnSelected = (guiComponent, userData) => { settings.WindowMode = (WindowMode)guiComponent.UserData; return true; };            
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
 
             if (settings.AutoCheckUpdates)
             {
@@ -216,19 +219,21 @@ namespace Launcher
             // TODO: Currently GUI updates the visible box automatically when it's active. 
             // Not sure what's intended here, or if this is necessary any more.
             // Updating the box manually leads to double updates.
-            if (GUIMessageBox.VisibleBox != null)
+            /*if (GUIMessageBox.VisibleBox != null)
             {
                 GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+                GUI.RefreshUpdateList();
                 GUI.UpdateMouseOn();
                 GUIMessageBox.VisibleBox.UpdateManually(deltaTime);
                 return;
-            }
+            }*/
 
             //GUI.ClearUpdateList();
             guiRoot.AddToGUIUpdateList();
+            /*GUI.RefreshUpdateList();
             GUI.UpdateMouseOn();
-
-            //guiRoot.Update(deltaTime);
+            guiRoot.UpdateManually(deltaTime, true);*/
+            GUI.Update(deltaTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -243,27 +248,29 @@ namespace Launcher
                 Color.White);
 
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
-            
-            guiRoot.DrawManually(spriteBatch);
-            
-            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.DrawManually(spriteBatch);            
+
+            /*guiRoot.DrawManually(spriteBatch, true);
+            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.DrawManually(spriteBatch, true);*/
+
+            GUI.Draw((float)(gameTime.ElapsedGameTime.TotalMilliseconds / 1000.0f), spriteBatch);
 
             spriteBatch.End();
 
+            
             if (updateCheckState == 1) updateCheckState = 2;
         }
 
         private bool TrySaveSettings(string filePath)
         {
-            DisplayMode selectedMode = resolutionDD.SelectedItemData as DisplayMode;         
-            if (selectedMode==null)
+            DisplayMode selectedMode = resolutionDD.SelectedItemData as DisplayMode;
+            if (selectedMode == null)
             {
                 resolutionDD.Flash();
                 return false;
             }
 
             ContentPackage selectedPackage = contentPackageDD.SelectedItemData as ContentPackage;
-            if (selectedPackage==null)
+            if (selectedPackage == null)
             {
                 contentPackageDD.Flash();
                 return false;
@@ -276,13 +283,7 @@ namespace Launcher
 
             return true;
         }
-
-        //private bool ToggleFullScreen(GUITickBox tickBox)
-        //{
-        //    settings.FullScreenEnabled = !settings.FullScreenEnabled;
-        //    return true;
-        //}
-
+        
         private bool LaunchClick(GUIButton button, object obj)
         {
             if (!TrySaveSettings(configPath)) return false;
@@ -323,27 +324,24 @@ namespace Launcher
             string[] lines = text.Split('\n');
             foreach (string line in lines)
             {
-                int indent = 10;
-                int heigth = 0;
+                int indent = 10, height = 0;
                 if (!string.IsNullOrWhiteSpace(line))
                 {
-                    if (line[0] == '-')
-                        indent = 20;
+                    if (line[0] == '-') indent = 20;
                 }
                 else
                 {
-                    heigth = 5;
+                    height = 5;
                 }
-                
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(indent, 0, 0, heigth), 
-                    line, "", 
-                    Alignment.TopLeft, Alignment.TopLeft, 
-                    updateInfoBox, true, GUI.SmallFont);
-                textBlock.Padding = new Vector4(indent, 0, 0, 0);
-                textBlock.TextColor = indent > 10 ? Color.LightGray : Color.White;
-                textBlock.CanBeFocused = false;
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(updateInfoBox.Content.Rect.Width - 20, height), updateInfoBox.Content.RectTransform) { AbsoluteOffset = new Point(indent, 0) },
+                    line, font: GUI.SmallFont, wrap: true)
+                {
+                    TextColor = indent > 10 ? Color.LightGray : Color.White,
+                    CanBeFocused = false
+                };
             }
+            updateInfoBox.UpdateScrollBarSize();
         }
 
         private bool CheckForUpdates()
@@ -576,12 +574,11 @@ namespace Launcher
 
             updateInfoText.Text = "Downloading file " + filesDownloaded + "/" + filesToDownloadCount;
 
-            GUITextBlock textBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 17),
-                "Downloading " + filesToDownload[filesDownloaded] + "...", "",
-                Alignment.TopLeft, Alignment.TopLeft,
-                updateInfoBox, false, GUI.SmallFont);
-            textBlock.CanBeFocused = false;
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Point(0, 17), updateInfoBox.Content.RectTransform),
+                "Downloading " + filesToDownload[filesDownloaded] + "...", font: GUI.SmallFont)
+            {
+                CanBeFocused = false
+            };
 
             updateInfoBox.BarScroll = 1.0f;
             
@@ -619,12 +616,8 @@ namespace Launcher
             {
                 string errorMsg = "Error while downloading: " + e.Error;
 
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 0),
-                    errorMsg, "",
-                    Alignment.TopLeft, Alignment.TopLeft,
-                    updateInfoBox, true, GUI.SmallFont);
-                textBlock.TextColor = Color.Red;
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, updateInfoBox.Content.RectTransform),
+                    errorMsg, textColor: Color.Red, font: GUI.SmallFont, wrap: true);
 
                 GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
                     new string[] { "Retry", "Cancel" }, 400, 200, Alignment.Center);

@@ -195,7 +195,7 @@ namespace Barotrauma
             }
 
             
-            GUI.Draw((float)deltaTime, spriteBatch, cam);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
 

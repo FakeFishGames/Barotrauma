@@ -103,7 +103,7 @@ namespace Barotrauma
                 }
             }
 
-            GUI.Draw((float)deltaTime, spriteBatch, cam);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
         }

@@ -44,10 +44,6 @@ namespace Barotrauma
             {
                 return graphicsDevice;
             }
-            set
-            {
-                graphicsDevice = value;
-            }
         }
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
@@ -96,10 +92,11 @@ namespace Barotrauma
 
         public static bool DisableHUD;
 
-        public static void Init(GameWindow window, ContentManager content)
+        public static void Init(GameWindow window, ContentPackage selectedContentPackage, GraphicsDevice graphicsDevice)
         {
+            GUI.graphicsDevice = graphicsDevice;
             KeyboardDispatcher = new KeyboardDispatcher(window);
-            var uiStyles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.UIStyle);
+            var uiStyles = selectedContentPackage.GetFilesOfType(ContentType.UIStyle);
             if (uiStyles.Count == 0)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");
@@ -110,7 +107,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Multiple UI styles defined in the selected content package! Selecting the first one.");
             }
 
-            Style = new GUIStyle(uiStyles[0]);
+            Style = new GUIStyle(uiStyles[0], graphicsDevice);
         }
 
         public static void LoadContent(bool loadSounds = true)
@@ -142,7 +139,7 @@ namespace Barotrauma
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
         /// </summary>
-        public static void Draw(float deltaTime, SpriteBatch spriteBatch, Camera cam)
+        public static void Draw(float deltaTime, SpriteBatch spriteBatch)
         {
             updateList.ForEach(c => c.DrawAuto(spriteBatch));
 

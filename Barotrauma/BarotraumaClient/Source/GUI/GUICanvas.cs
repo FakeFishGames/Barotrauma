@@ -18,7 +18,10 @@ namespace Barotrauma
                 if (_instance == null)
                 {
                     _instance = new GUICanvas();
-                    GameMain.Instance.OnResolutionChanged += RecalculateSize;
+                    if (GameMain.Instance != null)
+                    {
+                        GameMain.Instance.OnResolutionChanged += RecalculateSize;
+                    }
                 }
                 return _instance;
             }
