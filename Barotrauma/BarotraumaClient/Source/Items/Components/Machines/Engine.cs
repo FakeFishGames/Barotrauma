@@ -18,8 +18,6 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.DrawManually(spriteBatch);
-
             GUI.Font.DrawString(spriteBatch, TextManager.Get("Force") + ": " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
         }
 
@@ -27,12 +25,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
-        }
-
+        
         partial void UpdateAnimation(float deltaTime)
         {
             if (propellerSprite == null) return;

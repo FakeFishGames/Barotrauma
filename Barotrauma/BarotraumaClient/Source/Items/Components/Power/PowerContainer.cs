@@ -82,12 +82,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
-        }
-
+        
         public void ClientWrite(NetBuffer msg, object[] extraData)
         {
             msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));

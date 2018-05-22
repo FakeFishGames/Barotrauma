@@ -11,12 +11,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
-        }
-
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (item.Submarine == null) return;
@@ -24,9 +19,7 @@ namespace Barotrauma.Items.Components
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-
-            GuiFrame.DrawManually(spriteBatch);
-
+            
             if (!hasPower) return;
 
             Rectangle miniMap = new Rectangle(x + 20, y + 40, width - 40, height - 60);
