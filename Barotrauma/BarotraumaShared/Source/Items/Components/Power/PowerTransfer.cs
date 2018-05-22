@@ -84,7 +84,11 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             canTransfer = true;
+
+            InitProjectSpecific(element);
         }
+        
+        partial void InitProjectSpecific(XElement element);
 
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
