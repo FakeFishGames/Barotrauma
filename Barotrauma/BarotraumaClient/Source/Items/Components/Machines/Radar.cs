@@ -38,8 +38,6 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(deltaTime);
-
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {
                 radarBlips[i].FadeTimer -= deltaTime * 0.5f;
@@ -70,13 +68,10 @@ namespace Barotrauma.Items.Components
                 }
             }
             prevPassivePingRadius = passivePingRadius;
-
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            GuiFrame.DrawManually(spriteBatch);
-
             int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
         }

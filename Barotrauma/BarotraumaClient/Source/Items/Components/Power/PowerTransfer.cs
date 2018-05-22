@@ -11,9 +11,7 @@ namespace Barotrauma.Items.Components
 
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-
-            GuiFrame.DrawManually(spriteBatch);
-
+            
             GUI.Font.DrawString(spriteBatch, 
                 TextManager.Get("PowerTransferPower").Replace("[power]", ((int)(-currPowerConsumption)).ToString()), 
                 new Vector2(x + 30, y + 30), Color.White);
@@ -26,11 +24,6 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
-        }
-
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.UpdateManually(deltaTime);
         }
     }
 }

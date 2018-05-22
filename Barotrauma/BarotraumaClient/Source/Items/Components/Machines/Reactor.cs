@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -81,104 +82,159 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GuiFrame.Padding = Vector4.One * 20.0f;
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), GuiFrame.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                RelativeSpacing = 0.015f,
+                Stretch = true
+            };
+            
+            GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
+            GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.35f, 1.0f), paddedFrame.RectTransform), style: null);
 
-            int frameWidth = GuiFrame.Rect.Width - (int)GuiFrame.Padding.X - (int)GuiFrame.Padding.Z;
-            GUIFrame columnLeft = new GUIFrame(new Rectangle(0, 0, (int)(frameWidth * 0.25f), 0), null, GuiFrame);
-            GUIFrame columnMid = new GUIFrame(new Rectangle((int)(frameWidth * 0.25f) + 10, 0, (int)(frameWidth * 0.4f), 0), null, GuiFrame);
-            GUIFrame columnRight = new GUIFrame(new Rectangle((int)(frameWidth * 0.65f) + 20, 0, (int)(frameWidth * 0.35f) - 20, 0), null, GuiFrame);
+            //----------------------------------------------------------
+            //left column
+            //----------------------------------------------------------
 
             int buttonsPerRow = 2;
-            int buttonWidth = columnLeft.Rect.Width / buttonsPerRow;
+            int spacing = 5;
+            int buttonWidth = columnLeft.Rect.Width / buttonsPerRow - (spacing * (buttonsPerRow - 1));
             int buttonHeight = (int)(GuiFrame.Rect.Height * 0.35f) / 3;
             for (int i = 0; i < warningTexts.Length; i++)
             {
-                var warningBtn = new GUIButton(new Rectangle((i % buttonsPerRow) * buttonWidth, (int)Math.Floor(i / (float)buttonsPerRow) * buttonHeight, buttonWidth, buttonHeight),
-                    TextManager.Get(warningTexts[i]), "IndicatorButton", columnLeft);
-                warningBtn.GetChild<GUITextBlock>().Wrap = true;
-                warningBtn.GetChild<GUITextBlock>().SetTextPos();
+                var warningBtn = new GUIButton(new RectTransform(new Point(buttonWidth, buttonHeight), columnLeft.RectTransform)
+                { AbsoluteOffset = new Point((i % buttonsPerRow) * (buttonWidth + spacing), (int)Math.Floor(i / (float)buttonsPerRow) * (buttonHeight + spacing)) },
+                    TextManager.Get(warningTexts[i]), style: "IndicatorButton");
+
+                var btnText = warningBtn.GetChild<GUITextBlock>();
+                btnText.Font = GUI.SmallFont;
+                btnText.Wrap = true;
+                btnText.SetTextPos();
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
 
-            new GUITextBlock(new Rectangle(00, -90, 0, 20), TextManager.Get("ReactorFissionRate"), "", Alignment.Bottom, Alignment.Center, columnMid);
-            fissionRateScrollBar = new GUIScrollBar(new Rectangle(0, -60, 0, 30), null, 0.1f, Alignment.Bottom, "GUISlider", columnMid);
-            fissionRateScrollBar.BarScroll = 1.0f;
-            fissionRateScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
+
+            //----------------------------------------------------------
+            //mid column
+            //----------------------------------------------------------
+
+            new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 90) },
+                TextManager.Get("ReactorFissionRate"));
+            fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
+                style: "GUISlider", barSize: 0.1f)
             {
-                LastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
+                IsHorizontal = true,
+                BarScroll = 1.0f,
+                OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    LastUser = Character.Controlled;
+                    if (nextServerLogWriteTime == null)
+                    {
+                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    }
+                    unsentChanges = true;
+                    targetFissionRate = scrollAmount * 100.0f;
+
+                    return false;
                 }
-                unsentChanges = true;
-                targetFissionRate = scrollAmount * 100.0f;
-
-                return false;
-            };
-
-
-            new GUITextBlock(new Rectangle(0, -30, 0, 20), TextManager.Get("ReactorTurbineOutput"), "", Alignment.Bottom, Alignment.Center, columnMid);
-            turbineOutputScrollBar = new GUIScrollBar(new Rectangle(0, 0, 0, 30), null, 0.1f, Alignment.Bottom, "GUISlider", columnMid);
-            turbineOutputScrollBar.BarScroll = 1.0f;
-            turbineOutputScrollBar.OnMoved = (GUIScrollBar bar, float scrollAmount) =>
-            {
-                LastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
-                {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
-                }
-                unsentChanges = true;
-                targetTurbineOutput = scrollAmount * 100.0f;
-
-                return false;
             };
             
-
-            criticalHeatWarning = new GUITickBox(new Rectangle(0, 0, 30, 30), TextManager.Get("ReactorWarningCriticalTemp"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
-
-            lowTemperatureWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.25f), 0, 30, 30), TextManager.Get("ReactorWarningCriticalLowTemp"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
-            lowTemperatureWarning.CanBeFocused = false;
-            criticalOutputWarning = new GUITickBox(new Rectangle((int)(columnMid.Rect.Width * 0.66f), 0, 30, 30), TextManager.Get("ReactorWarningCriticalOutput"), Alignment.TopLeft, GUI.SmallFont, "IndicatorLightRed", columnMid);
-            criticalOutputWarning.CanBeFocused = false;
-
-            new GUITextBlock(new Rectangle(0, 60, columnMid.Rect.Width / 2, 20), TextManager.Get("ReactorFissionRate"), "", Alignment.TopLeft, Alignment.Center, columnMid);
-            new GUITextBlock(new Rectangle(columnMid.Rect.Width / 2, 60, columnMid.Rect.Width / 2, 20), TextManager.Get("ReactorTurbineOutput"), "", Alignment.TopLeft, Alignment.Center, columnMid);
-
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("ReactorAutoTemp"), "", columnRight);
-            autoTempTickBox = new GUIScrollBar(new Rectangle(0, 30, 100, 30), Color.White, 0.5f, Alignment.TopLeft, "OnOffSlider", columnRight);
-            autoTempTickBox.OnMoved = (scrollBar, scrollAmount) =>
+            new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 30) },
+                TextManager.Get("ReactorTurbineOutput"));
+            turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
+                style: "GUISlider", barSize: 0.1f)
             {
-                LastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
+                IsHorizontal = true,
+                BarScroll = 1.0f,
+                OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    LastUser = Character.Controlled;
+                    if (nextServerLogWriteTime == null)
+                    {
+                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    }
+                    unsentChanges = true;
+                    targetTurbineOutput = scrollAmount * 100.0f;
+
+                    return false;
                 }
-                unsentChanges = true;
-                return true;
+            };
+            
+            criticalHeatWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform),
+                TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            lowTemperatureWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
+                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            criticalOutputWarning = new GUITickBox(new RectTransform(new Point(30, 30), columnMid.RectTransform) { RelativeOffset = new Vector2(0.75f, 0.0f) },
+                TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SmallFont, style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+            
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+                TextManager.Get("ReactorFissionRate"));
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+                DrawFissionRateMeter, null);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.25f) },
+                TextManager.Get("ReactorTurbineOutput"));
+            new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.3f) },
+                DrawTurbineOutputMeter, null);
+
+            //----------------------------------------------------------
+            //right column
+            //----------------------------------------------------------
+            
+            new GUITextBlock(new RectTransform(new Point(100,20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"));
+            autoTempTickBox = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
+                barSize: 0.5f, style: "OnOffSlider")
+            {
+                OnMoved = (scrollBar, scrollAmount) =>
+                {
+                    LastUser = Character.Controlled;
+                    if (nextServerLogWriteTime == null)
+                    {
+                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    }
+                    unsentChanges = true;
+                    return true;
+                }
             };
 
-            onOffSwitch = new GUIScrollBar(new Rectangle(0, 0, 50, 80), Color.White, 0.2f, Alignment.TopRight, "OnOffLever", columnRight);
-            onOffSwitch.OnMoved = (scrollBar, scrollAmount) =>
+            onOffSwitch = new GUIScrollBar(new RectTransform(new Point(50, 80), columnRight.RectTransform, Anchor.TopRight),
+                barSize: 0.2f, style: "OnOffLever")
             {
-                LastUser = Character.Controlled;
-                if (nextServerLogWriteTime == null)
+                OnMoved = (scrollBar, scrollAmount) =>
                 {
-                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    LastUser = Character.Controlled;
+                    if (nextServerLogWriteTime == null)
+                    {
+                        nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                    }
+                    unsentChanges = true;
+                    return true;
                 }
-                unsentChanges = true;
-                return true;
             };
 
             var lever = onOffSwitch.GetChild<GUIButton>();
-            lever.Rect = new Rectangle(lever.Rect.X - 15, lever.Rect.Y, lever.Rect.Width + 30, lever.Rect.Height);
+            lever.RectTransform.AbsoluteOffset = new Point(-15, 0);
+            lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);
 
-            var loadText = new GUITextBlock(new Rectangle(40, columnRight.Rect.Height / 2 - 50, 100, 20), "Load", "", columnRight);
-            loadText.TextColor = Color.LightBlue;
+            var graphArea = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.5f), columnRight.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 30) },
+                DrawGraph, null);
+
+            var loadText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.TopLeft, Pivot.BottomLeft), 
+                "Load", textColor: Color.LightBlue, textAlignment: Alignment.CenterLeft);
             string loadStr = TextManager.Get("ReactorLoad");
             loadText.TextGetter += () => { return loadStr.Replace("[kw]", ((int)load).ToString()); };
 
-            var outputText = new GUITextBlock(new Rectangle(40, 0, 100, 20), "Output", "", Alignment.BottomLeft, Alignment.TopLeft, columnRight);
-            outputText.TextColor = Color.LightGreen;
+            var outputText = new GUITextBlock(new RectTransform(new Point(100, 30), graphArea.RectTransform, Anchor.BottomLeft, Pivot.TopLeft), 
+                "Output", textColor: Color.LightGreen, textAlignment: Alignment.CenterLeft);
             string outputStr = TextManager.Get("ReactorOutput");
             outputText.TextGetter += () => { return outputStr.Replace("[kw]", ((int)-currPowerConsumption).ToString()); };
         }
@@ -191,45 +247,11 @@ namespace Barotrauma.Items.Components
                 (GuiFrame.Children[0].Rect.Y + GuiFrame.Children[0].Rect.Height * 0.75f) / GameMain.GraphicsHeight);
         }
 
-        private void UpdateGraph(float deltaTime)
+        private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            graphTimer += deltaTime * 1000.0f;
+            Rectangle graphArea = new Rectangle(container.Rect.X + 30, container.Rect.Y, container.Rect.Width - 30, container.Rect.Height);
 
-            if (graphTimer > updateGraphInterval)
-            {
-                UpdateGraph(outputGraph, -currPowerConsumption);
-                UpdateGraph(loadGraph, load);
-
-                graphTimer = 0.0f;
-            }
-
-            if (autoTemp)
-            {
-                fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
-                turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
-            }
-        }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            IsActive = true;
-
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
-
-            GuiFrame.DrawManually(spriteBatch);
-
-            float maxLoad = 0.0f;
-            foreach (float loadVal in loadGraph)
-            {
-                maxLoad = Math.Max(maxLoad, loadVal);
-            }
-
-            Rectangle graphArea = new Rectangle(
-                GuiFrame.Children[2].Rect.X + 30,
-                GuiFrame.Children[2].Rect.Center.Y - 25,
-                GuiFrame.Children[2].Rect.Width - 30,
-                GuiFrame.Children[2].Rect.Height / 2);
+            float maxLoad = loadGraph.Max();
 
             float xOffset = graphTimer / updateGraphInterval;
             DrawGraph(outputGraph, spriteBatch,
@@ -256,6 +278,60 @@ namespace Barotrauma.Items.Components
 
             tempRangeIndicator.Draw(spriteBatch, new Vector2(meterBarPos.X, graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f));
             tempRangeIndicator.Draw(spriteBatch, new Vector2(meterBarPos.X, graphArea.Bottom - graphArea.Height * optimalTemperature.Y / 100.0f));
+
+        }
+
+
+        private void UpdateGraph(float deltaTime)
+        {
+            graphTimer += deltaTime * 1000.0f;
+
+            if (graphTimer > updateGraphInterval)
+            {
+                UpdateGraph(outputGraph, -currPowerConsumption);
+                UpdateGraph(loadGraph, load);
+
+                graphTimer = 0.0f;
+            }
+
+            if (autoTemp)
+            {
+                fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+            }
+        }
+
+        private void DrawFissionRateMeter(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            DrawMeter(spriteBatch, container.Rect,
+                fissionRateMeter, FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
+        }
+
+        private void DrawTurbineOutputMeter(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            DrawMeter(spriteBatch, container.Rect,
+                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
+        }
+
+        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        {
+            IsActive = true;
+
+            int x = GuiFrame.Rect.X;
+            int y = GuiFrame.Rect.Y;
+            
+            float maxLoad = 0.0f;
+            foreach (float loadVal in loadGraph)
+            {
+                maxLoad = Math.Max(maxLoad, loadVal);
+            }
+
+            Rectangle graphArea = Rectangle.Empty;/* new Rectangle(
+                GuiFrame.Children[2].Rect.X + 30,
+                GuiFrame.Children[2].Rect.Center.Y - 25,
+                GuiFrame.Children[2].Rect.Width - 30,
+                GuiFrame.Children[2].Rect.Height / 2);*/
+            return;
 
             Rectangle meterArea = GuiFrame.Children[1].Rect;
             DrawMeter(spriteBatch,
