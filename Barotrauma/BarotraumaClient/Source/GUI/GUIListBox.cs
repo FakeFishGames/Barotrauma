@@ -28,6 +28,8 @@ namespace Barotrauma
 
         private bool enabled;
 
+        private bool needsRecalculation;
+
         public bool SelectMultiple;
 
         public bool HideChildrenOutsideFrame = true;
@@ -197,8 +199,12 @@ namespace Barotrauma
         {
             selected = new List<GUIComponent>();
 
-            Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style);
-            Content.CanBeFocused = false;
+            Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
+            {
+                CanBeFocused = false                
+            };
+            Content.RectTransform.ChildrenChanged += (_) => { needsRecalculation = true; };
+
             if (style != null) GUI.Style.Apply(Content, "", this);
 
             if (color.HasValue)
@@ -221,7 +227,7 @@ namespace Barotrauma
             ScrollBar.BarScroll = 0.0f;
             padding = Vector4.Zero;
         }
-
+        
         public void Select(object userData, bool force = false)
         {
             var children = Content.Children;
@@ -351,6 +357,12 @@ namespace Barotrauma
             if (!Visible) return;
 
             UpdateChildrenRect();
+
+            if (needsRecalculation)
+            {
+                UpdateScrollBarSize();
+                needsRecalculation = false;
+            }
 
             if ((GUI.IsMouseOn(this) || IsParentOf(GUI.MouseOn) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {

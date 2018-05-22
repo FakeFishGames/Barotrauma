@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Voronoi2;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -12,24 +12,61 @@ namespace Barotrauma.Items.Components
     {
         private GUITickBox isActiveTickBox;
 
+        private float displayBorderSize;
+
         private List<RadarBlip> radarBlips;
 
         private float prevPingRadius;
 
-        float prevPassivePingRadius;
+        private float prevPassivePingRadius;
 
         private Vector2 center;
         private float displayRadius;
         private float displayScale;
 
-        private static Color[] blipColorGradient = 
+        private static Color[] blipColorGradient =
         {
             Color.TransparentBlack,
             new Color(0, 50, 160),
             new Color(0, 133, 166),
             new Color(2, 159, 30),
-            new Color(255, 255, 255) 
+            new Color(255, 255, 255)
         };
+
+        partial void InitProjSpecific(XElement element)
+        {
+            displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
+
+            radarBlips = new List<RadarBlip>();
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
+            {
+                CanBeFocused = false
+            };
+
+            isActiveTickBox = new GUITickBox(new RectTransform(new Point(20, 20), paddedFrame.RectTransform), "Active Sonar")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
+                    IsActive = box.Selected;
+
+                    return true;
+                }
+            };
+
+            new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
+                (spriteBatch, guiCustomComponent) => { DrawRadar(spriteBatch, guiCustomComponent.Rect); }, null);
+
+            GuiFrame.CanBeFocused = false;
+        }
 
         public override void AddToGUIUpdateList()
         {
@@ -62,23 +99,17 @@ namespace Barotrauma.Items.Components
                     if (Vector2.Distance(t.WorldPosition, item.WorldPosition) < t.SoundRange)
                     {
                         Ping(t.WorldPosition, t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
-
                         radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
                 }
             }
             prevPassivePingRadius = passivePingRadius;
         }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            int radius = GuiFrame.Rect.Height / 2 - 10;
-            DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
-        }
-
+        
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
-            center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
+            displayBorderSize = 0.2f;
+               center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
             displayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = displayRadius / range;
 
@@ -259,10 +290,10 @@ namespace Barotrauma.Items.Components
                         250.0f, 150.0f, range, pingStrength);
                 }
 
-                List<VoronoiCell> cells = Level.Loaded.GetCells(pingSource, 7);
-                foreach (VoronoiCell cell in cells)
+                List<Voronoi2.VoronoiCell> cells = Level.Loaded.GetCells(pingSource, 7);
+                foreach (Voronoi2.VoronoiCell cell in cells)
                 {
-                    foreach (GraphEdge edge in cell.edges)
+                    foreach (Voronoi2.GraphEdge edge in cell.edges)
                     {
                         if (!edge.isSolid) continue;
                         float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);
@@ -436,24 +467,33 @@ namespace Barotrauma.Items.Components
             float textAlpha = MathHelper.Clamp(1.5f - dist / 50000.0f, 0.5f, 1.0f);
 
             Vector2 dir = Vector2.Normalize(position);
-
             Vector2 markerPos = (dist * scale > radius) ? dir * radius : position;
             markerPos += center;
 
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightBlue);
+            if (!GuiFrame.Children[0].Rect.Contains(markerPos))
+            {
+                Vector2? intersection = MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children[0].Rect);
+                if (intersection.HasValue) markerPos = intersection.Value;                
+            }
 
-            if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X + 10;
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightBlue);
 
             string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
             wrappedLabel += "\n" + ((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
 
+            Vector2 labelPos = markerPos;
+            Vector2 textSize = GUI.SmallFont.MeasureString(wrappedLabel);
+
+            //flip the text to left side when the marker is on the left side or goes outside the right edge of the interface
+            if (dir.X < 0.0f || labelPos.X + textSize.X + 10 > GuiFrame.Rect.X) labelPos.X -= textSize.X + 10;
+
             GUI.DrawString(spriteBatch,
-                new Vector2(markerPos.X + 10, markerPos.Y),
+                new Vector2(labelPos.X + 10, labelPos.Y),
                 wrappedLabel,
-                Color.LightBlue * textAlpha, Color.Black * textAlpha * 0.5f,
+                Color.LightBlue * textAlpha, Color.Black * textAlpha * 0.8f,
                 2, GUI.SmallFont);
         }
         

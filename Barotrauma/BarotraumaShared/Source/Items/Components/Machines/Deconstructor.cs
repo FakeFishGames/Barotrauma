@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using System;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -9,20 +7,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
-        float progressTimer;
-
-        ItemContainer container;
+        private float progressTimer;
+        private ItemContainer container;
         
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
         {
-#if CLIENT
-            progressBar = new GUIProgressBar(new Rectangle(0,0,200,20), Color.Green, "", 0.0f, Alignment.BottomCenter, GuiFrame);
-
-            activateButton = new GUIButton(new Rectangle(0, 0, 200, 20), "Deconstruct", Alignment.TopCenter, "", GuiFrame);
-            activateButton.OnClicked = ToggleActive;
-#endif
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -33,19 +27,19 @@ namespace Barotrauma.Items.Components
             }
 
             if (voltage < minVoltage) return;
-            
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
-            progressTimer += deltaTime*voltage;
+            progressTimer += deltaTime * voltage;
             Voltage -= deltaTime * 10.0f;
 
             var targetItem = container.Inventory.Items.FirstOrDefault(i => i != null);
 #if CLIENT
-            progressBar.BarSize = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
+            progressBar.BarSize = System.Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
 #endif
-            if (progressTimer>targetItem.Prefab.DeconstructTime)
+            if (progressTimer > targetItem.Prefab.DeconstructTime)
             {
                 var containers = item.GetComponents<ItemContainer>();
                 if (containers.Count < 2)
