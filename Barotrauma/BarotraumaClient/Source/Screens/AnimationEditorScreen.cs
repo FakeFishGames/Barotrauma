@@ -39,10 +39,7 @@ namespace Barotrauma
             };
             cam.UpdateTransform(true);
 
-            gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: null, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
-
-            //new SerializableEntityEditor(HumanoidAnimParams.WalkInstance, false, editor, true);
-            //new SerializableEntityEditor(HumanoidAnimParams.RunInstance, false, editor, true);
+            gui = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft) { RelativeOffset = new Vector2(0.01f, 0) });
 
             var buttons = GUI.CreateButtons(1, new Vector2(0.9f, 0.1f), gui.RectTransform, anchor: Anchor.TopCenter, relativeSpacing: 0, startOffsetAbsolute: 30);
             for (int i = 0; i < buttons.Count; i++)
@@ -66,12 +63,24 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            gui.AddToGUIUpdateList();
+            base.AddToGUIUpdateList();
+            HumanoidAnimParams.Editor.AddToGUIUpdateList();
+        }
+
+        public static void UpdateEditor(float deltaTime)
+        {
+            if (Character.Controlled == null) { return; }
+            if (PlayerInput.KeyDown(Keys.LeftAlt) && PlayerInput.KeyHit(Keys.S))
+            {
+                HumanoidAnimParams.RunInstance.Save();
+                HumanoidAnimParams.WalkInstance.Save();
+            }
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            UpdateEditor((float)deltaTime);
 
             //Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             //Submarine.MainSub.Update((float)deltaTime);
@@ -94,8 +103,6 @@ namespace Barotrauma
             cam.Position = character.Position;
 
             GameMain.World.Step((float)deltaTime);
-
-            //gui.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -116,7 +123,6 @@ namespace Barotrauma
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
-            gui.DrawManually(spriteBatch);
             GUI.Draw((float)deltaTime, spriteBatch, cam);
             spriteBatch.End();
         }

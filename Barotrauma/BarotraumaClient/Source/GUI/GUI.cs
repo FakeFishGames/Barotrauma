@@ -396,8 +396,6 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.UpdateEditor(deltaTime);
             GUIMessageBox.VisibleBox?.AddToGUIUpdateList();
             if (pauseMenuOpen)
             {
