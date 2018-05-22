@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -74,6 +75,20 @@ namespace Barotrauma
         private bool needsToRecalculate;
         protected void Recalculate()
         {
+            float stretchFactor = 1.0f;
+            if (stretch && RectTransform.Children.Count() > 0)
+            {
+                float totalSize = RectTransform.Children
+                    .Where(c => !c.GUIComponent.IgnoreLayoutGroups)
+                    .Sum(c => isHorizontal ? c.Rect.Width : c.Rect.Height);
+
+                totalSize += 
+                    (RectTransform.Children.Count() - 1) * 
+                    (absoluteSpacing + relativeSpacing * (isHorizontal ? Rect.Width : Rect.Height));
+
+                stretchFactor = totalSize <= 0.0f ? 1.0f : (isHorizontal ? Rect.Width: Rect.Height) / totalSize;
+            }
+
             int absPos = 0;
             float relPos = 0;
             foreach (var child in RectTransform.Children)
@@ -84,23 +99,23 @@ namespace Barotrauma
                 {
                     child.RelativeOffset = new Vector2(relPos, 0);
                     child.AbsoluteOffset = new Point(absPos, 0);
-                    absPos += child.Rect.Width + absoluteSpacing;
+                    absPos += (int)((child.Rect.Width + absoluteSpacing) * stretchFactor);
                     if (stretch)
                     {
-                        child.RelativeSize = new Vector2(child.RelativeSize.X, 1);
+                        child.RelativeSize = new Vector2(child.RelativeSize.X * stretchFactor, child.RelativeSize.Y);
                     }
                 }
                 else
                 {
                     child.RelativeOffset = new Vector2(0, relPos);
                     child.AbsoluteOffset = new Point(0, absPos);
-                    absPos += child.Rect.Height + absoluteSpacing;
+                    absPos += (int)((child.Rect.Height + absoluteSpacing) * stretchFactor);
                     if (stretch)
                     {
-                        child.RelativeSize = new Vector2(1, child.RelativeSize.Y);
+                        child.RelativeSize = new Vector2(child.RelativeSize.X, child.RelativeSize.Y * stretchFactor);
                     }
                 }
-                relPos += relativeSpacing;
+                relPos += relativeSpacing * stretchFactor;
             }
             needsToRecalculate = false;
         }
