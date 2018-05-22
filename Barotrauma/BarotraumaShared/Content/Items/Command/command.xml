@@ -16,7 +16,7 @@
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,0.5,0.7" alignment="Center" style="ItemUI"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
@@ -30,9 +30,9 @@
       </LightComponent>
     </Steering>
 
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
       <sound file="radarPing.ogg" type="OnUse" range="4000.0"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
+      <GuiFrame rect="0,0,0.5,0.7" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
@@ -62,14 +62,14 @@
       <item name="Screwdriver"/>
     </fixrequirement>
 
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
+    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,0.5,0.7" alignment="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
       <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
       <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>

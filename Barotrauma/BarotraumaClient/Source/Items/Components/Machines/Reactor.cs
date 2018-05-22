@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Reactor : Powered, IServerSerializable, IClientSerializable
     {
-        private GUIScrollBar autoTempTickBox;
+        private GUIScrollBar autoTempSlider;
         private GUIScrollBar onOffSwitch;
 
         private const int GraphSize = 25;
@@ -191,9 +191,10 @@ namespace Barotrauma.Items.Components
             //----------------------------------------------------------
             
             new GUITextBlock(new RectTransform(new Point(100,20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"));
-            autoTempTickBox = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
+            autoTempSlider = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
                 barSize: 0.5f, style: "OnOffSlider")
             {
+                IsBooleanSwitch = true,
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -209,6 +210,9 @@ namespace Barotrauma.Items.Components
             onOffSwitch = new GUIScrollBar(new RectTransform(new Point(50, 80), columnRight.RectTransform, Anchor.TopRight),
                 barSize: 0.2f, style: "OnOffLever")
             {
+                IsBooleanSwitch = true,
+                MinValue = 0.25f, 
+                MaxValue = 0.75f,
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -312,37 +316,7 @@ namespace Barotrauma.Items.Components
             DrawMeter(spriteBatch, container.Rect,
                 turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
         }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            IsActive = true;
-
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
-            
-            float maxLoad = 0.0f;
-            foreach (float loadVal in loadGraph)
-            {
-                maxLoad = Math.Max(maxLoad, loadVal);
-            }
-
-            Rectangle graphArea = Rectangle.Empty;/* new Rectangle(
-                GuiFrame.Children[2].Rect.X + 30,
-                GuiFrame.Children[2].Rect.Center.Y - 25,
-                GuiFrame.Children[2].Rect.Width - 30,
-                GuiFrame.Children[2].Rect.Height / 2);*/
-            return;
-
-            Rectangle meterArea = GuiFrame.Children[1].Rect;
-            DrawMeter(spriteBatch,
-                new Rectangle(meterArea.X, meterArea.Y + 80, meterArea.Width / 2, meterArea.Height),
-                fissionRateMeter, FissionRate, new Vector2(0.0f, 100.0f), optimalFissionRate, allowedFissionRate);
-
-            DrawMeter(spriteBatch,
-                new Rectangle(meterArea.Center.X, meterArea.Y + 80, meterArea.Width / 2, meterArea.Height),
-                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
-        }
-
+        
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
@@ -350,7 +324,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(deltaTime);
+            IsActive = true;
 
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
@@ -369,29 +343,16 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && onOffSwitch.BarScroll > 0.5f;
-
-            if (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != autoTempTickBox && !autoTempTickBox.IsParentOf(GUI.MouseOn)))
+            
+            AutoTemp = autoTempSlider.BarScroll < 0.5f;
+            
+            if (onOffSwitch.BarScroll > 0.5f)
             {
-                int dir = Math.Sign(autoTempTickBox.BarScroll - 0.5f);
-                if (dir == 0) dir = 1;
-                autoTempTickBox.BarScroll += dir * 0.1f;
-
-                AutoTemp = dir < 0;
-            }
-            if (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != onOffSwitch && !onOffSwitch.IsParentOf(GUI.MouseOn)))
-            {
-                int dir = Math.Sign(onOffSwitch.BarScroll - 0.5f);
-                if (dir == 0) dir = 1;
-                onOffSwitch.BarScroll += dir * 0.1f;
-                onOffSwitch.BarScroll = MathHelper.Clamp(onOffSwitch.BarScroll, 0.25f, 0.75f);
-                if (dir == 1)
-                {
-                    targetFissionRate = 0.0f;
-                    targetTurbineOutput = 0.0f;
-                    fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
-                    turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
-                }
-            }
+                targetFissionRate = 0.0f;
+                targetTurbineOutput = 0.0f;
+                fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+            }            
         }
 
         private bool ToggleAutoTemp(GUITickBox tickBox)

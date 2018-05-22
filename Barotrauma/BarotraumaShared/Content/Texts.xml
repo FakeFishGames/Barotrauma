@@ -325,19 +325,23 @@
 
 
   <!-- Item HUDs -->
-  <Force>Force</Force>
+  <EngineForce>Thrust</EngineForce>
+  <EngineBackwards>Backwards</EngineBackwards>
+  <EngineForwards>Forwards</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
+  <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
   <MiniMapWaterLevelUnavailable>Water level data not available</MiniMapWaterLevelUnavailable>
   <MiniMapAirQuality>Air quality</MiniMapAirQuality>
   <MiniMapAirQualityUnavailable>Air quality data not available</MiniMapAirQualityUnavailable>
-  <PumpRunning>Running</PumpRunning>
+  <PumpPowered>Powered</PumpPowered>
   <PumpIn>IN</PumpIn>
   <PumpOut>OUT</PumpOut>
   <PumpSpeed>Pumping speed</PumpSpeed>

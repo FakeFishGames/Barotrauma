@@ -15,18 +15,16 @@ namespace Barotrauma.Items.Components
         private readonly Sprite pingCircle, screenOverlay;
 
         private readonly Sprite radarBlip;
-                
-        private float displayBorderSize;
 
         private bool aiPingCheckPending;
-                
+
         [Serialize(10000.0f, false)]
         public float Range
         {
             get { return range; }
             set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
         }
-        
+
         [Serialize(false, false)]
         public bool DetectSubmarineWalls
         {
@@ -53,12 +51,6 @@ namespace Barotrauma.Items.Components
         public Radar(Item item, XElement element)
             : base(item, element)
         {
-#if CLIENT
-            radarBlips = new List<RadarBlip>();
-#endif
-
-            displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
-
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -74,30 +66,12 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
-#if CLIENT
-            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Active Sonar", Alignment.TopLeft, GuiFrame);
-            isActiveTickBox.OnSelected = (GUITickBox box) =>
-            {
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                }
-                else if (GameMain.Client != null)
-                {
-                    item.CreateClientEvent(this);
-                    correctionTimer = CorrectionDelay;
-                }
-                IsActive = box.Selected;
-
-                return true;
-            };
             
-            GuiFrame.CanBeFocused = false;
-#endif
-
             IsActive = false;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
