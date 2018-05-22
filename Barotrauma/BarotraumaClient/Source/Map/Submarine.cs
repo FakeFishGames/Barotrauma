@@ -177,24 +177,26 @@ namespace Barotrauma
             return MainSub.SaveAs(filePath, previewImage);
         }
 
-        public void CreatePreviewWindow(GUIComponent frame)
+        public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), color: Color.Transparent);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), innerFrame.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
-            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), innerFrame.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
-            var descriptionBox = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), innerFrame.RectTransform, Anchor.Center, Pivot.TopCenter), color: Color.Black);
+            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
+            var descriptionBox = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.1f),
+            }, color: Color.Transparent);
 
             if (PreviewImage == null)
             {
                 //var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
                 //var txtBlock = new GUITextBlock(new RectTransform())
                 //txtBlock.OutlineColor = txtBlock.TextColor;
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
             {
-                new GUIImage(new RectTransform(new Vector2(0.5f, 1), upperPart.RectTransform), PreviewImage);
+                new GUIImage(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), PreviewImage);
             }
 
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
@@ -202,13 +204,7 @@ namespace Barotrauma
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1), upperPart.RectTransform, Anchor.TopCenter, Pivot.TopLeft)
-            {
-                RelativeOffset = new Vector2(0.1f, 0.1f)
-            })
-            {
-                Stretch = true
-            };
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
                 $"{TextManager.Get("Dimensions")}: {dimensionsStr}", 
@@ -226,10 +222,7 @@ namespace Barotrauma
                 $"{TextManager.Get("CompatibleContentPackages")}: {string.Join(", ", CompatibleContentPackages)}", 
                 font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft)
-            {
-                RelativeOffset = new Vector2(0.1f, 0.1f)
-            }, Description, font: GUI.SmallFont, wrap: true)
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
             {
                 CanBeFocused = false
             };
