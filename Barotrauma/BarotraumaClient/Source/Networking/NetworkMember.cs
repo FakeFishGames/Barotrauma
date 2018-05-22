@@ -108,9 +108,7 @@ namespace Barotrauma.Networking
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
-
-            GameMain.GameSession.CrewManager.Draw(spriteBatch);
-
+            
             inGameHUD.DrawManually(spriteBatch);
 
             if (EndVoteCount > 0)
