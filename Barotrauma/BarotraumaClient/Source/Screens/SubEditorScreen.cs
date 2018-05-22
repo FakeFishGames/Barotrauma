@@ -846,8 +846,18 @@ namespace Barotrauma
 
         private bool LoadSub(GUIButton button, object obj)
         {
-            // TODO: loadFrame is null
-            GUIListBox subList = loadFrame.GetChild<GUIListBox>();
+            if (loadFrame == null)
+            {
+                DebugConsole.NewMessage("load frame null", Color.Red);
+                return false;
+            }
+
+            GUIListBox subList = loadFrame.GetAnyChild<GUIListBox>();
+            if (subList == null)
+            {
+                DebugConsole.NewMessage("Sublist null", Color.Red);
+                return false;
+            }
 
             if (subList.Selected == null) return false;
 
