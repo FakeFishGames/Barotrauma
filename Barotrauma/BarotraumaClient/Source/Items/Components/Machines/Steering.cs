@@ -176,8 +176,6 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            GuiFrame.UpdateManually(deltaTime);
-
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y)) < 200.0f)
