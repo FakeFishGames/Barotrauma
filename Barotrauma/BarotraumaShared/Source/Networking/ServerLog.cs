@@ -139,7 +139,7 @@ namespace Barotrauma.Networking
                 }                
             }
 
-            string fileName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            string fileName = serverName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
 
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
