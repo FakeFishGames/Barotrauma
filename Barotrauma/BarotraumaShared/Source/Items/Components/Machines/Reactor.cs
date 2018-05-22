@@ -145,11 +145,11 @@ namespace Barotrauma.Items.Components
             { 
                 autoTemp = value;
 #if CLIENT
-                if (autoTempTickBox != null) 
+                if (autoTempSlider != null) 
                 {
-                    autoTempTickBox.BarScroll = value ? 
-                        Math.Min(0.45f, autoTempTickBox.BarScroll) : 
-                        Math.Max(0.55f, autoTempTickBox.BarScroll);
+                    autoTempSlider.BarScroll = value ? 
+                        Math.Min(0.45f, autoTempSlider.BarScroll) : 
+                        Math.Max(0.55f, autoTempSlider.BarScroll);
                 }
 #endif
             }

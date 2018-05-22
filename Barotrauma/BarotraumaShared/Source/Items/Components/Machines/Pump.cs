@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
         
         public Hull hull1;
 
+        private bool hasPower;
+
         [Serialize(0.0f, true)]
         public float FlowPercentage
         {
@@ -34,7 +36,7 @@ namespace Barotrauma.Items.Components
             set { maxFlow = value; } 
         }
 
-        float currFlow;
+        private float currFlow;
         public float CurrFlow
         {
             get 
@@ -43,23 +45,7 @@ namespace Barotrauma.Items.Components
                 return Math.Abs(currFlow); 
             }
         }
-
-        public override bool IsActive
-        {
-            get
-            {
-                return base.IsActive;
-            }
-            set
-            {
-                base.IsActive = value;
-
-#if CLIENT
-                if (isActiveTickBox != null) isActiveTickBox.Selected = value;
-#endif
-            }
-        }
-
+        
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -85,6 +71,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             currFlow = 0.0f;
+            hasPower = false;
 
             if (targetLevel != null)
             {
@@ -97,6 +84,8 @@ namespace Barotrauma.Items.Components
             if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
 
             if (voltage < minVoltage) return;
+
+            hasPower = true;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 

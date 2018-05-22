@@ -27,6 +27,22 @@ namespace Barotrauma
         /// </summary>
         public override bool ClampMouseRectToParent { get; set; } = false;
 
+        public bool IsBooleanSwitch;
+
+        private float minValue;
+        public float MinValue
+        {
+            get { return minValue; }
+            set { minValue = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+        private float maxValue = 1.0f;
+        public float MaxValue
+        {
+            get { return maxValue; }
+            set { maxValue = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
         public bool IsHorizontal
         {
             get { return isHorizontal; }
@@ -58,7 +74,7 @@ namespace Barotrauma
                     return;
                 }
 
-                barScroll = MathHelper.Clamp(value, 0.0f, 1.0f);
+                barScroll = MathHelper.Clamp(value, minValue, maxValue);
                 int newX = bar.Rect.X - frame.Rect.X;
                 int newY = bar.Rect.Y - frame.Rect.Y;
                 float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
@@ -105,6 +121,8 @@ namespace Barotrauma
                 UpdateRect();
             }
         }
+
+
 
         [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIScrollBar(Rectangle rect, string style, float barSize, GUIComponent parent = null)
@@ -206,6 +224,18 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (!enabled) return;
+
+            if (IsBooleanSwitch && 
+                (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != this && !IsParentOf(GUI.MouseOn))))
+            {
+                int dir = Math.Sign(barScroll - (minValue + maxValue) / 2.0f);
+                if (dir == 0) dir = 1;
+                if ((barScroll <= maxValue && dir > 0) || 
+                    (barScroll > minValue && dir < 0))
+                {
+                    BarScroll += dir * 0.1f;
+                }
+            }
 
             if (GUI.MouseOn == frame)
             {
