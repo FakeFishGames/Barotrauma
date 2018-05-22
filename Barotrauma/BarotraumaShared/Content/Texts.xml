@@ -377,6 +377,9 @@
   <PowerTransferLoadLabel>Load</PowerTransferLoadLabel>
   <PowerTransferLoad>[load] kW</PowerTransferLoad>
   <ConnectionLocked>(Locked)</ConnectionLocked>
+  <OptimizableLabel>Device can be optimized</OptimizableLabel>
+  <OptimizableRequiredSkills>Required skills:</OptimizableRequiredSkills>
+  <OptimizableOptimize>Optimize</OptimizableOptimize>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
