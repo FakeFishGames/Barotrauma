@@ -325,7 +325,10 @@
 
 
   <!-- Item HUDs -->
-  <Force>Force</Force>
+  <EngineForce>Thrust</EngineForce>
+  <EngineBackwards>Backwards</EngineBackwards>
+  <EngineForwards>Forwards</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
