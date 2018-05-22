@@ -58,7 +58,6 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
-            GuiFrame.UpdateManually(deltaTime);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -85,8 +84,6 @@ namespace Barotrauma.Items.Components
                     textBlock.TextColor = Color.White;
                 }
             }
-            
-            GuiFrame.DrawManually(spriteBatch);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -14,7 +15,7 @@ namespace Barotrauma
 
         public Sprite CursorSprite { get; private set; }
             
-        public GUIStyle(string file)
+        public GUIStyle(string file, GraphicsDevice graphicsDevice)
         {
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
@@ -35,13 +36,13 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "font":
-                        Font = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        Font = new ScalableFont(subElement, graphicsDevice);
                         break;
                     case "smallfont":
-                        SmallFont = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        SmallFont = new ScalableFont(subElement, graphicsDevice);
                         break;
                     case "largefont":
-                        LargeFont = new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                        LargeFont = new ScalableFont(subElement, graphicsDevice);
                         break;
                     case "cursor":
                         CursorSprite = new Sprite(subElement);

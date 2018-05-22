@@ -1,27 +1,33 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
-        GUIProgressBar progressBar;
-        GUIButton activateButton;
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            GuiFrame.DrawManually(spriteBatch);
-        }
-
+        private GUIProgressBar progressBar;
+        private GUIButton activateButton;
+        
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
-        public override void UpdateHUD(Character character, float deltaTime)
+        
+        partial void InitProjSpecific(XElement element)
         {
-            GuiFrame.UpdateManually(deltaTime);
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
+
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter),
+                barSize: 0.0f, color: Color.LightGreen);
+
+            activateButton = new GUIButton(new RectTransform(new Point(200, 30), paddedFrame.RectTransform, Anchor.Center),
+                TextManager.Get("DeconstuctorDeconstruct"))
+            {
+                OnClicked = ToggleActive
+            };
         }
 
         private bool ToggleActive(GUIButton button, object obj)

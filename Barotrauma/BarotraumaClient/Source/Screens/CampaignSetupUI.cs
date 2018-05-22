@@ -173,8 +173,7 @@ namespace Barotrauma
                 infoButton.OnClicked += (component, userdata) =>
                 {
                     // TODO: use relative size
-                    var msgBox = new GUIMessageBox("", "", 550, 400);
-                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                     return true;
                 };
             }
