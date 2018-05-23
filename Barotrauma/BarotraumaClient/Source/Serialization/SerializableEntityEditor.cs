@@ -14,7 +14,7 @@ namespace Barotrauma
         private static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         private static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
-        public int ElementHeight { get; set; }
+        public int ElementHeight { get; set; } = 18;
         private GUILayoutGroup layoutGroup;
 
         /// <summary>
