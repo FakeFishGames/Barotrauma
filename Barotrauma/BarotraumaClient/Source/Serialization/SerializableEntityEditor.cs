@@ -8,46 +8,507 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
+    // TODO: consider using pixel sizes for some elements. At least use min sizes.
     class SerializableEntityEditor : GUIComponent
     {
         private static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
         private static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         private static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
-        public int ElementHeight { get; set; }
-        private GUIListBox listBox;
+        private float elementHeight;
+        private GUILayoutGroup layoutGroup;
 
         /// <summary>
         /// This is the new editor.
-        /// It automatically creates a listbox element for the children.
         /// </summary>
-        public SerializableEntityEditor(RectTransform rectT, ISerializableEntity entity, bool inGame, bool showName, string style = "") : base(style, rectT)
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", float elementHeight = 0.2f) : base(style, new RectTransform(Vector2.One, parent))
         {
+            this.elementHeight = elementHeight;
             List<SerializableProperty> editableProperties = inGame ? 
                 SerializableProperty.GetProperties<InGameEditable>(entity) : 
                 SerializableProperty.GetProperties<Editable>(entity);
-
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), rectT, Anchor.Center), color: Color.Transparent);
 
             if (showName)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), innerFrame.RectTransform), entity.Name, font: GUI.Font);
+                new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), RectTransform), entity.Name, font: GUI.Font);
+                layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.9f), RectTransform) { RelativeOffset = new Vector2(0, 0.1f) });
             }
-
-            //var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), rectT, Anchor.Center));
-            listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), rectT) { RelativeOffset = new Vector2(0, 0.1f) });
+            else
+            {
+                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform));
+            }
             editableProperties.ForEach(ep => CreateNewField(ep, entity));
         }
 
+        // TODO: remove or refactor? The new system uses a layout group.
+        public void AddCustomContent(GUIComponent component, int childIndex)
+        {
+            childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
+
+            AddChild(component);
+            Children.Remove(component);
+            Children.Insert(childIndex, component);
+
+            if (childIndex > 0 )
+            {
+                component.Rect = new Rectangle(component.Rect.X, Children[childIndex - 1].Rect.Bottom, component.Rect.Width, component.Rect.Height);
+            }
+
+            for (int i = childIndex + 1; i < Children.Count; i++)
+            {
+                Children[i].Rect = new Rectangle(Children[i].Rect.X, Children[i].Rect.Y + component.Rect.Height, Children[i].Rect.Width, Children[i].Rect.Height);
+            }
+            SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);
+        }
+
+        private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
+        {
+            object value = property.GetValue();
+            if (property.PropertyType == typeof(string) && value == null)
+            {
+                value = "";
+            }
+            GUIComponent propertyField = null;
+            if (value is bool)
+            {
+                propertyField = CreateBoolField(entity, property, (bool)value);
+            }
+            else if (value is string)
+            {
+                propertyField = CreateStringField(entity, property, (string)value);
+            }
+            else if (value.GetType().IsEnum)
+            {
+                propertyField = CreateEnumField(entity, property, value);
+            }
+            else if (value is int)
+            {
+                propertyField = CreateIntField(entity, property, (int)value);
+            }
+            else if (value is float)
+            {
+                propertyField = CreateFloatField(entity, property, (float)value);
+            }
+            else if (value is Vector2)
+            {
+                propertyField = CreateVector2Field(entity, property, (Vector2)value);
+            }
+            else if (value is Vector3)
+            {
+                propertyField = CreateVector3Field(entity, property, (Vector3)value);
+            }
+            else if (value is Vector4)
+            {
+                propertyField = CreateVector4Field(entity, property, (Vector4)value);
+            }
+            else if (value is Color)
+            {
+                propertyField = CreateColorField(entity, property, (Color)value);
+            }
+            else if (value is Rectangle)
+            {
+                propertyField = CreateRectangleField(entity, property, (Rectangle)value);
+            }
+            return propertyField;
+        }
+
+        private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value)
+        {
+            GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), property.Name)
+            {
+                Font = GUI.SmallFont,
+                Selected = value,
+                ToolTip = property.GetAttribute<Editable>().ToolTip,
+                OnSelected = (tickBox) =>
+                {
+                    if (property.TrySetValue(tickBox.Selected))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                    return true;
+                }
+            };
+            return propertyTickBox;
+        }
+
+        private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform,
+                Anchor.TopRight), GUINumberInput.NumberType.Int)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip,
+                Font = GUI.SmallFont
+            };
+            var editableAttribute = property.GetAttribute<Editable>();
+            numberInput.MinValueInt = editableAttribute.MinValueInt;
+            numberInput.MaxValueInt = editableAttribute.MaxValueInt;
+            numberInput.IntValue = value;
+            numberInput.OnValueChanged += (numInput) =>
+            {
+                if (property.TrySetValue(numInput.IntValue))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+            };
+            return frame;
+        }
+
+        private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform,
+                Anchor.TopRight), GUINumberInput.NumberType.Float)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip,
+                Font = GUI.SmallFont
+            };
+            var editableAttribute = property.GetAttribute<Editable>();
+            numberInput.MinValueFloat = editableAttribute.MinValueFloat;
+            numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
+            numberInput.FloatValue = value;
+            numberInput.OnValueChanged += (numInput) =>
+            {
+                if (property.TrySetValue(numInput.FloatValue))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+            };
+            return frame;
+        }
+
+        private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight))
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            foreach (object enumValue in Enum.GetValues(value.GetType()))
+            {
+                enumDropDown.AddItem(enumValue.ToString(), enumValue);
+            }
+            enumDropDown.OnSelected += (selected, val) =>
+            {
+                if (property.TrySetValue(val))
+                {
+                    TrySendNetworkUpdate(entity, property);
+                }
+                return true;
+            };
+            enumDropDown.SelectItem(value);
+            return frame;
+        }
+
+        private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont, textAlignment: Alignment.Left)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight))
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip,
+                Font = GUI.SmallFont,
+                Text = value,
+                OnEnterPressed = (textBox, text) =>
+                {
+                    if (property.TrySetValue(text))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                        textBox.Text = (string)property.GetValue();
+                        textBox.Deselect();
+                    }
+                    return true;
+                }
+            };
+            return frame;
+        }
+
+        private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            {
+                Stretch = false,
+                RelativeSpacing = 0.05f
+            };
+            for (int i = 0; i < 2; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), color: Color.Transparent);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), vectorComponentLabels[i], font: GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                    GUINumberInput.NumberType.Float)
+                {
+                    Font = GUI.SmallFont
+                };
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else
+                    numberInput.FloatValue = value.Y;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Vector2 newVal = (Vector2)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.FloatValue;
+                    else
+                        newVal.Y = numInput.FloatValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+            }
+            return frame;
+        }
+
+        private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            {
+                Stretch = false,
+                RelativeSpacing = 0.03f
+            };
+            for (int i = 0; i < 3; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.3f, 1), inputArea.RectTransform), color: Color.Transparent);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), vectorComponentLabels[i], font: GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                    GUINumberInput.NumberType.Float)
+                {
+                    Font = GUI.SmallFont
+                };
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else if (i == 1)
+                    numberInput.FloatValue = value.Y;
+                else if (i == 2)
+                    numberInput.FloatValue = value.Z;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Vector3 newVal = (Vector3)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.FloatValue;
+                    else if (comp == 1)
+                        newVal.Y = numInput.FloatValue;
+                    else
+                        newVal.Z = numInput.FloatValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+            }
+            return frame;
+        }
+
+        private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            {
+                Stretch = false,
+                RelativeSpacing = 0.03f
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), vectorComponentLabels[i], font: GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                    GUINumberInput.NumberType.Float)
+                {
+                    Font = GUI.SmallFont
+                };
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else if (i == 1)
+                    numberInput.FloatValue = value.Y;
+                else if (i == 2)
+                    numberInput.FloatValue = value.Z;
+                else
+                    numberInput.FloatValue = value.W;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Vector4 newVal = (Vector4)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.FloatValue;
+                    else if (comp == 1)
+                        newVal.Y = numInput.FloatValue;
+                    else if (comp == 2)
+                        newVal.Z = numInput.FloatValue;
+                    else
+                        newVal.W = numInput.FloatValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+            }
+            return frame;
+        }
+
+        private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            var colorBoxBack = new GUIFrame(new RectTransform(new Vector2(0.075f, 1), frame.RectTransform)
+            {
+                RelativeOffset = new Vector2(0.2f, 0)
+            }, color: Color.Black, style: null);
+            var colorBox = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null);
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            {
+                Stretch = false,
+                RelativeSpacing = 0.03f
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform));
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), colorComponentLabels[i], font: GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+                numberInput.MinValueInt = 0;
+                numberInput.MaxValueInt = 255;
+
+                if (i == 0)
+                    numberInput.IntValue = value.R;
+                else if (i == 1)
+                    numberInput.IntValue = value.G;
+                else if (i == 2)
+                    numberInput.IntValue = value.B;
+                else
+                    numberInput.IntValue = value.A;
+
+                numberInput.Font = GUI.SmallFont;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Color newVal = (Color)property.GetValue();
+                    if (comp == 0)
+                        newVal.R = (byte)(numInput.IntValue);
+                    else if (comp == 1)
+                        newVal.G = (byte)(numInput.IntValue);
+                    else if (comp == 2)
+                        newVal.B = (byte)(numInput.IntValue);
+                    else
+                        newVal.A = (byte)(numInput.IntValue);
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                        colorBox.Color = newVal;
+                    }
+                };
+                colorBox.Color = (Color)property.GetValue();
+            }
+            return frame;
+        }
+
+        private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value)
+        {
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            {
+                ToolTip = property.GetAttribute<Editable>().ToolTip
+            };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true) { Stretch = true };
+            for (int i = 0; i < 4; i++)
+            {
+                var element = new GUIFrame(new RectTransform(new Vector2(0.5f, 1), inputArea.RectTransform), color: Color.Transparent);
+                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    Font = GUI.SmallFont
+                };
+
+                if (i == 0)
+                    numberInput.IntValue = value.X;
+                else if (i == 1)
+                    numberInput.IntValue = value.Y;
+                else if (i == 2)
+                    numberInput.IntValue = value.Width;
+                else
+                    numberInput.IntValue = value.Height;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Rectangle newVal = (Rectangle)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.IntValue;
+                    else if (comp == 1)
+                        newVal.Y = numInput.IntValue;
+                    else if (comp == 2)
+                        newVal.Width = numInput.IntValue;
+                    else
+                        newVal.Height = numInput.IntValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
+                    }
+                };
+            }
+            return frame;
+        }
+
+        #region obsolete
         [Obsolete("Use RectTransform")]
         public SerializableEntityEditor(ISerializableEntity entity, bool inGame, GUIComponent parent, bool showName) : base("")
         {
-            List<SerializableProperty> editableProperties = inGame ? 
-                SerializableProperty.GetProperties<InGameEditable>(entity) : 
+            List<SerializableProperty> editableProperties = inGame ?
+                SerializableProperty.GetProperties<InGameEditable>(entity) :
                 SerializableProperty.GetProperties<Editable>(entity);
-            
+
             if (parent != null) parent.AddChild(this);
-            
+
             if (showName)
             {
                 new GUITextBlock(new Rectangle(0, 0, 100, 20), entity.Name, "",
@@ -130,261 +591,6 @@ namespace Barotrauma
             }
         }
 
-        // TODO: remove or refactor? The new system uses a list box component.
-        public void AddCustomContent(GUIComponent component, int childIndex)
-        {
-            childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
-
-            AddChild(component);
-            Children.Remove(component);
-            Children.Insert(childIndex, component);
-
-            if (childIndex > 0 )
-            {
-                component.Rect = new Rectangle(component.Rect.X, Children[childIndex - 1].Rect.Bottom, component.Rect.Width, component.Rect.Height);
-            }
-
-            for (int i = childIndex + 1; i < Children.Count; i++)
-            {
-                Children[i].Rect = new Rectangle(Children[i].Rect.X, Children[i].Rect.Y + component.Rect.Height, Children[i].Rect.Width, Children[i].Rect.Height);
-            }
-            SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);
-        }
-
-        private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
-        {
-            object value = property.GetValue();
-            if (property.PropertyType == typeof(string) && value == null)
-            {
-                value = "";
-            }
-            GUIComponent propertyField = null;
-            if (value is bool)
-            {
-                propertyField = CreateBoolField(entity, property, (bool)value);
-            }
-            else if (value is string)
-            {
-                propertyField = CreateStringField(entity, property, (string)value);
-            }
-            else if (value.GetType().IsEnum)
-            {
-                propertyField = CreateEnumField(entity, property, value);
-            }
-            else if (value is int)
-            {
-                propertyField = CreateIntField(entity, property, (int)value);
-            }
-            else if (value is float)
-            {
-                propertyField = CreateFloatField(entity, property, (float)value);
-            }
-            else if (value is Vector2)
-            {
-                propertyField = CreateVector2Field(entity, property, (Vector2)value);
-            }
-            else if (value is Vector3)
-            {
-                propertyField = CreateVector3Field(entity, property, (Vector3)value);
-            }
-            else if (value is Vector4)
-            {
-                propertyField = CreateVector4Field(entity, property, (Vector4)value);
-            }
-            else if (value is Color)
-            {
-                propertyField = CreateColorField(entity, property, (Color)value);
-            }
-            else if (value is Rectangle)
-            {
-                propertyField = CreateRectangleField(entity, property, (Rectangle)value);
-            }
-            listBox.AddChild(propertyField);
-            return propertyField;
-        }
-
-        private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value)
-        {
-            GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), property.Name)
-            {
-                Font = GUI.SmallFont,
-                Selected = value,
-                ToolTip = property.GetAttribute<Editable>().ToolTip,
-                OnSelected = (tickBox) =>
-                {
-                    if (property.TrySetValue(tickBox.Selected))
-                    {
-                        TrySendNetworkUpdate(entity, property);
-                    }
-                    return true;
-                }
-            };
-            return propertyTickBox;
-        }
-
-        private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform,
-                Anchor.TopCenter, Pivot.TopLeft), GUINumberInput.NumberType.Int)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip,
-                Font = GUI.SmallFont
-            };
-            var editableAttribute = property.GetAttribute<Editable>();
-            numberInput.MinValueInt = editableAttribute.MinValueInt;
-            numberInput.MaxValueInt = editableAttribute.MaxValueInt;
-            numberInput.IntValue = value;
-            numberInput.OnValueChanged += (numInput) =>
-            {
-                if (property.TrySetValue(numInput.IntValue))
-                {
-                    TrySendNetworkUpdate(entity, property);
-                }
-            };
-            return frame;
-        }
-
-        private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform,
-                Anchor.TopCenter, Pivot.TopLeft), GUINumberInput.NumberType.Float)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip,
-                Font = GUI.SmallFont
-            };
-            var editableAttribute = property.GetAttribute<Editable>();
-            numberInput.MinValueFloat = editableAttribute.MinValueFloat;
-            numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
-            numberInput.FloatValue = value;
-            numberInput.OnValueChanged += (numInput) =>
-            {
-                if (property.TrySetValue(numInput.FloatValue))
-                {
-                    TrySendNetworkUpdate(entity, property);
-                }
-            };
-            return frame;
-        }
-
-        private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform, Anchor.TopCenter, Pivot.TopLeft))
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            foreach (object enumValue in Enum.GetValues(value.GetType()))
-            {
-                enumDropDown.AddItem(enumValue.ToString(), enumValue);
-            }
-            enumDropDown.OnSelected += (selected, val) =>
-            {
-                if (property.TrySetValue(val))
-                {
-                    TrySendNetworkUpdate(entity, property);
-                }
-                return true;
-            };
-            enumDropDown.SelectItem(value);
-            return frame;
-        }
-
-        private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform, Anchor.TopCenter, Pivot.TopLeft))
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip,
-                Font = GUI.SmallFont,
-                Text = value,
-                OnEnterPressed = (textBox, text) =>
-                {
-                    if (property.TrySetValue(text))
-                    {
-                        TrySendNetworkUpdate(entity, property);
-                        textBox.Text = (string)property.GetValue();
-                        textBox.Deselect();
-                    }
-                    return true;
-                }
-            };
-            return frame;
-        }
-
-        private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            //TODO
-            return frame;
-        }
-
-        private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            //TODO
-            return frame;
-        }
-
-        private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            //TODO
-            return frame;
-        }
-
-        private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            //TODO
-            return frame;
-        }
-
-        private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value)
-        {
-            var frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, ElementHeight), listBox.Content.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
-            {
-                ToolTip = property.GetAttribute<Editable>().ToolTip
-            };
-            //TODO
-            return frame;
-        }
-
-        #region obsolete
         [Obsolete]
         private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, int yPos, GUIComponent parent)
         {
