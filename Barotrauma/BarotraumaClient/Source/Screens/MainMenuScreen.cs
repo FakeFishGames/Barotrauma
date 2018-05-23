@@ -602,7 +602,7 @@ namespace Barotrauma
                 //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
                 var p = testElement;
 
-                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopCenter);
+                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopLeft);
 
                 new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
 

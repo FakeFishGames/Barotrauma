@@ -35,10 +35,15 @@ namespace Barotrauma
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform), 
-                color: Color.Black * 0.9f);
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform)
+            {
+                FixedSize = false
+            }, color: Color.Black * 0.9f);
 
-            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft));
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
+            {
+                FixedSize = false
+            });
             textBox.OnTextChanged += (textBox, text) =>
             {
                 ResetAutoComplete();
