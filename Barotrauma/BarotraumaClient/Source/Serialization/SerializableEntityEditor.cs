@@ -14,7 +14,7 @@ namespace Barotrauma
         private static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         private static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
-        public int ElementHeight { get; set; } = 18;
+        public float ElementHeight { get; set; } = 0.035f;
         private GUILayoutGroup layoutGroup;
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Barotrauma
 
         private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value)
         {
-            GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), property.Name)
+            GUITickBox propertyTickBox = new GUITickBox(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), property.Name)
             {
                 Font = GUI.SmallFont,
                 Selected = value,
@@ -131,13 +131,13 @@ namespace Barotrauma
 
         private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform,
-                Anchor.TopCenter, Pivot.TopLeft), GUINumberInput.NumberType.Int)
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform,
+                Anchor.TopRight), GUINumberInput.NumberType.Int)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip,
                 Font = GUI.SmallFont
@@ -158,13 +158,13 @@ namespace Barotrauma
 
         private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform,
-                Anchor.TopCenter, Pivot.TopLeft), GUINumberInput.NumberType.Float)
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform,
+                Anchor.TopRight), GUINumberInput.NumberType.Float)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip,
                 Font = GUI.SmallFont
@@ -185,12 +185,12 @@ namespace Barotrauma
 
         private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform, Anchor.TopCenter, Pivot.TopLeft))
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform, Anchor.TopRight))
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
@@ -212,12 +212,12 @@ namespace Barotrauma
 
         private GUIComponent CreateStringField(ISerializableEntity entity, SerializableProperty property, string value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform, Anchor.TopCenter, Pivot.TopLeft))
+            GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform, Anchor.TopRight))
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip,
                 Font = GUI.SmallFont,
@@ -238,8 +238,8 @@ namespace Barotrauma
 
         private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
@@ -249,8 +249,8 @@ namespace Barotrauma
 
         private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
@@ -260,8 +260,8 @@ namespace Barotrauma
 
         private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
@@ -271,8 +271,8 @@ namespace Barotrauma
 
         private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
@@ -282,8 +282,8 @@ namespace Barotrauma
 
         private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value)
         {
-            var frame = new GUIFrame(new RectTransform(new Point(layoutGroup.Rect.Width, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
