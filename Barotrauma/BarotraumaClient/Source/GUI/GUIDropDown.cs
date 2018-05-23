@@ -126,7 +126,10 @@ namespace Barotrauma
             };
             GUI.Style.Apply(button, style, this);
             
-            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft), style: style)
+            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            {
+                IsFixedSize = false
+            }, style: style)
             {
                 OnSelected = SelectItem
             };
@@ -143,7 +146,10 @@ namespace Barotrauma
             GUITextBlock textBlock = null;
             if (RectTransform != null)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform), text, style: "ListBoxElement");
+                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
+                {
+                    IsFixedSize = false
+                }, text, style: "ListBoxElement");
                 // In the old system, this is automatically called, because it's defined in the GUIComponent level.
                 // The trick is that since the old textbox constructor calls parent.AddChild, it uses listboxes overloaded method, which is quite different from the GUIComponent method.
                 // We will want to use this method with the new system also, because it updates the scroll bar.
