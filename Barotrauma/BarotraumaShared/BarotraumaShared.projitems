@@ -1755,6 +1755,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\NPCPersonalityTrait.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />
@@ -1857,8 +1858,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\Corridor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinStructure.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Voronoi.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\VoronoiElements.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\VoronoiElements.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelWall.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\LinkedSubmarine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntity.cs" />
