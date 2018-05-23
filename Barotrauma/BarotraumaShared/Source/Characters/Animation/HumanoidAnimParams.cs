@@ -42,44 +42,21 @@ namespace Barotrauma
 
 #if CLIENT
         private static GUIListBox editor;
-        private static GUIListBox Editor
+        public static GUIListBox Editor
         {
             get
             {
                 if (editor == null)
                 {
-                    editor = new GUIListBox(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "", null);
-                    editor.Padding = Vector4.One * 5.0f;
-                    new SerializableEntityEditor(editor.RectTransform, WalkInstance, inGame: false, showName: true);
-                    new SerializableEntityEditor(editor.RectTransform, RunInstance, inGame: false, showName: true);
+                    editor = new GUIListBox(new RectTransform(new Vector2(0.3f, 1), GUI.Canvas));
+                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, WalkInstance, false, true, elementHeight: 0.04f));
+                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, RunInstance, false, true, elementHeight: 0.04f));
                 }
                 return editor;
             }
         }
 
-        public static void UpdateEditor(float deltaTime)
-        {
-            if (Character.Controlled == null)
-            {
-                Editor.Visible = false;
-                return;
-            }
-            Editor.Visible = GameMain.DebugDraw;
-            Editor.AddToGUIUpdateList();
-        }
-
-        public static void DrawEditor(SpriteBatch spriteBatch)
-        {
-            Editor.DrawManually(spriteBatch);
-
-            if (PlayerInput.KeyDown(Keys.LeftAlt) && PlayerInput.KeyHit(Keys.S))
-            {
-                RunInstance.Save();
-                WalkInstance.Save();
-            }
-        }
-
-        private void Save()
+        public void Save()
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null || doc.Root == null) return;
