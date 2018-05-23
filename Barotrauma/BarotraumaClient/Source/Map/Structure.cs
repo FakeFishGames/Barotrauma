@@ -121,12 +121,15 @@ namespace Barotrauma
             int height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            //editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) });
+
             editingHUD.UserData = this;
-            
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-            
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+
+            //new SerializableEntityEditor(this, inGame, editingHUD, true);
+            editingHUD.AddChild(new SerializableEntityEditor(editingHUD.RectTransform, this, inGame, showName: true));
+
+            //editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
 
             return editingHUD;
         }
