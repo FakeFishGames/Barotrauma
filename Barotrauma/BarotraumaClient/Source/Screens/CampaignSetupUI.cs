@@ -157,6 +157,7 @@ namespace Barotrauma
 
                     var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterLeft)
                     {
+                        FixedSize = false,
                         RelativeOffset = new Vector2(0.5f, 0)
                     },
                         TextManager.Get("Shuttle"), font: GUI.SmallFont)
