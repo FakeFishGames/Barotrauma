@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
             float chargeRatio = charge / capacity;
             chargeIndicator.Color = chargeRatio < 0.5f ?
                 Color.Lerp(Color.Red, Color.Yellow, chargeRatio * 2) :
-                Color.Lerp(Color.Yellow, Color.LightGreen, (chargeRatio - 0.5f) * 2);
+                Color.Lerp(Color.Yellow, Color.Green, (chargeRatio - 0.5f) * 2);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)

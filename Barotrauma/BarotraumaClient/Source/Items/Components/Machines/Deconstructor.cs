@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -21,7 +20,7 @@ namespace Barotrauma.Items.Components
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter),
-                barSize: 0.0f, color: Color.LightGreen);
+                barSize: 0.0f, color: Color.Green);
 
             activateButton = new GUIButton(new RectTransform(new Point(200, 30), paddedFrame.RectTransform, Anchor.Center),
                 TextManager.Get("DeconstuctorDeconstruct"))
