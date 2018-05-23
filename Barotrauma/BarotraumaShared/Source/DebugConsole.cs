@@ -141,7 +141,11 @@ namespace Barotrauma
                     foreach (Command c in commands)
                     {
                         if (string.IsNullOrEmpty(c.help)) continue;
+#if CLIENT
+                        AddHelpMessage(c);
+#else
                         NewMessage(c.help, Color.Cyan);
+#endif
                     }
                 }
                 else
@@ -153,9 +157,21 @@ namespace Barotrauma
                     }
                     else
                     {
+#if CLIENT
+                        AddHelpMessage(matchingCommand);
+#else
                         NewMessage(matchingCommand.help, Color.Cyan);
+#endif
                     }
                 }
+            }, 
+            () =>
+            {
+                return new string[][]
+                {
+                    commands.SelectMany(c => c.names).ToArray(),
+                    new string[0]
+                };
             }));
 
             commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
@@ -272,8 +288,7 @@ namespace Barotrauma
                 List<string> itemNames = new List<string>();
                 foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
                 {
-                    ItemPrefab itemPrefab = prefab as ItemPrefab;
-                    if (itemPrefab != null) itemNames.Add(itemPrefab.Name);
+                    if (prefab is ItemPrefab itemPrefab) itemNames.Add(itemPrefab.Name);
                 }
 
                 return new string[][]

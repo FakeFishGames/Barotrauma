@@ -572,9 +572,12 @@ namespace Barotrauma
                 TextManager.Get("CompatibleContentPackages"), font: GUI.SmallFont);
 
             var contentPackList = new GUIListBox(new RectTransform(
-                    new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
-                    horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft)
-                    { AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height) });
+                new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
+                horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft)
+                {
+                    IsFixedSize = false,
+                    AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height)
+                });
 
             List<string> contentPacks = Submarine.MainSub.CompatibleContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.list)

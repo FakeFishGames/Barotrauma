@@ -116,7 +116,7 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text, textColor: textColor, font: GUI.SmallFont);
 
             progressBar = new GUIProgressBar(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform),
-                barSize: 0.0f, color: Color.LightGreen)
+                barSize: 0.0f, color: Color.Green)
             {
                 IsHorizontal = true
             };

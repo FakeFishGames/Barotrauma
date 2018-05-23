@@ -116,7 +116,10 @@ namespace Barotrauma
         /// </summary>
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
-            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft), string.Empty, Color.DarkGray)
+            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
+            {
+                IsFixedSize = false
+            }, string.Empty, Color.DarkGray)
             {
                 HoverColor = Color.Gray,
                 SelectedColor = Color.DarkGray,

@@ -31,26 +31,27 @@ namespace Barotrauma
 
         public static void Init()
         {
-            int x = 20, y = 20;
-            int width = 800, height = 500;
+            frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) }, 
+                color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
-            frame = new GUIFrame(new Rectangle(x, y, width, height), new Color(0.4f, 0.4f, 0.4f, 0.8f));
-            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+            listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform)
+            {
+                IsFixedSize = false
+            }, color: Color.Black * 0.9f);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, "", frame);
-            //listBox.Color = Color.Black * 0.7f;
-
-            textBox = new GUITextBox(new Rectangle(0, 0, 0, 20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, "", frame);
+            textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
+            {
+                IsFixedSize = false
+            });
             textBox.OnTextChanged += (textBox, text) =>
-                {
-                    ResetAutoComplete();
-                    return true;
-                };
-
+            {
+                ResetAutoComplete();
+                return true;
+            };
 
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
-
         }
 
         public static void AddToGUIUpdateList()
@@ -171,9 +172,7 @@ namespace Barotrauma
 
             if (listBox.Content.Children.Count > MaxMessages)
             {
-                // TODO: does not work wit RectTransforms, because currently it maps the hierarchy to new list.
-                // In principle we could use the RectTransform list, but it might cause issues. Better to implement the required method in RectTransform and use it.
-                listBox.Content.Children.RemoveRange(0, listBox.Content.Children.Count - MaxMessages);
+                listBox.RemoveChild(listBox.Content.Children[0]);
             }
 
             Messages.Add(msg);
@@ -184,17 +183,48 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg.Text, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-                textBlock.CanBeFocused = false;
-                textBlock.TextColor = msg.Color;
-
-                listBox.AddChild(textBlock);
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                    msg.Text, font: GUI.SmallFont, wrap: true)
+                {
+                    CanBeFocused = false,
+                    TextColor = msg.Color
+                };
+                listBox.UpdateScrollBarSize();
                 listBox.BarScroll = 1.0f;
             }
             catch (Exception e)
             {
                 ThrowError("Failed to add a message to the debug console.", e);
             }
+
+            selectedIndex = Messages.Count;
+        }
+
+        private static void AddHelpMessage(Command command)
+        {
+            if (listBox.Content.Children.Count > MaxMessages)
+            {
+                listBox.RemoveChild(listBox.Content.Children[0]);
+            }
+
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                style: "InnerFrame", color: Color.White * 0.6f)
+            {
+                CanBeFocused = false
+            };
+            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 170, 0), textContainer.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(20, 0) },
+                command.help, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false,
+                TextColor = Color.White
+            };
+            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+            textBlock.SetTextPos();
+            var nameBlock = new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
+                command.names[0], textAlignment: Alignment.TopLeft);
+            
+            listBox.UpdateScrollBarSize();
+            listBox.BarScroll = 1.0f;
 
             selectedIndex = Messages.Count;
         }

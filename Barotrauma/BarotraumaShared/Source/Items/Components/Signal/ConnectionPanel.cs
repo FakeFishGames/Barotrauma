@@ -33,7 +33,10 @@ namespace Barotrauma.Items.Components
             }
 
             IsActive = true;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void OnMapLoaded()
         {

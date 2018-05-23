@@ -185,7 +185,10 @@ namespace Barotrauma
             int height = Rect.Height / 2;
             var buttonSize = new Point(height, height);
 
-            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight), "+");
+            plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight)
+            {
+                IsFixedSize = false
+            }, "+");
             plusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -203,7 +206,10 @@ namespace Barotrauma
             plusButton.Visible = inputType == NumberType.Int;
             plusButton.ClampMouseRectToParent = false;
 
-            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight), "-");
+            minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight)
+            {
+                IsFixedSize = false
+            }, "-");
             minusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
