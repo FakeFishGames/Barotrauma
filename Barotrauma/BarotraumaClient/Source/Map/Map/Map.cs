@@ -101,6 +101,81 @@ namespace Barotrauma
             }
 
             drawOffset = -currentLocation.MapPosition;
+
+        }
+
+        private Texture2D noiseTexture;
+
+        partial void GenerateNoiseMapProjSpecific()
+        {
+            if (noiseTexture == null)
+            {
+                noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, NoiseResolution, NoiseResolution);
+            }
+
+            Color[] crackTextureData = new Color[NoiseResolution * NoiseResolution];
+            Color[] noiseTextureData = new Color[NoiseResolution * NoiseResolution];
+            for (int x = 0; x < NoiseResolution; x++)
+            {
+                for (int y = 0; y < NoiseResolution; y++)
+                {
+                    noiseTextureData[x + y * NoiseResolution] = Color.Lerp(Color.Black, Color.Transparent, Noise[x, y]);
+                }
+            }
+            noiseTextureData[0] = Color.Red;
+            noiseTextureData[(NoiseResolution - 1) + (NoiseResolution - 1) * NoiseResolution] = Color.Red;
+
+            foreach (LocationConnection connection in connections)
+            {
+                float totalLength = Vector2.Distance(connection.CrackSegments[0][0], connection.CrackSegments.Last()[1]);
+                for (int i = 0; i < connection.CrackSegments.Count; i++)
+                {
+                    Vector2 start = connection.CrackSegments[i][0] * (NoiseResolution / (float)size);
+                    Vector2 end = connection.CrackSegments[i][1] * (NoiseResolution / (float)size);
+
+                    float length = Vector2.Distance(start, end);
+                    for (float x = 0; x < 1; x += 1.0f / length)
+                    {
+                        Vector2 pos = Vector2.Lerp(start, end, x);
+                        SetNoiseColorOnArea(pos, MathHelper.Clamp((int)(totalLength / 50), 3, 10) + Rand.Range(-2,2), Color.Transparent);
+                    }
+                }
+            }
+
+            void SetNoiseColorOnArea(Vector2 pos, int dist, Color color)
+            {
+                for (int x = -dist; x < dist; x++)
+                {
+                    for (int y = -dist; y < dist; y++)
+                    {
+                        float d = 1.0f - new Vector2(x, y).Length() / dist;
+                        if (d <= 0) continue;
+
+                        int xIndex = (int)pos.X + x;
+                        if (xIndex < 0 || xIndex >= NoiseResolution) continue;
+                        int yIndex = (int)pos.Y + y;
+                        if (yIndex < 0 || yIndex >= NoiseResolution) continue;
+
+                        float perlin = (float)PerlinNoise.Perlin(
+                            xIndex / (float)NoiseResolution * 100.0f, 
+                            yIndex / (float)NoiseResolution * 100.0f, 0);
+                        
+                        byte a = Math.Max(crackTextureData[xIndex + yIndex * NoiseResolution].A, (byte)((d * perlin) * 255));
+
+                        crackTextureData[xIndex + yIndex * NoiseResolution].A = a;
+                    }
+                }
+            }
+
+            for (int i = 0; i<noiseTextureData.Length; i++)
+            {
+                float darken = noiseTextureData[i].A / 255.0f;
+                Color pathColor = Color.Lerp(Color.White, Color.Transparent, noiseTextureData[i].A / 255.0f);
+                noiseTextureData[i] = 
+                    Color.Lerp(noiseTextureData[i], pathColor, crackTextureData[i].A / 255.0f * 0.5f);
+            }
+            
+            noiseTexture.SetData(noiseTextureData);
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)
@@ -162,6 +237,8 @@ namespace Barotrauma
                 }
                 return;
             }
+
+            //GenerateNoiseMap(4, 0.5f);
 
             if (PlayerInput.KeyHit(Keys.D1))
             {
@@ -267,15 +344,15 @@ namespace Barotrauma
                 color: Color.White * 0.8f, startOffset: iceTextureOffset.ToPoint(),
                 textureScale: new Vector2(zoom, zoom) * 0.3f);*/
 
-            GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.CadetBlue, true);
+            //GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.CadetBlue, true);
 
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
                 for (int y = 0; y < mapTiles.GetLength(1); y++)
                 {
                     Vector2 mapPos = new Vector2(
-                        borders.Location.X + x * MapTileSize.X + ((y % 2 == 0) ? 0.0f : MapTileSize.X * 0.5f), 
-                        borders.Location.Y + y * MapTileSize.Y);
+                        x * MapTileSize.X + ((y % 2 == 0) ? 0.0f : MapTileSize.X * 0.5f), 
+                        y * MapTileSize.Y);
 
                     mapPos.X *= xScale;
                     mapPos.Y *= yScale;
@@ -290,9 +367,16 @@ namespace Barotrauma
                 }
             }
 
+            //GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
+
+
+            spriteBatch.Draw(noiseTexture, rectCenter + drawOffset * zoom,
+                sourceRectangle: null, color: Color.White, rotation: 0.0f, origin: Vector2.Zero,
+                scale: new Vector2(size / (float)noiseTexture.Width, size / (float)noiseTexture.Height) * zoom, 
+                effects: SpriteEffects.None, layerDepth: 0);
+
             if (drawOverlay)
             {
-
                 for (int i = 0; i < locations.Count; i++)
                 {
                     Location location = locations[i];
@@ -322,7 +406,7 @@ namespace Barotrauma
                     }
                     else if (!connection.Passed)
                     {
-                        crackColor *= 0.5f;
+                        //crackColor *= 0.5f;
                     }
 
                     for (int i = 0; i < connection.CrackSegments.Count; i++)
@@ -394,7 +478,7 @@ namespace Barotrauma
                     if (!rect.Intersects(drawRect)) continue;
 
                     Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.White : Color.Green;
-                    color *= (location.Discovered) ? 0.8f : 0.5f;
+                    //color *= (location.Discovered) ? 0.8f : 0.5f;
                     if (location == currentLocation) color = Color.Orange;
 
                     spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.25f * zoom, SpriteEffects.None, 0.0f);
