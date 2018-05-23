@@ -20,7 +20,7 @@ namespace Barotrauma
         /// <summary>
         /// This is the new editor.
         /// </summary>
-        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "") : base(style, new RectTransform(new Vector2(0.9f, 0.9f), parent, Anchor.Center))
+        public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "") : base(style, new RectTransform(Vector2.One, parent))
         {
             List<SerializableProperty> editableProperties = inGame ? 
                 SerializableProperty.GetProperties<InGameEditable>(entity) : 
@@ -29,16 +29,17 @@ namespace Barotrauma
             if (showName)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), RectTransform), entity.Name, font: GUI.Font);
-                layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.9f), RectTransform, Anchor.BottomCenter));
+                layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.9f), RectTransform) { RelativeOffset = new Vector2(0, 0.1f) });
             }
             else
             {
                 layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform));
             }
+            //layoutGroup.Stretch = true;
             editableProperties.ForEach(ep => CreateNewField(ep, entity));
         }
 
-        // TODO: remove or refactor? The new system uses a list box component.
+        // TODO: remove or refactor? The new system uses a layout group.
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
             childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
@@ -238,7 +239,7 @@ namespace Barotrauma
 
         private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Red);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
@@ -249,7 +250,7 @@ namespace Barotrauma
 
         private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Red);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
@@ -260,7 +261,7 @@ namespace Barotrauma
 
         private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value)
         {
-            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Red);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
@@ -271,7 +272,7 @@ namespace Barotrauma
 
         private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value)
         {
-            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Red);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
@@ -282,7 +283,7 @@ namespace Barotrauma
 
         private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value)
         {
-            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Transparent);
+            var frame = new GUIFrame(new RectTransform(new Vector2(1, ElementHeight), layoutGroup.RectTransform), color: Color.Red);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
