@@ -118,7 +118,7 @@ namespace Barotrauma
         {
             box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
             {
-                FixedSize = false
+                IsFixedSize = false
             }, string.Empty, Color.DarkGray)
             {
                 HoverColor = Color.Gray,

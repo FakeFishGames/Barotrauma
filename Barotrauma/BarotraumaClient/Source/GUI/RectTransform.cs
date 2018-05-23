@@ -307,7 +307,7 @@ namespace Barotrauma
 
         /// <summary>
         /// By default, elements defined with an absolute size (in pixels), will be treated as fixed sized.
-        /// This can be changed by setting FixedSize to false.
+        /// This can be changed by setting IsFixedSize to false.
         /// </summary>
         public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
@@ -317,7 +317,7 @@ namespace Barotrauma
             RecalculateRelativeSize();            
             RecalculateAnchorPoint();
             RecalculatePivotOffset();
-            FixedSize = true;
+            IsFixedSize = true;
             parent?.ChildrenChanged?.Invoke(this);
         }
 
@@ -366,7 +366,7 @@ namespace Barotrauma
         /// If true, the element will resize only when explicitly resized.
         /// Note that scaling always affects the elements.
         /// </summary>
-        public bool FixedSize { get; set; }
+        public bool IsFixedSize { get; set; }
 
         protected void RecalculateAll(bool resize, bool scale = true, bool withChildren = true)
         {
@@ -374,7 +374,7 @@ namespace Barotrauma
             {
                 RecalculateScale();
             }
-            if (resize && !FixedSize)
+            if (resize && !IsFixedSize)
             {
                 RecalculateAbsoluteSize();
             }

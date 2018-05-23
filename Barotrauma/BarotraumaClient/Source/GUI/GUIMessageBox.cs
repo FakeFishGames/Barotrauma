@@ -39,7 +39,7 @@ namespace Barotrauma
         {
             int headerHeight = 30;
 
-            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { FixedSize = false }, style: null);
+            InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, Anchor.Center) { IsFixedSize = false }, style: null);
             GUI.Style.Apply(InnerFrame, "", this);
 
             Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };

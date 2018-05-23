@@ -575,7 +575,7 @@ namespace Barotrauma
                 new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
                 horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft)
                 {
-                    FixedSize = false,
+                    IsFixedSize = false,
                     AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height)
                 });
 
