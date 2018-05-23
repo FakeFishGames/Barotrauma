@@ -1216,7 +1216,7 @@ namespace Barotrauma
                 Submarine.LockX = !Submarine.LockX;
             }, null, null));
 
-            commands.Add(new Command("locky", "loxky: Lock vertical movement of the main submarine.", (string[] args) =>
+            commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
             }, null, null));
