@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
             }
 
             progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), 
-                color: Color.LightGreen, barSize: 0.0f);
+                color: Color.Green, barSize: 0.0f);
 
             optimizeButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
                 TextManager.Get("OptimizableOptimize"))

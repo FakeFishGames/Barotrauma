@@ -125,6 +125,17 @@ namespace Barotrauma
                     (int)(frame.Rect.Y + padding.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
                     isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
                     isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+            
+            frame.Visible = true;
+            slider.Visible = true;
+            if (AutoDraw)
+            {
+                frame.DrawAuto(spriteBatch);
+            }
+            else
+            {
+                frame.DrawManually(spriteBatch);
+            }
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = sliderRect;
@@ -133,10 +144,9 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
 
-            slider.Visible = true;
             slider.Color = currColor;
             if (slider.RectTransform == null) slider.Rect = Rect;
-            if (slider.AutoDraw)
+            if (AutoDraw)
             {
                 slider.DrawAuto(spriteBatch);
             }
@@ -145,6 +155,7 @@ namespace Barotrauma
                 slider.DrawManually(spriteBatch);
             }
             //hide the slider, we've already drawn it manually
+            frame.Visible = false;
             slider.Visible = false;
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
         }
