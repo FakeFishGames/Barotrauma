@@ -347,6 +347,7 @@ namespace Barotrauma
         protected void RecalculateRelativeSize()
         {
             relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentRect.Width, NonScaledParentRect.Height);
+            SizeChanged?.Invoke();
         }
 
         protected void RecalculateAbsoluteSize()
