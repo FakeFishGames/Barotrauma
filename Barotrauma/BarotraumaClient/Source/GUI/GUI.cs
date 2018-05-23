@@ -77,6 +77,7 @@ namespace Barotrauma
         public static bool SettingsMenuOpen
         {
             get { return settingsMenuOpen; }
+            set { settingsMenuOpen = value; }
         }
 
         public static bool PauseMenuOpen
