@@ -130,8 +130,7 @@ namespace Barotrauma
         private void GenerateNoiseMap(int octaves, float persistence)
         {
             float z = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
-
-
+            
             float min = float.MaxValue, max = 0.0f;
             for (int x = 0; x < NoiseResolution; x++)
             {
@@ -277,14 +276,9 @@ namespace Barotrauma
             foreach (LocationConnection connection in connections)
             {
                 float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
-                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server),0, 100);
-
-                Vector2 start = connection.Locations[0].MapPosition;
-                Vector2 end = connection.Locations[1].MapPosition;
-                int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 5.0f));
-                connection.CrackSegments = MathUtils.GenerateJaggedLine(start, end, generations, Vector2.Distance(start, end) * 0.25f);
+                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
             }
-            
+
             AssignBiomes();
 
             GenerateNoiseMapProjSpecific();
