@@ -187,7 +187,7 @@ namespace Barotrauma
 
             plusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.TopRight)
             {
-                FixedSize = false
+                IsFixedSize = false
             }, "+");
             plusButton.OnButtonDown += () =>
             {
@@ -208,7 +208,7 @@ namespace Barotrauma
 
             minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight)
             {
-                FixedSize = false
+                IsFixedSize = false
             }, "-");
             minusButton.OnButtonDown += () =>
             {

@@ -37,12 +37,12 @@ namespace Barotrauma
 
             listBox = new GUIListBox(new RectTransform(new Point(paddedFrame.Rect.Width, paddedFrame.Rect.Height - 30), paddedFrame.RectTransform)
             {
-                FixedSize = false
+                IsFixedSize = false
             }, color: Color.Black * 0.9f);
 
             textBox = new GUITextBox(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform, Anchor.BottomLeft)
             {
-                FixedSize = false
+                IsFixedSize = false
             });
             textBox.OnTextChanged += (textBox, text) =>
             {
