@@ -25,9 +25,7 @@ namespace Barotrauma
 
         private bool scrollBarEnabled;
         private bool scrollBarHidden;
-
-        private bool enabled;
-
+        
         private bool needsRecalculation;
 
         public bool SelectMultiple;
@@ -80,17 +78,7 @@ namespace Barotrauma
             get { return spacing; }
             set { spacing = value; }
         }
-
-        public bool Enabled
-        {
-            get { return enabled; }
-            set
-            {
-                enabled = value;
-                //scrollBar.Enabled = value;
-            }
-        }
-        
+                
         [Obsolete("Use RectTransform instead of Rect")]
         public override Rectangle Rect
         {
@@ -185,7 +173,7 @@ namespace Barotrauma
 
             //Children.Clear();
 
-            enabled = true;
+            Enabled = true;
 
             scrollBarEnabled = true;
 
@@ -222,7 +210,7 @@ namespace Barotrauma
             }
             ScrollBar.IsHorizontal = isHorizontal;
             UpdateScrollBarSize();
-            enabled = true;
+            Enabled = true;
             scrollBarEnabled = true;
             ScrollBar.BarScroll = 0.0f;
             padding = Vector4.Zero;
@@ -302,7 +290,7 @@ namespace Barotrauma
                 }
 
                 // selecting
-                if (enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
+                if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

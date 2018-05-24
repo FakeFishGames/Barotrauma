@@ -24,7 +24,7 @@ namespace Barotrauma
             }
         }
 
-        public bool Enabled
+        public override bool Enabled
         {
             get { return listBox.Enabled; }
             set { listBox.Enabled = value; }
@@ -124,7 +124,7 @@ namespace Barotrauma
             {
                 OnClicked = OnClicked
             };
-            GUI.Style.Apply(button, style, this);
+            GUI.Style.Apply(button, "", this);
             
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
             {

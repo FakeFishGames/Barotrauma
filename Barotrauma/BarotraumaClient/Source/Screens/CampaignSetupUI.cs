@@ -62,14 +62,12 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(40, 40),
                 RelativeOffset = new Vector2(0, 0.4f)
-            }, string.Empty);
-
-            seedBox.Text = ToolBox.RandomSeed(8);
+            }, ToolBox.RandomSeed(8));
 
             var startButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), newGameContainer.RectTransform, Anchor.BottomRight, minSize: new Point(80, 30))
             {
                 AbsoluteOffset = new Point(40, 40)
-            }, TextManager.Get("StartCampaignButton"));
+            }, TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge");
             startButton.OnClicked = (GUIButton btn, object userData) =>
             {
                 if (string.IsNullOrWhiteSpace(saveNameBox.Text))
@@ -205,7 +203,7 @@ namespace Barotrauma
             loadGameButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), loadGameContainer.RectTransform, Anchor.BottomRight)
             {
                 RelativeOffset = new Vector2(0.075f, 0.1f)
-            }, TextManager.Get("LoadButton"));
+            }, TextManager.Get("LoadButton"), style: "GUIButtonLarge");
             loadGameButton.OnClicked = (btn, obj) => 
             {
                 if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;

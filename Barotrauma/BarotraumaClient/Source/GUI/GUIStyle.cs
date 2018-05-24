@@ -66,7 +66,6 @@ namespace Barotrauma
             GUIComponentStyle componentStyle = null;  
             if (parent != null)
             {
-
                 GUIComponentStyle parentStyle = parent.Style;
 
                 if (parent.Style == null)
@@ -79,8 +78,7 @@ namespace Barotrauma
                         return;
                     }
                 }
-
-
+                
                 string childStyleName = string.IsNullOrEmpty(styleName) ? targetComponent.GetType().Name : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName.ToLowerInvariant(), out componentStyle);
             }

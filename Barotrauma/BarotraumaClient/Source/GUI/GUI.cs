@@ -918,6 +918,7 @@ namespace Barotrauma
 
             TogglePauseMenu(null, null);
 
+            //TODO: text in pause menu buttons isn't repositioned when scaling the buttons (probably applies to other buttons too)
             if (pauseMenuOpen)
             {
                 pauseMenu = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), Canvas, Anchor.Center) { MinSize = new Point(200, 300) });
@@ -928,12 +929,12 @@ namespace Barotrauma
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume", style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };
 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings")
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings", style: "GUIButtonLarge")
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -948,7 +949,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
                         //TODO: communicate more clearly what this button does
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous");
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous", style: "GUIButtonLarge");
                         button.OnClicked += (btn, userData) =>
                         {
                             TogglePauseMenu(btn, userData);
@@ -962,7 +963,7 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit")
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit", style: "GUIButtonLarge")
                         {
                             UserData = "save"
                         };
@@ -971,7 +972,7 @@ namespace Barotrauma
                     }
                 }
                 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit");
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit", style: "GUIButtonLarge");
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
