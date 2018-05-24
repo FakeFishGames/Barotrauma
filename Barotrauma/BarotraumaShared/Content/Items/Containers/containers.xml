@@ -41,6 +41,17 @@
       <Containable name="medical"/>
     </ItemContainer>
   </Item>
+   
+  <Item
+    name="Dive Suit Locker"
+    pickdistance ="50">
+
+    <Sprite texture ="DivesuitLocker.png" depth="0.84" sourcerect="1,0,54,169"/>
+
+    <ItemContainer  hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Diving Suit"/>
+    </ItemContainer>
+  </Item>
 
   <Item
     name="Metal Crate"    
