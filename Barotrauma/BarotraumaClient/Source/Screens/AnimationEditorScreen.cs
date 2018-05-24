@@ -30,16 +30,14 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            //Submarine.RefreshSavedSubs();
+            Submarine.RefreshSavedSubs();
             //Submarine.MainSub = Submarine.SavedSubmarines.First();
-            //Submarine.MainSub.Load(true);
+            Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
+            Submarine.MainSub.Load(true);
+            GameMain.World.ProcessChanges();
 
-            //var spawnPos = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
-
-            //character.Submarine = Submarine.MainSub;
-            //GameMain.World.ProcessChanges();
             _character = SpawnCharacter(Character.HumanConfigFile);
-            Cam.UpdateTransform(true);
+            _character.Submarine = Submarine.MainSub;
 
             var frame = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
             var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
@@ -83,13 +81,14 @@ namespace Barotrauma
 
         private Character SpawnCharacter(string configFile)
         {
-            var spawnPos = Vector2.Zero;
+            var spawnPos = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             var character = Character.Create(configFile, spawnPos, ToolBox.RandomSeed(8), hasAi: false);
             // TODO: change
-            character.AnimController.forceStanding = character.IsHumanoid;
+            //character.AnimController.forceStanding = character.IsHumanoid;
             Character.Controlled = character;
             Cam.Position = character.WorldPosition;
             Cam.TargetPos = character.WorldPosition;
+            Cam.UpdateTransform(true);
             return character;
         }
 
@@ -114,8 +113,8 @@ namespace Barotrauma
             base.Update(deltaTime);
             UpdateEditor((float)deltaTime);
 
-            //Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-            //Submarine.MainSub.Update((float)deltaTime);
+            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            Submarine.MainSub.Update((float)deltaTime);
 
             //Vector2 mouseSimPos = ConvertUnits.ToSimUnits(character.CursorPosition);
             //foreach (Limb limb in character.AnimController.Limbs)
@@ -131,7 +130,8 @@ namespace Barotrauma
             _character.AnimController.UpdateAnim((float)deltaTime);
             _character.AnimController.Update((float)deltaTime, cam);
 
-            cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: false);
+            // Does not move/zoom, even if freecam is enabled
+            cam.MoveCamera((float)deltaTime, allowMove: true, allowZoom: true);
             cam.Position = _character.Position;
 
             GameMain.World.Step((float)deltaTime);
@@ -144,9 +144,9 @@ namespace Barotrauma
             cam.UpdateTransform(true);
 
             // Submarine
-            //spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
-            //Submarine.Draw(spriteBatch, true);
-            //spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            Submarine.Draw(spriteBatch, true);
+            spriteBatch.End();
 
             // Character
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
@@ -156,6 +156,18 @@ namespace Barotrauma
             // GUI
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw((float)deltaTime, spriteBatch);
+
+            // Debug
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 00), $"Cursor World Pos: {_character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {_character.CursorPosition}", Color.White, font: GUI.SmallFont);
+
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 60), $"Character World Pos: {_character.WorldPosition}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character Pos: {_character.Position}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Sim Pos: {_character.SimPosition}", Color.White, font: GUI.SmallFont);
+
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 160), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
             spriteBatch.End();
         }
     }
