@@ -26,6 +26,7 @@ namespace Barotrauma
 
         public float Shake;
         private Vector2 shakePosition;
+        private float shakeTimer;
         private Vector2 shakeTargetPosition;
         
         //the area of the world inside the camera view
@@ -229,9 +230,19 @@ namespace Barotrauma
                 moveCam = diff / MoveSmoothness;
             }
 
-            shakeTargetPosition = Rand.Vector(Shake);
-            shakePosition = Vector2.Lerp(shakePosition, shakeTargetPosition, 0.5f);
-            Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
+            if (Shake < 0.01f)
+            {
+                shakePosition = Vector2.Zero;
+                shakeTimer = 0.0f;
+            }
+            else
+            {
+                shakeTimer += deltaTime * 5.0f;
+                Vector2 noisePos = new Vector2((float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0) - 0.5f, (float)PerlinNoise.Perlin(shakeTimer, shakeTimer, 0.5f) - 0.5f);
+
+                shakePosition = noisePos * Shake * 2.0f;
+                Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
+            }
 
             Translate(moveCam + shakePosition);
         }

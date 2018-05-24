@@ -1326,8 +1326,10 @@ namespace Barotrauma
                 float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
                 float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
 
-                //TODO: use perlin noise to move the background, add blur
-                Vector2 pos = new Vector2((float)Math.Sin(Timing.TotalTime * 0.05f), (float)Math.Cos(Timing.TotalTime * 0.05f)) * 0.5f;
+                //TODO: blur the background
+
+                double noiseT = (Timing.TotalTime * 0.02f);
+                Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
                 pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
 
                 spriteBatch.Draw(backgroundSprite.Texture, 
