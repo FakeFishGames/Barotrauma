@@ -62,9 +62,9 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
+                Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
-                GUI.Style.Apply(textBlock, "", this);
+                GUI.Style.Apply(Text, "", this);
             }
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter),

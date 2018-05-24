@@ -36,7 +36,7 @@ namespace Barotrauma
         private GUITextBlock botSpawnModeText;
 
         private GUIButton[] missionTypeButtons;
-        private GUIComponent missionTypeBlock;
+        private GUIComponent missionTypeContainer;
 
         private GUIListBox jobList;
 
@@ -169,8 +169,8 @@ namespace Barotrauma
 
         public int MissionTypeIndex
         {
-            get { return (int)missionTypeBlock.UserData; }
-            set { missionTypeBlock.UserData = value; }
+            get { return (int)missionTypeContainer.UserData; }
+            set { missionTypeContainer.UserData = value; }
         }
         
         public List<JobPrefab> JobPreferences
@@ -393,14 +393,14 @@ namespace Barotrauma
 
             //mission type ------------------------------------------------------------------
 
-            var missionTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), isHorizontal: true);
-            missionTypeContainer.Visible = false;
-
-            missionTypeBlock = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
-                TextManager.Get("MissionType"))
+            missionTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), isHorizontal: true)
             {
-                UserData = 0
+                UserData = 0,
+                Visible = false
             };
+
+            var missionTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
+                TextManager.Get("MissionType"));
             missionTypeButtons = new GUIButton[2];
             missionTypeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), missionTypeContainer.RectTransform), "<")
             {
@@ -791,15 +791,15 @@ namespace Barotrauma
         {
             if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
-            missionTypeBlock.UserData = missionTypeIndex;
+            ((GUITextBlock)missionTypeContainer.Children[2]).Text = MissionPrefab.MissionTypes[missionTypeIndex];
+            missionTypeContainer.UserData = missionTypeIndex;
         }
 
         public bool ToggleMissionType(GUIButton button, object userData)
         {
             if (GameMain.Server == null) return false;
 
-            int missionTypeIndex = (int)missionTypeBlock.UserData;
+            int missionTypeIndex = (int)missionTypeContainer.UserData;
             missionTypeIndex += (int)userData;
 
             if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
@@ -1255,20 +1255,10 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-
-            if (campaignSetupUI != null)
-            {
-                campaignSetupUI.AddToGUIUpdateList();
-            }
-            else if (playerFrame != null)
-            {
-                playerFrame.AddToGUIUpdateList();
-            }
-            else
-            {
-                menu.AddToGUIUpdateList();
-            }
-
+              
+            menu.AddToGUIUpdateList();              
+            playerFrame?.AddToGUIUpdateList();  
+            campaignSetupUI?.AddToGUIUpdateList();
             jobInfoFrame?.AddToGUIUpdateList();
         }
         
@@ -1286,26 +1276,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-
-            if (playerFrame != null)
-            {
-                playerFrame.UpdateManually((float)deltaTime);
-            }
-            else
-            {
-                menu.UpdateManually((float)deltaTime);
-            }
-            
+                        
             if (campaignSetupUI != null)
             {
-                if (!campaignSetupUI.Visible)
-                {
-                    campaignSetupUI = null;
-                }
-                else
-                {
-                    campaignSetupUI.UpdateManually((float)deltaTime);
-                }
+                if (!campaignSetupUI.Visible) campaignSetupUI = null;                
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
@@ -1337,16 +1311,7 @@ namespace Barotrauma
                     null, Color.White, 0.0f, backgroundSprite.size / 2,
                     scale, SpriteEffects.None, 0.0f);
             }
-
-            menu.DrawManually(spriteBatch);
-                        
-            if (campaignSetupUI != null)
-            {
-                campaignSetupUI.DrawManually(spriteBatch);
-            }
-
-            if (playerFrame != null) playerFrame.DrawManually(spriteBatch);
-
+            
             GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
@@ -1415,8 +1380,8 @@ namespace Barotrauma
                 ToggleCampaignMode(false);
             }
 
-            modeList.Select(modeIndex, true);            
-            missionTypeBlock.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
+            modeList.Select(modeIndex, true);
+            missionTypeContainer.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
@@ -1425,8 +1390,8 @@ namespace Barotrauma
             
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
-            
-            missionTypeBlock.Visible = modePreset.Name == "Mission";
+
+            missionTypeContainer.Visible = modePreset.Name == "Mission";
 
             if (modePreset.Name == "Campaign")
             {
@@ -1468,35 +1433,52 @@ namespace Barotrauma
             {
                 if (campaignUI == null || campaignUI.Campaign != GameMain.GameSession.GameMode)
                 {
-                    campaignContainer.ClearChildren();                    
+                    campaignContainer.ClearChildren();
 
-                    campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
-                    campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+                    campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer)
+                    {
+                        StartRound = () => { GameMain.Server.StartGame(); }
+                    };
 
-                    var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), TextManager.Get("Back"), "", campaignContainer);
-                    backButton.ClampMouseRectToParent = false;
+                    var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
+                        TextManager.Get("Back"))
+                    {
+                        ClampMouseRectToParent = false
+                    };
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
-                    int buttonX = backButton.Rect.Width + 50;
+                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.1f), campaignContainer.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
+                        isHorizontal: true)
+                    {
+                        Stretch = true,
+                        RelativeSpacing = 0.05f
+                    };
+
+
                     List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
-                        var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
-                        tabButton.ClampMouseRectToParent = false;
+                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString())
+                        {
+                            ClampMouseRectToParent = false
+                        };
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
                             return true;
                         };
-                        buttonX += 110;
                     }
 
-                    var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), TextManager.Get("Credit"), "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
-                    moneyText.TextGetter = campaignUI.GetMoney;
+                    var moneyText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomLeft),
+                        TextManager.Get("Credit"))
+                    {
+                        TextGetter = campaignUI.GetMoney
+                    };
 
-                    var restartText = new GUITextBlock(new Rectangle(-backButton.Rect.Width - 30, -10, 130, 30), "", "", Alignment.BottomRight, Alignment.BottomRight, campaignContainer);
-                    restartText.Font = GUI.SmallFont;
-                    restartText.TextGetter = AutoRestartText;
+                    var restartText = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform, Anchor.BottomRight), "", font: GUI.SmallFont)
+                    {
+                        TextGetter = AutoRestartText
+                    };
                 }
                 modeList.Select(2, true);
             }
