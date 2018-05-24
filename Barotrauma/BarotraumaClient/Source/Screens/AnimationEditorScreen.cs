@@ -38,38 +38,7 @@ namespace Barotrauma
             Submarine.MainSub.Load(true);
             CalculateMovementLimits();
             _character = SpawnCharacter(Character.HumanConfigFile);
-            // GUI
-            var frame = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
-            var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
-            switchCharacterButton.OnClicked += (b, obj) =>
-            {
-                var configFile = GetConfigFile(_character.SpeciesName.Contains("human") ? "mantis" : "human");
-                _character = SpawnCharacter(configFile);
-                return true;
-            };
-            // TODO: use tick boxes?
-            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Stand");
-            swimButton.OnClicked += (b, obj) =>
-            {
-                _character.AnimController.forceStanding = !_character.AnimController.forceStanding;
-                swimButton.Text = _character.AnimController.forceStanding ? "Swim" : "Stand";
-                return true;
-            };
-            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Move");
-            moveButton.OnClicked += (b, obj) =>
-            {
-                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(1, 0) as Vector2?;
-                moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
-                return true;
-            };
-            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Run");
-            runButton.OnClicked += (b, obj) =>
-            {
-                _character.ForceRun = !_character.ForceRun;
-                runButton.Text = _character.ForceRun ? "Walk" : "Run";
-                return true;
-            };
+            CreateButtons();
         }
 
         #region Inifinite runner
@@ -160,14 +129,54 @@ namespace Barotrauma
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
             character.Submarine = Submarine.MainSub;
-            // TODO: change
-            //character.AnimController.forceStanding = character.IsHumanoid;
+            character.AnimController.forceStanding = true;
             Character.Controlled = character;
             Cam.Position = character.WorldPosition;
             Cam.TargetPos = character.WorldPosition;
             Cam.UpdateTransform(true);
             GameMain.World.ProcessChanges();
             return character;
+        }
+
+        private GUIFrame frame;
+        private void CreateButtons()
+        {
+            if (frame != null)
+            {
+                frame.RectTransform.Parent = null;
+            }
+            frame = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
+            var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
+            switchCharacterButton.OnClicked += (b, obj) =>
+            {
+                var configFile = GetConfigFile(_character.SpeciesName.Contains("human") ? "mantis" : "human");
+                _character = SpawnCharacter(configFile);
+                CreateButtons();
+                return true;
+            };
+            // TODO: use tick boxes?
+            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.AnimController.forceStanding ? "Swim" : "Stand");
+            swimButton.OnClicked += (b, obj) =>
+            {
+                _character.AnimController.forceStanding = !_character.AnimController.forceStanding;
+                swimButton.Text = _character.AnimController.forceStanding ? "Swim" : "Stand";
+                return true;
+            };
+            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.OverrideMovement.HasValue ? "Stop" : "Move");
+            moveButton.OnClicked += (b, obj) =>
+            {
+                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(1, 0) as Vector2?;
+                moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
+                return true;
+            };
+            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.ForceRun ? "Walk" : "Run");
+            runButton.OnClicked += (b, obj) =>
+            {
+                _character.ForceRun = !_character.ForceRun;
+                runButton.Text = _character.ForceRun ? "Walk" : "Run";
+                return true;
+            };
         }
 
         public override void AddToGUIUpdateList()
