@@ -161,6 +161,14 @@ namespace Barotrauma
             };
         }
 
+        private Color HealthColorLerp(Color fullHealthColor, Color midHealthColor, Color lowHealthColor, float t)
+        {
+            t = MathHelper.Clamp(t, 0.0f, 1.0f);
+            return t < 0.5f ?
+                Color.Lerp(lowHealthColor, midHealthColor, t * 2.0f) : 
+                Color.Lerp(midHealthColor, fullHealthColor, (t - 0.5f) * 2.0f);
+        }
+
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
             damageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, damageOverlayTimer, 1.0f);
@@ -332,16 +340,7 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = healthWindowHealthBar.Color = Color.Red;
-                if (vitality / MaxVitality > 0.5f)
-                {
-                    healthBar.Color = healthWindowHealthBar.Color = Color.Lerp(Color.Orange, Color.Green * 1.5f, (vitality / MaxVitality - 0.5f) * 2.0f);
-                }
-                else if (vitality > 0.0f)
-                {
-                    healthBar.Color = healthWindowHealthBar.Color = Color.Lerp(Color.Red, Color.Orange, (vitality / MaxVitality) * 2.0f);
-                }
-
+                healthBar.Color = healthWindowHealthBar.Color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, vitality / MaxVitality);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
             }
@@ -576,17 +575,29 @@ namespace Barotrauma
 
                     new GUIImage(new Rectangle(0, 0, 0, 0), affliction.Prefab.Icon, Alignment.TopLeft, child);
                     new GUITextBlock(new Rectangle((int)(affliction.Prefab.Icon.size.X + 10), 0, 0, 0), affliction.Prefab.Name, "", child);
-                    new GUITextBlock(new Rectangle((int)(affliction.Prefab.Icon.size.X + 10), 20, 0, 0), (int)Math.Ceiling(affliction.Strength) +" %", "", child).UserData = "percentage";
+                    var strengthBar = new GUIProgressBar(new Rectangle((int)(affliction.Prefab.Icon.size.X + 10), 30, 0, 15), Color.Green, "", 0.0f, Alignment.TopLeft, child);
+                    strengthBar.IsHorizontal = true;
+                    strengthBar.UserData = "strength";
 
-                    new GUITextBlock(new Rectangle(0, 60, 0, 0), affliction.Prefab.Description, "", child, true);
+                    new GUITextBlock(new Rectangle(0, 50, 0, 15), "", "", child, true).UserData = "vitality";
+
+                    new GUITextBlock(new Rectangle(0, 70, 0, 0), affliction.Prefab.Description, "", child, true);
 
                     child.Rect = new Rectangle(child.Rect.X, child.Rect.Y, child.Rect.Width, child.children.Sum(c => c.Rect.Height) + 20);
+
+                    strengthBar.SetDimensions(new Point(strengthBar.Rect.Width, 15), true);
                 }
                 else
                 {
-                    var percentageText = child.GetChild("percentage") as GUITextBlock;
-                    percentageText.Text = (int)Math.Ceiling(affliction.Strength) + " %";
-                    percentageText.TextColor = Color.Lerp(Color.Orange, Color.Red, affliction.Strength / 100.0f);
+                    var strengthBar = child.GetChild("strength") as GUIProgressBar;
+                    strengthBar.BarSize = Math.Max(affliction.Strength / affliction.Prefab.MaxStrength, 0.05f);
+                    strengthBar.Color = Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
+
+                    var vitalityText = child.GetChild("vitality") as GUITextBlock;
+                    int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
+                    vitalityText.Text = "Vitality -" + vitalityDecrease;
+                    vitalityText.TextColor = vitalityDecrease <= 0 ? Color.LightGreen :
+                    Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
 
                     currentChildren.Add(child);
                 }
@@ -836,8 +847,7 @@ namespace Barotrauma
                 if (limbHealth.IndicatorSprite == null) continue;
 
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
-                Color color = damageLerp < 0.5f ?
-                    Color.Lerp(Color.Green, Color.Orange, damageLerp * 2.0f) : Color.Lerp(Color.Orange, Color.Red, (damageLerp - 0.5f) * 2.0f);
+                Color color = HealthColorLerp(Color.Green, Color.Orange, Color.Red, 1.0f - damageLerp);
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)

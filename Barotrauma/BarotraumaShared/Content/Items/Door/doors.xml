@@ -122,12 +122,18 @@
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
     </DockingPort>
-
+    
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+    
     <PowerTransfer/>
     <Wire/>
     
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="60"/>
+      <skill name="Construction" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -166,6 +172,11 @@
 
     <PowerTransfer/>
     <Wire/>
+
+    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
+      <skill name="Construction" level="50"/>
+      <item name="Welding Tool"/>
+    </fixrequirement>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>

@@ -20,7 +20,7 @@ namespace Barotrauma
         public MonsterMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            monsterFile = prefab.XmlConfig.GetAttributeString("monsterfile", "");
+            monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
         }
         
         public override void Start(Level level)
