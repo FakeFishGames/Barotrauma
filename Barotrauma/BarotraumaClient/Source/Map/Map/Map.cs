@@ -443,14 +443,15 @@ namespace Barotrauma
                         float distFromPlayer = Vector2.Distance(currentLocation.MapPosition, (segment[0] + segment[1]) / 2.0f);
                         float dist = Vector2.Distance(start, end);
 
-                        int width = (int)(MathHelper.Lerp(5.0f, 25f, connection.Difficulty / 100.0f) * zoom);
+                        int width = (int)(MathHelper.Lerp(3.0f, 10f, connection.Difficulty / 100.0f) * zoom);
 
-                        /*spriteBatch.Draw(iceCrack,
-                            new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
-                            new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end - start),
-                            new Vector2(0, 30), SpriteEffects.None, 0.01f);*/
                         float a = (300.0f - distFromPlayer) / 300.0f;
-                        GUI.DrawLine(spriteBatch, start, end, Color.Red * MathHelper.Clamp(a * 0.2f, 0.05f, 0.3f), 0, (int)(6 * zoom));
+                        spriteBatch.Draw(iceCrack,
+                            new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
+                            null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
+                            new Vector2(0, 16), SpriteEffects.None, 0.01f);
+
+                        /*GUI.DrawLine(spriteBatch, start, end, Color.Red * MathHelper.Clamp(a * 0.2f, 0.05f, 0.3f), 0, (int)(6 * zoom));*/
                     }
 
                     if (GameMain.DebugDraw)
