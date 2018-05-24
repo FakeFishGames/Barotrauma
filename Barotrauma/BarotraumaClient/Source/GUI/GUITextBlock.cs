@@ -213,6 +213,9 @@ namespace Barotrauma
                 rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
             }
             SetTextPos();
+
+            RectTransform.ScaleChanged += SetTextPos;
+            RectTransform.SizeChanged += SetTextPos;
         }
 
         protected override void UpdateDimensions(GUIComponent parent = null)

@@ -10,8 +10,7 @@
     padding="40.0, 50.0, 40.0, 50.0"
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-  
+    selectedcolor="1.0,1.0,1.0,1.0"  
     textcolor="0.0, 0.0, 0.0, 1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
@@ -32,8 +31,7 @@
     padding="40.0, 40.0, 40.0, 40.0"
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-  
+    selectedcolor="1.0,1.0,1.0,1.0"  
     textcolor="0.0, 0.0, 0.0, 1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 705, 420, 55" slice="87,706,430,739"/>
@@ -43,8 +41,7 @@
     padding="40.0, 40.0, 40.0, 40.0"
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-  
+    selectedcolor="1.0,1.0,1.0,1.0"  
     textcolor="0.0, 0.0, 0.0, 1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="87, 541, 365, 220" slice="88,576,430,687"/>
@@ -77,10 +74,10 @@
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="683, 74, 129, 41" slice="687, 78, 808, 109"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="553, 74, 129, 41" slice="557, 78, 676, 109"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="553, 74, 129, 41" slice="557, 78, 676, 109"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="683, 74, 129, 41" slice="687, 78, 808, 109"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="553, 74, 129, 41" slice="557, 78, 676, 109"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="553, 74, 129, 41" slice="557, 78, 676, 109"/>
 
     <GUITextBlock
       textcolor="0.6, 0.65, 0.7, 1.0"
@@ -90,11 +87,16 @@
   <GUIButtonLarge
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-  
-    textcolor="1.0, 1.0, 1.0, 1.0">
+    selectedcolor="1.0,1.0,1.0,1.0">
+    
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="4,116,222,59" slice="41,140,189,151"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="415,172,222,59" slice="452,196,600,207"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="646,172,222,59" slice="683,196,831,207"/>    
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="646,172,222,59" slice="683,196,831,207"/>
 
-    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="13, 667, 220, 59" slice="27, 673, 226, 718"/>
+    <GUITextBlock
+      textcolor="0.6, 0.65, 0.7, 1.0"
+      padding="10.0, 0.0, 10.0, 0.0"/>
   </GUIButtonLarge>
 
   <GUIButtonHorizontalArrow
@@ -191,23 +193,30 @@
   <GUIDropDown
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    
+    selectedcolor="1.0,1.0,1.0,1.0"    
     textcolor="0.5, 0.55, 0.6, 1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="470, 599, 274, 52" slice="480, 610, 731, 640"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="469, 599, 276, 52" slice="480, 610, 731, 640"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="469, 544, 276, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="469, 544, 276, 52" slice="480, 552, 731, 584"/>
+    <GUITextBlock
+      textcolor="0.5, 0.55, 0.6, 1.0"
+      padding="10.0, 0.0, 10.0, 0.0">
+    </GUITextBlock>
   </GUIDropDown>
 
   <GUITextBox
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
-    selectedcolor="1.0,1.0,1.0,1.0"
-    
+    selectedcolor="1.0,1.0,1.0,1.0"    
     textcolor="0.5, 0.55, 0.6, 1.0">
-    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="470, 599, 274, 52" slice="480, 610, 731, 640"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 490, 274, 52" slice="480, 497, 731, 529"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="469, 599, 276, 52" slice="480, 610, 731, 640"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="469, 544, 276, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="469, 490, 276, 52" slice="480, 497, 731, 529"/>    
+    
+    <GUITextBlock
+      textcolor="0.5, 0.55, 0.6, 1.0"
+      padding="10.0, 0.0, 10.0, 0.0">
+    </GUITextBlock>
   </GUITextBox>
 
   <GUINumberInput>
@@ -217,9 +226,9 @@
       selectedcolor="1.0,1.0,1.0,1.0"
     
       textcolor="0.5, 0.55, 0.6, 1.0">
-      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="470, 599, 274, 52" slice="480, 610, 731, 640"/>
-      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
-      <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 490, 274, 52" slice="480, 497, 731, 529"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="470, 599, 274, 52" slice="480, 610, 731, 640"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="470, 544, 274, 52" slice="480, 552, 731, 584"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect="470, 490, 274, 52" slice="480, 497, 731, 529"/>
     </GUITextBox>
   </GUINumberInput>
 

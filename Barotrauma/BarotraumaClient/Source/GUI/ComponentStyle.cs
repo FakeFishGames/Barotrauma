@@ -54,22 +54,40 @@ namespace Barotrauma
                 int centerWidth = Math.Max(rect.Width - Slices[0].Width - Slices[2].Width, 0);
                 int centerHeight = Math.Max(rect.Height - Slices[0].Height - Slices[8].Height, 0);
 
-                Vector2 scale = new Vector2(
-                    MathHelper.Clamp((float)rect.Width / (Slices[0].Width + Slices[2].Width), 0, 1),
-                    MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[6].Height), 0, 1));
+                Vector2 scale = Vector2.One;
+                if (centerHeight == 0)
+                {
+                    scale.Y = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[3].Height + Slices[6].Height), 0, 1);
+                    centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale.Y);
+                }
+                else
+                {
+                    scale.Y = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[6].Height), 0, 1);
+                    centerHeight = (int)(centerHeight * scale.Y);
+                }
+                if (centerWidth == 0)
+                {
+                    scale.X = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[1].Height + Slices[2].Height), 0, 1);
+                    centerWidth = rect.Width - (int)((Slices[0].Height + Slices[2].Height) * scale.Y);
+                }
+                else
+                {
+                    scale.X = MathHelper.Clamp((float)rect.Width / (Slices[0].Width + Slices[2].Width), 0, 1);
+                    centerWidth = (int)(centerWidth * scale.X);
+                }
 
                 for (int x = 0; x < 3; x++)
                 {
-                    float width = (x == 1 ? centerWidth : Slices[x].Width) * scale.X;
+                    float width = (x == 1 ? centerWidth : Slices[x].Width * scale.X);
                     for (int y = 0; y < 3; y++)
                     {
-                        float height = (y == 1 ? centerHeight : Slices[x + y * 3].Height) * scale.Y;
+                        float height = (y == 1 ? centerHeight : Slices[x + y * 3].Height * scale.Y);
 
                         spriteBatch.Draw(Sprite.Texture,
                             new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
                             Slices[x + y * 3],
                             color);
-
+                        
                         pos.Y += height;
                     }
                     pos.X += width;

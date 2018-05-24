@@ -16,9 +16,7 @@ namespace Barotrauma
         private float barScroll;
 
         private float step;
-
-        private bool enabled;
-
+        
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
 
@@ -54,7 +52,7 @@ namespace Barotrauma
             }
         }
 
-        public bool Enabled
+        public override bool Enabled
         {
             get { return enabled; }
             set

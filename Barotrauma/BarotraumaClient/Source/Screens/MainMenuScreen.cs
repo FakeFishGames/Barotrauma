@@ -129,14 +129,12 @@ namespace Barotrauma
 
         public bool SelectTab(GUIButton button, object obj)
         {
-            try
+            if (obj is Tab)
             {
                 SelectTab((Tab)obj);
             }
-            catch (Exception e)
-            {
-                // TODO: This is bad, because the exception might be quite important in debugging. Try to get rid of this try catch block.
-                //DebugConsole.ThrowError("Exception: ", e);
+            else
+            { 
                 selectedTab = 0;
             }
 
@@ -550,7 +548,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), parent.RectTransform, Anchor.BottomRight)
             {
                 RelativeOffset = new Vector2(leftMargin, topMargin)
-            }, TextManager.Get("StartServerButton"))
+            }, TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
             {
                 OnClicked = HostServerClicked
             };

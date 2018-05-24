@@ -238,6 +238,13 @@ namespace Barotrauma
             set;
         }
 
+        protected bool enabled;
+        public virtual bool Enabled
+        {
+            get { return enabled; }
+            set { enabled = value; }
+        }
+
         public bool TileSprites;
 
         private static GUITextBlock toolTipBlock;
