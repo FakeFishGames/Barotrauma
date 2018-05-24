@@ -103,13 +103,12 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
-
-            if (inWater)
+            if (inWater && !forceStanding)
             {
                 Collider.FarseerBody.FixedRotation = false;
                 UpdateSineAnim(deltaTime);
             }
-            else if (currentHull != null && CanEnterSubmarine)
+            else if (currentHull != null && CanEnterSubmarine || forceStanding)
             {
                 //rotate collider back upright
                 float standAngle = dir == Direction.Right ? colliderStandAngle : -colliderStandAngle;
