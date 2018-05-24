@@ -84,7 +84,7 @@ namespace Barotrauma
 #if CLIENT       
             if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
+            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/MapLine.png");
 
             if (circleTexture == null) circleTexture = GUI.CreateCircle(512, true);
 
