@@ -120,5 +120,29 @@
     </ItemContainer>
   </Item>
 
+  <Item
+    name="Fire Extinguisher Bracket"
+    linkable="true"
+    pickdistance ="75">
+
+    <Sprite texture ="extinguisherBracket.png" depth="0.84" sourcerect="12,39,25,58" canflipx="false"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="14,-21" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Fire Extinguisher"/>
+    </ItemContainer>
+  </Item>
+  
+    <Item
+    name="Fire Extinguisher Mount"
+    linkable="true"
+    pickdistance ="75">
+
+    <Sprite texture ="extinguisherBracket.png" depth="0.54" sourcerect="2,101,29,30" canflipx="false"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="16,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true">
+      <Containable name="Fire Extinguisher"/>
+    </ItemContainer>
+  </Item>
+
 </Items>
 
