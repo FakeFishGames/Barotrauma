@@ -7,7 +7,7 @@ namespace Barotrauma
     //By Adrian Biagioli (Flafla2) 
     //under a Creative Commons Attribution 4.0 International License.
 
-    public class PerlinNoise
+    public static class PerlinNoise
     {
         public static double OctavePerlin(double x, double y, double z, int octaves, double persistence)
         {
