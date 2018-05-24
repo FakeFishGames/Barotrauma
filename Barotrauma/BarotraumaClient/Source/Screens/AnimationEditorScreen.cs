@@ -49,7 +49,7 @@ namespace Barotrauma
                 return true;
             };
             // TODO: use tick boxes?
-            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Swim");
+            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Stand");
             swimButton.OnClicked += (b, obj) =>
             {
                 _character.AnimController.forceStanding = !_character.AnimController.forceStanding;
@@ -63,7 +63,7 @@ namespace Barotrauma
                 moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
                 return true;
             };
-            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Walk");
+            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Run");
             runButton.OnClicked += (b, obj) =>
             {
                 _character.ForceRun = !_character.ForceRun;
