@@ -129,7 +129,7 @@ namespace Barotrauma
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
             character.Submarine = Submarine.MainSub;
-            character.AnimController.forceStanding = true;
+            character.AnimController.forceStanding = character.IsHumanoid;
             Character.Controlled = character;
             Cam.Position = character.WorldPosition;
             Cam.TargetPos = character.WorldPosition;
