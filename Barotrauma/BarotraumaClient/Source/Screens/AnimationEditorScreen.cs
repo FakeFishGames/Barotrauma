@@ -25,7 +25,9 @@ namespace Barotrauma
                 return cam;
             }
         }
+
         private Character _character;
+        private Vector2 spawnPosition;
 
         public override void Select()
         {
@@ -34,14 +36,11 @@ namespace Barotrauma
             //Submarine.MainSub = Submarine.SavedSubmarines.First();
             Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
             Submarine.MainSub.Load(true);
-            GameMain.World.ProcessChanges();
-
+            CalculateMovementLimits();
             _character = SpawnCharacter(Character.HumanConfigFile);
-            _character.Submarine = Submarine.MainSub;
-
+            // GUI
             var frame = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
             var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
-
             var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
             switchCharacterButton.OnClicked += (b, obj) =>
             {
@@ -60,7 +59,7 @@ namespace Barotrauma
             var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Move");
             moveButton.OnClicked += (b, obj) =>
             {
-                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
+                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(1, 0) as Vector2?;
                 moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
                 return true;
             };
@@ -73,6 +72,83 @@ namespace Barotrauma
             };
         }
 
+        #region Inifinite runner
+        private int min;
+        private int max;
+        private void CalculateMovementLimits()
+        {
+            min = CurrentWalls.Select(w => w.Rect.Left).OrderBy(p => p).First();
+            max = CurrentWalls.Select(w => w.Rect.Right).OrderBy(p => p).Last();
+        }
+
+        private List<Structure> _originalWalls;
+        private List<Structure> OriginalWalls
+        {
+            get
+            {
+                if (_originalWalls == null)
+                {
+                    _originalWalls = Structure.WallList;
+                }
+                return _originalWalls;
+            }
+        }
+
+        private List<Structure> clones = new List<Structure>();
+        private List<Structure> previousWalls;
+
+        private List<Structure> _currentWalls;
+        private List<Structure> CurrentWalls
+        {
+            get
+            {
+                if (_currentWalls == null)
+                {
+                    _currentWalls = OriginalWalls;
+                }
+                return _currentWalls;
+            }
+            set
+            {
+                _currentWalls = value;
+            }
+        }
+
+        private void CloneWalls(bool right)
+        {
+            previousWalls = CurrentWalls;
+            if (previousWalls == null)
+            {
+                previousWalls = OriginalWalls;
+            }
+            if (clones.None())
+            {
+                OriginalWalls.ForEachMod(w => clones.Add(w.Clone() as Structure));
+                CurrentWalls = clones;
+            }
+            else
+            {
+                // Select by position
+                var lastWall = right ?
+                    previousWalls.OrderBy(w => w.Rect.Right).Last() :
+                    previousWalls.OrderBy(w => w.Rect.Left).First();
+
+                CurrentWalls = clones.Contains(lastWall) ? clones : OriginalWalls;
+            }
+            if (CurrentWalls != OriginalWalls)
+            {
+                // Move the clones
+                for (int i = 0; i < CurrentWalls.Count; i++)
+                {
+                    int amount = right ? previousWalls[i].Rect.Width : -previousWalls[i].Rect.Width;
+                    CurrentWalls[i].Move(new Vector2(amount, 0));
+                }
+            }
+            GameMain.World.ProcessChanges();
+            CalculateMovementLimits();
+        }
+        #endregion
+
         private string GetConfigFile(string speciesName)
         {
             var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
@@ -81,14 +157,16 @@ namespace Barotrauma
 
         private Character SpawnCharacter(string configFile)
         {
-            var spawnPos = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
-            var character = Character.Create(configFile, spawnPos, ToolBox.RandomSeed(8), hasAi: false);
+            spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
+            var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
+            character.Submarine = Submarine.MainSub;
             // TODO: change
             //character.AnimController.forceStanding = character.IsHumanoid;
             Character.Controlled = character;
             Cam.Position = character.WorldPosition;
             Cam.TargetPos = character.WorldPosition;
             Cam.UpdateTransform(true);
+            GameMain.World.ProcessChanges();
             return character;
         }
 
@@ -130,8 +208,22 @@ namespace Barotrauma
             _character.AnimController.UpdateAnim((float)deltaTime);
             _character.AnimController.Update((float)deltaTime, cam);
 
-            // Does not move/zoom, even if freecam is enabled
-            cam.MoveCamera((float)deltaTime, allowMove: true, allowZoom: true);
+            // Teleports the character -> not very smooth
+            //if (_character.Position.X < min || _character.Position.X > max)
+            //{
+            //    _character.AnimController.SetPosition(ConvertUnits.ToSimUnits(new Vector2(spawnPosition.X, _character.Position.Y)), false);
+            //}
+
+            if (_character.Position.X < min)
+            {
+                CloneWalls(false);
+            }
+            else if (_character.Position.X > max)
+            {
+                CloneWalls(true);
+            }
+
+            cam.MoveCamera((float)deltaTime);
             cam.Position = _character.Position;
 
             GameMain.World.Step((float)deltaTime);
@@ -168,6 +260,11 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 160), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Clones: {clones.Count}", Color.White, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 260), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
+
             spriteBatch.End();
         }
     }
