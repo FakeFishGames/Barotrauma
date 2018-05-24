@@ -241,6 +241,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\EventManagerSettings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Autodoor.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Assemblies\Door.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
