@@ -81,13 +81,18 @@ namespace Barotrauma
 
             connections = new List<LocationConnection>();
 
-#if CLIENT
+#if CLIENT       
             if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
+            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/MapLine.png");
 
             if (circleTexture == null) circleTexture = GUI.CreateCircle(512, true);
-     
+
+            //TODO: move this to xml
+            for (int i = 1; i < 17; i++)
+            {
+                mapPieces.Add(new Sprite("Content/Map/MapPieces/btMAP_Test_" + i.ToString().PadLeft(2, '0') + ".png", Vector2.Zero, preMultiplyAlpha: false));
+            }     
 #endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
@@ -119,11 +124,61 @@ namespace Barotrauma
 
         partial void InitProjectSpecific();
 
+        const int NoiseResolution = 1000;
+        public float[,] Noise = new float[NoiseResolution, NoiseResolution];
+
+        private void GenerateNoiseMap(int octaves, float persistence)
+        {
+            float z = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+            
+            float min = float.MaxValue, max = 0.0f;
+            for (int x = 0; x < NoiseResolution; x++)
+            {
+                for (int y = 0; y < NoiseResolution; y++)
+                {
+                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / NoiseResolution, (double)y / NoiseResolution, (double)z, octaves, persistence);
+                    min = Math.Min(Noise[x, y], min);
+                    max = Math.Max(Noise[x, y], max);
+                }
+            }
+
+            float radius = NoiseResolution / 2;
+            Vector2 center = Vector2.One * radius;
+            float range = max - min;
+            float centerDarken = 0.0f;
+            for (int x = 0; x < NoiseResolution; x++)
+            {
+                for (int y = 0; y < NoiseResolution; y++)
+                {
+                    Noise[x, y] = (Noise[x, y] - min) / range;
+                    float dist = Vector2.Distance(center, new Vector2(x, y));
+                    float darkenAmount = 1.0f - (dist / radius);
+                    Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * centerDarken, darkenAmount * darkenAmount);
+                }
+            }
+        }
+
+        partial void GenerateNoiseMapProjSpecific();
+
         private void GenerateLocations()
         {
+            GenerateNoiseMap(4, 0.5f);
+
             List<Vector2> sites = new List<Vector2>();
             float mapRadius = size / 2;
             Vector2 mapCenter = new Vector2(mapRadius, mapRadius);
+
+            for (float x = 0; x < size; x+=10.0f)
+            {
+                for (float y = 0; y < size; y += 10.0f)
+                {
+                    float noiseVal = Noise[(int)(x / size * NoiseResolution), (int)(y / size * NoiseResolution)];
+                    if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < noiseVal * noiseVal * noiseVal * 0.1f)
+                    {
+                        sites.Add(new Vector2(x, y));
+                    }
+                }
+            }
 
             float zoneRadius = size / 2 / DifficultyZones;
             for (int i = 0; i < DifficultyZones; i++)
@@ -131,7 +186,6 @@ namespace Barotrauma
                 for (int j = 0; j < (i + 1) * MathHelper.Pi * 5; j++)
                 {
                     float thisZoneRadius = (i + 1.0f) * zoneRadius;
-                    sites.Add(mapCenter + Rand.Vector(thisZoneRadius - Rand.Range(0.0f, zoneRadius, Rand.RandSync.Server), Rand.RandSync.Server));
                 }
             }
 
@@ -222,15 +276,12 @@ namespace Barotrauma
             foreach (LocationConnection connection in connections)
             {
                 float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
-                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server),0, 100);
-
-                Vector2 start = connection.Locations[0].MapPosition;
-                Vector2 end = connection.Locations[1].MapPosition;
-                int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 10.0f));
-                connection.CrackSegments = MathUtils.GenerateJaggedLine(start, end, generations, 5.0f);
+                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
             }
-            
+
             AssignBiomes();
+
+            GenerateNoiseMapProjSpecific();
         }
 
         private void AssignBiomes()
