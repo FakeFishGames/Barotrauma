@@ -396,7 +396,8 @@ namespace Barotrauma
             missionTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), midInfoColumn.RectTransform), isHorizontal: true)
             {
                 UserData = 0,
-                Visible = false
+                Visible = false,
+                Stretch = true
             };
 
             var missionTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), missionTypeContainer.RectTransform),
@@ -1062,7 +1063,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
                      selectedClient.Connection.RemoteEndPoint.Address.ToString());
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), 
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), 
                     TextManager.Get("Rank"));
                 var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("Rank"))
@@ -1095,19 +1096,25 @@ namespace Barotrauma
                     return true;
                 };
 
+                var permissionLabels = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"));
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("PermittedConsoleCommands"));
+                
                 var permissionContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedPlayerFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
 
-                var permissionsBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform), style: null)
+                var permissionsBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
                 {
                     UserData = selectedClient
                 };
-
-                new GUITextBlock(new Rectangle(0, 100, permissionsBox.Rect.Width, 15), TextManager.Get("Permissions"), "", playerFrameInner);
-                int x = 0, y = 0;
+                
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (permission == ClientPermissions.None) continue;
@@ -1117,47 +1124,47 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, "", permissionsBox);
-                    permissionTick.UserData = permission;
-                    permissionTick.Selected = selectedClient.HasPermission(permission);
-
-                    permissionTick.OnSelected = (tickBox) =>
+                    var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
+                        permissionStr, font: GUI.SmallFont)
                     {
-                        //reset rank to custom
-                        rankDropDown.SelectItem(null);
+                        UserData = permission,
+                        Selected = selectedClient.HasPermission(permission),
 
-                        var client = playerFrame.UserData as Client;
-                        if (client == null) return false;
+                        OnSelected = (tickBox) =>
+                        {
+                            //reset rank to custom
+                            rankDropDown.SelectItem(null);
 
-                        var thisPermission = (ClientPermissions)tickBox.UserData;
+                            var client = playerFrame.UserData as Client;
+                            if (client == null) return false;
 
-                        if (tickBox.Selected)
-                            client.GivePermission(thisPermission);
-                        else
-                            client.RemovePermission(thisPermission);
+                            var thisPermission = (ClientPermissions)tickBox.UserData;
 
-                        GameMain.Server.UpdateClientPermissions(client);
+                            if (tickBox.Selected)
+                                client.GivePermission(thisPermission);
+                            else
+                                client.RemovePermission(thisPermission);
 
-                        return true;
+                            GameMain.Server.UpdateClientPermissions(client);
+
+                            return true;
+                        }
                     };
-
-                    y += 20;
-                    if (y >= permissionsBox.Rect.Height - 15)
-                    {
-                        y = 0;
-                        x += 120;
-                    }
                 }
 
-                new GUITextBlock(new Rectangle(0, 100, (int)(playerFrameInner.Rect.Width * 0.5f), 15), TextManager.Get("PermittedConsoleCommands"), "", Alignment.TopRight, Alignment.TopLeft, playerFrameInner, true);
-                var commandList = new GUIListBox(new Rectangle(0, 125, (int)(playerFrameInner.Rect.Width * 0.5f), 160), "", Alignment.TopRight, playerFrameInner);
-                commandList.UserData = selectedClient;
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), permissionContainer.RectTransform))
+                {
+                    UserData = selectedClient
+                };
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
-                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, "", commandList);
-                    commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
-                    commandTickBox.ToolTip = command.help;
-                    commandTickBox.UserData = command;
+                    var commandTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), commandList.Content.RectTransform),
+                        command.names[0], font: GUI.SmallFont)
+                    {
+                        Selected = selectedClient.PermittedConsoleCommands.Contains(command),
+                        ToolTip = command.help,
+                        UserData = command
+                    };
                     commandTickBox.OnSelected += (GUITickBox tickBox) =>
                     {
                         //reset rank to custom
@@ -1182,37 +1189,57 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
-            {
-                var kickButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Kick"), Alignment.BottomLeft, "", playerFrameInner);
-                kickButton.UserData = obj;
-                kickButton.OnClicked += KickPlayer;
-                kickButton.OnClicked += ClosePlayerFrame;
-            }
-
+            var buttonAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            var buttonAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true);
+            
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
-                var banButton = new GUIButton(new Rectangle(90, 0, 80, 20), TextManager.Get("Ban"), Alignment.BottomLeft, "", playerFrameInner);
-                banButton.UserData = obj;
+                var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    TextManager.Get("Ban"))
+                {
+                    UserData = obj
+                };
                 banButton.OnClicked += BanPlayer;
                 banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new Rectangle(180, 0, 80, 20), TextManager.Get("BanRange"), Alignment.BottomLeft, "", playerFrameInner);
-                rangebanButton.UserData = obj;
+                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaUpper.RectTransform),
+                    TextManager.Get("BanRange"))
+                {
+                    UserData = obj
+                };
                 rangebanButton.OnClicked += BanPlayerRange;
                 rangebanButton.OnClicked += ClosePlayerFrame;
             }
-            
+
+
             if (GameMain.Client != null && GameMain.Client.Voting.AllowVoteKick && selectedClient != null)
             {
-                var kickVoteButton = new GUIButton(new Rectangle(0, -30, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", playerFrameInner);
-                kickVoteButton.Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID);
-                kickVoteButton.UserData = selectedClient;
-                kickVoteButton.OnClicked += GameMain.Client.VoteForKick;
-            }        
+                var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    TextManager.Get("VoteToKick"))
+                {
+                    Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                    OnClicked = GameMain.Client.VoteForKick,
+                    UserData = selectedClient
+                };
+            }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Close"), Alignment.BottomRight, "", playerFrameInner);
-            closeButton.OnClicked = ClosePlayerFrame;
+            if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
+            {
+                var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    TextManager.Get("Kick"))
+                {
+                    UserData = obj
+                };
+                kickButton.OnClicked = KickPlayer;
+                kickButton.OnClicked = ClosePlayerFrame;
+            }
+
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
+                TextManager.Get("Close"))
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = ClosePlayerFrame
+            };
 
             return false;
         }
