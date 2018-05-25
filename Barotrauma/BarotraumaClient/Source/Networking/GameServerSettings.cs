@@ -11,34 +11,58 @@ namespace Barotrauma.Networking
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;
 
-
+        enum SettingsTab
+        {
+            Rounds,
+            Server,
+            Banlist,
+            WhiteList
+        }
+        
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
+            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
+            {
+                OnClicked = ToggleSettingsFrame
+            };
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, "", settingsFrame);
-            innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUITextBlock(new Rectangle(0, -5, 0, 20), "Settings", "", innerFrame, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), "Settings", font: GUI.LargeFont);
 
-            string[] tabNames = { "Rounds", "Server", "Banlist", "Whitelist" };
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            var tabValues = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>().ToArray();
+            string[] tabNames = new string[tabValues.Count()];
+            for (int i = 0; i<tabNames.Length; i++)
+            {
+                tabNames[i] = TextManager.Get("ServerSettings" + tabValues[i] + "Tab");
+            }
             settingsTabs = new GUIFrame[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
-                settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, "InnerFrame", innerFrame);
-                settingsTabs[i].Padding = new Vector4(40.0f, 20.0f, 40.0f, 40.0f);
+                settingsTabs[i] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.79f), paddedFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) },
+                    style: "InnerFrame");
 
-                var tabButton = new GUIButton(new Rectangle(85 * i, 35, 80, 20), tabNames[i], "", innerFrame);
-                tabButton.UserData = i;
-                tabButton.OnClicked = SelectSettingsTab;
+                var tabButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), tabNames[i])
+                {
+                    UserData = i,
+                    OnClicked = SelectSettingsTab
+                };
             }
-
-            settingsTabs[2].Padding = Vector4.Zero;
-
+            
             SelectSettingsTab(null, 0);
 
-            var closeButton = new GUIButton(new Rectangle(10, 0, 100, 20), "Close", Alignment.BottomRight, "", innerFrame);
-            closeButton.OnClicked = ToggleSettingsFrame;
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
+            {
+                OnClicked = ToggleSettingsFrame
+            };
 
             //--------------------------------------------------------------------------------
             //                              game settings 
@@ -46,145 +70,179 @@ namespace Barotrauma.Networking
 
             int y = 0;
 
-            settingsTabs[0].Padding = new Vector4(40.0f, 5.0f, 40.0f, 40.0f);
+            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Submarine selection:", "", settingsTabs[0]);
-            var selectionFrame = new GUIFrame(new Rectangle(0, y + 20, 300, 20), null, settingsTabs[0]);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
+            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
-                selectionTick.Selected = i == (int)subSelectionMode;
-                selectionTick.OnSelected = SwitchSubSelection;
-                selectionTick.UserData = (SelectionMode)i;
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont)
+                {
+                    Selected = i == (int)subSelectionMode,
+                    OnSelected = SwitchSubSelection,
+                    UserData = (SelectionMode)i
+                };
             }
 
             y += 45;
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Mode selection:", "", settingsTabs[0]);
-            selectionFrame = new GUIFrame(new Rectangle(0, y + 20, 300, 20), null, settingsTabs[0]);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
+            selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new Rectangle(i * 100, 0, 20, 20), ((SelectionMode)i).ToString(), Alignment.Left, selectionFrame);
-                selectionTick.Selected = i == (int)modeSelectionMode;
-                selectionTick.OnSelected = SwitchModeSelection;
-                selectionTick.UserData = (SelectionMode)i;
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), ((SelectionMode)i).ToString(), font: GUI.SmallFont)
+                {
+                    Selected = i == (int)modeSelectionMode,
+                    OnSelected = SwitchModeSelection,
+                    UserData = (SelectionMode)i
+                };
             }
 
             y += 60;
 
-            var endBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round when destination reached", Alignment.Left, settingsTabs[0]);
-            endBox.Selected = EndRoundAtLevelEnd;
-            endBox.OnSelected = (GUITickBox) => { EndRoundAtLevelEnd = GUITickBox.Selected; return true; };
+            var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+                TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
+            {
+                Selected = EndRoundAtLevelEnd,
+                OnSelected = (GUITickBox) => { EndRoundAtLevelEnd = GUITickBox.Selected; return true; }
+            };
 
             y += 25;
 
-            var endVoteBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round by voting", Alignment.Left, settingsTabs[0]);
-            endVoteBox.Selected = Voting.AllowEndVoting;
-            endVoteBox.OnSelected = (GUITickBox) =>
+            var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+                TextManager.Get("ServerSettingsEndRoundVoting"))
             {
-                Voting.AllowEndVoting = !Voting.AllowEndVoting;
-                GameMain.Server.UpdateVoteStatus();
-                return true;
+                Selected = Voting.AllowEndVoting,
+                OnSelected = (GUITickBox) =>
+                {
+                    Voting.AllowEndVoting = !Voting.AllowEndVoting;
+                    GameMain.Server.UpdateVoteStatus();
+                    return true;
+                }
             };
 
+            GUIScrollBar slider;
+            GUITextBlock sliderLabel;
+            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
 
-            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 15, 20, 20), "Votes required: 50 %", "", settingsTabs[0], GUI.SmallFont);
-
-            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[0]);
-            votesRequiredSlider.UserData = votesRequiredText;
-            votesRequiredSlider.Step = 0.2f;
-            votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
-            votesRequiredSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            string endRoundLabel = sliderLabel.Text;
+            slider.Step = 0.2f;
+            slider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
-
                 EndVoteRequiredRatio = barScroll / 2.0f + 0.5f;
-                voteText.Text = "Votes required: " + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                voteText.Text = endRoundLabel + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
-            votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
+            slider.OnMoved(slider, slider.BarScroll);
 
             y += 35;
 
-            var respawnBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow respawning", Alignment.Left, settingsTabs[0]);
-            respawnBox.Selected = AllowRespawn;
-            respawnBox.OnSelected = (GUITickBox) =>
+            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowRespawning"))
             {
-                AllowRespawn = !AllowRespawn;
-                return true;
+                Selected = AllowRespawn,
+                OnSelected = (GUITickBox) =>
+                {
+                    AllowRespawn = !AllowRespawn;
+                    return true;
+                }
             };
 
-
-            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 13, 20, 20), "Respawn interval", "", settingsTabs[0], GUI.SmallFont);
-
-            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
-            respawnIntervalSlider.UserData = respawnIntervalText;
-            respawnIntervalSlider.Step = 0.05f;
-            respawnIntervalSlider.BarScroll = RespawnInterval / 600.0f;
-            respawnIntervalSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
+            string intervalLabel = sliderLabel.Text;
+            slider.Step = 0.05f;
+            slider.BarScroll = RespawnInterval / 600.0f;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock text = scrollBar.UserData as GUITextBlock;
-
                 RespawnInterval = Math.Max(barScroll * 600.0f, 10.0f);
-                text.Text = "Interval: " + ToolBox.SecondsToReadableTime(RespawnInterval);
+                text.Text = intervalLabel + ToolBox.SecondsToReadableTime(RespawnInterval);
                 return true;
             };
-            respawnIntervalSlider.OnMoved(respawnIntervalSlider, respawnIntervalSlider.BarScroll);
+            slider.OnMoved(slider, slider.BarScroll);
 
             y += 35;
 
-            var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", "", settingsTabs[0]);
-            minRespawnText.ToolTip = "What percentage of players has to be dead/spectating until a respawn shuttle is dispatched";
+            var minRespawnText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
+            {
+                ToolTip = TextManager.Get("ServerSettingsMinRespawnToolTip")
+            };
 
-            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
-            minRespawnSlider.ToolTip = minRespawnText.ToolTip;
-            minRespawnSlider.UserData = minRespawnText;
-            minRespawnSlider.Step = 0.1f;
-            minRespawnSlider.BarScroll = MinRespawnRatio;
-            minRespawnSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn");
+            CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
+            slider.ToolTip = minRespawnText.ToolTip;
+            slider.UserData = minRespawnText;
+            slider.Step = 0.1f;
+            slider.BarScroll = MinRespawnRatio;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock txt = scrollBar.UserData as GUITextBlock;
-
                 MinRespawnRatio = barScroll;
-                txt.Text = "Minimum players to respawn: " + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
+                txt.Text = minRespawnLabel + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
-            minRespawnSlider.OnMoved(minRespawnSlider, MinRespawnRatio);
+            slider.OnMoved(slider, MinRespawnRatio);
 
             y += 30;
 
-            var respawnDurationText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Duration of respawn transport", "", settingsTabs[0]);
-            respawnDurationText.ToolTip = "The amount of time respawned players have to navigate the respawn shuttle to the main submarine. " +
-                "After the duration expires, the shuttle will automatically head back out of the level.";
+            var respawnDurationText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
+            {
+                ToolTip = TextManager.Get("ServerSettingsRespawnDurationToolTip")
+            };
 
-            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
-            respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
-            respawnDurationSlider.UserData = respawnDurationText;
-            respawnDurationSlider.Step = 0.1f;
-            respawnDurationSlider.BarScroll = MaxTransportTime <= 0.0f ? 1.0f : (MaxTransportTime - 60.0f) / 600.0f;
-            respawnDurationSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration");
+            CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
+            slider.ToolTip = minRespawnText.ToolTip;
+            slider.UserData = respawnDurationText;
+            slider.Step = 0.1f;
+            slider.BarScroll = MaxTransportTime <= 0.0f ? 1.0f : (MaxTransportTime - 60.0f) / 600.0f;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock txt = scrollBar.UserData as GUITextBlock;
 
                 if (barScroll == 1.0f)
                 {
                     MaxTransportTime = 0;
-                    txt.Text = "Duration of respawn transport: unlimited";
+                    txt.Text = respawnDurationLabel + "unlimited";
                 }
                 else
                 {
                     MaxTransportTime = barScroll * 600.0f + 60.0f;
-                    txt.Text = "Duration of respawn transport: " + ToolBox.SecondsToReadableTime(MaxTransportTime);
+                    txt.Text = respawnDurationLabel + ToolBox.SecondsToReadableTime(MaxTransportTime);
                 }
 
                 return true;
             };
-            respawnDurationSlider.OnMoved(respawnDurationSlider, respawnDurationSlider.BarScroll);
+            slider.OnMoved(slider, slider.BarScroll);
 
             y += 35;
 
-            var monsterButton = new GUIButton(new Rectangle(0, y, 130, 20), "Monster Spawns", "", settingsTabs[0]);
-            monsterButton.Enabled = !GameStarted;
+            var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            var monsterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonHolder.RectTransform),
+                TextManager.Get("ServerSettingsMonsterSpawns"))
+            {
+                Enabled = !GameStarted
+            };
+            //TODO: reimplement
             var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), "", settingsTabs[0]);
             monsterFrame.Visible = false;
             monsterFrame.ClampMouseRectToParent = false;
@@ -227,9 +285,12 @@ namespace Barotrauma.Networking
                 };
             }
 
-            var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", "", settingsTabs[0]);
-            cargoButton.Enabled = !GameStarted;
-
+            var cargoButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonHolder.RectTransform),
+                TextManager.Get("ServerSettingsAdditionalCargo"))
+            {
+                Enabled = !GameStarted
+            };
+            //TODO: reimplement
             var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), "", settingsTabs[0]);
             cargoFrame.Visible = false;
             cargoFrame.ClampMouseRectToParent = false;
@@ -295,6 +356,11 @@ namespace Barotrauma.Networking
 
             y = 0;
 
+            var serverTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Server].RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
             var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", "", settingsTabs[1]);
             var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
@@ -491,6 +557,21 @@ namespace Barotrauma.Networking
 
         }
 
+        private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), barSize: 0.1f);
+            label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), 
+                string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), font: GUI.SmallFont);
+
+            //slider has a reference to the label to change the text when it's used
+            slider.UserData = label;
+        }
 
         private bool SwitchSubSelection(GUITickBox tickBox)
         {

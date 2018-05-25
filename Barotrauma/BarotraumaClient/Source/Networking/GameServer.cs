@@ -53,19 +53,14 @@ namespace Barotrauma.Networking
         {
             if (started) base.AddToGUIUpdateList();
 
-            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
-            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+            settingsFrame?.AddToGUIUpdateList();
+            log.LogFrame?.AddToGUIUpdateList();
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
-            if (settingsFrame != null)
-            {
-                settingsFrame.DrawManually(spriteBatch);
-            }
-
+            
             if (!ShowNetStats) return;
 
             GUI.Font.DrawString(spriteBatch, "Unique Events: " + entityEventManager.UniqueEvents.Count, new Vector2(10, 50), Color.White);

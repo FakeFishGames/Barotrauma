@@ -341,7 +341,6 @@ namespace Barotrauma.Networking
         {
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
-            if (settingsFrame != null) settingsFrame.UpdateManually(deltaTime);
 #endif
             
             if (!started) return;
