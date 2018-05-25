@@ -161,11 +161,17 @@ namespace Barotrauma
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.IsHumanoid;
             Character.Controlled = character;
+            float size = ConvertUnits.ToDisplayUnits(character.AnimController.Collider.radius * 2);
+            float margin = 100;
+            float distance = Vector2.Distance(spawnPosition, new Vector2(spawnPosition.X, OriginalWalls.First().WorldPosition.Y)) - margin;
+            if (size > distance)
+            {
+                character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
+            }
             Cam.Position = character.WorldPosition;
             Cam.TargetPos = character.WorldPosition;
             Cam.UpdateTransform(true);
             GameMain.World.ProcessChanges();
-
             return character;
         }
         #endregion
