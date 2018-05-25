@@ -207,6 +207,20 @@ namespace Barotrauma
                 runButton.Text = _character.ForceRun ? "Walk" : "Run";
                 return true;
             };
+            var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
+            saveButton.OnClicked += (b, obj) =>
+            {
+                HumanoidAnimParams.RunInstance.Save();
+                HumanoidAnimParams.WalkInstance.Save();
+                return true;
+            };
+            var resetButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Reset");
+            resetButton.OnClicked += (b, obj) =>
+            {
+                HumanoidAnimParams.RunInstance.Reset();
+                HumanoidAnimParams.WalkInstance.Reset();
+                return true;
+            };
         }
         #endregion
 
@@ -216,20 +230,9 @@ namespace Barotrauma
             HumanoidAnimParams.Editor.AddToGUIUpdateList();
         }
 
-        public static void UpdateEditor(float deltaTime)
-        {
-            if (Character.Controlled == null) { return; }
-            if (PlayerInput.KeyDown(Keys.LeftAlt) && PlayerInput.KeyHit(Keys.S))
-            {
-                HumanoidAnimParams.RunInstance.Save();
-                HumanoidAnimParams.WalkInstance.Save();
-            }
-        }
-
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            UpdateEditor((float)deltaTime);
 
             Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             Submarine.MainSub.Update((float)deltaTime);
@@ -243,10 +246,10 @@ namespace Barotrauma
 
             PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
 
-            _character.ControlLocalPlayer((float)deltaTime, cam, false);
-            _character.Control((float)deltaTime, cam);
+            _character.ControlLocalPlayer((float)deltaTime, Cam, false);
+            _character.Control((float)deltaTime, Cam);
             _character.AnimController.UpdateAnim((float)deltaTime);
-            _character.AnimController.Update((float)deltaTime, cam);
+            _character.AnimController.Update((float)deltaTime, Cam);
 
             // Teleports the character -> not very smooth
             //if (_character.Position.X < min || _character.Position.X > max)
@@ -263,8 +266,8 @@ namespace Barotrauma
                 CloneWalls(true);
             }
 
-            cam.MoveCamera((float)deltaTime);
-            cam.Position = _character.Position;
+            Cam.MoveCamera((float)deltaTime);
+            Cam.Position = _character.Position;
 
             GameMain.World.Step((float)deltaTime);
         }
@@ -273,15 +276,15 @@ namespace Barotrauma
         {
             base.Draw(deltaTime, graphics, spriteBatch);
             graphics.Clear(Color.CornflowerBlue);
-            cam.UpdateTransform(true);
+            Cam.UpdateTransform(true);
 
             // Submarine
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
             Submarine.Draw(spriteBatch, true);
             spriteBatch.End();
 
             // Character
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
             _character.Draw(spriteBatch);
             spriteBatch.End();
 
