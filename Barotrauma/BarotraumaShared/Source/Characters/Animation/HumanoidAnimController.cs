@@ -10,6 +10,9 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
+        protected override AnimParams AnimParams => Math.Abs(TargetMovement.X) > 1.5f ? HumanoidAnimParams.RunInstance : HumanoidAnimParams.WalkInstance;
+        protected HumanoidAnimParams HumanAnimParams => AnimParams as HumanoidAnimParams;
+
         public bool Crouching;
 
         private bool aiming;
@@ -169,8 +172,7 @@ namespace Barotrauma
                 UpdateStandingSimple();
                 return;
             }
-            
-                                   
+                                             
             switch (Anim)
             {
                 case Animation.Climbing:
@@ -234,12 +236,8 @@ namespace Barotrauma
             if (character.IsRemotePlayer && GameMain.Server == null) Collider.LinearVelocity = Vector2.Zero;
         }
 
-
-
         void UpdateStanding()
         {
-            HumanoidAnimParams animParams = Math.Abs(TargetMovement.X) > 1.5f ? HumanoidAnimParams.RunInstance : HumanoidAnimParams.WalkInstance;
-
             Vector2 handPos;
 
             //if you're allergic to magic numbers, stop reading now
@@ -257,7 +255,7 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpSpeed = animParams.GetUpSpeed;
+            float getUpSpeed = HumanAnimParams.GetUpSpeed;
             //float walkCycleSpeed = movement.X * walkAnimSpeed;
             if (Stairs != null)
             {
@@ -290,14 +288,14 @@ namespace Barotrauma
             float walkPosY = (float)Math.Sin(walkPos);
 
 
-            Vector2 stepSize = animParams.StepSize;
+            Vector2 stepSize = HumanAnimParams.StepSize;
             stepSize.X *= walkPosX;
             stepSize.Y *= walkPosY;                
 
             float footMid = colliderPos.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
             movement = overrideTargetMovement == Vector2.Zero ?
-                MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, movementLerp) :
+                MathUtils.SmoothStep(movement, TargetMovement * WalkSpeed, movementLerp) :
                 overrideTargetMovement;
 
             if (Math.Abs(movement.X) < 0.005f)
@@ -321,9 +319,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    leg.body.ApplyTorque(shortestAngle * animParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(shortestAngle * HumanAnimParams.LegCorrectionTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * animParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(-shortestAngle * HumanAnimParams.LegCorrectionTorque);
                 }
             }
 
@@ -349,13 +347,13 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * animParams.TorsoLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + animParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * HumanAnimParams.TorsoLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + HumanAnimParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * animParams.HeadLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + animParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * HumanAnimParams.HeadLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HumanAnimParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
@@ -365,11 +363,11 @@ namespace Barotrauma
 
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * animParams.TorsoLeanAmount, colliderPos.Y + animParams.TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * HumanAnimParams.TorsoLeanAmount, colliderPos.Y + HumanAnimParams.TorsoPosition), getUpSpeed);
 
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * animParams.HeadLeanAmount, colliderPos.Y + animParams.HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * HumanAnimParams.HeadLeanAmount, colliderPos.Y + HumanAnimParams.HeadPosition), getUpSpeed * 1.2f);
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
@@ -391,7 +389,7 @@ namespace Barotrauma
             {
                 //progress the walking animation
                 //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
-                walkPos -= MathHelper.ToRadians(animParams.CycleSpeed) * Math.Sign(movement.X);
+                walkPos -= MathHelper.ToRadians(HumanAnimParams.CycleSpeed) * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -399,7 +397,7 @@ namespace Barotrauma
                     Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
-                    footPos += new Vector2(Math.Sign(movement.X) * animParams.FootMoveOffset.X, animParams.FootMoveOffset.Y);
+                    footPos += new Vector2(Math.Sign(movement.X) * HumanAnimParams.FootMoveOffset.X, HumanAnimParams.FootMoveOffset.Y);
 
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
@@ -413,8 +411,8 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    MoveLimb(foot, footPos + colliderPos, animParams.FootMoveStrength, true);
-                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, animParams.FootRotateStrength);
+                    MoveLimb(foot, footPos + colliderPos, HumanAnimParams.FootMoveStrength, true);
+                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, HumanAnimParams.FootRotateStrength);
                 }
 
                 /*if (runningModifier > 1.0f)
@@ -429,34 +427,34 @@ namespace Barotrauma
                     }
                 }*/
 
-                if (animParams.ThighCorrectionTorque > 0.0f)
+                if (HumanAnimParams.ThighCorrectionTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * HumanAnimParams.ThighCorrectionTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * HumanAnimParams.ThighCorrectionTorque);
                     }
                 }
 
                 //calculate the positions of hands
                 handPos = torso.SimPosition;
-                handPos.X = -walkPosX * animParams.HandMoveAmount.X;
+                handPos.X = -walkPosX * HumanAnimParams.HandMoveAmount.X;
 
-                float lowerY = animParams.HandClampY;
+                float lowerY = HumanAnimParams.HandClampY;
 
-                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * animParams.HandMoveAmount.Y));
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * HumanAnimParams.HandMoveAmount.Y));
 
-                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * animParams.HandMoveOffset.X, animParams.HandMoveOffset.Y);
+                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * HumanAnimParams.HandMoveOffset.X, HumanAnimParams.HandMoveOffset.Y);
 
                 if (!rightHand.Disabled)
                 {
                     HandIK(rightHand, torso.SimPosition + posAddition +
                         new Vector2(
                             -handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), animParams.HandMoveStrength);
+                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), HumanAnimParams.HandMoveStrength);
                 }
 
                 if (!leftHand.Disabled)
@@ -464,7 +462,7 @@ namespace Barotrauma
                     HandIK(leftHand, torso.SimPosition + posAddition +
                         new Vector2(
                             handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), animParams.HandMoveStrength);
+                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), HumanAnimParams.HandMoveStrength);
                 }
 
             }
@@ -672,7 +670,7 @@ namespace Barotrauma
 
             if (!character.IsRemotePlayer || GameMain.Server != null)
             {
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * swimSpeed, movementLerp);
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * SwimSpeed, movementLerp);
             }
                         
             walkPos += movement.Length() * 0.2f;

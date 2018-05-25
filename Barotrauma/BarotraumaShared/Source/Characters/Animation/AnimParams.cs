@@ -34,6 +34,55 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
         }
 
+        [Serialize("1.0,1.0", true), Editable]
+        public Vector2 StepSize
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, true), Editable]
+        public float WalkSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, true), Editable]
+        public float RunSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, true), Editable]
+        public float SwimSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(2.0f, true), Editable]
+        public float RunSpeedMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.5f, true), Editable]
+        public float SwimSpeedMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, true), Editable]
+        public float LegTorque
+        {
+            get;
+            set;
+        }
+
 #if CLIENT
         private static GUIListBox editor;
         public static GUIListBox Editor

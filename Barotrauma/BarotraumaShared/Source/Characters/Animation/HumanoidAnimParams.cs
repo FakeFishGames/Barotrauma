@@ -6,6 +6,7 @@ namespace Barotrauma
     {
         public static HumanoidAnimParams WalkInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimWalk.xml");
         public static HumanoidAnimParams RunInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimRun.xml");
+        // TODO: swim instance?
 
         public HumanoidAnimParams(string file) : base(file) { }
 
@@ -57,15 +58,9 @@ namespace Barotrauma
             get;
             set;
         }
+
         [Serialize(20.0f, true), Editable]
         public float FootRotateStrength
-        {
-            get;
-            set;
-        }
-
-        [Serialize("0.4,0.12", true), Editable]
-        public Vector2 StepSize
         {
             get;
             set;
