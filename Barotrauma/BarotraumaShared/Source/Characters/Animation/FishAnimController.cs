@@ -8,9 +8,12 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
+        private FishAnimParams animParams;
+
         //amplitude and wave length of the "sine wave" swimming animation
         //if amplitude = 0, sine wave animation isn't used
-        private float waveAmplitude;
+        private float WaveAmplitude => animParams != null ? _waveAmplitude * animParams.WaveAmplitudeMultiplier : _waveAmplitude;
+        private float _waveAmplitude;
         private float waveLength;
 
         private float steerTorque;
@@ -31,7 +34,8 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element, string seed)
             : base(character, element, seed)
         {
-            waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
+            animParams = FishAnimParams.GetInstance(character.SpeciesName);
+            _waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
 
             colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
@@ -308,13 +312,13 @@ namespace Barotrauma
             }
 
             Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null && waveAmplitude > 0.0f)
+            if (tail != null && WaveAmplitude > 0.0f)
             {
                 walkPos -= movement.Length();
 
                 float waveRotation = (float)Math.Sin(walkPos / waveLength);
 
-                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
+                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * WaveAmplitude);
             }
 
 

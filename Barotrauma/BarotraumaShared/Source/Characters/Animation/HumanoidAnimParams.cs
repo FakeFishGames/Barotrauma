@@ -1,89 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class HumanoidAnimParams : ISerializableEntity
+    class HumanoidAnimParams : AnimParams
     {
-        public string Name
-        {
-            get;
-            private set;
-        }
-
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get;
-            private set;
-        }
-
         public static HumanoidAnimParams WalkInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimWalk.xml");
         public static HumanoidAnimParams RunInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimRun.xml");
 
-        private string filePath;
-
-        public HumanoidAnimParams(string file)
-        {
-            this.filePath = file;
-
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
-
-            Name = doc.Root.Name.ToString();
-
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
-        }
-
-#if CLIENT
-        private static GUIListBox editor;
-        public static GUIListBox Editor
-        {
-            get
-            {
-                if (editor == null)
-                {
-                    editor = new GUIListBox(new RectTransform(new Vector2(0.25f, 1), GUI.Canvas) { MinSize = new Point(200, GameMain.GraphicsHeight) });
-                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, WalkInstance, false, true, elementHeight: 0.04f));
-                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, RunInstance, false, true, elementHeight: 0.04f));
-                }
-                return editor;
-            }
-        }
-
-        public void Save()
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null || doc.Root == null) return;
-            
-            SerializableProperty.SerializeProperties(this, doc.Root, true);
- 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.OmitXmlDeclaration = true;
-            settings.NewLineOnAttributes = true;
-
-            using (var writer = XmlWriter.Create(filePath, settings))
-            {
-                doc.WriteTo(writer);
-                writer.Flush();
-            }
-        }
-
-        public bool Reset()
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null || doc.Root == null) return false;
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
-            editor = null;
-            return true;
-        }
-#endif
+        public HumanoidAnimParams(string file) : base(file) { }
 
         [Serialize(0.3f, true), Editable]
         public float GetUpSpeed
@@ -105,7 +29,6 @@ namespace Barotrauma
             get;
             set;
         }
-
 
         [Serialize(0.25f, true), Editable]
         public float HeadLeanAmount
@@ -140,7 +63,6 @@ namespace Barotrauma
             get;
             set;
         }
-
 
         [Serialize("0.4,0.12", true), Editable]
         public Vector2 StepSize
@@ -196,7 +118,6 @@ namespace Barotrauma
         {
             get;
             set;
-        }
-        
+        }      
     }
 }

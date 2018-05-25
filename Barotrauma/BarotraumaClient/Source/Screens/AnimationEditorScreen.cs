@@ -37,6 +37,8 @@ namespace Barotrauma
             Submarine.MainSub.Load(true);
             CalculateMovementLimits();
             _character = SpawnCharacter(Character.HumanConfigFile);
+            HumanoidAnimParams.RunInstance.AddToEditor();
+            HumanoidAnimParams.WalkInstance.AddToEditor();
             CreateButtons();
         }
 
@@ -164,6 +166,7 @@ namespace Barotrauma
             Cam.TargetPos = character.WorldPosition;
             Cam.UpdateTransform(true);
             GameMain.World.ProcessChanges();
+
             return character;
         }
         #endregion
@@ -182,6 +185,7 @@ namespace Barotrauma
             switchCharacterButton.OnClicked += (b, obj) =>
             {
                 _character = SpawnCharacter(GetNextConfigFile());
+                ResetEditor();
                 CreateButtons();
                 return true;
             };
@@ -210,24 +214,52 @@ namespace Barotrauma
             var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
             saveButton.OnClicked += (b, obj) =>
             {
-                HumanoidAnimParams.RunInstance.Save();
-                HumanoidAnimParams.WalkInstance.Save();
+                AnimParams.ForEach(p => p.Save());
                 return true;
             };
             var resetButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Reset");
             resetButton.OnClicked += (b, obj) =>
             {
-                HumanoidAnimParams.RunInstance.Reset();
-                HumanoidAnimParams.WalkInstance.Reset();
+                AnimParams.ForEach(p => p.Reset());
+                ResetEditor();
                 return true;
             };
+        }
+        #endregion
+
+        #region AnimParams
+        private IEnumerable<AnimParams> AnimParams
+        {
+            get
+            {
+                if (_character.IsHumanoid)
+                {
+                    return new List<AnimParams> { HumanoidAnimParams.WalkInstance, HumanoidAnimParams.RunInstance };
+                }
+                else
+                {
+                    var animParams = new List<AnimParams>();
+                    var instance = FishAnimParams.GetInstance(_character.SpeciesName);
+                    if (instance != null)
+                    {
+                        animParams.Add(instance);
+                    }
+                    return animParams;
+                }
+            }
+        }
+
+        private void ResetEditor()
+        {
+            Barotrauma.AnimParams.CreateEditor();
+            AnimParams.ForEach(p => p.AddToEditor());
         }
         #endregion
 
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            HumanoidAnimParams.Editor.AddToGUIUpdateList();
+            Barotrauma.AnimParams.Editor.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
