@@ -74,6 +74,15 @@ namespace Barotrauma
                 writer.Flush();
             }
         }
+
+        public bool Reset()
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null || doc.Root == null) return false;
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
+            editor = null;
+            return true;
+        }
 #endif
 
         [Serialize(0.3f, true), Editable]
