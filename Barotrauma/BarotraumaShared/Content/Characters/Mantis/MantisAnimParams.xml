@@ -1,2 +1,4 @@
 ﻿<MantisAnimParams
-  waveamplitudemultiplier="1.0" />
+  waveamplitudemultiplier="1.0"
+  wavelengthmultiplier="1.0"
+  steertorquemultiplier="1.0" />

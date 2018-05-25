@@ -14,9 +14,12 @@ namespace Barotrauma
         //if amplitude = 0, sine wave animation isn't used
         private float WaveAmplitude => animParams != null ? _waveAmplitude * animParams.WaveAmplitudeMultiplier : _waveAmplitude;
         private float _waveAmplitude;
-        private float waveLength;
 
-        private float steerTorque;
+        private float WaveLength => animParams != null ? _waveLength * animParams.WaveLengthMultiplier : _waveLength;
+        private float _waveLength;
+
+        private float SteerTorque => animParams != null ? _steerTorque * animParams.SteerTorqueMultiplier : _steerTorque;
+        private float _steerTorque;
 
         private bool rotateTowardsMovement;
 
@@ -35,12 +38,13 @@ namespace Barotrauma
             : base(character, element, seed)
         {
             animParams = FishAnimParams.GetInstance(character.SpeciesName);
+
             _waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
-            waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
+            _waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
 
             colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
 
-            steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
+            _steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
             
             flip            = element.GetAttributeBool("flip", true);
             mirror          = element.GetAttributeBool("mirror", false);
@@ -286,7 +290,7 @@ namespace Barotrauma
             if (rotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, 25.0f);
-                MainLimb.body.SmoothRotate(movementAngle, steerTorque);
+                MainLimb.body.SmoothRotate(movementAngle, SteerTorque);
             }
             else
             {
@@ -302,12 +306,12 @@ namespace Barotrauma
                 if (TorsoAngle.HasValue)
                 {
                     Limb torso = GetLimb(LimbType.Torso);
-                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, steerTorque);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, SteerTorque);
                 }
                 if (HeadAngle.HasValue)
                 {
                     Limb head = GetLimb(LimbType.Head);
-                    head?.body.SmoothRotate(HeadAngle.Value * Dir, steerTorque);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, SteerTorque);
                 }
             }
 
@@ -316,7 +320,7 @@ namespace Barotrauma
             {
                 walkPos -= movement.Length();
 
-                float waveRotation = (float)Math.Sin(walkPos / waveLength);
+                float waveRotation = (float)Math.Sin(walkPos / WaveLength);
 
                 tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * WaveAmplitude);
             }
