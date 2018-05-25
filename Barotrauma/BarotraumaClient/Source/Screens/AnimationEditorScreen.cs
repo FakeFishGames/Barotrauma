@@ -33,7 +33,6 @@ namespace Barotrauma
         {
             base.Select();
             Submarine.RefreshSavedSubs();
-            //Submarine.MainSub = Submarine.SavedSubmarines.First();
             Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
             Submarine.MainSub.Load(true);
             CalculateMovementLimits();
@@ -118,14 +117,44 @@ namespace Barotrauma
         }
         #endregion
 
+        #region Character spawning
+        private int characterIndex = -1;
+        private List<string> allFiles;
+        private List<string> AllFiles
+        {
+            get
+            {
+                if (allFiles == null)
+                {
+                    allFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character).FindAll(f => !f.Contains("husk"));
+                    allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
+                }
+                return allFiles;
+            }
+        }
+
+        private string GetNextConfigFile()
+        {
+            if (characterIndex == -1)
+            {
+                characterIndex = AllFiles.IndexOf(GetConfigFile(_character.SpeciesName));
+            }
+            characterIndex++;
+            if (characterIndex == AllFiles.Count - 1)
+            {
+                characterIndex = 0;
+            }
+            return AllFiles[characterIndex];
+        }
+
         private string GetConfigFile(string speciesName)
         {
-            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
-            return characterFiles.Find(c => c.EndsWith(speciesName + ".xml"));
+            return AllFiles.Find(c => c.EndsWith(speciesName + ".xml"));
         }
 
         private Character SpawnCharacter(string configFile)
         {
+            DebugConsole.NewMessage($"Trying to spawn {configFile}", Color.HotPink);
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
             var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
             character.Submarine = Submarine.MainSub;
@@ -137,7 +166,9 @@ namespace Barotrauma
             GameMain.World.ProcessChanges();
             return character;
         }
+        #endregion
 
+        #region GUI
         private GUIFrame frame;
         private void CreateButtons()
         {
@@ -150,8 +181,7 @@ namespace Barotrauma
             var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
             switchCharacterButton.OnClicked += (b, obj) =>
             {
-                var configFile = GetConfigFile(_character.SpeciesName.Contains("human") ? "mantis" : "human");
-                _character = SpawnCharacter(configFile);
+                _character = SpawnCharacter(GetNextConfigFile());
                 CreateButtons();
                 return true;
             };
@@ -178,6 +208,7 @@ namespace Barotrauma
                 return true;
             };
         }
+        #endregion
 
         public override void AddToGUIUpdateList()
         {
