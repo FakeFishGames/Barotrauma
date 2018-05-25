@@ -351,12 +351,6 @@ namespace Barotrauma
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.DrawHud(spriteBatch, this, character);
-                return;
-            }
-
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);
