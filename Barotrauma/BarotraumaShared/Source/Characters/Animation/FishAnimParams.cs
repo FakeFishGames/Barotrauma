@@ -23,6 +23,20 @@
             get;
             set;
         }
+
+        [Serialize(1.0f, true), Editable]
+        public float WaveLengthMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, true), Editable]
+        public float SteerTorqueMultiplier
+        {
+            get;
+            set;
+        }
     }
 
     class CarrierAnimParams : FishAnimParams
