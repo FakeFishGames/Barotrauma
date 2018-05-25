@@ -14,4 +14,9 @@
   torsoposition="1.15"
   headleanamount="0.25"
   torsoleanamount="0.25"
-  footmoveoffset="0.2,0" />
+  footmoveoffset="0.2,0"
+  walkspeed="1.5"
+  swimspeed="2.0"
+  runspeedmultiplier="3.0"
+  swimspeedmultiplier="1.2"
+  legtorque="15.0" />

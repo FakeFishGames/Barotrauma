@@ -8,17 +8,18 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
-        private FishAnimParams animParams;
+        protected FishAnimParams fishAnimParams;
+        protected override AnimParams AnimParams => fishAnimParams;
 
         //amplitude and wave length of the "sine wave" swimming animation
         //if amplitude = 0, sine wave animation isn't used
-        private float WaveAmplitude => animParams != null ? _waveAmplitude * animParams.WaveAmplitudeMultiplier : _waveAmplitude;
+        private float WaveAmplitude => fishAnimParams != null ? fishAnimParams.WaveAmplitude : _waveAmplitude;
         private float _waveAmplitude;
 
-        private float WaveLength => animParams != null ? _waveLength * animParams.WaveLengthMultiplier : _waveLength;
+        private float WaveLength => fishAnimParams != null ? fishAnimParams.WaveLength : _waveLength;
         private float _waveLength;
 
-        private float SteerTorque => animParams != null ? _steerTorque * animParams.SteerTorqueMultiplier : _steerTorque;
+        private float SteerTorque => fishAnimParams != null ? _steerTorque * fishAnimParams.SteerTorque : _steerTorque;
         private float _steerTorque;
 
         private bool rotateTowardsMovement;
@@ -37,7 +38,7 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element, string seed)
             : base(character, element, seed)
         {
-            animParams = FishAnimParams.GetInstance(character.SpeciesName);
+            fishAnimParams = FishAnimParams.GetInstance(character.SpeciesName);
 
             _waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             _waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
@@ -278,7 +279,7 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = TargetMovement*swimSpeed;
+            movement = TargetMovement*SwimSpeed;
             
             MainLimb.pullJoint.Enabled = true;
             MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
@@ -341,7 +342,7 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement * WalkSpeed, 0.2f);
 
             float mainLimbHeight = colliderHeightFromFloor;
 
@@ -390,8 +391,8 @@ namespace Barotrauma
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(walkPos) * stepSize.X * 3.0f,
-                (float)Math.Sin(walkPos) * stepSize.Y * 2.0f);
+                (float)Math.Cos(walkPos) * StepSize.X * 3.0f,
+                (float)Math.Sin(walkPos) * StepSize.Y * 2.0f);
 
             foreach (Limb limb in Limbs)
             {
@@ -429,7 +430,7 @@ namespace Barotrauma
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (legTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * legTorque * Dir);
+                        if (LegTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * LegTorque * Dir);
                         break;
                 }
             }

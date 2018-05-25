@@ -17,22 +17,22 @@
             }
         }
 
-        [Serialize(1.0f, true), Editable]
-        public float WaveAmplitudeMultiplier
+        [Serialize(1f, true), Editable]
+        public float WaveAmplitude
         {
             get;
             set;
         }
 
-        [Serialize(1.0f, true), Editable]
-        public float WaveLengthMultiplier
+        [Serialize(1f, true), Editable]
+        public float WaveLength
         {
             get;
             set;
         }
 
-        [Serialize(1.0f, true), Editable]
-        public float SteerTorqueMultiplier
+        [Serialize(25.0f, true), Editable]
+        public float SteerTorque
         {
             get;
             set;

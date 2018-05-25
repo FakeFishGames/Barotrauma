@@ -37,8 +37,7 @@ namespace Barotrauma
             Submarine.MainSub.Load(true);
             CalculateMovementLimits();
             _character = SpawnCharacter(Character.HumanConfigFile);
-            HumanoidAnimParams.RunInstance.AddToEditor();
-            HumanoidAnimParams.WalkInstance.AddToEditor();
+            AnimParams.ForEach(p => p.AddToEditor());
             CreateButtons();
         }
 

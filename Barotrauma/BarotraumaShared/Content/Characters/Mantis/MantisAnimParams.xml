@@ -1,4 +1,10 @@
 ﻿<MantisAnimParams
-  waveamplitudemultiplier="1.0"
-  wavelengthmultiplier="1.0"
-  steertorquemultiplier="1.0" />
+  waveamplitude="0.5"
+  wavelength="25"
+  steertorque="25.0"
+  swimspeed="2.5"
+  walkspeed="3.0"
+  runspeedmultiplier="2"
+  swimspeedmultiplier="2.5"
+  stepsize ="0.2,0.2"
+  legtorque="10" />
