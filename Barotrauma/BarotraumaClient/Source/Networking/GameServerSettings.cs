@@ -16,7 +16,7 @@ namespace Barotrauma.Networking
             Rounds,
             Server,
             Banlist,
-            WhiteList
+            Whitelist
         }
         
         private void CreateSettingsFrame()
@@ -67,9 +67,7 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
             //                              game settings 
             //--------------------------------------------------------------------------------
-
-            int y = 0;
-
+            
             var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center))
             {
                 Stretch = true,
@@ -91,9 +89,7 @@ namespace Barotrauma.Networking
                     UserData = (SelectionMode)i
                 };
             }
-
-            y += 45;
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), isHorizontal: true)
             {
@@ -109,18 +105,14 @@ namespace Barotrauma.Networking
                     UserData = (SelectionMode)i
                 };
             }
-
-            y += 60;
-
+            
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"))
             {
                 Selected = EndRoundAtLevelEnd,
                 OnSelected = (GUITickBox) => { EndRoundAtLevelEnd = GUITickBox.Selected; return true; }
             };
-
-            y += 25;
-
+            
             var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundVoting"))
             {
@@ -142,15 +134,12 @@ namespace Barotrauma.Networking
             slider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
                 EndVoteRequiredRatio = barScroll / 2.0f + 0.5f;
-                voteText.Text = endRoundLabel + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + (int)MathUtils.Round(EndVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
-
-            y += 35;
-
+            
             var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsAllowRespawning"))
             {
@@ -174,9 +163,7 @@ namespace Barotrauma.Networking
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
-
-            y += 35;
-
+            
             var minRespawnText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
             {
                 ToolTip = TextManager.Get("ServerSettingsMinRespawnToolTip")
@@ -190,15 +177,12 @@ namespace Barotrauma.Networking
             slider.BarScroll = MinRespawnRatio;
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                GUITextBlock txt = scrollBar.UserData as GUITextBlock;
                 MinRespawnRatio = barScroll;
-                txt.Text = minRespawnLabel + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
+                ((GUITextBlock)scrollBar.UserData).Text = minRespawnLabel + (int)MathUtils.Round(MinRespawnRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
             slider.OnMoved(slider, MinRespawnRatio);
-
-            y += 30;
-
+            
             var respawnDurationText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
             {
                 ToolTip = TextManager.Get("ServerSettingsRespawnDurationToolTip")
@@ -212,25 +196,21 @@ namespace Barotrauma.Networking
             slider.BarScroll = MaxTransportTime <= 0.0f ? 1.0f : (MaxTransportTime - 60.0f) / 600.0f;
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                GUITextBlock txt = scrollBar.UserData as GUITextBlock;
-
                 if (barScroll == 1.0f)
                 {
                     MaxTransportTime = 0;
-                    txt.Text = respawnDurationLabel + "unlimited";
+                    ((GUITextBlock)scrollBar.UserData).Text = respawnDurationLabel + "unlimited";
                 }
                 else
                 {
                     MaxTransportTime = barScroll * 600.0f + 60.0f;
-                    txt.Text = respawnDurationLabel + ToolBox.SecondsToReadableTime(MaxTransportTime);
+                    ((GUITextBlock)scrollBar.UserData).Text = respawnDurationLabel + ToolBox.SecondsToReadableTime(MaxTransportTime);
                 }
 
                 return true;
             };
             slider.OnMoved(slider, slider.BarScroll);
-
-            y += 35;
-
+            
             var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -353,200 +333,166 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
             //                              server settings 
             //--------------------------------------------------------------------------------
-
-            y = 0;
-
+            
             var serverTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Server].RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", "", settingsTabs[1]);
-            var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
-            startIntervalSlider.UserData = startIntervalText;
-            startIntervalSlider.Step = 0.05f;
-            startIntervalSlider.BarScroll = AutoRestartInterval / 300.0f;
-            startIntervalSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay");
+            var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), autoRestartDelayLabel);
+            var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f)
             {
-                GUITextBlock text = scrollBar.UserData as GUITextBlock;
-
-                AutoRestartInterval = Math.Max(barScroll * 300.0f, 10.0f);
-
-                text.Text = "Autorestart delay: " + ToolBox.SecondsToReadableTime(AutoRestartInterval);
-                return true;
+                UserData = startIntervalText,
+                Step = 0.05f,
+                BarScroll = AutoRestartInterval / 300.0f,
+                OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    GUITextBlock text = scrollBar.UserData as GUITextBlock;
+                    AutoRestartInterval = Math.Max(barScroll * 300.0f, 10.0f);
+                    text.Text = autoRestartDelayLabel + ToolBox.SecondsToReadableTime(AutoRestartInterval);
+                    return true;
+                }
             };
             startIntervalSlider.OnMoved(startIntervalSlider, startIntervalSlider.BarScroll);
-
-            y += 45;
-
-            var allowSpecBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow spectating", Alignment.Left, settingsTabs[1]);
-            allowSpecBox.Selected = AllowSpectating;
-            allowSpecBox.OnSelected = (GUITickBox) =>
+            
+            var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"))
             {
-                AllowSpectating = GUITickBox.Selected;
-                GameMain.NetLobbyScreen.LastUpdateID++;
-                return true;
+                Selected = AllowSpectating,
+                OnSelected = (GUITickBox) =>
+                {
+                    AllowSpectating = GUITickBox.Selected;
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+                    return true;
+                }
+            };
+            
+            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"))
+            {
+                Selected = Voting.AllowVoteKick,
+                OnSelected = (GUITickBox) =>
+                {
+                    Voting.AllowVoteKick = !Voting.AllowVoteKick;
+                    GameMain.Server.UpdateVoteStatus();
+                    return true;
+                }
             };
 
-            y += 20;
-
-            var voteKickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow vote kicking", Alignment.Left, settingsTabs[1]);
-            voteKickBox.Selected = Voting.AllowVoteKick;
-            voteKickBox.OnSelected = (GUITickBox) =>
+            CreateLabeledSlider(serverTab, "ServerSettingsKickVotesRequired", out slider, out sliderLabel);
+            string votesRequiredLabel = sliderLabel.Text;
+            slider.Step = 0.2f;
+            slider.BarScroll = (KickVoteRequiredRatio - 0.5f) * 2.0f;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                Voting.AllowVoteKick = !Voting.AllowVoteKick;
-                GameMain.Server.UpdateVoteStatus();
-                return true;
-            };
-
-            var kickVotesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", "", settingsTabs[1], GUI.SmallFont);
-
-            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
-            kickVoteSlider.UserData = kickVotesRequiredText;
-            kickVoteSlider.Step = 0.2f;
-            kickVoteSlider.BarScroll = (KickVoteRequiredRatio - 0.5f) * 2.0f;
-            kickVoteSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
-            {
-                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
-
                 KickVoteRequiredRatio = barScroll / 2.0f + 0.5f;
-                voteText.Text = "Votes required: " + (int)MathUtils.Round(KickVoteRequiredRatio * 100.0f, 10.0f) + " %";
+                ((GUITextBlock)scrollBar.UserData).Text = votesRequiredLabel + (int)MathUtils.Round(KickVoteRequiredRatio * 100.0f, 10.0f) + " %";
                 return true;
             };
-            kickVoteSlider.OnMoved(kickVoteSlider, kickVoteSlider.BarScroll);
+            slider.OnMoved(slider, slider.BarScroll);
 
-            y += 20;
-
-            var autobanTimeText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), $"Auto ban time: " + ToolBox.SecondsToReadableTime(AutoBanTime), "", settingsTabs[1], GUI.SmallFont);
-
-            var autobanTimeSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
-            autobanTimeSlider.UserData = autobanTimeText;
-            autobanTimeSlider.Step = 0.05f;
-            autobanTimeSlider.BarScroll = AutoBanTime / MaxAutoBanTime;
-            autobanTimeSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            CreateLabeledSlider(serverTab, "ServerSettingsAutobanTime", out slider, out sliderLabel);
+            string autobanLabel = sliderLabel.Text;
+            slider.Step = 0.05f;
+            slider.BarScroll = AutoBanTime / MaxAutoBanTime;
+            slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
-                GUITextBlock voteText = scrollBar.UserData as GUITextBlock;
                 AutoBanTime = Math.Max(barScroll * MaxAutoBanTime, 0);
-                voteText.Text = "Auto ban time: " + ToolBox.SecondsToReadableTime(AutoBanTime);
+                ((GUITextBlock)scrollBar.UserData).Text = autobanLabel + ToolBox.SecondsToReadableTime(AutoBanTime);
                 return true;
             };
-            autobanTimeSlider.OnMoved(autobanTimeSlider, autobanTimeSlider.BarScroll);
+            slider.OnMoved(slider, slider.BarScroll);
 
-            y += 45;
-
-            var shareSubsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Share submarine files with players", Alignment.Left, settingsTabs[1]);
-            shareSubsBox.Selected = AllowFileTransfers;
-            shareSubsBox.OnSelected = (GUITickBox) =>
+            var shareSubsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsShareSubFiles"))
             {
-                AllowFileTransfers = GUITickBox.Selected;
-                return true;
+                Selected = AllowFileTransfers,
+                OnSelected = (GUITickBox) =>
+                {
+                    AllowFileTransfers = GUITickBox.Selected;
+                    return true;
+                }
             };
 
-            y += 20;
-
-            var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, settingsTabs[1]);
-            randomizeLevelBox.Selected = RandomizeSeed;
-            randomizeLevelBox.OnSelected = (GUITickBox) =>
+            var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"))
             {
-                RandomizeSeed = GUITickBox.Selected;
-                return true;
+                Selected = RandomizeSeed,
+                OnSelected = (GUITickBox) =>
+                {
+                    RandomizeSeed = GUITickBox.Selected;
+                    return true;
+                }
             };
 
-            y += 20;
-
-            var saveLogsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Save server logs", Alignment.Left, settingsTabs[1]);
-            saveLogsBox.Selected = SaveServerLogs;
-            saveLogsBox.OnSelected = (GUITickBox) =>
+            var saveLogsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSaveLogs"))
             {
-                SaveServerLogs = GUITickBox.Selected;
-                showLogButton.Visible = SaveServerLogs;
-                return true;
+                Selected = SaveServerLogs,
+                OnSelected = (GUITickBox) =>
+                {
+                    SaveServerLogs = GUITickBox.Selected;
+                    showLogButton.Visible = SaveServerLogs;
+                    return true;
+                }
             };
 
-            y += 20;
-
-            var ragdollButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow ragdoll button", Alignment.Left, settingsTabs[1]);
-            ragdollButtonBox.Selected = AllowRagdollButton;
-            ragdollButtonBox.OnSelected = (GUITickBox) =>
+            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"))
             {
-                AllowRagdollButton = GUITickBox.Selected;
-                return true;
+                Selected = AllowRagdollButton,
+                OnSelected = (GUITickBox) =>
+                {
+                    AllowRagdollButton = GUITickBox.Selected;
+                    return true;
+                }
             };
+            
+            var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
 
-            y += 20;
-
-            var traitorRatioBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use % of players for max traitors", Alignment.Left, settingsTabs[1]);
-            var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
-            var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
-            //Prepare the slider before the tick box
-            if (TraitorUseRatio)
-            {
-                traitorRatioSlider.UserData = traitorRatioText;
-                traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
-                traitorRatioSlider.BarScroll = (TraitorRatio - 0.1f) / 0.9f;
-            }
-            else
-            {
-                traitorRatioSlider.UserData = traitorRatioText;
-                traitorRatioSlider.Step = 1f / (maxPlayers-1);
-                traitorRatioSlider.BarScroll = MathUtils.Round(TraitorRatio, 1f);
-            }
-            //Slider END
-
+            CreateLabeledSlider(serverTab, "", out slider, out sliderLabel);
+            /*var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
+            var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);*/
+            var traitorRatioSlider = slider;
             traitorRatioBox.Selected = TraitorUseRatio;
             traitorRatioBox.OnSelected = (GUITickBox) =>
             {
                 TraitorUseRatio = GUITickBox.Selected;
-                //Affect the slider graphics
-                if (TraitorUseRatio)
-                {
-                    traitorRatioSlider.UserData = traitorRatioText;
-                    traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
-                    traitorRatioSlider.BarScroll = 0.2f; //default values
-                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
-                }
-                else
-                {
-                    traitorRatioSlider.UserData = traitorRatioText;
-                    traitorRatioSlider.Step = 1f / (maxPlayers-1);
-                    traitorRatioSlider.BarScroll = 1; //default values
-                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
-                }
+                traitorRatioSlider.Step = TraitorUseRatio ? 0.01f : 1f / (maxPlayers - 1);
+                traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
                 return true;
             };
+
+            string traitorRatioLabel = TextManager.Get("ServerSettingsTraitorRatio");
+            string traitorCountLabel = TextManager.Get("ServerSettingsTraitorCount");
             traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock traitorText = scrollBar.UserData as GUITextBlock;
                 if (TraitorUseRatio)
                 {
                     TraitorRatio = barScroll * 0.9f + 0.1f;
-                    traitorText.Text = "Traitor ratio: " + (int)MathUtils.Round(TraitorRatio * 100.0f, 1.0f) + " %";
+                    traitorText.Text = traitorRatioLabel + (int)MathUtils.Round(TraitorRatio * 100.0f, 1.0f) + " %";
                 }
                 else
                 {
                     TraitorRatio = MathUtils.Round(barScroll * (maxPlayers-1), 1f) + 1;
-                    traitorText.Text = "Traitor count: " + TraitorRatio;
+                    traitorText.Text = traitorCountLabel + TraitorRatio;
                 }
                 return true;
             };
             traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-
-            y += 45;
-
-            var karmaButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use Karma", Alignment.Left, settingsTabs[1]);
-            karmaButtonBox.Selected = KarmaEnabled;
-            karmaButtonBox.OnSelected = (GUITickBox) =>
+            traitorRatioBox.OnSelected(traitorRatioBox);
+            
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
             {
-                KarmaEnabled = GUITickBox.Selected;
-                return true;
+                Selected = KarmaEnabled,
+                OnSelected = (GUITickBox) =>
+                {
+                    KarmaEnabled = GUITickBox.Selected;
+                    return true;
+                }
             };
 
             //--------------------------------------------------------------------------------
             //                              banlist
             //--------------------------------------------------------------------------------
-
-
+            
             banList.CreateBanFrame(settingsTabs[2]);
 
             //--------------------------------------------------------------------------------
