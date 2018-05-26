@@ -208,6 +208,7 @@ namespace Barotrauma
             {
                 ScrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) });
             }
+            ScrollBar.RectTransform.IsFixedSize = false;
             ScrollBar.IsHorizontal = isHorizontal;
             UpdateScrollBarSize();
             Enabled = true;
