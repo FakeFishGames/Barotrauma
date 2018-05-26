@@ -761,7 +761,7 @@ namespace Barotrauma
                 if (!hoverArea.Contains(PlayerInput.MousePosition)) orderTargetFrame = null;                
             }
         }
-        
+
         #endregion
 
         /// <summary>
@@ -771,45 +771,51 @@ namespace Barotrauma
         {
             List<byte> teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
-            if (!teamIDs.Any()) teamIDs.Add(0);            
-
+            if (!teamIDs.Any()) teamIDs.Add(0);
+            
             int listBoxHeight = 300 / teamIDs.Count;
 
-            int y = 20;
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), crewFrame.RectTransform))
+            {
+                Stretch = true
+            };
+
             for (int i = 0; i < teamIDs.Count; i++)
             {
                 if (teamIDs.Count > 1)
                 {
-                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), "", crewFrame);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), content.RectTransform), CombatMission.GetTeamName(teamIDs[i]));
                 }
 
-                GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, "", crewFrame);
-                crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+                GUIListBox crewList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+                {
+                    UserData = crewFrame
+                };
                 crewList.OnSelected = (component, obj) =>
                 {
                     SelectCrewCharacter(component.UserData as Character, crewList);
                     return true;
                 };
-            
+
                 foreach (Character character in crew.FindAll(c => c.TeamID == teamIDs[i]))
                 {
-                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, "ListBoxElement", crewList);
-                    frame.UserData = character;
-                    frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                    frame.Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent;
+                    GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), crewList.Content.RectTransform), style: "ListBoxElement")
+                    {
+                        UserData = character,
+                        Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent
+                    };
 
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(40, 0, 0, 25),
-                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, frame.Rect.Width-20),
-                        null,null,
-                        Alignment.Left, Alignment.Left,
-                        "", frame);
-                    textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+                    var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
+                    {
+                        RelativeSpacing = 0.05f,
+                        Stretch = true
+                    };
 
-                    new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
+                    new GUIImage(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), character.AnimController.Limbs[0].sprite, scaleToFit: true);
+
+                    GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedFrame.RectTransform),
+                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, paddedFrame.Rect.Width - paddedFrame.Rect.Height));
                 }
-
-                y += crewList.Rect.Height + 30;
             }
         }
 
@@ -820,14 +826,15 @@ namespace Barotrauma
         {
             if (character == null) return false;
 
-            GUIComponent existingFrame = crewList.Parent.FindChild("SelectedCharacter");
-            if (existingFrame != null) crewList.Parent.RemoveChild(existingFrame);
+            GUIComponent crewFrame = (GUIComponent)crewList.UserData;
 
-            var previewPlayer = new GUIFrame(
-                new Rectangle(0, 0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewList.Parent);
-            previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            previewPlayer.UserData = "SelectedCharacter";
+            GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
+            if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
+
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.6f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            {
+                UserData = "SelectedCharacter"
+            };
 
             character.Info.CreateInfoFrame(previewPlayer);
 
