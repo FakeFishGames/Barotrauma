@@ -53,7 +53,20 @@ namespace Barotrauma
                 maxTextLength = value;
             }
         }
-        
+
+        public override bool Enabled
+        {
+            get { return enabled; }
+            set
+            {
+                enabled = value;
+                if (!enabled && Selected)
+                {
+                    Deselect();
+                }
+            }
+        }
+
         public override string ToolTip
         {
             get
