@@ -53,12 +53,7 @@ namespace Barotrauma
                 if (sprite == value) return;
                 sprite = value;
                 sourceRect = sprite.SourceRect;
-                if (scaleToFit)
-                {
-                    Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
-                        1.0f :
-                        Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
-                }
+                if (scaleToFit) RecalculateScale();                
             }
         }
 
@@ -115,6 +110,10 @@ namespace Barotrauma
             {
                 Scale = 1.0f;
             }
+            else
+            {
+                rectT.SizeChanged += RecalculateScale;
+            }
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
@@ -130,6 +129,13 @@ namespace Barotrauma
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects.None, 0.0f);
             }          
+        }
+
+        private void RecalculateScale()
+        {
+            Scale = sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
+                1.0f :
+                Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
         }
     }
 }
