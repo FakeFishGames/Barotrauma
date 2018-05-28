@@ -214,7 +214,6 @@ namespace Barotrauma
             Enabled = true;
             scrollBarEnabled = true;
             ScrollBar.BarScroll = 0.0f;
-            padding = Vector4.Zero;
         }
         
         public void Select(object userData, bool force = false)
@@ -394,13 +393,11 @@ namespace Barotrauma
 
         public void UpdateScrollBarSize()
         {
-            if (Content == null)
-            {
-                totalSize = 0;
-                return;
-            }
-            totalSize = (int)(padding.Y + padding.W);
-            totalSize += (int)(Content.Padding.Y + Content.Padding.W);
+            totalSize = 0;
+            if (Content == null) return;
+            
+            //totalSize = (int)(padding.Y + padding.W);
+            //totalSize += (int)(Content.Padding.Y + Content.Padding.W);
 
             var children = Content.Children;
             foreach (GUIComponent child in children)

@@ -62,6 +62,13 @@ namespace Barotrauma
             }
         }
 
+        private Vector4 padding;
+        public Vector4 Padding
+        {
+            get { return padding; }
+            set { padding = value; }
+        }
+
         public float BarScroll
         {
             get { return step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step); }
@@ -78,13 +85,13 @@ namespace Barotrauma
                 float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
                 if (isHorizontal)
                 {
-                    newX = (int)(frame.Padding.X + newScroll * (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z));
-                    newX = MathHelper.Clamp(newX, (int)frame.Padding.X, frame.Rect.Width - bar.Rect.Width - (int)frame.Padding.Z);
+                    newX = (int)(Padding.X + newScroll * (frame.Rect.Width - bar.Rect.Width - Padding.X - Padding.Z));
+                    newX = MathHelper.Clamp(newX, (int)Padding.X, frame.Rect.Width - bar.Rect.Width - (int)Padding.Z);
                 }
                 else
                 {
-                    newY = (int)(frame.Padding.Y + newScroll * (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W));
-                    newY = MathHelper.Clamp(newY, (int)frame.Padding.Y, frame.Rect.Height - bar.Rect.Height - (int)frame.Padding.W);
+                    newY = (int)(Padding.Y + newScroll * (frame.Rect.Height - bar.Rect.Height - Padding.Y - Padding.W));
+                    newY = MathHelper.Clamp(newY, (int)Padding.Y, frame.Rect.Height - bar.Rect.Height - (int)Padding.W);
                 }
                 if (RectTransform != null)
                 {
@@ -178,6 +185,12 @@ namespace Barotrauma
             UpdateRect();
         }
 
+        public override void ApplyStyle(GUIComponentStyle style)
+        {
+            base.ApplyStyle(style);
+            padding = style.Padding;
+        }
+
         private void UpdateRect()
         {
             if (RectTransform != null)
@@ -187,17 +200,15 @@ namespace Barotrauma
             }
             else
             {
-                float width = frame.Rect.Width - frame.Padding.X - frame.Padding.Z;
-                float height = frame.Rect.Height - frame.Padding.Y - frame.Padding.W;
+                float width = frame.Rect.Width - Padding.X - Padding.Z;
+                float height = frame.Rect.Height - Padding.Y - Padding.W;
 
                 bar.Rect = new Rectangle(
                     bar.Rect.X,
                     bar.Rect.Y,
                     isHorizontal ? (int)(width * barSize) : (int)width,
                     isHorizontal ? (int)height : (int)(height * barSize));
-
-                ClampRect();
-
+                
                 foreach (GUIComponent child in bar.Children)
                 {
                     child.Rect = bar.Rect;
@@ -205,7 +216,7 @@ namespace Barotrauma
             }
         }
 
-        private void ClampRect()
+        /*private void ClampRect()
         {
             // TODO: doesn't work for RectTransforms. Do we need this?
             bar.Rect = new Rectangle(
@@ -213,7 +224,7 @@ namespace Barotrauma
                 (int)MathHelper.Clamp(bar.Rect.Y, frame.Rect.Y + frame.Padding.Y, frame.Rect.Bottom - bar.Rect.Height - frame.Padding.Y - frame.Padding.W), 
                 bar.Rect.Width, 
                 bar.Rect.Height);
-        }
+        }*/
 
         protected override void Update(float deltaTime)
         {
@@ -270,12 +281,12 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 moveAmount.Y = 0.0f;
-                newScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
+                newScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - Padding.X - Padding.Z);
             }
             else
             {
                 moveAmount.X = 0.0f;
-                newScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
+                newScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - Padding.Y - Padding.W);
             }
 
             BarScroll = newScroll;

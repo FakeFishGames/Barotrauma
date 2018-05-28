@@ -201,9 +201,7 @@ namespace Barotrauma
         protected Rectangle rect;
 
         public bool CanBeFocused;
-
-        protected Vector4 padding;
-
+        
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
@@ -347,14 +345,7 @@ namespace Barotrauma
             get { return userData; }
             set { userData = value; }
         }
-
-        [Obsolete]
-        public virtual Vector4 Padding
-        {
-            get { return padding; }
-            set { padding = value; }
-        }
-
+        
         public int CountChildren
         {
             // TODO: optimize
@@ -667,7 +658,7 @@ namespace Barotrauma
 
             Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
-            Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
+            Vector4 padding = Vector4.Zero;
 
             if (rect.Width == 0) rect.Width = parentRect.Width - rect.X
                 - (int)padding.X - (int)padding.Z;
@@ -710,7 +701,6 @@ namespace Barotrauma
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
             
-            padding = style.Padding;
             sprites = style.Sprites;
 
             OutlineColor = style.OutlineColor;

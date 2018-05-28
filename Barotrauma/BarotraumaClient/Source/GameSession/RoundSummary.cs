@@ -33,7 +33,7 @@ namespace Barotrauma
             int width = 760, height = 400;
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", frame);
 
-            GUIListBox listBox = new GUIListBox(new Rectangle(0, 0, 0, height - (int)(30 + innerFrame.Padding.Y + innerFrame.Padding.W)), "", innerFrame);
+            GUIListBox listBox = new GUIListBox(new Rectangle(0, 0, 0, height - 30), "", innerFrame);
                         
             if (!singleplayer)
             {
@@ -107,7 +107,7 @@ namespace Barotrauma
 
                 var characterFrame = new GUIFrame(new Rectangle(x, 0, 170, 70), Color.Transparent, "", characterListBox);
                 characterFrame.OutlineColor = Color.Transparent;
-                characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                //characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 characterFrame.CanBeFocused = false;
 
                 characterInfo.CreateCharacterFrame(characterFrame,

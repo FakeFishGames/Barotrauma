@@ -121,10 +121,10 @@ namespace Barotrauma
             if (ProgressGetter != null) BarSize = ProgressGetter();   
 
             Rectangle sliderRect = new Rectangle(
-                    (int)(frame.Rect.X + padding.X),
-                    (int)(frame.Rect.Y + padding.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
-                    isHorizontal ? (int)((frame.Rect.Width - padding.X - padding.Z) * barSize) : frame.Rect.Width,
-                    isHorizontal ? (int)(frame.Rect.Height - padding.Y - padding.W) : (int)(frame.Rect.Height * barSize));
+                    frame.Rect.X,
+                    (int)(frame.Rect.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
+                    isHorizontal ? (int)((frame.Rect.Width) * barSize) : frame.Rect.Width,
+                    isHorizontal ? (int)(frame.Rect.Height) : (int)(frame.Rect.Height * barSize));
             
             frame.Visible = true;
             slider.Visible = true;
