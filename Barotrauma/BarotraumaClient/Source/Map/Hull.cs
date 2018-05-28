@@ -73,8 +73,10 @@ namespace Barotrauma
             //new SerializableEntityEditor(this, inGame, editingHUD, true);
             editingHUD.AddChild(new SerializableEntityEditor(editingHUD.RectTransform, this, inGame, showName: true));
 
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
-
+            editingHUD.RectTransform.NonScaledSize = new Point(
+                editingHUD.RectTransform.NonScaledSize.X,
+                MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
+            
             return editingHUD;
         }
 

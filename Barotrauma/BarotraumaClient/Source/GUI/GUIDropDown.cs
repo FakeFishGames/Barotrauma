@@ -70,31 +70,7 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
-
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-
-            set
-            {
-                Point moveAmount = value.Location - Rect.Location;
-                base.Rect = value;
-
-                button.Rect = new Rectangle(button.Rect.Location + moveAmount, button.Rect.Size);
-                listBox.Rect = new Rectangle(listBox.Rect.Location + moveAmount, listBox.Rect.Size);
-            }
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
-            : this(rect, text, style, Alignment.TopLeft, parent)
-        {
-        }
-
+        
         [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIDropDown(Rectangle rect, string text, string style, Alignment alignment, GUIComponent parent = null)
             : base(style)

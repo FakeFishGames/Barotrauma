@@ -586,38 +586,40 @@ namespace Barotrauma.Networking
 
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
-            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, "", infoFrame);
-            //cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            //crewList.OnSelected = SelectCrewCharacter;
-
+            GUIListBox cList = new GUIListBox(new RectTransform(Vector2.One, infoFrame.RectTransform));
             foreach (Client c in ConnectedClients)
             {
-                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, cList);
-                //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                frame.Color = (c.InGame && c.Character != null && !c.Character.IsDead) ? Color.Gold * 0.2f : Color.Transparent;
-                frame.HoverColor = Color.LightGray * 0.5f;
-                frame.SelectedColor = Color.Gold * 0.5f;
+                var frame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), cList.Content.RectTransform),
+                    c.Name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")", style: "ListBoxElement")
+                {
+                    Color = (c.InGame && c.Character != null && !c.Character.IsDead) ? Color.Gold * 0.2f : Color.Transparent,
+                    HoverColor = Color.LightGray * 0.5f,
+                    SelectedColor = Color.Gold * 0.5f
+                };
+                
+                var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f), frame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, 
+                    isHorizontal: true);
+                
+                var kickButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                    TextManager.Get("Kick"))
+                {
+                    UserData = c.Name,
+                    OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                };
 
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(40, 0, 0, 25),
-                    c.Name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")",
-                    Color.Transparent, Color.White,
-                    Alignment.Left, Alignment.Left,
-                    null, frame);
+                var banButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                    TextManager.Get("Ban"))
+                {
+                    UserData = c.Name,
+                    OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                };
 
-                var banButton = new GUIButton(new Rectangle(-110, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, "", frame);
-                banButton.UserData = c.Name;
-                banButton.OnClicked = GameMain.NetLobbyScreen.BanPlayer;
-
-                var rangebanButton = new GUIButton(new Rectangle(-220, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, "", frame);
-                rangebanButton.UserData = c.Name;
-                rangebanButton.OnClicked = GameMain.NetLobbyScreen.BanPlayerRange;
-
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, "", frame);
-                kickButton.UserData = c.Name;
-                kickButton.OnClicked = GameMain.NetLobbyScreen.KickPlayer;
-
-                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
+                    TextManager.Get("BanRange"))
+                {
+                    UserData = c.Name,
+                    OnClicked = GameMain.NetLobbyScreen.BanPlayerRange
+                };
             }
         }
     }

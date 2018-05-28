@@ -53,13 +53,20 @@ namespace Barotrauma
         // TODO: remove or refactor? The new system uses a layout group.
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
-            childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
+            /*childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
 
             AddChild(component);
             Children.Remove(component);
-            Children.Insert(childIndex, component);
+            Children.Insert(childIndex, component);*/
 
-            if (childIndex > 0 )
+            component.RectTransform.Parent = layoutGroup.RectTransform;
+            component.RectTransform.RepositionChildInHierarchy(childIndex);
+
+            int contentHeight = ContentHeight;
+            RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
+            layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
+
+            /*if (childIndex > 0 )
             {
                 component.Rect = new Rectangle(component.Rect.X, Children[childIndex - 1].Rect.Bottom, component.Rect.Width, component.Rect.Height);
             }
@@ -68,7 +75,7 @@ namespace Barotrauma
             {
                 Children[i].Rect = new Rectangle(Children[i].Rect.X, Children[i].Rect.Y + component.Rect.Height, Children[i].Rect.Width, Children[i].Rect.Height);
             }
-            SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);
+            SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);*/
         }
 
         private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
@@ -510,96 +517,7 @@ namespace Barotrauma
         }
 
         #region obsolete
-        [Obsolete("Use RectTransform")]
-        public SerializableEntityEditor(ISerializableEntity entity, bool inGame, GUIComponent parent, bool showName) : base("")
-        {
-            List<SerializableProperty> editableProperties = inGame ?
-                SerializableProperty.GetProperties<InGameEditable>(entity) :
-                SerializableProperty.GetProperties<Editable>(entity);
-
-            if (parent != null) parent.AddChild(this);
-
-            if (showName)
-            {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), entity.Name, "",
-                    Alignment.TopLeft, Alignment.TopLeft, this, false, GUI.Font);
-            }
-
-            int y = showName ? 30 : 10, padding = 10;
-            foreach (var property in editableProperties)
-            {
-                //int boxHeight = 18;
-                //var editable = property.Attributes.OfType<Editable>().FirstOrDefault();
-                //if (editable != null) boxHeight = (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f);
-
-                object value = property.GetValue();
-                if (property.PropertyType == typeof(string) && value == null)
-                {
-                    value = "";
-                }
-
-                GUIComponent propertyField = null;
-                if (value is bool)
-                {
-                    propertyField = CreateBoolField(entity, property, (bool)value, y, this);
-                }
-                else if (value is string)
-                {
-                    propertyField = CreateStringField(entity, property, (string)value, y, this);
-                }
-                else if (value.GetType().IsEnum)
-                {
-                    propertyField = CreateEnumField(entity, property, value, y, this);
-                }
-                else if (value is int)
-                {
-                    propertyField = CreateIntField(entity, property, (int)value, y, this);
-                }
-                else if (value is float)
-                {
-                    propertyField = CreateFloatField(entity, property, (float)value, y, this);
-                }
-                else if (value is Vector2)
-                {
-                    propertyField = CreateVector2Field(entity, property, (Vector2)value, y, this);
-                }
-                else if (value is Vector3)
-                {
-                    propertyField = CreateVector3Field(entity, property, (Vector3)value, y, this);
-                }
-                else if (value is Vector4)
-                {
-                    propertyField = CreateVector4Field(entity, property, (Vector4)value, y, this);
-                }
-                else if (value is Color)
-                {
-                    propertyField = CreateColorField(entity, property, (Color)value, y, this);
-                }
-                else if (value is Rectangle)
-                {
-                    propertyField = CreateRectangleField(entity, property, (Rectangle)value, y, this);
-                }
-
-                if (propertyField != null)
-                {
-                    y += propertyField.Rect.Height + padding;
-                }
-            }
-
-            if (Children.Count > 0)
-            {
-                SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);
-            }
-            else
-            {
-                SetDimensions(new Point(Rect.Width, 0), false);
-            }
-
-            if (parent is GUIListBox)
-            {
-                ((GUIListBox)parent).UpdateScrollBarSize();
-            }
-        }
+        
 
         [Obsolete]
         private GUIComponent CreateBoolField(ISerializableEntity entity, SerializableProperty property, bool value, int yPos, GUIComponent parent)

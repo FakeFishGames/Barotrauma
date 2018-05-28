@@ -116,22 +116,7 @@ namespace Barotrauma
                 base.ToolTip = value;
             }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                base.Rect = value;
-
-                if (frame != null) frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
-                if (textBlock != null) textBlock.Rect = value;
-            }
-        }
-
+        
         public bool Selected { get; set; }
 
         [System.Obsolete("Use RectTransform instead of Rectangle")]

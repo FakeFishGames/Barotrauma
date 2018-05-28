@@ -132,7 +132,7 @@ namespace Barotrauma
             foreach (Submarine sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.1f), subList.RectTransform)
+                    new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform)
                     {
                         AbsoluteOffset = new Point(10, 0)
                     },
@@ -141,7 +141,6 @@ namespace Barotrauma
                         ToolTip = sub.Description,
                         UserData = sub
                     };
-                subList.AddChild(textBlock);
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {

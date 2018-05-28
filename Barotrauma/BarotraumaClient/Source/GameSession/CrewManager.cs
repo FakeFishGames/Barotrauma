@@ -462,7 +462,7 @@ namespace Barotrauma
                 foreach (GUIComponent comp in components)
                 {
                     comp.Color = Color.Lerp(Color.DarkRed, Color.Transparent, timer / hideDuration);
-                    comp.Rect = new Rectangle(component.Rect.X, component.Rect.Y, component.Rect.Width, (int)(component.Rect.Height * (1.0f - (timer / hideDuration))));
+                    comp.RectTransform.LocalScale = new Vector2(comp.RectTransform.LocalScale.X, 1.0f - (timer / hideDuration));
                 }
                 timer += CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
