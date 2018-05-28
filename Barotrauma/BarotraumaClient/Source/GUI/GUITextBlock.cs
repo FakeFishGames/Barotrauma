@@ -32,7 +32,8 @@ namespace Barotrauma
 
         public Vector2 TextOffset { get; set; }
 
-        public override Vector4 Padding
+        private Vector4 padding;
+        public Vector4 Padding
         {
             get { return padding; }
             set 
@@ -229,6 +230,7 @@ namespace Barotrauma
         {
             if (style == null) return;
             base.ApplyStyle(style);
+            padding = style.Padding;
 
             textColor = style.textColor;
         }

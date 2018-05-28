@@ -89,10 +89,10 @@ namespace Barotrauma
             guiRoot = new GUIFrame(Rectangle.Empty, null, null);
 
             leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft", guiRoot);
-            leftPanel.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
+            //leftPanel.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
 
             rightPanel = new GUIFrame(new Rectangle(0, 0, 450, GameMain.GraphicsHeight), null, Alignment.Right, "GUIFrameRight", guiRoot);
-            rightPanel.Padding = new Vector4(10.0f, 20.0f, 0.0f, 20.0f);
+            //rightPanel.Padding = new Vector4(10.0f, 20.0f, 0.0f, 20.0f);
 
             var saveAllButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Save all", "", guiRoot);
             saveAllButton.OnClicked += (btn, obj) =>

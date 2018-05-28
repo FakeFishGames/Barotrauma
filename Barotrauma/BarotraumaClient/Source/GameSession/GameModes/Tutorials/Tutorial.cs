@@ -239,7 +239,7 @@ namespace Barotrauma.Tutorials
 
             var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, "");
             //infoBlock.Color = infoBlock.Color * 0.8f;
-            infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             infoBlock.Flash(Color.Green);
 
             var textBlock = new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, "", infoBlock, true);

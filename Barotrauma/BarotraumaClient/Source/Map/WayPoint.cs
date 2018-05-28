@@ -157,7 +157,7 @@ namespace Barotrauma
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
             editingHUD = new GUIFrame(new Rectangle(x, y, width, height));
-            editingHUD.Padding = new Vector4(10, 10, 20, 0);
+            //editingHUD.Padding = new Vector4(10, 10, 20, 0);
             editingHUD.UserData = this;
 
             if (spawnType == SpawnType.Path)

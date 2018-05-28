@@ -91,7 +91,7 @@ namespace Barotrauma
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
             editingHUD = new GUIFrame(new Rectangle(x, y, width, 100), "");
-            editingHUD.Padding = new Vector4(10, 10, 0, 0);
+            //editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
             new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("LinkedSub"), "",

@@ -688,7 +688,7 @@ namespace Barotrauma.Networking
 
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
-                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width - msgBox.InnerFrame.Padding.X - msgBox.InnerFrame.Padding.Z) / 2 - 30;
+                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
                 new GUITextBlock(new Rectangle(0, 0, listBoxWidth, 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, msgBox.InnerFrame, true, GUI.SmallFont);
                 var commandList = new GUIListBox(new Rectangle(0, 20, listBoxWidth, 0), "", Alignment.BottomRight, msgBox.InnerFrame);
                 foreach (string permittedCommand in permittedConsoleCommands)

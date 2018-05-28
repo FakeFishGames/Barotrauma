@@ -41,7 +41,7 @@ namespace Barotrauma
             cam = new Camera();
 
             GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "");
-            GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, "", GUIpanel);
             physicsButton.OnClicked += TogglePhysics;
@@ -301,7 +301,7 @@ namespace Barotrauma
             {
                 editingLimb = (Limb)selection;
                 limbPanel = new GUIFrame(new Rectangle(300, 0, 500, 100), Color.Gray*0.8f);
-                limbPanel.Padding = new Vector4(10.0f,10.0f,10.0f,10.0f);
+                //limbPanel.Padding = new Vector4(10.0f,10.0f,10.0f,10.0f);
                 new GUITextBlock(new Rectangle(0, 0, 200, 25), editingLimb.type.ToString(), Color.Transparent, Color.Black, Alignment.Left, null, limbPanel);
 
                 //spriteOrigin = new GUITextBlock(new Rectangle(0, 25, 200, 25), "Sprite origin: ", Color.White, Color.Black, Alignment.Left, limbPanel);
