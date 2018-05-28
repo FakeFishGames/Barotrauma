@@ -57,40 +57,6 @@ namespace Barotrauma
             }
         }
 
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIImage(Rectangle rect, string spritePath, Alignment alignment, GUIComponent parent = null)
-            : this(rect, new Sprite(spritePath, Vector2.Zero), alignment, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIImage(Rectangle rect, Sprite sprite, Alignment alignment, GUIComponent parent = null)
-            : this(rect, sprite == null ? Rectangle.Empty : sprite.SourceRect, sprite, alignment, 1.0f, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIImage(Rectangle rect, Rectangle sourceRect, Sprite sprite, Alignment alignment, float spriteScale, GUIComponent parent = null)
-            : base(null)
-        {
-            this.rect = rect;
-            this.alignment = alignment;
-            this.sprite = sprite;
-
-            color = Color.White;            
-            Scale = spriteScale;
-
-            if (rect.Width == 0) this.rect.Width = (int)(sprite.size.X * spriteScale);
-            if (rect.Height == 0) this.rect.Height = (int)(Math.Min(sprite.size.Y, sprite.size.Y * (this.rect.Width / sprite.size.X)) * spriteScale);
-
-            this.sourceRect = sourceRect;
-
-            //if (parent != null) parent.AddChild(this);
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
         public GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect = null, bool scaleToFit = false) : base(null, rectT)
         {
             this.scaleToFit = scaleToFit;
