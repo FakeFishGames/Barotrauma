@@ -65,10 +65,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
+        /*public override void Move(Vector2 amount)
         {
             textBlock.Rect = new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height);
-        }
+        }*/
 
         public ItemLabel(Item item, XElement element)
             : base(item, element)

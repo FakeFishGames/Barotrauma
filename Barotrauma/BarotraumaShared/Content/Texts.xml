@@ -284,6 +284,7 @@
   <SaveSubButton>Save</SaveSubButton>
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
+  <HoldToLink>Hold space to link to another item</HoldToLink>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
   <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
@@ -297,7 +298,7 @@
   <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
   <ShowLinks>Links</ShowLinks>
   <ShowHulls>Hulls</ShowHulls>
-  <ShowGaps>Gaps</ShowGaps>
+  <ShowGaps>Gaps</ShowGaps>  
   <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
   <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
   <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>

@@ -41,23 +41,7 @@ namespace Barotrauma
                 enabled = value;
             }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                if (RectTransform != null) { return; }
-                base.Rect = value;
-
-                if (box != null) box.Rect = new Rectangle(value.X,value.Y,box.Rect.Width,box.Rect.Height);
-                if (text != null) text.Rect = new Rectangle(box.Rect.Right, box.Rect.Y + 2, 20, box.Rect.Height);
-            }
-        }
-
+        
         public Color TextColor
         {
             get { return text.TextColor; }

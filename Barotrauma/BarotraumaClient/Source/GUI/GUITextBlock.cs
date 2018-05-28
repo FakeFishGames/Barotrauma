@@ -60,36 +60,7 @@ namespace Barotrauma
         {
             get { return wrappedText; }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                if (RectTransform != null) { return; }
-                if (base.Rect == value) return;
-                foreach (GUIComponent child in Children)
-                {
-                    child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
-                }
-
-                Point moveAmount = value.Location - rect.Location;
-
-                rect = value;
-                if (value.Width != rect.Width || value.Height != rect.Height)
-                {
-                    SetTextPos();
-                }
-                else if (moveAmount != Point.Zero)
-                {
-                    caretPos += moveAmount.ToVector2();
-                }
-            }
-        }
-
+        
         public float TextDepth
         {
             get { return textDepth; }

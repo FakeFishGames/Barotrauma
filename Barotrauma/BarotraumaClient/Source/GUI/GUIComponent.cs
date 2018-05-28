@@ -88,7 +88,7 @@ namespace Barotrauma
         {
             if (RectTransform != null)
             {
-                //DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
                 return;
             }
             if (child == null) return;
@@ -289,7 +289,7 @@ namespace Barotrauma
         public virtual Rectangle Rect
         {
             get { return RectTransform != null ? RectTransform.Rect : rect; }
-            set
+            /*set
             {
                 if (RectTransform == null)
                 {
@@ -315,7 +315,7 @@ namespace Barotrauma
                 {
                     ((GUIListBox)Parent).UpdateScrollBarSize();
                 }
-            }
+            }*/
         }
 
         public virtual bool ClampMouseRectToParent { get; set; } = true;
@@ -623,7 +623,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public virtual void SetDimensions(Point size, bool expandChildren = false)
+        /*public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
             if (RectTransform != null)
             {
@@ -646,7 +646,7 @@ namespace Barotrauma
                         child.rect.Height + expandAmount.Y);
                 }
             }
-        }
+        }*/
 
         /// <summary>
         /// todo: remove when all the ui elements are using the new system

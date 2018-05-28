@@ -93,15 +93,8 @@ namespace Barotrauma
                     newY = (int)(Padding.Y + newScroll * (frame.Rect.Height - bar.Rect.Height - Padding.Y - Padding.W));
                     newY = MathHelper.Clamp(newY, (int)Padding.Y, frame.Rect.Height - bar.Rect.Height - (int)Padding.W);
                 }
-                if (RectTransform != null)
-                {
-                    bar.RectTransform.AbsoluteOffset = new Point(newX, newY);
-                }
-                else
-                {
 
-                    bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
-                }
+                bar.RectTransform.AbsoluteOffset = new Point(newX, newY);
             }
         }
 
@@ -193,27 +186,8 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
-            if (RectTransform != null)
-            {
-                var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
-                bar.RectTransform.Resize(newSize);
-            }
-            else
-            {
-                float width = frame.Rect.Width - Padding.X - Padding.Z;
-                float height = frame.Rect.Height - Padding.Y - Padding.W;
-
-                bar.Rect = new Rectangle(
-                    bar.Rect.X,
-                    bar.Rect.Y,
-                    isHorizontal ? (int)(width * barSize) : (int)width,
-                    isHorizontal ? (int)height : (int)(height * barSize));
-                
-                foreach (GUIComponent child in bar.Children)
-                {
-                    child.Rect = bar.Rect;
-                }
-            }
+            var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
+            bar.RectTransform.Resize(newSize);
         }
 
         /*private void ClampRect()

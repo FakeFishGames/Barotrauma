@@ -118,24 +118,7 @@ namespace Barotrauma
                 textBlock.HoverColor = value;
             }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                base.Rect = value;
-
-                if (textBlock != null)
-                {
-                    textBlock.Rect = value;
-                }
-            }
-        }
-        
+                
         public string Text
         {
             get

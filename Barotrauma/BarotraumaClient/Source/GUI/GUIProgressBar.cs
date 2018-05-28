@@ -145,7 +145,6 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
 
             slider.Color = currColor;
-            if (slider.RectTransform == null) slider.Rect = Rect;
             if (AutoDraw)
             {
                 slider.DrawAuto(spriteBatch);
