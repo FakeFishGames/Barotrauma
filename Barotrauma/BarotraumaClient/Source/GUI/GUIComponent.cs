@@ -228,7 +228,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Does not set the rect values if the component uses RectTransform. TODO: remove setter.
+        /// Does not set the rect values if the component uses RectTransform.
         /// </summary>
         public virtual Rectangle Rect
         {

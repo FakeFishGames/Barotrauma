@@ -1740,8 +1740,6 @@ namespace Barotrauma
                 MapEntity.DrawEditor(spriteBatch, cam);
             }
 
-            if (tutorial != null) tutorial.Draw(spriteBatch);
-
             GUI.Draw((float)deltaTime, spriteBatch);
 
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;

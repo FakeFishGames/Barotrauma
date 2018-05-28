@@ -40,7 +40,7 @@ namespace Barotrauma
 
             cam = new Camera();
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "");
+            /*GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "");
             //GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
             physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, "", GUIpanel);
@@ -51,7 +51,7 @@ namespace Barotrauma
             limbList.OnSelected = SelectLimb;
 
             new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", "", GUIpanel);
-            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, "", GUIpanel);
+            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, "", GUIpanel);*/
             
             while (Character.CharacterList.Count > 1)
             {
@@ -207,7 +207,7 @@ namespace Barotrauma
         private void UpdateLimbLists(Character character)
         {
             limbList.ClearChildren();
-            foreach (Limb limb in character.AnimController.Limbs)
+            /*foreach (Limb limb in character.AnimController.Limbs)
             {
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0,0,0,25),
@@ -235,7 +235,7 @@ namespace Barotrauma
                     jointList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = joint;
-            }
+            }*/
         }
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
@@ -297,7 +297,7 @@ namespace Barotrauma
 
         private bool SelectLimb(GUIComponent component, object selection)
         {
-            try
+            /*try
             {
                 editingLimb = (Limb)selection;
                 limbPanel = new GUIFrame(new Rectangle(300, 0, 500, 100), Color.Gray*0.8f);
@@ -310,7 +310,7 @@ namespace Barotrauma
             catch
             {
                 return false;
-            }
+            }*/
             return true;
         }
 

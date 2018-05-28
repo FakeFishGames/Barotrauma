@@ -118,53 +118,7 @@ namespace Barotrauma
         }
         
         public bool Selected { get; set; }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIButton(Rectangle rect, string text, string style, GUIComponent parent = null)
-            : this(rect, text, null, Alignment.Left, style, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIButton(Rectangle rect, string text, Alignment alignment, string style, GUIComponent parent = null)
-            : this(rect, text, null, alignment, style, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIButton(Rectangle rect, string text, Color? color, string style, GUIComponent parent = null)
-            : this(rect, text, color, (Alignment.Left | Alignment.Top), style, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
-            : this(rect, text, color, alignment, Alignment.Center, style, parent)
-        {
-
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, string style = "", GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-            if (color != null) this.color = (Color)color;
-            this.alignment = alignment;
-
-            //if (parent != null) parent.AddChild(this);
-
-            frame = new GUIFrame(Rectangle.Empty, style, this);
-            GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
-
-            textBlock = new GUITextBlock(new Rectangle(0, 0, rect.Width, rect.Height), text,
-                Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
-                textAlignment, null, this);
-            GUI.Style.Apply(textBlock, style, this);
-
-            Enabled = true;
-        }
-
+        
         /// <summary>
         /// This is the new constructor.
         /// </summary>

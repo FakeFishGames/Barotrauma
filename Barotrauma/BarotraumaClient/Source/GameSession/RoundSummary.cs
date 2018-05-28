@@ -24,22 +24,26 @@ namespace Barotrauma
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
             bool singleplayer = GameMain.NetworkMember == null;
-
             bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead || c.IsUnconscious);
             bool progress = Submarine.MainSub.AtEndPosition;
-
-            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.8f);
-
-            int width = 760, height = 400;
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center));
-
             if (!singleplayer)
             {
                 SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
                 SoundPlayer.OverrideMusicDuration = 18.0f;
             }
 
+            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.8f);
+
+            int width = 760, height = 400;
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
+
+            GUIListBox infoTextBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform));
+            
             string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
                 (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
 
@@ -47,21 +51,24 @@ namespace Barotrauma
                 .Replace("[sub]", Submarine.MainSub.Name)
                 .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
 
-            var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+            var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
-                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
+                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
                     endMessage, wrap: true);
             }
 
             if (GameMain.GameSession.Mission != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                     TextManager.Get("Mission") + ": " + GameMain.GameSession.Mission.Name, font: GUI.LargeFont);
 
-                var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                var missionInfo = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                     GameMain.GameSession.Mission.Completed ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     wrap: true);
 
@@ -72,7 +79,7 @@ namespace Barotrauma
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
-                    var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                    var missionReward = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                         TextManager.Get("Reward") + ": " + GameMain.GameSession.Mission.Reward);
                 }  
             }
@@ -80,16 +87,16 @@ namespace Barotrauma
             {
                 GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
+            foreach (GUIComponent child in infoTextBox.Content.Children)
+            {
+                child.CanBeFocused = false;
+            }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), 
                 TextManager.Get("RoundSummaryCrewStatus"), font: GUI.LargeFont);
 
-            GUIListBox characterListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), listBox.Content.RectTransform, minSize: new Point(0, 75)), isHorizontal: true);
-            foreach (GUIComponent child in listBox.Content.Children)
-            {
-                child.CanBeFocused = child == characterListBox;
-            }
-            
+            GUIListBox characterListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedFrame.RectTransform, minSize: new Point(0, 75)), isHorizontal: true);
+                        
             foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())
             {
                 if (GameMain.GameSession.Mission is CombatMission &&
@@ -98,9 +105,10 @@ namespace Barotrauma
                     continue;
                 }
 
-                var characterFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), characterListBox.Content.RectTransform, minSize: new Point(170, 0)), style: null)
+                var characterFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), characterListBox.Content.RectTransform, minSize: new Point(170, 0)))
                 {
-                    CanBeFocused = false
+                    CanBeFocused = false,
+                    Stretch = true
                 };
 
                 characterInfo.CreateCharacterFrame(characterFrame,
@@ -132,12 +140,17 @@ namespace Barotrauma
                     }
                 }
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter),
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), characterFrame.RectTransform, Anchor.BottomCenter),
                     statusText, Color.White,
                     textAlignment: Alignment.Center,
-                    wrap: true, font: GUI.SmallFont, color: statusColor * 0.8f);
+                    wrap: true, font: GUI.SmallFont, style: null, color: statusColor * 0.8f);
             }
 
+            new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.BottomRight)
+            {
+                RelativeSpacing = 0.05f,
+                UserData = "buttonarea"
+            };
 
             return frame;
         }

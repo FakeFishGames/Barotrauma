@@ -118,67 +118,6 @@ namespace Barotrauma
             }
         }
 
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIListBox(Rectangle rect, string style, GUIComponent parent = null)
-            : this(rect, style, Alignment.TopLeft, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIListBox(Rectangle rect, string style, Alignment alignment, GUIComponent parent = null)
-            : this(rect, null, alignment, style, parent, false)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIListBox(Rectangle rect, Color? color, string style = null, GUIComponent parent = null)
-            : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, string style = null, GUIComponent parent = null, bool isHorizontal = false)
-            : base(style)
-        {
-            this.rect = rect;
-            this.alignment = alignment;
-
-            selected = new List<GUIComponent>();
-
-            if (color != null) this.color = (Color)color;
-
-            //if (parent != null) parent.AddChild(this);
-            
-            if (isHorizontal)
-            {
-                ScrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), null, 1.0f, "");
-            }
-            else
-            {
-                ScrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, "");
-            }
-
-            ScrollBar.IsHorizontal = isHorizontal;
-
-            Content = new GUIFrame(new Rectangle(0, 0, this.rect.Width, this.rect.Height), style, this);
-            if (style != null) GUI.Style.Apply(Content, "", this);
-
-            UpdateScrollBarSize();
-
-            //Children.Clear();
-
-            Enabled = true;
-
-            scrollBarEnabled = true;
-
-            ScrollBar.BarScroll = 0.0f;
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             selected = new List<GUIComponent>();

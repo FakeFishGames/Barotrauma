@@ -1551,17 +1551,13 @@ namespace Barotrauma
 
         private bool ChangeJobPreference(GUIButton button, object obj)
         {
-            GUIComponent jobText = button.Parent;
-            GUIListBox jobList = jobText.Parent as GUIListBox;
+            GUIComponent jobText = button.Parent.Parent;
 
-            //TODO: fix
             int index = jobList.Content.Children.IndexOf(jobText);
             int newIndex = index + (int)obj;
             if (newIndex < 0 || newIndex > jobList.Content.Children.Count - 1) return false;
 
-            GUIComponent temp = jobList.Content.Children[newIndex];
-            jobList.Content.Children[newIndex] = jobText;
-            jobList.Content.Children[index] = temp;
+            jobText.RectTransform.RepositionChildInHierarchy(newIndex);
 
             UpdateJobPreferences(jobList);
 

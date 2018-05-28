@@ -132,68 +132,23 @@ namespace Barotrauma
                 textBlock.Text = value;
                 if (textBlock.Text == null) textBlock.Text = "";
 
-                if (textBlock.Text != "")
+                if (textBlock.Text != "" && !Wrap)
                 {
-                    if (!Wrap)
+                    if (maxTextLength != null)
                     {
-                        if (maxTextLength != null)
+                        if (Text.Length > maxTextLength)
                         {
-                            if (Text.Length > maxTextLength)
-                            {
-                                Text = textBlock.Text.Substring(0, (int)maxTextLength);
-                            }
-                        }
-                        else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
-                        {
-                            Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                            Text = textBlock.Text.Substring(0, (int)maxTextLength);
                         }
                     }
+                    else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
+                    {
+                        Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                    }                    
                 }
             }
         }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, string style = null, GUIComponent parent = null)
-            : this(rect, null, null, Alignment.Left, Alignment.Left, style, parent)
-        {
-
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, string style = null, GUIComponent parent = null)
-            : this(rect, null, null, alignment, Alignment.Left, style, parent)
-        {
-
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.CenterLeft, string style = null, GUIComponent parent = null)
-            : base(style)
-        {
-            Enabled = true;
-
-            this.rect = rect;
-
-            if (color != null) this.color = (Color)color;
-                        
-            this.alignment = alignment;
-            
-            /*if (parent != null)
-                parent.AddChild(this);*/
-
-            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
-            
-            Font = GUI.Font;
-
-            GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
-            textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
-            
-            CaretEnabled = true;
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
+        
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)

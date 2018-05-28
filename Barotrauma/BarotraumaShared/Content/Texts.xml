@@ -85,6 +85,7 @@
   <BanRange>Ban range</BanRange>
   <BanListRemove>Remove</BanListRemove>
   <BanExpires>Expires [time]</BanExpires>
+  <BanDuration>Duration</BanDuration>
   <BanPermanent>Permanent</BanPermanent>
   <BanReason>Reason: </BanReason>
 
@@ -151,6 +152,8 @@
   <Delete>Delete</Delete>
   <Load>Load</Load>
   <Back>Back</Back>
+  <Days>Days</Days>
+  <Hours>Hours</Hours>
   <ManagePlayers>Manage players</ManagePlayers>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
@@ -264,6 +267,8 @@
   <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
   <BanRange>Ban range</BanRange>
+  <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
+  <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
   <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
   <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
@@ -271,6 +276,12 @@
   <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
   <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
 
+  <!-- Ingame UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>  
+  
   <!-- Sub editor -->
   <Items>Items</Items>
   <Structures>Structures</Structures>

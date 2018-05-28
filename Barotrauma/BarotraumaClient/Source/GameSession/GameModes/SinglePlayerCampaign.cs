@@ -207,18 +207,26 @@ namespace Barotrauma
                 if (summaryScreen != null)
                 {
                     summaryScreen = summaryScreen.Children[0];
+                    var buttonArea = summaryScreen.Children[0].FindChild("buttonarea");
+                    buttonArea.ClearChildren();
+
+
                     summaryScreen.RemoveChild(summaryScreen.Children.Find(c => c is GUIButton));
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += (GUIButton button, object obj) => 
+                    var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("LoadGameButton"))
                     {
-                        GameMain.GameSession.LoadPrevious();
-                        GameMain.LobbyScreen.Select();
-                        GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
-                        return true;
+                        OnClicked = (GUIButton button, object obj) =>
+                        {
+                            GameMain.GameSession.LoadPrevious();
+                            GameMain.LobbyScreen.Select();
+                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            return true;
+                        }
                     };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", summaryScreen);
+                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }
