@@ -49,8 +49,8 @@ namespace Barotrauma
                 if (editor == null)
                 {
                     editor = new GUIListBox(new RectTransform(new Vector2(0.3f, 1), GUI.Canvas));
-                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, WalkInstance, false, true, elementHeight: 0.04f));
-                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, RunInstance, false, true, elementHeight: 0.04f));
+                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, WalkInstance, false, true, elementHeight: 20));
+                    editor.AddChild(new SerializableEntityEditor(editor.RectTransform, RunInstance, false, true, elementHeight: 20));
                 }
                 return editor;
             }
