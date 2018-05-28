@@ -153,66 +153,81 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
-            int height = spawnType == SpawnType.Path ? 100 : 200;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
+            int height = spawnType == SpawnType.Path ? 80 : 200;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, height));
-            //editingHUD.Padding = new Vector4(10, 10, 20, 0);
-            editingHUD.UserData = this;
+            editingHUD = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
+
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), editingHUD.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing")+" " +TextManager.Get("Waypoint"), "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 20, 100, 20), TextManager.Get("LinkWaypoint"), "", editingHUD);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Waypoint"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("LinkWaypoint"));
             }
             else
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"), "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 25, 100, 20), TextManager.Get("SpawnType") + ": ", "", editingHUD);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"));
+                
+                var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), spawnTypeContainer.RectTransform), TextManager.Get("SpawnType") + ": ");
 
-                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), "", Alignment.Right, Alignment.TopLeft, editingHUD);
+                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "-")
+                {
+                    UserData = -1,
+                    OnClicked = ChangeSpawnType
+                };
+                var spawnTypeText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), spawnTypeContainer.RectTransform), spawnType.ToString(), textAlignment: Alignment.Center);
+                button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "+")
+                {
+                    UserData = 1,
+                    OnClicked = ChangeSpawnType
+                };
 
-                var button = new GUIButton(new Rectangle(-30, 0, 20, 20), "-", Alignment.Right, "", spawnTypeText);
-                button.UserData = -1;
-                button.OnClicked = ChangeSpawnType;
 
-                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, "", spawnTypeText);
-                button.UserData = 1;
-                button.OnClicked = ChangeSpawnType;
+                var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
+                    TextManager.Get("IDCardDescription"), font: GUI.SmallFont);
+                GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), descText.RectTransform, Anchor.CenterRight), idCardDesc)
+                {
+                    MaxTextLength = 150,
+                    OnEnterPressed = EnterIDCardDesc,
+                    OnTextChanged = TextBoxChanged,
+                    ToolTip = TextManager.Get("IDCardDescriptionTooltip")
+                };
 
-                y = 40 + 20;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardDescription"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 150;
-                propertyBox.Text = idCardDesc;
-                propertyBox.OnEnterPressed = EnterIDCardDesc;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("IDCardDescriptionTooltip");
+                var tagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                    TextManager.Get("IDCardTags"), font: GUI.SmallFont);
+                propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), tagsText.RectTransform, Anchor.CenterRight), string.Join(", ", idCardTags))
+                {
+                    MaxTextLength = 60,
+                    OnEnterPressed = EnterIDCardTags,
+                    OnTextChanged = TextBoxChanged,
+                    ToolTip = TextManager.Get("IDCardTagsTooltip")
+                };
 
-                y = y + 30;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardTags"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 60;
-                propertyBox.Text = string.Join(", ", idCardTags);
-                propertyBox.OnEnterPressed = EnterIDCardTags;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("IDCardTagsTooltip");
-
-                y = y + 30;
-
-                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("SpawnpointJobs"), "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                propertyBox = new GUITextBox(new Rectangle(150, y, 0, 20), "", editingHUD);
-                propertyBox.MaxTextLength = 60;
-                propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
-                propertyBox.OnEnterPressed = EnterAssignedJob;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = TextManager.Get("SpawnpointJobsTooltip");
-
+                var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
+                    TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont);
+                propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), jobsText.RectTransform, Anchor.CenterRight), (assignedJob == null) ? "None" : assignedJob.Name)
+                {
+                    MaxTextLength = 60,
+                    OnEnterPressed = EnterAssignedJob,
+                    OnTextChanged = TextBoxChanged,
+                    ToolTip = TextManager.Get("SpawnpointJobsTooltip")
+                };
             }
-            
-            y = y + 30;
 
             return editingHUD;
         }        

@@ -918,12 +918,13 @@ namespace Barotrauma
 
             TogglePauseMenu(null, null);
 
-            //TODO: text in pause menu buttons isn't repositioned when scaling the buttons (probably applies to other buttons too)
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), Canvas, Anchor.Center) { MinSize = new Point(200, 300) });
+                pauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
+                    
+                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), pauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenu.RectTransform, Anchor.Center))
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenuInner.RectTransform, Anchor.Center))
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f

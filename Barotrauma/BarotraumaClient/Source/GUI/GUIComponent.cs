@@ -233,33 +233,6 @@ namespace Barotrauma
         public virtual Rectangle Rect
         {
             get { return RectTransform != null ? RectTransform.Rect : rect; }
-            /*set
-            {
-                if (RectTransform == null)
-                {
-                    int prevX = rect.X, prevY = rect.Y;
-                    int prevWidth = rect.Width, prevHeight = rect.Height;
-
-                    rect = value;
-
-                    if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-
-                    //TODO: fix this (or replace with something better in the new GUI system)
-                    //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                    foreach (GUIComponent child in Children)
-                    {
-                        child.Rect = new Rectangle(
-                            child.rect.X + (rect.X - prevX),
-                            child.rect.Y + (rect.Y - prevY),
-                            Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
-                            Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
-                    }
-                }
-                if (Parent != null && Parent is GUIListBox)
-                {
-                    ((GUIListBox)Parent).UpdateScrollBarSize();
-                }
-            }*/
         }
 
         public virtual bool ClampMouseRectToParent { get; set; } = true;
@@ -567,31 +540,6 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        /*public virtual void SetDimensions(Point size, bool expandChildren = false)
-        {
-            if (RectTransform != null)
-            {
-                RectTransform.Resize(size, expandChildren);
-                return;
-            }
-            rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
-
-            if (expandChildren)
-            {
-                //TODO: fix this(or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                Point expandAmount = size - rect.Size;
-                foreach (GUIComponent child in Children)
-                {
-                    child.Rect = new Rectangle(
-                        child.rect.X,
-                        child.rect.Y,
-                        child.rect.Width + expandAmount.X,
-                        child.rect.Height + expandAmount.Y);
-                }
-            }
-        }*/
-                
         public virtual void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;

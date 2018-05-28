@@ -27,20 +27,6 @@ namespace Barotrauma
                 box.State = state;
             }
         }
-
-        private bool enabled;
-
-        public bool Enabled
-        {
-            get
-            {
-                return enabled;
-            }
-            set
-            {
-                enabled = value;
-            }
-        }
         
         public Color TextColor
         {

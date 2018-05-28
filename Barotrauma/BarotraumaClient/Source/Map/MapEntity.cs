@@ -361,17 +361,18 @@ namespace Barotrauma
 
             highlightedList = highlightedEntities;
 
-            highlightedListBox = new GUIListBox(
-                new Rectangle((int)PlayerInput.MousePosition.X + 15, (int)PlayerInput.MousePosition.Y + 15, 150, highlightedEntities.Count * 18 + 5),
-                null, Alignment.TopLeft, "GUIToolTip", null, false);
+            highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
+            {
+                ScreenSpaceOffset =  PlayerInput.MousePosition.ToPoint() + new Point(15)
+            }, style: "GUIToolTip");
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, highlightedListBox.Rect.Width, 18),
-                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), "", Alignment.TopLeft, Alignment.CenterLeft, highlightedListBox, false, GUI.SmallFont);
-
-                textBlock.UserData = entity;
+                var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
+                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                {
+                    UserData = entity
+                };
             }
 
             highlightedListBox.OnSelected = (GUIComponent component, object obj) =>
