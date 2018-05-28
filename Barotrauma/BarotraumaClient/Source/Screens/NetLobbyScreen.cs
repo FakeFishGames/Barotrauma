@@ -706,7 +706,7 @@ namespace Barotrauma
                 int buttonSize = jobButtonContainer.Rect.Height;
                 GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), jobButtonContainer.RectTransform), "?")
                 {
-                    UserData = -1,
+                    UserData = job,
                     OnClicked = ViewJobInfo
                 };
 
@@ -1233,7 +1233,7 @@ namespace Barotrauma
                     UserData = obj
                 };
                 kickButton.OnClicked = KickPlayer;
-                kickButton.OnClicked = ClosePlayerFrame;
+                kickButton.OnClicked += ClosePlayerFrame;
             }
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
@@ -1531,9 +1531,7 @@ namespace Barotrauma
         
         private bool ViewJobInfo(GUIButton button, object obj)
         {
-            GUIComponent jobText = button.Parent;
-
-            JobPrefab jobPrefab = jobText.UserData as JobPrefab;
+            JobPrefab jobPrefab = button.UserData as JobPrefab;
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();

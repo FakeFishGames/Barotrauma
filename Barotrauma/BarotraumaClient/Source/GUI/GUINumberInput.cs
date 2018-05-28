@@ -103,8 +103,8 @@ namespace Barotrauma
 
             this.alignment = alignment;
 
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             textBox = new GUITextBox(Rectangle.Empty, style, this);
             textBox.OnTextChanged += TextChanged;

@@ -145,8 +145,8 @@ namespace Barotrauma
 
             this.textAlignment = textAlignment;
 
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             this.Wrap = wrap;
 
@@ -189,14 +189,7 @@ namespace Barotrauma
             RectTransform.ScaleChanged += SetTextPos;
             RectTransform.SizeChanged += SetTextPos;
         }
-
-        protected override void UpdateDimensions(GUIComponent parent = null)
-        {
-            base.UpdateDimensions(parent);
-
-            SetTextPos();
-        }
-
+        
         public override void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;

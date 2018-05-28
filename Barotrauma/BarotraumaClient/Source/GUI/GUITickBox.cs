@@ -77,8 +77,8 @@ namespace Barotrauma
         public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, string style, GUIComponent parent)
             : base(null)
         {
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             box = new GUIFrame(rect, Color.DarkGray, "", this);
             box.HoverColor = Color.Gray;

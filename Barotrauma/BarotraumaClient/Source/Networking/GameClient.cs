@@ -699,11 +699,16 @@ namespace Barotrauma.Networking
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                new GUITextBlock(new Rectangle(0, 0, listBoxWidth, 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, msgBox.InnerFrame, true, GUI.SmallFont);
-                var commandList = new GUIListBox(new Rectangle(0, 20, listBoxWidth, 0), "", Alignment.BottomRight, msgBox.InnerFrame);
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.Children[0].RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
+                     "Permitted console commands:", wrap: true, font: GUI.SmallFont);
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.Children[0].RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
-                    new GUITextBlock(new Rectangle(0, 0, 0, 15), permittedCommand, "", commandList, GUI.SmallFont).CanBeFocused = false;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
+                        permittedCommand, font: GUI.SmallFont)
+                    {
+                        CanBeFocused = false
+                    };
                 }
             }
 
