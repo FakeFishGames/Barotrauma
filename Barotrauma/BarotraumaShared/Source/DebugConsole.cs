@@ -2334,9 +2334,12 @@ namespace Barotrauma
         {
 
 #if CLIENT
-            activeQuestionText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 30), "   >>" + question, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-            activeQuestionText.CanBeFocused = false;
-            activeQuestionText.TextColor = Color.Cyan;
+            activeQuestionText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, 30), listBox.Content.RectTransform),
+                "   >>" + question, font: GUI.SmallFont)
+            {
+                CanBeFocused = false,
+                TextColor = Color.Cyan
+            };
 #else
             NewMessage("   >>" + question, Color.Cyan);
 #endif

@@ -191,18 +191,11 @@ namespace Barotrauma.Tutorials
                     CoroutineManager.StartCoroutine(Dead());
                 }
             }
-
-            if (infoBox != null) infoBox.UpdateManually(deltaTime);
         }
 
         public virtual IEnumerable<object> UpdateState()
         {
             yield return CoroutineStatus.Success;
-        }
-
-        public virtual void Draw(SpriteBatch spriteBatch)
-        {
-            if (infoBox != null) infoBox.DrawManually(spriteBatch);
         }
 
         private IEnumerable<object> Dead()
@@ -237,17 +230,19 @@ namespace Barotrauma.Tutorials
 
             height += wrappedText.Split('\n').Length * 25;
 
-            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, "");
-            //infoBlock.Color = infoBlock.Color * 0.8f;
-            //infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, Anchor.TopRight) { AbsoluteOffset = new Point(20) });
             infoBlock.Flash(Color.Green);
 
-            var textBlock = new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, "", infoBlock, true);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.7f), infoBlock.RectTransform, Anchor.Center),
+                text, wrap: true);
 
             if (hasButton)
             {
-                var okButton = new GUIButton(new Rectangle(0, -40, 80, 25), "OK", Alignment.BottomCenter, "", textBlock);
-                okButton.OnClicked = CloseInfoFrame;
+                var okButton = new GUIButton(new RectTransform(new Point(80, 25), infoBlock.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 5) },
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = CloseInfoFrame
+                };
             }
             
             GUI.PlayUISound(GUISoundType.Message);

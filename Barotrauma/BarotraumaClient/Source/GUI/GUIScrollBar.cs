@@ -120,45 +120,6 @@ namespace Barotrauma
             }
         }
 
-
-        
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIScrollBar(Rectangle rect, Color? color, float barSize, string style = "", GUIComponent parent = null)
-            : this(rect, color, barSize, Alignment.TopLeft, style, parent)
-        {
-        }
-        
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIScrollBar(Rectangle rect, Color? color, float barSize, Alignment alignment, string style = "", GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-            //GetDimensions(parent);
-
-            this.alignment = alignment;
-
-            /*if (parent != null)
-                parent.AddChild(this);*/
-
-            isHorizontal = (this.rect.Width > this.rect.Height);
-            frame = new GUIFrame(new Rectangle(0,0,0,0), style, this);
-            GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
-
-            this.barSize = barSize;
-
-            bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, "", this);
-            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
-            
-            bar.OnPressed = SelectBar;
-
-            enabled = true;
-
-            UpdateRect();
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "") : base(style, rectT)
         {
             isHorizontal = (Rect.Width > Rect.Height);
@@ -183,17 +144,7 @@ namespace Barotrauma
             var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
             bar.RectTransform.Resize(newSize);
         }
-
-        /*private void ClampRect()
-        {
-            // TODO: doesn't work for RectTransforms. Do we need this?
-            bar.Rect = new Rectangle(
-                (int)MathHelper.Clamp(bar.Rect.X, frame.Rect.X + frame.Padding.X, frame.Rect.Right - bar.Rect.Width - frame.Padding.X - frame.Padding.Z),
-                (int)MathHelper.Clamp(bar.Rect.Y, frame.Rect.Y + frame.Padding.Y, frame.Rect.Bottom - bar.Rect.Height - frame.Padding.Y - frame.Padding.W), 
-                bar.Rect.Width, 
-                bar.Rect.Height);
-        }*/
-
+        
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;

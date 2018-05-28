@@ -5,40 +5,7 @@ using System.Linq;
 namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
-    {
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIFrame(Rectangle rect, string style = "", GUIComponent parent = null)
-            : this(rect, null, (Alignment.Left | Alignment.Top), style, parent)
-        {
-        }
-        
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIFrame(Rectangle rect, Color color, string style = "", GUIComponent parent = null)
-            : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIFrame(Rectangle rect, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-
-            this.alignment = alignment;
-
-            if (color != null) this.color = (Color)color;
-
-            if (parent != null)
-            {
-                //parent.AddChild(this);
-            }
-
-            //if (style != null) ApplyStyle(style);
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
+    {      
         public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
         {
             if (color.HasValue)

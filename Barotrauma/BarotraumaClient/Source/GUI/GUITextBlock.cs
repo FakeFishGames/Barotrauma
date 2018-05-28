@@ -100,66 +100,7 @@ namespace Barotrauma
         {
             get { return caretPos; }
         }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent, ScalableFont font)
-            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
-        {
-        }
-
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
-        {
-        }
-
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
-            : this(rect, text, style, alignment, textAlignment, parent, wrap, font)
-        {
-            if (color != null) this.color = (Color)color;
-            if (textColor != null) this.textColor = (Color)textColor;
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBlock(Rectangle rect, string text, string style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
-            : base(style)
-        {
-            this.Font = font == null ? GUI.Font : font;
-
-            this.rect = rect;
-
-            this.text = text;
-
-            this.alignment = alignment;
-
-            this.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-
-            this.textAlignment = textAlignment;
-
-            /*if (parent != null)
-                parent.AddChild(this);*/
-
-            this.Wrap = wrap;
-
-            SetTextPos();
-
-            TextScale = 1.0f;
-
-            if (rect.Height == 0 && !string.IsNullOrEmpty(Text))
-            {
-                this.rect.Height = (int)Font.MeasureString(wrappedText).Y;
-            }
-        }
-
+        
         /// <summary>
         /// This is the new constructor.
         /// If the rectT height is set 0, the height is calculated from the text.

@@ -53,34 +53,6 @@ namespace Barotrauma
             }
         }
 
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
-            : this(rect, label, alignment, GUI.Font, "", parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, string style, GUIComponent parent)
-            : base(null)
-        {
-            /*if (parent != null)
-                parent.AddChild(this);*/
-
-            box = new GUIFrame(rect, Color.DarkGray, "", this);
-            box.HoverColor = Color.Gray;
-            box.SelectedColor = Color.DarkGray;
-            box.CanBeFocused = false;
-
-            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
-            
-            text = new GUITextBlock(new Rectangle(rect.Right, rect.Y, 20, rect.Height), label, "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, this, false, font);
-            GUI.Style.Apply(text, "GUIButtonHorizontal", this);
-            
-            this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
-
-            Enabled = true;
-        }
-
         /// <summary>
         /// This is the new constructor.
         /// </summary>
@@ -117,7 +89,7 @@ namespace Barotrauma
                 if (PlayerInput.LeftButtonClicked())
                 {
                     Selected = !Selected;
-                    if (OnSelected != null) OnSelected(this);
+                    OnSelected?.Invoke(this);
                 }
             }
             else

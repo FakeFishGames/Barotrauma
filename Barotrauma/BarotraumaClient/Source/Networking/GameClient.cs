@@ -1263,7 +1263,8 @@ namespace Barotrauma.Networking
                         GUIButton infoButton = subElement.GetChild<GUIButton>();
                         if (infoButton == null)
                         {
-                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                            int buttonSize = (int)(subElement.Rect.Height * 0.8f);
+                            infoButton = new GUIButton(new RectTransform(new Point(buttonSize), subElement.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?");
                         }
                         infoButton.UserData = newSub;
                         infoButton.OnClicked = (component, userdata) =>
