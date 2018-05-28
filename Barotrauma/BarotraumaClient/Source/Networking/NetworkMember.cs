@@ -32,8 +32,10 @@ namespace Barotrauma.Networking
 
         private void InitProjSpecific()
         {
-            inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
-            inGameHUD.CanBeFocused = false;
+            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
 
             chatBox = new ChatBox(inGameHUD, false);
             chatBox.OnEnterMessage += EnterChatMessage;

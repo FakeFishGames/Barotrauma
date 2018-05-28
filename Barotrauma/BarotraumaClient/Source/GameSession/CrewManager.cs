@@ -831,7 +831,7 @@ namespace Barotrauma
             GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
             if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
 
-            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.6f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
             {
                 UserData = "SelectedCharacter"
             };
