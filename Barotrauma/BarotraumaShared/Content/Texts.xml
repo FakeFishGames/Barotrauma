@@ -171,6 +171,9 @@
   <MissionReward>Reward: [reward]</MissionReward>
 
   <!-- Campaign setup menu -->
+  <CampaignSetup>Campaign Setup</CampaignSetup>
+  <NewCampaign>New campaign</NewCampaign>
+  <LoadCampaign>Load campaign</LoadCampaign>
   <LoadButton>Load</LoadButton>
   <DeleteButton>Delete</DeleteButton>
   <SubNotSelected>Submarine not selected!</SubNotSelected>
