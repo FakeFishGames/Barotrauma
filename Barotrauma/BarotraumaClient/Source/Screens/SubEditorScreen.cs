@@ -784,10 +784,10 @@ namespace Barotrauma
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
             {
                 OnSelected = (GUIComponent selected, object userData) =>
-                    {
-                        if (loadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
-                        return true;
-                    }
+                {
+                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    return true;
+                }
             };
 
             foreach (Submarine sub in Submarine.SavedSubmarines)

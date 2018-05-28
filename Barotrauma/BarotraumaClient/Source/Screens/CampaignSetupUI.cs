@@ -188,9 +188,11 @@ namespace Barotrauma
 
             foreach (string saveFile in saveFiles)
             {
-                saveList.AddChild(new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), saveList.RectTransform),
+                new GUITextBlock(new RectTransform(new Vector2(1, 0.1f), saveList.Content.RectTransform),
                     text: Path.GetFileNameWithoutExtension(saveFile), style: "ListBoxElement")
-                    { UserData = saveFile });     
+                {
+                    UserData = saveFile
+                };     
             }
 
             loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"), style: "GUIButtonLarge");

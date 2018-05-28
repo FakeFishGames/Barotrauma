@@ -121,13 +121,7 @@ namespace Barotrauma
         }
 
 
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIScrollBar(Rectangle rect, string style, float barSize, GUIComponent parent = null)
-            : this(rect, null, barSize, style, parent)
-        {
-        }
-
+        
         [System.Obsolete("Use RectTransform instead of Rectangle")]
         public GUIScrollBar(Rectangle rect, Color? color, float barSize, string style = "", GUIComponent parent = null)
             : this(rect, color, barSize, Alignment.TopLeft, style, parent)
@@ -143,8 +137,8 @@ namespace Barotrauma
 
             this.alignment = alignment;
 
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             isHorizontal = (this.rect.Width > this.rect.Height);
             frame = new GUIFrame(new Rectangle(0,0,0,0), style, this);

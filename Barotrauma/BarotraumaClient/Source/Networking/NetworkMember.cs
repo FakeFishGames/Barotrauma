@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
+    //TODO: remove hard-coded texts in this class
     abstract partial class NetworkMember
     {
         protected CharacterInfo characterInfo;
@@ -160,21 +161,29 @@ namespace Barotrauma.Networking
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
             var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK", "Cancel" }, 400, 300);
-            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.Children[0]);
-            banReasonBox.Wrap = true;
-            banReasonBox.MaxTextLength = 100;
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.Children[0].RectTransform, Anchor.Center));
+            var banReasonBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform))
+            {
+                Wrap = true,
+                MaxTextLength = 100
+            };
 
             GUINumberInput durationInputDays = null, durationInputHours = null;
             GUITickBox permaBanTickBox = null;
 
             if (ban)
             {
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.Children[0]);
-                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.Children[0]);
-                permaBanTickBox.Selected = true;
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), "Duration:");
+                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), "Permanent")
+                {
+                    Selected = true
+                };
 
-                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.Children[0]);
-                durationContainer.Visible = false;
+                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), isHorizontal: true)
+                {
+                    Visible = false
+                };
 
                 permaBanTickBox.OnSelected += (tickBox) =>
                 {
@@ -182,15 +191,19 @@ namespace Barotrauma.Networking
                     return true;
                 };
                 
-                new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 1000;
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f),durationContainer.RectTransform),"Days:");
+                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 1000
+                };
 
-                new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 24;
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), "Hours:");
+                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 24
+                };
             }
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>

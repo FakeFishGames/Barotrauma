@@ -147,7 +147,7 @@ namespace Barotrauma
 
             if (color != null) this.color = (Color)color;
 
-            if (parent != null) parent.AddChild(this);
+            //if (parent != null) parent.AddChild(this);
             
             if (isHorizontal)
             {
@@ -406,7 +406,7 @@ namespace Barotrauma
                 Math.Max(Math.Min(Content.Rect.Height / (float)totalSize, 1.0f), 5.0f / Content.Rect.Height);
         }
 
-        public override void AddChild(GUIComponent child)
+        /*public override void AddChild(GUIComponent child)
         {
             // The old system calls this method in the constructor. Therefore this check. TODO: remove
             if (child is GUIScrollBar || Content == null)
@@ -424,7 +424,7 @@ namespace Barotrauma
             }
             UpdateScrollBarSize();
             UpdateChildrenRect();
-        }
+        }*/
 
         public override void ClearChildren()
         {

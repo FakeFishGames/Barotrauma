@@ -30,11 +30,7 @@ namespace Barotrauma
 
             if (parent != null)
             {
-                parent.AddChild(this);
-            }
-            else
-            {
-                UpdateDimensions();
+                //parent.AddChild(this);
             }
 
             //if (style != null) ApplyStyle(style);

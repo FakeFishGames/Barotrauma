@@ -7,12 +7,16 @@ namespace Barotrauma.Networking
     partial class ServerLog
     {
         public GUIFrame LogFrame;
-
         private GUIListBox listBox;
 
         public void CreateLogFrame()
         {
             LogFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            new GUIButton(new RectTransform(Vector2.One, LogFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
+            {
+                LogFrame = null;
+                return true;
+            };
 
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.4f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(600, 420) });
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);

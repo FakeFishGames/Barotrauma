@@ -152,7 +152,7 @@ namespace Barotrauma
             if (color != null) this.color = (Color)color;
             this.alignment = alignment;
 
-            if (parent != null) parent.AddChild(this);
+            //if (parent != null) parent.AddChild(this);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);

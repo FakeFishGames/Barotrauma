@@ -81,39 +81,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// TODO: remove this method when all the ui elements are using the new system
-        /// </summary>
-        public virtual void AddChild(GUIComponent child)
-        {
-            if (RectTransform != null)
-            {
-                DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
-                return;
-            }
-            if (child == null) return;
-            if (child.IsParentOf(this))
-            {
-                DebugConsole.ThrowError("Tried to add the parent of a GUIComponent as a child.\n" + Environment.StackTrace);
-                return;
-            }
-            if (child == this)
-            {
-                DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
-                return;
-            }
-            if (children.Contains(child))
-            {
-                DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
-                return;
-            }
-
-            child.parent = this;
-            child.UpdateDimensions(this);
-
-            children.Add(child);
-        }
-
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) return;
@@ -150,35 +117,12 @@ namespace Barotrauma
 
         public virtual void ClearChildren()
         {
-            if (RectTransform != null)
-            {
-                RectTransform.ClearChildren();
-            }
-            else
-            {
-                children.Clear();
-            }
+            RectTransform.ClearChildren();
         }
 
         public void SetAsLastChild()
         {
-            if (RectTransform != null)
-            {
-                RectTransform.SetAsLastChild();
-            }
-            else
-            {
-                if (parent == null) { return; }
-                var last = parent.Children.LastOrDefault();
-                if (last == this || last == null) { return; }
-                if (!parent.children.Contains(this))
-                {
-                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible!");
-                    return;
-                }
-                parent.RemoveChild(this);
-                parent.AddChild(this);
-            }
+            RectTransform.SetAsLastChild();
         }
         #endregion
 
@@ -647,52 +591,7 @@ namespace Barotrauma
                 }
             }
         }*/
-
-        /// <summary>
-        /// todo: remove when all the ui elements are using the new system
-        /// </summary>
-        protected virtual void UpdateDimensions(GUIComponent parent = null)
-        {
-            // Don't manipulate the rect, if the component is using RectTransform component.
-            if (RectTransform != null) { return; }
-
-            Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
-
-            Vector4 padding = Vector4.Zero;
-
-            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X
-                - (int)padding.X - (int)padding.Z;
-
-            if (rect.Height == 0) rect.Height = parentRect.Height - rect.Y
-                - (int)padding.Y - (int)padding.W;
-
-            if (alignment.HasFlag(Alignment.CenterX))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width / 2 - (int)rect.Width / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Right))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width - (int)padding.Z - (int)rect.Width;
-            }
-            else
-            {
-                rect.X += parentRect.X + (int)padding.X;
-            }
-
-            if (alignment.HasFlag(Alignment.CenterY))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height / 2 - (int)rect.Height / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Bottom))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height - (int)padding.W - (int)rect.Height;
-            }
-            else
-            {
-                rect.Y += parentRect.Y + (int)padding.Y;
-            }
-        }
-
+                
         public virtual void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;

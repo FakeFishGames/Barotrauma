@@ -178,8 +178,8 @@ namespace Barotrauma
                         
             this.alignment = alignment;
             
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
             

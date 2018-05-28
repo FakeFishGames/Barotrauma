@@ -52,8 +52,8 @@ namespace Barotrauma
 
             this.alignment = alignment;
             
-            if (parent != null)
-                parent.AddChild(this);
+            /*if (parent != null)
+                parent.AddChild(this);*/
 
             frame = new GUIFrame(new Rectangle(0, 0, 0, 0), null, this);
             GUI.Style.Apply(frame, "", this);
