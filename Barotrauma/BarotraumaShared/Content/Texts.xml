@@ -50,7 +50,7 @@
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
   <ServerSettingsServerTab>Server</ServerSettingsServerTab>
   <ServerSettingsBanlistTab>Banlist</ServerSettingsBanlistTab>
-  <ServerSettingsWhiteListTab>WhiteList</ServerSettingsWhiteListTab>
+  <ServerSettingsWhiteListTab>Whitelist</ServerSettingsWhiteListTab>
   <ServerSettingsSubSelection>Submarine selection</ServerSettingsSubSelection>
   <ServerSettingsModeSelection>Game mode selection</ServerSettingsModeSelection>
   <ServerSettingsEndRoundWhenDestReached>End round when destination reached</ServerSettingsEndRoundWhenDestReached>

@@ -222,10 +222,11 @@ namespace Barotrauma.Networking
             {
                 Enabled = !GameStarted
             };
-            //TODO: reimplement
-            var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), "", settingsTabs[0]);
-            monsterFrame.Visible = false;
-            monsterFrame.ClampMouseRectToParent = false;
+            var monsterFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomLeft, Pivot.BottomRight))
+            {
+                Visible = false,
+                ClampMouseRectToParent = false
+            };
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
             {
@@ -241,27 +242,21 @@ namespace Barotrauma.Networking
             List<string> monsterNames = monsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 260, 25),
-                    s,
-                    "",
-                    Alignment.Left, Alignment.Left, monsterFrame);
-                textBlock.Padding = new Vector4(35.0f, 3.0f, 0.0f, 0.0f);
-                textBlock.UserData = monsterFrame;
-                textBlock.CanBeFocused = false;
-
-                var monsterEnabledBox = new GUITickBox(new Rectangle(-25, 0, 20, 20), "", Alignment.Left, textBlock);
-                monsterEnabledBox.Selected = monsterEnabled[s];
-                monsterEnabledBox.OnSelected = (GUITickBox) =>
+                var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
+                    label: s)
                 {
-                    if (gameStarted)
+                    Selected = monsterEnabled[s],
+                    OnSelected = (GUITickBox) =>
                     {
-                        monsterFrame.Visible = false;
-                        monsterButton.Enabled = false;
+                        if (gameStarted)
+                        {
+                            monsterFrame.Visible = false;
+                            monsterButton.Enabled = false;
+                            return true;
+                        }
+                        monsterEnabled[s] = !monsterEnabled[s];
                         return true;
                     }
-                    monsterEnabled[s] = !monsterEnabled[s];
-                    return true;
                 };
             }
 
@@ -270,10 +265,11 @@ namespace Barotrauma.Networking
             {
                 Enabled = !GameStarted
             };
-            //TODO: reimplement
-            var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), "", settingsTabs[0]);
-            cargoFrame.Visible = false;
-            cargoFrame.ClampMouseRectToParent = false;
+            var cargoFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
+            {
+                Visible = false,
+                ClampMouseRectToParent = false
+            };
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
@@ -292,30 +288,31 @@ namespace Barotrauma.Networking
                 ItemPrefab ip = pf as ItemPrefab;
 
                 if (ip == null || (!ip.CanBeBought && !ip.Tags.Contains("smallitem"))) continue;
-                
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 260, 25),
-                    ip.Name, "",
-                    Alignment.Left, Alignment.CenterLeft, cargoFrame, false, GUI.SmallFont);
-                textBlock.Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f);
-                textBlock.UserData = cargoFrame;
-                textBlock.CanBeFocused = false;
+
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) },
+                    ip.Name, font: GUI.SmallFont)
+                {
+                    Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f),
+                    UserData = cargoFrame,
+                    CanBeFocused = false
+                };
 
                 if (ip.sprite != null)
                 {
-                    float scale = Math.Min(Math.Min(30.0f / ip.sprite.SourceRect.Width, 30.0f / ip.sprite.SourceRect.Height), 1.0f);
-                    GUIImage img = new GUIImage(new Rectangle(-20 - (int)(ip.sprite.SourceRect.Width * scale * 0.5f), 12 - (int)(ip.sprite.SourceRect.Height * scale * 0.5f), 40, 40), ip.sprite, Alignment.Left, textBlock);
-                    img.Color = ip.SpriteColor;
-                    img.Scale = scale;
+                    GUIImage img = new GUIImage(new RectTransform(new Point(textBlock.Rect.Height), textBlock.RectTransform), ip.sprite, scaleToFit: true)
+                    {
+                        Color = ip.SpriteColor
+                    };
                 }
 
-                int cargoVal = 0;
-                extraCargo.TryGetValue(ip, out cargoVal);
-                var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", GUINumberInput.NumberType.Int, textBlock);
-                amountInput.MinValueInt = 0;
-                amountInput.MaxValueInt = 100;
-                amountInput.IntValue = cargoVal;
-
+                extraCargo.TryGetValue(ip, out int cargoVal);
+                var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
+                    GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueInt = 100,
+                    IntValue = cargoVal
+                };
                 amountInput.OnValueChanged += (numberInput) =>
                 {
                     if (extraCargo.ContainsKey(ip))
@@ -590,13 +587,13 @@ namespace Barotrauma.Networking
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
             GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, "", infoFrame);
-            cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            //cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //crewList.OnSelected = SelectCrewCharacter;
 
             foreach (Client c in ConnectedClients)
             {
                 GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, cList);
-                frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 frame.Color = (c.InGame && c.Character != null && !c.Character.IsDead) ? Color.Gold * 0.2f : Color.Transparent;
                 frame.HoverColor = Color.LightGray * 0.5f;
                 frame.SelectedColor = Color.Gold * 0.5f;
