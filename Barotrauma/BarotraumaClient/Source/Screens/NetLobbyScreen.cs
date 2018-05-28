@@ -748,7 +748,9 @@ namespace Barotrauma
                 GameMain.NetworkMember.CharacterInfo = null;
                 GameMain.NetworkMember.Character = null;
 
-                new GUITextBlock(new RectTransform(Vector2.One, playerInfoContainer.RectTransform, Anchor.Center), TextManager.Get("PlayingAsSpectator"));
+                new GUITextBlock(new RectTransform(Vector2.One, playerInfoContainer.RectTransform, Anchor.Center), 
+                    TextManager.Get("PlayingAsSpectator"),
+                    textAlignment: Alignment.Center);
             }
             return false;
         }
