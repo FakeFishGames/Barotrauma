@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     abstract class AnimController : Ragdoll
     {
-        protected abstract AnimParams AnimParams { get; }
+        protected abstract Animation AnimParams { get; }
 
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
@@ -42,6 +42,8 @@ namespace Barotrauma
 
             _stepSize = element.GetAttributeVector2("stepsize", Vector2.One);
             _stepSize = ConvertUnits.ToSimUnits(StepSize);
+
+            // only applies to fishes?
 
             _walkSpeed = element.GetAttributeFloat("walkspeed", 1.0f);
             _swimSpeed = element.GetAttributeFloat("swimspeed", 1.0f);

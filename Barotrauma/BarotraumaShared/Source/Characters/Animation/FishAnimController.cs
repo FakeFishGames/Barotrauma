@@ -8,8 +8,8 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
-        protected FishAnimParams fishAnimParams;
-        protected override AnimParams AnimParams => fishAnimParams;
+        protected FishSwimAnimation fishAnimParams;
+        protected override Animation AnimParams => fishAnimParams;
 
         //amplitude and wave length of the "sine wave" swimming animation
         //if amplitude = 0, sine wave animation isn't used
@@ -38,18 +38,15 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element, string seed)
             : base(character, element, seed)
         {
-            fishAnimParams = FishAnimParams.GetInstance(character.SpeciesName);
+            fishAnimParams = FishSwimAnimation.GetAnimParamsFromSpeciesName(character.SpeciesName);
 
+            // swimming
             _waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             _waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
+            _steerTorque = element.GetAttributeFloat("steertorque", 25.0f);
 
+            // not sure
             colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
-
-            _steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
-            
-            flip            = element.GetAttributeBool("flip", true);
-            mirror          = element.GetAttributeBool("mirror", false);
-            
             float footRot = element.GetAttributeFloat("footrotation", float.NaN);
             if (float.IsNaN(footRot))
             {
@@ -59,8 +56,10 @@ namespace Barotrauma
             {
                 footRotation = MathHelper.ToRadians(footRot);
             }
-
             rotateTowardsMovement = element.GetAttributeBool("rotatetowardsmovement", true);
+
+            flip            = element.GetAttributeBool("flip", true);
+            mirror          = element.GetAttributeBool("mirror", false);
         }
 
         public override void UpdateAnim(float deltaTime)

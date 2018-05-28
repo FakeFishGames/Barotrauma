@@ -9,8 +9,30 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    abstract class AnimParams : ISerializableEntity
+    abstract class SwimAnimation : Animation
     {
+        protected SwimAnimation(string file) : base(file) { }
+    }
+
+    abstract class WalkAnimation : Animation
+    {
+        protected WalkAnimation(string file) : base(file) { }
+
+        [Serialize("1.0,1.0", true), Editable]
+        public Vector2 StepSize
+        {
+            get;
+            set;
+        }
+    }
+
+    abstract class Animation : ISerializableEntity
+    {
+        protected const string CHARACTERS_FOLDER = @"Content/Characters";
+        protected abstract string CharacterName { get; }
+        protected abstract string ClipName { get; }
+        protected string Path => $"{CHARACTERS_FOLDER}/{CharacterName}/{ClipName}";
+
         public string Name
         {
             get;
@@ -25,7 +47,7 @@ namespace Barotrauma
 
         protected string filePath;
 
-        protected AnimParams(string file)
+        protected Animation(string file)
         {
             filePath = file;
             XDocument doc = XMLExtensions.TryLoadXml(file);
@@ -34,54 +56,23 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
         }
 
-        [Serialize("1.0,1.0", true), Editable]
-        public Vector2 StepSize
-        {
-            get;
-            set;
-        }
-
         [Serialize(1.0f, true), Editable]
-        public float WalkSpeed
+        public float Speed
         {
             get;
             set;
         }
 
-        [Serialize(1.0f, true), Editable]
-        public float RunSpeed
-        {
-            get;
-            set;
-        }
-
-        [Serialize(1.0f, true), Editable]
-        public float SwimSpeed
-        {
-            get;
-            set;
-        }
-
-        [Serialize(2.0f, true), Editable]
-        public float RunSpeedMultiplier
-        {
-            get;
-            set;
-        }
-
-        [Serialize(1.5f, true), Editable]
-        public float SwimSpeedMultiplier
-        {
-            get;
-            set;
-        }
-
-        [Serialize(0.0f, true), Editable]
-        public float LegTorque
-        {
-            get;
-            set;
-        }
+        //public static IEnumerable<Animation> GetAnimParamsFromSpeciesName(string speciesName)
+        //{
+        //    switch (speciesName)
+        //    {
+        //        case "mantis":
+        //            return MantisAnimParams.Instances;
+        //        default:
+        //            throw new NotImplementedException();
+        //    }
+        //}
 
 #if CLIENT
         private static GUIListBox editor;

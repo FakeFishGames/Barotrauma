@@ -10,8 +10,8 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
-        protected override AnimParams AnimParams => Math.Abs(TargetMovement.X) > 1.5f ? HumanoidAnimParams.RunInstance : HumanoidAnimParams.WalkInstance;
-        protected HumanoidAnimParams HumanAnimParams => AnimParams as HumanoidAnimParams;
+        protected override Animation AnimParams => Math.Abs(TargetMovement.X) > 1.5f ? HumanoidGroundedAnimation.RunInstance : HumanoidGroundedAnimation.WalkInstance;
+        protected HumanoidGroundedAnimation HumanAnimParams => AnimParams as HumanoidGroundedAnimation;
 
         public bool Crouching;
 
