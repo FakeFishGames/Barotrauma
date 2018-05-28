@@ -335,6 +335,7 @@
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
   </SerializableEntityEditor>
 
   <ChatBox
