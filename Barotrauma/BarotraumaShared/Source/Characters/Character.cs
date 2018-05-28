@@ -888,7 +888,8 @@ namespace Barotrauma
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
-                    targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+                    //targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+                    targetMovement *= AnimController.InWater ? AnimController.SwimFastParams.Speed : AnimController.RunParams.Speed;
                 }
             }
             
@@ -903,7 +904,8 @@ namespace Barotrauma
 
         public float GetCurrentMaxSpeed()
         {
-            float currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
+            // currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier; 
+            float currMaxSpeed = AnimController.InWater ? AnimController.SwimFastParams.Speed : AnimController.RunParams.Speed;
 
             currMaxSpeed *= 1.5f;
 

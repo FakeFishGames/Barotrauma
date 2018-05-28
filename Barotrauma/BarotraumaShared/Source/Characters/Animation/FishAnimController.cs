@@ -8,19 +8,65 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
-        protected FishSwimAnimation fishAnimParams;
-        protected override Animation AnimParams => fishAnimParams;
+        private FishWalkParams _fishWalkParams;
+        public FishWalkParams FishWalkParams
+        {
+            get
+            {
+                if (_fishWalkParams == null)
+                {
+                    _fishWalkParams = FishWalkParams.GetAnimParams(character.SpeciesName);
+                }
+                return _fishWalkParams;
+            }
+        }
 
-        //amplitude and wave length of the "sine wave" swimming animation
-        //if amplitude = 0, sine wave animation isn't used
-        private float WaveAmplitude => fishAnimParams != null ? fishAnimParams.WaveAmplitude : _waveAmplitude;
-        private float _waveAmplitude;
+        private FishRunParams _fishRunParams;
+        public FishRunParams FishRunParams
+        {
+            get
+            {
+                if (_fishRunParams == null)
+                {
+                    _fishRunParams = FishRunParams.GetAnimParams(character.SpeciesName);
+                }
+                return _fishRunParams;
+            }
+        }
 
-        private float WaveLength => fishAnimParams != null ? fishAnimParams.WaveLength : _waveLength;
-        private float _waveLength;
+        private FishSwimSlowParams _fishSwimSlowParams;
+        public FishSwimSlowParams FishSwimSlowParams
+        {
+            get
+            {
+                if (_fishSwimSlowParams == null)
+                {
+                    _fishSwimSlowParams = FishSwimSlowParams.GetAnimParams(character.SpeciesName);
+                }
+                return _fishSwimSlowParams;
+            }
+        }
 
-        private float SteerTorque => fishAnimParams != null ? _steerTorque * fishAnimParams.SteerTorque : _steerTorque;
-        private float _steerTorque;
+        private FishSwimFastParams _fishSwimFastParams;
+        public FishSwimFastParams FishSwimFastParams
+        {
+            get
+            {
+                if (_fishSwimFastParams == null)
+                {
+                    _fishSwimFastParams = FishSwimFastParams.GetAnimParams(character.SpeciesName);
+                }
+                return _fishSwimFastParams;
+            }
+        }
+
+        public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
+        public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
+
+        public override GroundedMovementParams WalkParams => FishWalkParams;
+        public override GroundedMovementParams RunParams => FishRunParams;
+        public override AnimationParams SwimSlowParams => FishSwimSlowParams;
+        public override AnimationParams SwimFastParams => FishSwimFastParams;
 
         private bool rotateTowardsMovement;
 
@@ -38,14 +84,8 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element, string seed)
             : base(character, element, seed)
         {
-            fishAnimParams = FishSwimAnimation.GetAnimParamsFromSpeciesName(character.SpeciesName);
 
-            // swimming
-            _waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
-            _waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
-            _steerTorque = element.GetAttributeFloat("steertorque", 25.0f);
-
-            // not sure
+            // not sure, todo:
             colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
             float footRot = element.GetAttributeFloat("footrotation", float.NaN);
             if (float.IsNaN(footRot))
@@ -278,7 +318,7 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = TargetMovement*SwimSpeed;
+            movement = TargetMovement * CurrentSwimParams.Speed;
             
             MainLimb.pullJoint.Enabled = true;
             MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
@@ -290,7 +330,7 @@ namespace Barotrauma
             if (rotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, 25.0f);
-                MainLimb.body.SmoothRotate(movementAngle, SteerTorque);
+                MainLimb.body.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
             }
             else
             {
@@ -306,23 +346,23 @@ namespace Barotrauma
                 if (TorsoAngle.HasValue)
                 {
                     Limb torso = GetLimb(LimbType.Torso);
-                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, SteerTorque);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
                 }
                 if (HeadAngle.HasValue)
                 {
                     Limb head = GetLimb(LimbType.Head);
-                    head?.body.SmoothRotate(HeadAngle.Value * Dir, SteerTorque);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
                 }
             }
 
             Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null && WaveAmplitude > 0.0f)
+            if (tail != null && CurrentSwimParams.WaveAmplitude > 0.0f)
             {
                 walkPos -= movement.Length();
 
-                float waveRotation = (float)Math.Sin(walkPos / WaveLength);
+                float waveRotation = (float)Math.Sin(walkPos / CurrentSwimParams.WaveLength);
 
-                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * WaveAmplitude);
+                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * CurrentSwimParams.WaveAmplitude);
             }
 
 
@@ -341,7 +381,7 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement * WalkSpeed, 0.2f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement * CurrentGroundedParams.Speed, 0.2f);
 
             float mainLimbHeight = colliderHeightFromFloor;
 
@@ -390,8 +430,8 @@ namespace Barotrauma
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(walkPos) * StepSize.X * 3.0f,
-                (float)Math.Sin(walkPos) * StepSize.Y * 2.0f);
+                (float)Math.Cos(walkPos) * FishWalkParams.StepSize.X * 3.0f,
+                (float)Math.Sin(walkPos) * FishWalkParams.StepSize.Y * 2.0f);
 
             foreach (Limb limb in Limbs)
             {
@@ -429,7 +469,7 @@ namespace Barotrauma
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (LegTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * LegTorque * Dir);
+                        if (CurrentGroundedParams.LegTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
                         break;
                 }
             }

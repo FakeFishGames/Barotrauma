@@ -2,28 +2,40 @@
 
 namespace Barotrauma
 {
-    class HumanoidWalkAnimation : HumanoidGroundedAnimation
+    class HumanWalkParams : HumanGroundedParams
     {
-        public static readonly HumanoidWalkAnimation Instance = new HumanoidWalkAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidWalk.xml");
-        protected HumanoidWalkAnimation(string file) : base(file) { }
+        public static HumanWalkParams GetAnimParams()
+        {
+            return GetAnimParams<HumanWalkParams>("human", AnimationType.Walk);
+        }
     }
 
-    class HumanoidRunAnimation : HumanoidGroundedAnimation
+    class HumanRunParams : HumanGroundedParams
     {
-        public static readonly HumanoidRunAnimation Instance = new HumanoidRunAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidRun.xml");
-        protected HumanoidRunAnimation(string file) : base(file) { }
+        public static HumanRunParams GetAnimParams()
+        {
+            return GetAnimParams<HumanRunParams>("human", AnimationType.Run);
+        }
     }
 
-    class HumanoidSwimAnimation : SwimAnimation
+    class HumanSwimFastParams: AnimationParams
     {
-        public static readonly HumanoidSwimAnimation Instance = new HumanoidSwimAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidSwim.xml");
-        protected HumanoidSwimAnimation(string file) : base(file) { }
+        public static HumanSwimFastParams GetAnimParams()
+        {
+            return GetAnimParams<HumanSwimFastParams>("human", AnimationType.SwimFast);
+        }
     }
 
-    abstract class HumanoidGroundedAnimation : WalkAnimation
+    class HumanSwimSlowParams : AnimationParams
     {
-        protected HumanoidGroundedAnimation(string file) : base(file) { }
+        public static HumanSwimSlowParams GetAnimParams()
+        {
+            return GetAnimParams<HumanSwimSlowParams>("human", AnimationType.SwimSlow);
+        }
+    }
 
+    abstract class HumanGroundedParams : GroundedMovementParams
+    {
         [Serialize(0.3f, true), Editable]
         public float GetUpSpeed
         {

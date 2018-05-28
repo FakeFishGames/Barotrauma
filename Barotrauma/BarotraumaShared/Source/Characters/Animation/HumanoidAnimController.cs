@@ -10,8 +10,64 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
-        protected override Animation AnimParams => Math.Abs(TargetMovement.X) > 1.5f ? HumanoidGroundedAnimation.RunInstance : HumanoidGroundedAnimation.WalkInstance;
-        protected HumanoidGroundedAnimation HumanAnimParams => AnimParams as HumanoidGroundedAnimation;
+        private HumanWalkParams _humanWalkParams;
+        public HumanWalkParams HumanWalkParams
+        {
+            get
+            {
+                if (_humanWalkParams == null)
+                {
+                    _humanWalkParams = HumanWalkParams.GetAnimParams();
+                }
+                return _humanWalkParams;
+            }
+        }
+
+        private HumanRunParams _humanRunParams;
+        public HumanRunParams HumanRunParams
+        {
+            get
+            {
+                if (_humanRunParams == null)
+                {
+                    _humanRunParams = HumanRunParams.GetAnimParams();
+                }
+                return _humanRunParams;
+            }
+        }
+
+        private HumanSwimSlowParams _humanSwimSlowParams;
+        public HumanSwimSlowParams HumanSwimSlowParams
+        {
+            get
+            {
+                if (_humanSwimSlowParams == null)
+                {
+                    _humanSwimSlowParams = HumanSwimSlowParams.GetAnimParams();
+                }
+                return _humanSwimSlowParams;
+            }
+        }
+
+        private HumanSwimFastParams _humanSwimFastParams;
+        public HumanSwimFastParams HumanSwimFastParams
+        {
+            get
+            {
+                if (_humanSwimFastParams == null)
+                {
+                    _humanSwimFastParams = HumanSwimFastParams.GetAnimParams();
+                }
+                return _humanSwimFastParams;
+            }
+        }
+
+        public new HumanGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as HumanGroundedParams;
+
+        public override GroundedMovementParams WalkParams => HumanWalkParams;
+        public override GroundedMovementParams RunParams => HumanRunParams;
+        public override AnimationParams SwimSlowParams => HumanSwimSlowParams;
+        public override AnimationParams SwimFastParams => HumanSwimFastParams;
 
         public bool Crouching;
 
@@ -255,7 +311,7 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpSpeed = HumanAnimParams.GetUpSpeed;
+            float getUpSpeed = CurrentGroundedParams.GetUpSpeed;
             //float walkCycleSpeed = movement.X * walkAnimSpeed;
             if (Stairs != null)
             {
@@ -288,14 +344,14 @@ namespace Barotrauma
             float walkPosY = (float)Math.Sin(walkPos);
 
 
-            Vector2 stepSize = HumanAnimParams.StepSize;
+            Vector2 stepSize = CurrentGroundedParams.StepSize;
             stepSize.X *= walkPosX;
             stepSize.Y *= walkPosY;                
 
             float footMid = colliderPos.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
             movement = overrideTargetMovement == Vector2.Zero ?
-                MathUtils.SmoothStep(movement, TargetMovement * WalkSpeed, movementLerp) :
+                MathUtils.SmoothStep(movement, TargetMovement * CurrentGroundedParams.Speed, movementLerp) :
                 overrideTargetMovement;
 
             if (Math.Abs(movement.X) < 0.005f)
@@ -319,9 +375,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    leg.body.ApplyTorque(shortestAngle * HumanAnimParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(shortestAngle * CurrentGroundedParams.LegCorrectionTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * HumanAnimParams.LegCorrectionTorque);
+                    leg.body.ApplyTorque(-shortestAngle * CurrentGroundedParams.LegCorrectionTorque);
                 }
             }
 
@@ -347,13 +403,13 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * HumanAnimParams.TorsoLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + HumanAnimParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + CurrentGroundedParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * HumanAnimParams.HeadLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HumanAnimParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + CurrentGroundedParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
@@ -363,11 +419,11 @@ namespace Barotrauma
 
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * HumanAnimParams.TorsoLeanAmount, colliderPos.Y + HumanAnimParams.TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, colliderPos.Y + CurrentGroundedParams.TorsoPosition), getUpSpeed);
 
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * HumanAnimParams.HeadLeanAmount, colliderPos.Y + HumanAnimParams.HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, colliderPos.Y + CurrentGroundedParams.HeadPosition), getUpSpeed * 1.2f);
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
@@ -389,7 +445,7 @@ namespace Barotrauma
             {
                 //progress the walking animation
                 //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
-                walkPos -= MathHelper.ToRadians(HumanAnimParams.CycleSpeed) * Math.Sign(movement.X);
+                walkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -397,7 +453,7 @@ namespace Barotrauma
                     Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
-                    footPos += new Vector2(Math.Sign(movement.X) * HumanAnimParams.FootMoveOffset.X, HumanAnimParams.FootMoveOffset.Y);
+                    footPos += new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.FootMoveOffset.X, CurrentGroundedParams.FootMoveOffset.Y);
 
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
@@ -411,8 +467,8 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    MoveLimb(foot, footPos + colliderPos, HumanAnimParams.FootMoveStrength, true);
-                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, HumanAnimParams.FootRotateStrength);
+                    MoveLimb(foot, footPos + colliderPos, CurrentGroundedParams.FootMoveStrength, true);
+                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
                 }
 
                 /*if (runningModifier > 1.0f)
@@ -427,34 +483,34 @@ namespace Barotrauma
                     }
                 }*/
 
-                if (HumanAnimParams.ThighCorrectionTorque > 0.0f)
+                if (CurrentGroundedParams.ThighCorrectionTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * HumanAnimParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.ThighCorrectionTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * HumanAnimParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.ThighCorrectionTorque);
                     }
                 }
 
                 //calculate the positions of hands
                 handPos = torso.SimPosition;
-                handPos.X = -walkPosX * HumanAnimParams.HandMoveAmount.X;
+                handPos.X = -walkPosX * CurrentGroundedParams.HandMoveAmount.X;
 
-                float lowerY = HumanAnimParams.HandClampY;
+                float lowerY = CurrentGroundedParams.HandClampY;
 
-                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * HumanAnimParams.HandMoveAmount.Y));
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * CurrentGroundedParams.HandMoveAmount.Y));
 
-                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * HumanAnimParams.HandMoveOffset.X, HumanAnimParams.HandMoveOffset.Y);
+                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.HandMoveOffset.X, CurrentGroundedParams.HandMoveOffset.Y);
 
                 if (!rightHand.Disabled)
                 {
                     HandIK(rightHand, torso.SimPosition + posAddition +
                         new Vector2(
                             -handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), HumanAnimParams.HandMoveStrength);
+                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), CurrentGroundedParams.HandMoveStrength);
                 }
 
                 if (!leftHand.Disabled)
@@ -462,7 +518,7 @@ namespace Barotrauma
                     HandIK(leftHand, torso.SimPosition + posAddition +
                         new Vector2(
                             handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), HumanAnimParams.HandMoveStrength);
+                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), CurrentGroundedParams.HandMoveStrength);
                 }
 
             }
@@ -670,7 +726,7 @@ namespace Barotrauma
 
             if (!character.IsRemotePlayer || GameMain.Server != null)
             {
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * SwimSpeed, movementLerp);
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * CurrentSwimParams.Speed, movementLerp);
             }
                         
             walkPos += movement.Length() * 0.2f;

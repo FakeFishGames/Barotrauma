@@ -83,7 +83,8 @@ namespace Barotrauma
 
             if (currObjectivePriority > 30.0f)
             {
-                moveSpeed *= Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier;                
+                //moveSpeed *= Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier;
+                moveSpeed *= Character.AnimController.InWater ? Character.AnimController.SwimFastParams.Speed : Character.AnimController.RunParams.Speed;
             }
             
             steeringManager.Update(moveSpeed);
