@@ -1,21 +1,8 @@
 ﻿namespace Barotrauma
 {
-    abstract class FishAnimParams : AnimParams
+    abstract class FishSwimAnimation : SwimAnimation
     {
-        protected FishAnimParams(string file) : base(file) { }
-
-        public static FishAnimParams GetInstance(string speciesName)
-        {
-            switch (speciesName)
-            {
-                case "mantis":
-                    return MantisAnimParams.Instance;
-                case "carrier":
-                    return CarrierAnimParams.Instance;
-                default:
-                    return null;
-            }
-        }
+        protected FishSwimAnimation(string file) : base(file) { }
 
         [Serialize(1f, true), Editable]
         public float WaveAmplitude
@@ -39,15 +26,48 @@
         }
     }
 
-    class CarrierAnimParams : FishAnimParams
+    abstract class FishWalkAnimation : WalkAnimation
     {
-        public static CarrierAnimParams Instance = new CarrierAnimParams("Content/Characters/Carrier/CarrierAnimParams.xml");
-        protected CarrierAnimParams(string file) : base(file) { }
+        protected FishWalkAnimation(string file) : base(file) { }
+
+        [Serialize(0.0f, true), Editable]
+        public float LegTorque
+        {
+            get;
+            set;
+        }
     }
 
-    class MantisAnimParams : FishAnimParams
+    #region Mantis
+    class MantisSwimAnimation : FishSwimAnimation
     {
-        public static MantisAnimParams Instance = new MantisAnimParams("Content/Characters/Mantis/MantisAnimParams.xml");
-        protected MantisAnimParams(string file) : base(file) { }
+        protected override string CharacterName => @"Mantis";
+        protected override string ClipName => @"MantisSwim.xml";
+        public static MantisSwimAnimation Instance { get; private set; }
+
+        protected MantisSwimAnimation(string file) : base(file)
+        {
+            Instance = new MantisSwimAnimation(Path);
+        }
     }
+
+    // TODO: Interface?
+    class MantisWalkAnimation : FishWalkAnimation
+    {
+        protected override string CharacterName => @"Mantis";
+        protected override string ClipName => @"MantisWalk.xml";
+        public static MantisWalkAnimation Instance { get; private set; }
+
+        protected MantisWalkAnimation(string file) : base(file)
+        {
+            Instance = new MantisWalkAnimation(Path);
+        }
+    }
+
+    //class MantisRunAnimation: FishWalkAnimation
+    //{
+    //    public readonly static MantisRunAnimation Instance = new MantisRunAnimation($"{CHARACTERS_FOLDER}/Mantis/MantisRun.xml");
+    //    protected MantisRunAnimation(string file) : base(file) { }
+    //}
+    #endregion
 }

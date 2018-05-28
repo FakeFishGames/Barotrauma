@@ -2,13 +2,27 @@
 
 namespace Barotrauma
 {
-    class HumanoidAnimParams : AnimParams
+    class HumanoidWalkAnimation : HumanoidGroundedAnimation
     {
-        public static HumanoidAnimParams WalkInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimWalk.xml");
-        public static HumanoidAnimParams RunInstance = new HumanoidAnimParams("Content/Characters/HumanoidAnimRun.xml");
-        // TODO: swim instance?
+        public static readonly HumanoidWalkAnimation Instance = new HumanoidWalkAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidWalk.xml");
+        protected HumanoidWalkAnimation(string file) : base(file) { }
+    }
 
-        public HumanoidAnimParams(string file) : base(file) { }
+    class HumanoidRunAnimation : HumanoidGroundedAnimation
+    {
+        public static readonly HumanoidRunAnimation Instance = new HumanoidRunAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidRun.xml");
+        protected HumanoidRunAnimation(string file) : base(file) { }
+    }
+
+    class HumanoidSwimAnimation : SwimAnimation
+    {
+        public static readonly HumanoidSwimAnimation Instance = new HumanoidSwimAnimation($"{CHARACTERS_FOLDER}/Humanoid/HumanoidSwim.xml");
+        protected HumanoidSwimAnimation(string file) : base(file) { }
+    }
+
+    abstract class HumanoidGroundedAnimation : WalkAnimation
+    {
+        protected HumanoidGroundedAnimation(string file) : base(file) { }
 
         [Serialize(0.3f, true), Editable]
         public float GetUpSpeed
@@ -113,6 +127,6 @@ namespace Barotrauma
         {
             get;
             set;
-        }      
+        }
     }
 }
