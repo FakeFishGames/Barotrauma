@@ -1,0 +1,5 @@
+﻿<MantisSwimFast
+  speed="3.5"
+  waveamplitude="0.5"
+  wavelength ="25"
+  steertorque="25"/>

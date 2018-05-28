@@ -1,0 +1,4 @@
+﻿<MantisWalk
+  speed ="3.0"
+  stepsize ="0.2,0.2"
+  legtorque="10"/>

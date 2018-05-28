@@ -233,30 +233,11 @@ namespace Barotrauma
         #endregion
 
         #region AnimParams
-        private IEnumerable<Animation> AnimParams
-        {
-            get
-            {
-                if (_character.IsHumanoid)
-                {
-                    return new List<Animation> { HumanoidGroundedAnimation.WalkInstance, HumanoidGroundedAnimation.RunInstance };
-                }
-                else
-                {
-                    var animParams = new List<Animation>();
-                    var instance = FishSwimAnimation.GetAnimParamsFromSpeciesName(_character.SpeciesName);
-                    if (instance != null)
-                    {
-                        animParams.Add(instance);
-                    }
-                    return animParams;
-                }
-            }
-        }
+        private List<AnimationParams> AnimParams => _character.AnimController.AllAnimParams;
 
         private void ResetEditor()
         {
-            Barotrauma.Animation.CreateEditor();
+            AnimationParams.CreateEditor();
             AnimParams.ForEach(p => p.AddToEditor());
         }
         #endregion
@@ -264,7 +245,7 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            Barotrauma.Animation.Editor.AddToGUIUpdateList();
+            AnimationParams.Editor.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)

@@ -1,0 +1,4 @@
+﻿<MantisRun
+  speed ="3.5"
+  stepsize ="0.4,0.4"
+  legtorque="10"/>

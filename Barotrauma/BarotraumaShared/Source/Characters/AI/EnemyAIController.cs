@@ -325,8 +325,8 @@ namespace Barotrauma
 
             if (run)
             {
-                steeringManager.Update(Character.AnimController.InWater ? 
-                    Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);                
+                //steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);
+                steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimFastParams.Speed : Character.AnimController.RunParams.Speed);
             }
             else
             {
