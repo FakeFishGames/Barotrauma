@@ -2,33 +2,33 @@
 {
     class FishWalkParams : FishGroundedParams
     {
-        public static FishWalkParams GetAnimParams(string speciesName)
+        public static FishWalkParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishWalkParams>(speciesName, AnimationType.Walk);
+            return GetAnimParams<FishWalkParams>(character, AnimationType.Walk);
         }
     }
 
     class FishRunParams : FishGroundedParams
     {
-        public static FishRunParams GetAnimParams(string speciesName)
+        public static FishRunParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishRunParams>(speciesName, AnimationType.Run);
+            return GetAnimParams<FishRunParams>(character, AnimationType.Run);
         }
     }
 
     class FishSwimFastParams : FishSwimParams
     {
-        public static FishSwimFastParams GetAnimParams(string speciesName)
+        public static FishSwimFastParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishSwimFastParams>(speciesName, AnimationType.SwimFast);
+            return GetAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast);
         }
     }
 
     class FishSwimSlowParams : FishSwimParams
     {
-        public static FishSwimSlowParams GetAnimParams(string speciesName)
+        public static FishSwimSlowParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishSwimSlowParams>(speciesName, AnimationType.SwimSlow);
+            return GetAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow);
         }
     }
 

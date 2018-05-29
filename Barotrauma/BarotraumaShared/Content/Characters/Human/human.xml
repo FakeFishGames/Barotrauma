@@ -2,6 +2,8 @@
 <Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  
+  <animation path="Content/Characters/Human/Human[ANIMTYPE].xml"/>
 
   <health
     usehealthwindow="true"

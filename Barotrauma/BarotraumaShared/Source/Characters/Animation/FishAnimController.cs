@@ -15,7 +15,7 @@ namespace Barotrauma
             {
                 if (_fishWalkParams == null)
                 {
-                    _fishWalkParams = FishWalkParams.GetAnimParams(character.SpeciesName);
+                    _fishWalkParams = FishWalkParams.GetAnimParams(character);
                 }
                 return _fishWalkParams;
             }
@@ -28,7 +28,7 @@ namespace Barotrauma
             {
                 if (_fishRunParams == null)
                 {
-                    _fishRunParams = FishRunParams.GetAnimParams(character.SpeciesName);
+                    _fishRunParams = FishRunParams.GetAnimParams(character);
                 }
                 return _fishRunParams;
             }
@@ -41,7 +41,7 @@ namespace Barotrauma
             {
                 if (_fishSwimSlowParams == null)
                 {
-                    _fishSwimSlowParams = FishSwimSlowParams.GetAnimParams(character.SpeciesName);
+                    _fishSwimSlowParams = FishSwimSlowParams.GetAnimParams(character);
                 }
                 return _fishSwimSlowParams;
             }
@@ -54,7 +54,7 @@ namespace Barotrauma
             {
                 if (_fishSwimFastParams == null)
                 {
-                    _fishSwimFastParams = FishSwimFastParams.GetAnimParams(character.SpeciesName);
+                    _fishSwimFastParams = FishSwimFastParams.GetAnimParams(character);
                 }
                 return _fishSwimFastParams;
             }
