@@ -62,7 +62,9 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            var hostServerScale = new Vector2(0.7f, 1.0f);
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
+                Vector2.Multiply(relativeSize, hostServerScale), Frame.RectTransform, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
 
             CreateHostServerFields();
 
@@ -410,124 +412,72 @@ namespace Barotrauma
 
         private void CreateHostServerFields()
         {
-            Vector2 textLabelSize = new Vector2(0.25f, 0.1f);
-            Vector2 textFieldSize = new Vector2(0.25f, 0.1f);
-            Vector2 buttonSize = new Vector2(0.04f, 0.06f);
-            float leftMargin = 0.05f;
-            float topMargin = 0.1f;
-            int absoluteSpacing = 5;
-            float relativeSpacing = 0.01f;
-            Vector2 tickBoxSize = new Vector2(0.4f, 0.1f);
-            GUIComponent parent = menuTabs[(int)Tab.HostServer];
+            Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
             Alignment textAlignment = Alignment.CenterLeft;
-            int lineCount = 0;
-            Func<int, float> getY = lc => topMargin + (textLabelSize.Y + relativeSpacing) * lc;
+            Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
+            Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.75f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            }; 
+            GUIComponent parent = paddedFrame;
+            
+            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont);
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform)
-            {
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, 0),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment);
+            var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
 
-            lineCount++;
-
-            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, absoluteSpacing),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerPort"), textAlignment: textAlignment);
-            portBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, 0),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment)
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
+            portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
                 Text = NetConfig.DefaultPort.ToString(),
-                ToolTip = "Server port"
+                ToolTip = TextManager.Get("ServerPort")
             };
 
-            lineCount++;
-
-            var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
+            var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
+            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
             {
-                AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
-
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount + 10),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, "-", textAlignment: Alignment.Center)
+                Stretch = true,
+                RelativeSpacing = 0.1f
+            };
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "-", textAlignment: Alignment.Center)
             {
                 UserData = -1,
                 OnClicked = ChangeMaxPlayers
             };
 
-            float maxPlayersBoxWidth = buttonSize.X * 2;
-            maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(maxPlayersBoxWidth, textFieldSize.Y), parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing * 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 2 + buttonSize.X, getY(lineCount))
-            }, textAlignment: Alignment.Center)
+            maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
                 Text = "8",
                 Enabled = false
             };
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing * 3, absoluteSpacing * lineCount + 10),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 3 + buttonSize.X + maxPlayersBoxWidth, getY(lineCount))
-            }, "+", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
             {
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
             };
 
-            lineCount++;
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("Password"), textAlignment: textAlignment);
-            passwordBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment);
-
-            lineCount++;
-
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("PublicServer"))
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            
+            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-
-            lineCount++;
-
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("AttemptUPnP"))
+            
+            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
             {
                 ToolTip = TextManager.Get("AttemptUPnPToolTip")
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), parent.RectTransform, Anchor.BottomRight)
+            new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {
-                RelativeOffset = new Vector2(leftMargin, topMargin)
+                RelativeOffset = new Vector2(0.05f, 0.05f)
             }, TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
             {
+                IgnoreLayoutGroups = true,
                 OnClicked = HostServerClicked
             };
         }
