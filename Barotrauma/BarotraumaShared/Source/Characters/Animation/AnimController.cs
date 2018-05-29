@@ -79,12 +79,12 @@ namespace Barotrauma
             }
         }
 
-        public float GetCurrentSpeed(bool maxSpeed)
+        public float GetCurrentSpeed(bool useMaxSpeed)
         {
             AnimationType animType;
             if (InWater)
             {
-                if (maxSpeed)
+                if (useMaxSpeed)
                 {
                     animType = AnimationType.SwimFast;
                 }
@@ -95,7 +95,7 @@ namespace Barotrauma
             }
             else
             {
-                if (maxSpeed)
+                if (useMaxSpeed)
                 {
                     animType = AnimationType.Run;
                 }
