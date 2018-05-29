@@ -323,15 +323,16 @@ namespace Barotrauma
                     throw new NotImplementedException();
             }
 
-            if (run)
-            {
-                //steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);
-                steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimFastParams.Speed : Character.AnimController.RunParams.Speed);
-            }
-            else
-            {
-                steeringManager.Update();
-            }
+            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run));
+            //if (run)
+            //{
+            //    steeringManager.Update(Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);
+            //    
+            //}
+            //else
+            //{
+            //    steeringManager.Update();
+            //}
         }
 
         #region Idle
