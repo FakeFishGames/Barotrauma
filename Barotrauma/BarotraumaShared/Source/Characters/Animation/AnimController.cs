@@ -15,9 +15,9 @@ namespace Barotrauma
 
         public GroundedMovementParams CurrentGroundedParams => IsRunning ? RunParams : WalkParams;
         public AnimationParams CurrentSwimParams => IsSwimmingFast ? SwimFastParams : SwimSlowParams;
-        // TODO: test that this is right
+
         public bool IsRunning => Math.Abs(TargetMovement.X) > WalkParams.Speed;
-        public bool IsSwimmingFast => Math.Abs(TargetMovement.X) > SwimSlowParams.Speed;
+        public bool IsSwimmingFast => Math.Abs(TargetMovement.X) > SwimSlowParams.Speed || Math.Abs(TargetMovement.Y) > SwimSlowParams.Speed;
 
         /// <summary>
         /// Note: creates a new list each time accessed. If you need to acces frequently, consider caching or change the implementation.
@@ -62,5 +62,49 @@ namespace Barotrauma
 
         public virtual void UpdateUseItem(bool allowMovement, Vector2 handPos) { }
 
-   }
+        public float GetSpeed(AnimationType type)
+        {
+            switch (type)
+            {
+                case AnimationType.Walk:
+                    return WalkParams.Speed;
+                case AnimationType.Run:
+                    return RunParams.Speed;
+                case AnimationType.SwimSlow:
+                    return SwimSlowParams.Speed;
+                case AnimationType.SwimFast:
+                    return SwimFastParams.Speed;
+                default:
+                    throw new NotImplementedException(type.ToString());
+            }
+        }
+
+        public float GetCurrentSpeed(bool maxSpeed)
+        {
+            AnimationType animType;
+            if (InWater)
+            {
+                if (maxSpeed)
+                {
+                    animType = AnimationType.SwimFast;
+                }
+                else
+                {
+                    animType = AnimationType.SwimSlow;
+                }
+            }
+            else
+            {
+                if (maxSpeed)
+                {
+                    animType = AnimationType.Run;
+                }
+                else
+                {
+                    animType = AnimationType.Walk;
+                }
+            }
+            return GetSpeed(animType);
+        }
+    }
 }

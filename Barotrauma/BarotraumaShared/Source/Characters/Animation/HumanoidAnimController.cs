@@ -351,7 +351,7 @@ namespace Barotrauma
             float footMid = colliderPos.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
             movement = overrideTargetMovement == Vector2.Zero ?
-                MathUtils.SmoothStep(movement, TargetMovement * CurrentGroundedParams.Speed, movementLerp) :
+                MathUtils.SmoothStep(movement, TargetMovement, movementLerp) :
                 overrideTargetMovement;
 
             if (Math.Abs(movement.X) < 0.005f)
@@ -675,8 +675,7 @@ namespace Barotrauma
                 {
                     float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
                     Collider.SmoothRotate(newRotation, 5.0f);
-                    //torso.body.SmoothRotate(newRotation);
-                    
+                    //torso.body.SmoothRotate(newRotation);                
                 }
             }
             else
@@ -726,7 +725,7 @@ namespace Barotrauma
 
             if (!character.IsRemotePlayer || GameMain.Server != null)
             {
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * CurrentSwimParams.Speed, movementLerp);
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
                         
             walkPos += movement.Length() * 0.2f;

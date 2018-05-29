@@ -425,12 +425,6 @@ namespace Barotrauma
             set;
         }
 
-        public float SpeedMultiplier
-        {
-            get;
-            set;
-        }
-
         public Item[] SelectedItems
         {
             get { return selectedItems; }
@@ -878,36 +872,33 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
+            bool run = false;
             if (IsKeyDown(InputType.Run) || ForceRun)
             {
                 //can't run if
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if ((SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
+                run = (SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
-                    Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
-                {
-                    //targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
-                    targetMovement *= AnimController.InWater ? AnimController.SwimFastParams.Speed : AnimController.RunParams.Speed;
-                }
+                    Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir);
             }
             
-            targetMovement *= SpeedMultiplier;
-            float maxSpeed = GetCurrentMaxSpeed();
+            targetMovement *= AnimController.GetCurrentSpeed(run);
+            float maxSpeed = GetCurrentMaxSpeed(run);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-            SpeedMultiplier = 1.0f;
 
             return targetMovement;
         }
 
-        public float GetCurrentMaxSpeed()
+        // TODO: not sure what how this is supposed to work
+        public float GetCurrentMaxSpeed(bool run)
         {
-            // currMaxSpeed = AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier; 
-            float currMaxSpeed = AnimController.InWater ? AnimController.SwimFastParams.Speed : AnimController.RunParams.Speed;
+            float currMaxSpeed = AnimController.GetCurrentSpeed(run);
 
-            currMaxSpeed *= 1.5f;
+            //?
+            //currMaxSpeed *= 1.5f;
 
             var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
             if (leftFoot != null)

@@ -318,7 +318,7 @@ namespace Barotrauma
 
         void UpdateSineAnim(float deltaTime)
         {
-            movement = TargetMovement * CurrentSwimParams.Speed;
+            movement = TargetMovement;
             
             MainLimb.pullJoint.Enabled = true;
             MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
@@ -381,7 +381,7 @@ namespace Barotrauma
             
         void UpdateWalkAnim(float deltaTime)
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement * CurrentGroundedParams.Speed, 0.2f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
             float mainLimbHeight = colliderHeightFromFloor;
 
@@ -430,8 +430,8 @@ namespace Barotrauma
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(walkPos) * FishWalkParams.StepSize.X * 3.0f,
-                (float)Math.Sin(walkPos) * FishWalkParams.StepSize.Y * 2.0f);
+                (float)Math.Cos(walkPos) * CurrentGroundedParams.StepSize.X * 3.0f,
+                (float)Math.Sin(walkPos) * CurrentGroundedParams.StepSize.Y * 2.0f);
 
             foreach (Limb limb in Limbs)
             {
