@@ -130,45 +130,52 @@ namespace Barotrauma.Networking
         {
             var transfers = fileSender.ActiveTransfers.FindAll(t => t.Connection == client.Connection);
 
-            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.FindChild(client.Name);
+            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client.Name);
 
             var clientInfo = clientNameBox.FindChild("filetransfer");
             if (clientInfo == null)
             {
                 clientNameBox.ClearChildren();
-                clientInfo = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.9f), clientNameBox.RectTransform, Anchor.CenterRight), style: null);
-                clientInfo.UserData = "filetransfer";
+                clientInfo = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.9f), clientNameBox.RectTransform, Anchor.CenterRight), style: null)
+                {
+                    UserData = "filetransfer"
+                };
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), clientInfo.RectTransform),
+                    "", textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
+                {
+                    TextGetter = () =>
+                    {
+                        string txt = "";
+                        if (transfers.Count > 0)
+                        {
+                            txt += transfers[0].FileName + " ";
+                            if (transfers.Count > 1) txt += "+ " + (transfers.Count - 1) + " others ";
+                        }
+                        txt += "(" + MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length)) + ")";
+                        return txt;
+                    }
+                };
+
+                var progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.8f, 0.5f), clientInfo.RectTransform, Anchor.BottomLeft),
+                    barSize: 0.0f, color: Color.Green)
+                {
+                    IsHorizontal = true,
+                    ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; }
+                };
+
+                var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), clientInfo.RectTransform, Anchor.BottomRight), "X")
+                {
+                    OnClicked = (GUIButton button, object userdata) =>
+                    {
+                        transfers.ForEach(t => fileSender.CancelTransfer(t));
+                        return true;
+                    }
+                };
             }
             else if (transfers.Count == 0)
             {
                 clientInfo.Parent.RemoveChild(clientInfo);
             }
-            clientInfo.ClearChildren();
-
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), clientInfo.RectTransform),
-                "", font: GUI.SmallFont)
-            {
-                TextGetter = () =>
-                {
-                    return MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length));
-                }
-            };
-
-            var progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.8f, 0.5f), clientInfo.RectTransform, Anchor.BottomLeft),
-                barSize: 0.0f, color: Color.Green)
-            {
-                IsHorizontal = true,
-                ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; }
-            };
-
-            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), clientInfo.RectTransform, Anchor.BottomRight), "X")
-            {
-                OnClicked = (GUIButton button, object userdata) =>
-                {
-                    transfers.ForEach(t => fileSender.CancelTransfer(t));
-                    return true;
-                }
-            };
         }
 
         public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
