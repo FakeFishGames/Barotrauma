@@ -13,6 +13,8 @@ namespace Barotrauma
         private GUIButton button;
         private GUIListBox listBox;
 
+        private RectTransform prevParent;
+
         public bool Dropped { get; set; }
 
         public object SelectedItemData
@@ -84,7 +86,19 @@ namespace Barotrauma
                 IsFixedSize = false
             }, style: style)
             {
+                ClampMouseRectToParent = false,
                 OnSelected = SelectItem
+            };
+
+            prevParent = rectT.Parent;
+            rectT.Parent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+            rectT.ParentChanged += (RectTransform newParent) =>
+            {
+                prevParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                if (newParent != null)
+                {
+                    newParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+                }
             };
         }
         
@@ -145,16 +159,24 @@ namespace Barotrauma
             
             wasOpened = true;
             Dropped = !Dropped;
-            if (Dropped)
+            if (Dropped && Enabled)
             {
-                if (Enabled)
-                {
-                    OnDropped?.Invoke(this, userData);
-                }
-                //TODO: this doesn't work if the dropdown is in a GUILayoutGroup
-                RectTransform.SetAsLastChild();
+                OnDropped?.Invoke(this, userData);                
             }
             return true;
+        }
+
+        private void AddListBoxToGUIUpdateList(GUIComponent parent)
+        {
+            if (parent.RectTransform != RectTransform.Parent)
+            {
+                DebugConsole.ThrowError("GUIDropDown received a AddListBoxToGUIUpdateList callback from a component that is not its parent.");
+                return;
+            }
+            if (Dropped)
+            {
+                listBox.AddToGUIUpdateList(false, UpdateOrder);
+            }
         }
 
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
@@ -163,10 +185,6 @@ namespace Barotrauma
             if (!ignoreChildren)
             {
                 button.AddToGUIUpdateList(false, order);
-                if (Dropped)
-                {
-                    listBox.AddToGUIUpdateList(false, order);
-                }
             }
         }
 
@@ -178,7 +196,6 @@ namespace Barotrauma
             if (Dropped && PlayerInput.LeftButtonClicked())
             {
                 Rectangle listBoxRect = listBox.Rect;
-                listBoxRect.Width += 20; // ?
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;

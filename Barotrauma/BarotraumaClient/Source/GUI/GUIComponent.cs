@@ -1,10 +1,9 @@
-using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma
 {
@@ -14,14 +13,9 @@ namespace Barotrauma
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
         
         public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
-
+        
         public T GetChild<T>() where T : GUIComponent
         {
-            //foreach (GUIComponent child in Children)
-            //{
-            //    if (child is T) return child as T;
-            //}
-            //return default(T);
             return Children.FirstOrDefault(c => c is T) as T;
         }
 
@@ -107,6 +101,8 @@ namespace Barotrauma
         public bool AutoUpdate { get; set; } = true;
         public bool AutoDraw { get; set; } = true;
         public int UpdateOrder { get; set; }
+
+        public Action<GUIComponent> OnAddedToGUIUpdateList;
 
         const float FlashDuration = 1.5f;
 
@@ -307,6 +303,7 @@ namespace Barotrauma
             {
                 RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
             }
+            OnAddedToGUIUpdateList?.Invoke(this);
         }
 
         public void RemoveFromGUIUpdateList(bool alsoChildren = true)
