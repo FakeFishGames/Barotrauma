@@ -344,27 +344,7 @@ namespace Barotrauma
                 Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), 5.0f / Content.Rect.Width) :
                 Math.Max(Math.Min(Content.Rect.Height / (float)totalSize, 1.0f), 5.0f / Content.Rect.Height);
         }
-
-        /*public override void AddChild(GUIComponent child)
-        {
-            // The old system calls this method in the constructor. Therefore this check. TODO: remove
-            if (child is GUIScrollBar || Content == null)
-            {
-                base.AddChild(child);
-                return;
-            }
-            if (child.RectTransform != null)
-            {
-                child.RectTransform.Parent = Content.RectTransform;
-            }
-            else
-            {
-                Content.AddChild(child);
-            }
-            UpdateScrollBarSize();
-            UpdateChildrenRect();
-        }*/
-
+        
         public override void ClearChildren()
         {
             Content.ClearChildren();
@@ -374,14 +354,7 @@ namespace Barotrauma
         public override void RemoveChild(GUIComponent child)
         {
             if (child == null) return;
-            if (RectTransform != null)
-            {
-                child.RectTransform.Parent = null;
-            }
-            else
-            {
-                Content.RemoveChild(child);
-            }
+            child.RectTransform.Parent = null;
             if (selected.Contains(child)) selected.Remove(child);
             UpdateScrollBarSize();
         }
@@ -413,22 +386,6 @@ namespace Barotrauma
             if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
             if (ScrollBarEnabled) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
-
-            //// Debug
-            //GUI.DrawString(spriteBatch, new Vector2(800, 0), "scroll bar total size: " + totalSize.ToString(), Color.White, Color.Black * 0.5f);
-            //if (Frame != null && Frame.RectTransform != null)
-            //{
-            //    GUI.DrawString(spriteBatch, new Vector2(800, 40), $"Frame location: {Frame.Rect.Location}, Size: {Frame.Rect.Size}, Offset: {Frame.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            //    GUI.DrawString(spriteBatch, new Vector2(800, 80), "child count: " + Frame.Children.Count().ToString(), Color.White, Color.Black * 0.5f);
-
-            //    int y = 80;
-            //    foreach (var child in Frame.Children)
-            //    {
-            //        if (child.RectTransform == null) { continue; }
-            //        y += 30;
-            //        GUI.DrawString(spriteBatch, new Vector2(800, y), $"Child location: {child.Rect.Location}, Size: {child.Rect.Size}, Offset: {child.RectTransform.AbsoluteOffset}", Color.White, Color.Black * 0.5f);
-            //    }
-            //}
         }
 
         private bool IsChildInsideFrame(GUIComponent child)
