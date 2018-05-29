@@ -250,8 +250,15 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!Visible) { return; }
-            base.AddToGUIUpdateList(true, order);
-            if (ignoreChildren) { return; }
+
+            UpdateOrder = order;
+            GUI.AddToUpdateList(this);
+            
+            if (ignoreChildren)
+            {
+                OnAddedToGUIUpdateList?.Invoke(this);
+                return;
+            }
             Content.AddToGUIUpdateList(true, order);
             int lastVisible = 0;
             for (int i = 0; i < Content.CountChildren; i++)
@@ -270,6 +277,7 @@ namespace Barotrauma
             {
                 ScrollBar.AddToGUIUpdateList(false, order);
             }
+            OnAddedToGUIUpdateList?.Invoke(this);
         }
 
         protected override void Update(float deltaTime)
