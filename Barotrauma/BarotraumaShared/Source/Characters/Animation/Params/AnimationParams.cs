@@ -30,7 +30,7 @@ namespace Barotrauma
 
     abstract class AnimationParams : ISerializableEntity
     {
-        protected bool Init(string file, AnimationType type)
+        protected bool Load(string file, AnimationType type)
         {
             FilePath = file;
             AnimationType = type;
@@ -42,30 +42,35 @@ namespace Barotrauma
         }
 
         protected string FilePath { get; private set; }
-        protected const string CHARACTERS_FOLDER = @"Content/Characters";
         public virtual AnimationType AnimationType { get; private set; }
 
         protected static Dictionary<string, Dictionary<AnimationType, AnimationParams>> animations = new Dictionary<string, Dictionary<AnimationType, AnimationParams>>();
 
-        public static T GetAnimParams<T>(string speciesName, AnimationType type) where T : AnimationParams, new()
+        public static T GetAnimParams<T>(Character character, AnimationType type) where T : AnimationParams, new()
         {
+            string speciesName = character.SpeciesName;
             if (!animations.TryGetValue(speciesName, out Dictionary<AnimationType, AnimationParams> anims))
             {
                 anims = new Dictionary<AnimationType, AnimationParams>();
-                animations.Add(speciesName, anims);
+                animations.Add(character.SpeciesName, anims);
             }
             if (!anims.TryGetValue(type, out AnimationParams anim))
             {
-                T a = new T();
+                XDocument doc = XMLExtensions.TryLoadXml(character.ConfigPath);
                 string firstLetter = speciesName.First().ToString().ToUpperInvariant();
                 speciesName = firstLetter + speciesName.ToLowerInvariant().Substring(1);
-                if (a.Init($"{CHARACTERS_FOLDER}/{speciesName}/{speciesName}{type.ToString()}.xml", type))
+                string animType = type.ToString();
+                string defaultPath = $"Content/Characters/{speciesName}/{speciesName}{animType}.xml";
+                string animPath = doc.Root.Element("animation").GetAttributeString("path", defaultPath);
+                animPath = animPath.Replace("[ANIMTYPE]", animType);
+                T a = new T();
+                if (a.Load(animPath, type))
                 {
                     anims.Add(type, a);
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Failed to initialize an animation {a} of type {a.AnimationType} at {a.FilePath}");
+                    DebugConsole.ThrowError($"Failed to load an animation {a} of type {type} at {animPath}");
                 }
                 anim = a;
             }
