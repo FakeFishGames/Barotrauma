@@ -11,17 +11,13 @@ namespace Barotrauma
     public abstract class GUIComponent
     {
         #region Hierarchy
-        // TODO: remove the backup field when the old system is not needed.
-        private GUIComponent parent;
-        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent?.GUIComponent : parent;
+        public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
 
-        // TODO: remove the backup field when the old system is not needed.
-        private List<GUIComponent> children = new List<GUIComponent>();
         /// <summary>
         /// TODO: return IEnumerable.
         /// Maps RectTransform children's elements to a new collection. For efficiency, access RectTransform.Children directly.
         /// </summary>
-        public List<GUIComponent> Children => RectTransform != null ? RectTransform.Children.Select(c => c.GUIComponent).ToList() : children;
+        public List<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent).ToList();
 
         public T GetChild<T>() where T : GUIComponent
         {
@@ -53,45 +49,19 @@ namespace Barotrauma
         /// </summary>
         public IEnumerable<GUIComponent> GetAllChildren()
         {
-            if (RectTransform != null)
-            {
-                return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
-            }
-            else
-            {
-                return children.SelectManyRecursive(c => c.children);
-            }
+            return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
         public bool IsParentOf(GUIComponent component)
         {
             if (component == null) { return false; }
-            if (RectTransform != null && component.RectTransform != null)
-            {
-                return RectTransform.IsParentOf(component.RectTransform);
-            }
-            else
-            {
-                for (int i = children.Count - 1; i >= 0; i--)
-                {
-                    if (children[i] == component) return true;
-                    if (children[i].IsParentOf(component)) return true;
-                }
-                return false;
-            }
+            return RectTransform.IsParentOf(component.RectTransform);
         }
 
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) return;
-            if (RectTransform != null)
-            {
-                child.RectTransform.Parent = null;
-            }
-            else
-            {
-                if (children.Contains(child)) children.Remove(child);
-            }
+            child.RectTransform.Parent = null;
         }
 
         // TODO: refactor?
@@ -139,11 +109,7 @@ namespace Barotrauma
         protected GUIComponentStyle style;
 
         protected object userData;
-
-        // TODO: remove when the old system is not needed.
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        protected Rectangle rect;
-
+        
         public bool CanBeFocused;
         
         protected Color color;
@@ -227,12 +193,9 @@ namespace Barotrauma
             return r;
         }
 
-        /// <summary>
-        /// Does not set the rect values if the component uses RectTransform.
-        /// </summary>
         public virtual Rectangle Rect
         {
-            get { return RectTransform != null ? RectTransform.Rect : rect; }
+            get { return RectTransform.Rect; }
         }
 
         public virtual bool ClampMouseRectToParent { get; set; } = true;
@@ -308,7 +271,6 @@ namespace Barotrauma
         protected GUIComponent(string style, RectTransform rectT) : this(style)
         {
             RectTransform = rectT;
-            rect = RectTransform.Rect;
         }
 
         protected GUIComponent(string style)
@@ -336,14 +298,7 @@ namespace Barotrauma
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
-                if (RectTransform != null)
-                {
-                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
-                }
-                else
-                {
-                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, order));
-                }
+                RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
             }
         }
 
@@ -392,14 +347,7 @@ namespace Barotrauma
         /// </summary>
         public void UpdateChildren(float deltaTime, bool recursive)
         {
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
-            }
-            else
-            {
-                children.ForEach(c => c.UpdateManually(deltaTime, recursive, recursive));
-            }
+            RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
         }
         #endregion
 
@@ -435,14 +383,7 @@ namespace Barotrauma
         /// </summary>
         public void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
-            }
-            else
-            {
-                children.ForEach(c => c.DrawManually(spriteBatch, recursive, recursive));
-            }
+            RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
         }
 
         protected virtual void Draw(SpriteBatch spriteBatch)
