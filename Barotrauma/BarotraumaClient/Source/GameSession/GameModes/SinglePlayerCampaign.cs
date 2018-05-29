@@ -206,12 +206,12 @@ namespace Barotrauma
 
                 if (summaryScreen != null)
                 {
-                    summaryScreen = summaryScreen.Children[0];
-                    var buttonArea = summaryScreen.Children[0].FindChild("buttonarea");
+                    summaryScreen = summaryScreen.Children.First();
+                    var buttonArea = summaryScreen.Children.First().FindChild("buttonarea");
                     buttonArea.ClearChildren();
 
 
-                    summaryScreen.RemoveChild(summaryScreen.Children.Find(c => c is GUIButton));
+                    summaryScreen.RemoveChild(summaryScreen.Children.FirstOrDefault(c => c is GUIButton));
 
                     var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("LoadGameButton"))

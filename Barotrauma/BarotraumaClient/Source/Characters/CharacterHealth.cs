@@ -362,7 +362,7 @@ namespace Barotrauma
                     openHealthWindow = null;
                 }
 
-                Rectangle limbArea = healthWindow.Children[0].Rect;
+                Rectangle limbArea = healthWindow.Children.First().Rect;
                 UpdateAfflictionContainer(highlightedLimbIndex < 0 ? (selectedLimbIndex < 0 ? null : limbHealths[selectedLimbIndex]) : limbHealths[highlightedLimbIndex]);
                 UpdateItemContainer();
 
@@ -572,11 +572,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var strengthBar = child.Children[0].GetChild("strength") as GUIProgressBar;
+                    var strengthBar = child.Children.First().GetChildByUserData("strength") as GUIProgressBar;
                     strengthBar.BarSize = Math.Max(affliction.Strength / affliction.Prefab.MaxStrength, 0.05f);
                     strengthBar.Color = Color.Lerp(Color.Orange, Color.Red, affliction.Strength / affliction.Prefab.MaxStrength);
 
-                    var vitalityText = child.Children[0].GetChild("vitality") as GUITextBlock;
+                    var vitalityText = child.Children.First().GetChildByUserData("vitality") as GUITextBlock;
                     int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
                     vitalityText.Text = "Vitality -" + vitalityDecrease;
                     vitalityText.TextColor = vitalityDecrease <= 0 ? Color.LightGreen :
@@ -585,19 +585,20 @@ namespace Barotrauma
                     currentChildren.Add(child);
                 }
             }
-
+            
             for (int i = afflictionContainer.Content.CountChildren - 1; i>= 0; i--)
             {
-                if (!currentChildren.Contains(afflictionContainer.Content.Children[i]))
+                var child = afflictionContainer.Content.GetChild(i);
+                if (!currentChildren.Contains(child))
                 {
-                    afflictionContainer.RemoveChild(afflictionContainer.Content.Children[i]);
+                    afflictionContainer.RemoveChild(child);
                 }
             }
 
-            afflictionContainer.Content.Children.Sort((c1, c2) =>
+            afflictionContainer.Content.RectTransform.SortChildren((c1, c2) =>
             {
-                Affliction affliction1 = c1.UserData as Affliction;
-                Affliction affliction2 = c2.UserData as Affliction;
+                Affliction affliction1 = c1.GUIComponent.UserData as Affliction;
+                Affliction affliction2 = c2.GUIComponent.UserData as Affliction;
                 return (int)(affliction2.Strength - affliction1.Strength);
             });
 

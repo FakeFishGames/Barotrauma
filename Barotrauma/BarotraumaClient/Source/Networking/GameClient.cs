@@ -370,7 +370,7 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f),  msgBox.Children[0].RectTransform));
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f),  msgBox.InnerFrame.RectTransform));
                     passwordBox.UserData = "password";
 
                     var okButton = msgBox.Buttons[0];
@@ -699,9 +699,9 @@ namespace Barotrauma.Networking
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.Children[0].RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
                      "Permitted console commands:", wrap: true, font: GUI.SmallFont);
-                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.Children[0].RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
@@ -1247,15 +1247,15 @@ namespace Barotrauma.Networking
 
                     for (int i = 0; i < 2; i++)
                     {
-                        List<GUIComponent> subListChildren = (i == 0) ? 
+                        IEnumerable<GUIComponent> subListChildren = (i == 0) ? 
                             GameMain.NetLobbyScreen.ShuttleList.ListBox.Content.Children : 
                             GameMain.NetLobbyScreen.SubList.Content.Children;
 
-                        var subElement = subListChildren.Find(c => 
+                        var subElement = subListChildren.FirstOrDefault(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 
                             ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
-
                         if (subElement == null) continue;
+
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.UserData = newSub;
                         subElement.ToolTip = newSub.Description;

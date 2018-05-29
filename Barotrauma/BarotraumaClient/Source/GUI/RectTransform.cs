@@ -53,6 +53,8 @@ namespace Barotrauma
         private List<RectTransform> children = new List<RectTransform>();
         public IEnumerable<RectTransform> Children => children;
 
+        public int CountChildren => children.Count;
+
         private Vector2 relativeSize = Vector2.One;
         /// <summary>
         /// Relative to the parent rect.
@@ -497,6 +499,16 @@ namespace Barotrauma
             return children.SelectManyRecursive(c => c.children);
         }
 
+        public int GetChildIndex(RectTransform rectT)
+        {
+            return children.IndexOf(rectT);
+        }
+
+        public RectTransform GetChild(int index)
+        {
+            return children[index];
+        }
+
         public bool IsParentOf(RectTransform rectT)
         {
             return children.Contains(rectT) || children.Any(c => c.IsParentOf(rectT));
@@ -505,6 +517,13 @@ namespace Barotrauma
         public void ClearChildren()
         {
             children.ForEachMod(c => c.Parent = null);
+        }
+
+        public void SortChildren(Comparison<RectTransform> comparison)
+        {
+            children.Sort(comparison);
+            RecalculateAll(false, true, true);
+            Parent.ChildrenChanged?.Invoke(this);
         }
 
         public void SetAsLastChild()

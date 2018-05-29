@@ -12,12 +12,8 @@ namespace Barotrauma
     {
         #region Hierarchy
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
-
-        /// <summary>
-        /// TODO: return IEnumerable.
-        /// Maps RectTransform children's elements to a new collection. For efficiency, access RectTransform.Children directly.
-        /// </summary>
-        public List<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent).ToList();
+        
+        public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
 
         public T GetChild<T>() where T : GUIComponent
         {
@@ -34,7 +30,19 @@ namespace Barotrauma
             return GetAllChildren().FirstOrDefault(c => c is T) as T;
         }
 
-        public GUIComponent GetChild(object obj)
+        public GUIComponent GetChild(int index)
+        {
+            if (index < 0 || index > CountChildren) return null;
+            return RectTransform.GetChild(index).GUIComponent;
+        }
+
+        public int GetChildIndex(GUIComponent child)
+        {
+            if (child == null) return -1;
+            return RectTransform.GetChildIndex(child.RectTransform);
+        }
+
+        public GUIComponent GetChildByUserData(object obj)
         {
             foreach (GUIComponent child in Children)
             {
@@ -228,8 +236,7 @@ namespace Barotrauma
         
         public int CountChildren
         {
-            // TODO: optimize
-            get { return Children.Count(); }
+            get { return RectTransform.CountChildren; }
         }
 
         public virtual Color Color

@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    //TODO: remove hard-coded texts in this class
     abstract partial class NetworkMember
     {
         protected CharacterInfo characterInfo;
@@ -160,7 +159,7 @@ namespace Barotrauma.Networking
                 TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
                 "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, 400, 300);
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.Children[0].RectTransform, Anchor.Center));
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
             var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
             {
                 Wrap = true,

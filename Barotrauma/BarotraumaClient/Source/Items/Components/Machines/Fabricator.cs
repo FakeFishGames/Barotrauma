@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
 
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
             
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.8f), GuiFrame.Children[0].RectTransform, Anchor.CenterRight),
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.8f), GuiFrame.Children.First().RectTransform, Anchor.CenterRight),
                 style: "InnerFrame");
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.05f };
 

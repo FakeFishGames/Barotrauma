@@ -3,12 +3,10 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    // TODO: consider using pixel sizes for some elements. At least use min sizes.
     class SerializableEntityEditor : GUIComponent
     {
         private static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
@@ -53,29 +51,12 @@ namespace Barotrauma
         // TODO: remove or refactor? The new system uses a layout group.
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
-            /*childIndex = MathHelper.Clamp(childIndex, 0, Children.Count);
-
-            AddChild(component);
-            Children.Remove(component);
-            Children.Insert(childIndex, component);*/
-
             component.RectTransform.Parent = layoutGroup.RectTransform;
             component.RectTransform.RepositionChildInHierarchy(childIndex);
 
             int contentHeight = ContentHeight;
             RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
-
-            /*if (childIndex > 0 )
-            {
-                component.Rect = new Rectangle(component.Rect.X, Children[childIndex - 1].Rect.Bottom, component.Rect.Width, component.Rect.Height);
-            }
-
-            for (int i = childIndex + 1; i < Children.Count; i++)
-            {
-                Children[i].Rect = new Rectangle(Children[i].Rect.X, Children[i].Rect.Y + component.Rect.Height, Children[i].Rect.Width, Children[i].Rect.Height);
-            }
-            SetDimensions(new Point(Rect.Width, Children.Last().Rect.Bottom - Rect.Y + 10), false);*/
         }
 
         private GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
