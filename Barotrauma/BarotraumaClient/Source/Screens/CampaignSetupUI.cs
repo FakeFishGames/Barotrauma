@@ -158,10 +158,7 @@ namespace Barotrauma
                     };
                 }
 
-                var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 0.8f), textBlock.RectTransform, Anchor.CenterRight)
-                {
-                    AbsoluteOffset = new Point(20, 0)
-                }, text: "?")
+                var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), text: "?")
                 {
                     UserData = sub
                 };
