@@ -17,7 +17,7 @@ namespace Barotrauma
         public AnimationParams CurrentSwimParams => IsSwimmingFast ? SwimFastParams : SwimSlowParams;
 
         public bool IsRunning => Math.Abs(TargetMovement.X) > WalkParams.Speed;
-        public bool IsSwimmingFast => Math.Abs(TargetMovement.X) > SwimSlowParams.Speed || Math.Abs(TargetMovement.Y) > SwimSlowParams.Speed;
+        public bool IsSwimmingFast => TargetMovement.LengthSquared() > SwimSlowParams.Speed * SwimSlowParams.Speed;
 
         /// <summary>
         /// Note: creates a new list each time accessed. If you need to acces frequently, consider caching or change the implementation.
