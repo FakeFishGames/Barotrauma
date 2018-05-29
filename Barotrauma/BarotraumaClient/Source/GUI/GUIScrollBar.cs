@@ -31,14 +31,22 @@ namespace Barotrauma
         public float MinValue
         {
             get { return minValue; }
-            set { minValue = MathHelper.Clamp(value, 0.0f, 1.0f); }
+            set
+            {
+                minValue = MathHelper.Clamp(value, 0.0f, 1.0f);
+                BarScroll = Math.Max(minValue, barScroll);
+            }
         }
 
         private float maxValue = 1.0f;
         public float MaxValue
         {
             get { return maxValue; }
-            set { maxValue = MathHelper.Clamp(value, 0.0f, 1.0f); }
+            set
+            {
+                maxValue = MathHelper.Clamp(value, 0.0f, 1.0f);
+                BarScroll = Math.Min(maxValue, barScroll);
+            }
         }
 
         public bool IsHorizontal

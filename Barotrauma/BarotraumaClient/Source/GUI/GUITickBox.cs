@@ -71,6 +71,16 @@ namespace Barotrauma
             text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft);
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
+
+            ResizeBox();
+
+            rectT.ScaleChanged += ResizeBox;
+            rectT.SizeChanged += ResizeBox;
+        }
+
+        private void ResizeBox()
+        {
+            box.RectTransform.NonScaledSize = new Point(box.RectTransform.NonScaledSize.Y);
         }
         
         protected override void Update(float deltaTime)
