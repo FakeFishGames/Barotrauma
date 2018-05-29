@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -21,7 +22,7 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.Children.Find(c => c.UserData as string == itemName);
+                    GUIComponent component = reqFrame.GetChildByUserData(itemName);
                     if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
                 }
             }
@@ -33,7 +34,7 @@ namespace Barotrauma
 
                 if (reqFrame != null)
                 {
-                    GUIComponent component = reqFrame.Children.Find(c => c.UserData as Skill == skill);
+                    GUIComponent component = reqFrame.GetChildByUserData(skill);
                     GUITextBlock text = component as GUITextBlock;
                     if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Orange;
                 }
@@ -169,7 +170,7 @@ namespace Barotrauma
                 if (requirement.Fixed)
                 {
                     child.Color = Color.LightGreen * 0.3f;
-                    child.Children[0].GetChild<GUITickBox>().Selected = true;
+                    child.Children.First().GetChild<GUITickBox>().Selected = true;
                 }
                 else
                 {
@@ -177,7 +178,7 @@ namespace Barotrauma
                     {
                         bool itemFound = (character.Inventory.FindItem(itemName) != null);
                         
-                        GUIComponent component = itemTextContainer.Children.Find(c => c.UserData as string == itemName);
+                        GUIComponent component = itemTextContainer.GetChildByUserData(itemName);
                         if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
                     }
 
@@ -186,7 +187,7 @@ namespace Barotrauma
                         float characterSkill = character.GetSkillLevel(skill.Name);
                         bool sufficientSkill = characterSkill >= skill.Level;
 
-                        GUIComponent component = skillTextContainer.Children.Find(c => c.UserData as Skill == skill);
+                        GUIComponent component = skillTextContainer.GetChildByUserData(skill);
                         if (component is GUITextBlock text) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
                     }
                     child.Color = Color.Red * 0.2f;

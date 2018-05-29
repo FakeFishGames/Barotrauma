@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -473,9 +474,9 @@ namespace Barotrauma.Items.Components
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
 
-            if (!GuiFrame.Children[0].Rect.Contains(markerPos))
+            if (!GuiFrame.Children.First().Rect.Contains(markerPos))
             {
-                Vector2? intersection = MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children[0].Rect);
+                Vector2? intersection = MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children.First().Rect);
                 if (intersection.HasValue) markerPos = intersection.Value;                
             }
 

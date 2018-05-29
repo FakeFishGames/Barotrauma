@@ -57,7 +57,7 @@ namespace Barotrauma
             get
             {
                 if (Selected == null) return -1;
-                return Content.Children.FindIndex(x => x == Selected);
+                return Content.RectTransform.GetChildIndex(Selected.RectTransform);
             }
         }
 
@@ -170,14 +170,17 @@ namespace Barotrauma
         public void Select(object userData, bool force = false)
         {
             var children = Content.Children;
-            for (int i = 0; i < children.Count; i++)
+
+            int i = 0;
+            foreach (GUIComponent child in children)
             {
-                if ((children[i].UserData != null && children[i].UserData.Equals(userData)) ||
-                    (children[i].UserData == null && userData == null))
+                if ((child.UserData != null && child.UserData.Equals(userData)) ||
+                    (child.UserData == null && userData == null))
                 {
                     Select(i, force);
                     if (!SelectMultiple) return;
                 }
+                i++;
             }
         }
         
@@ -202,9 +205,9 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < children.Count; i++)
+            for (int i = 0; i < Content.CountChildren; i++)
             {
-                GUIComponent child = children[i];
+                GUIComponent child = Content.GetChild(i);
                 if (!child.Visible) { continue; }
                 if (RectTransform != null)
                 {
@@ -250,11 +253,10 @@ namespace Barotrauma
             base.AddToGUIUpdateList(true, order);
             if (ignoreChildren) { return; }
             Content.AddToGUIUpdateList(true, order);
-            var children = Content.Children;
             int lastVisible = 0;
-            for (int i = 0; i < children.Count; i++)
+            for (int i = 0; i < Content.CountChildren; i++)
             {
-                var child = children[i];
+                var child = Content.GetChild(i);
                 if (!child.Visible) continue;
                 if (!IsChildInsideFrame(child))
                 {
@@ -292,29 +294,30 @@ namespace Barotrauma
 
         public void Select(int childIndex, bool force = false)
         {
-            var children = Content.Children;
-            if (childIndex >= children.Count || childIndex < 0) return;
+            if (childIndex >= Content.CountChildren || childIndex < 0) return;
+
+            GUIComponent child = Content.GetChild(childIndex);
 
             bool wasSelected = true;
-            if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData) || force;
+            if (OnSelected != null) wasSelected = force || OnSelected(child, child.UserData);
             
             if (!wasSelected) return;
 
             if (SelectMultiple)
             {
-                if (selected.Contains(children[childIndex]))
+                if (selected.Contains(child))
                 {
-                    selected.Remove(children[childIndex]);
+                    selected.Remove(child);
                 }
                 else
                 {
-                    selected.Add(children[childIndex]);
+                    selected.Add(child);
                 }
             }
             else
             {
                 selected.Clear();
-                selected.Add(children[childIndex]);
+                selected.Add(child);
             }
         }
 
@@ -325,12 +328,9 @@ namespace Barotrauma
 
         public void UpdateScrollBarSize()
         {
-            totalSize = 0;
             if (Content == null) return;
             
-            //totalSize = (int)(padding.Y + padding.W);
-            //totalSize += (int)(Content.Padding.Y + Content.Padding.W);
-
+            totalSize = 0;
             var children = Content.Children;
             foreach (GUIComponent child in children)
             {
@@ -338,7 +338,7 @@ namespace Barotrauma
                 totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
             }
 
-            totalSize += (children.Count - 1) * spacing;
+            totalSize += Content.CountChildren * spacing;
 
             ScrollBar.BarSize = ScrollBar.IsHorizontal ?
                 Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), 5.0f / Content.Rect.Width) :
@@ -370,9 +370,10 @@ namespace Barotrauma
 
             var children = Content.Children;
             int lastVisible = 0;
-            for (int i = 0; i < children.Count; i++)
+
+            int i = 0;
+            foreach (GUIComponent child in Content.Children)
             {
-                GUIComponent child = children[i];
                 if (!child.Visible) continue;
                 if (!IsChildInsideFrame(child))
                 {
@@ -381,8 +382,9 @@ namespace Barotrauma
                 }
                 lastVisible = i;
                 child.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+                i++;
             }
-
+            
             if (HideChildrenOutsideFrame) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
 
             if (ScrollBarEnabled) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);

@@ -53,7 +53,7 @@ namespace Barotrauma
             get
             {
                 if (listBox.Selected == null) return -1;
-                return listBox.Content.Children.FindIndex(x => x == listBox.Selected);
+                return listBox.Content.GetChildIndex(listBox.Selected);
             }
         }
 
@@ -108,7 +108,7 @@ namespace Barotrauma
             listBox.ClearChildren();
         }
 
-        public List<GUIComponent> GetChildren()
+        public IEnumerable<GUIComponent> GetChildren()
         {
             return listBox.Content.Children;
         }

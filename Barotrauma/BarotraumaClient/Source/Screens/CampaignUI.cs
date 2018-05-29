@@ -335,7 +335,8 @@ namespace Barotrauma
                 CreateItemFrame(itemPrefab, priceInfo, storeItemList, width);
             }
 
-            storeItemList.Content.Children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
+            storeItemList.Content.RectTransform.SortChildren((x, y) => 
+                (x.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((y.GUIComponent.UserData as MapEntityPrefab).Name));
 
             foreach (GUIComponent child in button.Parent.Children)
             {

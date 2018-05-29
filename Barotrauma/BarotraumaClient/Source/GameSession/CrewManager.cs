@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -388,14 +389,14 @@ namespace Barotrauma
             GUIComponent selectedCharacterFrame = null;
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
-                GUIButton button = child.Children.Find(c => c.UserData is Character) as GUIButton;
+                GUIButton button = child.Children.FirstOrDefault(c => c.UserData is Character) as GUIButton;
                 if (button == null) continue;
 
                 bool isSelectedCharacter = (Character)button.UserData == character;
 
                 button.Selected = isSelectedCharacter;
-                var reportButtons = child.GetChild("reportbuttons");
-                var orderButtons = child.GetChild("orderbuttons");
+                var reportButtons = child.GetChildByUserData("reportbuttons");
+                var orderButtons = child.GetChildByUserData("orderbuttons");
 
                 reportButtons.Visible = isSelectedCharacter;
                 orderButtons.Visible = !isSelectedCharacter;
@@ -408,24 +409,14 @@ namespace Barotrauma
 
             if (selectedCharacterFrame != null)
             {
-                if (selectedCharacterFrame.RectTransform != null)
-                {
-                    selectedCharacterFrame.RectTransform.SetAsFirstChild();
-                }
-                else
-                {
-                    //move the selected character to the top of the list
-                    characterListBox.RemoveChild(selectedCharacterFrame);
-                    characterListBox.Content.Children.Insert(0, selectedCharacterFrame);
-                }
-
+                selectedCharacterFrame.RectTransform.SetAsFirstChild();
                 characterListBox.BarScroll = 0.0f; 
             }      
         }
 
         public void ReviveCharacter(Character revivedCharacter)
         {
-            if (characterListBox.GetChild(revivedCharacter) is GUIComponent characterBlock)
+            if (characterListBox.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
             {
                 characterBlock.Color = Color.Transparent;
             }
@@ -437,7 +428,7 @@ namespace Barotrauma
 
         public void KillCharacter(Character killedCharacter)
         {
-            if (characterListBox.GetChild(killedCharacter) is GUIComponent characterBlock)
+            if (characterListBox.GetChildByUserData(killedCharacter) is GUIComponent characterBlock)
             {
                 CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
             }
@@ -728,8 +719,8 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
-                var orderButtons = child.GetChild("orderbuttons");
-                var reportButtons = child.GetChild("reportbuttons");
+                var orderButtons = child.GetChildByUserData("orderbuttons");
+                var reportButtons = child.GetChildByUserData("reportbuttons");
 
                 orderButtons.RectTransform.AbsoluteOffset = new Point((int)crewAreaOffset.X, 0);
                 reportButtons.RectTransform.AbsoluteOffset = new Point((int)crewAreaOffset.X, 0);
@@ -928,7 +919,7 @@ namespace Barotrauma
         private void ToggleReportButton(string orderAiTag, bool enabled)
         {
             Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
-            var existingButton = reportButtonContainer.Content.GetChild(order);
+            var existingButton = reportButtonContainer.Content.GetChildByUserData(order);
 
             //already reported, disable the button
             if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>

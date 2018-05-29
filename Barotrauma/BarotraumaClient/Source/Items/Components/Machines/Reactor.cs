@@ -253,8 +253,8 @@ namespace Barotrauma.Items.Components
         {
             Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
             inventory.CenterPos = new Vector2(
-                GuiFrame.Children[0].Rect.Center.X / (float)GameMain.GraphicsWidth, 
-                (GuiFrame.Children[0].Rect.Y + GuiFrame.Children[0].Rect.Height * 0.75f) / GameMain.GraphicsHeight);
+                GuiFrame.Children.First().Rect.Center.X / (float)GameMain.GraphicsWidth, 
+                (GuiFrame.Children.First().Rect.Y + GuiFrame.Children.First().Rect.Height * 0.75f) / GameMain.GraphicsHeight);
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
