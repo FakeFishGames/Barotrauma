@@ -13,9 +13,7 @@ namespace Barotrauma
 
         protected Vector2 textPos;
         protected Vector2 origin;
-
-        protected Vector2 caretPos;
-
+        
         protected Color textColor;
 
         private string wrappedText;
@@ -95,12 +93,7 @@ namespace Barotrauma
             get { return textColor; }
             set { textColor = value; }
         }
-
-        public Vector2 CaretPos
-        {
-            get { return caretPos; }
-        }
-        
+                
         /// <summary>
         /// This is the new constructor.
         /// If the rectT height is set 0, the height is calculated from the text.
@@ -182,17 +175,6 @@ namespace Barotrauma
 
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
-
-            if (wrappedText.Contains("\n"))
-            {
-                string[] lines = wrappedText.Split('\n');
-                Vector2 lastLineSize = MeasureText(lines[lines.Length-1]);
-                caretPos = new Vector2(rect.X + lastLineSize.X, rect.Y + size.Y - lastLineSize.Y) + textPos - origin;
-            }
-            else
-            {
-                caretPos = new Vector2(rect.X + size.X, rect.Y) + textPos - origin;
-            }
         }
 
         private Vector2 MeasureText(string text) 
