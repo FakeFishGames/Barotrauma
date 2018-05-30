@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -52,12 +53,12 @@ namespace Barotrauma
         public bool IsHorizontal
         {
             get { return isHorizontal; }
-            set 
+            /*set 
             { 
                 if (isHorizontal == value) return;
                 isHorizontal = value;
                 UpdateRect();
-            }
+            }*/
         }
 
         public override bool Enabled
@@ -70,11 +71,13 @@ namespace Barotrauma
             }
         }
 
-        private Vector4 padding;
         public Vector4 Padding
         {
-            get { return padding; }
-            set { padding = value; }
+            get
+            {
+                if (frame?.Style == null) return Vector4.Zero;
+                return frame.Style.Padding;
+            }
         }
 
         public float BarScroll
@@ -128,28 +131,27 @@ namespace Barotrauma
             }
         }
 
-        public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "") : base(style, rectT)
+        public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
-            isHorizontal = (Rect.Width > Rect.Height);
+            this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
+            GUI.Style.Apply(frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
-            bar = new GUIButton(new RectTransform(Vector2.One, rectT), color: color);
-            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
+            bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color);
+            GUI.Style.Apply(bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();
-        }
 
-        public override void ApplyStyle(GUIComponentStyle style)
-        {
-            base.ApplyStyle(style);
-            padding = style.Padding;
+            rectT.SizeChanged += UpdateRect;
+            rectT.ScaleChanged += UpdateRect;
         }
 
         private void UpdateRect()
         {
-            var newSize = isHorizontal ? new Vector2(barSize, 1) : new Vector2(1, barSize);
+            Vector4 padding = frame.Style.Padding;
+            var newSize = new Point((int)(Rect.Size.X - padding.X - padding.Z), (int)(Rect.Size.Y - padding.Y - padding.W));
+            newSize = IsHorizontal ? newSize.Multiply(new Vector2(BarSize, 1)) : newSize.Multiply(new Vector2(1, BarSize));
             bar.RectTransform.Resize(newSize);
         }
         
