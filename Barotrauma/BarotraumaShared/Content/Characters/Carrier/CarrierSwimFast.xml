@@ -1,0 +1,8 @@
+﻿<CarrierSwimFast
+  speed="6"
+  waveamplitude="0"
+  wavelength ="0"
+  steertorque="25"
+  flip="true"
+  mirror="true"
+  rotatetowardsmovement="false"/>

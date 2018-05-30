@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="carrier" humanoid="false">
 
+  <animation path="Content/Characters/Carrier/Carrier[ANIMTYPE].xml"/>
+  
   <health
     vitality="1000"
     doesbleed="false"
@@ -24,7 +26,7 @@
     <targetpriority tag="stronger" state="Escape" priority="50"/>
   </ai>
     
-  <ragdoll waveamplitude="0.0" swimspeed="4.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
+  <ragdoll headangle="-90" canentersubmarine="false">
 
     <collider radius ="230"/>
     
