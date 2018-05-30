@@ -50,13 +50,7 @@ namespace Barotrauma
         
         //the physics body of the limb
         public PhysicsBody body;
-
-        private readonly int refJointIndex;
-
-        private readonly float steerForce;
-
-        private readonly bool doesFlip;
-        
+                        
         protected readonly Vector2 stepOffset;
         
         public Sprite sprite, damagedSprite;
@@ -69,24 +63,15 @@ namespace Barotrauma
 
         public readonly bool ignoreCollisions;
         
-        private float damageOverlayStrength, burnOverLayStrength;
-
         private bool isSevered;
         private float severedFadeOutTimer;
                 
         public Vector2? MouthPos;
         
         public readonly Attack attack;
+        private List<DamageModifier> damageModifiers;
 
         private Direction dir;
-
-        private List<WearableSprite> wearingItems;
-
-        private Vector2 animTargetPos;
-
-        private float scale;
-
-        private List<DamageModifier> damageModifiers;
         
         public float AttackTimer;
 
@@ -100,17 +85,13 @@ namespace Barotrauma
             set
             {
                 isSevered = value;
-                if (isSevered)
-                {
-                    damageOverlayStrength = 100.0f;
-                }
+#if CLIENT
+                if (isSevered) damageOverlayStrength = 100.0f;
+#endif
             }
         }
 
-        public bool DoesFlip
-        {
-            get { return doesFlip; }
-        }
+        public bool DoesFlip { get; private set; }
 
         public Vector2 WorldPosition
         {
@@ -132,21 +113,12 @@ namespace Barotrauma
             get { return body.Rotation; }
         }
 
-        public float Scale
-        {
-            get { return scale; }
-        }
+        public float Scale { get; private set; }
 
         //where an animcontroller is trying to pull the limb, only used for debug visualization
-        public Vector2 AnimTargetPos
-        {
-            get { return animTargetPos; }
-        }
+        public Vector2 AnimTargetPos { get; private set; }
 
-        public float SteerForce
-        {
-            get { return steerForce; }
-        }
+        public float SteerForce { get; private set; }
 
         public float Mass
         {
@@ -166,46 +138,14 @@ namespace Barotrauma
             set { dir = (value==-1.0f) ? Direction.Left : Direction.Right; }
         }
 
-        public int RefJointIndex
-        {
-            get { return refJointIndex; }
-        }
+        public int RefJointIndex { get; private set; }
 
         public Vector2 StepOffset
         {
             get { return stepOffset; }
         }
-        
-        public float DamageOverlayStrength
-        {
-            get { return damageOverlayStrength; }
-            set { damageOverlayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
-        }
 
-        public float BurnOverlayStrength
-        {
-            get { return burnOverLayStrength; }
-            set { burnOverLayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
-        }
-
-        /*public float Damage
-        {
-            get { return character.CharacterHealth.GetDamage(this); }
-            set { character.CharacterHealth.SetDamage(this, value); }
-        }
-
-        public float BurnDamage
-        {
-            get { return character.CharacterHealth.GetBurnDamage(this); }
-            set { character.CharacterHealth.SetBurnDamage(this, value); }
-        }
-
-        public float BleedingAmount
-        {
-            get { return character.CharacterHealth.GetBleedingAmount(this); }
-            set { character.CharacterHealth.SetBleedingAmount(this, value); }
-        }*/
-
+        private List<WearableSprite> wearingItems;
         public List<WearableSprite> WearingItems
         {
             get { return wearingItems; }
@@ -213,7 +153,8 @@ namespace Barotrauma
 
         public string Name
         {
-            get { return type.ToString(); }
+            get;
+            private set;
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -227,12 +168,12 @@ namespace Barotrauma
             this.character = character;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            this.scale = scale;
+            Scale = scale;
 
             HealthIndex = element.GetAttributeInt("healthindex", 0);
             AttackPriority = element.GetAttributeFloat("attackpriority", 0);
 
-            doesFlip = element.GetAttributeBool("flip", false);
+            DoesFlip = element.GetAttributeBool("flip", false);
 
             body = new PhysicsBody(element, scale);
             if (element.GetAttributeBool("ignorecollisions", false))
@@ -250,7 +191,9 @@ namespace Barotrauma
             }
             
             body.UserData = this;
-            refJointIndex = -1;
+
+            RefJointIndex = -1;
+
             Vector2 pullJointPos = Vector2.Zero;
             if (element.Attribute("type") != null)
             {
@@ -271,7 +214,7 @@ namespace Barotrauma
                 stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * scale;
                 stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
-                refJointIndex = element.GetAttributeInt("refjoint", -1);
+                RefJointIndex = element.GetAttributeInt("refjoint", -1);
 
             }
             else
@@ -279,13 +222,17 @@ namespace Barotrauma
                 type = LimbType.None;
             }
 
-            pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos);
-            pullJoint.Enabled = false;
-            pullJoint.MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass;
+            Name = type.ToString();
+
+            pullJoint = new FixedMouseJoint(body.FarseerBody, pullJointPos)
+            {
+                Enabled = false,
+                MaxForce = ((type == LimbType.LeftHand || type == LimbType.RightHand) ? 400.0f : 150.0f) * body.Mass
+            };
 
             GameMain.World.AddJoint(pullJoint);
 
-            steerForce = element.GetAttributeFloat("steerforce", 0.0f);
+            SteerForce = element.GetAttributeFloat("steerforce", 0.0f);
             
             if (element.Attribute("mouthpos") != null)
             {
@@ -362,12 +309,12 @@ namespace Barotrauma
         public void MoveToPos(Vector2 pos, float force, bool pullFromCenter=false)
         {
             Vector2 pullPos = body.SimPosition;
-            if (pullJoint!=null && !pullFromCenter)
+            if (pullJoint != null && !pullFromCenter)
             {
                 pullPos = pullJoint.WorldAnchorA;
             }
 
-            animTargetPos = pos;
+            AnimTargetPos = pos;
 
             body.MoveToPos(pos, force, pullPos);
         }
@@ -413,49 +360,12 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-            float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-
-            if (playSound)
-            {
-                string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-
-                foreach (DamageModifier damageModifier in appliedDamageModifiers)
-                {
-                    if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
-                    {
-                        damageSoundType = damageModifier.DamageSound;
-                        break;
-                    }
-                }
-                
-                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
-            }
-            
-            if (character.UseBloodParticles)
-            {
-                float bloodParticleAmount = (int)Math.Min(bleedingDamage * 5, 10);
-                float bloodParticleSize = MathHelper.Clamp(bleedingDamage, 0.1f, 1.0f);
-
-                for (int i = 0; i < bloodParticleAmount; i++)
-                {
-                    var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
-                    if (blood != null)
-                    {
-                        blood.Size *= bloodParticleSize;
-                    }
-                }
-
-                if (bloodParticleAmount > 0 && character.CurrentHull != null)
-                {
-                    character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
-                }
-            }
-#endif
+            AddDamageProjSpecific(position, afflictions, playSound, appliedDamageModifiers);
 
             return new AttackResult(afflictions, this, appliedDamageModifiers);
         }
+
+        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
@@ -474,7 +384,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            UpdateProjSpecific();
+            UpdateProjSpecific(deltaTime);
             
             if (LinearVelocity.X > 500.0f)
             {
@@ -496,18 +406,9 @@ namespace Barotrauma
                     body.Enabled = false;
                 }
             }
-
-            if (character.IsDead) return;
-
-            damageOverlayStrength = Math.Max(0.0f, damageOverlayStrength - deltaTime * 0.1f);
         }
 
-        partial void UpdateProjSpecific();
-
-        public void ActivateDamagedSprite()
-        {
-            damageOverlayStrength = 100.0f;
-        }
+        partial void UpdateProjSpecific(float deltaTime);
         
         public void UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
         {
@@ -528,18 +429,15 @@ namespace Barotrauma
                         break;
                     case HitDetection.Contact:
                         List<Body> targetBodies = new List<Body>();
-                        if (damageTarget is Character)
+                        if (damageTarget is Character targetCharacter)
                         {
-                            Character targetCharacter = (Character)damageTarget;
                             foreach (Limb limb in targetCharacter.AnimController.Limbs)
                             {
                                 if (!limb.IsSevered && limb.body?.FarseerBody != null) targetBodies.Add(limb.body.FarseerBody);
                             }
                         }
-                        else if (damageTarget is Structure)
+                        else if (damageTarget is Structure targetStructure)
                         {
-                            Structure targetStructure = (Structure)damageTarget;
-                            
                             if (character.Submarine == null && targetStructure.Submarine != null)
                             {
                                 targetBodies.Add(targetStructure.Submarine.PhysicsBody.FarseerBody);
@@ -554,7 +452,7 @@ namespace Barotrauma
                             Item targetItem = damageTarget as Item;
                             if (targetItem.body?.FarseerBody != null) targetBodies.Add(targetItem.body.FarseerBody);
                         }
-                        
+
                         if (targetBodies != null)
                         {
                             ContactEdge contactEdge = body.FarseerBody.ContactList;

@@ -30,7 +30,7 @@ namespace Barotrauma
             get
             {
                 if (descriptions == null) return "";
-
+                
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.Character == null)
                 {
                     //non-team-specific description
