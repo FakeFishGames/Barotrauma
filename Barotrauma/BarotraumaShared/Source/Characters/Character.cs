@@ -425,6 +425,12 @@ namespace Barotrauma
             set;
         }
 
+        public float SpeedMultiplier
+        {
+            get;
+            set;
+        }
+
         public Item[] SelectedItems
         {
             get { return selectedItems; }
@@ -884,7 +890,9 @@ namespace Barotrauma
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir);
             }
             
-            targetMovement *= AnimController.GetCurrentSpeed(run);
+            targetMovement *= AnimController.GetCurrentSpeed(run) * SpeedMultiplier;
+            SpeedMultiplier = 1; // Reset, items will set the value before the next update
+
             float maxSpeed = GetCurrentMaxSpeed(run);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);

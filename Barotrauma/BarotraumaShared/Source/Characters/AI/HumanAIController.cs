@@ -108,6 +108,9 @@ namespace Barotrauma
                 Vector2 targetMovement = new Vector2(
                     Character.AnimController.TargetMovement.X,
                     MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
+                targetMovement *= Character.SpeedMultiplier;
+                Character.SpeedMultiplier = 1.0f;   // Reset, items will set the value before the next update
+
                 float maxSpeed = Character.GetCurrentMaxSpeed(run);
                 targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
                 targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
