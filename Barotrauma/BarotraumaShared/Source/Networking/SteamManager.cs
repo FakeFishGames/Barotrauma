@@ -1,9 +1,7 @@
 ﻿using Facepunch.Steamworks;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Barotrauma.Steam
 {
@@ -45,9 +43,6 @@ namespace Barotrauma.Steam
                 return Instance.isInitialized;
             }
         }
-        
-        private bool m_bInitialized;
-        private bool m_bConnectedToSteam;
         
         private Client client;
         private Server server;

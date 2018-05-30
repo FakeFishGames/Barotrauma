@@ -154,7 +154,7 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
-#if CLIENT
+#if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
 #endif
 
