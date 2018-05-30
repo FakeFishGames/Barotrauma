@@ -1,0 +1,5 @@
+﻿<TigerthresherSwimFast
+  speed ="6"
+  wavelength="25"
+  waveamplitude="0.3"
+  steertorque="100"/>
