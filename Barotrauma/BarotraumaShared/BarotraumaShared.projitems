@@ -1883,9 +1883,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntityPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Location.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationType.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\Map.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Md5Hash.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Structure.cs" />
