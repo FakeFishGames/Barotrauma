@@ -36,14 +36,7 @@
   <ragdoll 
     headposition="120" headangle="-90" 
     minscale="0.8" maxscale="1.2"
-    waveamplitude="50.0" wavelength="2500" 
-    swimspeed="2.5" walkspeed="3.0"
-    runspeedmultiplier="2" swimspeedmultiplier="2.5"
-    stepsize ="20.0,20.0"
-    legtorque="10"
-    footrotation ="180.0"
     impacttolerance="10"
-    flip="true"
     draggable="true">
 
     <collider radius="60"/>

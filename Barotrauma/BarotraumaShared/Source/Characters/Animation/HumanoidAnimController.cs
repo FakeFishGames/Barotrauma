@@ -73,11 +73,7 @@ namespace Barotrauma
 
         private bool aiming;
 
-        private float walkAnimSpeed;
-
         private float movementLerp;
-
-        private float thighTorque;
 
         private float cprAnimTimer;
         private float cprPump;
@@ -123,15 +119,10 @@ namespace Barotrauma
             }
         }
 
-        public HumanoidAnimController(Character character, XElement element, string seed)
-            : base(character, element, seed)
+        public HumanoidAnimController(Character character, XElement element, string seed) : base(character, element, seed)
         {
-            walkAnimSpeed = element.GetAttributeFloat("walkanimspeed", 4.0f);
-            walkAnimSpeed = MathHelper.ToRadians(walkAnimSpeed);
 
             movementLerp = element.GetAttributeFloat("movementlerp", 0.4f);
-
-            thighTorque = element.GetAttributeFloat("thightorque", -5.0f);
         }
 
         public override void UpdateAnim(float deltaTime)
