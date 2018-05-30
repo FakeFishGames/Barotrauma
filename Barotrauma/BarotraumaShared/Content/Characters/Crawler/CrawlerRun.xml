@@ -1,0 +1,6 @@
+﻿<CrawlerRun
+  speed ="4"
+  stepsize ="0.15,0.2"
+  legtorque="10"
+  colliderstandangle="90"
+  flip="true"/>
