@@ -13,5 +13,9 @@ namespace Barotrauma.Networking
         public int PlayerCount;
         public int MaxPlayers;
         public bool HasPassword;
+
+        public string GameVersion;
+        public string ContentPackageName;
+        public string ContentPackageHash;
     }
 }
