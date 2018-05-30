@@ -123,7 +123,6 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
                 style: "GUISlider", barSize: 0.1f)
             {
-                IsHorizontal = true,
                 BarScroll = 1.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
@@ -138,13 +137,12 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
-            
+
             new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 30) },
                 TextManager.Get("ReactorTurbineOutput"));
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
-                style: "GUISlider", barSize: 0.1f)
+                style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
-                IsHorizontal = true,
                 BarScroll = 1.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {

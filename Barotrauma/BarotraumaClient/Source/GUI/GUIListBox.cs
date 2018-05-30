@@ -141,13 +141,12 @@ namespace Barotrauma
 
             if (isHorizontal)
             {
-                ScrollBar = new GUIScrollBar(new RectTransform(new Point(Rect.Width, 20), rectT, Anchor.BottomLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, 20) });
+                ScrollBar = new GUIScrollBar(new RectTransform(new Point(Rect.Width, 20), rectT, Anchor.BottomLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, 20) }, isHorizontal: isHorizontal);
             }
             else
             {
-                ScrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) });
+                ScrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) }, isHorizontal: isHorizontal);
             }
-            ScrollBar.IsHorizontal = isHorizontal;
             UpdateScrollBarSize();
             Enabled = true;
             scrollBarEnabled = true;

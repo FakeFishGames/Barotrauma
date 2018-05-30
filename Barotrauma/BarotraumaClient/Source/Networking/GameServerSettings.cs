@@ -518,12 +518,17 @@ namespace Barotrauma.Networking
 
         private bool SwitchSubSelection(GUITickBox tickBox)
         {
+            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
+            if (!tickBox.Selected)
+            {
+                tickBox.Selected = true;
+                return false;
+            }
             subSelectionMode = (SelectionMode)tickBox.UserData;
 
             foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
             {
-                if (otherTickBox == tickBox) continue;
-                ((GUITickBox)otherTickBox).Selected = false;
+                ((GUITickBox)otherTickBox).Selected = otherTickBox == tickBox;
             }
 
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
@@ -550,6 +555,12 @@ namespace Barotrauma.Networking
 
         private bool SwitchModeSelection(GUITickBox tickBox)
         {
+            //can't deselect tickboxes, the mode is switched by selecting a deselected tickbox in the group
+            if (!tickBox.Selected)
+            {
+                tickBox.Selected = true;
+                return false;
+            }
             modeSelectionMode = (SelectionMode)tickBox.UserData;
 
             foreach (GUIComponent otherTickBox in tickBox.Parent.Children)
