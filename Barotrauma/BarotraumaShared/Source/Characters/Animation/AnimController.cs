@@ -13,17 +13,59 @@ namespace Barotrauma
         public abstract AnimationParams SwimSlowParams { get; }
         public abstract AnimationParams SwimFastParams { get; }
 
-        public AnimationParams CurrentAnimationParams => InWater ? CurrentSwimParams : CurrentGroundedParams;
-        public GroundedMovementParams CurrentGroundedParams => IsRunning ? RunParams : WalkParams;
-        public AnimationParams CurrentSwimParams => IsSwimmingFast ? SwimFastParams : SwimSlowParams;
+        public AnimationParams CurrentAnimationParams => (InWater || !CanWalk) ? CurrentSwimParams : CurrentGroundedParams;
+        public GroundedMovementParams CurrentGroundedParams
+        {
+            get
+            {
+                if (!CanWalk)
+                {
+                    DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
+                    return null;
+                }
+                else
+                {
+                    return IsMovingFast ? RunParams : WalkParams;
+                }
+            }
+        }
+        public AnimationParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
 
-        public bool IsRunning => !InWater && Math.Abs(TargetMovement.X) > WalkParams.Speed;
-        public bool IsSwimmingFast => InWater && TargetMovement.LengthSquared() > SwimSlowParams.Speed * SwimSlowParams.Speed;
+        public bool CanWalk => CanEnterSubmarine;
+        public bool IsMovingFast
+        {
+            get
+            {
+                if (InWater || !CanWalk)
+                {
+                    return TargetMovement.LengthSquared() > SwimSlowParams.Speed * SwimSlowParams.Speed;
+                }
+                else
+                {
+                    return Math.Abs(TargetMovement.X) > WalkParams.Speed;
+                }
+            }
+        }
 
-        /// <summary>
-        /// Note: creates a new list each time accessed. If you need to acces frequently, consider caching or change the implementation.
-        /// </summary>
-        public List<AnimationParams> AllAnimParams => new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
+        private List<AnimationParams> _allAnimParams;
+        public List<AnimationParams> AllAnimParams
+        {
+            get
+            {
+                if (_allAnimParams == null)
+                {
+                    if (CanWalk)
+                    {
+                        _allAnimParams = new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
+                    }
+                    else
+                    {
+                        _allAnimParams = new List<AnimationParams> { SwimSlowParams, SwimFastParams };
+                    }
+                }
+                return _allAnimParams;
+            }
+        }
 
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
@@ -52,8 +94,18 @@ namespace Barotrauma
             switch (type)
             {
                 case AnimationType.Walk:
+                    if (!CanWalk)
+                    {
+                        DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
+                        return 0;
+                    }
                     return WalkParams.Speed;
                 case AnimationType.Run:
+                    if (!CanWalk)
+                    {
+                        DebugConsole.ThrowError($"{character.SpeciesName} cannot run!");
+                        return 0;
+                    }
                     return RunParams.Speed;
                 case AnimationType.SwimSlow:
                     return SwimSlowParams.Speed;
@@ -67,7 +119,7 @@ namespace Barotrauma
         public float GetCurrentSpeed(bool useMaxSpeed)
         {
             AnimationType animType;
-            if (InWater)
+            if (InWater || !CanWalk)
             {
                 if (useMaxSpeed)
                 {

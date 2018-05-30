@@ -6,16 +6,30 @@ namespace Barotrauma
     {
         public static FishWalkParams GetAnimParams(Character character)
         {
+            if (!character.AnimController.CanWalk)
+            {
+                DebugConsole.ThrowError($"{character.SpeciesName} cannot use walk animations!");
+                return Empty;
+            }
             return GetAnimParams<FishWalkParams>(character, AnimationType.Walk);
         }
+
+        protected static FishWalkParams Empty = new FishWalkParams();
     }
 
     class FishRunParams : FishGroundedParams
     {
         public static FishRunParams GetAnimParams(Character character)
         {
+            if (!character.AnimController.CanWalk)
+            {
+                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
+                return Empty;
+            }
             return GetAnimParams<FishRunParams>(character, AnimationType.Run);
         }
+
+        protected static FishRunParams Empty = new FishRunParams();
     }
 
     class FishSwimFastParams : FishSwimParams
