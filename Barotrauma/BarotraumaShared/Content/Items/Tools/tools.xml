@@ -15,7 +15,7 @@
     
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
-    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar and a steel bar -->
+    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
@@ -40,7 +40,7 @@
       <ParticleEmitterHitItem particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
-      <sound file="weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-1.0"/>
@@ -51,9 +51,10 @@
       <!-- the tool can fix structures, i.e. walls and windows -->
       <Fixable name="structure"/>
 
-      <!-- construction skill 20 required to use the item -->
+      <!-- mechanic skill 20 required to use the item -->
       <RequiredSkill name="Mechanical Engineering" level="20"/>
 
+      <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
       <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
@@ -65,6 +66,7 @@
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>
   </Item>
 
@@ -95,8 +97,9 @@
               aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
-      <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
+      <RequiredItems name="Oxygen Tank,Oxygenite Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-1.0"/>
+      <StatusEffect type="OnUse" target="Contained" targetnames="Oxygenite Tank" Condition="-0.5"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block,Alien Door,Alien Hatch" Stuck="-20.0" Condition="-3.0"/>
 
       <ParticleEmitter particle="plasma" particlespersecond="50"/>
@@ -106,7 +109,7 @@
       <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
-      <sound file="plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <Fixable name="structure"/>
 
@@ -122,6 +125,7 @@
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
+      <Containable name="Oxygenite Tank"/>
     </ItemContainer>
   </Item>
 
@@ -184,7 +188,7 @@
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50"/>
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
-      <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
     </RepairTool>
 
     <Propulsion force="-20" usablein="water" particles="bubbles"/>
@@ -381,7 +385,7 @@
 
       <StatusEffect type="OnBroken" target="This" IsOn="false"/>
       
-      <sound file="flare.ogg" type="OnActive" range="800.0" loop="true"/>
+      <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true"/>
     </LightComponent>
   </Item>
 

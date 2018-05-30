@@ -116,7 +116,7 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions = MissionPrefab.List.FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
+                allowedMissions = MissionPrefab.List.FindAll(m => m.TypeMatches(missionType));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
