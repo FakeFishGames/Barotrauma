@@ -24,8 +24,9 @@ namespace Barotrauma
         private int spacing;
 
         private bool scrollBarEnabled;
-        
-        private bool needsRecalculation;
+
+        private bool childrenNeedsRecalculation;
+        private bool scrollBarNeedsRecalculation;
 
         public bool SelectMultiple;
 
@@ -77,23 +78,6 @@ namespace Barotrauma
             get { return spacing; }
             set { spacing = value; }
         }
-                
-        /*[Obsolete("Use RectTransform instead of Rect")]
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                base.Rect = value;
-                Content.Rect = value;
-                ScrollBar.Rect = ScrollBar.IsHorizontal ?
-                    new Rectangle(rect.X, rect.Bottom - 20, rect.Width, 20) :
-                    new Rectangle(rect.Right - 20, rect.Y, 20, rect.Height);            
-            }
-        }*/
 
         public override Color Color
         {
@@ -130,7 +114,11 @@ namespace Barotrauma
             {
                 CanBeFocused = false                
             };
-            Content.RectTransform.ChildrenChanged += (_) => { needsRecalculation = true; };
+            Content.RectTransform.ChildrenChanged += (_) => 
+            {
+                scrollBarNeedsRecalculation = true;
+                childrenNeedsRecalculation = true;
+            };
 
             if (style != null) GUI.Style.Apply(Content, "", this);
 
@@ -151,7 +139,7 @@ namespace Barotrauma
             Enabled = true;
             scrollBarEnabled = true;
             ScrollBar.BarScroll = 0.0f;
-
+            
             RectTransform.ScaleChanged += UpdateDimensions;
             RectTransform.SizeChanged += UpdateDimensions;
         }
@@ -182,16 +170,11 @@ namespace Barotrauma
                 i++;
             }
         }
-        
-        private void UpdateChildrenRect()
+
+        private void RepositionChildren()
         {
             var children = Content.Children;
-            int x = Content.Rect.X, y = Content.Rect.Y;
-            if (RectTransform != null)
-            {
-                x = 0;
-                y = 0;
-            }
+            int x = 0, y = 0;
             if (ScrollBar.BarSize < 1.0f)
             {
                 if (ScrollBar.IsHorizontal)
@@ -220,7 +203,14 @@ namespace Barotrauma
                 {
                     y += child.Rect.Height + spacing;
                 }
-
+            }
+        }
+        
+        private void UpdateChildrenRect()
+        {
+            int i = 0;
+            foreach (GUIComponent child in Content.Children)
+            {
                 // selecting
                 if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
@@ -243,12 +233,19 @@ namespace Barotrauma
                 {
                     child.State = ComponentState.None;
                 }
+                i++;
             }
         }
 
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             if (!Visible) { return; }
+
+            if (childrenNeedsRecalculation)
+            {
+                RepositionChildren();
+                childrenNeedsRecalculation = false;
+            }
 
             UpdateOrder = order;
             GUI.AddToUpdateList(this);
@@ -284,11 +281,12 @@ namespace Barotrauma
             if (!Visible) return;
 
             UpdateChildrenRect();
+            RepositionChildren();
 
-            if (needsRecalculation)
+            if (scrollBarNeedsRecalculation)
             {
                 UpdateScrollBarSize();
-                needsRecalculation = false;
+                scrollBarNeedsRecalculation = false;
             }
 
             ScrollBar.Enabled = scrollBarEnabled && ScrollBar.BarSize < 1.0f;
