@@ -35,23 +35,9 @@ namespace Barotrauma
         protected Character character;
         protected float walkPos;
 
-        public AnimController(Character character, XElement element, string seed)
-            : base(character, element, seed)
+        public AnimController(Character character, XElement element, string seed) : base(character, element, seed)
         {
             this.character = character;
-
-            //_stepSize = element.GetAttributeVector2("stepsize", Vector2.One);
-            //_stepSize = ConvertUnits.ToSimUnits(_stepSize);
-
-            // only applies to fishes?
-
-            //_walkSpeed = element.GetAttributeFloat("walkspeed", 1.0f);
-            //_swimSpeed = element.GetAttributeFloat("swimspeed", 1.0f);
-
-            //_runSpeedMultiplier = element.GetAttributeFloat("runspeedmultiplier", 2f);
-            //_swimSpeedMultiplier = element.GetAttributeFloat("swimspeedmultiplier", 1.5f);
-            
-            //_legTorque = element.GetAttributeFloat("legtorque", 0.0f);
         }
 
         public virtual void UpdateAnim(float deltaTime) { }
