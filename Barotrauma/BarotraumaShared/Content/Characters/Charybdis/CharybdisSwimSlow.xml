@@ -1,0 +1,5 @@
+﻿<CharybdisSwimSlow
+  speed="4"
+  waveamplitude="15"
+  wavelength ="100"
+  steertorque="1000"/>
