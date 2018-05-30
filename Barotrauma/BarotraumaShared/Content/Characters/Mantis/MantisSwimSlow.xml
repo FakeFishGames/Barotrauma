@@ -2,4 +2,7 @@
   speed="3"
   waveamplitude="0.5"
   wavelength ="25"
-  steertorque="25"/>
+  steertorque="25"
+  flip="true"
+  mirror="false"
+  rotatetowardsmovement="true"/>

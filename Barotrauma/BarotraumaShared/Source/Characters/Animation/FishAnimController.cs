@@ -60,6 +60,7 @@ namespace Barotrauma
             }
         }
 
+        public IFishAnimation CurrentFishAnimation => CurrentAnimationParams as IFishAnimation;
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
@@ -68,39 +69,12 @@ namespace Barotrauma
         public override AnimationParams SwimSlowParams => FishSwimSlowParams;
         public override AnimationParams SwimFastParams => FishSwimFastParams;
 
-        private bool rotateTowardsMovement;
-
-        private bool mirror, flip;
-
         private float flipTimer;
 
-        private float? footRotation;
-
-        //the angle of the collider when standing (i.e. out of water)
-        private float colliderStandAngle;
-
+        // TODO: should this be defined in the character config or is it practically constant?
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, XElement element, string seed)
-            : base(character, element, seed)
-        {
-
-            // not sure, todo:
-            colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
-            float footRot = element.GetAttributeFloat("footrotation", float.NaN);
-            if (float.IsNaN(footRot))
-            {
-                footRotation = null;
-            }
-            else
-            {
-                footRotation = MathHelper.ToRadians(footRot);
-            }
-            rotateTowardsMovement = element.GetAttributeBool("rotatetowardsmovement", true);
-
-            flip            = element.GetAttributeBool("flip", true);
-            mirror          = element.GetAttributeBool("mirror", false);
-        }
+        public FishAnimController(Character character, XElement element, string seed) : base(character, element, seed) { }
 
         public override void UpdateAnim(float deltaTime)
         {
@@ -159,7 +133,7 @@ namespace Barotrauma
             else if (currentHull != null && CanEnterSubmarine || forceStanding)
             {
                 //rotate collider back upright
-                float standAngle = dir == Direction.Right ? colliderStandAngle : -colliderStandAngle;
+                float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
                 if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
                     Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
@@ -175,7 +149,7 @@ namespace Barotrauma
             
             if (!character.IsRemotePlayer)
             {
-                if (mirror || !inWater)
+                if (!inWater || CurrentSwimParams.Mirror)
                 {
                     if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
                     {
@@ -209,7 +183,7 @@ namespace Barotrauma
 
             if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
 
-            if (!flip) return;
+            if (!CurrentFishAnimation.Flip) return;
 
             flipTimer += deltaTime;
 
@@ -234,7 +208,7 @@ namespace Barotrauma
                     else
                     {
                         Flip();
-                        if (mirror || !inWater)
+                        if (!inWater || CurrentSwimParams.Mirror)
                         {
                             Mirror();
                         }
@@ -327,7 +301,7 @@ namespace Barotrauma
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
             
-            if (rotateTowardsMovement)
+            if (CurrentSwimParams.RotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, 25.0f);
                 MainLimb.body.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
@@ -464,7 +438,7 @@ namespace Barotrauma
                             8.0f);
                         }
 
-                        if (footRotation != null) limb.body.SmoothRotate((float)footRotation * Dir, 50.0f);
+                        if (MathUtils.IsValid(CurrentGroundedParams.FootRotationInRadians)) limb.body.SmoothRotate(CurrentGroundedParams.FootRotationInRadians * Dir, 50.0f);
 
                         break;
                     case LimbType.LeftLeg:

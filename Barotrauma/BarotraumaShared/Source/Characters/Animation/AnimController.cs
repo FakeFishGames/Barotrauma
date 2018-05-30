@@ -13,6 +13,7 @@ namespace Barotrauma
         public abstract AnimationParams SwimSlowParams { get; }
         public abstract AnimationParams SwimFastParams { get; }
 
+        public AnimationParams CurrentAnimationParams => InWater ? CurrentSwimParams : CurrentGroundedParams;
         public GroundedMovementParams CurrentGroundedParams => IsRunning ? RunParams : WalkParams;
         public AnimationParams CurrentSwimParams => IsSwimmingFast ? SwimFastParams : SwimSlowParams;
 
@@ -29,8 +30,6 @@ namespace Barotrauma
 
         public Vector2 AimSourcePos => ConvertUnits.ToDisplayUnits(AimSourceSimPos);
         public virtual Vector2 AimSourceSimPos => Collider.SimPosition;
-
-        private readonly float _runSpeedMultiplier;
 
         protected Character character;
         protected float walkPos;
