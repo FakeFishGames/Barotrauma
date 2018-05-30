@@ -333,7 +333,10 @@ namespace Barotrauma
             
             ServerListScreen        =   new ServerListScreen();
 
-            SteamWorkshopScreen     = new SteamWorkshopScreen();
+            if (SteamManager.USE_STEAM)
+            {
+                SteamWorkshopScreen     = new SteamWorkshopScreen();
+            }
 
             SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();

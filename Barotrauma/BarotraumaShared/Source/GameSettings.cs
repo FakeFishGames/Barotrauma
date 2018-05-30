@@ -37,6 +37,11 @@ namespace Barotrauma
         
         public bool UseSteamMatchmaking { get; set; }
 
+#if DEBUG
+        //steam functionality can be enabled/disabled in debug builds
+        public bool UseSteam;
+#endif
+
         public WindowMode WindowMode
         {
             get { return windowMode; }
@@ -149,6 +154,10 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
+#if CLIENT
+            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#endif
+
             if (doc == null)
             {
                 GraphicsWidth = 1024;
@@ -193,7 +202,11 @@ namespace Barotrauma
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
-            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+#if DEBUG
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && UseSteam;
+#else
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && Steam.SteamManager.USE_STEAM;
+#endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
@@ -220,18 +233,15 @@ namespace Barotrauma
                     case "keymapping":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            InputType inputType;
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
+                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
                             {
-                                int mouseButton;
-                                if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
                                 else
                                 {
-                                    Keys key;
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
                                     {
                                         keyMapping[(int)inputType] = new KeyOrMouse(key);
                                     }

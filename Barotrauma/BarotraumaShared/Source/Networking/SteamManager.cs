@@ -9,6 +9,16 @@ namespace Barotrauma.Steam
 {
     class SteamManager
     {
+#if DEBUG
+        public static bool USE_STEAM
+        {
+            get { return GameMain.Config.UseSteam; }
+        }
+#else
+        //cannot enable/disable steam in release builds
+        public const bool USE_STEAM = true;
+#endif
+
         const uint AppID = 602960;
 
         // UDP port for the server to do authentication on (ie, talk to Steam on)
@@ -16,10 +26,7 @@ namespace Barotrauma.Steam
         
         // UDP port for the master server updater to listen on
         const ushort MASTER_SERVER_UPDATER_PORT = 27016;
-
-        // Current game server version
-        const string SERVER_VERSION = "1.0.0.0";
-
+        
         private static SteamManager instance;
         public static SteamManager Instance
         {
@@ -41,15 +48,13 @@ namespace Barotrauma.Steam
         
         private bool m_bInitialized;
         private bool m_bConnectedToSteam;
-
-        /*private List<ServerInfo> serverList = new List<ServerInfo>();
-        private Action<List<ServerInfo>> onLobbyFound;*/
-
+        
         private Client client;
         private Server server;
 
         public static void Initialize()
         {
+            if (!USE_STEAM) return;
             instance = new SteamManager();
         }
 
@@ -220,6 +225,11 @@ namespace Barotrauma.Steam
 
         private IEnumerable<object> PublishItem(Workshop.Editor item, DirectoryInfo tempFolder)
         {
+            if (instance == null || !instance.isInitialized)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             item.Publish();
             while (item.Publishing)
             {
