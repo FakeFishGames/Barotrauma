@@ -129,6 +129,10 @@
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
+      <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
+      <Name>Facepunch.Steamworks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics.csproj">
       <Project>{a4610e4c-dd34-428b-babb-779ca0b5993a}</Project>
       <Name>Farseer Physics</Name>

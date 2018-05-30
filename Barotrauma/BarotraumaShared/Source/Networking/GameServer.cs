@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.IO;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -69,7 +70,12 @@ namespace Barotrauma.Networking
         {
             get { return updateInterval; }
         }
-        
+
+        public bool HasPassword
+        {
+            get { return !string.IsNullOrEmpty(password); }
+        }
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
@@ -200,7 +206,14 @@ namespace Barotrauma.Networking
 
             if (isPublic)
             {
-                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    registeredToMaster = SteamManager.CreateServer(this, maxPlayers);
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                }
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
@@ -326,7 +339,7 @@ namespace Barotrauma.Networking
                 Log("Master server responded", ServerLog.MessageType.ServerMessage);
             }
 
-            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+            System.Diagnostics.Debug.WriteLine("took " + sw.ElapsedMilliseconds + " ms");
 
             yield return CoroutineStatus.Success;
         }
@@ -520,7 +533,14 @@ namespace Barotrauma.Networking
 
             if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
 
-            CoroutineManager.StartCoroutine(RefreshMaster());
+            if (GameMain.Config.UseSteamMatchmaking)
+            {
+                SteamManager.RefreshServerDetails(this);
+            }
+            else
+            {
+                CoroutineManager.StartCoroutine(RefreshMaster());
+            }
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
 
@@ -2385,14 +2405,20 @@ namespace Barotrauma.Networking
             banList.Save();
             SaveSettings();
 
-            if (registeredToMaster && restClient != null)
+            if (registeredToMaster)
             {
-                var request = new RestRequest("masterserver2.php", Method.GET);
-                request.AddParameter("action", "removeserver");
-                request.AddParameter("serverport", Port);
-                
-                restClient.Execute(request);
-                restClient = null;
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    SteamManager.CloseServer();
+                }
+                else if (restClient != null)
+                {
+                    var request = new RestRequest("masterserver2.php", Method.GET);
+                    request.AddParameter("action", "removeserver");
+                    request.AddParameter("serverport", Port);                
+                    restClient.Execute(request);
+                    restClient = null;
+                }
             }
 
             if (SaveServerLogs)

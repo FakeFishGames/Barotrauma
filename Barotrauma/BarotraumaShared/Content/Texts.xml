@@ -12,6 +12,7 @@
   <HostServerButton>Host Server</HostServerButton>
   <SubEditorButton>Submarine Editor</SubEditorButton>
   <SettingsButton>Settings</SettingsButton>
+  <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>
 
   <!-- Host server menu -->
@@ -25,6 +26,9 @@
   <AttemptUPnPToolTip>UPnP can be used for forwarding ports on your router to allow players join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</AttemptUPnPToolTip>
   <StartServerButton>Start</StartServerButton>
 
+  <!-- Steam Workshop menu -->
+  <DownloadButton>Download</DownloadButton>  
+  
   <!-- Settings menu -->
   <Settings>Settings</Settings>
   <Resolution>Resolution</Resolution>
@@ -229,6 +233,7 @@
   <NoMatchingServers>No matching servers found.</NoMatchingServers>
   <RefreshingServerList>Refreshing server list...</RefreshingServerList>
   <NoServers>Could not find any servers.</NoServers>
+  <ServerListNoSteamConnection>Could not find any servers (not connected to Steam).</ServerListNoSteamConnection>
   <MasterServerErrorLabel>Connection error</MasterServerErrorLabel>
   <MasterServerTimeOutError>Could not connect to master server (request timed out).</MasterServerTimeOutError>
   <MasterServerErrorException>Error while connecting to master server { [error] }</MasterServerErrorException>

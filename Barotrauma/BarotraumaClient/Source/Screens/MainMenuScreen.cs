@@ -15,7 +15,7 @@ namespace Barotrauma
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
 
-        private GUIFrame buttonsParent;
+        private GUIComponent buttonsParent;
 
         private GUIFrame[] menuTabs;
 
@@ -30,19 +30,83 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
-            buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0, 0.1f),
                 AbsoluteOffset = new Point(50, 0)
-            }, color: Color.Transparent);
+            })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
-            // 
-            var buttons = GUI.CreateButtons(8, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
-                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 0 : 20);
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Tutorials,
+                OnClicked = SelectTab
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("NewGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.NewGame,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("LoadGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.LoadGame,
+                OnClicked = SelectTab
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = JoinServerClicked
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.HostServer,
+                OnClicked = SelectTab
+            };
+
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SubEditorButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; }
+            };
+
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
+                {
+                    OnClicked = SteamWorkshopClicked
+                };
+            }
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SettingsButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Settings,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("QuitButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = QuitClicked
+            };
+
+            
+           /* var buttons = GUI.CreateButtons(9, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
+                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 20 : 0);
             buttons.ForEach(b => b.Color *= 0.8f);
             SetupButtons(buttons);
-            buttons.ForEach(b => b.TextBlock.SetTextPos());
+            buttons.ForEach(b => b.TextBlock.SetTextPos());*/
 
             var relativeSize = new Vector2(0.5f, 0.5f);
             var minSize = new Point(600, 400);
@@ -50,7 +114,7 @@ namespace Barotrauma
             var anchor = Anchor.Center;
             var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-
+            
             menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
             var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
@@ -216,6 +280,12 @@ namespace Barotrauma
             return true;
         }
 
+        private bool SteamWorkshopClicked(GUIButton button, object obj)
+        {
+            GameMain.SteamWorkshopScreen.Select();
+            return true;
+        }
+
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
@@ -359,57 +429,7 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private void SetupButtons(List<GUIButton> buttons)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                var button = buttons[i];
-                switch (i)
-                {
-                    case 7:
-                        button.Text = TextManager.Get("TutorialButton");
-                        button.UserData = Tab.Tutorials;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 6:
-                        button.Text = TextManager.Get("NewGameButton");
-                        button.UserData = Tab.NewGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 5:
-                        button.Text = TextManager.Get("LoadGameButton");
-                        button.UserData = Tab.LoadGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 4:
-                        button.Text = TextManager.Get("JoinServerButton");
-                        //button.UserData = (int)Tabs.JoinServer;
-                        button.OnClicked = JoinServerClicked;
-                        break;
-                    case 3:
-                        button.Text = TextManager.Get("HostServerButton");
-                        button.UserData = Tab.HostServer;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 2:
-                        button.Text = TextManager.Get("SubEditorButton");
-                        button.OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; };
-                        break;
-                    case 1:
-                        button.Text = TextManager.Get("SettingsButton");
-                        button.UserData = Tab.Settings;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 0:
-                        button.Text = TextManager.Get("QuitButton");
-                        button.OnClicked = QuitClicked;
-                        break;
-                    default:
-                        throw new Exception();
-                }
-            }
-        }
-
+      
         private void CreateHostServerFields()
         {
             Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
