@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="charybdis" humanoid="false">
 
-  <animation path="Content/Characters/Charybids/Charybdis[ANIMTYPE].xml"/>
+  <animation path="Content/Characters/Charybdis/Charybdis[ANIMTYPE].xml"/>
 
   <health
     vitality="1000"
