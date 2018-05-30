@@ -91,8 +91,8 @@ namespace Barotrauma
                 }
 
                 barScroll = MathHelper.Clamp(value, minValue, maxValue);
-                int newX = bar.Rect.X - frame.Rect.X;
-                int newY = bar.Rect.Y - frame.Rect.Y;
+                int newX = bar.RectTransform.AbsoluteOffset.X;
+                int newY = bar.RectTransform.AbsoluteOffset.Y;
                 float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
                 if (isHorizontal)
                 {
