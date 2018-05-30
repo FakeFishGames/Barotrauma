@@ -259,7 +259,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            bool hoverOnInventory = GUIComponent.MouseOn == null &&
+            bool hoverOnInventory = GUI.MouseOn == null &&
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
             if (CharacterHealth.OpenHealthWindow != null) hoverOnInventory = true;
 
@@ -291,7 +291,7 @@ namespace Barotrauma
                     arrowAlpha = Math.Max(arrowAlpha - deltaTime * 10.0f, 0.5f);
                 }
 
-                if (GUIComponent.MouseOn == null &&
+                if (GUI.MouseOn == null &&
                     (slots[toggleArrowSlotIndex].DrawOffset.Y < 10.0f && PlayerInput.MousePosition.Y > arrowRect.Bottom ||
                     slots[toggleArrowSlotIndex].DrawOffset.Y > 10.0f && PlayerInput.MousePosition.Y > slots[toggleArrowSlotIndex].EquipButtonRect.Bottom) &&
                     slots.Any(s => PlayerInput.MousePosition.X > s.InteractRect.X - 10 && PlayerInput.MousePosition.X < s.InteractRect.Right + 10))
@@ -441,7 +441,7 @@ namespace Barotrauma
                                 QuickUseItem(Items[i], true, false);
                             }
                         }
-                    }                    
+                    }
                 }
             }
 
@@ -596,7 +596,7 @@ namespace Barotrauma
                     if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
-                        useOnSelfButton[i - 3].Draw(spriteBatch);
+                        useOnSelfButton[i - 3].DrawManually(spriteBatch);
                     }
                 }
             }*/

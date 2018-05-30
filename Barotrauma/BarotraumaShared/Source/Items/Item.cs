@@ -1230,7 +1230,7 @@ namespace Barotrauma
                         //if the cursor is on a UI component, disable interaction with the left mouse button
                         //to prevent accidentally selecting items when clicking UI elements
 #if CLIENT
-                        if (picker == Character.Controlled && GUIComponent.MouseOn != null)
+                        if (picker == Character.Controlled && GUI.MouseOn != null)
                         {
                             if (GameMain.Config.KeyBind(ic.PickKey).MouseButton == 0) pickHit = false;
                             if (GameMain.Config.KeyBind(ic.SelectKey).MouseButton == 0) selectHit = false;
@@ -1256,7 +1256,7 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
 #if CLIENT
-                    if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
+                    if (picker == Character.Controlled) GUI.ForceMouseOn(null);
 #endif
 
                     if (ic.CanBeSelected) selected = true;

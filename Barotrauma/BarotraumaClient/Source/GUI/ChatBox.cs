@@ -99,16 +99,18 @@ namespace Barotrauma
                 radioIcon.Origin = radioIcon.size / 2;
             }
                         
-            guiFrame = new GUIFrame(HUDLayoutSettings.ChatBoxArea, null, parent);
-            chatBox = new GUIListBox(new Rectangle(0, 0, 0, guiFrame.Rect.Height - 40), Color.White * 0.5f, "ChatBox", guiFrame);
-            chatBox.Padding = Vector4.Zero;
+            guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
+            chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
 
-            toggleButton = new GUIButton(new Rectangle(HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? -40 : guiFrame.Rect.Width + 10, 0, 25, 70), "", "GUIButtonHorizontalArrow", guiFrame);
-            toggleButton.ClampMouseRectToParent = false;
+            toggleButton = new GUIButton(new RectTransform(new Point(25, 70), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(10, 0) },
+                style: "GUIButtonHorizontalArrow")
+            {
+                ClampMouseRectToParent = false
+            };
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleOpen = !toggleOpen;
-                foreach (GUIComponent child in btn.children)
+                foreach (GUIComponent child in btn.Children)
                 {
                     child.SpriteEffects = toggleOpen == (HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) ?
                       SpriteEffects.FlipHorizontally : SpriteEffects.None;
@@ -120,11 +122,15 @@ namespace Barotrauma
             
             if (isSinglePlayer)
             {
-                radioButton = new GUIButton(
-                    new Rectangle(0, 0, (int)radioIcon.size.X, (int)radioIcon.size.Y), 
-                    "", HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? Alignment.BottomRight : Alignment.BottomLeft , null, guiFrame);
-                radioButton.ClampMouseRectToParent = false;
-                new GUIImage(Rectangle.Empty, radioIcon, Alignment.Center, radioButton);
+                radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), guiFrame.RectTransform, Anchor.BottomRight, Pivot.Center),
+                    style: null)
+                {
+                    ClampMouseRectToParent = false
+                };
+                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
+                {
+                    Color = Color.White * 0.8f
+                };
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {
                     GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = !GameMain.GameSession.CrewManager.ToggleCrewAreaOpen;
@@ -133,17 +139,19 @@ namespace Barotrauma
             }
             else
             {
-                inputBox = new GUITextBox(
-                    new Rectangle(0, -10, 0, 25),
-                    Color.White * 0.5f, Color.Black, Alignment.BottomCenter, Alignment.Left, "ChatTextBox", guiFrame);
-                inputBox.children[0].Padding = HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? new Vector4(30, 0, 10, 0) : new Vector4(10, 0, 30, 0);
-                inputBox.Font = GUI.SmallFont;
-                inputBox.MaxTextLength = ChatMessage.MaxLength;
-                inputBox.Padding = Vector4.Zero;
+                inputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.1f), guiFrame.RectTransform, Anchor.BottomCenter),
+                    style: "ChatTextBox")
+                {
+                    Font = GUI.SmallFont,
+                    MaxTextLength = ChatMessage.MaxLength
+                };
 
-                radioButton = new GUIButton(new Rectangle(HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? -15 : guiFrame.Rect.Width - 15, 0, (int)radioIcon.size.X, (int)radioIcon.size.Y), "", Alignment.CenterLeft, null, inputBox);
-                radioButton.ClampMouseRectToParent = false;
-                new GUIImage(Rectangle.Empty, radioIcon, Alignment.Center, radioButton);
+                radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
+                    style: null)
+                {
+                    ClampMouseRectToParent = false
+                };
+                new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {
                     if (inputBox.Selected)
@@ -168,10 +176,12 @@ namespace Barotrauma
 
         public void AddMessage(ChatMessage message)
         {
-            while (chatBox.CountChildren > 20)
+            while (chatBox.Content.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.children[0]);
+                chatBox.RemoveChild(chatBox.Content.Children.First());
             }
+            
+            float prevSize = chatBox.BarSize;
 
             string displayedText = message.Text;
             string senderName = "";
@@ -183,28 +193,27 @@ namespace Barotrauma
             GUITextBlock senderText = null;
             if (!string.IsNullOrEmpty(senderName))
             {
-                senderText = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 15, 0), senderName,
-                    ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, Color.White,
-                    Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
-                senderText.CanBeFocused = false;
-                senderText.Padding = new Vector4(10, 0, 0, 0);
+                senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) },
+                    senderName, textColor: Color.White, font: GUI.SmallFont, style: null,
+                    color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
+                {
+                    CanBeFocused = false
+                };
             }
 
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 15, 0), displayedText,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, Alignment.TopLeft, "ListBoxElement", null, true, GUI.SmallFont);
-            msg.UserData = message.SenderName;
-            msg.CanBeFocused = false;
-            msg.Padding = new Vector4(20.0f, 0, 0, 0);
+            GUITextBlock msg = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), chatBox.Content.RectTransform) { RelativeOffset = new Vector2(0.08f, 0.0f) },
+                displayedText, textColor: message.Color, font: GUI.SmallFont, style: null, wrap: true,
+                color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
+            {
+                UserData = message.SenderName,
+                CanBeFocused = false
+            };
             msg.Flash(Color.Yellow * 0.5f);
+            //some spacing at the bottom of the msg
+            msg.RectTransform.NonScaledSize += new Point(0, 5);
+                        
+            chatBox.UpdateScrollBarSize();
 
-            float prevSize = chatBox.BarSize;
-
-            msg.Padding = new Vector4(20, 0, 0, 0);
-            msg.Rect = new Rectangle(msg.Rect.X, msg.Rect.Y, msg.Rect.Width, (int)GUI.SmallFont.MeasureString(msg.WrappedText).Y + 5);
-            if (senderText != null) chatBox.AddChild(senderText);
-            chatBox.AddChild(msg);
-            
             if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
 
             GUISoundType soundType = GUISoundType.Message;
@@ -220,6 +229,8 @@ namespace Barotrauma
             GUI.PlayUISound(soundType);
             hideTimer = HideDelay;
         }
+
+        private float openState;
         
         public void Update(float deltaTime)
         {
@@ -232,15 +243,17 @@ namespace Barotrauma
                 PlayerInput.MousePosition.Y < Math.Max(chatBox.Rect.Bottom, radioButton.Rect.Bottom);
 
             hideTimer -= deltaTime;
+
             if ((hideTimer > 0.0f || hovering || toggleOpen) && Inventory.draggingItem == null)
             {
-                guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), defaultPos.ToVector2(), deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
+                openState += deltaTime * 5.0f;
             }
             else
             {
-                Vector2 hiddenPos = new Vector2(HUDLayoutSettings.ChatBoxAlignment == Alignment.Right ? defaultPos.X + chatBox.Rect.Width : defaultPos.X - chatBox.Rect.Width, defaultPos.Y);
-                guiFrame.Rect = new Rectangle(Vector2.Lerp(chatBox.Rect.Location.ToVector2(), hiddenPos, deltaTime * 10.0f).ToPoint(), guiFrame.Rect.Size);
+                openState -= deltaTime * 5.0f;
             }
+            openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
+            guiFrame.RectTransform.AbsoluteOffset = new Point((int)MathHelper.SmoothStep(-guiFrame.Rect.Width, 0, openState), 0);
         }
     }
 }

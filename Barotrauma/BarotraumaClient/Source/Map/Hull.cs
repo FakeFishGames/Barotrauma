@@ -60,23 +60,27 @@ namespace Barotrauma
         
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
+            int width = 600, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+            
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
+            
+            GUIListBox listBox = (GUIListBox)editingHUD;
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
-
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
-
+            editingHUD.RectTransform.NonScaledSize = new Point(
+                editingHUD.RectTransform.NonScaledSize.X,
+                MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
+            
             return editingHUD;
         }
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
         }
 
         public override void UpdateEditing(Camera cam)
@@ -86,7 +90,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
-            editingHUD.Update((float)Timing.Step);
+            editingHUD.UpdateManually((float)Timing.Step);
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();

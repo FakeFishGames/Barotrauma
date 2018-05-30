@@ -86,39 +86,60 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            guiRoot = new GUIFrame(Rectangle.Empty, null, null);
+            guiRoot = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null);
 
-            leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft", guiRoot);
-            leftPanel.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
-
-            rightPanel = new GUIFrame(new Rectangle(0, 0, 450, GameMain.GraphicsHeight), null, Alignment.Right, "GUIFrameRight", guiRoot);
-            rightPanel.Padding = new Vector4(10.0f, 20.0f, 0.0f, 20.0f);
-
-            var saveAllButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Save all", "", guiRoot);
-            saveAllButton.OnClicked += (btn, obj) =>
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.07f, 1.0f), guiRoot.RectTransform) { MinSize = new Point(150,0) }, 
+                style: "GUIFrameLeft");
+            var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
-                SerializeAll();
-                return true;
+                Stretch = true
             };
 
-            var serializeToClipBoardButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Copy to clipboard", "", guiRoot);
-            serializeToClipBoardButton.OnClicked += (btn, obj) =>
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), guiRoot.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) },
+                style: "GUIFrameRight");
+            var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) {RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
-                SerializeToClipboard(selectedPrefab);
-                return true;
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+            
+            var saveAllButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
+                TextManager.Get("ParticleEditorSaveAll"))
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    SerializeAll();
+                    return true;
+                }
+            };
+
+            var serializeToClipBoardButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
+                TextManager.Get("ParticleEditorCopyToClipboard"))
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    SerializeToClipboard(selectedPrefab);
+                    return true;
+                }
             };
 
             emitter = new Emitter();
-            var emitterEditor = new SerializableEntityEditor(emitter, false, rightPanel, true);
+            var emitterEditorContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedRightPanel.RectTransform), style: null);
+            var emitterEditor = new SerializableEntityEditor(emitterEditorContainer.RectTransform, emitter, false, true, elementHeight: 20);
+            emitterEditorContainer.RectTransform.NonScaledSize = new Point(
+                emitterEditorContainer.RectTransform.NonScaledSize.X,
+                emitterEditor.ContentHeight);
 
-            var listBox = new GUIListBox(new Rectangle(0, emitterEditor.Rect.Height + 20, 0, 0), "", rightPanel);
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedRightPanel.RectTransform));
 
-            prefabList = new GUIListBox(new Rectangle(0, 50, 0, 0), "", leftPanel);
+            prefabList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), paddedLeftPanel.RectTransform));
             prefabList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedPrefab = obj as ParticlePrefab;
                 listBox.ClearChildren();
-                particlePrefabEditor = new SerializableEntityEditor(selectedPrefab, false, listBox, true);
+                particlePrefabEditor = new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20);
+                //listBox.Content.RectTransform.NonScaledSize = particlePrefabEditor.RectTransform.NonScaledSize;
+                //listBox.UpdateScrollBarSize();
                 return true;
             };
         }
@@ -136,9 +157,12 @@ namespace Barotrauma
             var particlePrefabs = GameMain.ParticleManager.GetPrefabList();
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
-                var prefabText = new GUITextBlock(new Rectangle(0, 0, 0, 20), particlePrefab.Name, "", prefabList);
-                prefabText.Padding = Vector4.Zero;
-                prefabText.UserData = particlePrefab;
+                var prefabText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    particlePrefab.Name)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = particlePrefab
+                };
             }
         }
 
@@ -216,10 +240,8 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);
-
-            guiRoot.Update((float)deltaTime);
-
+            cam.MoveCamera((float)deltaTime, true, GUI.MouseOn == null);
+            
             if (selectedPrefab != null)
             {
                 emitter.EmitTimer += (float)deltaTime;
@@ -282,10 +304,8 @@ namespace Barotrauma
             //-------------------------------------------------------
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
-            guiRoot.Draw(spriteBatch);
-
-            GUI.Draw((float)deltaTime, spriteBatch, cam);
+            
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
         }

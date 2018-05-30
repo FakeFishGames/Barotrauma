@@ -25,12 +25,12 @@ namespace Barotrauma.Lights
         public Color AmbientLight;
 
         private float lightmapScale = 0.5f;
-        public RenderTarget2D lightMap
+        public RenderTarget2D LightMap
         {
             get;
             private set;
         }
-        public RenderTarget2D losTexture
+        public RenderTarget2D LosTexture
         {
             get;
             private set;
@@ -67,17 +67,12 @@ namespace Barotrauma.Lights
             AmbientLight = new Color(20, 20, 20, 255);
 
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
-            //visionCircle = new Sprite("Content/Lights/visioncircle.png", new Vector2(0.2f, 0.5f));
 
-            var pp = graphics.PresentationParameters;
-
-            lightMap = new RenderTarget2D(graphics, 
-                       (int)(GameMain.GraphicsWidth*lightmapScale), (int)(GameMain.GraphicsHeight*lightmapScale), false,
-                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
-                       RenderTargetUsage.DiscardContents);
-
-            losTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth*lightmapScale), (int)(GameMain.GraphicsHeight*lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
-            
+            CreateRenderTargets(graphics);
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                CreateRenderTargets(graphics);
+            };
 
 #if WINDOWS
             LosEffect = content.Load<Effect>("Effects/losshader");
@@ -101,6 +96,20 @@ namespace Barotrauma.Lights
             {
                 alphaClearTexture = TextureLoader.FromFile("Content/Lights/alphaOne.png");
             }
+        }
+
+        private void CreateRenderTargets(GraphicsDevice graphics)
+        {
+            var pp = graphics.PresentationParameters;
+
+            LightMap?.Dispose();
+            LightMap = new RenderTarget2D(graphics,
+                       (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false,
+                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
+                       RenderTargetUsage.DiscardContents);
+
+            LosTexture?.Dispose();
+            LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * lightmapScale), (int)(GameMain.GraphicsHeight * lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -157,7 +166,7 @@ namespace Barotrauma.Lights
         {
             if (!LightingEnabled) return;
             
-            graphics.SetRenderTarget(lightMap);
+            graphics.SetRenderTarget(LightMap);
 
             Rectangle viewRect = cam.WorldView;
             viewRect.Y -= cam.WorldView.Height;
@@ -239,7 +248,7 @@ namespace Barotrauma.Lights
         {
             if (!LosEnabled && !ObstructVision) return;
 
-            graphics.SetRenderTarget(losTexture);
+            graphics.SetRenderTarget(LosTexture);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
             

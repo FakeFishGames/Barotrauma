@@ -35,7 +35,7 @@ namespace Barotrauma
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
 
-        private int[] columnX;
+        private float[] columnRelativeWidth;
 
         //filters
         private GUITextBox searchBox;
@@ -54,63 +54,94 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
-            menu = new GUIFrame(panelRect, null, Alignment.Center, "");
-            menu.Padding = new Vector4(40.0f, 40.0f, 40.0f, 20.0f);
+            menu = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas, Anchor.Center));
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), TextManager.Get("JoinServer"), "", Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), menu.RectTransform, Anchor.TopCenter),
+                TextManager.Get("JoinServer"), textAlignment: Alignment.Center, font: GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), TextManager.Get("YourName"), "", menu);
-            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), "", menu);
-            clientNameBox.Text = GameMain.Config.DefaultPlayerName;
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.87f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.03f) }, style: null);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), TextManager.Get("ServerIP"), "", menu);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
+            //-------------------------------------------------------------------------------------
+            //left column
+            //-------------------------------------------------------------------------------------
 
-            int middleX = (int)(width * 0.35f);
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.35f, 1.0f), paddedFrame.RectTransform, Anchor.TopLeft));
 
-            serverList = new GUIListBox(new Rectangle(middleX, 60, 0, height - 160), "", menu);
-            serverList.OnSelected = SelectServer;
-
-            float[] columnRelativeX = new float[] { 0.15f, 0.5f, 0.15f, 0.2f };
-            columnX = new int[columnRelativeX.Length];
-            for (int n = 0; n < columnX.Length; n++)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourName"));
+            clientNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "")
             {
-                columnX[n] = (int)(columnRelativeX[n] * serverList.Rect.Width);
-                if (n > 0) columnX[n] += columnX[n - 1];
-            }
+                Text = GameMain.Config.DefaultPlayerName
+            };
 
-            ScalableFont font = GUI.SmallFont; // serverList.Rect.Width < 400 ? GUI.SmallFont : GUI.Font;
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ServerIP"));
+            ipBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "");
 
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), TextManager.Get("Password"), "", menu).Font = font;
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), style: null);
 
-            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), TextManager.Get("ServerListName"), "", menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), TextManager.Get("ServerListPlayers"), "", menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), TextManager.Get("ServerListRoundStarted"), "", menu).Font = font;
-
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), TextManager.Get("ServerListRefresh"), Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = RefreshServers;
-
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), TextManager.Get("ServerListJoin"), Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = JoinServer;
-
-            //--------------------------------------------------------
-
-            int y = 180;
-
-            new GUITextBlock(new Rectangle(0, y, 200, 30), TextManager.Get("FilterServers"), "", menu);
-            searchBox = new GUITextBox(new Rectangle(0, y + 30, 200, 30), "", menu);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterServers"));
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "");
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), TextManager.Get("FilterPassword"), Alignment.TopLeft, menu);
+            filterPassword = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterPassword"));
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterFull = new GUITickBox(new Rectangle(0, y + 90, 30, 30), TextManager.Get("FilterFullServers"), Alignment.TopLeft, menu);
+            filterFull = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterFullServers"));
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new Rectangle(0, y + 120, 30, 30), TextManager.Get("FilterEmptyServers"), Alignment.TopLeft, menu);
+            filterEmpty = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("FilterEmptyServers"));
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
+            //-------------------------------------------------------------------------------------
+            //right column
+            //-------------------------------------------------------------------------------------
+
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - leftColumn.RectTransform.RelativeSize.X - 0.05f, 1.0f),
+                paddedFrame.RectTransform, Anchor.TopRight))
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+
+            var columnHeaderContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), rightColumn.RectTransform), isHorizontal: true);
+            serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), rightColumn.RectTransform, Anchor.Center))
+            {
+                OnSelected = SelectServer
+            };
+
+            columnRelativeWidth = new float[] { 0.15f, 0.5f, 0.15f, 0.2f };
+            string[] columnHeaders = new string[]
+            {
+                TextManager.Get("Password") ,
+                TextManager.Get("ServerListName"),
+                TextManager.Get("ServerListPlayers"),
+                TextManager.Get("ServerListRoundStarted")
+            };
+            System.Diagnostics.Debug.Assert(columnRelativeWidth.Length == columnHeaders.Length);
+            
+            for (int i = 0; i < columnHeaders.Length; i++)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), columnHeaderContainer.RectTransform),
+                    columnHeaders[i], font: GUI.SmallFont);
+            }
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), rightColumn.RectTransform), style: null);
+            
+            new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("ServerListRefresh"))
+            {
+                OnClicked = RefreshServers
+            };
+
+            joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform, Anchor.BottomRight),
+                TextManager.Get("ServerListJoin"))
+            {
+                OnClicked = JoinServer
+            };
+
             //--------------------------------------------------------
 
-            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), TextManager.Get("Back"), Alignment.TopLeft, "", menu);
-            button.OnClicked = GameMain.MainMenuScreen.SelectTab;
+            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.13f, 0.06f), paddedFrame.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("Back"))
+            {
+                OnClicked = GameMain.MainMenuScreen.SelectTab
+            };
             button.SelectedColor = button.Color;
 
             refreshDisableTimer = DateTime.Now;
@@ -124,9 +155,9 @@ namespace Barotrauma
 
         private void FilterServers()
         {
-            serverList.RemoveChild(serverList.FindChild("noresults"));
+            serverList.Content.RemoveChild(serverList.Content.FindChild("noresults"));
             
-            foreach (GUIComponent child in serverList.children)
+            foreach (GUIComponent child in serverList.Content.Children)
             {
                 if (!(child.UserData is ServerInfo)) continue;
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
@@ -138,9 +169,13 @@ namespace Barotrauma
                     (!filterEmpty.Selected || serverInfo.PlayerCount > 0);
             }
 
-            if (serverList.children.All(c => !c.Visible))
+            if (serverList.Content.Children.All(c => !c.Visible))
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoMatchingServers"), "", serverList).UserData = "noresults";
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
+                    TextManager.Get("NoMatchingServers"))
+                {
+                    UserData = "noresults"
+                };
             }
         }
 
@@ -168,7 +203,8 @@ namespace Barotrauma
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("RefreshingServerList"), "", serverList);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
+                TextManager.Get("RefreshingServerList"));
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
 
@@ -198,7 +234,8 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoServers"), "", serverList);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
+                    TextManager.Get("NoServers"));
                 return;
             }
 
@@ -216,17 +253,16 @@ namespace Barotrauma
                 string[] arguments = lines[i].Split('|');
                 if (arguments.Length < 3) continue;
 
-                string ip = arguments[0];
-                string port = arguments[1];
-                string serverName = arguments[2];
-                bool gameStarted = arguments.Length > 3 && arguments[3] == "1";
-                string currPlayersStr = (arguments.Length > 4) ? arguments[4] : "";
-                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";                
-                bool hasPassWord = arguments.Length > 6 && arguments[6] == "1";
+                string ip               = arguments[0];
+                string port             = arguments[1];
+                string serverName       = arguments[2];
+                bool gameStarted        = arguments.Length > 3 && arguments[3] == "1";
+                string currPlayersStr   = (arguments.Length > 4) ? arguments[4] : "";
+                string maxPlayersStr    = (arguments.Length > 5) ? arguments[5] : "";                
+                bool hasPassWord        = arguments.Length > 6 && arguments[6] == "1";
 
-                int playerCount = 0, maxPlayers = 1;
-                int.TryParse(currPlayersStr, out playerCount);
-                int.TryParse(maxPlayersStr, out maxPlayers);
+                int.TryParse(currPlayersStr, out int playerCount);
+                int.TryParse(maxPlayersStr, out int maxPlayers);
 
                 var serverInfo = new ServerInfo()
                 {
@@ -239,20 +275,31 @@ namespace Barotrauma
                     HasPassword = hasPassWord
                 };
 
-                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
-                serverFrame.UserData = serverInfo;
+                var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    style: "InnerFrame", color: Color.White * 0.5f)
+                {
+                    UserData = serverInfo
+                };
+                var serverContent = new GUILayoutGroup(new RectTransform(Vector2.One, serverFrame.RectTransform), isHorizontal: true);
 
-                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
-                passwordBox.Selected = hasPassWord;
-                passwordBox.Enabled = false;
-                passwordBox.UserData = "password";
+                var passwordBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 1.0f), serverContent.RectTransform), label: "")
+                {
+                    Selected = hasPassWord,
+                    Enabled = false,
+                    UserData = "password"
+                };
 
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
-                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+                new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[1], 1.0f), serverContent.RectTransform), serverName);
+                new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2], 1.0f), serverContent.RectTransform), 
+                    playerCount + "/" + maxPlayers);
 
-                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2]) / 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
-                gameStartedBox.Selected = gameStarted;
-                gameStartedBox.Enabled = false;
+                var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform, Anchor.TopRight),
+                    label: "")
+                {
+                    IgnoreLayoutGroups = true,
+                    Selected = gameStarted,
+                    Enabled = false
+                };
             }
 
             FilterServers();
@@ -396,10 +443,8 @@ namespace Barotrauma
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
-
-            menu.Draw(spriteBatch);
             
-            GUI.Draw((float)deltaTime, spriteBatch, null);
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             spriteBatch.End();
         }
@@ -408,10 +453,6 @@ namespace Barotrauma
         {
             menu.AddToGUIUpdateList();
         }
-
-        public override void Update(double deltaTime)
-        {
-            menu.Update((float)deltaTime);
-        }
+        
     }
 }

@@ -27,25 +27,41 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            new GUITextBlock(new Rectangle(0, -30, 0, 20), "Device can be optimized", "", Alignment.TopCenter, Alignment.TopCenter, GuiFrame, false, GUI.LargeFont);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 50), Description, "", Alignment.TopLeft, Alignment.TopLeft, GuiFrame, true, GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
+                TextManager.Get("OptimizableLabel"), textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 50, 100, 20), "Required skills:", "", GuiFrame);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                Description, font: GUI.SmallFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
+                TextManager.Get("OptimizableRequiredSkills"));
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                var skillText = new GUITextBlock(new Rectangle(0, 65 + i * 15, 100, 20), "   - " + requiredSkills[i].Name + ": " + ((int)requiredSkills[i].Level), "", GuiFrame, GUI.SmallFont);
-                skillText.UserData = requiredSkills[i];
+                var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
+                    "   - " + requiredSkills[i].Name + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
+                {
+                    UserData = requiredSkills[i]
+                };
             }
 
-            progressBar = new GUIProgressBar(new Rectangle(0, 15, (int)((GuiFrame.Rect.Width - GuiFrame.Padding.X - GuiFrame.Padding.Z) * 0.6f), 20), Color.Green, 0.0f, Alignment.BottomRight, GuiFrame);
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), 
+                color: Color.Green, barSize: 0.0f);
 
-            optimizeButton = new GUIButton(new Rectangle(0, 15, (int)((GuiFrame.Rect.Width - GuiFrame.Padding.X - GuiFrame.Padding.Z) * 0.3f), 20), "Optimize", Alignment.BottomLeft, "", GuiFrame);
-            optimizeButton.OnClicked = (btn, obj) =>
+            optimizeButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
+                TextManager.Get("OptimizableOptimize"))
             {
-                currentOptimizer = Character.Controlled;
-                item.CreateClientEvent(this);
-                return true;
+                OnClicked = (btn, obj) =>
+                {
+                    currentOptimizer = Character.Controlled;
+                    item.CreateClientEvent(this);
+                    return true;
+                }
             };
         }
 
@@ -58,7 +74,6 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
-            GuiFrame.Update(deltaTime);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -69,7 +84,7 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = optimizationProgress;
 
             optimizeButton.Enabled = true;
-            foreach (GUIComponent c in GuiFrame.children)
+            foreach (GUIComponent c in GuiFrame.Children)
             {
                 Skill skill = c.UserData as Skill;
                 if (skill == null) continue;
@@ -85,8 +100,6 @@ namespace Barotrauma.Items.Components
                     textBlock.TextColor = Color.White;
                 }
             }
-            
-            GuiFrame.Draw(spriteBatch);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

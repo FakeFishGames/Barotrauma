@@ -475,6 +475,8 @@ namespace Barotrauma
 
                     i++;
                 }
+
+                offsetAmount *= 0.5f;
             }
 
             return segments;

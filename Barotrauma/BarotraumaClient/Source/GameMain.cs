@@ -29,9 +29,10 @@ namespace Barotrauma
         public static NetLobbyScreen NetLobbyScreen;
         public static ServerListScreen ServerListScreen;
 
-        public static SubEditorScreen SubEditorScreen;
-        public static CharacterEditorScreen CharacterEditorScreen;
-        public static ParticleEditorScreen ParticleEditorScreen;
+        public static SubEditorScreen         SubEditorScreen;
+        public static CharacterEditorScreen   CharacterEditorScreen;
+        public static ParticleEditorScreen  ParticleEditorScreen;
+        public static AnimationEditorScreen AnimationEditorScreen;
 
         public static Lights.LightManager LightManager;
 
@@ -64,6 +65,8 @@ namespace Barotrauma
         private static SpriteBatch spriteBatch;
 
         private Viewport defaultViewport;
+
+        public event Action OnResolutionChanged;
 
         public static GameMain Instance
         {
@@ -179,6 +182,8 @@ namespace Barotrauma
             SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
+
+            OnResolutionChanged?.Invoke();
         }
 
         public void SetWindowMode(WindowMode windowMode)
@@ -244,7 +249,6 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-            GUI.GraphicsDevice = base.GraphicsDevice;
 
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
@@ -252,10 +256,9 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
 
-            GUI.Init(Content);
+            GUI.Init(Window, Config.SelectedContentPackage, GraphicsDevice);
+            DebugConsole.Init();
 
-            GUIComponent.Init(Window);
-            DebugConsole.Init(Window);
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
@@ -333,6 +336,7 @@ namespace Barotrauma
             SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
+            AnimationEditorScreen   =   new AnimationEditorScreen();
 
         yield return CoroutineStatus.Running;
 
@@ -425,23 +429,18 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    GUIComponent.ClearUpdateList();
+                    GUI.ClearUpdateList();
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
-                    if (!paused)
-                    {
-                        Screen.Selected.AddToGUIUpdateList();
-                    }
+                    Screen.Selected.AddToGUIUpdateList();
 
                     if (NetworkMember != null)
                     {
                         NetworkMember.AddToGUIUpdateList();
                     }
 
-                    GUI.AddToGUIUpdateList();
                     DebugConsole.AddToGUIUpdateList();
-                    GUIComponent.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
                     paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
@@ -487,10 +486,10 @@ namespace Barotrauma
             }
 
             if (!DebugDraw) return;
-            if (GUIComponent.MouseOn!=null)
+            if (GUI.MouseOn != null)
             {
                 spriteBatch.Begin();
-                GUI.DrawRectangle(spriteBatch, GUIComponent.MouseOn.MouseRect, Color.Lime);
+                GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
                 spriteBatch.End();
             }
         }

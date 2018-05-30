@@ -29,12 +29,12 @@ namespace Barotrauma
             : base(preset, param)
         {
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
-            endRoundButton = new GUIButton(
-                new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), 
-                TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
-
-            endRoundButton.Font = GUI.SmallFont;
-            endRoundButton.OnClicked = TryEndRound;
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), GUICanvas.Instance),
+                TextManager.Get("EndRound"), textAlignment: Alignment.Center)
+            {
+                Font = GUI.SmallFont,
+                OnClicked = TryEndRound
+            };
 
             foreach (JobPrefab jobPrefab in JobPrefab.List)
             {
@@ -96,9 +96,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!isRunning|| GUI.DisableHUD) return;
-
-            CrewManager.Draw(spriteBatch);
-
+            
             if (Submarine.MainSub == null) return;
 
             Submarine leavingSub = GetLeavingSub();
@@ -124,7 +122,7 @@ namespace Barotrauma
                 endRoundButton.Visible = false;
             }
 
-            endRoundButton.Draw(spriteBatch);
+            endRoundButton.DrawManually(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()
@@ -144,7 +142,7 @@ namespace Barotrauma
 
             CrewManager.Update(deltaTime);
 
-            endRoundButton.Update(deltaTime);
+            endRoundButton.UpdateManually(deltaTime);
 
             if (!crewDead)
             {
@@ -202,26 +200,33 @@ namespace Barotrauma
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
-
             if (!success)
             {
                 var summaryScreen = GUIMessageBox.VisibleBox;
 
                 if (summaryScreen != null)
                 {
-                    summaryScreen = summaryScreen.children[0];
-                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+                    summaryScreen = summaryScreen.Children.First();
+                    var buttonArea = summaryScreen.Children.First().FindChild("buttonarea");
+                    buttonArea.ClearChildren();
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += (GUIButton button, object obj) => 
+
+                    summaryScreen.RemoveChild(summaryScreen.Children.FirstOrDefault(c => c is GUIButton));
+
+                    var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("LoadGameButton"))
                     {
-                        GameMain.GameSession.LoadPrevious();
-                        GameMain.LobbyScreen.Select();
-                        GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
-                        return true;
+                        OnClicked = (GUIButton button, object obj) =>
+                        {
+                            GameMain.GameSession.LoadPrevious();
+                            GameMain.LobbyScreen.Select();
+                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            return true;
+                        }
                     };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", summaryScreen);
+                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                        TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }

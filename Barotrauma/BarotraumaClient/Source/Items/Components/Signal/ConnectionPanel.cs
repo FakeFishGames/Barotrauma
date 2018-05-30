@@ -1,12 +1,19 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
         public static Wire HighlightedWire;
+
+        partial void InitProjSpecific(XElement element)
+        {
+            if (GuiFrame == null) return;
+            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null);
+        }
 
         public override bool ShouldDrawHUD(Character character)
         {
@@ -21,8 +28,6 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             if (character != Character.Controlled || character != user) return;
-
-            GuiFrame?.Update(deltaTime);
             
             if (HighlightedWire != null)
             {
@@ -32,15 +37,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        private void DrawConnections(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (character != Character.Controlled || character != user) return;
-            if (GuiFrame == null) return;
-
-            GuiFrame.Draw(spriteBatch);
+            if (user != Character.Controlled || user == null) return;
 
             HighlightedWire = null;
-            Connection.DrawConnections(spriteBatch, this, character);
+            Connection.DrawConnections(spriteBatch, this, user);
 
             foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {

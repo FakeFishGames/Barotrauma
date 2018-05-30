@@ -141,7 +141,11 @@ namespace Barotrauma
                     foreach (Command c in commands)
                     {
                         if (string.IsNullOrEmpty(c.help)) continue;
+#if CLIENT
+                        AddHelpMessage(c);
+#else
                         NewMessage(c.help, Color.Cyan);
+#endif
                     }
                 }
                 else
@@ -153,9 +157,21 @@ namespace Barotrauma
                     }
                     else
                     {
+#if CLIENT
+                        AddHelpMessage(matchingCommand);
+#else
                         NewMessage(matchingCommand.help, Color.Cyan);
+#endif
                     }
                 }
+            }, 
+            () =>
+            {
+                return new string[][]
+                {
+                    commands.SelectMany(c => c.names).ToArray(),
+                    new string[0]
+                };
             }));
 
             commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
@@ -272,8 +288,7 @@ namespace Barotrauma
                 List<string> itemNames = new List<string>();
                 foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
                 {
-                    ItemPrefab itemPrefab = prefab as ItemPrefab;
-                    if (itemPrefab != null) itemNames.Add(itemPrefab.Name);
+                    if (prefab is ItemPrefab itemPrefab) itemNames.Add(itemPrefab.Name);
                 }
 
                 return new string[][]
@@ -2319,9 +2334,12 @@ namespace Barotrauma
         {
 
 #if CLIENT
-            activeQuestionText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 30), "   >>" + question, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-            activeQuestionText.CanBeFocused = false;
-            activeQuestionText.TextColor = Color.Cyan;
+            activeQuestionText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, 30), listBox.Content.RectTransform),
+                "   >>" + question, font: GUI.SmallFont)
+            {
+                CanBeFocused = false,
+                TextColor = Color.Cyan
+            };
 #else
             NewMessage("   >>" + question, Color.Cyan);
 #endif

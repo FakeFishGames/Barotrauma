@@ -52,9 +52,13 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
-            int barWidth = 200;
-            powerIndicator = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth / 2 - barWidth / 2, 20, barWidth, 30), Color.White, 0.0f);
+            
+            powerIndicator = new GUIProgressBar(new RectTransform(new Vector2(0.18f, 0.03f), GUI.Canvas, Anchor.TopCenter)
+            {
+                MinSize = new Point(100,20),
+                RelativeOffset = new Vector2(0.0f, 0.01f)
+            }, 
+            barSize: 0.0f);
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
@@ -94,13 +98,11 @@ namespace Barotrauma.Items.Components
         {
             if (HudTint.A > 0)
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), 
-                    new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A/255.0f), true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                    new Color(HudTint.R, HudTint.G, HudTint.B) * (HudTint.A / 255.0f), true);
             }
 
-            float batteryCharge;
-            float batteryCapacity;
-            GetAvailablePower(out batteryCharge, out batteryCapacity);
+            GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
             List<Projectile> projectiles = GetLoadedProjectiles(false, true);
 
@@ -112,7 +114,7 @@ namespace Barotrauma.Items.Components
             {
                 powerIndicator.BarSize = chargeRate;
                 powerIndicator.Color = charged ? Color.Green : Color.Red;
-                powerIndicator.Draw(spriteBatch);
+                powerIndicator.DrawManually(spriteBatch, true);
 
                 int requiredChargeIndicatorPos = (int)((powerConsumption / (batteryCapacity * 3600.0f)) * powerIndicator.Rect.Width);
                 GUI.DrawRectangle(spriteBatch,
@@ -131,7 +133,7 @@ namespace Barotrauma.Items.Components
                 {
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
-                        projectiles[i] == null ? null : projectiles[i].Item, true);
+                        projectiles[i]?.Item, true);
                 }
             }
 

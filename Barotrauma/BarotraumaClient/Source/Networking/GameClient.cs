@@ -66,30 +66,36 @@ namespace Barotrauma.Networking
         
         public GameClient(string newName)
         {
-            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.6f);
-
-            endVoteTickBox = new GUITickBox(new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 20, buttonHeight), "End round", Alignment.TopLeft, inGameHUD);
-            endVoteTickBox.OnSelected = ToggleEndRoundVote;
-            endVoteTickBox.Visible = false;
-
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "End round", Alignment.TopLeft, "", inGameHUD);
-            endRoundButton.OnClicked = (btn, userdata) => 
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
+                isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
-                if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
-
-                RequestRoundEnd();
-
-                return true; 
+                CanBeFocused = false
             };
-            endRoundButton.Visible = false;
 
-            newName = newName.Replace(":", "");
-            newName = newName.Replace(";", "");
+            endRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("EndRound"))
+            {
+                OnClicked = (btn, userdata) => 
+                {
+                    if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
+                    RequestRoundEnd();
+                    return true;
+                },
+                Visible = false
+            };
 
+            endVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("EndRound"))
+            {
+                OnSelected = ToggleEndRoundVote,
+                Visible = false
+            };
+            
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
             Hull.EditWater = false;
 
+            newName = newName.Replace(":", "").Replace(";", "");
             name = newName;
 
             entityEventManager = new ClientEntityEventManager(this);
@@ -97,9 +103,11 @@ namespace Barotrauma.Networking
             fileReceiver = new FileReceiver();
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
-            
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name,Gender.None,null);
-            characterInfo.Job = null;
+
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
+            {
+                Job = null
+            };
 
             otherClients = new List<Client>();
 
@@ -244,7 +252,7 @@ namespace Barotrauma.Networking
                 {
                     connectingText += ".";
                 }
-                reconnectBox.Text = connectingText;
+                reconnectBox.Text.Text = connectingText;
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -362,7 +370,7 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, "", msgBox.children[0]);
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f),  msgBox.InnerFrame.RectTransform));
                     passwordBox.UserData = "password";
 
                     var okButton = msgBox.Buttons[0];
@@ -683,17 +691,24 @@ namespace Barotrauma.Networking
 
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
-            GUIMessageBox msgBox = new GUIMessageBox("Permissions changed", msg, GUIMessageBox.DefaultWidth, 0);
-            msgBox.UserData = "permissions";
+            GUIMessageBox msgBox = new GUIMessageBox("Permissions changed", msg, GUIMessageBox.DefaultWidth, 0)
+            {
+                UserData = "permissions"
+            };
 
             if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
-                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width - msgBox.InnerFrame.Padding.X - msgBox.InnerFrame.Padding.Z) / 2 - 30;
-                new GUITextBlock(new Rectangle(0, 0, listBoxWidth, 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, msgBox.InnerFrame, true, GUI.SmallFont);
-                var commandList = new GUIListBox(new Rectangle(0, 20, listBoxWidth, 0), "", Alignment.BottomRight, msgBox.InnerFrame);
+                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
+                     "Permitted console commands:", wrap: true, font: GUI.SmallFont);
+                var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
-                    new GUITextBlock(new Rectangle(0, 0, 0, 15), permittedCommand, "", commandList, GUI.SmallFont).CanBeFocused = false;
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
+                        permittedCommand, font: GUI.SmallFont)
+                    {
+                        CanBeFocused = false
+                    };
                 }
             }
 
@@ -1232,15 +1247,15 @@ namespace Barotrauma.Networking
 
                     for (int i = 0; i < 2; i++)
                     {
-                        List<GUIComponent> subListChildren = (i == 0) ? 
-                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
-                            GameMain.NetLobbyScreen.SubList.children;
+                        IEnumerable<GUIComponent> subListChildren = (i == 0) ? 
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.Content.Children : 
+                            GameMain.NetLobbyScreen.SubList.Content.Children;
 
-                        var subElement = subListChildren.Find(c => 
+                        var subElement = subListChildren.FirstOrDefault(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 
                             ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
-
                         if (subElement == null) continue;
+
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.UserData = newSub;
                         subElement.ToolTip = newSub.Description;
@@ -1248,13 +1263,13 @@ namespace Barotrauma.Networking
                         GUIButton infoButton = subElement.GetChild<GUIButton>();
                         if (infoButton == null)
                         {
-                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                            int buttonSize = (int)(subElement.Rect.Height * 0.8f);
+                            infoButton = new GUIButton(new RectTransform(new Point(buttonSize), subElement.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?");
                         }
                         infoButton.UserData = newSub;
                         infoButton.OnClicked = (component, userdata) =>
                         {
-                            var msgBox = new GUIMessageBox("", "", 550, 400);
-                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                             return true;
                         };
                     }
@@ -1418,29 +1433,41 @@ namespace Barotrauma.Networking
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) return false;
 
+
+
+
+                
+
                 if (HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Ban"), Alignment.BottomRight, "", characterFrame);
-                    banButton.UserData = character.Name;
-                    banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
+                        TextManager.Get("Ban"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                    };
                 }
                 if (HasPermission(ClientPermissions.Kick))
                 {
-                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Kick"), Alignment.BottomLeft, "", characterFrame);
-                    kickButton.UserData = character.Name;
-                    kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
+                        TextManager.Get("Kick"))
+                    {
+                        UserData = character.Name,
+                        OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                    };
                 }
                 else if (Voting.AllowVoteKick)
                 {
-                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", characterFrame);
-
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
+                        TextManager.Get("VoteToKick"))
+                    {
+                        UserData = character,
+                        OnClicked = VoteForKick
+                    };
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
                         kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
                     }
-
-                    kickVoteButton.UserData = character;
-                    kickVoteButton.OnClicked += VoteForKick;
                 }                
             }
 

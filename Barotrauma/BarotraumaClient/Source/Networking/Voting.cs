@@ -44,7 +44,7 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
 
                 //gray out modes that can't be voted
-                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.children)
+                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.Content.Children)
                 {
                     comp.TextColor =
                         new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
@@ -69,10 +69,9 @@ namespace Barotrauma
             GUIListBox listBox = (voteType == VoteType.Sub) ?
                 GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            foreach (GUIComponent comp in listBox.children)
+            foreach (GUIComponent comp in listBox.Content.Children)
             {
-                GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
-                if (voteText != null) comp.RemoveChild(voteText);
+                if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
             }
 
             if (clients != null)
@@ -88,14 +87,17 @@ namespace Barotrauma
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
             if (userData == null) return;
-            foreach (GUIComponent comp in listBox.children)
+            foreach (GUIComponent comp in listBox.Content.Children)
             {
                 if (comp.UserData != userData) continue;
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText == null)
                 {
-                    voteText = new GUITextBlock(new Rectangle(0, 0, 30, 0), "", "", Alignment.Right, Alignment.Right, comp);
-                    voteText.UserData = "votes";
+                    voteText = new GUITextBlock(new RectTransform(new Point(30, comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
+                        "", textAlignment: Alignment.CenterRight)
+                    {
+                        UserData = "votes"
+                    };
                 }
 
                 voteText.Text = votes == 0 ? "" : votes.ToString();

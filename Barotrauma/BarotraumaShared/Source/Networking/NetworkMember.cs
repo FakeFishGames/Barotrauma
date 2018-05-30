@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
 
                 if (!GUI.DisableHUD)
                 {
-                    inGameHUD.Update(deltaTime);            
+                    inGameHUD.UpdateManually(deltaTime);            
                     chatBox.Update(deltaTime);
                 }
                 
@@ -213,7 +213,7 @@ namespace Barotrauma.Networking
                 }
             }
 #endif
-            }
+        }
 
         public virtual void Disconnect() { }
     }
