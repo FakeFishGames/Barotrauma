@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="endworm" humanoid="false">
-    
+
+  <animation path="Content/Characters/Endworm/Endworm[ANIMTYPE].xml"/>
+
   <health
     vitality="10000.0"
     doesbleed="false"/>
@@ -17,7 +19,7 @@
     <targetpriority tag="stronger" state="Escape" priority="30"/>
   </ai>
   
-  <ragdoll waveamplitude="100.0" wavelength="1000" speed="2.0" scale ="2.0" flip="false" canentersubmarine="false">
+  <ragdoll scale ="2.0" canentersubmarine="false">
 
     <collider radius="300" height="400"/>
     
