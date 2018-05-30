@@ -103,10 +103,10 @@ namespace Barotrauma
                 return;
             }
 
-            if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow)
+            if (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow)
             {
                 if (highlightedListBox == null ||
-                    (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn)))
+                    (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn)))
                 {
                     UpdateHighlightedListBox(null);
                     return;
@@ -172,9 +172,9 @@ namespace Barotrauma
             if (startMovingPos == Vector2.Zero)
             {
                 List<MapEntity> highlightedEntities = new List<MapEntity>();
-                if (highlightedListBox != null && highlightedListBox.IsParentOf(GUIComponent.MouseOn))
+                if (highlightedListBox != null && highlightedListBox.IsParentOf(GUI.MouseOn))
                 {
-                    highLightedEntity = GUIComponent.MouseOn.UserData as MapEntity;
+                    highLightedEntity = GUI.MouseOn.UserData as MapEntity;
                 }
                 else
                 {
@@ -333,7 +333,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space) &&
-                    (highlightedListBox == null || (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn))))
+                    (highlightedListBox == null || (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn))))
                 {
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in selectedList)
@@ -355,23 +355,24 @@ namespace Barotrauma
             }
             if (highlightedListBox != null)
             {
-                if (GUIComponent.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUIComponent.MouseOn)) return;
+                if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
                 if (highlightedEntities.SequenceEqual(highlightedList)) return;
             }
 
             highlightedList = highlightedEntities;
 
-            highlightedListBox = new GUIListBox(
-                new Rectangle((int)PlayerInput.MousePosition.X + 15, (int)PlayerInput.MousePosition.Y + 15, 150, highlightedEntities.Count * 18 + 5),
-                null, Alignment.TopLeft, "GUIToolTip", null, false);
+            highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
+            {
+                ScreenSpaceOffset =  PlayerInput.MousePosition.ToPoint() + new Point(15)
+            }, style: "GUIToolTip");
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, highlightedListBox.Rect.Width, 18),
-                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), "", Alignment.TopLeft, Alignment.CenterLeft, highlightedListBox, false, GUI.SmallFont);
-
-                textBlock.UserData = entity;
+                var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
+                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                {
+                    UserData = entity
+                };
             }
 
             highlightedListBox.OnSelected = (GUIComponent component, object obj) =>
@@ -401,7 +402,7 @@ namespace Barotrauma
         /// </summary>
         public static void DrawSelecting(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GUIComponent.MouseOn != null) return;
+            if (GUI.MouseOn != null) return;
 
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
@@ -432,13 +433,13 @@ namespace Barotrauma
 
         public static void UpdateEditor(Camera cam)
         {
-            if (highlightedListBox != null) highlightedListBox.Update((float)Timing.Step);
+            if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
 
             if (editingHUD != null)
             {
                 if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
                 {
-                    foreach (GUIComponent component in editingHUD.children)
+                    foreach (GUIComponent component in editingHUD.Children)
                     {
                         var textBox = component as GUITextBox;
                         if (textBox == null) continue;
@@ -511,7 +512,7 @@ namespace Barotrauma
 
             if (highlightedListBox != null)
             {
-                highlightedListBox.Draw(spriteBatch);
+                highlightedListBox.DrawManually(spriteBatch);
             }
         }
 

@@ -66,5 +66,24 @@ namespace Barotrauma
             return Vector2.Normalize(randomVector) * length;
         }
 
+        /// <summary>
+        /// Random float between 0 and 1.
+        /// </summary>
+        public static float Value(RandSync sync = RandSync.Unsynced)
+        {
+            return Range(0f, 1f, sync);
+        }
+
+        public static Color Color(bool randomAlpha = false, RandSync sync = RandSync.Unsynced)
+        {
+            if (randomAlpha)
+            {
+                return new Color(Value(sync), Value(sync), Value(sync), Value(sync));
+            }
+            else
+            {
+                return new Color(Value(sync), Value(sync), Value(sync));
+            }
+        }
     }
 }

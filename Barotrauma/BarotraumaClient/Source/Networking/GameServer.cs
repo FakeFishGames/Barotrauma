@@ -15,61 +15,56 @@ namespace Barotrauma.Networking
 
         void InitProjSpecific()
         {
-            //----------------------------------------
-
-            int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
-
-            var endRoundButton = new GUIButton(
-                new Rectangle(GameMain.GraphicsWidth - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), 
-                TextManager.Get("EndRound"), Alignment.TopLeft, "", inGameHUD);
-            endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
-
-            showLogButton = new GUIButton(
-                new Rectangle(GameMain.GraphicsWidth - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), 
-                TextManager.Get("ServerLog"), Alignment.TopLeft, "", inGameHUD);
-
-            showLogButton.OnClicked = (GUIButton button, object userData) =>
+            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
+                isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
-                if (log.LogFrame == null)
-                {
-                    log.CreateLogFrame();
-                }
-                else
-                {
-                    log.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
-                }
-                return true;
+                CanBeFocused = false
             };
 
-            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 150, buttonHeight), "Settings", Alignment.TopLeft, "", inGameHUD);
-            settingsButton.OnClicked = ToggleSettingsFrame;
-            settingsButton.UserData = "settingsButton";
+            var endRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("EndRound"))
+            {
+                OnClicked = (btn, userdata) => { EndGame(); return true; }
+            };
 
-            //----------------------------------------
+            showLogButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("ServerLog"))
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (log.LogFrame == null)
+                    {
+                        log.CreateLogFrame();
+                    }
+                    else
+                    {
+                        log.LogFrame = null;
+                        GUI.KeyboardDispatcher.Subscriber = null;
+                    }
+                    return true;
+                }
+            };
+
+            GUIButton settingsButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("ServerSettingsButton"))
+            {
+                OnClicked = ToggleSettingsFrame,
+                UserData = "settingsButton"
+            };
         }
 
         public override void AddToGUIUpdateList()
         {
             if (started) base.AddToGUIUpdateList();
 
-            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
-            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+            settingsFrame?.AddToGUIUpdateList();
+            log.LogFrame?.AddToGUIUpdateList();
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
-            if (settingsFrame != null)
-            {
-                settingsFrame.Draw(spriteBatch);
-            }
-            else if (log.LogFrame != null)
-            {
-                log.LogFrame.Draw(spriteBatch);
-            }
-
+            
             if (!ShowNetStats) return;
 
             GUI.Font.DrawString(spriteBatch, "Unique Events: " + entityEventManager.UniqueEvents.Count, new Vector2(10, 50), Color.White);
@@ -77,12 +72,10 @@ namespace Barotrauma.Networking
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
 
-
             if (clientListScrollBar == null)
             {
-                clientListScrollBar = new GUIScrollBar(new Rectangle(x + width - 10, y, 10, height), "", 1.0f);
+                clientListScrollBar = new GUIScrollBar(new RectTransform(new Point(10, height), GUI.Canvas) { AbsoluteOffset = new Point(x + width - 10, y) });
             }
-
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
@@ -122,8 +115,8 @@ namespace Barotrauma.Networking
                 y += 40;
             }
 
-            clientListScrollBar.Update(1.0f / 60.0f);
-            clientListScrollBar.Draw(spriteBatch);
+            clientListScrollBar.UpdateManually(1.0f / 60.0f);
+            clientListScrollBar.DrawManually(spriteBatch);
 
             netStats.AddValue(NetStats.NetStatType.ResentMessages, Math.Max(resentMessages, 0));
             netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);
@@ -137,36 +130,52 @@ namespace Barotrauma.Networking
         {
             var transfers = fileSender.ActiveTransfers.FindAll(t => t.Connection == client.Connection);
 
-            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.FindChild(client.Name);
+            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client.Name);
 
             var clientInfo = clientNameBox.FindChild("filetransfer");
             if (clientInfo == null)
             {
                 clientNameBox.ClearChildren();
-                clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
-                clientInfo.UserData = "filetransfer";
+                clientInfo = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.9f), clientNameBox.RectTransform, Anchor.CenterRight), style: null)
+                {
+                    UserData = "filetransfer"
+                };
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), clientInfo.RectTransform),
+                    "", textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
+                {
+                    TextGetter = () =>
+                    {
+                        string txt = "";
+                        if (transfers.Count > 0)
+                        {
+                            txt += transfers[0].FileName + " ";
+                            if (transfers.Count > 1) txt += "+ " + (transfers.Count - 1) + " others ";
+                        }
+                        txt += "(" + MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length)) + ")";
+                        return txt;
+                    }
+                };
+
+                var progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.8f, 0.5f), clientInfo.RectTransform, Anchor.BottomLeft),
+                    barSize: 0.0f, color: Color.Green)
+                {
+                    IsHorizontal = true,
+                    ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; }
+                };
+
+                var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), clientInfo.RectTransform, Anchor.BottomRight), "X")
+                {
+                    OnClicked = (GUIButton button, object userdata) =>
+                    {
+                        transfers.ForEach(t => fileSender.CancelTransfer(t));
+                        return true;
+                    }
+                };
             }
             else if (transfers.Count == 0)
             {
                 clientInfo.Parent.RemoveChild(clientInfo);
             }
-
-            clientInfo.ClearChildren();
-
-            var progressBar = new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, "", 0.0f, Alignment.Left, clientInfo);
-            progressBar.IsHorizontal = true;
-            progressBar.ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; };
-
-            var textBlock = new GUITextBlock(new Rectangle(0, 2, 160, 0), "", "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
-            textBlock.TextGetter = () =>
-            { return MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length)); };
-
-            var cancelButton = new GUIButton(new Rectangle(-5, 0, 14, 0), "X", Alignment.Right, "", clientInfo);
-            cancelButton.OnClicked = (GUIButton button, object userdata) =>
-            {
-                transfers.ForEach(t => fileSender.CancelTransfer(t));
-                return true;
-            };
         }
 
         public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
@@ -175,17 +184,24 @@ namespace Barotrauma.Networking
             
             if (character != myCharacter)
             {
-                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
-                banButton.UserData = character.Name;
-                banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
-
-                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, "", characterFrame);
-                rangebanButton.UserData = character.Name;
-                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
-
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, "", characterFrame);
-                kickButton.UserData = character.Name;
-                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
+                var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight),
+                    TextManager.Get("Ban"))
+                {
+                    UserData = character.Name,
+                    OnClicked = GameMain.NetLobbyScreen.BanPlayer
+                };
+                var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.16f) },
+                    TextManager.Get("BanRange"))
+                {
+                    UserData = character.Name,
+                    OnClicked = GameMain.NetLobbyScreen.BanPlayerRange
+                };
+                var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.15f), characterFrame.RectTransform, Anchor.BottomLeft),
+                    TextManager.Get("Kick"))
+                {
+                    UserData = character.Name,
+                    OnClicked = GameMain.NetLobbyScreen.KickPlayer
+                };
             }
 
             return true;

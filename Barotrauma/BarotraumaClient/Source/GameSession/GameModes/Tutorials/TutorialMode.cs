@@ -33,11 +33,5 @@ namespace Barotrauma
             base.Update(deltaTime);
             tutorial.Update(deltaTime);
         }
-        
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);            
-            tutorial.Draw(spriteBatch);
-        }
     }
 }

@@ -2,36 +2,35 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class MiniMap : Powered
     {
+        partial void InitProjSpecific(XElement element)
+        {
+            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center),
+                DrawHUD, null);
+        }
+
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            GuiFrame.Update(deltaTime);
-        }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        private void DrawHUD(SpriteBatch spriteBatch, GUICustomComponent container)
         {
             if (item.Submarine == null) return;
 
-            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
-
-            GuiFrame.Draw(spriteBatch);
+            int width = container.Rect.Width, height = container.Rect.Height;
+            int x = container.Rect.X;
+            int y = container.Rect.Y;
 
             if (!hasPower) return;
 
             Rectangle miniMap = new Rectangle(x + 20, y + 40, width - 40, height - 60);
-
-            float size = Math.Min((float)miniMap.Width / (float)item.Submarine.Borders.Width, (float)miniMap.Height / (float)item.Submarine.Borders.Height);
+            float size = Math.Min(miniMap.Width / (float)item.Submarine.Borders.Width, miniMap.Height / (float)item.Submarine.Borders.Height);
             foreach (Hull hull in Hull.hullList)
             {
                 Point topLeft = new Point(
@@ -50,11 +49,9 @@ namespace Barotrauma.Items.Components
                 Rectangle hullRect = new Rectangle(
                     topLeft, bottomRight - topLeft);
 
-                HullData hullData;
-                hullDatas.TryGetValue(hull, out hullData);
+                hullDatas.TryGetValue(hull, out HullData hullData);
 
                 Color borderColor = Color.Green;
-
 
                 //hull integrity -----------------------------------
 

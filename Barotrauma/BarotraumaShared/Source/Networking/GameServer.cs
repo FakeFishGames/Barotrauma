@@ -79,7 +79,7 @@ namespace Barotrauma.Networking
             this.isPublic = isPublic;
             this.maxPlayers = maxPlayers;
             this.password = "";
-            if (password.Length > 0)
+            if (password != null && password.Length > 0)
             {
                 SetPassword(password);
             }
@@ -341,8 +341,6 @@ namespace Barotrauma.Networking
         {
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
-            if (settingsFrame != null) settingsFrame.Update(deltaTime);
-            if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
 #endif
             
             if (!started) return;

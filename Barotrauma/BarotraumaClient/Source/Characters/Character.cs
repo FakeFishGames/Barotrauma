@@ -140,7 +140,7 @@ namespace Barotrauma
                 cam.OffsetAmount = 0.0f;
             }
             else if (selectedConstruction != null &&
-                selectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUIComponent.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUIComponent.MouseOn))))
+                selectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
             {
                 cam.OffsetAmount = 0.0f;
             }

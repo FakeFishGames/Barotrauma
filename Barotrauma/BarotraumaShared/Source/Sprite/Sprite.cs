@@ -58,7 +58,7 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
-        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn);
+        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
         // TODO: use the Init method below?
@@ -105,22 +105,23 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        public Sprite(string newFile, Vector2 newOrigin)
+        public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)
         {
-            Init(newFile, newOrigin: newOrigin);
+            Init(newFile, newOrigin: newOrigin, preMultiplyAlpha: preMultiplyAlpha);
         }
         
-        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset = null, float newRotation = 0)
+        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset = null, float newRotation = 0, bool preMultiplyAlpha = true)
         {
-            Init(newFile, sourceRectangle: sourceRectangle, newOffset: newOffset, newRotation: newRotation);
+            Init(newFile, sourceRectangle: sourceRectangle, newOffset: newOffset, newRotation: newRotation, preMultiplyAlpha: preMultiplyAlpha);
         }
         
-        private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0)
+        private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
+            bool preMultiplyAlpha = true)
         {
             file = newFile;
             Vector4 sourceVector = Vector4.Zero;
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn);
+            LoadTexture(ref sourceVector, ref shouldReturn, preMultiplyAlpha);
             if (shouldReturn) return;
             if (sourceRectangle.HasValue)
             {

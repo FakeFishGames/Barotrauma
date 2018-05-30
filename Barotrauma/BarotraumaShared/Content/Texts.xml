@@ -46,12 +46,57 @@
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredText>You need to restart the game for the resolution changes to take effect.</RestartRequiredText>
 
+  <!-- Server settings menu -->
+  <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
+  <ServerSettingsServerTab>Server</ServerSettingsServerTab>
+  <ServerSettingsBanlistTab>Banlist</ServerSettingsBanlistTab>
+  <ServerSettingsWhiteListTab>Whitelist</ServerSettingsWhiteListTab>
+  <ServerSettingsSubSelection>Submarine selection</ServerSettingsSubSelection>
+  <ServerSettingsModeSelection>Game mode selection</ServerSettingsModeSelection>
+  <ServerSettingsEndRoundWhenDestReached>End round when destination reached</ServerSettingsEndRoundWhenDestReached>
+  <ServerSettingsEndRoundVoting>End round by voting</ServerSettingsEndRoundVoting>
+  <ServerSettingsEndRoundVotesRequired>Votes required: </ServerSettingsEndRoundVotesRequired>
+  <ServerSettingsAllowRespawning>Allow respawning</ServerSettingsAllowRespawning>
+  <ServerSettingsRespawnInterval>Interval: </ServerSettingsRespawnInterval>
+  <ServerSettingsMinRespawn>Minimum players to respawn: </ServerSettingsMinRespawn>
+  <ServerSettingsMinRespawnToolTip>What percentage of players has to be dead/spectating until a respawn shuttle is dispatched.</ServerSettingsMinRespawnToolTip>
+  <ServerSettingsRespawnDuration>Duration of respawn transport: </ServerSettingsRespawnDuration>
+  <ServerSettingsRespawnDurationToolTip>The amount of time respawned players have to navigate the respawn shuttle to the main submarine. After the duration expires, the shuttle will automatically head back out of the level.</ServerSettingsRespawnDurationToolTip>
+  <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
+  <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
+  <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
+  <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
+  <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
+  <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
+  <ServerSettingsAutobanTime>Autoban duration: </ServerSettingsAutobanTime>
+  <ServerSettingsShareSubFiles>Share submarine files with players</ServerSettingsShareSubFiles>
+  <ServerSettingsRandomizeSeed>Randomize level seed between rounds</ServerSettingsRandomizeSeed>
+  <ServerSettingsSaveLogs>Save server logs</ServerSettingsSaveLogs>
+  <ServerSettingsAllowRagdollButton>Allow ragdoll button</ServerSettingsAllowRagdollButton>
+  <ServerSettingsUseTraitorRatio>Use % of players for max traitors</ServerSettingsUseTraitorRatio>
+  <ServerSettingsTraitorRatio>Traitor ratio: </ServerSettingsTraitorRatio>
+  <ServerSettingsTraitorCount>Traitor count: </ServerSettingsTraitorCount>
+  <ServerSettingsUseKarma>Use Karma</ServerSettingsUseKarma>
+  <WhiteListEnabled>Enabled</WhiteListEnabled>
+  <WhiteListName>Name</WhiteListName>
+  <WhiteListIP>IP Address</WhiteListIP>
+  <WhiteListAdd>Add to whitelist</WhiteListAdd>
+  <WhiteListRemove>Remove</WhiteListRemove>
+  <BanRange>Ban range</BanRange>
+  <BanListRemove>Remove</BanListRemove>
+  <BanExpires>Expires [time]</BanExpires>
+  <BanDuration>Duration</BanDuration>
+  <BanPermanent>Permanent</BanPermanent>
+  <BanReason>Reason: </BanReason>
+
+
   <!-- Round summary -->
   <RoundSummaryProgress>[sub] has made its way to [location].</RoundSummaryProgress>
   <RoundSummaryProgress>[sub] has arrived at [location].</RoundSummaryProgress>
   <RoundSummaryReturn>[sub] has returned to [location].</RoundSummaryReturn>
   <RoundSummaryGameOver>The ocean has claimed [sub] and its crew.</RoundSummaryGameOver>
-  <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>  
+  <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>
+  
 
   <!-- Character HUD -->
   <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
@@ -85,7 +130,7 @@
   <RightThigh>Right thigh</RightThigh>
   <LeftThigh>Left thigh</LeftThigh>
   <Waist>Waist</Waist>
-  
+
   <!-- Misc -->
   <Yes>Yes</Yes>
   <No>No</No>
@@ -107,6 +152,8 @@
   <Delete>Delete</Delete>
   <Load>Load</Load>
   <Back>Back</Back>
+  <Days>Days</Days>
+  <Hours>Hours</Hours>
   <ManagePlayers>Manage players</ManagePlayers>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
@@ -127,8 +174,11 @@
   <MissionReward>Reward: [reward]</MissionReward>
 
   <!-- Campaign setup menu -->
+  <CampaignSetup>Campaign Setup</CampaignSetup>
+  <NewCampaign>New campaign</NewCampaign>
+  <LoadCampaign>Load campaign</LoadCampaign>
   <LoadButton>Load</LoadButton>
-  <DeleteButton>Delete</DeleteButton>  
+  <DeleteButton>Delete</DeleteButton>
   <SubNotSelected>Submarine not selected!</SubNotSelected>
   <SelectSubRequest>Please select a submarine.</SelectSubRequest>
   <SelectedSub>Selected submarine</SelectedSub>
@@ -142,7 +192,7 @@
 
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
   <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
-  
+
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
@@ -157,6 +207,7 @@
   <Credits>Credits</Credits>
 
   <!-- Ingame menus -->
+  <InfoButton>Info</InfoButton>
   <EndRound>End round</EndRound>
   <EnterLocation>Enter [locationname]</EnterLocation>
   <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
@@ -184,7 +235,7 @@
   <MasterServerError404>Error while connecting to master server (404 - [masterserverurl] not found)</MasterServerError404>
   <MasterServerErrorUnavailable>Error while connecting to master server (505 - Service Unavailable). The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.</MasterServerErrorUnavailable>
   <MasterServerErrorDefault>Error while connecting to master server ([statuscode]: [statusdescription])</MasterServerErrorDefault>
-  
+
   <!-- Server lobby -->
   <RestartingIn>Restarting in</RestartingIn>
   <Votes>Votes</Votes>
@@ -193,7 +244,7 @@
   <Random>Random</Random>
   <LevelSeed>Level seed</LevelSeed>
   <LevelDifficulty>Level difficulty</LevelDifficulty>
-  <Traitors>Traitors</Traitors>  
+  <Traitors>Traitors</Traitors>
   <BotCount>Bot count</BotCount>
   <BotSpawnMode>Bot spawn mode</BotSpawnMode>
   <AutoRestart>Automatic restart</AutoRestart>
@@ -216,6 +267,8 @@
   <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
   <BanRange>Ban range</BanRange>
+  <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
+  <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
   <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
   <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
@@ -223,18 +276,26 @@
   <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
   <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
 
+  <!-- Ingame UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>  
+  
   <!-- Sub editor -->
   <Items>Items</Items>
   <Structures>Structures</Structures>
   <TotalHullVolume>Total hull volume</TotalHullVolume>
   <SelectedHullVolume>Selected hull volume</SelectedHullVolume>
   <OptimalBallastLevel>optimal neutral ballast level is [value]</OptimalBallastLevel>
+  <SaveItemAssembly>Save as item assembly</SaveItemAssembly>
   <InsufficientBallast>insufficient volume for buoyancy control</InsufficientBallast>
   <PhysicsBodies>Physics bodies</PhysicsBodies>
   <OpenSubButton>Open...</OpenSubButton>
   <SaveSubButton>Save</SaveSubButton>
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
+  <HoldToLink>Hold space to link to another item</HoldToLink>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
   <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
@@ -248,10 +309,10 @@
   <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
   <ShowLinks>Links</ShowLinks>
   <ShowHulls>Hulls</ShowHulls>
-  <ShowGaps>Gaps</ShowGaps>
+  <ShowGaps>Gaps</ShowGaps>  
   <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
   <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
-  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>  
+  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>
   <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
   <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
   <SaveSubDialogName>Name</SaveSubDialogName>
@@ -269,7 +330,11 @@
   <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
 
   <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
-  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>  
+  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>
+
+  <!-- Particle editor -->
+  <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
+  <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
   
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
@@ -286,7 +351,7 @@
   <SubBottomCenter>Lower mid</SubBottomCenter>
   <SubBottomRight>Lower fore side</SubBottomRight>
   <SubDirOClock>[dir] o'clock</SubDirOClock>
-  
+
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
   <DimensionsFormat>[width]x[height] m</DimensionsFormat>
@@ -297,7 +362,7 @@
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>
-  
+
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>
   <LinkWaypoint>Hold space to link to another waypoint</LinkWaypoint>
@@ -323,19 +388,23 @@
 
 
   <!-- Item HUDs -->
-  <Force>Force</Force>
+  <EngineForce>Thrust</EngineForce>
+  <EngineBackwards>Backwards</EngineBackwards>
+  <EngineForwards>Forwards</EngineForwards>
+  <EnginePowered>Powered</EnginePowered>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
   <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
+  <DeconstuctorDeconstruct>Deconstruct</DeconstuctorDeconstruct>
   <Lvl>Lvl</Lvl>
   <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
   <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
   <MiniMapWaterLevelUnavailable>Water level data not available</MiniMapWaterLevelUnavailable>
   <MiniMapAirQuality>Air quality</MiniMapAirQuality>
   <MiniMapAirQualityUnavailable>Air quality data not available</MiniMapAirQualityUnavailable>
-  <PumpRunning>Running</PumpRunning>
+  <PumpPowered>Powered</PumpPowered>
   <PumpIn>IN</PumpIn>
   <PumpOut>OUT</PumpOut>
   <PumpSpeed>Pumping speed</PumpSpeed>
@@ -362,28 +431,36 @@
   <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
   <SteeringDepth>Depth: [m] m</SteeringDepth>
   <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
-  <PowerContainerRechargeRate>Recharge rate</PowerContainerRechargeRate>
-  <PowerTransferPower>Power: [power] kW</PowerTransferPower>
-  <PowerTransferLoad>Load: [load] kW</PowerTransferLoad>
+  <PowerContainerRechargeRate>Recharge rate [rate] %</PowerContainerRechargeRate>
+  <PowerTransferPowered>Powered</PowerTransferPowered>
+  <PowerTransferHighVoltage>Overvoltage</PowerTransferHighVoltage>
+  <PowerTransferLowVoltage>Low voltage</PowerTransferLowVoltage>
+  <PowerTransferPowerLabel>Power</PowerTransferPowerLabel>
+  <PowerTransferPower>[power] kW</PowerTransferPower>
+  <PowerTransferLoadLabel>Load</PowerTransferLoadLabel>
+  <PowerTransferLoad>[load] kW</PowerTransferLoad>
   <ConnectionLocked>(Locked)</ConnectionLocked>
+  <OptimizableLabel>Device can be optimized</OptimizableLabel>
+  <OptimizableRequiredSkills>Required skills:</OptimizableRequiredSkills>
+  <OptimizableOptimize>Optimize</OptimizableOptimize>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
   <FixButton>Fix</FixButton>
-  
+
   <!-- Traitors -->
   <NewTraitor>New traitor</NewTraitor>
   <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
   <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
   <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
-  
+
   <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
   <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
   <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
   <TraitorEndMessageFailure>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
   <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname], but [genderpronoun] got [genderpronounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
   <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed - [genderpronoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
-  
+
   <!-- Causes of death -->
   <CauseOfDeath>Cause of death</CauseOfDeath>
   <CauseOfDeath.Damage>Damage</CauseOfDeath.Damage>
@@ -394,7 +471,7 @@
   <CauseOfDeath.Burn>Burn</CauseOfDeath.Burn>
   <CauseOfDeath.Husk>Husk infection</CauseOfDeath.Husk>
   <CauseOfDeath.Disconnected>Braindead</CauseOfDeath.Disconnected>
-  
+
   <CauseOfDeathDescription.Damage>Succumbed to their injuries</CauseOfDeathDescription.Damage>
   <CauseOfDeathDescription.Bloodloss>Bled out</CauseOfDeathDescription.Bloodloss>
   <CauseOfDeathDescription.Drowning>Drowned</CauseOfDeathDescription.Drowning>
@@ -497,14 +574,4 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-
-
-
-
-
-
-
-
-
-
 </infotexts>

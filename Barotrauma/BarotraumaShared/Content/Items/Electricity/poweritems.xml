@@ -54,7 +54,7 @@
     <Sprite texture ="battery.png" sourcerect="0,0,58,77" depth="0.8"/>
 
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
-      <GuiFrame rect="0,-100,350,160" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,-100,350,250" alignment="Center" style="ItemUI"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
     </PowerContainer>
 
@@ -86,7 +86,7 @@
     <Sprite texture="supercapacitor.png" depth="0.8" sourcerect="0,0,77,88"/>
 
     <PowerContainer capacity="20.0" maxrechargespeed="20.0" maxoutput="2000000.0" canbeselected = "true">
-      <GuiFrame rect="0,0,0.3,0.3" alignment="Center" style="ItemUI"/>
+      <GuiFrame rect="0,0,350,250" alignment="Center" style="ItemUI"/>
     </PowerContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">

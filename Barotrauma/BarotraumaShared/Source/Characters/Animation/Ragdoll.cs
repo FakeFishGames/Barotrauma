@@ -16,7 +16,7 @@ namespace Barotrauma
         private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
-
+        
         private Limb[] limbs;
         public Limb[] Limbs
         {
@@ -889,6 +889,8 @@ namespace Barotrauma
 
         protected bool levitatingCollider = true;
 
+        public bool forceStanding;
+
         public void Update(float deltaTime, Camera cam)
         {
             if (!character.Enabled || Frozen) return;
@@ -902,8 +904,13 @@ namespace Barotrauma
 
             splashSoundTimer -= deltaTime;
 
+            if (forceStanding)
+            {
+                inWater = false;
+                headInWater = false;
+            }
             //ragdoll isn't in any room -> it's in the water
-            if (currentHull == null)
+            else if (currentHull == null)
             {
                 inWater = true;
                 headInWater = true;
@@ -952,7 +959,11 @@ namespace Barotrauma
                 bool prevInWater = limb.inWater;
                 limb.inWater = false;
 
-                if (limbHull == null)
+                if (forceStanding)
+                {
+                    limb.inWater = false;
+                }
+                else if (limbHull == null)
                 {
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
@@ -1047,8 +1058,12 @@ namespace Barotrauma
                 contacts = contacts.Next;
             }
 
+            if (forceStanding)
+            {
+                onGround = true;
+            }
             //the ragdoll "stays on ground" for 50 millisecs after separation
-            if (onFloorTimer <= 0.0f)
+            else if (onFloorTimer <= 0.0f)
             {
                 onGround = false;
             }

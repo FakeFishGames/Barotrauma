@@ -177,46 +177,55 @@ namespace Barotrauma
             return MainSub.SaveAs(filePath, previewImage);
         }
 
-        public void CreatePreviewWindow(GUIComponent frame)
+        public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), Name, "", Alignment.TopCenter, Alignment.TopCenter, frame, true, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform, Anchor.TopCenter), Name, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+
+            var upperPart = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), messageBox.Content.RectTransform, Anchor.Center, Pivot.BottomCenter), color: Color.Transparent);
+            var descriptionBox = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), messageBox.Content.RectTransform, Anchor.Center, Pivot.TopCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.1f),
+            }, color: Color.Transparent);
 
             if (PreviewImage == null)
             {
-                var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
-                txtBlock.OutlineColor = txtBlock.TextColor;
+                //var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
+                //var txtBlock = new GUITextBlock(new RectTransform())
+                //txtBlock.OutlineColor = txtBlock.TextColor;
+                new GUITextBlock(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
             }
             else
             {
-                new GUIImage(new Rectangle(-10, 60, 256, 128), PreviewImage, Alignment.TopLeft, frame);
+                new GUIImage(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform), PreviewImage);
             }
 
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             string dimensionsStr = realWorldDimensions == Vector2.Zero ?
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
-            
-            new GUITextBlock(new Rectangle(246, 60, 100, 20),
-                TextManager.Get("Dimensions") + ": " + dimensionsStr,
-                "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(246, 80, 100, 20),
-                TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
-                "", frame, GUI.SmallFont);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
 
-            new GUITextBlock(new Rectangle(246, 100, 100, 20),
-                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
-                "", frame, GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+                $"{TextManager.Get("Dimensions")}: {dimensionsStr}", 
+                font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new Rectangle(246, 120, 0, 20),
-                TextManager.Get("CompatibleContentPackages") + ":\n" + string.Join(", ", CompatibleContentPackages),
-                "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+                $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}", 
+                font: GUI.SmallFont, wrap: true);
 
-            var descrBox = new GUIListBox(new Rectangle(0, 200, 0, 120), "", frame);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+                $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience)}", 
+                font: GUI.SmallFont, wrap: true);
 
-            var descr = new GUITextBlock(new Rectangle(0, 0, descrBox.Rect.Width - 15, 0), Description + "\n", "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
-            descrBox.AddChild(descr);
-            descr.CanBeFocused = false;
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+                $"{TextManager.Get("CompatibleContentPackages")}: {string.Join(", ", CompatibleContentPackages)}", 
+                font: GUI.SmallFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false
+            };
         }
 
         public void CheckForErrors()
