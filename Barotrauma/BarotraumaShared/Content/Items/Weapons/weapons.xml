@@ -43,8 +43,8 @@
               holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
     
     <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
-      <Sound file="harpoon1.ogg" type="OnUse"/>
-      <Sound file="harpoon2.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/harpoon1.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/harpoon2.ogg" type="OnUse"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
@@ -78,7 +78,7 @@
               aimpos="90,10" handle1="-10,-7"/>
     
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
-      <Sound file="syringegun.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse"/>
       <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
       <RequiredSkill name="Weapons" level="15"/>
       <RequiredSkill name="Medical" level="30"/>
@@ -128,7 +128,7 @@
               aimpos="90,10" handle1="-11,-7"/>
 
     <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
-      <Sound file="revolver.ogg" type="OnUse" range="3000"/>
+      <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
@@ -300,7 +300,7 @@
     <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="-5,0"/>
 
     <RangedWeapon reload="2">
-      <Sound file="honk.ogg" type="OnUse"/>
+      <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse"/>
     </RangedWeapon>
 
   </Item>

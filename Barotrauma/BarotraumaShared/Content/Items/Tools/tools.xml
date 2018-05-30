@@ -10,7 +10,7 @@
 
     <Sprite texture ="tools.png" sourcerect="0,17,41,17" depth="0.55"/>
 
-    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar and a steel bar -->
+    <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
     <Deconstruct time="10">
       <Item name="Polycarbonate Bar"/>
       <Item name="Steel Bar"/>
@@ -35,7 +35,7 @@
       <ParticleEmitterHitItem particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
-      <sound file="weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <!-- when using, the contained welding fuel tank will detoriate (= lose fuel) -->
       <StatusEffect type="OnUse" target="Contained" targetnames="Welding Fuel Tank" Condition="-1.0"/>
@@ -48,7 +48,7 @@
 
       <!-- construction skill 20 required to use the item -->
       <RequiredSkill name="Construction" level="20"/>
-
+      <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
 
       <LightComponent LightColor="1.0,0.9,0.7,1.0" Flicker="0.5">
@@ -98,7 +98,7 @@
       <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
-      <sound file="plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
       <Fixable name="structure"/>
 
@@ -164,7 +164,7 @@
     <RepairTool extinquishamount="60.0" range="500" barrelpos="21,25">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50"/>
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
-      <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Tools/extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
     </RepairTool>
 
     <Propulsion force="-20" usablein="water" particles="bubbles"/>
@@ -330,7 +330,7 @@
 
       <StatusEffect type="OnBroken" target="This" IsOn="false"/>
       
-      <sound file="flare.ogg" type="OnActive" range="800.0" loop="true"/>
+      <sound file="Content/Items/Tools/flare.ogg" type="OnActive" range="800.0" loop="true"/>
     </LightComponent>
   </Item>
 
