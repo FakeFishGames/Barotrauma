@@ -130,7 +130,7 @@ namespace Barotrauma
                 Collider.FarseerBody.FixedRotation = false;
                 UpdateSineAnim(deltaTime);
             }
-            else if (currentHull != null && CanEnterSubmarine || forceStanding)
+            else if (CanEnterSubmarine && (currentHull != null || forceStanding))
             {
                 //rotate collider back upright
                 float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;

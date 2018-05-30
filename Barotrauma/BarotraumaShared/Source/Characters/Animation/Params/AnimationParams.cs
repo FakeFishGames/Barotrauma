@@ -31,6 +31,7 @@ namespace Barotrauma
     // TODO: add some of the ragdoll params here?
     abstract class AnimationParams : ISerializableEntity
     {
+        private bool isLoaded;
         protected bool Load(string file, AnimationType type)
         {
             FilePath = file;
@@ -39,6 +40,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return false;
             Name = doc.Root.Name.ToString();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
+            isLoaded = true;
             return SerializableProperties != null;
         }
 
@@ -118,11 +120,21 @@ namespace Barotrauma
 
         public void AddToEditor()
         {
+            if (!isLoaded)
+            {
+                DebugConsole.ThrowError("Animation params not loaded!");
+                return;
+            }
             Editor.AddChild(new SerializableEntityEditor(Editor.RectTransform, this, false, true, elementHeight: 0.04f));
         }
 
         public bool Save()
         {
+             if (!isLoaded)
+            {
+                DebugConsole.ThrowError("Animation params not loaded!");
+                return false;
+            }
             XDocument doc = XMLExtensions.TryLoadXml(FilePath);
             if (doc == null || doc.Root == null) return false;       
             SerializableProperty.SerializeProperties(this, doc.Root, true);
@@ -142,6 +154,11 @@ namespace Barotrauma
 
         public bool Reset()
         {
+            if (!isLoaded)
+            {
+                DebugConsole.ThrowError("Animation params not loaded!");
+                return false;
+            }
             XDocument doc = XMLExtensions.TryLoadXml(FilePath);
             if (doc == null || doc.Root == null) return false;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
