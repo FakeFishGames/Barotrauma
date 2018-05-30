@@ -1,0 +1,5 @@
+﻿<FractalguardianSwimSlow
+  speed ="3"
+  waveamplitude="0.5"
+  wavelength="5"
+  flip="false"/>
