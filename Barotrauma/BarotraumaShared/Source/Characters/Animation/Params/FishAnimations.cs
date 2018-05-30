@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using Microsoft.Xna.Framework;
+
+namespace Barotrauma
 {
     class FishWalkParams : FishGroundedParams
     {
@@ -32,37 +34,70 @@
         }
     }
 
-    abstract class FishGroundedParams : GroundedMovementParams
+    abstract class FishGroundedParams : GroundedMovementParams, IFishAnimation
     {
+        [Serialize(true, true), Editable]
+        public bool Flip { get; set; }
+
         [Serialize(0.0f, true), Editable]
-        public float LegTorque
+        public float LegTorque { get; set; }
+
+        [Serialize(1f, true), Editable]
+        public float WaveLength { get; set; }
+
+        /// <summary>
+        /// The angle of the collider when standing (i.e. out of water).
+        /// In degrees.
+        /// </summary>
+        [Serialize(0f, true), Editable]
+        public float ColliderStandAngle
         {
-            get;
-            set;
+            get => MathHelper.ToDegrees(ColliderStandAngleInRadians);
+            set => ColliderStandAngleInRadians = MathHelper.ToRadians(value);
         }
+        public float ColliderStandAngleInRadians { get; private set; }
+
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(float.NaN, true), Editable]
+        public float FootRotation
+        {
+            get => float.IsNaN(FootRotationInRadians) ? float.NaN : MathHelper.ToDegrees(FootRotationInRadians);
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    FootRotationInRadians = MathHelper.ToRadians(value);
+                }
+            }
+        }
+        public float FootRotationInRadians { get; private set; } = float.NaN;
     }
 
-    abstract class FishSwimParams : AnimationParams
+    abstract class FishSwimParams : AnimationParams, IFishAnimation
     {
-        [Serialize(1f, true), Editable]
-        public float WaveAmplitude
-        {
-            get;
-            set;
-        }
+        [Serialize(true, true), Editable]
+        public bool Flip { get; set; }
+
+        [Serialize(false, true), Editable]
+        public bool Mirror { get; set; }
 
         [Serialize(1f, true), Editable]
-        public float WaveLength
-        {
-            get;
-            set;
-        }
+        public float WaveAmplitude { get; set; }
+
+        [Serialize(1f, true), Editable]
+        public float WaveLength { get; set; }
 
         [Serialize(25.0f, true), Editable]
-        public float SteerTorque
-        {
-            get;
-            set;
-        }
+        public float SteerTorque { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool RotateTowardsMovement { get; set; }
+    }
+
+    interface IFishAnimation
+    {
+        bool Flip { get; set; }
     }
 }

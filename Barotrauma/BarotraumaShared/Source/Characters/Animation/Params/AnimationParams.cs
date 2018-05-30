@@ -28,6 +28,7 @@ namespace Barotrauma
         }
     }
 
+    // TODO: add some of the ragdoll params here?
     abstract class AnimationParams : ISerializableEntity
     {
         protected bool Load(string file, AnimationType type)
