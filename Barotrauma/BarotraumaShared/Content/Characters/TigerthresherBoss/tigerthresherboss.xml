@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="tigerthresherboss" humanoid="false">
 
+  <animation path="Content/Characters/TigerthresherBoss/TigerthresherBoss[ANIMTYPE].xml"/>
+
   <health
     vitality="500"
     doesbleed="true"/>
@@ -22,13 +24,7 @@
     <targetpriority tag="room" state="Attack" priority="40"/>
   </ai>
 
-  <ragdoll waveamplitude="30.0" 
-           wavelength="2500" 
-           steertorque="100"
-           swimspeed="5.0" 
-           swimspeedmultiplier="1.5"
-           canentersubmarine="false"
-           scale="1.5">
+  <ragdoll canentersubmarine="false" scale="1.5">
 
     <collider radius="50" height="185"/>
     
