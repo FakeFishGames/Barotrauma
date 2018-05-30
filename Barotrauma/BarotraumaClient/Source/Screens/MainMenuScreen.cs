@@ -71,9 +71,13 @@ namespace Barotrauma
             button.UserData = Tab.Settings;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 380, 200, 30), TextManager.Get("SteamWorkshopButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
-            button.Color = button.Color * 0.8f;
-            button.OnClicked = SteamWorkshopClicked;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                button = new GUIButton(new Rectangle(50, y + 380, 200, 30), TextManager.Get("SteamWorkshopButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+                button.Color = button.Color * 0.8f;
+                button.OnClicked = SteamWorkshopClicked;
+            }
+
 
             button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
             button.Color = button.Color * 0.8f;
