@@ -99,27 +99,37 @@ namespace Barotrauma.Steam
             };
 
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () =>
-            {
-                foreach (ServerList.Server s in query.Responded)
-                {
-                    var serverInfo = new Networking.ServerInfo()
-                    {
-                        ServerName = s.Name,
-                        Port = s.ConnectionPort.ToString(),
-                        IP = s.Address.ToString(), //TODO: check
-                        //GameStarted = serverDetails.???,
-                        PlayerCount = s.Players,
-                        MaxPlayers = s.MaxPlayers,
-                        HasPassword = s.Passworded
-                    };
-                    onServerFound(serverInfo);
-                }
-                query.Responded.Clear();
-            };
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound); };
             query.OnFinished = onFinished;
-                
+
+            var localQuery = instance.client.ServerList.Local(filter);
+            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound); };
+            localQuery.OnFinished = onFinished;
+
             return true;
+        }
+
+        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound)
+        {
+            foreach (ServerList.Server s in query.Responded)
+            {
+                var serverInfo = new Networking.ServerInfo()
+                {
+                    ServerName = s.Name,
+                    Port = s.ConnectionPort.ToString(),
+                    IP = s.Address.ToString(),
+                    PlayerCount = s.Players,
+                    MaxPlayers = s.MaxPlayers,
+                    HasPassword = s.Passworded
+                };
+                s.FetchRules();
+                s.OnReceivedRules += (bool asd) =>
+                {
+                    DebugConsole.Log(s.Rules.Values.ToString());
+                };
+                onServerFound(serverInfo);
+            }
+            query.Responded.Clear();
         }
 
 #endregion
@@ -154,6 +164,9 @@ namespace Barotrauma.Steam
             instance.server.ServerName = server.Name;
             instance.server.MaxPlayers = server.MaxPlayers;
             instance.server.Passworded = server.HasPassword;
+            Instance.server.SetKey("version", GameMain.Version.ToString());
+            Instance.server.SetKey("contentpackage", GameMain.Config.SelectedContentPackage.Name);
+            Instance.server.SetKey("contentpackagehash", GameMain.Config.SelectedContentPackage.MD5hash.Hash);
 #if SERVER
             instance.server.DedicatedServer = true;
 #endif

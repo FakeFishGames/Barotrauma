@@ -53,6 +53,11 @@ namespace Barotrauma
             }
         }
 
+        public GUIFrame Box
+        {
+            get { return box; }
+        }
+
         /// <summary>
         /// This is the new constructor.
         /// </summary>

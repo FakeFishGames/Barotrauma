@@ -50,7 +50,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
-        private static Sprite submarineIcon, arrow;
+        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
@@ -72,6 +72,16 @@ namespace Barotrauma
         public static Sprite Arrow
         {
             get { return arrow; }
+        }
+
+        public static Sprite CheckmarkIcon
+        {
+            get { return checkmarkIcon; }
+        }
+
+        public static Sprite LockIcon
+        {
+            get { return lockIcon; }
         }
 
         public static bool SettingsMenuOpen
@@ -135,6 +145,12 @@ namespace Barotrauma
             arrow.Origin = arrow.size / 2;
             SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61));
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
+
+            lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25));
+            lockIcon.Origin = lockIcon.size / 2;
+
+            checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28));
+            checkmarkIcon.Origin = checkmarkIcon.size / 2;
         }
 
         /// <summary>

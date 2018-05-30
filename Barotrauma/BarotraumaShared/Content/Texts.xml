@@ -223,11 +223,17 @@
   <ServerIP>Server IP</ServerIP>
   <ServerListName>Name</ServerListName>
   <ServerListPlayers>Players</ServerListPlayers>
+  <ServerListCompatible>Compatible</ServerListCompatible>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
+  <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
+  <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
+  <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
+  <ServerListIncompatibleContentPackage>You need the content package "[contentpackage]" (MD5: [hash]) to play on this server.</ServerListIncompatibleContentPackage>
   <FilterServers>Filter servers</FilterServers>
   <FilterPassword>No password required</FilterPassword>
+  <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>
   <FilterFullServers>Hide full servers</FilterFullServers>
   <FilterEmptyServers>Hide empty servers</FilterEmptyServers>
   <NoMatchingServers>No matching servers found.</NoMatchingServers>
