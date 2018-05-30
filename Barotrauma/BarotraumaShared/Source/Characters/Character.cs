@@ -892,7 +892,9 @@ namespace Barotrauma
             return targetMovement;
         }
 
-        // TODO: not sure what how this is supposed to work
+        /// <summary>
+        /// Applies temporary limits to the speed (damage).
+        /// </summary>
         public float GetCurrentMaxSpeed(bool run)
         {
             float currMaxSpeed = AnimController.GetCurrentSpeed(run);
