@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="coelanth" humanoid="false">
 
+  <animation path="Content/Characters/Coelanth/Coelanth[ANIMTYPE].xml"/>
+
   <health
     vitality="100"
     doesbleed="true"/>
@@ -22,13 +24,7 @@
     <targetpriority tag="nasonov" state="Attack" priority="30"/>
   </ai>
 
-  <ragdoll 
-    waveamplitude="50.0" 
-    wavelength="2500" 
-    steertorque="500"
-    swimspeed="5.0" 
-    walkspeed="3.5" 
-    canentersubmarine="false">
+  <ragdoll canentersubmarine="false">
 
     <collider radius="50" height="250"/>
     
