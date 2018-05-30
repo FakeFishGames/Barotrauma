@@ -179,7 +179,6 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
 
-
         public override bool Combine(Item item)
         {
             if (!containableItems.Any(x => x.MatchesItem(item))) return false;
@@ -193,6 +192,42 @@ namespace Barotrauma.Items.Components
             }
 
             return false;
+        }
+
+        public void SetContainedItemPositions()
+        {
+            Vector2 simPos = item.SimPosition;
+            Vector2 displayPos = item.Position;
+
+            foreach (Item contained in Inventory.Items)
+            {
+                if (contained == null) continue;
+
+                if (contained.body != null)
+                {
+                    try
+                    {
+                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
+#endif
+                    }
+                }
+
+                contained.Rect =
+                    new Rectangle(
+                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
+                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
+                        contained.Rect.Width, contained.Rect.Height);
+
+                contained.Submarine = item.Submarine;
+                contained.CurrentHull = item.CurrentHull;
+
+                contained.SetContainedItemPositions();
+            }
         }
 
         public override void OnMapLoaded()
