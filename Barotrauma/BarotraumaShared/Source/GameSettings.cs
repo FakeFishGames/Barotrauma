@@ -36,6 +36,7 @@ namespace Barotrauma
         public List<string> jobNamePreferences;
         
         public bool UseSteamMatchmaking { get; set; }
+        public bool RequireSteamAuthentication { get; set; }
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
@@ -204,8 +205,10 @@ namespace Barotrauma
 
 #if DEBUG
             UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && UseSteam;
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && UseSteam;
 #else
             UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && Steam.SteamManager.USE_STEAM;
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && Steam.SteamManager.USE_STEAM;
 #endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);

@@ -18,13 +18,7 @@ namespace Barotrauma.Steam
 #endif
 
         const uint AppID = 602960;
-
-        // UDP port for the server to do authentication on (ie, talk to Steam on)
-        const ushort SERVER_AUTHENTICATION_PORT = 8766;
-        
-        // UDP port for the master server updater to listen on
-        const ushort MASTER_SERVER_UPDATER_PORT = 27016;
-        
+                
         private static SteamManager instance;
         public static SteamManager Instance
         {
@@ -69,6 +63,15 @@ namespace Barotrauma.Steam
                 DebugConsole.ThrowError("Initializing Steam client failed.", e);
 #endif
             }
+        }
+
+        public static ulong GetSteamID()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return 0;
+            }
+            return instance.client.SteamId;
         }
         
         public static bool UnlockAchievement(string achievementName)
@@ -125,29 +128,61 @@ namespace Barotrauma.Steam
                 s.FetchRules();
                 s.OnReceivedRules += (bool asd) =>
                 {
-                    DebugConsole.Log(s.Rules.Values.ToString());
+                    DebugConsole.Log(string.Join(", ", s.Rules.Values));
                 };
                 onServerFound(serverInfo);
             }
             query.Responded.Clear();
         }
 
+        public static Auth.Ticket GetAuthSessionTicket()
+        {
+            if (instance == null || !instance.isInitialized)
+            {
+                return null;
+            }
+
+            return instance.client.Auth.GetAuthSessionTicket();
+        }
+
 #endregion
 
 #region Server
 
-        public static bool CreateServer(Networking.GameServer server, int maxPlayers)
+        public static bool CreateServer(Networking.GameServer server)
         {
             if (instance == null || !instance.isInitialized)
             {
                 return false;
             }
 
-            ServerInit options = new ServerInit("Barotrauma", "Barotrauma");
-            Instance.server = new Server(AppID, options);
+            ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
+            {
+                GamePort = (ushort)server.Port,
+                //QueryPort = (ushort)server.Port
+            };
+            //options.QueryShareGamePort();
+
+            instance.server = new Server(AppID, options);
+            if (!instance.server.IsValid)
+            {
+                instance.server.Dispose();
+                instance.server = null;
+                DebugConsole.ThrowError("Initializing Steam server failed.");
+                return false;
+            }
+
             RefreshServerDetails(server);
+
+            instance.server.Auth.OnAuthChange = server.OnAuthChange;
+
+            return true;
+        }
+
+        public static bool RegisterToMasterServer()
+        {
+            if (instance == null || !instance.isInitialized || instance.server == null) return false;
             Instance.server.LogOnAnonymous();
-            
             return true;
         }
 
@@ -174,11 +209,23 @@ namespace Barotrauma.Steam
             return true;
         }
 
+        public static bool StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        {
+            if (instance == null || !instance.isInitialized || instance.server == null) return false;
+
+            DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
+            if (!instance.server.Auth.StartSession(authTicketData, clientSteamID))
+            {
+                DebugConsole.Log("Authentication failed");
+                return false;
+            }
+            return true;
+        }
+
         public static bool CloseServer()
         {
             if (instance == null || !instance.isInitialized || instance.server == null) return false;
             
-
             instance.server.Dispose();
             instance.server = null;
             
