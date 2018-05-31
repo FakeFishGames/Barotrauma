@@ -204,11 +204,15 @@ namespace Barotrauma.Networking
                 FinishUPnP();
             }
 
-            if (isPublic)
+            if (SteamManager.USE_STEAM)
             {
+                SteamManager.CreateServer(this);
+            }
+            if (isPublic)
+            { 
                 if (GameMain.Config.UseSteamMatchmaking)
                 {
-                    registeredToMaster = SteamManager.CreateServer(this, maxPlayers);
+                    SteamManager.RegisterToMasterServer();
                 }
                 else
                 {
@@ -229,11 +233,11 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> RegisterToMasterServer()
         {
-            if (restClient==null)
+            if (restClient == null)
             {
-                restClient = new RestClient(NetConfig.MasterServerUrl);            
+                restClient = new RestClient(NetConfig.MasterServerUrl);
             }
-                
+
             var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
@@ -486,10 +490,16 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                if ((ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
+                                ClientPacketHeader packetHeader = (ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte();
+                                if (packetHeader == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
-                                    ClientAuthRequest(inc.SenderConnection);
+                                    HandleClientAuthRequest(inc.SenderConnection);
+                                }
+                                else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
+                                {
+                                    inc.SenderConnection.Approve();
+                                    ReadClientSteamAuthRequest(inc);
                                 }
                             }
                             break;
@@ -556,7 +566,10 @@ namespace Barotrauma.Networking
             switch (header)
             {
                 case ClientPacketHeader.REQUEST_AUTH:
-                    ClientAuthRequest(inc.SenderConnection);
+                    HandleClientAuthRequest(inc.SenderConnection);
+                    break;
+                case ClientPacketHeader.REQUEST_STEAMAUTH:
+                    ReadClientSteamAuthRequest(inc);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);
@@ -2404,14 +2417,11 @@ namespace Barotrauma.Networking
         {
             banList.Save();
             SaveSettings();
+            SteamManager.CloseServer();
 
             if (registeredToMaster)
             {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    SteamManager.CloseServer();
-                }
-                else if (restClient != null)
+                if (restClient != null)
                 {
                     var request = new RestRequest("masterserver2.php", Method.GET);
                     request.AddParameter("action", "removeserver");

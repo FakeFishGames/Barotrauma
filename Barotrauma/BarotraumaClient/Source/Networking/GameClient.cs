@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Steam;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -16,7 +17,7 @@ namespace Barotrauma.Networking
         private NetClient client;
 
         private GUIMessageBox reconnectBox;
-        
+
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
@@ -35,6 +36,7 @@ namespace Barotrauma.Networking
         private bool requiresPw;
         private int nonce;
         private string saltedPw;
+        private Facepunch.Steamworks.Auth.Ticket steamAuthTicket;
 
         private UInt16 lastSentChatMsgID = 0; //last message this client has successfully sent
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
@@ -45,12 +47,12 @@ namespace Barotrauma.Networking
         private ClientEntityEventManager entityEventManager;
 
         private FileReceiver fileReceiver;
-        
+
         public byte ID
         {
             get { return myID; }
         }
-        
+
         public override List<Client> ConnectedClients
         {
             get
@@ -63,7 +65,7 @@ namespace Barotrauma.Networking
         {
             get { return fileReceiver; }
         }
-        
+
         public GameClient(string newName)
         {
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
@@ -75,7 +77,7 @@ namespace Barotrauma.Networking
             endRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
                 TextManager.Get("EndRound"))
             {
-                OnClicked = (btn, userdata) => 
+                OnClicked = (btn, userdata) =>
                 {
                     if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
                     RequestRoundEnd();
@@ -90,7 +92,7 @@ namespace Barotrauma.Networking
                 OnSelected = ToggleEndRoundVote,
                 Visible = false
             };
-            
+
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
             Hull.EditWater = false;
@@ -118,7 +120,7 @@ namespace Barotrauma.Networking
         public void ConnectToServer(string hostIP)
         {
             string[] address = hostIP.Split(':');
-            if (address.Length==1)
+            if (address.Length == 1)
             {
                 serverIP = hostIP;
                 Port = NetConfig.DefaultPort;
@@ -130,13 +132,13 @@ namespace Barotrauma.Networking
                 int port = 0;
                 if (!int.TryParse(address[1], out port))
                 {
-                    DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
+                    DebugConsole.ThrowError("Invalid port: " + address[1] + "!");
                     Port = NetConfig.DefaultPort;
                 }
                 else
                 {
                     Port = port;
-                }     
+                }
             }
 
             myCharacter = Character.Controlled;
@@ -160,7 +162,7 @@ namespace Barotrauma.Networking
             client = new NetClient(config);
             netPeer = client;
             client.Start();
-            
+
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
@@ -168,12 +170,12 @@ namespace Barotrauma.Networking
             }
             catch
             {
-                new GUIMessageBox("Could not connect to server", "Failed to resolve address \""+serverIP+":"+Port+"\". Please make sure you have entered a valid IP address.");
+                new GUIMessageBox("Could not connect to server", "Failed to resolve address \"" + serverIP + ":" + Port + "\". Please make sure you have entered a valid IP address.");
                 return;
             }
 
             NetOutgoingMessage outmsg = client.CreateMessage();
-            outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+            WriteAuthRequest(outmsg);
 
             // Connect client, to ip previously requested from user 
             try
@@ -182,13 +184,13 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't connect to "+hostIP+". Error message: "+e.Message);
+                DebugConsole.ThrowError("Couldn't connect to " + hostIP + ". Error message: " + e.Message);
                 Disconnect();
 
                 GameMain.ServerListScreen.Select();
                 return;
             }
-            
+
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
@@ -209,7 +211,7 @@ namespace Barotrauma.Networking
             GameMain.NetworkMember = null;
             GameMain.GameSession = null;
             GameMain.ServerListScreen.Select();
-            
+
             return true;
         }
 
@@ -230,8 +232,8 @@ namespace Barotrauma.Networking
             connectCancelled = false;
             // When this is set to true, we are approved and ready to go
             bool CanStart = false;
-            
-            DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
+
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
             DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
@@ -248,7 +250,7 @@ namespace Barotrauma.Networking
                 int seconds = DateTime.Now.Second;
 
                 string connectingText = "Connecting to " + serverIP;
-                for (int i = 0; i < 1 + (seconds % 3); i++ )
+                for (int i = 0; i < 1 + (seconds % 3); i++)
                 {
                     connectingText += ".";
                 }
@@ -260,7 +262,7 @@ namespace Barotrauma.Networking
                     {
                         //request auth again
                         NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                        reqAuthMsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+                        WriteAuthRequest(reqAuthMsg);
                         client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
                     }
                     else
@@ -370,7 +372,7 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f),  msgBox.InnerFrame.RectTransform));
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform));
                     passwordBox.UserData = "password";
 
                     var okButton = msgBox.Buttons[0];
@@ -402,7 +404,7 @@ namespace Barotrauma.Networking
                         {
                             //request auth again to prevent timeout
                             NetOutgoingMessage reqAuthMsg = client.CreateMessage();
-                            reqAuthMsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+                            WriteAuthRequest(reqAuthMsg);
                             client.SendMessage(reqAuthMsg, NetDeliveryMethod.Unreliable);
                             reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 3);
                         }
@@ -446,7 +448,7 @@ namespace Barotrauma.Networking
             {
                 var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to the server.", new string[] { "Retry", "Cancel" });
 
-                DebugConsole.NewMessage("Failed to connect to the server - connection status: "+client.ConnectionStatus.ToString(), Color.Orange);
+                DebugConsole.NewMessage("Failed to connect to the server - connection status: " + client.ConnectionStatus.ToString(), Color.Orange);
 
                 reconnect.Buttons[0].OnClicked += RetryConnection;
                 reconnect.Buttons[0].OnClicked += reconnect.Close;
@@ -463,6 +465,38 @@ namespace Barotrauma.Networking
             }
 
             yield return CoroutineStatus.Success;
+        }
+
+        private void WriteAuthRequest(NetOutgoingMessage outmsg)
+        {
+            if (SteamManager.IsInitialized && SteamManager.USE_STEAM)
+            {
+                if (steamAuthTicket == null)
+                {
+                    steamAuthTicket = SteamManager.GetAuthSessionTicket();
+                }
+
+                DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 3);
+                while ((steamAuthTicket.Data == null || steamAuthTicket.Data.Length == 0) &&
+                    DateTime.Now < timeOut)
+                {
+                    System.Threading.Thread.Sleep(10);
+                }
+
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_STEAMAUTH);
+                outmsg.Write(SteamManager.GetSteamID());
+                outmsg.Write(steamAuthTicket.Data.Length);
+                outmsg.Write(steamAuthTicket.Data);
+
+                DebugConsole.Log("Sending Steam auth message");
+                DebugConsole.Log("   Steam ID: " + SteamManager.GetSteamID());
+                DebugConsole.Log("   Ticket data: " + steamAuthTicket.Data.Length);
+                DebugConsole.Log("   Msg length: " + outmsg.LengthBytes);
+            }
+            else
+            {
+                outmsg.Write((byte)ClientPacketHeader.REQUEST_AUTH);
+            }
         }
 
         public override void Update(float deltaTime)
@@ -1404,6 +1438,7 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             client.Shutdown("");
+            steamAuthTicket?.Cancel();
             GameMain.NetworkMember = null;
         }
         
