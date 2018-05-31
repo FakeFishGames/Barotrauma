@@ -33,8 +33,9 @@ namespace Barotrauma.Networking
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ReadClientSteamAuthRequest(NetIncomingMessage inc)
+        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
         {
+            clientSteamID = 0;
             if (!Steam.SteamManager.USE_STEAM)
             {
                 //not using steam, handle auth normally
@@ -42,7 +43,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            ulong clientSteamID = inc.ReadUInt64();
+            clientSteamID = inc.ReadUInt64();
             int authTicketLength = inc.ReadInt32();
             inc.ReadBytes(authTicketLength, out byte[] authTicketData);
 
@@ -51,6 +52,11 @@ namespace Barotrauma.Networking
             DebugConsole.Log("  Auth ticket length: " + authTicketLength);
 
             DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
+
+            if (banList.IsBanned("", clientSteamID))
+            {
+                return;
+            }
 
             if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection && uc.WaitingSteamAuth))
             {
@@ -77,6 +83,8 @@ namespace Barotrauma.Networking
                 unauthClient.Connection.Disconnect("Steam authentication failed.");
                 unauthenticatedClients.Remove(unauthClient);
             }
+
+            return;
         }
 
         public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
