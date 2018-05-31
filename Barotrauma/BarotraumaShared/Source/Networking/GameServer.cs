@@ -480,7 +480,7 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
-                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
                             {
                                 inc.SenderConnection.Deny("You have been banned from the server");
                             }
@@ -498,8 +498,15 @@ namespace Barotrauma.Networking
                                 }
                                 else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
                                 {
-                                    inc.SenderConnection.Approve();
-                                    ReadClientSteamAuthRequest(inc);
+                                    ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
+                                    if (banList.IsBanned("", clientSteamID))
+                                    {
+                                        inc.SenderConnection.Deny("You have been banned from the server");
+                                    }
+                                    else
+                                    {
+                                        inc.SenderConnection.Approve();
+                                    }
                                 }
                             }
                             break;
@@ -556,7 +563,8 @@ namespace Barotrauma.Networking
 
         private void ReadDataMessage(NetIncomingMessage inc)
         {
-            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+            var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString(), connectedClient == null ? 0 : connectedClient.SteamID))
             {
                 KickClient(inc.SenderConnection, "You have been banned from the server.");
                 return;
@@ -569,14 +577,13 @@ namespace Barotrauma.Networking
                     HandleClientAuthRequest(inc.SenderConnection);
                     break;
                 case ClientPacketHeader.REQUEST_STEAMAUTH:
-                    ReadClientSteamAuthRequest(inc);
+                    ReadClientSteamAuthRequest(inc, out _);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);
                     break;
 
                 case ClientPacketHeader.RESPONSE_STARTGAME:
-                    var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
                     if (connectedClient != null)
                     {
                         connectedClient.ReadyToStart = inc.ReadBoolean();
@@ -1681,7 +1688,7 @@ namespace Barotrauma.Networking
             if (client == null)
             {
                 conn.Disconnect("You have been banned from the server");
-                if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString()))
+                if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString(), 0))
                 {
                     banList.BanPlayer("Unnamed", conn.RemoteEndPoint.Address.ToString(), reason, duration);
                 }                
@@ -1699,9 +1706,17 @@ namespace Barotrauma.Networking
             string msg = "You have been banned from the server.";
             if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
             DisconnectClient(client, client.Name + " has been banned from the server.", msg);
-            string ip = client.Connection.RemoteEndPoint.Address.ToString();
-            if (range) { ip = banList.ToRange(ip); }
-            banList.BanPlayer(client.Name, ip, reason, duration);
+
+            if (client.SteamID == 0 || range)
+            {
+                string ip = client.Connection.RemoteEndPoint.Address.ToString();
+                if (range) { ip = banList.ToRange(ip); }
+                banList.BanPlayer(client.Name, ip, reason, duration);
+            }
+            if (client.SteamID > 0)
+            {
+                banList.BanPlayer(client.Name, client.SteamID, reason, duration);
+            }
         }
 
         public void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
