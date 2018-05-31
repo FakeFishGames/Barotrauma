@@ -262,6 +262,13 @@ namespace Barotrauma.Steam
             item.WorkshopUploadAppId = AppID;
             item.Title = sub.Name;
 
+            string subPreviewPath = "SubPreview.png";
+#if CLIENT
+            FileStream fs = new FileStream(subPreviewPath, FileMode.Create);
+            sub.PreviewImage.Texture.SaveAsPng(fs, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
+            item.PreviewImage = subPreviewPath;
+#endif
+
             var tempFolder = new DirectoryInfo("Temp");
             item.Folder = tempFolder.FullName;
             if (tempFolder.Exists)
@@ -275,10 +282,10 @@ namespace Barotrauma.Steam
 
             File.Copy(sub.FilePath, Path.Combine(tempFolder.FullName, Path.GetFileName(sub.FilePath)));
 
-            CoroutineManager.StartCoroutine(instance.PublishItem(item, tempFolder));
+            CoroutineManager.StartCoroutine(instance.PublishItem(item, tempFolder, subPreviewPath));
         }
 
-        private IEnumerable<object> PublishItem(Workshop.Editor item, DirectoryInfo tempFolder)
+        private IEnumerable<object> PublishItem(Workshop.Editor item, DirectoryInfo tempFolder, string previewImgPath)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -302,6 +309,10 @@ namespace Barotrauma.Steam
             
             SaveUtil.ClearFolder(tempFolder.FullName);
             tempFolder.Delete();
+            if (File.Exists(previewImgPath))
+            {
+                File.Delete(previewImgPath);
+            }
 
             yield return CoroutineStatus.Success;
         }

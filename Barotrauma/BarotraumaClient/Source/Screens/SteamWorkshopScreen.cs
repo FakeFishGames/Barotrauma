@@ -48,18 +48,27 @@ namespace Barotrauma
             foreach (var item in itemDetails)
             {
                 var itemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), itemList.Content.RectTransform, minSize: new Point(0, 80)),
-                    style: "ListBoxElement");
-                itemFrame.UserData = item;
+                    style: "ListBoxElement")
+                {
+                    UserData = item
+                };
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.25f), itemFrame.RectTransform), item.Title);
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.75f), itemFrame.RectTransform, Anchor.BottomLeft), item.Description,
                     wrap: true, font: GUI.SmallFont);
 
-                var downloadBtn = new GUIButton(new RectTransform(new Vector2(0.2f, 0.2f), itemFrame.RectTransform, Anchor.CenterRight),
-                    TextManager.Get("DownloadButton"))
+                if (item.Installed)
                 {
-                    UserData = item,
-                    OnClicked = DownloadItem
-                };
+                    new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.25f), itemFrame.RectTransform, Anchor.CenterRight), "Installed", textAlignment: Alignment.CenterRight);
+                }
+                else
+                {
+                    var downloadBtn = new GUIButton(new RectTransform(new Vector2(0.2f, 0.2f), itemFrame.RectTransform, Anchor.CenterRight),
+                        TextManager.Get("DownloadButton"))
+                    {
+                        UserData = item,
+                        OnClicked = DownloadItem
+                    };
+                }
             }
         }
 
