@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
@@ -34,31 +35,33 @@ namespace Barotrauma
 
     public class BackgroundMusic
     {
-        public readonly string file;
-        public readonly string type;
+        public readonly string File;
+        public readonly string Type;
 
-        public readonly Vector2 priorityRange;
-
-        public BackgroundMusic(string file, string type, Vector2 priorityRange)
+        public readonly Vector2 IntensityRange;
+                
+        public BackgroundMusic(XElement element)
         {
-            this.file = file;
-            this.type = type;
-            this.priorityRange = priorityRange;
+            this.File = element.GetAttributeString("file", "");
+            this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
+            this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
         }
     }
 
     static class SoundPlayer
     {
         private static ILookup<string, Sound> miscSounds;
-
+        
         //music
         public static float MusicVolume = 1.0f;
         private const float MusicLerpSpeed = 1.0f;
         private const float UpdateMusicInterval = 5.0f;
-        
-        private static Sound currentMusic;
-        private static SoundChannel currentMusicChannel;
-        private static BackgroundMusic targetMusic;
+
+        const int MaxMusicChannels = 6;
+
+        private readonly static Sound[] currentMusic = new Sound[MaxMusicChannels];
+        private readonly static SoundChannel[] musicChannel = new SoundChannel[MaxMusicChannels];
+        private readonly static BackgroundMusic[] targetMusic = new BackgroundMusic[MaxMusicChannels];
         private static List<BackgroundMusic> musicClips;
 
         private static float updateMusicTimer;
@@ -128,11 +131,7 @@ namespace Barotrauma
                 switch (soundElement.Name.ToString().ToLowerInvariant())
                 {
                     case "music":
-                        string file = soundElement.GetAttributeString("file", "");
-                        string type = soundElement.GetAttributeString("type", "").ToLowerInvariant();
-                        Vector2 priority = soundElement.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
-
-                        musicClips.Add(new BackgroundMusic(file, type, priority));
+                        musicClips.Add(new BackgroundMusic(soundElement));
                         break;
                     case "splash":
                         SplashSounds.Add(GameMain.SoundManager.LoadSound(soundElement, false));
@@ -312,87 +311,114 @@ namespace Barotrauma
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
-                List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
-                
-                if (suitableMusic.Count == 0)
-                {
-                    targetMusic = null;
-                }
-                else if (targetMusic==null || currentMusic==null || !suitableMusic.Any(m => m.file == currentMusic.Filename))
-                {
-                    int index = Rand.Int(suitableMusic.Count);
+                //find appropriate music for the current situation
+                string currentMusicType = GetCurrentMusicType();
+                float currentIntensity = GameMain.GameSession?.EventManager != null ?
+                    GameMain.GameSession.EventManager.CurrentIntensity * 100.0f : 0.0f;
 
-                    if (currentMusic == null || suitableMusic[index].file != currentMusic.Filename)
+                IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
+
+                if (suitableMusic.Count() == 0)
+                {
+                    targetMusic[0] = null;
+                }
+                //switch the music if nothing playing atm or the currently playing clip is not suitable anymore
+                else if (targetMusic[0] == null || currentMusic[0] == null || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
+                {
+                    targetMusic[0] = suitableMusic.GetRandom();                    
+                }
+                                
+                //get the appropriate intensity layers for current situation
+                IEnumerable<BackgroundMusic> suitableIntensityMusic = GetSuitableMusicClips("intensity", currentIntensity);
+
+                for (int i = 1; i < MaxMusicChannels; i++)
+                {
+                    //disable targetmusics that aren't suitable anymore
+                    if (targetMusic[i] != null && !suitableIntensityMusic.Any(m => m.File == targetMusic[i].File))
                     {
-                        targetMusic = suitableMusic[index];
+                        targetMusic[i] = null;
                     }
                 }
+                    
+                foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
+                {
+                    //already playing, do nothing
+                    if (targetMusic.Any(m => m != null && m.File == intensityMusic.File)) continue;
+
+                    for (int i = 1; i < MaxMusicChannels; i++)
+                    {
+                        if (targetMusic[i] == null)
+                        {
+                            targetMusic[i] = intensityMusic;
+                            break;
+                        }
+                    }
+                }                
+
                 updateMusicTimer = UpdateMusicInterval;
             }
-            
-            if (targetMusic == null)
-            {
-                if (currentMusicChannel != null && currentMusicChannel.IsPlaying)
-                {
-                    currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, 0.0f, MusicLerpSpeed * deltaTime);
 
-                    if (currentMusicChannel.Gain < 0.01f)
+            for (int i = 0; i < MaxMusicChannels; i++)
+            {
+                //nothing should be playing on this channel
+                if (targetMusic[i] == null)
+                {
+                    if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
-                        currentMusicChannel.Dispose(); currentMusicChannel = null;
-                        currentMusic.Dispose(); currentMusic = null;
+                        //mute the channel
+                        musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
+                        if (musicChannel[i].Gain < 0.01f)
+                        {
+                            musicChannel[i].Dispose(); musicChannel[i] = null;
+                            currentMusic[i].Dispose(); currentMusic[i] = null;
+                        }
                     }
                 }
-            }
-            else if (currentMusic == null || targetMusic.file != currentMusic.Filename)
-            {
-                if (currentMusicChannel != null && currentMusicChannel.IsPlaying)
+                //something should be playing, but the channel is playing nothing or an incorrect clip
+                else if (currentMusic[i] == null || targetMusic[i].File != currentMusic[i].Filename)
                 {
-                    currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                
-                    if (currentMusicChannel.Gain < 0.01f)
+                    //something playing -> mute it first
+                    if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
-                        currentMusicChannel.Dispose(); currentMusicChannel = null;
-                        currentMusic.Dispose(); currentMusic = null;
+                        musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
+                        if (musicChannel[i].Gain < 0.01f)
+                        {
+                            musicChannel[i].Dispose(); musicChannel[i] = null;
+                            currentMusic[i].Dispose(); currentMusic[i] = null;
+                        }
+                    }
+                    //channel free now, start playing the correct clip
+                    if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
+                    {
+                        currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
+                        if (musicChannel[i] != null) musicChannel[i].Dispose();
+                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                     }
                 }
-                if (currentMusic == null || (currentMusicChannel==null || !currentMusicChannel.IsPlaying))
+                else
                 {
-                    currentMusic = GameMain.SoundManager.LoadSound(targetMusic.file, true);
-                    if (currentMusicChannel != null) currentMusicChannel.Dispose();
-                    currentMusicChannel = currentMusic.Play(0.0f,"music");
+                    //playing something, lerp volume up
+                    if (musicChannel[i] == null || !musicChannel[i].IsPlaying)
+                    {
+                        musicChannel[i].Dispose();
+                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                    }
+                    musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, MusicVolume, MusicLerpSpeed * deltaTime);
                 }
-            }
-            else
-            {
-                if (currentMusicChannel == null || !currentMusicChannel.IsPlaying)
-                {
-                    currentMusicChannel.Dispose();
-                    currentMusicChannel = currentMusic.Play(0.0f,"music");
-                }
-                currentMusicChannel.Gain = MathHelper.Lerp(currentMusicChannel.Gain, MusicVolume, MusicLerpSpeed * deltaTime);
-            }
+            } 
         }
-
-        public static void SwitchMusic()
+        
+        private static IEnumerable<BackgroundMusic> GetSuitableMusicClips(string musicType, float currentIntensity)
         {
-            var suitableMusic = GetSuitableMusicClips();
-
-            if (suitableMusic.Count > 1)
-            {
-                targetMusic = currentMusic == null ? suitableMusic[0] : suitableMusic.Find(m => m.file != currentMusic.Filename);
-            }
-        }
-
-        private static List<BackgroundMusic> GetSuitableMusicClips()
-        {
-            string musicType = GetCurrentMusicType();
-            return musicClips.Where(music => music != null && music.type == musicType).ToList();
+            return musicClips.Where(music => 
+                music != null && 
+                music.Type == musicType && 
+                currentIntensity >= music.IntensityRange.X &&
+                currentIntensity <= music.IntensityRange.Y);
         }
 
         private static string GetCurrentMusicType()
         {
-            /*if ((currentMusicChannel==null || !currentMusicChannel.IsPlaying) &&
-                targetMusic != null && targetMusic.type == OverrideMusicType) OverrideMusicType = null;*/
             if (OverrideMusicType != null) return OverrideMusicType;
             
             if (Character.Controlled != null &&
@@ -411,20 +437,7 @@ namespace Barotrauma
             }
 
             if (targetSubmarine != null)
-            {
-                List<Reactor> reactors = new List<Reactor>();
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != targetSubmarine) continue;
-                    var reactor = item.GetComponent<Reactor>();
-                    if (reactor != null)
-                    {
-                        reactors.Add(reactor);
-                    }
-                }
-
-                //if (reactors.All(r => r.Temperature < 1.0f)) return "repair";
-
+            {                
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.hullList)
@@ -434,10 +447,9 @@ namespace Barotrauma
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "repair";             
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "flooded";             
             }
-
-
+            
             float enemyDistThreshold = 5000.0f;
 
             if (targetSubmarine != null)
@@ -466,6 +478,11 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
+            {
+                return "start";
+            }
+
             return "default";
         }
 
@@ -485,11 +502,11 @@ namespace Barotrauma
 
         public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<string> tags = null)
         {
-            damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-            var sounds = damageSounds.FindAll(s => 
+            damage = MathHelper.Clamp(damage + Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
+            var sounds = damageSounds.FindAll(s =>
                 s.damageRange == null ||
-                (damage >= s.damageRange.X && 
-                damage <= s.damageRange.Y) && 
+                (damage >= s.damageRange.X &&
+                damage <= s.damageRange.Y) &&
                 s.damageType == damageType &&
                 (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)));
 
