@@ -24,6 +24,8 @@ namespace Barotrauma
         private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
 
+        private GUIButton steamWorkshopButton;
+
         private GameMain game;
 
         private Tab selectedTab;
@@ -83,8 +85,9 @@ namespace Barotrauma
 
             if (Steam.SteamManager.USE_STEAM)
             {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
+                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
                 {
+                    Enabled = false,
                     OnClicked = SteamWorkshopClicked
                 };
             }
@@ -351,6 +354,11 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
+
+            if (steamWorkshopButton != null)
+            {
+                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
