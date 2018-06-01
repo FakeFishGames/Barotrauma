@@ -86,7 +86,7 @@ namespace Barotrauma
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
             if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/MapLine.png");
 
-            if (circleTexture == null) circleTexture = GUI.CreateCircle(512, true);
+            if (circleTexture == null) circleTexture = GUI.CreateCircle(512, false);
 
             //TODO: move this to xml
             for (int i = 1; i < 17; i++)
@@ -136,7 +136,7 @@ namespace Barotrauma
             {
                 for (int y = 0; y < NoiseResolution; y++)
                 {
-                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / NoiseResolution, (double)y / NoiseResolution, (double)z, octaves, persistence);
+                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / NoiseResolution, (double)y / NoiseResolution, (double)z, 10, octaves, persistence);
                     min = Math.Min(Noise[x, y], min);
                     max = Math.Max(Noise[x, y], max);
                 }
@@ -145,15 +145,38 @@ namespace Barotrauma
             float radius = NoiseResolution / 2;
             Vector2 center = Vector2.One * radius;
             float range = max - min;
-            float centerDarken = 0.0f;
+
+            float centerDarkenStrength = 1.0f;
+            float centerDarkenRadius = radius * 0.8f;
+
+            float edgeDarkenStrength = 0.8f;
+            float edgeDarkenRadius = radius * 0.95f;
             for (int x = 0; x < NoiseResolution; x++)
             {
                 for (int y = 0; y < NoiseResolution; y++)
                 {
+                    //normalize the noise to 0-1 range
                     Noise[x, y] = (Noise[x, y] - min) / range;
+
                     float dist = Vector2.Distance(center, new Vector2(x, y));
-                    float darkenAmount = 1.0f - (dist / radius);
-                    Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * centerDarken, darkenAmount * darkenAmount);
+                    if (dist < centerDarkenRadius)
+                    {
+                        float angle = (float)Math.Atan2(y - center.Y, x - center.X);
+                        float freq = 5.0f + Noise[x, y] * 5.0f;
+
+                        float currDarkenRadius = centerDarkenRadius * (0.6f + (float)Math.Sin(angle * 3.0f + Noise[x, y] * 10.0f) * 0.4f);
+                        if (dist < currDarkenRadius)
+                        {
+                            float darkenAmount = 1.0f - (dist / currDarkenRadius);
+                            Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * (1.0f - centerDarkenStrength), darkenAmount);
+                        }
+
+                    }
+                    if (dist > edgeDarkenRadius)
+                    {
+                        float darkenAmount = Math.Min((dist - edgeDarkenRadius) / (radius - edgeDarkenRadius), 1.0f);
+                        Noise[x, y] = MathHelper.Lerp(Noise[x, y], 1.0f - edgeDarkenStrength, darkenAmount);
+                    }
                 }
             }
         }
@@ -168,12 +191,14 @@ namespace Barotrauma
             float mapRadius = size / 2;
             Vector2 mapCenter = new Vector2(mapRadius, mapRadius);
 
-            for (float x = 0; x < size; x+=10.0f)
+            float locationRadius = mapRadius * 0.9f;
+
+            for (float x = mapCenter.X - locationRadius; x < mapCenter.X + locationRadius; x += 5.0f)
             {
-                for (float y = 0; y < size; y += 10.0f)
+                for (float y = mapCenter.Y - locationRadius; y < mapCenter.Y + locationRadius; y += 5.0f)
                 {
                     float noiseVal = Noise[(int)(x / size * NoiseResolution), (int)(y / size * NoiseResolution)];
-                    if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < noiseVal * noiseVal * noiseVal * 0.1f)
+                    if (Rand.Range(0.1f, 1.0f, Rand.RandSync.Server) < noiseVal * noiseVal * noiseVal * 0.5f)
                     {
                         sites.Add(new Vector2(x, y));
                     }
@@ -197,8 +222,8 @@ namespace Barotrauma
             {
                 if (edge.point1 == edge.point2) continue;
                 
-                if (Vector2.DistanceSquared(edge.point1, mapCenter) >= mapRadius * mapRadius ||
-                    Vector2.DistanceSquared(edge.point2, mapCenter) >= mapRadius * mapRadius) continue;
+                if (Vector2.DistanceSquared(edge.point1, mapCenter) >= locationRadius * locationRadius ||
+                    Vector2.DistanceSquared(edge.point2, mapCenter) >= locationRadius * locationRadius) continue;
 
                 Location[] newLocations = new Location[2];
                 newLocations[0] = locations.Find(l => l.MapPosition == edge.point1 || l.MapPosition == edge.point2);
@@ -214,7 +239,6 @@ namespace Barotrauma
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
-                    float dddd = Vector2.Distance(position, mapCenter);
                     int zone = MathHelper.Clamp(DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, DifficultyZones);
                     newLocations[i] = Location.CreateRandom(position, zone);
                     locations.Add(newLocations[i]);
