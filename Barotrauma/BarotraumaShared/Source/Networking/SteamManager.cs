@@ -53,6 +53,11 @@ namespace Barotrauma.Steam
             {
                 client = new Client(AppID);
                 isInitialized = client.IsSubscribed && client.IsValid;
+
+                if (isInitialized)
+                {
+                    DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
+                }
             }
             catch (Exception e)
             {
@@ -262,11 +267,21 @@ namespace Barotrauma.Steam
             item.WorkshopUploadAppId = AppID;
             item.Title = sub.Name;
 
-            string subPreviewPath = "SubPreview.png";
+            string subPreviewPath = Path.GetFullPath("SubPreview.png");
 #if CLIENT
-            FileStream fs = new FileStream(subPreviewPath, FileMode.Create);
-            sub.PreviewImage.Texture.SaveAsPng(fs, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
-            item.PreviewImage = subPreviewPath;
+            try
+            {
+                using (Stream s = File.Create(subPreviewPath))
+                {
+                    sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
+                    item.PreviewImage = subPreviewPath;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving submarine preview image failed.", e);
+                item.PreviewImage = null;
+            }
 #endif
 
             var tempFolder = new DirectoryInfo("Temp");
