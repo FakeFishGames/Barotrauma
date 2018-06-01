@@ -9,10 +9,9 @@ namespace Barotrauma
 
     public static class PerlinNoise
     {
-        public static double OctavePerlin(double x, double y, double z, int octaves, double persistence)
+        public static double OctavePerlin(double x, double y, double z, double frequency, int octaves, double persistence)
         {
             double total = 0;
-            double frequency = 6;
             double amplitude = 3;
             for (int i = 0; i < octaves; i++)
             {

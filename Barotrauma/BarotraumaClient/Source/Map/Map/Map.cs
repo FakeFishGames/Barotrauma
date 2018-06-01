@@ -9,6 +9,9 @@ namespace Barotrauma
 {
     partial class Map
     {
+        //how much larger the ice background is compared to the size of the map
+        private const float BackgroundScale = 1.5f;
+
         private static Sprite iceTexture;
         private static Texture2D iceCraters;
         private static Texture2D iceCrack;
@@ -56,7 +59,7 @@ namespace Barotrauma
 
         private Rectangle borders;
 
-        static Vector2 MapTileSpriteSize = new Vector2(200.0f, 200.0f);
+        static Vector2 MapTileSpriteSize = new Vector2(100.0f, 100.0f);
         static Vector2 MapTileSize = new Vector2(MapTileSpriteSize.X * 1.4f, MapTileSpriteSize.Y * 0.4f);
 
         private MapTile[,] mapTiles;
@@ -88,7 +91,7 @@ namespace Barotrauma
             borders.Width = borders.Width - borders.X;
             borders.Height = borders.Height - borders.Y;
 
-            mapTiles = new MapTile[(int)Math.Ceiling(borders.Width / MapTileSize.X), (int)Math.Ceiling(borders.Width / MapTileSize.Y)];
+            mapTiles = new MapTile[(int)Math.Ceiling(size * BackgroundScale / MapTileSize.X), (int)Math.Ceiling(size * BackgroundScale / MapTileSize.Y)];
 
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
@@ -139,7 +142,7 @@ namespace Barotrauma
                 int generations = (int)(Math.Sqrt(connectionLength / 5.0f));
                 connection.CrackSegments = MathUtils.GenerateJaggedLine(connectionStart, connectionEnd, generations / 2, connectionLength * 0.1f);                
 
-                var visualCrackSegments = MathUtils.GenerateJaggedLine(connectionStart, connectionEnd, generations, connectionLength * 0.3f);
+                var visualCrackSegments = MathUtils.GenerateJaggedLine(connectionStart, connectionEnd, generations, connectionLength * 0.5f);
 
                 float totalLength = Vector2.Distance(visualCrackSegments[0][0], visualCrackSegments.Last()[1]);
                 for (int i = 0; i < visualCrackSegments.Count; i++)
@@ -151,7 +154,7 @@ namespace Barotrauma
                     for (float x = 0; x < 1; x += 1.0f / length)
                     {
                         Vector2 pos = Vector2.Lerp(start, end, x);
-                        SetNoiseColorOnArea(pos, MathHelper.Clamp((int)(totalLength / 50), 3, 10) + Rand.Range(-2,2), Color.Transparent);
+                        SetNoiseColorOnArea(pos, MathHelper.Clamp((int)(totalLength / 30), 2, 5) + Rand.Range(-1,1), Color.Transparent);
                     }
                 }
             }
@@ -312,8 +315,6 @@ namespace Barotrauma
             if (rect.Contains(PlayerInput.MousePosition) && PlayerInput.MidButtonHeld())
             {
                 drawOffset += PlayerInput.MouseSpeed / zoom;
-                drawOffset.X = MathHelper.Clamp(drawOffset.X, -borders.Width, 0);
-                drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -borders.Height, 0);
             }
 
 #if DEBUG
@@ -339,6 +340,14 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
+
+            Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
+            float edgeBuffer = size * (BackgroundScale - 1.0f) / 2;
+            drawOffset.X = MathHelper.Clamp(drawOffset.X, -size - edgeBuffer + viewSize.X / 2.0f, edgeBuffer -viewSize.X / 2.0f);
+            drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -size - edgeBuffer + viewSize.Y / 2.0f, edgeBuffer -viewSize.Y / 2.0f);
+
+
+
             GUI.DrawString(spriteBatch, new Vector2(10, 10), "Num key 1 to toggle location visibility", Color.White);
             GUI.DrawString(spriteBatch, new Vector2(10, 30), "Num keys 2-5 to edit map tile spacing", Color.White);
             GUI.DrawString(spriteBatch, new Vector2(10, 50), "Tile spacing: "+xScale+"x"+yScale, Color.White);
@@ -362,6 +371,9 @@ namespace Barotrauma
                     mapPos.X *= xScale;
                     mapPos.Y *= yScale;
 
+                    mapPos.X -= size / 2 * (BackgroundScale - 1.0f);
+                    mapPos.Y -= size / 2 * (BackgroundScale - 1.0f);
+
                     mapPos += mapTiles[x, y].Offset * randomOffsetScale * 100.0f;
 
                     Vector2 scale = new Vector2(
@@ -373,12 +385,29 @@ namespace Barotrauma
             }
 
             //GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
-            
-            spriteBatch.Draw(noiseTexture, rectCenter + drawOffset * zoom,
-                sourceRectangle: null, color: Color.White, rotation: 0.0f, origin: Vector2.Zero,
-                scale: new Vector2(size / (float)noiseTexture.Width, size / (float)noiseTexture.Height) * zoom, 
-                effects: SpriteEffects.None, layerDepth: 0);
-            
+
+            Vector2 topLeft = rectCenter + drawOffset * zoom;
+            topLeft.X = (int)topLeft.X;
+            topLeft.Y = (int)topLeft.Y;
+
+            Vector2 bottomRight = rectCenter + (drawOffset + new Vector2(size,size)) * zoom;
+            bottomRight.X = (int)bottomRight.X;
+            bottomRight.Y = (int)bottomRight.Y;
+
+            spriteBatch.Draw(noiseTexture,
+                destinationRectangle: new Rectangle((int)topLeft.X, (int)topLeft.Y, (int)(bottomRight.X- topLeft.X), (int)(bottomRight.Y - topLeft.Y)),
+                sourceRectangle: null,
+                color: Color.White);
+
+            if (topLeft.X > rect.X)
+                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, (int)(topLeft.X- rect.X), rect.Height), Color.Black* 0.8f, true);
+            if (topLeft.Y > rect.Y)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, rect.Y, (int)(bottomRight.X - topLeft.X), (int)(topLeft.Y - rect.Y)), Color.Black * 0.8f, true);
+            if (bottomRight.X < rect.Right)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)bottomRight.X, rect.Y, (int)(rect.Right - bottomRight.X), rect.Height), Color.Black * 0.8f, true);
+            if (bottomRight.Y < rect.Bottom)
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(rect.Bottom - bottomRight.Y)), Color.Black * 0.8f, true);
+
             if (drawOverlay)
             {
                 for (int i = 0; i < locations.Count; i++)
@@ -443,11 +472,11 @@ namespace Barotrauma
                         float distFromPlayer = Vector2.Distance(currentLocation.MapPosition, (segment[0] + segment[1]) / 2.0f);
                         float dist = Vector2.Distance(start, end);
 
-                        int width = (int)(MathHelper.Lerp(3.0f, 10f, connection.Difficulty / 100.0f) * zoom);
+                        int width = (int)(3 * zoom);// (int)(MathHelper.Lerp(1.0f, 4.0f, connection.Difficulty / 100.0f) * zoom);
 
-                        float a = (300.0f - distFromPlayer) / 300.0f;
+                        float a = (200.0f - distFromPlayer) / 200.0f;
                         spriteBatch.Draw(iceCrack,
-                            new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
+                            new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
                             null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
 
@@ -466,7 +495,7 @@ namespace Barotrauma
                     float radius = size / 2 * ((i + 1.0f) / DifficultyZones);
                     float textureSize = (radius / (circleTexture.Width / 2) * zoom);
 
-                    spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.Black * 0.05f, 0.0f,
+                    spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.White, 0.0f,
                         new Vector2(512, 512), textureSize, SpriteEffects.None, 0);
                 }
 
@@ -485,11 +514,11 @@ namespace Barotrauma
 
                     if (!rect.Intersects(drawRect)) continue;
 
-                    Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.White : Color.Green;
+                    Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation)) == null ? Color.Orange : Color.Green;
                     //color *= (location.Discovered) ? 0.8f : 0.5f;
-                    if (location == currentLocation) color = Color.Orange;
+                    if (location == currentLocation) color = Color.Red;
 
-                    spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.25f * zoom, SpriteEffects.None, 0.0f);
+                    spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.2f * zoom, SpriteEffects.None, 0.0f);
                 }
 
                 for (int i = 0; i < 3; i++)
