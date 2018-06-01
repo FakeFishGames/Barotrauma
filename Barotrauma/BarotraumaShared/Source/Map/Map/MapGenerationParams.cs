@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,6 +17,11 @@ namespace Barotrauma
             }
         }
 
+#if DEBUG
+        [Serialize(false, true), Editable]
+        public bool ShowNoiseMap { get; set; }
+#endif
+
         [Serialize(9, true)]        
         public int DifficultyZones { get; set; } //Number of difficulty zones
         
@@ -28,31 +34,36 @@ namespace Barotrauma
         [Serialize(10.0f, true), Editable(0.0f, 1000.0f)]
         public float NoiseFrequency { get; set; }
 
-        [Serialize(4, true), Editable(1, 100)]
+        [Serialize(8, true), Editable(1, 100)]
         public int NoiseOctaves { get; set; }
 
         [Serialize(0.5f, true), Editable(0.0f, 1.0f)]
         public float NoisePersistence { get; set; }
 
+        [Serialize("200,200", true), Editable]
+        public Vector2 TileSpriteSize { get; set; }
+        [Serialize("280,80", true), Editable]
+        public Vector2 TileSpriteSpacing { get; set; }
+
         [Serialize(1.0f, true), Editable(0.0f, 1.0f, ToolTip = "How dark the center of the map is (1.0f = black).")]
         public float CenterDarkenStrength { get; set; } 
 
-        [Serialize(0.8f, true), Editable(0.0f, 1.0f, ToolTip = "How close to the center the darkening starts (0.8f = 20% from the edge).")]
+        [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How close to the center the darkening starts (0.8f = 20% from the edge).")]
         public float CenterDarkenRadius { get; set; }
-        
-        [Serialize(3, true), Editable(0, 1000, 
-            ToolTip = "The edge of the center darkening is wave-shaped, the frequency is determined by this value."+
-            " Must be an int for the start and beginning of the wave to align ")]
+
+        [Serialize(5, true), Editable(0, 1000,
+            ToolTip = "The edge of the dark center area is wave-shaped, and the frequency is determined by this value." +
+            " I.e. how many points does the star-shaped dark area in the center have.")]
         public int CenterDarkenWaveFrequency { get; set; }
-        
-        [Serialize(10.0f, true), Editable(0, 1000.0f,
+
+        [Serialize(15.0f, true), Editable(0, 1000.0f,
             ToolTip = "How heavily the noise map affects the phase of the edge wave (higher value = more irregular shape).")]
         public float CenterDarkenWavePhaseNoise { get; set; }
 
         [Serialize(0.8f, true), Editable(0.0f, 1.0f, ToolTip = "How dark the edges of the map are (1.0f = black).")]
         public float EdgeDarkenStrength { get; set; }
 
-        [Serialize(0.95f, true), Editable(0.0f, 1.0f, ToolTip = "How far from the center the darkening starts (0.95f = 5% from the edge).")]
+        [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How far from the center the darkening starts (0.95f = 5% from the edge).")]
         public float EdgeDarkenRadius { get; set; }
         
         [Serialize(0.9f, true), Editable(0.0f, 1.0f, ToolTip = "How far from the center locations can be placed.")]

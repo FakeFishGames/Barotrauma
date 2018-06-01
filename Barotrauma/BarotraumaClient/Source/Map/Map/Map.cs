@@ -58,12 +58,9 @@ namespace Barotrauma
         private float zoom = 3.0f;
 
         private Rectangle borders;
-
-        static Vector2 MapTileSpriteSize = new Vector2(100.0f, 100.0f);
-        static Vector2 MapTileSize = new Vector2(MapTileSpriteSize.X * 1.4f, MapTileSpriteSize.Y * 0.4f);
-
+        
         private MapTile[,] mapTiles;
-
+        
 #if DEBUG
         private GUIComponent editor;
 
@@ -119,7 +116,9 @@ namespace Barotrauma
             borders.Width = borders.Width - borders.X;
             borders.Height = borders.Height - borders.Y;
 
-            mapTiles = new MapTile[(int)Math.Ceiling(size * BackgroundScale / MapTileSize.X), (int)Math.Ceiling(size * BackgroundScale / MapTileSize.Y)];
+            mapTiles = new MapTile[
+                (int)Math.Ceiling(size * BackgroundScale / generationParams.TileSpriteSpacing.X), 
+                (int)Math.Ceiling(size * BackgroundScale / generationParams.TileSpriteSpacing.Y)];
 
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
@@ -401,8 +400,8 @@ namespace Barotrauma
                 for (int y = 0; y < mapTiles.GetLength(1); y++)
                 {
                     Vector2 mapPos = new Vector2(
-                        x * MapTileSize.X + ((y % 2 == 0) ? 0.0f : MapTileSize.X * 0.5f), 
-                        y * MapTileSize.Y);
+                        x * generationParams.TileSpriteSpacing.X + ((y % 2 == 0) ? 0.0f : generationParams.TileSpriteSpacing.X * 0.5f), 
+                        y * generationParams.TileSpriteSpacing.Y);
 
                     mapPos.X *= xScale;
                     mapPos.Y *= yScale;
@@ -413,15 +412,17 @@ namespace Barotrauma
                     mapPos += mapTiles[x, y].Offset * randomOffsetScale * 100.0f;
 
                     Vector2 scale = new Vector2(
-                        MapTileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
-                        MapTileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
+                        generationParams.TileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
+                        generationParams.TileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
                     mapTiles[x, y].Sprite.Draw(spriteBatch, rectCenter + (mapPos + drawOffset) * zoom, Color.White,
                         origin: new Vector2(256.0f, 256.0f), rotate: 0, scale: scale * zoom, spriteEffect: mapTiles[x, y].SpriteEffect);
                 }
             }
 
-            GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
-
+            if (generationParams.ShowNoiseMap)
+            {
+                GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
+            }
             Vector2 topLeft = rectCenter + drawOffset * zoom;
             topLeft.X = (int)topLeft.X;
             topLeft.Y = (int)topLeft.Y;

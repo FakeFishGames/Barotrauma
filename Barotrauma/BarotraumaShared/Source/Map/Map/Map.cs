@@ -131,7 +131,10 @@ namespace Barotrauma
             {
                 for (int y = 0; y < generationParams.NoiseResolution; y++)
                 {
-                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / generationParams.NoiseResolution, (double)y / generationParams.NoiseResolution, z, 10, octaves, persistence);
+                    Noise[x, y] = (float)PerlinNoise.OctavePerlin(
+                        (double)x / generationParams.NoiseResolution, 
+                        (double)y / generationParams.NoiseResolution, 
+                        z, generationParams.NoiseFrequency, octaves, persistence);
                     min = Math.Min(Noise[x, y], min);
                     max = Math.Max(Noise[x, y], max);
                 }
