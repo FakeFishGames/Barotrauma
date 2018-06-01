@@ -8,14 +8,9 @@ using Voronoi2;
 namespace Barotrauma
 {
     partial class Map
-    {
-        const int DifficultyZones = 9;
+    {        
+        private MapGenerationParams generationParams;
         
-        public const int DefaultSize = 2000;
-
-        Vector2 difficultyIncrease = new Vector2(5.0f, 10.0f);
-        Vector2 difficultyCutoff = new Vector2(80.0f, 100.0f);
-
         private List<Level> levels;
 
         private List<Location> locations;
@@ -33,7 +28,7 @@ namespace Barotrauma
         public Action<Location, LocationConnection> OnLocationSelected;
         //from -> to
         public Action<Location, Location> OnLocationChanged;
-
+        
         public Location CurrentLocation
         {
             get { return currentLocation; }
@@ -69,18 +64,18 @@ namespace Barotrauma
             get { return locations; }
         }
 
-        public Map(string seed, int size)
+        public Map(string seed)
         {
+            generationParams = MapGenerationParams.Instance;
             this.seed = seed;
-
-            this.size = size;
+            this.size = generationParams.Size;
 
             levels = new List<Level>();
 
             locations = new List<Location>();
 
             connections = new List<LocationConnection>();
-
+            
 #if CLIENT       
             if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
@@ -96,7 +91,7 @@ namespace Barotrauma
 #endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
-            GenerateLocations();
+            Generate();
 
             //start from the colony furthest away from the center
             float largestDist = 0.0f;
@@ -123,37 +118,34 @@ namespace Barotrauma
         }
 
         partial void InitProjectSpecific();
-
-        const int NoiseResolution = 1000;
-        public float[,] Noise = new float[NoiseResolution, NoiseResolution];
+        
+        public float[,] Noise;
 
         private void GenerateNoiseMap(int octaves, float persistence)
         {
             float z = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+            Noise = new float[generationParams.NoiseResolution, generationParams.NoiseResolution];
             
             float min = float.MaxValue, max = 0.0f;
-            for (int x = 0; x < NoiseResolution; x++)
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
             {
-                for (int y = 0; y < NoiseResolution; y++)
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
                 {
-                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / NoiseResolution, (double)y / NoiseResolution, (double)z, 10, octaves, persistence);
+                    Noise[x, y] = (float)PerlinNoise.OctavePerlin((double)x / generationParams.NoiseResolution, (double)y / generationParams.NoiseResolution, z, 10, octaves, persistence);
                     min = Math.Min(Noise[x, y], min);
                     max = Math.Max(Noise[x, y], max);
                 }
             }
 
-            float radius = NoiseResolution / 2;
+            float radius = generationParams.NoiseResolution / 2;
             Vector2 center = Vector2.One * radius;
             float range = max - min;
-
-            float centerDarkenStrength = 1.0f;
-            float centerDarkenRadius = radius * 0.8f;
-
-            float edgeDarkenStrength = 0.8f;
-            float edgeDarkenRadius = radius * 0.95f;
-            for (int x = 0; x < NoiseResolution; x++)
+            
+            float centerDarkenRadius = radius * generationParams.CenterDarkenRadius;            
+            float edgeDarkenRadius = radius * generationParams.EdgeDarkenRadius;
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
             {
-                for (int y = 0; y < NoiseResolution; y++)
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
                 {
                     //normalize the noise to 0-1 range
                     Noise[x, y] = (Noise[x, y] - min) / range;
@@ -162,20 +154,18 @@ namespace Barotrauma
                     if (dist < centerDarkenRadius)
                     {
                         float angle = (float)Math.Atan2(y - center.Y, x - center.X);
-                        float freq = 5.0f + Noise[x, y] * 5.0f;
-
-                        float currDarkenRadius = centerDarkenRadius * (0.6f + (float)Math.Sin(angle * 3.0f + Noise[x, y] * 10.0f) * 0.4f);
+                        float phase = angle * generationParams.CenterDarkenWaveFrequency + Noise[x, y] * generationParams.CenterDarkenWavePhaseNoise;
+                        float currDarkenRadius = centerDarkenRadius * (0.6f + (float)Math.Sin(phase) * 0.4f);
                         if (dist < currDarkenRadius)
                         {
                             float darkenAmount = 1.0f - (dist / currDarkenRadius);
-                            Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * (1.0f - centerDarkenStrength), darkenAmount);
+                            Noise[x, y] = MathHelper.Lerp(Noise[x, y], Noise[x, y] * (1.0f - generationParams.CenterDarkenStrength), darkenAmount);
                         }
-
                     }
                     if (dist > edgeDarkenRadius)
                     {
                         float darkenAmount = Math.Min((dist - edgeDarkenRadius) / (radius - edgeDarkenRadius), 1.0f);
-                        Noise[x, y] = MathHelper.Lerp(Noise[x, y], 1.0f - edgeDarkenStrength, darkenAmount);
+                        Noise[x, y] = MathHelper.Lerp(Noise[x, y], 1.0f - generationParams.EdgeDarkenStrength, darkenAmount);
                     }
                 }
             }
@@ -183,39 +173,35 @@ namespace Barotrauma
 
         partial void GenerateNoiseMapProjSpecific();
 
-        private void GenerateLocations()
+        private void Generate()
         {
-            GenerateNoiseMap(4, 0.5f);
+            connections.Clear();
+            locations.Clear();
+
+            GenerateNoiseMap(generationParams.NoiseOctaves, generationParams.NoisePersistence);
 
             List<Vector2> sites = new List<Vector2>();
             float mapRadius = size / 2;
             Vector2 mapCenter = new Vector2(mapRadius, mapRadius);
 
-            float locationRadius = mapRadius * 0.9f;
+            float locationRadius = mapRadius * generationParams.LocationRadius;
 
-            for (float x = mapCenter.X - locationRadius; x < mapCenter.X + locationRadius; x += 5.0f)
+            for (float x = mapCenter.X - locationRadius; x < mapCenter.X + locationRadius; x += generationParams.VoronoiSiteInterval)
             {
-                for (float y = mapCenter.Y - locationRadius; y < mapCenter.Y + locationRadius; y += 5.0f)
+                for (float y = mapCenter.Y - locationRadius; y < mapCenter.Y + locationRadius; y += generationParams.VoronoiSiteInterval)
                 {
-                    float noiseVal = Noise[(int)(x / size * NoiseResolution), (int)(y / size * NoiseResolution)];
-                    if (Rand.Range(0.1f, 1.0f, Rand.RandSync.Server) < noiseVal * noiseVal * noiseVal * 0.5f)
+                    float noiseVal = Noise[(int)(x / size * generationParams.NoiseResolution), (int)(y / size * generationParams.NoiseResolution)];
+                    if (Rand.Range(generationParams.VoronoiSitePlacementMinVal, 1.0f, Rand.RandSync.Server) < 
+                        noiseVal * generationParams.VoronoiSitePlacementProbability)
                     {
                         sites.Add(new Vector2(x, y));
                     }
                 }
             }
 
-            float zoneRadius = size / 2 / DifficultyZones;
-            for (int i = 0; i < DifficultyZones; i++)
-            {
-                for (int j = 0; j < (i + 1) * MathHelper.Pi * 5; j++)
-                {
-                    float thisZoneRadius = (i + 1.0f) * zoneRadius;
-                }
-            }
-
             Voronoi voronoi = new Voronoi(0.5f);
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(sites, size, size);
+            float zoneRadius = size / 2 / generationParams.DifficultyZones;
 
             sites.Clear();
             foreach (GraphEdge edge in edges)
@@ -239,16 +225,20 @@ namespace Barotrauma
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
-                    int zone = MathHelper.Clamp(DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, DifficultyZones);
+                    int zone = MathHelper.Clamp(generationParams.DifficultyZones - (int)Math.Floor(Vector2.Distance(position, mapCenter) / zoneRadius), 1, generationParams.DifficultyZones);
                     newLocations[i] = Location.CreateRandom(position, zone);
                     locations.Add(newLocations[i]);
                 }
-                //int seed = (newLocations[0].GetHashCode() | newLocations[1].GetHashCode());
-                connections.Add(new LocationConnection(newLocations[0], newLocations[1]));
+
+                var newConnection = new LocationConnection(newLocations[0], newLocations[1]);
+                float centerDist = Vector2.Distance(newConnection.CenterPos, mapCenter);
+                newConnection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
+
+                connections.Add(newConnection);
             }
 
             //remove connections that are too short
-            float minDistance = 50.0f;
+            float minDistance = generationParams.MinConnectionDistance;
             for (int i = connections.Count - 1; i >= 0; i--)
             {
                 LocationConnection connection = connections[i];
@@ -312,15 +302,15 @@ namespace Barotrauma
         {
             var biomes = LevelGenerationParams.GetBiomes();
             Vector2 centerPos = new Vector2(size, size) / 2;
-            for (int i = 0; i<DifficultyZones; i++)
+            for (int i = 0; i< generationParams.DifficultyZones; i++)
             {
-                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(DifficultyZones - i + 1));
-                float zoneRadius = size / 2 * ((i + 1.0f) / DifficultyZones);
+                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i + 1));
+                float zoneRadius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
                 foreach (LocationConnection connection in connections)
                 {
                     if (connection.Biome != null) continue;
 
-                    if (i == DifficultyZones - 1 ||
+                    if (i == generationParams.DifficultyZones - 1 ||
                         Vector2.Distance(connection.Locations[0].MapPosition, centerPos) < zoneRadius ||
                         Vector2.Distance(connection.Locations[1].MapPosition, centerPos) < zoneRadius)
                     {
@@ -529,10 +519,8 @@ namespace Barotrauma
 
         public static Map LoadNew(XElement element)
         {
-            string mapSeed = element.GetAttributeString("seed", "a");
-
-            int size = element.GetAttributeInt("size", DefaultSize);
-            Map map = new Map(mapSeed, size);
+            string mapSeed = element.GetAttributeString("seed", "a");            
+            Map map = new Map(mapSeed);
             map.Load(element, false);
 
             return map;
@@ -588,7 +576,6 @@ namespace Barotrauma
             mapElement.Add(new XAttribute("version", GameMain.Version.ToString()));
             mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
             mapElement.Add(new XAttribute("seed", Seed));
-            mapElement.Add(new XAttribute("size", size));
 
             for (int i = 0; i < locations.Count; i++)
             {
