@@ -11,6 +11,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox autopilotTickBox, maintainPosTickBox;
         private GUITickBox levelEndTickBox, levelStartTickBox;
 
+        private GUIComponent steerArea;
+
         public bool LevelStartSelected
         {
             get { return levelStartTickBox.Selected; }
@@ -107,6 +109,9 @@ namespace Barotrauma.Items.Components
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };
+
+            steerArea = new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
+                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
         }
 
         private bool ToggleMaintainPosition(GUITickBox tickBox)
@@ -130,11 +135,11 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
+        public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
-            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
+            int width = rect.Width, height = rect.Height;
+            int x = rect.X;
+            int y = rect.Y;
             
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
@@ -178,11 +183,11 @@ namespace Barotrauma.Items.Components
         {
             if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y)) < 200.0f)
+            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    SteeringInput = PlayerInput.MousePosition - new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y);
+                    SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                     steeringInput.Y = -steeringInput.Y;
 
                     steeringAdjustSpeed = character == null ? 

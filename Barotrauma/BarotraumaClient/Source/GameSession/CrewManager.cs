@@ -73,12 +73,17 @@ namespace Barotrauma
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
 
-            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent);
-            guiFrame.CanBeFocused = false;
+            guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
+            {
+                CanBeFocused = false
+            };
 
             int scrollButtonHeight = (int)(30 * GUI.Scale);
 
-            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent);
+            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
+            {
+                CanBeFocused = false
+            };
             toggleCrewButton = new GUIButton(new RectTransform(new Point(25,70), crewArea.RectTransform, Anchor.CenterLeft), "", style: "GUIButtonHorizontalArrow");
             toggleCrewButton.ClampMouseRectToParent = false;
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
