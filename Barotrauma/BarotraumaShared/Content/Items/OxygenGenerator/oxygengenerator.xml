@@ -39,7 +39,7 @@
     <Sprite texture="vent.png" depth="0.91" sourcerect="0,0,64,64"/>
 
     <Vent>
-      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="600.0" volume="OxygenFlow" volumemultiplier="0.001f" loop="true"/>
+      <sound file="Content/Items/OxygenGenerator/ventilation.ogg" type="OnActive" range="400.0" volume="OxygenFlow" volumemultiplier="0.0005f" loop="true"/>
     </Vent>
 
   </Item>

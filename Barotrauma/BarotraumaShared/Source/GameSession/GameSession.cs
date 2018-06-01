@@ -234,7 +234,6 @@ namespace Barotrauma
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
-            SoundPlayer.SwitchMusic();
 #endif
 
             RoundStartTime = Timing.TotalTime;

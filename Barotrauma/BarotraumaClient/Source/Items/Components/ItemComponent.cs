@@ -95,11 +95,10 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            List<ItemSound> matchingSounds;
-            if (!sounds.TryGetValue(type, out matchingSounds)) return;
+            if (!sounds.TryGetValue(type, out List<ItemSound> matchingSounds)) return;
 
             ItemSound itemSound = null;
-            if (loopingSoundChannel==null || !loopingSoundChannel.IsPlaying)
+            if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
                 int index = Rand.Int(matchingSounds.Count);
                 itemSound = matchingSounds[index];
