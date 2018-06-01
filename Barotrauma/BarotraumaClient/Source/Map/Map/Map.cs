@@ -64,6 +64,34 @@ namespace Barotrauma
 
         private MapTile[,] mapTiles;
 
+#if DEBUG
+        private GUIComponent editor;
+
+        private void CreateEditor()
+        {
+            editor = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), GUI.Canvas, Anchor.TopRight, minSize: new Point(400, 0)));
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), editor.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f,
+                CanBeFocused = false
+            };
+
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), paddedFrame.RectTransform, Anchor.Center));
+            new SerializableEntityEditor(listBox.Content.RectTransform, generationParams, false, true);
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), "Generate")
+            {
+                OnClicked =(btn, userData) =>
+                {
+                    Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
+                    Generate();
+                    return true;
+                }
+            };
+        }
+#endif
+
         struct MapTile
         {
             public readonly Sprite Sprite;
@@ -104,7 +132,6 @@ namespace Barotrauma
             }
 
             drawOffset = -currentLocation.MapPosition;
-
         }
 
         private Texture2D noiseTexture;
@@ -113,42 +140,43 @@ namespace Barotrauma
         {
             if (noiseTexture == null)
             {
-                noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, NoiseResolution, NoiseResolution);
+                noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
             }
 
-            Color[] crackTextureData = new Color[NoiseResolution * NoiseResolution];
-            Color[] noiseTextureData = new Color[NoiseResolution * NoiseResolution];
-            for (int x = 0; x < NoiseResolution; x++)
+            Color[] crackTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            Color[] noiseTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            for (int x = 0; x < generationParams.NoiseResolution; x++)
             {
-                for (int y = 0; y < NoiseResolution; y++)
+                for (int y = 0; y < generationParams.NoiseResolution; y++)
                 {
-                    noiseTextureData[x + y * NoiseResolution] = Color.Lerp(Color.Black, Color.Transparent, Noise[x, y]);
+                    noiseTextureData[x + y * generationParams.NoiseResolution] = Color.Lerp(Color.Black, Color.Transparent, Noise[x, y]);
                 }
             }
-            noiseTextureData[0] = Color.Red;
-            noiseTextureData[(NoiseResolution - 1) + (NoiseResolution - 1) * NoiseResolution] = Color.Red;
 
             float mapRadius = size / 2;
             Vector2 mapCenter = Vector2.One * mapRadius;
-
             foreach (LocationConnection connection in connections)
             {
                 float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
-                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
 
                 Vector2 connectionStart = connection.Locations[0].MapPosition;
                 Vector2 connectionEnd = connection.Locations[1].MapPosition;
                 float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
-                int generations = (int)(Math.Sqrt(connectionLength / 5.0f));
-                connection.CrackSegments = MathUtils.GenerateJaggedLine(connectionStart, connectionEnd, generations / 2, connectionLength * 0.1f);                
+                int iterations = (int)(Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier));
+                connection.CrackSegments = MathUtils.GenerateJaggedLine(
+                    connectionStart, connectionEnd, 
+                    iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier);                
 
-                var visualCrackSegments = MathUtils.GenerateJaggedLine(connectionStart, connectionEnd, generations, connectionLength * 0.5f);
+                iterations = (int)(Math.Sqrt(connectionLength * generationParams.ConnectionIterationMultiplier));
+                var visualCrackSegments = MathUtils.GenerateJaggedLine(
+                    connectionStart, connectionEnd, 
+                    iterations, connectionLength * generationParams.ConnectionDisplacementMultiplier);
 
                 float totalLength = Vector2.Distance(visualCrackSegments[0][0], visualCrackSegments.Last()[1]);
                 for (int i = 0; i < visualCrackSegments.Count; i++)
                 {
-                    Vector2 start = visualCrackSegments[i][0] * (NoiseResolution / (float)size);
-                    Vector2 end = visualCrackSegments[i][1] * (NoiseResolution / (float)size);
+                    Vector2 start = visualCrackSegments[i][0] * (generationParams.NoiseResolution / (float)size);
+                    Vector2 end = visualCrackSegments[i][1] * (generationParams.NoiseResolution / (float)size);
 
                     float length = Vector2.Distance(start, end);
                     for (float x = 0; x < 1; x += 1.0f / length)
@@ -169,17 +197,17 @@ namespace Barotrauma
                         if (d <= 0) continue;
 
                         int xIndex = (int)pos.X + x;
-                        if (xIndex < 0 || xIndex >= NoiseResolution) continue;
+                        if (xIndex < 0 || xIndex >= generationParams.NoiseResolution) continue;
                         int yIndex = (int)pos.Y + y;
-                        if (yIndex < 0 || yIndex >= NoiseResolution) continue;
+                        if (yIndex < 0 || yIndex >= generationParams.NoiseResolution) continue;
 
                         float perlin = (float)PerlinNoise.Perlin(
-                            xIndex / (float)NoiseResolution * 100.0f, 
-                            yIndex / (float)NoiseResolution * 100.0f, 0);
+                            xIndex / (float)generationParams.NoiseResolution * 100.0f, 
+                            yIndex / (float)generationParams.NoiseResolution * 100.0f, 0);
                         
-                        byte a = Math.Max(crackTextureData[xIndex + yIndex * NoiseResolution].A, (byte)((d * perlin) * 255));
+                        byte a = Math.Max(crackTextureData[xIndex + yIndex * generationParams.NoiseResolution].A, (byte)((d * perlin) * 255));
 
-                        crackTextureData[xIndex + yIndex * NoiseResolution].A = a;
+                        crackTextureData[xIndex + yIndex * generationParams.NoiseResolution].A = a;
                     }
                 }
             }
@@ -245,6 +273,14 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Rectangle rect)
         {
+#if DEBUG
+            if (GameMain.DebugDraw)
+            {
+                if (editor == null) CreateEditor();
+                editor.AddToGUIUpdateList(order: 1);
+            }
+#endif
+
             if (mapAnimQueue.Count > 0)
             {
                 UpdateMapAnim(mapAnimQueue.Peek(), deltaTime);
@@ -384,7 +420,7 @@ namespace Barotrauma
                 }
             }
 
-            //GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
+            GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
 
             Vector2 topLeft = rectCenter + drawOffset * zoom;
             topLeft.X = (int)topLeft.X;
@@ -483,16 +519,16 @@ namespace Barotrauma
                         /*GUI.DrawLine(spriteBatch, start, end, Color.Red * MathHelper.Clamp(a * 0.2f, 0.05f, 0.3f), 0, (int)(6 * zoom));*/
                     }
 
-                    if (GameMain.DebugDraw)
+                    /*if (GameMain.DebugDraw)
                     {
                         Vector2 center = rectCenter + (connection.CenterPos + drawOffset) * zoom;
                         GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
-                    }
+                    }*/
                 }
 
-                for (int i = 0; i < DifficultyZones; i++)
+                for (int i = 0; i < generationParams.DifficultyZones; i++)
                 {
-                    float radius = size / 2 * ((i + 1.0f) / DifficultyZones);
+                    float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
                     float textureSize = (radius / (circleTexture.Width / 2) * zoom);
 
                     spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.White, 0.0f,
