@@ -397,12 +397,16 @@ namespace Barotrauma
         private static void ProcessHelperList(List<GUIComponent> list)
         {
             if (list.Count == 0) { return; }
-            list.Sort((previous, next) => next.UpdateOrder.CompareTo(previous.UpdateOrder));
             foreach (var item in list)
             {
+                int i = updateList.Count - 1;
+                while (updateList[i].UpdateOrder > item.UpdateOrder)
+                {
+                    i--;
+                }
                 if (!updateList.Contains(item))
                 {
-                    updateList.Add(item);
+                    updateList.Insert(Math.Max(i, 0), item);
                 }
             }
             list.Clear();
