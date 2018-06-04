@@ -26,6 +26,12 @@ namespace Barotrauma
             get;
             set;
         }
+
+        [Serialize(float.NaN, true), Editable]
+        public float HeadPosition { get; set; }
+
+        [Serialize(float.NaN, true), Editable]
+        public float TorsoPosition { get; set; }
     }
 
     // TODO: add some of the ragdoll params here?
@@ -98,6 +104,40 @@ namespace Barotrauma
             get;
             set;
         }
+
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(float.NaN, true), Editable]
+        public float HeadAngle
+        {
+            get => float.IsNaN(HeadAngleInRadians) ? float.NaN : MathHelper.ToDegrees(HeadAngleInRadians);
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    HeadAngleInRadians = MathHelper.ToRadians(value);
+                }
+            }
+        }
+        public float HeadAngleInRadians { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// In degrees.
+        /// </summary>
+        [Serialize(float.NaN, true), Editable]
+        public float TorsoAngle
+        {
+            get => float.IsNaN(TorsoAngleInRadians) ? float.NaN : MathHelper.ToDegrees(TorsoAngleInRadians);
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    TorsoAngleInRadians = MathHelper.ToRadians(value);
+                }
+            }
+        }
+        public float TorsoAngleInRadians { get; private set; } = float.NaN;
 
 #if CLIENT
         private static GUIListBox editor;
