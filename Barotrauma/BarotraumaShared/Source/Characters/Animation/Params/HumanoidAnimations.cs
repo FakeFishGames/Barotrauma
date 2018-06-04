@@ -43,20 +43,6 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(1.54f, true), Editable]
-        public float HeadPosition
-        {
-            get;
-            set;
-        }
-
-        [Serialize(1.15f, true), Editable]
-        public float TorsoPosition
-        {
-            get;
-            set;
-        }
-
         [Serialize(0.25f, true), Editable]
         public float HeadLeanAmount
         {
