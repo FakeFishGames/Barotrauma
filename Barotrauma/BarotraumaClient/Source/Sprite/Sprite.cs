@@ -33,9 +33,9 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        partial void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
+        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
         {
-            texture = LoadTexture(this.file);
+            texture = LoadTexture(this.file, preMultiplyAlpha);
 
             if (texture == null)
             {
@@ -53,7 +53,7 @@ namespace Barotrauma
         }
 
 
-        public static Texture2D LoadTexture(string file)
+        public static Texture2D LoadTexture(string file, bool preMultiplyAlpha = true)
         {
             foreach (Sprite s in list)
             {
@@ -62,7 +62,7 @@ namespace Barotrauma
 
             if (File.Exists(file))
             {
-                return TextureLoader.FromFile(file);
+                return TextureLoader.FromFile(file, preMultiplyAlpha);
             }
             else
             {

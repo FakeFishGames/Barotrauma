@@ -1,35 +1,21 @@
-using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma
 {
     public abstract class GUIComponent
     {
         #region Hierarchy
-        // TODO: remove the backup field when the old system is not needed.
-        private GUIComponent parent;
-        public GUIComponent Parent => RectTransform != null ? RectTransform.Parent?.GUIComponent : parent;
-
-        // TODO: remove the backup field when the old system is not needed.
-        private List<GUIComponent> children = new List<GUIComponent>();
-        /// <summary>
-        /// TODO: return IEnumerable.
-        /// Maps RectTransform children's elements to a new collection. For efficiency, access RectTransform.Children directly.
-        /// </summary>
-        public List<GUIComponent> Children => RectTransform != null ? RectTransform.Children.Select(c => c.GUIComponent).ToList() : children;
-
+        public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
+        
+        public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
+        
         public T GetChild<T>() where T : GUIComponent
         {
-            //foreach (GUIComponent child in Children)
-            //{
-            //    if (child is T) return child as T;
-            //}
-            //return default(T);
             return Children.FirstOrDefault(c => c is T) as T;
         }
 
@@ -38,7 +24,19 @@ namespace Barotrauma
             return GetAllChildren().FirstOrDefault(c => c is T) as T;
         }
 
-        public GUIComponent GetChild(object obj)
+        public GUIComponent GetChild(int index)
+        {
+            if (index < 0 || index > CountChildren) return null;
+            return RectTransform.GetChild(index).GUIComponent;
+        }
+
+        public int GetChildIndex(GUIComponent child)
+        {
+            if (child == null) return -1;
+            return RectTransform.GetChildIndex(child.RectTransform);
+        }
+
+        public GUIComponent GetChildByUserData(object obj)
         {
             foreach (GUIComponent child in Children)
             {
@@ -53,78 +51,19 @@ namespace Barotrauma
         /// </summary>
         public IEnumerable<GUIComponent> GetAllChildren()
         {
-            if (RectTransform != null)
-            {
-                return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
-            }
-            else
-            {
-                return children.SelectManyRecursive(c => c.children);
-            }
+            return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
         public bool IsParentOf(GUIComponent component)
         {
             if (component == null) { return false; }
-            if (RectTransform != null && component.RectTransform != null)
-            {
-                return RectTransform.IsParentOf(component.RectTransform);
-            }
-            else
-            {
-                for (int i = children.Count - 1; i >= 0; i--)
-                {
-                    if (children[i] == component) return true;
-                    if (children[i].IsParentOf(component)) return true;
-                }
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// TODO: remove this method when all the ui elements are using the new system
-        /// </summary>
-        public virtual void AddChild(GUIComponent child)
-        {
-            if (RectTransform != null)
-            {
-                //DebugConsole.ThrowError("Tried to add child on a component using RectTransform.\n" + Environment.StackTrace);
-                return;
-            }
-            if (child == null) return;
-            if (child.IsParentOf(this))
-            {
-                DebugConsole.ThrowError("Tried to add the parent of a GUIComponent as a child.\n" + Environment.StackTrace);
-                return;
-            }
-            if (child == this)
-            {
-                DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
-                return;
-            }
-            if (children.Contains(child))
-            {
-                DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
-                return;
-            }
-
-            child.parent = this;
-            child.UpdateDimensions(this);
-
-            children.Add(child);
+            return RectTransform.IsParentOf(component.RectTransform);
         }
 
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) return;
-            if (RectTransform != null)
-            {
-                child.RectTransform.Parent = null;
-            }
-            else
-            {
-                if (children.Contains(child)) children.Remove(child);
-            }
+            child.RectTransform.Parent = null;
         }
 
         // TODO: refactor?
@@ -150,41 +89,20 @@ namespace Barotrauma
 
         public virtual void ClearChildren()
         {
-            if (RectTransform != null)
-            {
-                RectTransform.ClearChildren();
-            }
-            else
-            {
-                children.Clear();
-            }
+            RectTransform.ClearChildren();
         }
 
         public void SetAsLastChild()
         {
-            if (RectTransform != null)
-            {
-                RectTransform.SetAsLastChild();
-            }
-            else
-            {
-                if (parent == null) { return; }
-                var last = parent.Children.LastOrDefault();
-                if (last == this || last == null) { return; }
-                if (!parent.children.Contains(this))
-                {
-                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible!");
-                    return;
-                }
-                parent.RemoveChild(this);
-                parent.AddChild(this);
-            }
+            RectTransform.SetAsLastChild();
         }
         #endregion
 
         public bool AutoUpdate { get; set; } = true;
         public bool AutoDraw { get; set; } = true;
         public int UpdateOrder { get; set; }
+
+        public Action<GUIComponent> OnAddedToGUIUpdateList;
 
         const float FlashDuration = 1.5f;
 
@@ -195,15 +113,9 @@ namespace Barotrauma
         protected GUIComponentStyle style;
 
         protected object userData;
-
-        // TODO: remove when the old system is not needed.
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        protected Rectangle rect;
-
+        
         public bool CanBeFocused;
-
-        protected Vector4 padding;
-
+        
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
@@ -236,6 +148,13 @@ namespace Barotrauma
         {
             get;
             set;
+        }
+
+        protected bool enabled;
+        public virtual bool Enabled
+        {
+            get { return enabled; }
+            set { enabled = value; }
         }
 
         public bool TileSprites;
@@ -278,39 +197,9 @@ namespace Barotrauma
             return r;
         }
 
-        /// <summary>
-        /// Does not set the rect values if the component uses RectTransform. TODO: remove setter.
-        /// </summary>
         public virtual Rectangle Rect
         {
-            get { return RectTransform != null ? RectTransform.Rect : rect; }
-            set
-            {
-                if (RectTransform == null)
-                {
-                    int prevX = rect.X, prevY = rect.Y;
-                    int prevWidth = rect.Width, prevHeight = rect.Height;
-
-                    rect = value;
-
-                    if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-
-                    //TODO: fix this (or replace with something better in the new GUI system)
-                    //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                    foreach (GUIComponent child in Children)
-                    {
-                        child.Rect = new Rectangle(
-                            child.rect.X + (rect.X - prevX),
-                            child.rect.Y + (rect.Y - prevY),
-                            Math.Max(child.rect.Width + (rect.Width - prevWidth), 0),
-                            Math.Max(child.rect.Height + (rect.Height - prevHeight), 0));
-                    }
-                }
-                if (Parent != null && Parent is GUIListBox)
-                {
-                    ((GUIListBox)Parent).UpdateScrollBarSize();
-                }
-            }
+            get { return RectTransform.Rect; }
         }
 
         public virtual bool ClampMouseRectToParent { get; set; } = true;
@@ -340,18 +229,10 @@ namespace Barotrauma
             get { return userData; }
             set { userData = value; }
         }
-
-        [Obsolete]
-        public virtual Vector4 Padding
-        {
-            get { return padding; }
-            set { padding = value; }
-        }
-
+        
         public int CountChildren
         {
-            // TODO: optimize
-            get { return Children.Count(); }
+            get { return RectTransform.CountChildren; }
         }
 
         public virtual Color Color
@@ -393,7 +274,6 @@ namespace Barotrauma
         protected GUIComponent(string style, RectTransform rectT) : this(style)
         {
             RectTransform = rectT;
-            rect = RectTransform.Rect;
         }
 
         protected GUIComponent(string style)
@@ -421,15 +301,9 @@ namespace Barotrauma
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
-                if (RectTransform != null)
-                {
-                    RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
-                }
-                else
-                {
-                    children.ForEach(c => c.AddToGUIUpdateList(ignoreChildren, order));
-                }
+                RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
             }
+            OnAddedToGUIUpdateList?.Invoke(this);
         }
 
         public void RemoveFromGUIUpdateList(bool alsoChildren = true)
@@ -477,14 +351,7 @@ namespace Barotrauma
         /// </summary>
         public void UpdateChildren(float deltaTime, bool recursive)
         {
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
-            }
-            else
-            {
-                children.ForEach(c => c.UpdateManually(deltaTime, recursive, recursive));
-            }
+            RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
         }
         #endregion
 
@@ -520,14 +387,7 @@ namespace Barotrauma
         /// </summary>
         public void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
-            if (RectTransform != null)
-            {
-                RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
-            }
-            else
-            {
-                children.ForEach(c => c.DrawManually(spriteBatch, recursive, recursive));
-            }
+            RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
         }
 
         protected virtual void Draw(SpriteBatch spriteBatch)
@@ -625,76 +485,6 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public virtual void SetDimensions(Point size, bool expandChildren = false)
-        {
-            if (RectTransform != null)
-            {
-                RectTransform.Resize(size, expandChildren);
-                return;
-            }
-            rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
-
-            if (expandChildren)
-            {
-                //TODO: fix this(or replace with something better in the new GUI system)
-                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
-                Point expandAmount = size - rect.Size;
-                foreach (GUIComponent child in Children)
-                {
-                    child.Rect = new Rectangle(
-                        child.rect.X,
-                        child.rect.Y,
-                        child.rect.Width + expandAmount.X,
-                        child.rect.Height + expandAmount.Y);
-                }
-            }
-        }
-
-        /// <summary>
-        /// todo: remove when all the ui elements are using the new system
-        /// </summary>
-        protected virtual void UpdateDimensions(GUIComponent parent = null)
-        {
-            // Don't manipulate the rect, if the component is using RectTransform component.
-            if (RectTransform != null) { return; }
-
-            Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
-
-            Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
-
-            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X
-                - (int)padding.X - (int)padding.Z;
-
-            if (rect.Height == 0) rect.Height = parentRect.Height - rect.Y
-                - (int)padding.Y - (int)padding.W;
-
-            if (alignment.HasFlag(Alignment.CenterX))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width / 2 - (int)rect.Width / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Right))
-            {
-                rect.X += parentRect.X + (int)parentRect.Width - (int)padding.Z - (int)rect.Width;
-            }
-            else
-            {
-                rect.X += parentRect.X + (int)padding.X;
-            }
-
-            if (alignment.HasFlag(Alignment.CenterY))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height / 2 - (int)rect.Height / 2;
-            }
-            else if (alignment.HasFlag(Alignment.Bottom))
-            {
-                rect.Y += parentRect.Y + (int)parentRect.Height - (int)padding.W - (int)rect.Height;
-            }
-            else
-            {
-                rect.Y += parentRect.Y + (int)padding.Y;
-            }
-        }
-
         public virtual void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;
@@ -703,7 +493,6 @@ namespace Barotrauma
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
             
-            padding = style.Padding;
             sprites = style.Sprites;
 
             OutlineColor = style.OutlineColor;

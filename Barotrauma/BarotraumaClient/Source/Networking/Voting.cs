@@ -71,8 +71,7 @@ namespace Barotrauma
 
             foreach (GUIComponent comp in listBox.Content.Children)
             {
-                GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
-                if (voteText != null) comp.RemoveChild(voteText);
+                if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
             }
 
             if (clients != null)
@@ -94,8 +93,11 @@ namespace Barotrauma
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText == null)
                 {
-                    voteText = new GUITextBlock(new Rectangle(0, 0, 30, 0), "", "", Alignment.Right, Alignment.Right, comp);
-                    voteText.UserData = "votes";
+                    voteText = new GUITextBlock(new RectTransform(new Point(30, comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
+                        "", textAlignment: Alignment.CenterRight)
+                    {
+                        UserData = "votes"
+                    };
                 }
 
                 voteText.Text = votes == 0 ? "" : votes.ToString();

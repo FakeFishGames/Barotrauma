@@ -62,9 +62,9 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
+                Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
                     text, textAlignment: textAlignment, wrap: true);
-                GUI.Style.Apply(textBlock, "", this);
+                GUI.Style.Apply(Text, "", this);
             }
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter),
@@ -77,7 +77,7 @@ namespace Barotrauma
             Buttons = new List<GUIButton>(buttons.Length);
             for (int i = 0; i < buttons.Length; i++)
             {
-                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i]);
+                var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform, maxSize: new Point(300, 30)), buttons[i]);
                 Buttons.Add(button);
             }
 

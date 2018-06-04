@@ -12,6 +12,7 @@
   <HostServerButton>Host Server</HostServerButton>
   <SubEditorButton>Submarine Editor</SubEditorButton>
   <SettingsButton>Settings</SettingsButton>
+  <SteamWorkshopButton>Steam Workshop</SteamWorkshopButton>
   <QuitButton>Quit</QuitButton>
 
   <!-- Host server menu -->
@@ -25,6 +26,9 @@
   <AttemptUPnPToolTip>UPnP can be used for forwarding ports on your router to allow players join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</AttemptUPnPToolTip>
   <StartServerButton>Start</StartServerButton>
 
+  <!-- Steam Workshop menu -->
+  <DownloadButton>Download</DownloadButton>  
+  
   <!-- Settings menu -->
   <Settings>Settings</Settings>
   <Resolution>Resolution</Resolution>
@@ -46,12 +50,57 @@
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
   <RestartRequiredText>You need to restart the game for the resolution changes to take effect.</RestartRequiredText>
 
+  <!-- Server settings menu -->
+  <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
+  <ServerSettingsServerTab>Server</ServerSettingsServerTab>
+  <ServerSettingsBanlistTab>Banlist</ServerSettingsBanlistTab>
+  <ServerSettingsWhiteListTab>Whitelist</ServerSettingsWhiteListTab>
+  <ServerSettingsSubSelection>Submarine selection</ServerSettingsSubSelection>
+  <ServerSettingsModeSelection>Game mode selection</ServerSettingsModeSelection>
+  <ServerSettingsEndRoundWhenDestReached>End round when destination reached</ServerSettingsEndRoundWhenDestReached>
+  <ServerSettingsEndRoundVoting>End round by voting</ServerSettingsEndRoundVoting>
+  <ServerSettingsEndRoundVotesRequired>Votes required: </ServerSettingsEndRoundVotesRequired>
+  <ServerSettingsAllowRespawning>Allow respawning</ServerSettingsAllowRespawning>
+  <ServerSettingsRespawnInterval>Interval: </ServerSettingsRespawnInterval>
+  <ServerSettingsMinRespawn>Minimum players to respawn: </ServerSettingsMinRespawn>
+  <ServerSettingsMinRespawnToolTip>What percentage of players has to be dead/spectating until a respawn shuttle is dispatched.</ServerSettingsMinRespawnToolTip>
+  <ServerSettingsRespawnDuration>Duration of respawn transport: </ServerSettingsRespawnDuration>
+  <ServerSettingsRespawnDurationToolTip>The amount of time respawned players have to navigate the respawn shuttle to the main submarine. After the duration expires, the shuttle will automatically head back out of the level.</ServerSettingsRespawnDurationToolTip>
+  <ServerSettingsMonsterSpawns>Monster Spawns</ServerSettingsMonsterSpawns>
+  <ServerSettingsAdditionalCargo>Additional Cargo</ServerSettingsAdditionalCargo>
+  <ServerSettingsAutoRestartDelay>Autorestart delay: </ServerSettingsAutoRestartDelay>
+  <ServerSettingsAllowSpectating>Allow spectating</ServerSettingsAllowSpectating>
+  <ServerSettingsAllowVoteKick>Allow vote kicking</ServerSettingsAllowVoteKick>
+  <ServerSettingsKickVotesRequired>Votes required: </ServerSettingsKickVotesRequired>
+  <ServerSettingsAutobanTime>Autoban duration: </ServerSettingsAutobanTime>
+  <ServerSettingsShareSubFiles>Share submarine files with players</ServerSettingsShareSubFiles>
+  <ServerSettingsRandomizeSeed>Randomize level seed between rounds</ServerSettingsRandomizeSeed>
+  <ServerSettingsSaveLogs>Save server logs</ServerSettingsSaveLogs>
+  <ServerSettingsAllowRagdollButton>Allow ragdoll button</ServerSettingsAllowRagdollButton>
+  <ServerSettingsUseTraitorRatio>Use % of players for max traitors</ServerSettingsUseTraitorRatio>
+  <ServerSettingsTraitorRatio>Traitor ratio: </ServerSettingsTraitorRatio>
+  <ServerSettingsTraitorCount>Traitor count: </ServerSettingsTraitorCount>
+  <ServerSettingsUseKarma>Use Karma</ServerSettingsUseKarma>
+  <WhiteListEnabled>Enabled</WhiteListEnabled>
+  <WhiteListName>Name</WhiteListName>
+  <WhiteListIP>IP Address</WhiteListIP>
+  <WhiteListAdd>Add to whitelist</WhiteListAdd>
+  <WhiteListRemove>Remove</WhiteListRemove>
+  <BanRange>Ban range</BanRange>
+  <BanListRemove>Remove</BanListRemove>
+  <BanExpires>Expires [time]</BanExpires>
+  <BanDuration>Duration</BanDuration>
+  <BanPermanent>Permanent</BanPermanent>
+  <BanReason>Reason: </BanReason>
+
+
   <!-- Round summary -->
   <RoundSummaryProgress>[sub] has made its way to [location].</RoundSummaryProgress>
   <RoundSummaryProgress>[sub] has arrived at [location].</RoundSummaryProgress>
   <RoundSummaryReturn>[sub] has returned to [location].</RoundSummaryReturn>
   <RoundSummaryGameOver>The ocean has claimed [sub] and its crew.</RoundSummaryGameOver>
-  <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>  
+  <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>
+  
 
   <!-- Character HUD -->
   <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
@@ -85,7 +134,7 @@
   <RightThigh>Right thigh</RightThigh>
   <LeftThigh>Left thigh</LeftThigh>
   <Waist>Waist</Waist>
-  
+
   <!-- Misc -->
   <Yes>Yes</Yes>
   <No>No</No>
@@ -107,6 +156,8 @@
   <Delete>Delete</Delete>
   <Load>Load</Load>
   <Back>Back</Back>
+  <Days>Days</Days>
+  <Hours>Hours</Hours>
   <ManagePlayers>Manage players</ManagePlayers>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
@@ -127,8 +178,11 @@
   <MissionReward>Reward: [reward]</MissionReward>
 
   <!-- Campaign setup menu -->
+  <CampaignSetup>Campaign Setup</CampaignSetup>
+  <NewCampaign>New campaign</NewCampaign>
+  <LoadCampaign>Load campaign</LoadCampaign>
   <LoadButton>Load</LoadButton>
-  <DeleteButton>Delete</DeleteButton>  
+  <DeleteButton>Delete</DeleteButton>
   <SubNotSelected>Submarine not selected!</SubNotSelected>
   <SelectSubRequest>Please select a submarine.</SelectSubRequest>
   <SelectedSub>Selected submarine</SelectedSub>
@@ -142,7 +196,7 @@
 
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
   <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
-  
+
   <!-- Campaign menu -->
   <Map>Map</Map>
   <Crew>Crew</Crew>
@@ -169,23 +223,30 @@
   <ServerIP>Server IP</ServerIP>
   <ServerListName>Name</ServerListName>
   <ServerListPlayers>Players</ServerListPlayers>
+  <ServerListCompatible>Compatible</ServerListCompatible>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
+  <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
+  <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
+  <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
+  <ServerListIncompatibleContentPackage>You need the content package "[contentpackage]" (MD5: [hash]) to play on this server.</ServerListIncompatibleContentPackage>
   <FilterServers>Filter servers</FilterServers>
   <FilterPassword>No password required</FilterPassword>
+  <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>
   <FilterFullServers>Hide full servers</FilterFullServers>
   <FilterEmptyServers>Hide empty servers</FilterEmptyServers>
   <NoMatchingServers>No matching servers found.</NoMatchingServers>
   <RefreshingServerList>Refreshing server list...</RefreshingServerList>
   <NoServers>Could not find any servers.</NoServers>
+  <ServerListNoSteamConnection>Could not find any servers (not connected to Steam).</ServerListNoSteamConnection>
   <MasterServerErrorLabel>Connection error</MasterServerErrorLabel>
   <MasterServerTimeOutError>Could not connect to master server (request timed out).</MasterServerTimeOutError>
   <MasterServerErrorException>Error while connecting to master server { [error] }</MasterServerErrorException>
   <MasterServerError404>Error while connecting to master server (404 - [masterserverurl] not found)</MasterServerError404>
   <MasterServerErrorUnavailable>Error while connecting to master server (505 - Service Unavailable). The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.</MasterServerErrorUnavailable>
   <MasterServerErrorDefault>Error while connecting to master server ([statuscode]: [statusdescription])</MasterServerErrorDefault>
-  
+
   <!-- Server lobby -->
   <RestartingIn>Restarting in</RestartingIn>
   <Votes>Votes</Votes>
@@ -194,7 +255,7 @@
   <Random>Random</Random>
   <LevelSeed>Level seed</LevelSeed>
   <LevelDifficulty>Level difficulty</LevelDifficulty>
-  <Traitors>Traitors</Traitors>  
+  <Traitors>Traitors</Traitors>
   <BotCount>Bot count</BotCount>
   <BotSpawnMode>Bot spawn mode</BotSpawnMode>
   <AutoRestart>Automatic restart</AutoRestart>
@@ -217,6 +278,8 @@
   <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
   <BanRange>Ban range</BanRange>
+  <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
+  <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
   <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
   <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
@@ -224,6 +287,12 @@
   <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
   <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
 
+  <!-- Ingame UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>  
+  
   <!-- Sub editor -->
   <Items>Items</Items>
   <Structures>Structures</Structures>
@@ -237,6 +306,7 @@
   <SaveSubButton>Save</SaveSubButton>
   <AddSubButton>Add submarine</AddSubButton>
   <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
+  <HoldToLink>Hold space to link to another item</HoldToLink>
   <FilterMapEntities>Filter</FilterMapEntities>
   <CharacterModeButton>Character mode</CharacterModeButton>
   <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
@@ -250,10 +320,10 @@
   <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
   <ShowLinks>Links</ShowLinks>
   <ShowHulls>Hulls</ShowHulls>
-  <ShowGaps>Gaps</ShowGaps>
+  <ShowGaps>Gaps</ShowGaps>  
   <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
   <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
-  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>  
+  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>
   <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
   <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
   <SaveSubDialogName>Name</SaveSubDialogName>
@@ -271,7 +341,11 @@
   <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
 
   <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
-  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>  
+  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>
+
+  <!-- Particle editor -->
+  <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
+  <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
   
   <!-- Rooms -->
   <ReactorRoom>Reactor room</ReactorRoom>
@@ -288,7 +362,7 @@
   <SubBottomCenter>Lower mid</SubBottomCenter>
   <SubBottomRight>Lower fore side</SubBottomRight>
   <SubDirOClock>[dir] o'clock</SubDirOClock>
-  
+
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
   <DimensionsFormat>[width]x[height] m</DimensionsFormat>
@@ -299,7 +373,7 @@
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>
-  
+
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>
   <LinkWaypoint>Hold space to link to another waypoint</LinkWaypoint>
@@ -511,15 +585,4 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-
-
-
-
-
-
-
-
-
-
-
 </infotexts>

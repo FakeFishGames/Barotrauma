@@ -123,7 +123,6 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
                 style: "GUISlider", barSize: 0.1f)
             {
-                IsHorizontal = true,
                 BarScroll = 1.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
@@ -138,13 +137,12 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
-            
+
             new GUITextBlock(new RectTransform(new Point(0, 20), columnMid.RectTransform, Anchor.BottomLeft) { AbsoluteOffset = new Point(0, 30) },
                 TextManager.Get("ReactorTurbineOutput"));
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
-                style: "GUISlider", barSize: 0.1f)
+                style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
-                IsHorizontal = true,
                 BarScroll = 1.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
@@ -179,17 +177,23 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) },
                 TextManager.Get("ReactorFissionRate"));
             new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.3f) },
-                DrawFissionRateMeter, null);
+                DrawFissionRateMeter, null)
+            {
+                CanBeFocused = false
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.05f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.25f) },
                 TextManager.Get("ReactorTurbineOutput"));
             new GUICustomComponent(new RectTransform(new Vector2(0.5f, 0.5f), columnMid.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, 0.3f) },
-                DrawTurbineOutputMeter, null);
+                DrawTurbineOutputMeter, null)
+            {
+                CanBeFocused = false
+            };
 
             //----------------------------------------------------------
             //right column
             //----------------------------------------------------------
-            
+
             new GUITextBlock(new RectTransform(new Point(100,20), columnRight.RectTransform), TextManager.Get("ReactorAutoTemp"));
             autoTempSlider = new GUIScrollBar(new RectTransform(new Point(100, 30), columnRight.RectTransform) { AbsoluteOffset = new Point(0, 30) },
                 barSize: 0.5f, style: "OnOffSlider")
@@ -247,8 +251,8 @@ namespace Barotrauma.Items.Components
         {
             Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
             inventory.CenterPos = new Vector2(
-                GuiFrame.Children[0].Rect.Center.X / (float)GameMain.GraphicsWidth, 
-                (GuiFrame.Children[0].Rect.Y + GuiFrame.Children[0].Rect.Height * 0.75f) / GameMain.GraphicsHeight);
+                GuiFrame.Children.First().Rect.Center.X / (float)GameMain.GraphicsWidth, 
+                (GuiFrame.Children.First().Rect.Y + GuiFrame.Children.First().Rect.Height * 0.75f) / GameMain.GraphicsHeight);
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)

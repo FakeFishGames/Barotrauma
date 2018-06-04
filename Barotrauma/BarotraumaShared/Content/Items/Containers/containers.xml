@@ -13,12 +13,25 @@
   </Item>
 
   <Item
-    name="Medicine Cabinet"    
+    name="Railgun Shell Rack"
+    identifier="railgunshellrack"
+    pickdistance="120">
+
+    <Sprite texture="content/items/weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
+
+    <ItemContainer  hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+      <Containable name="Nuclear Shell"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Medicine Cabinet" 
     identifier="medcabinet"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150">
 
-    <Sprite texture ="ff_medicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
+    <Sprite texture="ff_medicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
@@ -28,17 +41,29 @@
   </Item>
   
   <Item
-    name="Toxic Cabinet"   
+    name="Toxic Cabinet"
     identifier="toxcabinet"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150">
 
-    <Sprite texture ="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
+    <Sprite texture="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
       <Containable name="chem"/>
       <Containable name="medical"/>
+    </ItemContainer>
+  </Item>
+   
+  <Item
+    name="Diving Suit Locker"
+    identifier="divingsuitlocker"
+    pickdistance="50">
+
+    <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169"/>
+
+    <ItemContainer  hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Diving Suit"/>
     </ItemContainer>
   </Item>
 
@@ -106,6 +131,32 @@
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Fire Extinguisher Bracket"
+    identifier="extinguisherbracket"
+    linkable="true"
+    pickdistance="75">
+
+    <Sprite texture ="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Fire Extinguisher"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item
+    name="Fire Extinguisher Mount"
+    identifier="extinguishermount"
+    linkable="true"
+    pickdistance="75">
+
+    <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true">
+      <Containable name="Fire Extinguisher"/>
     </ItemContainer>
   </Item>
 

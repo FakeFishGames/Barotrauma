@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ItemAssembly name="Autodoor" description="Door that shuts automatically after 5 seconds.">
+  <Item name="Door" identifier="door" ID="51" rect="-16,-16,48,208" linked="714" description="" spritecolor="1,1,1,1" tags="door">
+    <Door isopen="False" pickingtime="10" canbepicked="True" msg="Force Open [Crowbar]">
+      <requireditem name="Crowbar" type="Equipped" msg="" />
+    </Door>
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped" msg="" />
+      <input name="toggle">
+        <link w="720" />
+        <link w="721" />
+      </input>
+      <input name="set_state">
+        <link w="722" />
+      </input>
+      <output name="state_out" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="Button" identifier="button" ID="588" rect="31,-113,24,27" description="" spritecolor="1,1,1,1" tags="smallitem">
+    <Controller pickingtime="0" canbepicked="True" msg="Press [E]">
+      <requireditem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped" msg="" />
+      <output name="signal_out">
+        <link w="720" />
+        <link w="724" />
+      </output>
+    </ConnectionPanel>
+    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped" msg="" />
+    </Holdable>
+  </Item>
+  <Item name="Button" identifier="button" ID="86" rect="-40,-113,24,27" description="" spritecolor="1,1,1,1" tags="smallitem">
+    <Controller pickingtime="0" canbepicked="True" msg="Press [E]">
+      <requireditem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS" />
+    </Controller>
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped" msg="" />
+      <output name="signal_out">
+        <link w="721" />
+        <link w="723" />
+      </output>
+    </ConnectionPanel>
+    <Holdable attached="True" pickingtime="10" canbepicked="True" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped" msg="" />
+    </Holdable>
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="725" rect="-5,-55,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="8;8;8;-8" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="724" rect="-6,25,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="40;-128;40;8;8;8" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="723" rect="-13,241,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="-32;-120;-32;8;8;8" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="722" rect="-10,-169,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="8;-16;8;-48" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="721" rect="-75,-65,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="-24;-120;8;-120" />
+  </Item>
+  <Item name="Blue Wire" identifier="bluewire" ID="720" rect="-81,-66,44,22" description="" spritecolor="0,0.6,1,1" tags="smallitem,wire">
+    <Holdable pickingtime="0" canbepicked="True" msg="" />
+    <Wire pickingtime="0" canbepicked="False" msg="" nodes="40;-120;8;-120" />
+  </Item>
+  <Item name="Delay Component" identifier="delaycomponent" ID="590" rect="0,16,16,8" description="Delays all received signals for a specific amount of time." spritecolor="1,1,1,1" tags="smallitem">
+    <DelayComponent delay="5" pickingtime="0" canbepicked="False" msg="" />
+    <Holdable attached="True" pickingtime="5" canbepicked="True" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped" msg="" />
+    </Holdable>
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="" />
+      <input name="signal_in">
+        <link w="723" />
+        <link w="724" />
+      </input>
+      <output name="signal_out">
+        <link w="725" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Item name="Not Component" identifier="notcomponent" ID="589" rect="1,0,16,16" description="Sends a signal when the input is NOT receiving a signal." spritecolor="1,1,1,1" tags="smallitem">
+    <NotComponent pickingtime="0" canbepicked="False" msg="" />
+    <Holdable attached="True" pickingtime="5" canbepicked="True" msg="Detach [Wrench]">
+      <requireditem name="Wrench" type="Equipped" msg="" />
+    </Holdable>
+    <ConnectionPanel pickingtime="0" canbepicked="False" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped" msg="" />
+      <input name="signal_in">
+        <link w="725" />
+      </input>
+      <output name="signal_out">
+        <link w="722" />
+      </output>
+    </ConnectionPanel>
+  </Item>
+  <Gap ID="714" horizontal="true" rect="-21,-16,58,208" />
+  <WayPoint ID="715" x="5" y="-111" spawn="Path" />
+</ItemAssembly>

@@ -2,27 +2,30 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma.Networking
 {
     class UnauthenticatedClient
     {
-        public NetConnection Connection;
-        public int Nonce;
+        public readonly NetConnection Connection;
+        public readonly ulong SteamID;
+        public readonly int Nonce;
 
-        public int failedAttempts;
+        public bool WaitingSteamAuth;
+
+        public int FailedAttempts;
 
         public float AuthTimer;
-
-        public UnauthenticatedClient(NetConnection connection, int nonce)
+        
+        public UnauthenticatedClient(NetConnection connection, int nonce, ulong steamID = 0)
         {
             Connection = connection;
+            SteamID = steamID;
             Nonce = nonce;
-
             AuthTimer = 10.0f;
-
-            failedAttempts = 0;
+            FailedAttempts = 0;
         }
     }
     
@@ -30,28 +33,117 @@ namespace Barotrauma.Networking
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 
-        private void ClientAuthRequest(NetConnection conn)
+        private void ReadClientSteamAuthRequest(NetIncomingMessage inc, out ulong clientSteamID)
         {
+            clientSteamID = 0;
+            if (!Steam.SteamManager.USE_STEAM)
+            {
+                //not using steam, handle auth normally
+                HandleClientAuthRequest(inc.SenderConnection, 0);
+                return;
+            }
+
+            clientSteamID = inc.ReadUInt64();
+            int authTicketLength = inc.ReadInt32();
+            inc.ReadBytes(authTicketLength, out byte[] authTicketData);
+
+            DebugConsole.Log("Received a Steam auth request");
+            DebugConsole.Log("  Steam ID: "+ clientSteamID);
+            DebugConsole.Log("  Auth ticket length: " + authTicketLength);
+
+            DebugConsole.Log("  Auth ticket data: " + ((authTicketData == null) ? "null" : authTicketData.Length.ToString()));
+
+            if (banList.IsBanned("", clientSteamID))
+            {
+                return;
+            }
+
+            if (unauthenticatedClients.Any(uc => uc.Connection == inc.SenderConnection && uc.WaitingSteamAuth))
+            {
+                DebugConsole.Log("Duplicate request");
+                return;
+            }
+
+            if (authTicketData == null)
+            {
+                DebugConsole.Log("Invalid request");
+                return;
+            }
+
+            unauthenticatedClients.RemoveAll(uc => uc.Connection == inc.SenderConnection);
+            var unauthClient = new UnauthenticatedClient(inc.SenderConnection, 0, clientSteamID)
+            {
+                AuthTimer = 100,
+                WaitingSteamAuth = true
+            };
+            unauthenticatedClients.Add(unauthClient);
+            
+            if (!Steam.SteamManager.StartAuthSession(authTicketData, clientSteamID))
+            {
+                unauthClient.Connection.Disconnect("Steam authentication failed.");
+                unauthenticatedClients.Remove(unauthClient);
+            }
+
+            return;
+        }
+
+        public void OnAuthChange(ulong steamID, ulong ownerID, Facepunch.Steamworks.ServerAuth.Status status)
+        {
+            DebugConsole.Log("OnAuthChange");
+            DebugConsole.Log("  Steam ID: " + steamID);
+            DebugConsole.Log("  Owner ID: " + ownerID);
+            DebugConsole.Log("  Status: " + status);
+            
+            UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.SteamID == ownerID);
+            if (unauthClient != null)
+            {
+                switch (status)
+                {
+                    case Facepunch.Steamworks.ServerAuth.Status.OK:
+                        ////steam authentication done, check password next
+                        unauthenticatedClients.Remove(unauthClient);
+                        HandleClientAuthRequest(unauthClient.Connection, unauthClient.SteamID);
+                        break;
+                    default:
+                        unauthenticatedClients.Remove(unauthClient);
+                        unauthClient.Connection.Disconnect("Steam authentication failed (" + status.ToString() + ")");
+                        break;
+                }
+                return;
+            }
+
+            //TODO: kick connected client if status becomes invalid (e.g. VAC banned, not connected to steam)
+            //var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
+        }
+        
+        private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
+        {
+            if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
+            {
+                connection.Disconnect("Steam authentication required. Please make sure Steam is running and you are logged in to an account.");
+                return;
+            }
+
             //client wants to know if server requires password
-            if (ConnectedClients.Find(c => c.Connection == conn) != null)
+            if (ConnectedClients.Find(c => c.Connection == connection) != null)
             {
                 //this client has already been authenticated
                 return;
             }
             
-            UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == conn);
+            UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == connection);
             if (unauthClient == null)
             {
                 //new client, generate nonce and add to unauth queue
                 if (ConnectedClients.Count >= maxPlayers)
                 {
                     //server is full, can't allow new connection
-                    conn.Disconnect("Server full");
+                    connection.Disconnect("Server full");
                     return;
                 }
 
                 int nonce = CryptoRandom.Instance.Next();
-                unauthClient = new UnauthenticatedClient(conn, nonce);
+                unauthClient = new UnauthenticatedClient(connection, nonce, steamID);
                 unauthenticatedClients.Add(unauthClient);
             }
             unauthClient.AuthTimer = 10.0f;
@@ -68,7 +160,7 @@ namespace Barotrauma.Networking
                 nonceMsg.Write((Int32)unauthClient.Nonce); //here's nonce, encrypt with this
             }
             CompressOutgoingMessage(nonceMsg);
-            server.SendMessage(nonceMsg, conn, NetDeliveryMethod.Unreliable);
+            server.SendMessage(nonceMsg, connection, NetDeliveryMethod.Unreliable);
         }
 
         private void ClientInitRequest(NetIncomingMessage inc)
@@ -97,8 +189,8 @@ namespace Barotrauma.Networking
                 string clPw = inc.ReadString();
                 if (clPw != saltedPw)
                 {
-                    unauthClient.failedAttempts++;
-                    if (unauthClient.failedAttempts > 3)
+                    unauthClient.FailedAttempts++;
+                    if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
                         banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), "Too many failed login attempts.", null);
@@ -113,7 +205,7 @@ namespace Barotrauma.Networking
                         //not disconnecting the player here, because they'll still use the same connection and nonce if they try logging in again
                         NetOutgoingMessage reject = server.CreateMessage();
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
-                        reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.failedAttempts)+" more attempts before you're banned from the server.");
+                        reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.FailedAttempts)+" more attempts before you're banned from the server.");
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
                         CompressOutgoingMessage(reject);
@@ -208,6 +300,7 @@ namespace Barotrauma.Networking
             Client newClient = new Client(clName, GetNewClientID());
             newClient.InitClientSync();
             newClient.Connection = unauthClient.Connection;
+            newClient.SteamID = unauthClient.SteamID;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);

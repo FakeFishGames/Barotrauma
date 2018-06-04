@@ -10,32 +10,49 @@ namespace Barotrauma
     {
         public static GUIComponent StartCampaignSetup()
         {
-            GUIFrame background = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
+            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
 
-            GUIFrame setupBox = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, "", background);
-            setupBox.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-            new GUITextBlock(new Rectangle(0, 0, 10, 10), "Campaign Setup", "", setupBox, GUI.LargeFont);
-            setupBox.Padding = new Vector4(20.0f, 80.0f, 20.0f, 20.0f);
+            GUIFrame setupBox = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.45f), background.RectTransform, Anchor.Center) { MinSize = new Point(500, 500) });
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), setupBox.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
 
-            var newCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox);
-            var loadCampaignContainer = new GUIFrame(new Rectangle(0, 40, 0, 0), null, setupBox);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform,Anchor.TopCenter),
+                TextManager.Get("CampaignSetup"), font: GUI.LargeFont);
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), paddedFrame.RectTransform, Anchor.BottomLeft), style: null);
+            
+            var newCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
+            var loadCampaignContainer = new GUIFrame(new RectTransform(Vector2.One, campaignContainer.RectTransform, Anchor.BottomLeft), style: null);
 
             var campaignSetupUI = new CampaignSetupUI(true, newCampaignContainer, loadCampaignContainer);
 
-            var newCampaignButton = new GUIButton(new Rectangle(0, 0, 120, 20), "New campaign", "", setupBox);
-            newCampaignButton.OnClicked += (btn, obj) =>
+            var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform),
+                TextManager.Get("NewCampaign"))
             {
-                newCampaignContainer.Visible = true;
-                loadCampaignContainer.Visible = false;
-                return true;
+                OnClicked = (btn, obj) =>
+                {
+                    newCampaignContainer.Visible = true;
+                    loadCampaignContainer.Visible = false;
+                    return true;
+                }
             };
 
-            var loadCampaignButton = new GUIButton(new Rectangle(130, 0, 120, 20), "Load campaign", "", setupBox);
-            loadCampaignButton.OnClicked += (btn, obj) =>
+            var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.00f), buttonContainer.RectTransform),
+                TextManager.Get("LoadCampaign"))
             {
-                newCampaignContainer.Visible = false;
-                loadCampaignContainer.Visible = true;
-                return true;
+                OnClicked = (btn, obj) =>
+                {
+                    newCampaignContainer.Visible = false;
+                    loadCampaignContainer.Visible = true;
+                    return true;
+                }
             };
 
             loadCampaignContainer.Visible = false;
@@ -67,19 +84,22 @@ namespace Barotrauma
                 campaign.Map.SelectRandomLocation(true);
             };
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 120, 30), "Cancel", Alignment.BottomLeft, "", setupBox);
-            cancelButton.OnClicked += (btn, obj) =>
+            var cancelButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.05f), paddedFrame.RectTransform, Anchor.BottomLeft), TextManager.Get("Cancel"))
             {
-                background.Visible = false;
-                int otherModeIndex = 0;
-                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Content.Children.Count; otherModeIndex++)
+                OnClicked = (btn, obj) =>
                 {
-                    if (GameMain.NetLobbyScreen.ModeList.Content.Children[otherModeIndex].UserData is MultiPlayerCampaign) continue;
-                    break;
-                }
+                    //find the first mode that's not multiplayer campaign and switch to that
+                    background.Visible = false;
+                    int otherModeIndex = 0;
+                    for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.Content.CountChildren; otherModeIndex++)
+                    {
+                        if (GameMain.NetLobbyScreen.ModeList.Content.GetChild(otherModeIndex).UserData is MultiPlayerCampaign) continue;
+                        break;
+                    }
 
-                GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
-                return true;
+                    GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
+                    return true;
+                }
             };
 
             return background;

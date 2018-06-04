@@ -576,11 +576,11 @@ namespace Launcher
         {
             GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.Center);
             errorBox.Buttons[0].OnClicked = errorBox.Close;
-            errorBox.InnerFrame.Rect = new Rectangle(
+            /*errorBox.InnerFrame.Rect = new Rectangle(
                 (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
                 (graphicsHeight - errorBox.InnerFrame.Rect.Height) / 2,
                 errorBox.InnerFrame.Rect.Width,
-                errorBox.InnerFrame.Rect.Height);
+                errorBox.InnerFrame.Rect.Height);*/
         }
 
         private void Completed(object sender, AsyncCompletedEventArgs e)
@@ -594,11 +594,11 @@ namespace Launcher
 
                 GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
                     new string[] { "Retry", "Cancel" }, 400, 200, Alignment.Center);
-                errorBox.InnerFrame.Rect = new Rectangle(
+                /*errorBox.InnerFrame.RectTransform = new Rectangle(
                     (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
                     (graphicsHeight - errorBox.InnerFrame.Rect.Height) / 2,
                     errorBox.InnerFrame.Rect.Width,
-                    errorBox.InnerFrame.Rect.Height);
+                    errorBox.InnerFrame.Rect.Height);*/
 
                 errorBox.Buttons[0].OnClicked += DownloadButtonClicked;
                 errorBox.Buttons[0].OnClicked += errorBox.Close;

@@ -13,6 +13,8 @@ namespace Barotrauma
         private GUIButton button;
         private GUIListBox listBox;
 
+        private RectTransform prevParent;
+
         public bool Dropped { get; set; }
 
         public object SelectedItemData
@@ -24,7 +26,7 @@ namespace Barotrauma
             }
         }
 
-        public bool Enabled
+        public override bool Enabled
         {
             get { return listBox.Enabled; }
             set { listBox.Enabled = value; }
@@ -53,7 +55,7 @@ namespace Barotrauma
             get
             {
                 if (listBox.Selected == null) return -1;
-                return listBox.Content.Children.FindIndex(x => x == listBox.Selected);
+                return listBox.Content.GetChildIndex(listBox.Selected);
             }
         }
 
@@ -70,101 +72,49 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
-
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-
-            set
-            {
-                Point moveAmount = value.Location - Rect.Location;
-                base.Rect = value;
-
-                button.Rect = new Rectangle(button.Rect.Location + moveAmount, button.Rect.Size);
-                listBox.Rect = new Rectangle(listBox.Rect.Location + moveAmount, listBox.Rect.Size);
-            }
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
-            : this(rect, text, style, Alignment.TopLeft, parent)
-        {
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUIDropDown(Rectangle rect, string text, string style, Alignment alignment, GUIComponent parent = null)
-            : base(style)
-        {
-            this.rect = rect;
-
-            if (parent != null) parent.AddChild(this);
-
-            button = new GUIButton(this.rect, text, Color.White, alignment, Alignment.CenterLeft, "GUIDropDown", null);
-            GUI.Style.Apply(button, style, this);
-
-            button.OnClicked = OnClicked;
-
-            listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
-            listBox.OnSelected = SelectItem;
-            // In the old system the GUIDropDown seems to be drawn in a wrong place, so let's disable drawing.
-            // Seems to not happen in the new system.
-            AutoDraw = false;
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
+        
         public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "") : base(style, rectT)
         {
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
                 OnClicked = OnClicked
             };
-            GUI.Style.Apply(button, style, this);
+            GUI.Style.Apply(button, "", this);
             
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount - 1, 5, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
             {
                 IsFixedSize = false
             }, style: style)
             {
+                ClampMouseRectToParent = false,
                 OnSelected = SelectItem
             };
-        }
 
-        public override void AddChild(GUIComponent child)
-        {
-            listBox.AddChild(child);
-            child.ClampMouseRectToParent = false;
+            prevParent = rectT.Parent;
+            rectT.Parent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+            rectT.ParentChanged += (RectTransform newParent) =>
+            {
+                prevParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                if (newParent != null)
+                {
+                    newParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+                }
+            };
         }
-
+        
         public void AddItem(string text, object userData = null, string toolTip = "")
         {
             GUITextBlock textBlock = null;
-            if (RectTransform != null)
+
+            textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
-                {
-                    IsFixedSize = false
-                }, text, style: "ListBoxElement");
-                // In the old system, this is automatically called, because it's defined in the GUIComponent level.
-                // The trick is that since the old textbox constructor calls parent.AddChild, it uses listboxes overloaded method, which is quite different from the GUIComponent method.
-                // We will want to use this method with the new system also, because it updates the scroll bar.
-                // However, we don't want to call it in the textbox constructor, because in the new system, we don't want to manually add children on just any elements.
-                // Instead, parenting is handled by assigning the parent of the rect transform.
-                // Therefore we have to call listbox.AddChild here, but not with the old elements.
-                listBox.AddChild(textBlock);
-            }
-            else
+                IsFixedSize = false
+            }, text, style: "ListBoxElement")
             {
-                textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox.Content);
-            }
-            textBlock.UserData = userData;
-            textBlock.ToolTip = toolTip;
-            textBlock.ClampMouseRectToParent = false;
+                UserData = userData,
+                ToolTip = toolTip,
+                ClampMouseRectToParent = false
+            };
         }
 
         public override void ClearChildren()
@@ -172,7 +122,7 @@ namespace Barotrauma
             listBox.ClearChildren();
         }
 
-        public List<GUIComponent> GetChildren()
+        public IEnumerable<GUIComponent> GetChildren()
         {
             return listBox.Content.Children;
         }
@@ -209,26 +159,24 @@ namespace Barotrauma
             
             wasOpened = true;
             Dropped = !Dropped;
-            if (Dropped)
+            if (Dropped && Enabled)
             {
-                if (Enabled)
-                {
-                    OnDropped?.Invoke(this, userData);
-                }
-                if (RectTransform != null)
-                {
-                    RectTransform.SetAsLastChild();
-                }
-                else
-                {
-                    if (Parent != null && Parent.Children.Last() != this)
-                    {
-                        Parent.RemoveChild(this);
-                        Parent.AddChild(this);
-                    }
-                }
+                OnDropped?.Invoke(this, userData);                
             }
             return true;
+        }
+
+        private void AddListBoxToGUIUpdateList(GUIComponent parent)
+        {
+            if (parent.RectTransform != RectTransform.Parent)
+            {
+                DebugConsole.ThrowError("GUIDropDown received a AddListBoxToGUIUpdateList callback from a component that is not its parent.");
+                return;
+            }
+            if (Dropped)
+            {
+                listBox.AddToGUIUpdateList(false, UpdateOrder);
+            }
         }
 
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
@@ -237,10 +185,6 @@ namespace Barotrauma
             if (!ignoreChildren)
             {
                 button.AddToGUIUpdateList(false, order);
-                if (Dropped)
-                {
-                    listBox.AddToGUIUpdateList(false, order);
-                }
             }
         }
 
@@ -252,7 +196,6 @@ namespace Barotrauma
             if (Dropped && PlayerInput.LeftButtonClicked())
             {
                 Rectangle listBoxRect = listBox.Rect;
-                listBoxRect.Width += 20; // ?
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))
                 {
                     Dropped = false;

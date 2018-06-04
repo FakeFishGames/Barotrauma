@@ -237,20 +237,23 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int height = 150;
+            int width = 450, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+            
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
 
-            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD.UserData = this;
             GUIListBox listBox = (GUIListBox)editingHUD;
             listBox.Spacing = 5;
             
-            var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
+            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
             
             if (!inGame && Linkable)
             {
-                itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
+                itemEditor.AddCustomContent(new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)), 
+                    TextManager.Get("HoldToLink"), font: GUI.SmallFont), 1);
             }            
 
             foreach (ItemComponent ic in components)
@@ -267,19 +270,24 @@ namespace Barotrauma
                     }
                 }
 
-                var componentEditor = new SerializableEntityEditor(ic, inGame, editingHUD, !inGame);
-
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
+                
                 if (inGame) continue;
 
                 foreach (RelatedItem relatedItem in ic.requiredItems)
                 {
-                    var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, null, false, GUI.SmallFont);
-                    textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
+                    var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, 20)),
+                        relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                    {
+                        Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
+                    };
                     componentEditor.AddCustomContent(textBlock, 1);
 
-                    GUITextBox namesBox = new GUITextBox(new Rectangle(0, 0, 180, 20), Alignment.Right, "", textBlock);
-                    namesBox.Font = GUI.SmallFont;
-                    namesBox.Text = relatedItem.JoinedNames;
+                    GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
+                    {
+                        Font = GUI.SmallFont,
+                        Text = relatedItem.JoinedNames
+                    };
 
                     namesBox.OnDeselected += (textBox, key) =>
                     {
@@ -293,14 +301,12 @@ namespace Barotrauma
                         textBox.Text = relatedItem.JoinedNames;
                         return true;
                     };
-
-                    y += 20;
                 }
             }
 
-            int contentHeight = (int)(editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.Children.Count - 1) * listBox.Spacing + listBox.Padding.Y + listBox.Padding.W);
-
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(contentHeight, 50, editingHUD.Rect.Height)));
+            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
+            editingHUD.RectTransform.NonScaledSize =
+                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
 
             return editingHUD;
         }
@@ -351,12 +357,6 @@ namespace Barotrauma
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.DrawHud(spriteBatch, this, character);
-                return;
-            }
-
             if (HasInGameEditableProperties)
             {
                 DrawEditing(spriteBatch, cam);

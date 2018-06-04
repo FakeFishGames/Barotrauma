@@ -170,9 +170,9 @@ namespace Barotrauma
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
 
-            if (listBox.Content.Children.Count > MaxMessages)
+            if (listBox.Content.CountChildren > MaxMessages)
             {
-                listBox.RemoveChild(listBox.Content.Children[0]);
+                listBox.RemoveChild(listBox.Content.Children.First());
             }
 
             Messages.Add(msg);
@@ -202,9 +202,9 @@ namespace Barotrauma
 
         private static void AddHelpMessage(Command command)
         {
-            if (listBox.Content.Children.Count > MaxMessages)
+            if (listBox.Content.CountChildren > MaxMessages)
             {
-                listBox.RemoveChild(listBox.Content.Children[0]);
+                listBox.RemoveChild(listBox.Content.Children.First());
             }
 
             var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),

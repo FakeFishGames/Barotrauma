@@ -28,14 +28,20 @@ namespace Barotrauma
         public bool EnableSplashScreen { get; set; }
 
         public int ParticleLimit { get; set; }
-
-        //public bool FullScreenEnabled { get; set; }
-        
+                
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
 
         public List<string> jobNamePreferences;
+        
+        public bool UseSteamMatchmaking { get; set; }
+        public bool RequireSteamAuthentication { get; set; }
+
+#if DEBUG
+        //steam functionality can be enabled/disabled in debug builds
+        public bool UseSteam;
+#endif
 
         public WindowMode WindowMode
         {
@@ -149,6 +155,10 @@ namespace Barotrauma
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
 
+#if DEBUG
+            UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#endif
+
             if (doc == null)
             {
                 GraphicsWidth = 1024;
@@ -193,6 +203,14 @@ namespace Barotrauma
             SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
+#if DEBUG
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && UseSteam;
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && UseSteam;
+#else
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && Steam.SteamManager.USE_STEAM;
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && Steam.SteamManager.USE_STEAM;
+#endif
+
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
@@ -218,18 +236,15 @@ namespace Barotrauma
                     case "keymapping":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            InputType inputType;
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
+                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
                             {
-                                int mouseButton;
-                                if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
                                 else
                                 {
-                                    Keys key;
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
                                     {
                                         keyMapping[(int)inputType] = new KeyOrMouse(key);
                                     }

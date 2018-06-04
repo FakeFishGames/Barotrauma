@@ -1,5 +1,6 @@
 using Barotrauma.Networking;
 using Barotrauma.Particles;
+using Barotrauma.Steam;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -8,7 +9,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace Barotrauma
@@ -28,6 +28,7 @@ namespace Barotrauma
 
         public static NetLobbyScreen NetLobbyScreen;
         public static ServerListScreen ServerListScreen;
+        public static SteamWorkshopScreen SteamWorkshopScreen;
 
         public static SubEditorScreen         SubEditorScreen;
         public static CharacterEditorScreen   CharacterEditorScreen;
@@ -231,7 +232,7 @@ namespace Barotrauma
         {
             GraphicsWidth = GraphicsDevice.Viewport.Width;
             GraphicsHeight = GraphicsDevice.Viewport.Height;
-
+            
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -255,9 +256,11 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
-
+            
             GUI.Init(Window, Config.SelectedContentPackage, GraphicsDevice);
             DebugConsole.Init();
+
+            SteamManager.Initialize();
 
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
@@ -332,6 +335,11 @@ namespace Barotrauma
             LobbyScreen             =   new LobbyScreen();
             
             ServerListScreen        =   new ServerListScreen();
+
+            if (SteamManager.USE_STEAM)
+            {
+                SteamWorkshopScreen     = new SteamWorkshopScreen();
+            }
 
             SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();
@@ -460,6 +468,8 @@ namespace Barotrauma
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
+                SteamManager.Update();
+
                 Timing.Accumulator -= Timing.Step;
             }
 
@@ -506,7 +516,9 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-           
+
+            SteamManager.ShutDown();
+
             base.OnExiting(sender, args);
         }
     }

@@ -401,7 +401,8 @@ namespace Barotrauma.Items.Components
             {
                 loopingSoundChannel.Dispose();
                 loopingSoundChannel = null;
-            }
+            }                
+            if (GuiFrame != null) GUI.RemoveFromUpdateList(GuiFrame, true);
 #endif
 
             if (delayedCorrectionCoroutine != null)
@@ -411,6 +412,7 @@ namespace Barotrauma.Items.Components
             }
 
             RemoveComponentSpecific();
+
         }
 
         /// <summary>
@@ -440,8 +442,7 @@ namespace Barotrauma.Items.Components
 
         public bool HasRequiredSkills(Character character)
         {
-            Skill temp;
-            return HasRequiredSkills(character, out temp);
+            return HasRequiredSkills(character, out Skill temp);
         }
 
         public bool HasRequiredSkills(Character character, out Skill insufficientSkill)

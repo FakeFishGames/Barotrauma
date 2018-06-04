@@ -110,34 +110,33 @@ namespace Barotrauma
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
-            }
-
-            editingHUD.UpdateManually((float)Timing.Step);
+            }            
         }
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            //int width = 450;
-            //int height = 150;
-            int width = 600;
-            int height = 150;
+            int width = 600, height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
-            //editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) });
-            editingHUD.UserData = this;
+            editingHUD = new GUIListBox(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            {
+                UserData = this
+            };
 
-            //new SerializableEntityEditor(this, inGame, editingHUD, true);
-            editingHUD.AddChild(new SerializableEntityEditor(editingHUD.RectTransform, this, inGame, showName: true));
+            GUIListBox listBox = (GUIListBox)editingHUD;
+            new SerializableEntityEditor(editingHUD.RectTransform, this, inGame, showName: true, elementHeight: 20);
 
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.Children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
-
+            listBox.UpdateScrollBarSize();
+            editingHUD.RectTransform.NonScaledSize =
+                new Point(
+                    editingHUD.RectTransform.NonScaledSize.X, 
+                    MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
+            
             return editingHUD;
         }
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null && editingHUD.UserData == this) editingHUD.DrawManually(spriteBatch);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)

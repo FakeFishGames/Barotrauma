@@ -8,7 +8,9 @@ namespace Barotrauma
         private InfoFrameTab selectedTab;
         private GUIButton infoButton;
         private GUIFrame infoFrame;
-        
+
+        private GUIFrame infoFrameContent;
+
         private RoundSummary roundSummary;
         public RoundSummary RoundSummary
         {
@@ -33,36 +35,46 @@ namespace Barotrauma
         public void CreateInfoFrame()
         {
             int width = 600, height = 400;
+            
+            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style:null, color: Color.Black * 0.8f);
 
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width,height) });
 
-            infoFrame = new GUIFrame(
-                Rectangle.Empty, Color.Black * 0.8f, null);
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style:null);
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.01f
+            };
+            infoFrameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.08f) }, style: "InnerFrame");
 
-            var innerFrame = new GUIFrame(
-                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", infoFrame);
+            var crewButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"))
+            {
+                ClampMouseRectToParent = false,
+                UserData = InfoFrameTab.Crew,
+                OnClicked = SelectInfoFrameTab
+            };
 
-            innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), TextManager.Get("Crew"), "", innerFrame);
-            crewButton.ClampMouseRectToParent = false;
-            crewButton.UserData = InfoFrameTab.Crew;
-            crewButton.OnClicked = SelectInfoFrameTab;
-
-            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), TextManager.Get("Mission"), "", innerFrame);
-            missionButton.ClampMouseRectToParent = false;
-            missionButton.UserData = InfoFrameTab.Mission;
-            missionButton.OnClicked = SelectInfoFrameTab;
+            var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"))
+            {
+                ClampMouseRectToParent = false,
+                UserData = InfoFrameTab.Mission,
+                OnClicked = SelectInfoFrameTab
+            };
 
             if (GameMain.Server != null)
             {
-                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), TextManager.Get("ManagePlayers"), "", innerFrame);
-                manageButton.ClampMouseRectToParent = false;
-                manageButton.UserData = InfoFrameTab.ManagePlayers;
-                manageButton.OnClicked = SelectInfoFrameTab;
+                var manageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("ManagePlayers"))
+                {
+                    ClampMouseRectToParent = false,
+                    UserData = InfoFrameTab.ManagePlayers,
+                    OnClicked = SelectInfoFrameTab
+                };
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Close"), Alignment.BottomCenter, "", innerFrame);
-            closeButton.OnClicked = ToggleInfoFrame;
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.08f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
+            {
+                OnClicked = ToggleInfoFrame
+            };
 
         }
 
@@ -75,13 +87,13 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case InfoFrameTab.Crew:
-                    CrewManager.CreateCrewListFrame(CrewManager.GetCharacters(), infoFrame.Children[0] as GUIFrame);
+                    CrewManager.CreateCrewListFrame(CrewManager.GetCharacters(), infoFrameContent);
                     break;
                 case InfoFrameTab.Mission:
-                    CreateMissionInfo(infoFrame.Children[0] as GUIFrame);
+                    CreateMissionInfo(infoFrameContent);
                     break;
                 case InfoFrameTab.ManagePlayers:
-                    GameMain.Server.ManagePlayersFrame(infoFrame.Children[0] as GUIFrame);
+                    GameMain.Server.ManagePlayersFrame(infoFrameContent);
                     break;
             }
 
@@ -90,16 +102,23 @@ namespace Barotrauma
 
         private void CreateMissionInfo(GUIFrame infoFrame)
         {
+            infoFrameContent.ClearChildren();
+
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), infoFrameContent.RectTransform))
+            {
+                RelativeSpacing = 0.05f
+            };
+
             if (Mission == null)
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 50), TextManager.Get("NoMission"), "", infoFrame, true);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform, Anchor.TopCenter), TextManager.Get("NoMission"));
                 return;
             }
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 40), Mission.Name, "", infoFrame, GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Mission.Name, font: GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 20), TextManager.Get("MissionReward").Replace("[reward]", Mission.Reward.ToString()), "", infoFrame, true);
-            new GUITextBlock(new Rectangle(0, 70, 0, 50), Mission.Description, "", infoFrame, true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), TextManager.Get("MissionReward").Replace("[reward]", Mission.Reward.ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), Mission.Description, wrap: true);
         }
 
         public void AddToGUIUpdateList()

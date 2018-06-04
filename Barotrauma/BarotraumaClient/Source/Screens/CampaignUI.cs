@@ -85,12 +85,14 @@ namespace Barotrauma
 
             if (GameMain.Client == null)
             {
-                startButton = new GUIButton(new RectTransform(new Vector2(0.07f, 0.04f), tabs[(int)Tab.Map].RectTransform, Anchor.BottomRight, Pivot.BottomRight)
+                startButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.06f), tabs[(int)Tab.Map].RectTransform, Anchor.BottomRight, Pivot.BottomRight)
                 {
                     RelativeOffset = new Vector2(0.01f, 0.03f)
-                }, TextManager.Get("StartCampaignButton"));
-                startButton.OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; };
-                startButton.Enabled = false;
+                }, TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+                {
+                    OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
+                    Enabled = false
+                };
             }
 
             //---------------------------------------
@@ -333,7 +335,8 @@ namespace Barotrauma
                 CreateItemFrame(itemPrefab, priceInfo, storeItemList, width);
             }
 
-            storeItemList.Content.Children.Sort((x, y) => (x.UserData as MapEntityPrefab).Name.CompareTo((y.UserData as MapEntityPrefab).Name));
+            storeItemList.Content.RectTransform.SortChildren((x, y) => 
+                (x.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((y.GUIComponent.UserData as MapEntityPrefab).Name));
 
             foreach (GUIComponent child in button.Parent.Children)
             {
