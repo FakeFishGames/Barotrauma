@@ -124,14 +124,14 @@
   <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
 
   <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" intensityrange="0,100"/>
-  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="20,40"/>
-  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="40,60"/>
-  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="60,80"/>
-  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="80,100"/>
+  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="30,50"/>
+  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="50,70"/>
+  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="70,100"/>
   
   <music file="Content/Sounds/Music/Layer 1 - Monsters Nearby.ogg" type="monster"/>
   
   <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="ruins"/>
-  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded" type="flooded"/>
-  <music file="Content/Sounds/Music/Layer 11 - Crush Depth" type="deep"/>
+  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded.ogg" type="flooded"/>
+  <music file="Content/Sounds/Music/Layer 11 - Crush Depth.ogg" type="deep"/>
 </sounds>
