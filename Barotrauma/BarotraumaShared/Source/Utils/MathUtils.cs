@@ -449,13 +449,13 @@ namespace Barotrauma
             return wrappedPoints;
         }
 
-        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int generations, float offsetAmount)
+        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount)
         {
             List<Vector2[]> segments = new List<Vector2[]>();
 
             segments.Add(new Vector2[] { start, end });
             
-            for (int n = 0; n < generations; n++)
+            for (int n = 0; n < iterations; n++)
             {
                 for (int i = 0; i < segments.Count; i++)
                 {
@@ -475,6 +475,8 @@ namespace Barotrauma
 
                     i++;
                 }
+
+                offsetAmount *= 0.5f;
             }
 
             return segments;

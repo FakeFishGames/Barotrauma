@@ -9,6 +9,7 @@ namespace Barotrauma.Networking
     {
         public string Name;
         public byte ID;
+        public ulong SteamID;
 
         private float karma = 1.0f;
         public float Karma

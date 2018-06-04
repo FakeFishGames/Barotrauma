@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -368,7 +369,8 @@ namespace Barotrauma
                 }
             }
 
-            entityList.Content.Children.Sort((i1, i2) => (i1.UserData as MapEntityPrefab).Name.CompareTo((i2.UserData as MapEntityPrefab).Name));
+            entityList.Content.RectTransform.SortChildren((i1, i2) => 
+                (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
         }
 
         /*public void StartTutorial()
@@ -758,7 +760,7 @@ namespace Barotrauma
                 }
             }
 
-            string description = ((GUITextBox)saveFrame.GetChild("description")).Text;
+            string description = ((GUITextBox)saveFrame.GetChildByUserData("description")).Text;
 
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
             XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
@@ -784,10 +786,10 @@ namespace Barotrauma
             var subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.9f), paddedLoadFrame.RectTransform))
             {
                 OnSelected = (GUIComponent selected, object userData) =>
-                    {
-                        if (loadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
-                        return true;
-                    }
+                {
+                    if (paddedLoadFrame.FindChild("delete") is GUIButton deleteBtn) deleteBtn.Enabled = true;
+                    return true;
+                }
             };
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -1739,8 +1741,6 @@ namespace Barotrauma
 
                 MapEntity.DrawEditor(spriteBatch, cam);
             }
-
-            if (tutorial != null) tutorial.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch);
 

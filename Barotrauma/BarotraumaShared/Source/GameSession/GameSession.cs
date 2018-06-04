@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -248,8 +249,11 @@ namespace Barotrauma
             {
                 GUIFrame summaryFrame = roundSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                var okButton = new GUIButton(new Rectangle(0, 20, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.Children[0]);
-                okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+                var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), summaryFrame.Children.First().Children.First().FindChild("buttonarea").RectTransform),
+                    TextManager.Get("OK"))
+                {
+                    OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; }
+                };
             }
 #endif
 

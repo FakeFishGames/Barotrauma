@@ -473,6 +473,7 @@ namespace Barotrauma
                 afflictions[i].Update(this, null, deltaTime);
             }
 
+#if CLIENT
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 limb.BurnOverlayStrength = limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha);
@@ -480,6 +481,7 @@ namespace Barotrauma
                     100.0f :
                     limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
             }
+#endif
             
             CalculateVitality();            
             if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());            

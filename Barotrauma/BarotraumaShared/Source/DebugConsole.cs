@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -131,7 +132,7 @@ namespace Barotrauma
         private static List<ColoredText> unsavedMessages = new List<ColoredText>();
         private static int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
-
+        
         static DebugConsole()
         {
             commands.Add(new Command("help", "", (string[] args) =>
@@ -1279,7 +1280,7 @@ namespace Barotrauma
                 Submarine.LockX = !Submarine.LockX;
             }, null, null));
 
-            commands.Add(new Command("locky", "loxky: Lock vertical movement of the main submarine.", (string[] args) =>
+            commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
             }, null, null));
@@ -1815,6 +1816,32 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("savesubtoworkshop", "", (string[] args) =>
+            {
+                if (Submarine.MainSub == null) return;
+                SteamManager.SaveToWorkshop(Submarine.MainSub);
+            },
+            null, null));
+            
+            commands.Add(new Command("requestworkshopsubscriptions", "", (string[] args) =>
+            {
+                void itemsReceived(IList<Facepunch.Steamworks.Workshop.Item> items)
+                {
+                    foreach (var item in items)
+                    {
+                        Log("*********************************");
+                        Log(item.Title);
+                        Log(item.Description);
+                        Log("Size: " + item.Size / 1024 +" kB");
+                        Log("Directory: " + item.Directory);
+                        Log("Installed: " + item.Installed);
+                    }
+                }
+
+                SteamManager.GetWorkshopItems(itemsReceived);
+            },
+            null, null));
+
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
                 foreach (Item item in Item.ItemList)
@@ -2334,9 +2361,12 @@ namespace Barotrauma
         {
 
 #if CLIENT
-            activeQuestionText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 30), "   >>" + question, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-            activeQuestionText.CanBeFocused = false;
-            activeQuestionText.TextColor = Color.Cyan;
+            activeQuestionText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, 30), listBox.Content.RectTransform),
+                "   >>" + question, font: GUI.SmallFont)
+            {
+                CanBeFocused = false,
+                TextColor = Color.Cyan
+            };
 #else
             NewMessage("   >>" + question, Color.Cyan);
 #endif

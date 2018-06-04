@@ -32,8 +32,10 @@ namespace Barotrauma.Networking
 
         private void InitProjSpecific()
         {
-            inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
-            inGameHUD.CanBeFocused = false;
+            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
 
             chatBox = new ChatBox(inGameHUD, false);
             chatBox.OnEnterMessage += EnterChatMessage;
@@ -113,16 +115,10 @@ namespace Barotrauma.Networking
 
             if (EndVoteCount > 0)
             {
-                if (GameMain.NetworkMember.myCharacter == null)
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                        "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
-                else
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
-                        "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
+                    TextManager.Get("EndRoundVotes").Replace("[y]", EndVoteCount.ToString()).Replace("[n]", (EndVoteMax - EndVoteCount).ToString()),
+                    Color.White,
+                    font: GUI.SmallFont);
             }
 
             if (respawnManager != null)
@@ -132,12 +128,14 @@ namespace Barotrauma.Networking
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.CountdownStarted)
                 {
-                    respawnInfo = respawnManager.UsingShuttle ? "Respawn Shuttle dispatching in " : "Respawning players in ";
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : respawnInfo + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
+                    respawnInfo = TextManager.Get(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn");
+                    respawnInfo = respawnInfo.Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer));
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
                 {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
+                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? 
+                        "" : 
+                        TextManager.Get("RespawnShuttleLeavingIn").Replace("[time]", ToolBox.SecondsToReadableTime(respawnManager.TransportTimer));
                 }
 
                 if (!string.IsNullOrEmpty(respawnInfo))
@@ -154,41 +152,55 @@ namespace Barotrauma.Networking
         {
             return false;
         }
-        
+
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
-            var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK", "Cancel" }, 400, 300);
-            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.Children[0]);
-            banReasonBox.Wrap = true;
-            banReasonBox.MaxTextLength = 100;
+            var banReasonPrompt = new GUIMessageBox(
+                TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, 400, 300);
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
+            var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
+            {
+                Wrap = true,
+                MaxTextLength = 100
+            };
 
             GUINumberInput durationInputDays = null, durationInputHours = null;
             GUITickBox permaBanTickBox = null;
 
             if (ban)
             {
-                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.Children[0]);
-                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.Children[0]);
-                permaBanTickBox.Selected = true;
+                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), TextManager.Get("BanDuration"));
+                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) }, 
+                    TextManager.Get("BanPermanent"))
+                {
+                    Selected = true
+                };
 
-                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.Children[0]);
-                durationContainer.Visible = false;
+                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), isHorizontal: true)
+                {
+                    Visible = false
+                };
 
                 permaBanTickBox.OnSelected += (tickBox) =>
                 {
                     durationContainer.Visible = !tickBox.Selected;
                     return true;
                 };
-                
-                new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 1000;
 
-                new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
-                durationInputDays.MinValueInt = 0;
-                durationInputDays.MaxValueFloat = 24;
+                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 1000
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Days"));
+                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                {
+                    MinValueInt = 0,
+                    MaxValueFloat = 24
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Hours"));
             }
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>

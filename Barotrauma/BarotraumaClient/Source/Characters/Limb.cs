@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -15,18 +16,30 @@ namespace Barotrauma
         public const float SoundInterval = 0.4f;
         public float LastAttackSoundTime, LastImpactSoundTime;
 
+        private float wetTimer;
+        private float dripParticleTimer;
+        
         public LightSource LightSource
         {
             get;
             private set;
         }
 
-        private string hitSoundTag;
-
-        public string HitSoundTag
+        private float damageOverlayStrength;
+        public float DamageOverlayStrength
         {
-            get { return hitSoundTag; }
+            get { return damageOverlayStrength; }
+            set { damageOverlayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+
+        private float burnOverLayStrength;
+        public float BurnOverlayStrength
+        {
+            get { return burnOverLayStrength; }
+            set { burnOverLayStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        public string HitSoundTag { get; private set; }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -38,19 +51,92 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         break;
                     case "sound":
-                        hitSoundTag = subElement.GetAttributeString("tag", "");
-                        if (string.IsNullOrWhiteSpace(hitSoundTag))
+                        HitSoundTag = subElement.GetAttributeString("tag", "");
+                        if (string.IsNullOrWhiteSpace(HitSoundTag))
                         {
                             //legacy support
-                            hitSoundTag = subElement.GetAttributeString("file", "");
+                            HitSoundTag = subElement.GetAttributeString("file", "");
                         }
                         break;
                 }
             }
         }
 
-        partial void UpdateProjSpecific()
+        partial void AddDamageProjSpecific(Vector2 position, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
         {
+            float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
+            float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
+
+            if (playSound)
+            {
+                string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
+
+                foreach (DamageModifier damageModifier in appliedDamageModifiers)
+                {
+                    if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
+                    {
+                        damageSoundType = damageModifier.DamageSound;
+                        break;
+                    }
+                }
+
+                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), position);
+            }
+
+            if (character.UseBloodParticles)
+            {
+                float bloodParticleAmount = (int)Math.Min(bleedingDamage * 5, 10);
+                float bloodParticleSize = MathHelper.Clamp(bleedingDamage, 0.1f, 1.0f);
+
+                for (int i = 0; i < bloodParticleAmount; i++)
+                {
+                    var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
+                    if (blood != null)
+                    {
+                        blood.Size *= bloodParticleSize;
+                    }
+                }
+
+                if (bloodParticleAmount > 0 && character.CurrentHull != null)
+                {
+                    character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+                }
+            }
+        }
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            if (!body.Enabled) return;
+
+            if (!character.IsDead)
+            {
+                DamageOverlayStrength -= deltaTime;
+                BurnOverlayStrength -= deltaTime;
+            }
+
+            if (inWater)
+            {
+                wetTimer = 1.0f;
+            }
+            else
+            {
+                wetTimer -= deltaTime * 0.1f;
+                if (wetTimer > 0.0f)
+                {
+                    dripParticleTimer += wetTimer * deltaTime * Mass * (wetTimer > 0.9f ? 50.0f : 5.0f);
+                    if (dripParticleTimer > 1.0f)
+                    {
+                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.width, body.height) : body.radius;
+                        GameMain.ParticleManager.CreateParticle(
+                            "waterdrop", 
+                            WorldPosition + Rand.Vector(Rand.Range(0.0f, ConvertUnits.ToDisplayUnits(dropRadius))), 
+                            ConvertUnits.ToDisplayUnits(body.LinearVelocity), 
+                            0, character.CurrentHull);
+                        dripParticleTimer = 0.0f;
+                    }
+                }
+            }
+
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
@@ -76,15 +162,13 @@ namespace Barotrauma
             }
 
             body.Dir = Dir;
-
+            
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
-                body.UpdateDrawPosition();
+            body.UpdateDrawPosition();
+
             if (!hideLimb)
             {
-                body.Draw(spriteBatch, sprite, color, null, scale);
-            }
-            else
-            {
+                body.Draw(spriteBatch, sprite, color, null, Scale);
             }
 
             if (LightSource != null)
@@ -92,10 +176,9 @@ namespace Barotrauma
                 LightSource.Position = body.DrawPosition;
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
-
+            
             WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
-
-            foreach (WearableSprite wearable in wearingItems)
+            foreach (WearableSprite wearable in WearingItems)
             {
                 if (onlyDrawable != null && onlyDrawable != wearable) continue;
 
@@ -123,7 +206,7 @@ namespace Barotrauma
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     color, origin,
                     -body.DrawRotation,
-                    scale, spriteEffect, depth);
+                    Scale, spriteEffect, depth);
             }
 
             if (damageOverlayStrength > 0.0f && damagedSprite != null && !hideLimb)

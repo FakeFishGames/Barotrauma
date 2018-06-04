@@ -58,13 +58,13 @@ namespace Barotrauma
 
         public GUIFrame CreateCharacterFrame(GUIComponent parent, string text, object userData)
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, 40), parent.RectTransform), "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, 40), parent.RectTransform) { IsFixedSize = false }, "ListBoxElement")
             {
                 UserData = userData
             };
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
-            new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft), HeadSprite);            
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, font: GUI.SmallFont);
+            new GUIImage(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, HeadSprite);            
 
             return frame;
         }

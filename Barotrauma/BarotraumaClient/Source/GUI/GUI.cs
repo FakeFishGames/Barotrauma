@@ -50,7 +50,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         private static GUIFrame pauseMenu;
-        private static Sprite submarineIcon, arrow;
+        private static Sprite submarineIcon, arrow, lockIcon, checkmarkIcon;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
@@ -72,6 +72,16 @@ namespace Barotrauma
         public static Sprite Arrow
         {
             get { return arrow; }
+        }
+
+        public static Sprite CheckmarkIcon
+        {
+            get { return checkmarkIcon; }
+        }
+
+        public static Sprite LockIcon
+        {
+            get { return lockIcon; }
         }
 
         public static bool SettingsMenuOpen
@@ -135,6 +145,12 @@ namespace Barotrauma
             arrow.Origin = arrow.size / 2;
             SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61));
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
+
+            lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25));
+            lockIcon.Origin = lockIcon.size / 2;
+
+            checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28));
+            checkmarkIcon.Origin = checkmarkIcon.size / 2;
         }
 
         /// <summary>
@@ -381,12 +397,16 @@ namespace Barotrauma
         private static void ProcessHelperList(List<GUIComponent> list)
         {
             if (list.Count == 0) { return; }
-            list.Sort((previous, next) => next.UpdateOrder.CompareTo(previous.UpdateOrder));
             foreach (var item in list)
             {
+                int i = updateList.Count - 1;
+                while (updateList[i].UpdateOrder > item.UpdateOrder)
+                {
+                    i--;
+                }
                 if (!updateList.Contains(item))
                 {
-                    updateList.Add(item);
+                    updateList.Insert(Math.Max(i, 0), item);
                 }
             }
             list.Clear();
@@ -918,20 +938,22 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), Canvas, Anchor.Center) { MinSize = new Point(200, 300) });
+                pauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
+                    
+                var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), pauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(200, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenu.RectTransform, Anchor.Center))
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.85f), pauseMenuInner.RectTransform, Anchor.Center))
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
 
-                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume")
+                var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Resume", style: "GUIButtonLarge")
                 {
                     OnClicked = TogglePauseMenu
                 };
 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings")
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Settings", style: "GUIButtonLarge")
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -946,7 +968,7 @@ namespace Barotrauma
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
                         //TODO: communicate more clearly what this button does
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous");
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Load previous", style: "GUIButtonLarge");
                         button.OnClicked += (btn, userData) =>
                         {
                             TogglePauseMenu(btn, userData);
@@ -960,7 +982,7 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit")
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Save & quit", style: "GUIButtonLarge")
                         {
                             UserData = "save"
                         };
@@ -969,7 +991,7 @@ namespace Barotrauma
                     }
                 }
                 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit");
+                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), "Quit", style: "GUIButtonLarge");
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }

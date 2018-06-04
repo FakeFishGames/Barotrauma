@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -31,11 +32,21 @@ namespace Barotrauma
         public bool CaretEnabled;
 
         private int? maxTextLength;
-        
+
+        private int caretIndex;
+        private bool caretPosDirty;
+        protected Vector2 caretPos;
+
         public GUITextBlock.TextGetterHandler TextGetter
         {
             get { return textBlock.TextGetter; }
             set { textBlock.TextGetter = value; }
+        }
+
+        public bool Selected
+        {
+            get;
+            set;
         }
 
         public bool Wrap
@@ -53,11 +64,18 @@ namespace Barotrauma
                 maxTextLength = value;
             }
         }
-        
-        public bool Enabled
+
+        public override bool Enabled
         {
-            get;
-            set;
+            get { return enabled; }
+            set
+            {
+                enabled = value;
+                if (!enabled && Selected)
+                {
+                    Deselect();
+                }
+            }
         }
 
         public override string ToolTip
@@ -111,24 +129,7 @@ namespace Barotrauma
                 textBlock.HoverColor = value;
             }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                base.Rect = value;
-
-                if (textBlock != null)
-                {
-                    textBlock.Rect = value;
-                }
-            }
-        }
-        
+                
         public string Text
         {
             get
@@ -142,68 +143,26 @@ namespace Barotrauma
                 textBlock.Text = value;
                 if (textBlock.Text == null) textBlock.Text = "";
 
-                if (textBlock.Text != "")
+                if (textBlock.Text != "" && !Wrap)
                 {
-                    if (!Wrap)
+                    if (maxTextLength != null)
                     {
-                        if (maxTextLength != null)
+                        if (Text.Length > maxTextLength)
                         {
-                            if (Text.Length > maxTextLength)
-                            {
-                                Text = textBlock.Text.Substring(0, (int)maxTextLength);
-                            }
-                        }
-                        else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
-                        {
-                            Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                            Text = textBlock.Text.Substring(0, (int)maxTextLength);
                         }
                     }
+                    else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
+                    {
+                        Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                    }                    
                 }
+
+                caretIndex = Text.Length;
+                caretPosDirty = true;
             }
         }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, string style = null, GUIComponent parent = null)
-            : this(rect, null, null, Alignment.Left, Alignment.Left, style, parent)
-        {
-
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, string style = null, GUIComponent parent = null)
-            : this(rect, null, null, alignment, Alignment.Left, style, parent)
-        {
-
-        }
-
-        [System.Obsolete("Use RectTransform instead of Rectangle")]
-        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.CenterLeft, string style = null, GUIComponent parent = null)
-            : base(style)
-        {
-            Enabled = true;
-
-            this.rect = rect;
-
-            if (color != null) this.color = (Color)color;
-                        
-            this.alignment = alignment;
-            
-            if (parent != null)
-                parent.AddChild(this);
-
-            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
-            
-            Font = GUI.Font;
-
-            GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
-            textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
-            
-            CaretEnabled = true;
-        }
-
-        /// <summary>
-        /// This is the new constructor.
-        /// </summary>
+        
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
@@ -213,11 +172,44 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap);
+            GUI.Style.Apply(textBlock, "", this);
             CaretEnabled = true;
+            caretPosDirty = true;
+
+            rectT.SizeChanged += () => { caretPosDirty = true; };
+            rectT.ScaleChanged += () => { caretPosDirty = true; };
+        }
+
+        private void CalculateCaretPos()
+        {
+            if (textBlock.WrappedText.Contains("\n"))
+            {
+                string[] lines = textBlock.WrappedText.Split('\n');
+                int n = 0;
+                for (int i = 0; i<lines.Length; i++)
+                {
+                    //add the number of letters in the line
+                    n += lines[i].Length;
+                    //caret is on this line
+                    if (caretIndex <= n)
+                    {
+                        Vector2 lastLineSize = Font.MeasureString(lines[i]);
+                        Vector2 textSize = Font.MeasureString(textBlock.WrappedText.Substring(n+i));
+                        caretPos = new Vector2(lastLineSize.X, textSize.Y - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin;
+                    }
+                }
+            }
+            else
+            {
+                Vector2 textSize = Font.MeasureString(textBlock.Text.Substring(0, caretIndex));
+                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin;
+            }
+            caretPosDirty = false;
         }
 
         public void Select()
         {
+            caretIndex = textBlock.Text.Length;
             Selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             //if (Clicked != null) Clicked(this);
@@ -264,6 +256,10 @@ namespace Barotrauma
             {
                 caretTimer += deltaTime;
                 caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
+                if (caretVisible && caretPosDirty)
+                {
+                    CalculateCaretPos();
+                }
             }
             
             if (GUI.KeyboardDispatcher.Subscriber == this)
@@ -294,12 +290,11 @@ namespace Barotrauma
             textBlock.DrawManually(spriteBatch);
             if (caretVisible)
             {
-                Vector2 caretPos = textBlock.CaretPos;
                 if (caretVisible && Selected)
                 {
                     GUI.DrawLine(spriteBatch,
-                        new Vector2((int)caretPos.X + 2, caretPos.Y + 3),
-                        new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString("I").Y - 3),
+                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
+                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y - 3),
                         textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
                 }
             }
@@ -307,7 +302,10 @@ namespace Barotrauma
 
         public void ReceiveTextInput(char inputChar)
         {
-            Text += inputChar;
+            int prevCaretIndex = caretIndex; 
+            Text = Text.Insert(caretIndex, inputChar.ToString());
+            caretIndex = Math.Min(Text.Length, ++prevCaretIndex);
+            caretPosDirty = true;
             OnTextChanged?.Invoke(this, Text);
         }
         public void ReceiveTextInput(string text)
@@ -322,9 +320,12 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (Text.Length > 0)
+                    if (Text.Length > 0 && caretIndex > 0)
                     {
-                        Text = Text.Substring(0, Text.Length - 1);
+                        caretIndex--;
+                        int prevCaretIndex = caretIndex;
+                        Text = Text.Remove(caretIndex, 1);
+                        caretIndex = prevCaretIndex;
                     }
                     OnTextChanged?.Invoke(this, Text);
                     break;
@@ -333,15 +334,28 @@ namespace Barotrauma
 
         public void ReceiveSpecialInput(Keys key)
         {
+            if (key == Keys.Left)
+            {
+                caretIndex = Math.Max(caretIndex - 1, 0);
+                caretTimer = 0;
+            }
+            else if (key == Keys.Right)
+            {
+                caretIndex = Math.Min(caretIndex + 1, Text.Length);
+                caretTimer = 0;
+            }
+            else if (key == Keys.Delete)
+            {
+                if (Text.Length > 0 && caretIndex < Text.Length)
+                {
+                    int prevCaretIndex = caretIndex;
+                    Text = Text.Remove(caretIndex, 1);
+                    caretIndex = prevCaretIndex;
+                }
+
+            }
+            caretPosDirty = true;
             OnKeyHit?.Invoke(this, key);
-        }
-
-        //public event TextBoxEvent OnTabPressed;
-
-        public bool Selected
-        {
-            get;
-            set;
         }
     }
 }

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.IO;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -69,7 +70,12 @@ namespace Barotrauma.Networking
         {
             get { return updateInterval; }
         }
-        
+
+        public bool HasPassword
+        {
+            get { return !string.IsNullOrEmpty(password); }
+        }
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
@@ -198,9 +204,20 @@ namespace Barotrauma.Networking
                 FinishUPnP();
             }
 
-            if (isPublic)
+            if (SteamManager.USE_STEAM)
             {
-                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                SteamManager.CreateServer(this);
+            }
+            if (isPublic)
+            { 
+                if (GameMain.Config.UseSteamMatchmaking)
+                {
+                    SteamManager.RegisterToMasterServer();
+                }
+                else
+                {
+                    CoroutineManager.StartCoroutine(RegisterToMasterServer());
+                }
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
@@ -216,11 +233,11 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> RegisterToMasterServer()
         {
-            if (restClient==null)
+            if (restClient == null)
             {
-                restClient = new RestClient(NetConfig.MasterServerUrl);            
+                restClient = new RestClient(NetConfig.MasterServerUrl);
             }
-                
+
             var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
@@ -326,7 +343,7 @@ namespace Barotrauma.Networking
                 Log("Master server responded", ServerLog.MessageType.ServerMessage);
             }
 
-            System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
+            System.Diagnostics.Debug.WriteLine("took " + sw.ElapsedMilliseconds + " ms");
 
             yield return CoroutineStatus.Success;
         }
@@ -341,7 +358,6 @@ namespace Barotrauma.Networking
         {
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
-            if (settingsFrame != null) settingsFrame.UpdateManually(deltaTime);
 #endif
             
             if (!started) return;
@@ -464,7 +480,7 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case NetIncomingMessageType.ConnectionApproval:
-                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+                            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
                             {
                                 inc.SenderConnection.Deny("You have been banned from the server");
                             }
@@ -474,10 +490,23 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                if ((ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
+                                ClientPacketHeader packetHeader = (ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte();
+                                if (packetHeader == ClientPacketHeader.REQUEST_AUTH)
                                 {
                                     inc.SenderConnection.Approve();
-                                    ClientAuthRequest(inc.SenderConnection);
+                                    HandleClientAuthRequest(inc.SenderConnection);
+                                }
+                                else if (packetHeader == ClientPacketHeader.REQUEST_STEAMAUTH)
+                                {
+                                    ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
+                                    if (banList.IsBanned("", clientSteamID))
+                                    {
+                                        inc.SenderConnection.Deny("You have been banned from the server");
+                                    }
+                                    else
+                                    {
+                                        inc.SenderConnection.Approve();
+                                    }
                                 }
                             }
                             break;
@@ -521,13 +550,21 @@ namespace Barotrauma.Networking
 
             if (!registeredToMaster || refreshMasterTimer >= DateTime.Now) return;
 
-            CoroutineManager.StartCoroutine(RefreshMaster());
+            if (GameMain.Config.UseSteamMatchmaking)
+            {
+                SteamManager.RefreshServerDetails(this);
+            }
+            else
+            {
+                CoroutineManager.StartCoroutine(RefreshMaster());
+            }
             refreshMasterTimer = DateTime.Now + refreshMasterInterval;
         }
 
         private void ReadDataMessage(NetIncomingMessage inc)
         {
-            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString()))
+            var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+            if (banList.IsBanned(inc.SenderEndPoint.Address.ToString(), connectedClient == null ? 0 : connectedClient.SteamID))
             {
                 KickClient(inc.SenderConnection, "You have been banned from the server.");
                 return;
@@ -537,14 +574,16 @@ namespace Barotrauma.Networking
             switch (header)
             {
                 case ClientPacketHeader.REQUEST_AUTH:
-                    ClientAuthRequest(inc.SenderConnection);
+                    HandleClientAuthRequest(inc.SenderConnection);
+                    break;
+                case ClientPacketHeader.REQUEST_STEAMAUTH:
+                    ReadClientSteamAuthRequest(inc, out _);
                     break;
                 case ClientPacketHeader.REQUEST_INIT:
                     ClientInitRequest(inc);
                     break;
 
                 case ClientPacketHeader.RESPONSE_STARTGAME:
-                    var connectedClient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
                     if (connectedClient != null)
                     {
                         connectedClient.ReadyToStart = inc.ReadBoolean();
@@ -1649,7 +1688,7 @@ namespace Barotrauma.Networking
             if (client == null)
             {
                 conn.Disconnect("You have been banned from the server");
-                if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString()))
+                if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString(), 0))
                 {
                     banList.BanPlayer("Unnamed", conn.RemoteEndPoint.Address.ToString(), reason, duration);
                 }                
@@ -1667,9 +1706,17 @@ namespace Barotrauma.Networking
             string msg = "You have been banned from the server.";
             if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
             DisconnectClient(client, client.Name + " has been banned from the server.", msg);
-            string ip = client.Connection.RemoteEndPoint.Address.ToString();
-            if (range) { ip = banList.ToRange(ip); }
-            banList.BanPlayer(client.Name, ip, reason, duration);
+
+            if (client.SteamID == 0 || range)
+            {
+                string ip = client.Connection.RemoteEndPoint.Address.ToString();
+                if (range) { ip = banList.ToRange(ip); }
+                banList.BanPlayer(client.Name, ip, reason, duration);
+            }
+            if (client.SteamID > 0)
+            {
+                banList.BanPlayer(client.Name, client.SteamID, reason, duration);
+            }
         }
 
         public void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
@@ -2385,15 +2432,18 @@ namespace Barotrauma.Networking
         {
             banList.Save();
             SaveSettings();
+            SteamManager.CloseServer();
 
-            if (registeredToMaster && restClient != null)
+            if (registeredToMaster)
             {
-                var request = new RestRequest("masterserver2.php", Method.GET);
-                request.AddParameter("action", "removeserver");
-                request.AddParameter("serverport", Port);
-                
-                restClient.Execute(request);
-                restClient = null;
+                if (restClient != null)
+                {
+                    var request = new RestRequest("masterserver2.php", Method.GET);
+                    request.AddParameter("action", "removeserver");
+                    request.AddParameter("serverport", Port);                
+                    restClient.Execute(request);
+                    restClient = null;
+                }
             }
 
             if (SaveServerLogs)

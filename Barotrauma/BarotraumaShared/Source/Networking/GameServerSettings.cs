@@ -286,6 +286,11 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        public int MaxPlayers
+        {
+            get { return maxPlayers; }
+        }
 
         public List<string> AllowedRandomMissionTypes
         {

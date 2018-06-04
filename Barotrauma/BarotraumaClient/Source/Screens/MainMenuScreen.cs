@@ -15,7 +15,7 @@ namespace Barotrauma
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5 }
 
-        private GUIFrame buttonsParent;
+        private GUIComponent buttonsParent;
 
         private GUIFrame[] menuTabs;
 
@@ -24,41 +24,92 @@ namespace Barotrauma
         private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
 
+        private GUIButton steamWorkshopButton;
+
         private GameMain game;
 
         private Tab selectedTab;
 
-        // test elements
-        private List<GUIFrame> innerElements = new List<GUIFrame>();
-        private GUIFrame outerElement;
-        private GUIFrame testElement;
-        private GUIButton animEditorButton;
-
         public MainMenuScreen(GameMain game)
         {
-            animEditorButton = new GUIButton(new RectTransform(new Point(150, 40), parent: Frame.RectTransform, anchor: Anchor.TopRight) { AbsoluteOffset = new Point(50, 50) }, "Animation Editor")
-            {
-                Color = Color.Red * 0.8f
-            };
-            animEditorButton.OnClicked += (button, obj) =>
-            {
-                GameMain.AnimationEditorScreen.Select();
-                return true;
-            };
-
-            buttonsParent = new GUIFrame(new RectTransform(new Vector2(0.15f, 1), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
+            buttonsParent = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), parent: Frame.RectTransform, anchor: Anchor.BottomLeft)
             {
                 RelativeOffset = new Vector2(0, 0.1f),
                 AbsoluteOffset = new Point(50, 0)
-            }, color: Color.Transparent);
+            })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(240, 40);
-            // 
-            var buttons = GUI.CreateButtons(8, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
-                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 0 : 20);
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Tutorials,
+                OnClicked = SelectTab
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("NewGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.NewGame,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("LoadGameButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.LoadGame,
+                OnClicked = SelectTab
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("JoinServerButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = JoinServerClicked
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("HostServerButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.HostServer,
+                OnClicked = SelectTab
+            };
+
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SubEditorButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; }
+            };
+
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
+                {
+                    Enabled = false,
+                    OnClicked = SteamWorkshopClicked
+                };
+            }
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), buttonsParent.RectTransform), style: null); //spacing
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SettingsButton"), style: "GUIButtonLarge")
+            {
+                UserData = Tab.Settings,
+                OnClicked = SelectTab
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("QuitButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = QuitClicked
+            };
+
+            
+           /* var buttons = GUI.CreateButtons(9, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
+                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 20 : 0);
             buttons.ForEach(b => b.Color *= 0.8f);
             SetupButtons(buttons);
-            buttons.ForEach(b => b.TextBlock.SetTextPos());
+            buttons.ForEach(b => b.TextBlock.SetTextPos());*/
 
             var relativeSize = new Vector2(0.5f, 0.5f);
             var minSize = new Point(600, 400);
@@ -66,19 +117,21 @@ namespace Barotrauma
             var anchor = Anchor.Center;
             var pivot = Pivot.Center;
             menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
-            // TODO: recreate using the new system
+            
             menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
-
-            // TODO: refactor using the RectTransform
-
-            campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame])
+            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
+            
+            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
             };
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(relativeSize, Frame.RectTransform, anchor, pivot, minSize, maxSize));
+            var hostServerScale = new Vector2(0.7f, 1.0f);
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
+                Vector2.Multiply(relativeSize, hostServerScale), Frame.RectTransform, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)));
 
             CreateHostServerFields();
 
@@ -129,14 +182,12 @@ namespace Barotrauma
 
         public bool SelectTab(GUIButton button, object obj)
         {
-            try
+            if (obj is Tab)
             {
                 SelectTab((Tab)obj);
             }
-            catch (Exception e)
-            {
-                // TODO: This is bad, because the exception might be quite important in debugging. Try to get rid of this try catch block.
-                //DebugConsole.ThrowError("Exception: ", e);
+            else
+            { 
                 selectedTab = 0;
             }
 
@@ -232,6 +283,12 @@ namespace Barotrauma
             return true;
         }
 
+        private bool SteamWorkshopClicked(GUIButton button, object obj)
+        {
+            GameMain.SteamWorkshopScreen.Select();
+            return true;
+        }
+
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
@@ -284,13 +341,10 @@ namespace Barotrauma
         {
             Frame.AddToGUIUpdateList(ignoreChildren: true);
             buttonsParent.AddToGUIUpdateList();
-            animEditorButton?.AddToGUIUpdateList();
             if (selectedTab > 0)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
             }
-            outerElement?.AddToGUIUpdateList();
-            testElement?.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
@@ -301,8 +355,10 @@ namespace Barotrauma
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f),
                     0.1f);
 
-            CreateTestElements();
-            UpdateTestElements();
+            if (steamWorkshopButton != null)
+            {
+                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -381,468 +437,79 @@ namespace Barotrauma
         }
 
         #region UI Methods
-        private void SetupButtons(List<GUIButton> buttons)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                var button = buttons[i];
-                switch (i)
-                {
-                    case 7:
-                        button.Text = TextManager.Get("TutorialButton");
-                        button.UserData = Tab.Tutorials;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 6:
-                        button.Text = TextManager.Get("NewGameButton");
-                        button.UserData = Tab.NewGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 5:
-                        button.Text = TextManager.Get("LoadGameButton");
-                        button.UserData = Tab.LoadGame;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 4:
-                        button.Text = TextManager.Get("JoinServerButton");
-                        //button.UserData = (int)Tabs.JoinServer;
-                        button.OnClicked = JoinServerClicked;
-                        break;
-                    case 3:
-                        button.Text = TextManager.Get("HostServerButton");
-                        button.UserData = Tab.HostServer;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 2:
-                        button.Text = TextManager.Get("SubEditorButton");
-                        button.OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; };
-                        break;
-                    case 1:
-                        button.Text = TextManager.Get("SettingsButton");
-                        button.UserData = Tab.Settings;
-                        button.OnClicked = SelectTab;
-                        break;
-                    case 0:
-                        button.Text = TextManager.Get("QuitButton");
-                        button.OnClicked = QuitClicked;
-                        break;
-                    default:
-                        throw new Exception();
-                }
-            }
-        }
-
+      
         private void CreateHostServerFields()
         {
-            Vector2 textLabelSize = new Vector2(0.25f, 0.1f);
-            Vector2 textFieldSize = new Vector2(0.25f, 0.1f);
-            Vector2 buttonSize = new Vector2(0.04f, 0.06f);
-            float leftMargin = 0.05f;
-            float topMargin = 0.1f;
-            int absoluteSpacing = 5;
-            float relativeSpacing = 0.01f;
-            Vector2 tickBoxSize = new Vector2(0.4f, 0.1f);
-            GUIComponent parent = menuTabs[(int)Tab.HostServer];
+            Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
             Alignment textAlignment = Alignment.CenterLeft;
-            int lineCount = 0;
-            Func<int, float> getY = lc => topMargin + (textLabelSize.Y + relativeSpacing) * lc;
+            Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
+            Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.75f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            }; 
+            GUIComponent parent = paddedFrame;
+            
+            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont);
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform)
-            {
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, 0),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment);
+            var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
 
-            lineCount++;
-
-            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, absoluteSpacing),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("ServerPort"), textAlignment: textAlignment);
-            portBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, 0),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment)
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
+            portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
                 Text = NetConfig.DefaultPort.ToString(),
-                ToolTip = "Server port"
+                ToolTip = TextManager.Get("ServerPort")
             };
 
-            lineCount++;
-
-            var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
+            var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
+            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
             {
-                AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
-
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount + 10),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, "-", textAlignment: Alignment.Center)
+                Stretch = true,
+                RelativeSpacing = 0.1f
+            };
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "-", textAlignment: Alignment.Center)
             {
                 UserData = -1,
                 OnClicked = ChangeMaxPlayers
             };
 
-            float maxPlayersBoxWidth = buttonSize.X * 2;
-            maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(maxPlayersBoxWidth, textFieldSize.Y), parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing * 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 2 + buttonSize.X, getY(lineCount))
-            }, textAlignment: Alignment.Center)
+            maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
                 Text = "8",
                 Enabled = false
             };
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing * 3, absoluteSpacing * lineCount + 10),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing * 3 + buttonSize.X + maxPlayersBoxWidth, getY(lineCount))
-            }, "+", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
             {
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
             };
 
-            lineCount++;
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(0, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("Password"), textAlignment: textAlignment);
-            passwordBox = new GUITextBox(new RectTransform(textFieldSize, parent: parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(absoluteSpacing, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin + textLabelSize.X + relativeSpacing, getY(lineCount))
-            }, textAlignment: textAlignment);
-
-            lineCount++;
-
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("PublicServer"))
+            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
+            
+            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-
-            lineCount++;
-
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform)
-            {
-                AbsoluteOffset = new Point(GUITickBox.size / 2, absoluteSpacing * lineCount),
-                RelativeOffset = new Vector2(leftMargin, getY(lineCount))
-            }, TextManager.Get("AttemptUPnP"))
+            
+            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
             {
                 ToolTip = TextManager.Get("AttemptUPnPToolTip")
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.2f, 0.1f), parent.RectTransform, Anchor.BottomRight)
+            new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {
-                RelativeOffset = new Vector2(leftMargin, topMargin)
-            }, TextManager.Get("StartServerButton"))
+                RelativeOffset = new Vector2(0.05f, 0.05f)
+            }, TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
             {
+                IgnoreLayoutGroups = true,
                 OnClicked = HostServerClicked
             };
         }
         #endregion
 
-        #region UI Test
-        private GUIDropDown dropdown;
-        private GUILayoutGroup layoutGroup;
-        private void CreateTestElements()
-        {
-            if (PlayerInput.KeyHit(Keys.R))
-            {
-                GUI.Canvas.ResetScale();
-            }
-            if (PlayerInput.KeyHit(Keys.Z))
-            {
-                layoutGroup.Stretch = !layoutGroup.Stretch;
-            }
-            if (PlayerInput.KeyHit(Keys.X))
-            {
-                layoutGroup.IsHorizontal = !layoutGroup.IsHorizontal;
-            }
-            if (PlayerInput.KeyHit(Keys.Q))
-            {
-                //dropdown.ListBox.RemoveChild(dropdown.ListBox.Content.Children.LastOrDefault());
-                var last = layoutGroup.RectTransform.Children.LastOrDefault();
-                if (last != null)
-                {
-                    last.Parent = null;
-                }
-            }
-            if (PlayerInput.KeyHit(Keys.E))
-            {
-                //dropdown.AddItem("Extra");
-                new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
-            }
-            if (PlayerInput.KeyHit(Keys.PageUp))
-            {
-                layoutGroup.AbsoluteSpacing++;
-            }
-            if (PlayerInput.KeyHit(Keys.PageDown))
-            {
-                layoutGroup.AbsoluteSpacing--;
-            }
-            if (PlayerInput.KeyHit(Keys.T))
-            {
-                testElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), parent: GUI.Canvas, anchor: Anchor.Center));
-                //testElement = new GUIFrame(new Rectangle(0, 0, 0, 0));
-                var p = testElement;
-
-                layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, p.RectTransform), childAnchor: Anchor.TopLeft);
-
-                new GUIButton(new RectTransform(new Point(100, 30), layoutGroup.RectTransform));
-
-                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 30)});
-                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 60) });
-                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform) { AbsoluteOffset = new Point(0, 90) });
-
-
-                //new GUITextBlock(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center), "Keep calm, this is a test. Keep calm, this is a test.", wrap: true);
-                //new GUITextBox(new RectTransform(new Point(100, 100), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 100) }, "Carry on.", wrap: true);
-                //new GUIButton(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 60) }, "Test Button");
-
-                // old dropdown (also scroll bar dragging should now work)
-                //new GUITextBlock(new Rectangle(500, 350, 100, 20), text: "TEST", style: "", parent: p, color: null, textColor: null);
-                //var dropdown = new GUIDropDown(new Rectangle(500, 300, 100, 20), "Dropdown", "", p);
-
-                //dropdown = new GUIDropDown(new RectTransform(new Point(100, 30), p.RectTransform, Anchor.CenterLeft), "Dropdown");
-
-                //dropdown.AddItem("Test1");
-                //dropdown.AddItem("Test2");
-                //dropdown.AddItem("Test3");
-                //dropdown.AddItem("Test4");
-                //dropdown.AddItem("Test5");
-
-                // new list box
-                //var listBox = new GUIListBox(new RectTransform(new Point(100, 60), p.RectTransform, Anchor.CenterRight));
-                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child1", color: Color.Red));
-                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child2", color: Color.Blue));
-                //listBox.AddChild(new GUITextBlock(new RectTransform(new Point(100, 30)), "Child3", color: Color.Yellow));
-
-                // old list box
-                //var listBox = new GUIListBox(new Rectangle(600, 200, 100, 40), "", p);
-                //listBox.AddChild(new GUITextBlock(new Rectangle(0, 0, 0, 0), "Child1", null, textColor: Color.White));
-                //listBox.AddChild(new GUITextBlock(new Rectangle(0, 0, 0, 0), "Child2", null, textColor: Color.White));
-                //listBox.AddChild(new GUITextBlock(new Rectangle(0, 0, 0, 0), "Child3", null, textColor: Color.White));
-
-                // plain scroll bar (old) works now both vertical and horizontal
-                //float value = 0.5f;
-                //new GUITextBlock(new Rectangle(0, 0, 100, 20), "Scroll bar", "", p);
-                //GUIScrollBar scrollBar = new GUIScrollBar(new Rectangle(0, 60, 20, 150), "", 0.1f, p);
-                //scrollBar.BarScroll = value;
-                //scrollBar.OnMoved = (bar, scroll) => { value = scroll; return true; };
-                //scrollBar.Step = 0.05f;
-
-                // new scroll bar, works
-                //float value = 0.5f;
-                //var text = new GUITextBlock(new RectTransform(new Point(500, 40), p.RectTransform, Anchor.Center), "Scroll bar");
-                //GUIScrollBar scrollBar = new GUIScrollBar(new RectTransform(Vector2.One, text.RectTransform) { AbsoluteOffset = new Point(0, text.RectTransform.NonScaledSize.Y) }, 0.1f);
-                //scrollBar.BarScroll = value;
-                //scrollBar.OnMoved = (bar, scroll) => { value = scroll; return true; };
-                //scrollBar.Step = 0.05f;
-
-                //new GUIProgressBar(new RectTransform(new Point(200, 20), p.RectTransform, Anchor.BottomCenter), 0.5f, Color.Green);
-
-                //new GUINumberInput(new RectTransform(new Point(100, 40), p.RectTransform, Anchor.Center), GUINumberInput.NumberType.Int);
-
-                //var messageBox = new GUIMessageBox(new RectTransform(Vector2.One * 0.75f, parent: null, anchor: Anchor.Center),
-                //    "Header text", "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain " +
-                //    "textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain text" +
-                //    "Main textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain textMain" +
-                //    "");
-                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomCenter) { RelativeOffset = new Vector2(0, 0.1f) }, "OK", (button, obj) =>
-                //{
-                //    messageBox.Close();
-                //    return true;
-                //});
-                //messageBox.AddButton(new RectTransform(new Vector2(0.2f, 0.1f), messageBox.RectTransform, anchor: Anchor.BottomLeft) { RelativeOffset = new Vector2(0.1f, 0.1f) }, "Add text", (button, obj) =>
-                //{
-                //    messageBox.Text.Text += "\nNew text";
-                //    return true;
-                //});
-            }
-            //if (Keyboard.GetState().IsKeyDown(Keys.R))
-            //{
-            //    innerElements.Clear();
-            //    outerElement = new GUIFrame(new RectTransform(Vector2.One, parent: null, anchor: Anchor.Center));
-            //    bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
-            //    if (global)
-            //    {
-            //        RectTransform.ResetGlobalScale();
-            //    }
-            //    else
-            //    {
-            //        //outerElement.RectTransform.ResetScale();
-            //        //outerElement.RectTransform.ClearChildren();
-            //    }
-            //    for (int i = 0; i < 5; i++)
-            //    {
-            //        //var parent = innerElements.LastOrDefault();
-            //        //if (parent == null)
-            //        //{
-            //        //    parent = outerElement;
-            //        //}
-            //        var parent = outerElement;
-            //        GUIFrame element;
-            //        switch (i)
-            //        {
-            //            case 0:
-            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopLeft), color: Rand.Color());
-            //                break;
-            //            case 1:
-            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.TopRight), color: Rand.Color());
-            //                break;
-            //            case 2:
-            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomLeft), color: Rand.Color());
-            //                break;
-            //            case 3:
-            //                element = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.4f), parent.RectTransform, anchor: Anchor.BottomRight), color: Rand.Color());
-            //                break;
-            //            case 4:
-            //                // absolute element
-            //                element = new GUIFrame(new RectTransform(new Point(200, 200), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-            //                break;
-            //            default:
-            //                element = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.1f), parent.RectTransform, anchor: Anchor.Center), color: Rand.Color());
-            //                break;
-            //        }
-            //        if (i < 4)
-            //        {
-            //            // offsets are cumulative
-            //            element.RectTransform.AbsoluteOffset = new Point(10, 10);
-            //            element.RectTransform.RelativeOffset = new Vector2(0.05f, 0.05f);
-            //            element.RectTransform.MinSize = new Point(200, 200);
-            //            element.RectTransform.MaxSize = new Point(400, 400);
-            //        }
-            //        innerElements.Add(element);
-            //    }
-            //}
-        }
-
-        private void UpdateTestElements()
-        {
-            var element = Keyboard.GetState().IsKeyDown(Keys.LeftControl) ? GUI.Canvas.Children.FirstOrDefault() : GUI.Canvas;
-            if (element == null) { return; }
-            bool global = Keyboard.GetState().IsKeyDown(Keys.Space);
-            // Scaling
-            float step = 0.01f;
-            if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
-            {
-                if (global)
-                {
-                    RectTransform.globalScale *= 1 + step;
-                    GUICanvas.Instance.RecalculateScale(true);
-                }
-                else
-                {
-                    element.LocalScale *= 1 + step;
-                }
-                GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
-            {
-                if (global)
-                {
-                    RectTransform.globalScale *= 1 - step;
-                    GUICanvas.Instance.RecalculateScale(true);
-                }
-                else
-                {
-                    element.LocalScale *= 1 - step;
-                }
-                GUICanvas.Instance.GetAllChildren().Select(c => c.GUIComponent as GUITextBlock).ForEach(t => t?.SetTextPos());
-            }
-            // Size
-            if (Keyboard.GetState().IsKeyDown(Keys.Left))
-            {
-                //element.RectTransform.NonScaledSize -= new Point(1, 0);
-                element.RelativeSize -= new Vector2(step, 0);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Right))
-            {
-                //element.RectTransform.NonScaledSize += new Point(1, 0);
-                element.RelativeSize += new Vector2(step, 0);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Up))
-            {
-                //element.RectTransform.NonScaledSize += new Point(0, 1);
-                element.RelativeSize += new Vector2(0, step);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Down))
-            {
-                //element.RectTransform.NonScaledSize -= new Point(0, 1);
-                element.RelativeSize -= new Vector2(0, step);
-            }
-            // Translation
-            if (Keyboard.GetState().IsKeyDown(Keys.A))
-            {
-                element.Translate(new Point(-1, 0));
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.D))
-            {
-                element.Translate(new Point(1, 0));
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.W))
-            {
-                element.Translate(new Point(0, -1));
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.S))
-            {
-                element.Translate(new Point(0, 1));
-            }
-            // Positioning (with matching anchors and pivots)
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad7))
-            {
-                element.SetPosition(Anchor.TopLeft);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad8))
-            {
-                element.SetPosition(Anchor.TopCenter);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad9))
-            {
-                element.SetPosition(Anchor.TopRight);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad4))
-            {
-                element.SetPosition(Anchor.CenterLeft);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad5))
-            {
-                element.SetPosition(Anchor.Center);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad6))
-            {
-                element.SetPosition(Anchor.CenterRight);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad1))
-            {
-                element.SetPosition(Anchor.BottomLeft);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad2))
-            {
-                element.SetPosition(Anchor.BottomCenter);
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.NumPad3))
-            {
-                element.SetPosition(Anchor.BottomRight);
-            }
-        }
-        #endregion
     }
 }

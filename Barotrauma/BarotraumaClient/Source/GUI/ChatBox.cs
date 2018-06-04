@@ -178,7 +178,7 @@ namespace Barotrauma
         {
             while (chatBox.Content.CountChildren > 20)
             {
-                chatBox.RemoveChild(chatBox.Content.Children[0]);
+                chatBox.RemoveChild(chatBox.Content.Children.First());
             }
             
             float prevSize = chatBox.BarSize;
