@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name ="mantistest" humanoid="false">
+<Character name="mantistest" humanoid="false">
 
   <health
     vitality="200"
@@ -33,23 +33,21 @@
     <targetpriority tag="nasonov" state="Attack" priority="50"/>
   </ai>
   
-  <ragdoll 
-    headposition="120" headangle="-90" 
-    minscale="0.8" maxscale="1.2"
+  <ragdoll
+    torsoposition="100" torsoangle="-90"
+    minscale="0.4" maxscale="0.4"
     waveamplitude="50.0" wavelength="2500" 
     swimspeed="2.5" walkspeed="3.0"
-    runspeedmultiplier="2" swimspeedmultiplier="2.5"
-    stepsize ="20.0,20.0"
     legtorque="10"
     footrotation ="180.0"
     impacttolerance="10"
     flip="true"
     draggable="true">
 
-    <collider radius="60" height="170"/>
+    <collider radius="120"/>
     
     <!-- head -->
-    <limb id = "0" radius="70" type="Head" flip="true" steerforce="1.0" mouthpos="30,65">
+    <limb id = "0" radius="70" type="Head" flip="true" steerforce="2.0" mouthpos="17,10">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="0,0,170,167" depth="0.003" origin="0.5,0.5"/>
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
@@ -63,7 +61,7 @@
     </limb>
 
     <!-- torso -->
-    <limb id="2" radius="60" height="170" type="Torso" flip="true">
+    <limb id="2" radius="60" height="170" type="Torso" steerforce="0.5" flip="true">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="0,172,163,340" depth="0.003" origin="0.5,0.5"/>
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
@@ -83,19 +81,19 @@
     </limb>
 
     <!-- front leg upper -->
-    <limb id="6" width="70" height="200" refjoint="5" flip="true">
+    <limb id="6" width="70" height="200" refjoint="5" flip="true" type="RightThigh">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="358,290,85,204" depth="0.002" origin="0.5,0.5"/>
     </limb>
     <!-- front leg lower -->
-    <limb id="7" width="65" height="160" refjoint="5" flip="true">
+    <limb id="7" width="65" height="160" refjoint="5" flip="true" type="RightLeg">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="359,111,73,177" depth="0.001" origin="0.5,0.5"/>
       <sound tag="footstep_armor"/>
     </limb>
     <!-- claw -->
-    <limb id="8" radius="40" height="60" flip="true" pullpos="0.0,30.0" refjoint="5">
+    <limb id="8" radius="40" height="60" flip="true" pullpos="0.0,30.0" refjoint="5" type="RightFoot">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="172,14,116,175" depth="0.0" origin="0.5,0.5"/>
       <attack range="200" damagerange="100" duration="0.25" structuredamage="10" itemdamage="12" structuresoundtype="StructureSlash"
-              targetforce="-100" severlimbsprobability="0.8" torque="-20" force="10" applyforceonlimbs="0,6">
+              targetforce="-100" severlimbsprobability="0.8" torque="-20" force="5" applyforceonlimbs="0,8">
         <affliction name="Internal Damage" strength="10"/>
         <affliction name="Bleeding" strength="50"/>
         <affliction name="Stun" strength="0.1"/>
@@ -108,7 +106,7 @@
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="265,315,77,160" depth="0.005" origin="0.5,0.5"/>
     </limb>
     <!-- back leg lower -->
-    <limb id="10" width="50" height="211" type="LeftFoot" flip="true" pullpos="0.0,30.0" refjoint="8" stepoffset="100.0,0.0">
+    <limb id="10" width="50" height="211" type="LeftFoot" flip="true" pullpos="0.0,-100.0" refjoint="8" stepoffset="0.0,0.0">
       <sprite texture="Content/Characters/MantisTest/SeaMantis.png" sourcerect="286,101,63,211" depth="0.004" origin="0.5,0.5"/>
       <sound tag="footstep_armor"/>
     </limb>
@@ -132,16 +130,16 @@
     <joint limb1="4" limb1anchor="4,-43" limb2="5" limb2anchor="0,59" lowerlimit="-30" upperlimit="30" canbesevered="true"/>
 
     <!-- torso to front leg upper -->
-    <joint limb1="2" limb1anchor="31,78" limb2="6" limb2anchor="-5,67" lowerlimit="-250" upperlimit="-190" canbesevered="true"/>
+    <joint limb1="2" limb1anchor="31,78" limb2="6" limb2anchor="-5,67" lowerlimit="-270" upperlimit="-190" canbesevered="true"/>
     <!-- front leg upper to front leg lower -->
-    <joint limb1="6" limb1anchor="6,-76" limb2="7" limb2anchor="3,-38" lowerlimit="-170" upperlimit="-30" canbesevered="true"/>
+    <joint limb1="6" limb1anchor="6,-76" limb2="7" limb2anchor="3,-38" lowerlimit="-175" upperlimit="-80" canbesevered="true"/>
     <!-- front leg lower to claw -->
     <joint limb1="7" limb1anchor="-14,51" limb2="8" limb2anchor="-18,-61" lowerlimit="-20" upperlimit="80" canbesevered="true"/>
 
     <!-- torso to back leg upper -->
-    <joint limb1="2" limb1anchor="40,-60" limb2="9" limb2anchor="6,15" lowerlimit="-0" upperlimit="-90" canbesevered="true"/>
+    <joint limb1="2" limb1anchor="60,-60" limb2="9" limb2anchor="6,15" lowerlimit="60" upperlimit="120" canbesevered="true"/>
     <!-- back leg upper to back leg lower -->
-    <joint limb1="9" limb1anchor="-3,-67" limb2="10" limb2anchor="1,78" lowerlimit="-180" upperlimit="-10" canbesevered="true"/>
+    <joint limb1="9" limb1anchor="-3,-67" limb2="10" limb2anchor="1,78" lowerlimit="-90" upperlimit="10" canbesevered="true"/>
     
     <!-- torso to belly -->
     <joint limb1="2" limb1anchor="38,5" limb2="11" limb2anchor="0,0" lowerlimit="170" upperlimit="190" canbesevered="true"/>  
