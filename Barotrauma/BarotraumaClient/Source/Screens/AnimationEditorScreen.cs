@@ -195,13 +195,14 @@ namespace Barotrauma
                 return true;
             };
             // TODO: use tick boxes?
-            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.AnimController.forceStanding ? "Swim" : "Stand");
+            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.AnimController.forceStanding ? "Swim" : "Grounded");
             swimButton.OnClicked += (b, obj) =>
             {
                 _character.AnimController.forceStanding = !_character.AnimController.forceStanding;
-                swimButton.Text = _character.AnimController.forceStanding ? "Swim" : "Stand";
+                swimButton.Text = _character.AnimController.forceStanding ? "Swim" : "Grounded";
                 return true;
             };
+            swimButton.Enabled = _character.AnimController.CanWalk;
             var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.OverrideMovement.HasValue ? "Stop" : "Move");
             moveButton.OnClicked += (b, obj) =>
             {
@@ -209,11 +210,11 @@ namespace Barotrauma
                 moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
                 return true;
             };
-            var runButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.ForceRun ? "Walk" : "Run");
-            runButton.OnClicked += (b, obj) =>
+            var speedButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.ForceRun ? "Slow" : "Fast");
+            speedButton.OnClicked += (b, obj) =>
             {
                 _character.ForceRun = !_character.ForceRun;
-                runButton.Text = _character.ForceRun ? "Walk" : "Run";
+                speedButton.Text = _character.ForceRun ? "Slow" : "Fast";
                 return true;
             };
             var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
