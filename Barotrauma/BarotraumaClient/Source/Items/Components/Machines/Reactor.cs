@@ -230,7 +230,6 @@ namespace Barotrauma.Items.Components
             };
 
             var lever = onOffSwitch.GetChild<GUIButton>();
-            lever.RectTransform.AbsoluteOffset = new Point(-15, 0);
             lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);
 
             var graphArea = new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.5f), columnRight.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 30) },
