@@ -1,5 +1,8 @@
 ﻿<CharybdisSwimFast
   speed="6"
-  waveamplitude="15"
-  wavelength ="100"
-  steertorque="1000"/>
+  waveamplitude="2"
+  wavelength="50"
+  steertorque="100"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True" />

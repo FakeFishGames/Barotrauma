@@ -4,6 +4,6 @@
   wavelength="20"
   steertorque="25"
   flip="True"
-  mirror="False"
+  mirror="True"
   rotatetowardsmovement="True"
   headangle="-90"/>

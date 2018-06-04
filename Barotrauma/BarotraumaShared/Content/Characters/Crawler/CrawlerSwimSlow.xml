@@ -4,7 +4,7 @@
   waveamplitude="0.04"
   wavelength="30"
   flip="True"
-  headangle="-70"
-  torsoangle="-90"
-  mirror="False"
-  rotatetowardsmovement="True"/>
+  headangle="-90"
+  torsoangle="-120"
+  mirror="True"
+  rotatetowardsmovement="True" />

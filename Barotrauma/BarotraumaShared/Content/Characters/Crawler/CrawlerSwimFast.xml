@@ -6,5 +6,5 @@
   flip="True"
   headangle="-70"
   torsoangle="-90"
-  mirror="False"
-  rotatetowardsmovement="True"/>
+  mirror="True"
+  rotatetowardsmovement="True" />

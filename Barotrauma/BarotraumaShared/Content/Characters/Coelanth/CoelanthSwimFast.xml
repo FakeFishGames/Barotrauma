@@ -1,5 +1,8 @@
 ﻿<CoelanthSwimFast
-  waveamplitude="0.5"
-  wavelength="25"
-  steertorque="500"
-  speed="7.5"/>
+  waveamplitude="0.8"
+  wavelength="20"
+  steertorque="300"
+  speed="6"
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"/>

@@ -1,9 +1,9 @@
 ﻿<MantisSwimSlow
-  speed="3"
+  speed="1"
   waveamplitude="0.3"
   wavelength="25"
   steertorque="25"
   flip="True"
-  mirror="False"
+  mirror="True"
   rotatetowardsmovement="True"
   headangle="-90"/>
