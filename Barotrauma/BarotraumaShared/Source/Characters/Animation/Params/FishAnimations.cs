@@ -56,9 +56,6 @@ namespace Barotrauma
         [Serialize(0.0f, true), Editable]
         public float LegTorque { get; set; }
 
-        [Serialize(1f, true), Editable]
-        public float WaveLength { get; set; }
-
         /// <summary>
         /// The angle of the collider when standing (i.e. out of water).
         /// In degrees.
