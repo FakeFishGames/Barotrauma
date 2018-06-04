@@ -1,8 +1,9 @@
 ﻿<MantisSwimFast
   speed="6"
   waveamplitude="1"
-  wavelength ="20"
+  wavelength="20"
   steertorque="25"
-  flip="true"
-  mirror="false"
-  rotatetowardsmovement="true"/>
+  flip="True"
+  mirror="False"
+  rotatetowardsmovement="True"
+  headangle="-90"/>

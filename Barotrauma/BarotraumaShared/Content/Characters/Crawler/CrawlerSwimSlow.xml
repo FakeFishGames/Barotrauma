@@ -1,6 +1,10 @@
 ﻿<CrawlerSwimSlow
-  speed ="3"
+  speed="3"
   steertorque="20"
   waveamplitude="0.04"
   wavelength="30"
-  flip="true"/>
+  flip="True"
+  headangle="-70"
+  torsoangle="-90"
+  mirror="False"
+  rotatetowardsmovement="True"/>

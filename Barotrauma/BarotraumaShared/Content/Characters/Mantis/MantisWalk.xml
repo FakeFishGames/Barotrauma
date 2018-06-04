@@ -1,7 +1,8 @@
 ﻿<MantisWalk
-  speed ="3.0"
-  stepsize ="0.2,0.2"
+  speed="3"
+  stepsize="0.15,0.2"
   legtorque="10"
   colliderstandangle="0"
-  footrotation ="180.0"
-  flip="true"/>
+  footrotation="180"
+  flip="True"
+  headangle="-90"/>

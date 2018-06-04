@@ -1,6 +1,10 @@
 ﻿<CrawlerWalk
-  speed ="2"
-  stepsize ="0.15,0.2"
+  speed="2"
+  stepsize="0.12,0.2"
   legtorque="10"
   colliderstandangle="90"
-  flip="true"/>
+  flip="True"
+  headposition="0.6"
+  torsoposition="0.4"
+  headangle="-70"
+  torsoangle="-90"/>

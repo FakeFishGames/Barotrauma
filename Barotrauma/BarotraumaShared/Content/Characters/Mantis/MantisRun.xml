@@ -1,7 +1,9 @@
 ﻿<MantisRun
-  speed ="6"
-  stepsize ="0.2,0.2"
+  speed="6"
+  stepsize="0.25,0.4"
   legtorque="10"
   colliderstandangle="0"
-  footrotation ="180.0"
-  flip="true"/>
+  footrotation="180"
+  flip="True"
+  headposition="1.1"
+  headangle="-120"/>
