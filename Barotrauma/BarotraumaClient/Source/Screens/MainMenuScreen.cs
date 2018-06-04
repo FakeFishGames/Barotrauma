@@ -83,6 +83,11 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { GameMain.SubEditorScreen.Select(); return true; }
             };
 
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("AnimEditorButton"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) => { GameMain.AnimationEditorScreen.Select(); return true; }
+            };
+
             if (Steam.SteamManager.USE_STEAM)
             {
                 steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("SteamWorkshopButton"), style: "GUIButtonLarge")
