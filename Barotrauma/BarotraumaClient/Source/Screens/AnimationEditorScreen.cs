@@ -206,7 +206,7 @@ namespace Barotrauma
             var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.OverrideMovement.HasValue ? "Stop" : "Move");
             moveButton.OnClicked += (b, obj) =>
             {
-                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(1, 0) as Vector2?;
+                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
                 moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
                 return true;
             };
