@@ -132,11 +132,11 @@ namespace Barotrauma
         private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform,
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
                 Anchor.TopRight), GUINumberInput.NumberType.Int)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip,
@@ -159,11 +159,11 @@ namespace Barotrauma
         private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform,
+            GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform,
                 Anchor.TopRight), GUINumberInput.NumberType.Float)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip,
@@ -186,11 +186,11 @@ namespace Barotrauma
         private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight))
+            GUIDropDown enumDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform, Anchor.TopRight))
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
