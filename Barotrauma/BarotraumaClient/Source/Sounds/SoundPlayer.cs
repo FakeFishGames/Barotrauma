@@ -76,6 +76,12 @@ namespace Barotrauma
         //misc
         public static List<Sound> FlowSounds = new List<Sound>();
         public static List<Sound> SplashSounds = new List<Sound>();
+        private static SoundChannel[] flowSoundChannels;
+        private static float[] flowLeft;
+        private static float[] flowRight;
+
+        const float FlowSoundRange = 1500.0f;
+        const float MaxFlowStrength = 400.0f;
 
         private static List<DamageSound> damageSounds;
 
@@ -166,6 +172,10 @@ namespace Barotrauma
                 }
             }
 
+            flowSoundChannels = new SoundChannel[FlowSounds.Count];
+            flowLeft = new float[FlowSounds.Count];
+            flowRight = new float[FlowSounds.Count];
+
             miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
 
             Initialized = true;
@@ -185,16 +195,21 @@ namespace Barotrauma
                 startUpSound = null;                
             }
 
-            //stop submarine ambient sounds if no sub is loaded
+            //stop water sounds if no sub is loaded
             if (Submarine.MainSub == null || Screen.Selected != GameMain.GameScreen)  
             {
                 for (int i = 0; i < waterAmbienceChannels.Length; i++)
                 {
                     if (waterAmbienceChannels[i] == null) continue;
-
                     waterAmbienceChannels[i].Dispose();
                     waterAmbienceChannels[i] = null;
-                }  
+                }
+                for (int i = 0; i < FlowSounds.Count; i++)
+                {
+                    if (flowSoundChannels[i] == null) continue;
+                    flowSoundChannels[i].Dispose();
+                    flowSoundChannels[i] = null;
+                }
                 return;
             }
 
@@ -214,6 +229,15 @@ namespace Barotrauma
                 lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             }
 
+            UpdateWaterAmbience(ambienceVolume);
+            UpdateWaterFlowSounds(deltaTime);
+            UpdateRandomAmbience(deltaTime);
+            GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
+            
+        }
+
+        private static void UpdateWaterAmbience(float ambienceVolume)
+        {
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementSoundVolume = 0.0f;
 
@@ -222,7 +246,7 @@ namespace Barotrauma
                 float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 10.0f;
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
 
-                if (Character.Controlled==null || Character.Controlled.Submarine != sub)
+                if (Character.Controlled == null || Character.Controlled.Submarine != sub)
                 {
                     float dist = Vector2.Distance(GameMain.GameScreen.Cam.WorldViewCenter, sub.WorldPosition);
                     movementFactor = movementFactor / Math.Max(dist / 1000.0f, 1.0f);
@@ -231,22 +255,6 @@ namespace Barotrauma
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
             }
 
-            if (ambientSoundTimer > 0.0f)
-            {
-                ambientSoundTimer -= (float)Timing.Step;
-            }
-            else
-            {
-                PlaySound(
-                    "ambient",
-                    Rand.Range(0.5f, 1.0f), 
-                    1000.0f, 
-                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f));
-
-                ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
-            }
-
-            GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
             if (waterAmbiences.Count > 1)
             {
                 if (waterAmbienceChannels[0] == null || !waterAmbienceChannels[0].IsPlaying)
@@ -271,7 +279,91 @@ namespace Barotrauma
                     waterAmbienceChannels[1].Gain = ambienceVolume * movementSoundVolume;
                 }
             }
+        }
 
+        private static void UpdateWaterFlowSounds(float deltaTime)
+        {
+            float[] targetFlowLeft = new float[FlowSounds.Count];
+            float[] targetFlowRight = new float[FlowSounds.Count];
+
+            Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.Open < 0.01f) continue;
+                float gapFlow = Math.Abs(gap.LerpedFlowForce.X) + Math.Abs(gap.LerpedFlowForce.Y) * 2.5f;
+
+                if (gapFlow < 10.0f) continue;
+
+                int flowSoundIndex = (int)Math.Floor(MathHelper.Clamp(gapFlow / MaxFlowStrength, 0, FlowSounds.Count));
+                flowSoundIndex = Math.Min(flowSoundIndex, FlowSounds.Count - 1);
+
+                Vector2 diff = gap.WorldPosition - listenerPos;
+                if (Math.Abs(diff.X) < FlowSoundRange && Math.Abs(diff.Y) < FlowSoundRange)
+                {
+                    float dist = diff.Length();
+                    float distFallOff = dist / FlowSoundRange;
+                    if (distFallOff >= 0.99f) continue;
+
+                    //flow at the left side
+                    if (diff.X < 0)
+                    {
+                        targetFlowLeft[flowSoundIndex] = 1.0f - distFallOff;
+                    }
+                    else
+                    {
+                        targetFlowRight[flowSoundIndex] = 1.0f - distFallOff;
+                    }
+                }
+            }
+
+            for (int i = 0; i < FlowSounds.Count; i++)
+            {
+                flowLeft[i] = (targetFlowLeft[i] < flowLeft[i]) ?
+                    Math.Max(targetFlowLeft[i], flowLeft[i] - deltaTime) :
+                    Math.Min(targetFlowLeft[i], flowLeft[i] + deltaTime);
+                flowRight[i] = (targetFlowRight[i] < flowRight[i]) ?
+                     Math.Max(targetFlowRight[i], flowRight[i] - deltaTime) :
+                     Math.Min(targetFlowRight[i], flowRight[i] + deltaTime);
+
+                if (flowLeft[i] < 0.05f && flowRight[i] < 0.05f)
+                {
+                    if (flowSoundChannels[i] != null)
+                    {
+                        flowSoundChannels[i].Dispose();
+                        flowSoundChannels[i] = null;
+                    }
+                }
+                else
+                {
+                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (flowRight[i] - flowLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
+                    if (flowSoundChannels[i] == null || !flowSoundChannels[i].IsPlaying)
+                    {
+                        flowSoundChannels[i] = FlowSounds[i].Play(1.0f, FlowSoundRange, soundPos);
+                        flowSoundChannels[i].Looping = true;
+                    }
+                    flowSoundChannels[i].Gain = Math.Max(flowRight[i], flowLeft[i]);
+                    flowSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
+
+                }
+            }
+        }
+
+        private static void UpdateRandomAmbience(float deltaTime)
+        {
+            if (ambientSoundTimer > 0.0f)
+            {
+                ambientSoundTimer -= deltaTime;
+            }
+            else
+            {
+                PlaySound(
+                    "ambient",
+                    Rand.Range(0.5f, 1.0f), 
+                    1000.0f, 
+                    new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y) + Rand.Vector(100.0f));
+
+                ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
+            }
         }
 
         public static Sound GetSound(string soundTag)
