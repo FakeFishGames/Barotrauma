@@ -125,7 +125,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Animation params not loaded!");
                 return;
             }
-            Editor.AddChild(new SerializableEntityEditor(Editor.RectTransform, this, false, true, elementHeight: 0.04f));
+            new SerializableEntityEditor(Editor.Content.RectTransform, this, false, true);
         }
 
         public bool Save()
