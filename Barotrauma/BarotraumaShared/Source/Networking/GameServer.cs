@@ -2106,15 +2106,29 @@ namespace Barotrauma.Networking
 
         public void UpdateClientPermissions(Client client)
         {           
-            clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
-
-            if (client.Permissions != ClientPermissions.None)
+            if (client.SteamID > 0)
             {
-                clientPermissions.Add(new SavedClientPermission(
-                    client.Name, 
-                    client.Connection.RemoteEndPoint.Address.ToString(), 
-                    client.Permissions,
-                    client.PermittedConsoleCommands));
+                clientPermissions.RemoveAll(cp => cp.SteamID == client.SteamID);
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    clientPermissions.Add(new SavedClientPermission(
+                        client.Name, 
+                        client.SteamID, 
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
+            }
+            else
+            {
+                clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    clientPermissions.Add(new SavedClientPermission(
+                        client.Name, 
+                        client.Connection.RemoteEndPoint.Address.ToString(), 
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
             }
 
             var msg = server.CreateMessage();

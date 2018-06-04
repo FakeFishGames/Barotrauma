@@ -29,6 +29,7 @@ namespace Barotrauma.Networking
         private class SavedClientPermission
         {
             public readonly string IP;
+            public readonly ulong SteamID;
             public readonly string Name;
             public List<DebugConsole.Command> PermittedCommands;
 
@@ -38,6 +39,14 @@ namespace Barotrauma.Networking
             {
                 this.Name = name;
                 this.IP = ip;
+
+                this.Permissions = permissions;
+                this.PermittedCommands = permittedCommands;
+            }
+            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            {
+                this.Name = name;
+                this.SteamID = steamID;
 
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
@@ -462,15 +471,21 @@ namespace Barotrauma.Networking
             {
                 string clientName = clientElement.GetAttributeString("name", "");
                 string clientIP = clientElement.GetAttributeString("ip", "");
-                if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientIP))
+                string steamIdStr = clientElement.GetAttributeString("steamid", "");
+
+                if (string.IsNullOrWhiteSpace(clientName))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
                     continue;
                 }
+                if (string.IsNullOrWhiteSpace(clientIP) && string.IsNullOrWhiteSpace(steamIdStr))
+                {
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
+                    continue;
+                }
 
                 string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                ClientPermissions permissions;
-                if (!Enum.TryParse(permissionsStr, out permissions))
+                if (!Enum.TryParse(permissionsStr, out ClientPermissions permissions))
                 {
                     DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
                     continue;
@@ -495,7 +510,22 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                if (!string.IsNullOrEmpty(steamIdStr))
+                {
+                    if (ulong.TryParse(steamIdStr, out ulong steamID))
+                    {
+                        clientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + steamIdStr + "\" is not a valid Steam ID.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
+                }
             }
         }
 
@@ -551,8 +581,16 @@ namespace Barotrauma.Networking
             {
                 XElement clientElement = new XElement("Client", 
                     new XAttribute("name", clientPermission.Name),
-                    new XAttribute("ip", clientPermission.IP),
                     new XAttribute("permissions", clientPermission.Permissions.ToString()));
+
+                if (clientPermission.SteamID > 0)
+                {
+                    clientElement.Add(new XAttribute("steamid", clientPermission.SteamID));
+                }
+                else
+                {
+                    clientElement.Add(new XAttribute("ip", clientPermission.IP));
+                }
 
                 if (clientPermission.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
                 {

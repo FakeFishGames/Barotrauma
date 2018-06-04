@@ -310,7 +310,11 @@ namespace Barotrauma.Networking
 #endif
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
-            var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+            var savedPermissions = clientPermissions.Find(cp => 
+                cp.SteamID > 0 ? 
+                cp.SteamID == newClient.SteamID :            
+                cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+
             if (savedPermissions != null)
             {
                 newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
