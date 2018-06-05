@@ -32,6 +32,7 @@ namespace Barotrauma
             Submarine.RefreshSavedSubs();
             Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
             Submarine.MainSub.Load(true);
+            Submarine.MainSub.GodMode = true;
             CalculateMovementLimits();
             character = SpawnCharacter(Character.HumanConfigFile);
             AnimParams.ForEach(p => p.AddToEditor());
