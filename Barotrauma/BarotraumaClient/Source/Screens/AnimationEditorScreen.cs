@@ -318,7 +318,8 @@ namespace Barotrauma
             GUI.DrawIndicator(spriteBatch, pos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
 
-            DrawJointEditor(spriteBatch);
+            DrawWidgetEditor(spriteBatch);
+            //DrawJointEditor(spriteBatch);
 
             // Debug
             if (GameMain.DebugDraw)
@@ -344,6 +345,34 @@ namespace Barotrauma
 
             spriteBatch.End();
         }
+
+        #region Widgets (test)
+        private void DrawWidgetEditor(SpriteBatch spriteBatch)
+        {
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
+                GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
+                GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
+
+                if (limb.type == LimbType.Head)
+                {
+                    // raycast?
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        var currentAnimParams = character.AnimController.CurrentAnimationParams;
+                        if (currentAnimParams is GroundedMovementParams grounded)
+                        {
+                            grounded.HeadPosition += 0.01f * PlayerInput.MouseSpeed.Y;
+                            var point = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorB)).ToPoint();
+                            GUI.DrawRectangle(spriteBatch, new Rectangle(point, new Point(5, 5)), Color.Red);
+                            // TODO: update the value in the editor
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
 
         #region Joint edit (test)
         private void DrawJointEditor(SpriteBatch spriteBatch)
