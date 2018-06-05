@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Steam
 {
@@ -18,7 +20,10 @@ namespace Barotrauma.Steam
 #endif
 
         const uint AppID = 602960;
-                
+        
+        private Client client;
+        private Server server;
+
         private static SteamManager instance;
         public static SteamManager Instance
         {
@@ -38,9 +43,6 @@ namespace Barotrauma.Steam
             }
         }
         
-        private Client client;
-        private Server server;
-
         public static void Initialize()
         {
             if (!USE_STEAM) return;
@@ -237,26 +239,38 @@ namespace Barotrauma.Steam
             return true;
         }
 
-#endregion
+        #endregion
 
-#region Workshop
-
-        public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound)
+        #region Workshop
+        
+        public static void GetWorkshopItems(Action<IList<Workshop.Item>> onItemsFound, List<string> requireTags = null)
         {
             if (instance == null || !instance.isInitialized) return;
 
             var query = instance.client.Workshop.CreateQuery();
             query.Order = Workshop.Order.RankedByTrend;
             query.UploaderAppId = AppID;
+            if (requireTags != null) query.RequireTags = requireTags;
 
             query.Run();
-
             query.OnResult += (Workshop.Query q) =>
             {
-                onItemsFound(q.Items);
+                onItemsFound?.Invoke(q.Items);
             };
         }
 
+        /// <summary>
+        /// Moves a workshop item from the download folder to the game folder and makes it usable in-game
+        /// </summary>
+        private void EnableWorkshopItem(Workshop.Item item)
+        {
+            if (!item.Installed)
+            {
+                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
+                return;
+            }
+        }
+        
         public static void SaveToWorkshop(Submarine sub)
         {
             if (instance == null || !instance.isInitialized) return;
@@ -266,6 +280,7 @@ namespace Barotrauma.Steam
             item.Description = sub.Description;
             item.WorkshopUploadAppId = AppID;
             item.Title = sub.Name;
+            item.Tags.Add("Submarine");
 
             string subPreviewPath = Path.GetFullPath("SubPreview.png");
 #if CLIENT
@@ -283,21 +298,51 @@ namespace Barotrauma.Steam
                 item.PreviewImage = null;
             }
 #endif
-
-            var tempFolder = new DirectoryInfo("Temp");
-            item.Folder = tempFolder.FullName;
-            if (tempFolder.Exists)
+            DirectoryInfo tempFolder;
+            try
             {
-                SaveUtil.ClearFolder(tempFolder.FullName);
-            }                
-            else
+                CreateWorkshopItemFolder(new List<string>() { sub.FilePath }, out tempFolder);
+            }
+            catch (Exception e)
             {
-                tempFolder.Create();
+                DebugConsole.ThrowError("Creating the workshop item failed.", e);
+                return;
             }
 
-            File.Copy(sub.FilePath, Path.Combine(tempFolder.FullName, Path.GetFileName(sub.FilePath)));
-
+            item.Folder = tempFolder.FullName;
+            
             CoroutineManager.StartCoroutine(instance.PublishItem(item, tempFolder, subPreviewPath));
+        }
+
+        /// <summary>
+        /// Creates a new folder, copies the specified files there and creates a metadata file with install instructions.
+        /// </summary>
+        /// <param name="itemPaths">Files to include in the workshop item</param>
+        /// <param name="itemFolder">The path of the created folder</param>
+        private static void CreateWorkshopItemFolder(List<string> filePaths, out DirectoryInfo itemFolder)
+        {
+            itemFolder = new DirectoryInfo("Temp");
+            if (itemFolder.Exists)
+            {
+                SaveUtil.ClearFolder(itemFolder.FullName);
+            }
+            else
+            {
+                itemFolder.Create();
+            }
+
+            XDocument metaDoc = new XDocument(new XElement("files"));
+            foreach (string filePath in filePaths)
+            {
+                //get relative path in case we've been passed a full path
+                string originalPath = UpdaterUtil.GetRelativePath(Path.GetFullPath(filePath), Environment.CurrentDirectory);
+                string destinationPath = Path.Combine(itemFolder.FullName, Path.GetFileName(filePath));
+                File.Copy(filePath, destinationPath);
+
+                metaDoc.Root.Add(new XElement("file", new XAttribute("path", originalPath)));
+            }
+
+            metaDoc.Save(Path.Combine(itemFolder.FullName, "metadata.meta"));            
         }
 
         private IEnumerable<object> PublishItem(Workshop.Editor item, DirectoryInfo tempFolder, string previewImgPath)
@@ -315,7 +360,7 @@ namespace Barotrauma.Steam
 
             if (string.IsNullOrEmpty(item.Error))
             {
-                DebugConsole.ThrowError("Published workshop item " + item.Title + " succesfully.");
+                DebugConsole.NewMessage("Published workshop item " + item.Title + " succesfully.", Microsoft.Xna.Framework.Color.LightGreen);
             }
             else
             {
@@ -332,7 +377,129 @@ namespace Barotrauma.Steam
             yield return CoroutineStatus.Success;
         }
 
-#endregion
+        /// <summary>
+        /// Enables a workshop item by moving it to the game folder.
+        /// </summary>
+        public static bool EnableWorkShopItem(Workshop.Item item, bool allowFileOverwrite)
+        {
+            if (!item.Installed)
+            {
+                DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\" because it has not been installed.");
+                return false;
+            }
+
+            var metaDoc = GetWorkshopItemMetaData(item);
+            if (metaDoc?.Root == null) return false;
+
+            List<string> filePaths = new List<string>();
+            foreach (XElement fileElement in metaDoc.Root.Elements())
+            {
+                filePaths.Add(fileElement.GetAttributeString("path", ""));
+            }
+
+            if (!allowFileOverwrite)
+            {
+                foreach (string filePath in filePaths)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        //TODO: ask the player if they want to let a workshop item overwrite existing files?
+                        DebugConsole.ThrowError("Cannot enable workshop item \"" + item.Title + "\". The file \"" + filePath + "\" would be overwritten by the item.");
+                        return false;
+                    }
+                }
+            }
+
+            try
+            {
+                foreach (string filePath in filePaths)
+                {
+                    string sourceFile = Path.Combine(item.Directory.FullName, Path.GetFileName(filePath));
+                    File.Copy(sourceFile, filePath, overwrite: true);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Enabling the workshop item \"" + item.Title + "\" failed.", e);
+            }
+            
+            return true;
+        }
+
+        /// <summary>
+        /// Disables a workshop item by removing the files from the game folder.
+        /// </summary>
+        public static bool DisableWorkShopItem(Workshop.Item item)
+        {
+            if (!item.Installed)
+            {
+                DebugConsole.ThrowError("Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.");
+                return false;
+            }
+
+            var metaDoc = GetWorkshopItemMetaData(item);
+            if (metaDoc?.Root == null) return false;
+
+            List<string> filePaths = new List<string>();
+            foreach (XElement fileElement in metaDoc.Root.Elements())
+            {
+                filePaths.Add(fileElement.GetAttributeString("path", ""));
+            }
+            
+            try
+            {
+                foreach (string filePath in filePaths)
+                {
+                    File.Delete(filePath);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Disabling the workshop item \"" + item.Title + "\" failed.", e);
+            }
+            return true;
+        }
+
+        public static bool CheckWorkshopItemEnabled(Workshop.Item item)
+        {
+            if (!item.Installed) return false;
+
+            var metaDoc = GetWorkshopItemMetaData(item);
+            if (metaDoc?.Root == null) return false;
+            
+            foreach (XElement fileElement in metaDoc.Root.Elements())
+            {
+                string filePath = fileElement.GetAttributeString("path", "");
+                if (!File.Exists(filePath))
+                {
+                    //TODO: check the MD5 hash of the file
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static XDocument GetWorkshopItemMetaData(Workshop.Item item)
+        {
+            string metaFilePath = Path.Combine(item.Directory.FullName, "metadata.meta");
+            if (!File.Exists(metaFilePath))
+            {
+                DebugConsole.ThrowError("Error: could not find a metadata file of the workshop item \"" + item.Title + "\". The item may be corrupted.");
+                return null;
+            }
+            XDocument metaDoc = XMLExtensions.TryLoadXml(metaFilePath);
+            if (metaDoc?.Root == null)
+            {
+                DebugConsole.ThrowError("Error: could not read the metadata file of the workshop item \"" + item.Title + "\". The item may be corrupted.");
+                return null;
+            }
+
+            return metaDoc;
+        }
+
+
+        #endregion
 
         public static void Update()
         {
