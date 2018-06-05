@@ -421,6 +421,17 @@ namespace Barotrauma.Steam
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Enabling the workshop item \"" + item.Title + "\" failed.", e);
+                return false;
+            }
+
+            foreach (string tag in item.Tags)
+            {
+                switch (tag)
+                {
+                    case "Submarine":
+                        Submarine.RefreshSavedSubs();
+                        break;
+                }
             }
             
             return true;
