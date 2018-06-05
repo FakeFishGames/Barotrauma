@@ -163,7 +163,7 @@ namespace Launcher
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Content package");
             contentPackageDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
 
-            foreach (ContentPackage contentPackage in ContentPackage.list)
+            foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
 
