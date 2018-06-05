@@ -1,13 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
 
 namespace Barotrauma
 {
@@ -26,7 +23,7 @@ namespace Barotrauma
             }
         }
 
-        private Character _character;
+        private Character character;
         private Vector2 spawnPosition;
 
         public override void Select()
@@ -36,7 +33,7 @@ namespace Barotrauma
             Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
             Submarine.MainSub.Load(true);
             CalculateMovementLimits();
-            _character = SpawnCharacter(Character.HumanConfigFile);
+            character = SpawnCharacter(Character.HumanConfigFile);
             AnimParams.ForEach(p => p.AddToEditor());
             CreateButtons();
         }
@@ -138,7 +135,7 @@ namespace Barotrauma
         {
             if (characterIndex == -1)
             {
-                characterIndex = AllFiles.IndexOf(GetConfigFile(_character.SpeciesName));
+                characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
             }
             characterIndex++;
             if (characterIndex == AllFiles.Count - 1)
@@ -189,32 +186,39 @@ namespace Barotrauma
             var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
             switchCharacterButton.OnClicked += (b, obj) =>
             {
-                _character = SpawnCharacter(GetNextConfigFile());
+                character = SpawnCharacter(GetNextConfigFile());
                 ResetEditor();
                 CreateButtons();
                 return true;
             };
             // TODO: use tick boxes?
-            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.AnimController.forceStanding ? "Swim" : "Grounded");
+            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.AnimController.forceStanding ? "Swim" : "Grounded");
             swimButton.OnClicked += (b, obj) =>
             {
-                _character.AnimController.forceStanding = !_character.AnimController.forceStanding;
-                swimButton.Text = _character.AnimController.forceStanding ? "Swim" : "Grounded";
+                character.AnimController.forceStanding = !character.AnimController.forceStanding;
+                swimButton.Text = character.AnimController.forceStanding ? "Swim" : "Grounded";
                 return true;
             };
-            swimButton.Enabled = _character.AnimController.CanWalk;
-            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.OverrideMovement.HasValue ? "Stop" : "Move");
+            swimButton.Enabled = character.AnimController.CanWalk;
+            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.OverrideMovement.HasValue ? "Stop" : "Move");
             moveButton.OnClicked += (b, obj) =>
             {
-                _character.OverrideMovement = _character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
-                moveButton.Text = _character.OverrideMovement.HasValue ? "Stop" : "Move";
+                character.OverrideMovement = character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
+                moveButton.Text = character.OverrideMovement.HasValue ? "Stop" : "Move";
                 return true;
             };
-            var speedButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), _character.ForceRun ? "Slow" : "Fast");
+            var speedButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.ForceRun ? "Slow" : "Fast");
             speedButton.OnClicked += (b, obj) =>
             {
-                _character.ForceRun = !_character.ForceRun;
-                speedButton.Text = _character.ForceRun ? "Slow" : "Fast";
+                character.ForceRun = !character.ForceRun;
+                speedButton.Text = character.ForceRun ? "Slow" : "Fast";
+                return true;
+            };
+            var turnButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.dontFollowCursor ? "Enable Turning" : "Disable Turning");
+            turnButton.OnClicked += (b, obj) =>
+            {
+                character.dontFollowCursor = !character.dontFollowCursor;
+                turnButton.Text = character.dontFollowCursor ? "Enable Turning" : "Disable Turning";
                 return true;
             };
             var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
@@ -234,7 +238,7 @@ namespace Barotrauma
         #endregion
 
         #region AnimParams
-        private List<AnimationParams> AnimParams => _character.AnimController.AllAnimParams;
+        private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
 
         private void ResetEditor()
         {
@@ -265,10 +269,10 @@ namespace Barotrauma
 
             PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
 
-            _character.ControlLocalPlayer((float)deltaTime, Cam, false);
-            _character.Control((float)deltaTime, Cam);
-            _character.AnimController.UpdateAnim((float)deltaTime);
-            _character.AnimController.Update((float)deltaTime, Cam);
+            character.ControlLocalPlayer((float)deltaTime, Cam, false);
+            character.Control((float)deltaTime, Cam);
+            character.AnimController.UpdateAnim((float)deltaTime);
+            character.AnimController.Update((float)deltaTime, Cam);
 
             // Teleports the character -> not very smooth
             //if (_character.Position.X < min || _character.Position.X > max)
@@ -276,17 +280,17 @@ namespace Barotrauma
             //    _character.AnimController.SetPosition(ConvertUnits.ToSimUnits(new Vector2(spawnPosition.X, _character.Position.Y)), false);
             //}
 
-            if (_character.Position.X < min)
+            if (character.Position.X < min)
             {
                 CloneWalls(false);
             }
-            else if (_character.Position.X > max)
+            else if (character.Position.X > max)
             {
                 CloneWalls(true);
             }
 
             Cam.MoveCamera((float)deltaTime);
-            Cam.Position = _character.Position;
+            Cam.Position = character.Position;
 
             GameMain.World.Step((float)deltaTime);
         }
@@ -304,36 +308,119 @@ namespace Barotrauma
 
             // Character
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
-            _character.Draw(spriteBatch);
+            character.Draw(spriteBatch);
             spriteBatch.End();
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
             Structure clone = clones.FirstOrDefault();
-            Vector2 drawPos = clone == null ? OriginalWalls.First().DrawPosition : clone.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, drawPos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            Vector2 pos = clone == null ? OriginalWalls.First().DrawPosition : clone.DrawPosition;
+            GUI.DrawIndicator(spriteBatch, pos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
+
+            DrawJointEditor(spriteBatch);
 
             // Debug
             if (GameMain.DebugDraw)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 00), $"Cursor World Pos: {_character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {_character.CursorPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 00), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
 
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 60), $"Character World Pos: {_character.WorldPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character Pos: {_character.Position}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Sim Pos: {_character.SimPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 60), $"Character World Pos: {character.WorldPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 80), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
 
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 160), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
 
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Clones: {clones.Count}", Color.White, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 260), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 160), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
+
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 260), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Clones: {clones.Count}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
             }
 
             spriteBatch.End();
         }
+
+        #region Joint edit (test)
+        private void DrawJointEditor(SpriteBatch spriteBatch)
+        {
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(limbBodyPos.ToPoint(), new Point(5, 5)), Color.Red);
+
+                DrawJoints(spriteBatch, limb, limbBodyPos);
+
+                GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
+                GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
+
+                if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                {
+                    limb.sprite.Origin += PlayerInput.MouseSpeed;
+                }
+            }
+        }
+
+        private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
+        {
+            foreach (var joint in character.AnimController.LimbJoints)
+            {
+                Vector2 jointPos = Vector2.Zero;
+
+                if (joint.BodyA == limb.body.FarseerBody)
+                {
+                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+
+                }
+                else if (joint.BodyB == limb.body.FarseerBody)
+                {
+                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                }
+                else
+                {
+                    continue;
+                }
+
+                Vector2 tformedJointPos = jointPos /= limb.Scale;
+                tformedJointPos.Y = -tformedJointPos.Y;
+                tformedJointPos += limbBodyPos;
+
+                if (joint.BodyA == limb.body.FarseerBody)
+                {
+                    float a1 = joint.UpperLimit - MathHelper.PiOver2;
+                    float a2 = joint.LowerLimit - MathHelper.PiOver2;
+                    float a3 = (a1 + a2) / 2.0f;
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
+
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
+                }
+
+                GUI.DrawRectangle(spriteBatch, tformedJointPos, new Vector2(5.0f, 5.0f), Color.Red, true);
+                if (Vector2.Distance(PlayerInput.MousePosition, tformedJointPos) < 10.0f)
+                {
+                    GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
+                    GUI.DrawRectangle(spriteBatch, tformedJointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        Vector2 speed = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
+                        speed.Y = -speed.Y;
+                        if (joint.BodyA == limb.body.FarseerBody)
+                        {
+                            joint.LocalAnchorA += speed;
+                        }
+                        else
+                        {
+                            joint.LocalAnchorB += speed;
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }

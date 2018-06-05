@@ -301,6 +301,7 @@ namespace Barotrauma
 
         public bool IsRagdolled;
         public bool IsForceRagdolled;
+        public bool dontFollowCursor;
 
         public bool IsUnconscious
         {
@@ -952,7 +953,11 @@ namespace Barotrauma
             {
                 //Limb head = AnimController.GetLimb(LimbType.Head);
 
-                if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
+                if (dontFollowCursor)
+                {
+                    AnimController.TargetDir = Direction.Left;
+                }
+                else if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
