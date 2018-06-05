@@ -166,7 +166,7 @@ namespace Barotrauma
 
                 MasterServerUrl = "";
 
-                SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
+                SelectedContentPackage = ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage("");
 
                 jobNamePreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
@@ -289,7 +289,7 @@ namespace Barotrauma
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
                         
-                        SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
+                        SelectedContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
 
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
                         break;

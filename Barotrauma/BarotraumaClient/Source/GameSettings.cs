@@ -163,7 +163,7 @@ namespace Barotrauma
             var contentPackageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
             contentPackageDD.OnSelected = SelectContentPackage;
 
-            foreach (ContentPackage contentPackage in ContentPackage.list)
+            foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
                 if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);

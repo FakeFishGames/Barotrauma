@@ -582,7 +582,7 @@ namespace Barotrauma
                 });
 
             List<string> contentPacks = Submarine.MainSub.CompatibleContentPackages.ToList();
-            foreach (ContentPackage contentPack in ContentPackage.list)
+            foreach (ContentPackage contentPack in ContentPackage.List)
             {
                 if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
             }

@@ -14,6 +14,14 @@ namespace Barotrauma
 
         private GUIFrame itemPreviewFrame;
 
+        private enum Tab
+        {
+            Browse,
+            Publish
+        }
+
+        private GUIFrame[] tabs;
+
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -21,18 +29,27 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
-            menu = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.9f), GUI.Canvas, Anchor.Center));
-            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center), style: null);
+            tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
-            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), paddedFrame.RectTransform))
+            menu = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.9f), GUI.Canvas, Anchor.Center));
+            
+            //-------------------------------------------------------------------------------
+            //Browse tab
+            //-------------------------------------------------------------------------------
+
+            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center), style: null);
+
+            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
             GUIButton button = new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), listContainer.RectTransform),
-                TextManager.Get("Back"));
-            button.OnClicked = GameMain.MainMenuScreen.SelectTab;
+                TextManager.Get("Back"))
+            {
+                OnClicked = GameMain.MainMenuScreen.SelectTab
+            };
             button.SelectedColor = button.Color;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Installed items");
@@ -54,16 +71,42 @@ namespace Barotrauma
                     return true;
                 }
             };
+            
+            itemPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Browse].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
-            //--------------------------------------------------------
+            //-------------------------------------------------------------------------------
+            //Publish tab
+            //-------------------------------------------------------------------------------
 
-            itemPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight), style: "InnerFrame");
+            tabs[(int)Tab.Publish] = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center), style: null);
+
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Publish].RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Published items");
+            new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), leftColumn.RectTransform));
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Your items");
+            new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), leftColumn.RectTransform));
+
+            SelectTab(Tab.Browse);
         }
 
         public override void Select()
         {
             base.Select();
             RefreshItemList();
+        }
+
+        private void SelectTab(Tab tab)
+        {
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                tabs[i].Visible = i == (int)tab;
+            }
         }
 
         private void RefreshItemList()
@@ -95,6 +138,10 @@ namespace Barotrauma
                         UserData = item,
                         OnSelected = ToggleItemEnabled
                     };
+                }
+                else if (item.Downloading)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.5f), itemFrame.RectTransform, Anchor.CenterRight), "Downloading");
                 }
                 else
                 {
