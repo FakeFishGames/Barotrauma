@@ -2140,8 +2140,23 @@ namespace Barotrauma
                     spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     break;
                 default:
-                    extraParams = 0;
+                    int id = 0;
+                    int.TryParse(args.Last(), out id);
+                    if(id > 0) {
+                        var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                        if (client != null && client.Character != null) {
+                            spawnInventory = client.Character.Inventory;
+                        }else{
+                            errorMsg = "Client with ID \"" + id + "\" isn't currently playing";
+                            return;
+                        }
+                        extraParams = 1;
+
+                    }else{
+                        extraParams = 0;
+                    }
                     break;
+
             }
 
             string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
