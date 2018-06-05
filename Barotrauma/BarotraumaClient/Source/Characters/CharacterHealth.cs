@@ -113,7 +113,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.9f), healthWindow.RectTransform, anchor: Anchor.Center),
                 (spriteBatch, component) => 
                 {
-                    DrawLimbIndicators(spriteBatch, component.RectTransform.Rect, true, false);
+                    DrawHealthWindow(spriteBatch, component.RectTransform.Rect, true, false);
                 },
                 (deltaTime, component) => 
                 {
@@ -512,12 +512,6 @@ namespace Barotrauma
                     healthWindowHealthBar.BarSize = currHealth;
                     healthWindowHealthBar.Color = prevColor;
                 }
-                if (draggingMed != null)
-                {
-                    GUIImage itemImage = draggingMed.GetChild<GUIImage>();
-                    float scale = Math.Min(40.0f / itemImage.Sprite.size.X, 40.0f / itemImage.Sprite.size.Y);
-                    itemImage.Sprite.Draw(spriteBatch, PlayerInput.MousePosition, itemImage.Color, 0, scale);
-                }
             }
         }
 
@@ -826,7 +820,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawLimbIndicators(SpriteBatch spriteBatch, Rectangle drawArea, bool allowHighlight, bool highlightAll)
+        private void DrawHealthWindow(SpriteBatch spriteBatch, Rectangle drawArea, bool allowHighlight, bool highlightAll)
         {
             int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
@@ -883,6 +877,13 @@ namespace Barotrauma
                     }
                 }
                 i++;
+            }
+            
+            if (draggingMed != null)
+            {
+                GUIImage itemImage = draggingMed.GetChild<GUIImage>();
+                float scale = Math.Min(40.0f / itemImage.Sprite.size.X, 40.0f / itemImage.Sprite.size.Y);
+                itemImage.Sprite.Draw(spriteBatch, PlayerInput.MousePosition, itemImage.Color, 0, scale);
             }
         }
 
