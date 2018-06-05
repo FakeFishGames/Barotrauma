@@ -258,22 +258,22 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Husk\legs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\MantisTestRun.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\SeamantisRun.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\MantisTestSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\SeamantisSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\MantisTestSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\SeamantisSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\mantistest.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\seamantis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\MantisTestWalk.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\SeamantisWalk.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MantisTest\SeaMantis.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\Seamantis.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\MantisRun.xml">
