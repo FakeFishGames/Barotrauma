@@ -358,16 +358,31 @@ namespace Barotrauma
 
                 if (limb.type == LimbType.Head)
                 {
-                    // raycast?
-                    if (PlayerInput.LeftButtonHeld())
+                    var currentAnimParams = character.AnimController.CurrentAnimationParams;
+                    if (currentAnimParams is GroundedMovementParams grounded)
                     {
-                        var currentAnimParams = character.AnimController.CurrentAnimationParams;
-                        if (currentAnimParams is GroundedMovementParams grounded)
+                        Point rectSize = new Point(10, 10);
+                        Point drawPoint = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y))).ToPoint();
+                        var drawRect = new Rectangle(new Point(drawPoint.X - rectSize.X / 2, drawPoint.Y - rectSize.Y / 2), rectSize);
+                        var inflatedRect = new Rectangle(drawRect.Location, drawRect.Size);
+                        inflatedRect.Inflate(10, 10);
+                        bool isSelected = inflatedRect.Contains(PlayerInput.MousePosition);
+                        if (isSelected)
                         {
-                            grounded.HeadPosition += 0.01f * PlayerInput.MouseSpeed.Y;
-                            var point = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorB)).ToPoint();
-                            GUI.DrawRectangle(spriteBatch, new Rectangle(point, new Point(5, 5)), Color.Red);
-                            // TODO: update the value in the editor
+                            GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y), "Head Position", Color.White, Color.Black * 0.5f);
+                            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, false, thickness: 3);
+                            if (PlayerInput.LeftButtonHeld())
+                            {
+                                grounded.HeadPosition -= 0.015f * PlayerInput.MouseSpeed.Y;
+                                // TODO: update the value in the editor
+                                // TODO: could we get the value directly from the mouse position?
+                                //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
+                                //grounded.HeadPosition = newPos.Y;
+                            }
+                        }
+                        else
+                        {
+                            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red);
                         }
                     }
                 }
