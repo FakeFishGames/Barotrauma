@@ -142,21 +142,6 @@ namespace Barotrauma
                         UserData = sub
                     };
 
-                if (sub.HasTag(SubmarineTag.Shuttle))
-                {
-                    textBlock.TextColor = textBlock.TextColor * 0.85f;
-
-                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
-                    {
-                        IsFixedSize = false,
-                        AbsoluteOffset = new Point(40, 0)
-                    },
-                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
-                    {
-                        TextColor = textBlock.TextColor * 0.8f,
-                        ToolTip = textBlock.ToolTip
-                    };
-                }
 
                 var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), text: "?")
                 {
@@ -168,6 +153,22 @@ namespace Barotrauma
                     ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                     return true;
                 };
+
+                if (sub.HasTag(SubmarineTag.Shuttle))
+                {
+                    textBlock.TextColor = textBlock.TextColor * 0.85f;
+
+                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
+                    {
+                        IsFixedSize = false,
+                        RelativeOffset = new Vector2(infoButton.RectTransform.RelativeSize.X + 0.01f, 0)
+                    },
+                        TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
+                    {
+                        TextColor = textBlock.TextColor * 0.8f,
+                        ToolTip = textBlock.ToolTip
+                    };
+                }
             }
             if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
         }
