@@ -1,0 +1,9 @@
+﻿<SeamantisSwimFast
+  speed="6"
+  waveamplitude="1"
+  wavelength="20"
+  steertorque="25"
+  flip="True"
+  mirror="True"
+  rotatetowardsmovement="True"
+  headangle="-90"/>

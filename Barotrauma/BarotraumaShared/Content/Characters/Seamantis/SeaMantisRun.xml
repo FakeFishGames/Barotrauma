@@ -1,0 +1,10 @@
+﻿<SeamantisRun
+  speed="6"
+  stepsize="0.25,0.4"
+  legtorque="10"
+  colliderstandangle="0"
+  footrotation="180"
+  flip="True"
+  headposition="1.1"
+  torsoposition="1"
+  headangle="-120"/>
