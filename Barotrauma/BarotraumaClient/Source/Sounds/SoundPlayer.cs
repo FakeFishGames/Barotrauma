@@ -77,11 +77,18 @@ namespace Barotrauma
         public static List<Sound> FlowSounds = new List<Sound>();
         public static List<Sound> SplashSounds = new List<Sound>();
         private static SoundChannel[] flowSoundChannels;
-        private static float[] flowLeft;
-        private static float[] flowRight;
+        private static float[] flowVolumeLeft;
+        private static float[] flowVolumeRight;
 
         const float FlowSoundRange = 1500.0f;
-        const float MaxFlowStrength = 400.0f;
+        const float MaxFlowStrength = 400.0f; //the heaviest water sound effect is played when the water flow is this strong
+
+        private static SoundChannel[] fireSoundChannels;
+        private static float[] fireVolumeLeft;
+        private static float[] fireVolumeRight;
+
+        const float FireSoundRange = 1000.0f;
+        const float FireSoundLargeLimit = 200.0f; //switch to large fire sound when the size of a firesource is above this
 
         private static List<DamageSound> damageSounds;
 
@@ -173,8 +180,12 @@ namespace Barotrauma
             }
 
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
-            flowLeft = new float[FlowSounds.Count];
-            flowRight = new float[FlowSounds.Count];
+            flowVolumeLeft = new float[FlowSounds.Count];
+            flowVolumeRight = new float[FlowSounds.Count];
+
+            fireSoundChannels = new SoundChannel[2];
+            fireVolumeLeft = new float[2];
+            fireVolumeRight = new float[2];
 
             miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
 
@@ -232,6 +243,7 @@ namespace Barotrauma
             UpdateWaterAmbience(ambienceVolume);
             UpdateWaterFlowSounds(deltaTime);
             UpdateRandomAmbience(deltaTime);
+            UpdateFireSounds(deltaTime);
             GameMain.SoundManager.SetCategoryMuffle("default", lowpassHFGain < 0.5f);
             
         }
@@ -318,14 +330,14 @@ namespace Barotrauma
 
             for (int i = 0; i < FlowSounds.Count; i++)
             {
-                flowLeft[i] = (targetFlowLeft[i] < flowLeft[i]) ?
-                    Math.Max(targetFlowLeft[i], flowLeft[i] - deltaTime) :
-                    Math.Min(targetFlowLeft[i], flowLeft[i] + deltaTime);
-                flowRight[i] = (targetFlowRight[i] < flowRight[i]) ?
-                     Math.Max(targetFlowRight[i], flowRight[i] - deltaTime) :
-                     Math.Min(targetFlowRight[i], flowRight[i] + deltaTime);
+                flowVolumeLeft[i] = (targetFlowLeft[i] < flowVolumeLeft[i]) ?
+                    Math.Max(targetFlowLeft[i], flowVolumeLeft[i] - deltaTime) :
+                    Math.Min(targetFlowLeft[i], flowVolumeLeft[i] + deltaTime);
+                flowVolumeRight[i] = (targetFlowRight[i] < flowVolumeRight[i]) ?
+                     Math.Max(targetFlowRight[i], flowVolumeRight[i] - deltaTime) :
+                     Math.Min(targetFlowRight[i], flowVolumeRight[i] + deltaTime);
 
-                if (flowLeft[i] < 0.05f && flowRight[i] < 0.05f)
+                if (flowVolumeLeft[i] < 0.05f && flowVolumeRight[i] < 0.05f)
                 {
                     if (flowSoundChannels[i] != null)
                     {
@@ -335,15 +347,79 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (flowRight[i] - flowLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
+                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (flowVolumeRight[i] - flowVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
                     if (flowSoundChannels[i] == null || !flowSoundChannels[i].IsPlaying)
                     {
                         flowSoundChannels[i] = FlowSounds[i].Play(1.0f, FlowSoundRange, soundPos);
                         flowSoundChannels[i].Looping = true;
                     }
-                    flowSoundChannels[i].Gain = Math.Max(flowRight[i], flowLeft[i]);
+                    flowSoundChannels[i].Gain = Math.Max(flowVolumeRight[i], flowVolumeLeft[i]);
                     flowSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
+                }
+            }
+        }
 
+        private static void UpdateFireSounds(float deltaTime)
+        {
+            for (int i = 0; i < fireVolumeLeft.Length; i++)
+            {
+                fireVolumeLeft[i] = 0.0f;
+                fireVolumeRight[i] = 0.0f;
+            }
+
+            Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
+            foreach (Hull hull in Hull.hullList)
+            {
+                foreach (FireSource fs in hull.FireSources)
+                {
+                    Vector2 diff = fs.WorldPosition + fs.Size / 2 - listenerPos;
+                    if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
+                    {
+                        Vector2 diffLeft = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
+                        if (diffLeft.X <= 0)
+                        {
+                            float distFallOffLeft = diffLeft.Length() / FireSoundRange;
+                            if (distFallOffLeft < 0.99f)
+                            {
+                                fireVolumeLeft[0] = (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] = (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                        }
+
+                        Vector2 diffRight = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
+                        if (diffRight.X >= 0)
+                        {
+                            float distFallOffRight = diffRight.Length() / FireSoundRange;
+                            if (distFallOffRight < 0.99f)
+                            {
+                                fireVolumeRight[0] = 1.0f - distFallOffRight;
+                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeRight[1] = (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < fireVolumeLeft.Length; i++)
+            {
+                if (fireVolumeLeft[i] < 0.05f && fireVolumeRight[i] < 0.05f)
+                {
+                    if (fireSoundChannels[i] != null)
+                    {
+                        fireSoundChannels[i].Dispose();
+                        fireSoundChannels[i] = null;
+                    }
+                }
+                else
+                {
+                    Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (fireVolumeRight[i] - fireVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
+                    if (fireSoundChannels[i] == null || !fireSoundChannels[i].IsPlaying)
+                    {
+                        fireSoundChannels[i] = GetSound(i == 0 ? "fire" : "firelarge").Play(1.0f, FlowSoundRange, soundPos);
+                        fireSoundChannels[i].Looping = true;
+                    }
+                    fireSoundChannels[i].Gain = Math.Max(fireVolumeRight[i], fireVolumeLeft[i]);
+                    fireSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
                 }
             }
         }
