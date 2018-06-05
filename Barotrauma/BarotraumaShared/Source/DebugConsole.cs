@@ -2140,19 +2140,22 @@ namespace Barotrauma
                     spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     break;
                 default:
+                    //Check if last arg matches the clientid of an in-game player
                     int id = 0;
                     int.TryParse(args.Last(), out id);
                     if(id > 0) {
                         var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                         if (client != null && client.Character != null) {
+                            //If a client id was provided and matched an in-game player, set the target inventory to their inventory
                             spawnInventory = client.Character.Inventory;
                         }else{
+                            //If the last arg was an int, but not one of a player who is in-game, throw an error
                             errorMsg = "Client with ID \"" + id + "\" isn't currently playing";
                             return;
                         }
                         extraParams = 1;
-
                     }else{
+                        //If the last arg wasn't an int, proceed as normal
                         extraParams = 0;
                     }
                     break;
