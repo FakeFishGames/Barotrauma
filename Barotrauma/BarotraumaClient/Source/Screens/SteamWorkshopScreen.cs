@@ -12,6 +12,8 @@ namespace Barotrauma
         private GUIListBox installedItemList;
         private GUIListBox availableItemList;
 
+        private GUIFrame itemPreviewFrame;
+
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -34,12 +36,28 @@ namespace Barotrauma
             button.SelectedColor = button.Color;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Installed items");
-            installedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), listContainer.RectTransform));
+            installedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), listContainer.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    return true;
+                }
+            };
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Available items");
-            availableItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), listContainer.RectTransform));
+            availableItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), listContainer.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    ShowItemPreview(userdata as Facepunch.Steamworks.Workshop.Item);
+                    return true;
+                }
+            };
 
             //--------------------------------------------------------
 
+            itemPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight), style: "InnerFrame");
         }
 
         public override void Select()
@@ -109,6 +127,28 @@ namespace Barotrauma
                 tickBox.Selected = !SteamManager.DisableWorkShopItem(item);
             }
             return true;
+        }
+
+        private void ShowItemPreview(Facepunch.Steamworks.Workshop.Item item)
+        {
+            itemPreviewFrame.ClearChildren();
+
+            if (item == null) return;
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), itemPreviewFrame.RectTransform, Anchor.Center))
+            {
+                RelativeSpacing = 0.02f
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Title, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item.Description, wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Score: " + item.Score);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Upvotes: " + item.VotesUp);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Downvotes: "+item.VotesDown);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Creator: " + item.OwnerName);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Created: " + item.Created);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Modified: " + item.Modified);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Url: " + item.Url);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
