@@ -384,15 +384,17 @@ namespace Barotrauma
                 if (serverInfo.GameVersion != GameMain.Version.ToString())
                     toolTip = TextManager.Get("ServerListIncompatibleVersion").Replace("[version]", serverInfo.GameVersion);
 
-                //TODO: list missing content packages
-                /*if (serverInfo.ContentPackageHash != GameMain.Config.SelectedContentPackage.MD5hash.Hash)
+                for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
-                    if (toolTip != "") toolTip += "\n";
-                    toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
-                        .Replace("[contentpackage]", serverInfo.ContentPackageName)
-                        .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHash));
-                }*/
-
+                    if (!GameMain.SelectedPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
+                    {
+                        if (toolTip != "") toolTip += "\n";
+                        toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
+                            .Replace("[contentpackage]", serverInfo.ContentPackageNames[i])
+                            .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]));
+                    }
+                }
+                
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
 
                 serverName.TextColor *= 0.5f;
