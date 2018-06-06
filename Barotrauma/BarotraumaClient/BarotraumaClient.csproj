@@ -105,6 +105,7 @@
     <Compile Include="Source\Extensions\PointExtensions.cs" />
     <Compile Include="Source\Extensions\RectangleExtensions.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
+    <Compile Include="Source\GUI\ShapeExtensions.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
     <Compile Include="Source\Characters\CharacterHealth.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
