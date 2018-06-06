@@ -51,9 +51,9 @@ namespace Barotrauma
         
         public static bool ShouldRun = true;
 
-        public static ContentPackage SelectedPackage
+        public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackage; }
+            get { return Config.SelectedContentPackages; }
         }
 
         public GameMain()
@@ -86,11 +86,11 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
-            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
-            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
             LocationType.Init();
@@ -100,6 +100,14 @@ namespace Barotrauma
             Screen.SelectNull();
 
             NetLobbyScreen = new NetLobbyScreen();
+        }
+
+        /// <summary>
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
+        /// </summary>
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
 
         public void StartServer()

@@ -437,7 +437,7 @@ namespace Barotrauma.Networking
             showLogButton.Visible = SaveServerLogs;
 #endif
 
-            List<string> monsterNames = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+            List<string> monsterNames = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
             for (int i = 0; i < monsterNames.Count; i++)
             {
                 monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));

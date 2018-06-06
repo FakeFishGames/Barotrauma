@@ -182,7 +182,7 @@ namespace Barotrauma
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
 
                 bool incompatible =
-                    (!string.IsNullOrEmpty(serverInfo.ContentPackageHash) && serverInfo.ContentPackageHash != GameMain.Config.SelectedContentPackage.MD5hash.Hash) ||
+                    (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
                     (!string.IsNullOrEmpty(serverInfo.GameVersion) && serverInfo.GameVersion != GameMain.Version.ToString());
 
                 child.Visible =
@@ -290,8 +290,8 @@ namespace Barotrauma
                 string maxPlayersStr =      arguments.Length > 5 ? arguments[5] : "";
                 bool hasPassWord =          arguments.Length > 6 && arguments[6] == "1";
                 string gameVersion =        arguments.Length > 7 ? arguments[7] : "";
-                string contentPackageName = arguments.Length > 8 ? arguments[8] : "";
-                string contentPackageHash = arguments.Length > 9 ? arguments[9] : "";
+                string contentPackageNames = arguments.Length > 8 ? arguments[8] : "";
+                string contentPackageHashes = arguments.Length > 9 ? arguments[9] : "";
 
                 int.TryParse(currPlayersStr, out int playerCount);
                 int.TryParse(maxPlayersStr, out int maxPlayers);
@@ -305,10 +305,17 @@ namespace Barotrauma
                     PlayerCount = playerCount,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassWord,
-                    GameVersion = gameVersion,
-                    ContentPackageName = contentPackageName,
-                    ContentPackageHash = contentPackageHash
+                    GameVersion = gameVersion
                 };
+                foreach (string contentPackageName in contentPackageNames.Split(','))
+                {
+                    serverInfo.ContentPackageNames.Add(contentPackageName);
+                }
+                foreach (string contentPackageHash in contentPackageHashes.Split(','))
+                {
+                    serverInfo.ContentPackageHashes.Add(contentPackageHash);
+                }
+
                 serverInfos.Add(serverInfo);
             }
 
@@ -338,7 +345,7 @@ namespace Barotrauma
             {
                 Selected = 
                     serverInfo.GameVersion == GameMain.Version.ToString() && 
-                    serverInfo.ContentPackageHash == GameMain.Config.SelectedContentPackage.MD5hash.Hash, 
+                    serverInfo.ContentPackagesMatch(GameMain.SelectedPackages), 
                 Enabled = false,
                 UserData = "compatible"
             };
@@ -362,7 +369,7 @@ namespace Barotrauma
                 Enabled = false
             };
 
-            if (string.IsNullOrEmpty(serverInfo.GameVersion) || string.IsNullOrEmpty(serverInfo.ContentPackageHash))
+            if (string.IsNullOrEmpty(serverInfo.GameVersion) || !serverInfo.ContentPackageHashes.Any())
             {
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), compatibleBox.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center)
                 {
@@ -376,14 +383,18 @@ namespace Barotrauma
                 string toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version.ToString())
                     toolTip = TextManager.Get("ServerListIncompatibleVersion").Replace("[version]", serverInfo.GameVersion);
-                if (serverInfo.ContentPackageHash != GameMain.Config.SelectedContentPackage.MD5hash.Hash)
-                {
-                    if (toolTip != "") toolTip += "\n";
-                    toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
-                        .Replace("[contentpackage]", serverInfo.ContentPackageName)
-                        .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHash));
-                }
 
+                for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
+                {
+                    if (!GameMain.SelectedPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
+                    {
+                        if (toolTip != "") toolTip += "\n";
+                        toolTip += TextManager.Get("ServerListIncompatibleContentPackage")
+                            .Replace("[contentpackage]", serverInfo.ContentPackageNames[i])
+                            .Replace("[hash]", Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]));
+                    }
+                }
+                
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
 
                 serverName.TextColor *= 0.5f;

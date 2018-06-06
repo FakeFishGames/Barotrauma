@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 
@@ -38,7 +39,7 @@ namespace Barotrauma
 
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
-        private HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
+        private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
         {
             ContentType.Jobs,
             ContentType.Item,
@@ -57,6 +58,7 @@ namespace Barotrauma
         public string Name
         {
             get { return name; }
+            set { name = value; }
         }
 
         public string Path
@@ -75,11 +77,20 @@ namespace Barotrauma
             }
         }
 
-        public List<ContentFile> files;
+        //core packages are content packages that are required for the game to work
+        //e.g. they include the executable, some location types, level generation params and other files the game won't work without
+        //one (and only one) core package must always be selected
+        public bool CorePackage
+        {
+            get;
+            private set;
+        }
+
+        public List<ContentFile> Files;
 
         private ContentPackage()
         {
-            files = new List<ContentFile>();
+            Files = new List<ContentFile>();
         }
 
         public ContentPackage(string filePath)
@@ -97,6 +108,8 @@ namespace Barotrauma
 
             name = doc.Root.GetAttributeString("name", "");
 
+            CorePackage = doc.Root.GetAttributeBool("corepackage", false);
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
@@ -104,7 +117,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in content package \"" + name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     continue;
                 }
-                files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
             }
         }
 
@@ -113,31 +126,30 @@ namespace Barotrauma
             return name;
         }
 
-        public static ContentPackage CreatePackage(string name)
+        public static ContentPackage CreatePackage(string name, string path)
         {
-            ContentPackage newPackage = new ContentPackage("Content/Data/" + name)
+            ContentPackage newPackage = new ContentPackage()
             {
                 name = name,
-                Path = Folder + name
+                Path = path
             };
-            List.Add(newPackage);
 
             return newPackage;
         }
 
         public ContentFile AddFile(string path, ContentType type)
         {
-            if (files.Find(file => file.Path == path && file.Type == type) != null) return null;
+            if (Files.Find(file => file.Path == path && file.Type == type) != null) return null;
 
             ContentFile cf = new ContentFile(path, type);
-            files.Add(cf);
+            Files.Add(cf);
 
             return cf;
         }
 
         public void RemoveFile(ContentFile file)
         {
-            files.Remove(file);
+            Files.Remove(file);
         }
 
         public void Save(string filePath)
@@ -145,14 +157,15 @@ namespace Barotrauma
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", name),
-                new XAttribute("path", Path)));
+                new XAttribute("path", Path),
+                new XAttribute("corepackage", CorePackage)));
 
-            foreach (ContentFile file in files)
+            foreach (ContentFile file in Files)
             {
                 doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path)));
             }
 
-            doc.Save(System.IO.Path.Combine(filePath, name + ".xml"));
+            doc.Save(filePath);
         }
 
         private void CalculateHash()
@@ -160,7 +173,7 @@ namespace Barotrauma
             List<byte[]> hashes = new List<byte[]>();
             
             var md5 = MD5.Create();
-            foreach (ContentFile file in files)
+            foreach (ContentFile file in Files)
             {
                 if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
 
@@ -196,16 +209,14 @@ namespace Barotrauma
             md5Hash = new Md5Hash(bytes);
         }
 
-        public List<string> GetFilesOfType(ContentType type)
+        public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
-            List<ContentFile> contentFiles = files.FindAll(f => f.Type == type);
+            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type).Select(f => f.Path);
+        }
 
-            List<string> filePaths = new List<string>();
-            foreach (ContentFile contentFile in contentFiles)
-            {
-                filePaths.Add(contentFile.Path);
-            }
-            return filePaths;
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
 
         public static void LoadAll(string folder)
