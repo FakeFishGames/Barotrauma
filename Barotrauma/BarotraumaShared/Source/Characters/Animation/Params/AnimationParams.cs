@@ -52,6 +52,8 @@ namespace Barotrauma
 
         protected string FilePath { get; private set; }
         public virtual AnimationType AnimationType { get; private set; }
+        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
+        public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
 
         protected static Dictionary<string, Dictionary<AnimationType, AnimationParams>> animations = new Dictionary<string, Dictionary<AnimationType, AnimationParams>>();
 
