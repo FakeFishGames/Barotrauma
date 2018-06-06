@@ -12,22 +12,26 @@ namespace Barotrauma.Items.Components
 {
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
-        Sprite barrelSprite;
+        private Sprite barrelSprite;
 
-        Vector2 barrelPos;
+        private Vector2 barrelPos;
 
-        bool? hasLight;
-        LightComponent lightComponent;
+        private bool? hasLight;
+        private LightComponent lightComponent;
 
-        float rotation, targetRotation;
+        private float rotation, targetRotation;
 
-        float reload, reloadTime;
+        private float reload, reloadTime;
 
-        float minRotation, maxRotation;
+        private float minRotation, maxRotation;
 
-        float launchImpulse;
+        private float launchImpulse;
 
-        Camera cam;
+        private Camera cam;
+
+        private float angularVelocity;
+
+        private Character user;
 
         [Serialize("0,0", false)]
         public Vector2 BarrelPos
@@ -70,6 +74,45 @@ namespace Barotrauma.Items.Components
 
                 rotation = (minRotation + maxRotation) / 2;
             }
+        }
+
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringStiffnessLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(2.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringStiffnessHighSkill
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(50.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringDampingLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(10.0f, false), Editable(0.0f, 1000.0f)]
+        public float SpringDampingHighSkill
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1.0f, false), Editable(0.0f, 100.0f)]
+        public float RotationSpeedLowSkill
+        {
+            get;
+            private set;
+        }
+        [Serialize(5.0f, false), Editable(0.0f, 100.0f)]
+        public float RotationSpeedHighSkill
+        {
+            get;
+            private set;
         }
 
         public Turret(Item item, XElement element)
@@ -121,6 +164,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            UpdateProjSpecific(deltaTime);
+
             if (minRotation == maxRotation) return;
 
             float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
@@ -132,20 +177,29 @@ namespace Barotrauma.Items.Components
                 targetRotation = (targetMidDiff < 0.0f) ? minRotation : maxRotation;
             }
 
-            float deltaRotation = MathHelper.WrapAngle(targetRotation-rotation);
-            deltaRotation = MathHelper.Clamp(deltaRotation, -0.5f, 0.5f) * 5.0f;
+            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);            
+            if (degreeOfSuccess < 0.5f) degreeOfSuccess *= degreeOfSuccess; //the ease of aiming drops quickly with insufficient skill levels
+            float springStiffness = MathHelper.Lerp(SpringStiffnessLowSkill, SpringStiffnessHighSkill, degreeOfSuccess);
+            float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
+            float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
 
-            rotation += deltaRotation * deltaTime;
+            angularVelocity += 
+                (MathHelper.WrapAngle(targetRotation - rotation) * springStiffness - angularVelocity * springDamping) * deltaTime;
+            angularVelocity = MathHelper.Clamp(angularVelocity, -rotationSpeed, rotationSpeed);
+
+            rotation += angularVelocity * deltaTime;
 
             float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
 
             if (rotMidDiff < -maxDist)
             {
                 rotation = minRotation;
+                angularVelocity *= -0.5f;
             } 
             else if (rotMidDiff > maxDist)
             {
                 rotation = maxRotation;
+                angularVelocity *= -0.5f;
             }
 
             if ((bool)hasLight)
@@ -153,6 +207,8 @@ namespace Barotrauma.Items.Components
                 lightComponent.Rotation = rotation;
             }
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         public override bool Use(float deltaTime, Character character = null)
         {
@@ -226,7 +282,11 @@ namespace Barotrauma.Items.Components
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
             }
+
+            LaunchProjSpecific();
         }
+
+        partial void LaunchProjSpecific();
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
@@ -309,7 +369,7 @@ namespace Barotrauma.Items.Components
             if (objective.Option.ToLowerInvariant() == "fire at will")
             {
                 character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
-                Use(deltaTime, character);
+                character.SetInput(InputType.Use, true, true);
             }
 
             return false;
@@ -348,6 +408,13 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
 
             if (barrelSprite != null) barrelSprite.Remove();
+
+#if CLIENT
+            moveSoundChannel?.Dispose(); moveSoundChannel = null;
+            moveSound?.Dispose(); moveSound = null;
+            endMoveSound?.Dispose(); endMoveSound = null;
+            startMoveSound?.Dispose(); startMoveSound = null;
+#endif
         }
 
         private List<Projectile> GetLoadedProjectiles(bool returnFirst = false, bool returnNull = false)
@@ -430,12 +497,12 @@ namespace Barotrauma.Items.Components
             {
                 case "position_in":
                     float.TryParse(signal, out targetRotation);
-
                     IsActive = true;
-
+                    user = sender;
                     break;
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
+                    user = sender;
                     break;
             }
         }
