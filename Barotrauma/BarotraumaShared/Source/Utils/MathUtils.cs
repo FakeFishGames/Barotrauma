@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    //TODO: perhaps find a better place for this?
+    //TODO: Currently this is only used for text positioning? -> move there?
     [Flags]
     public enum Alignment
     {
@@ -575,6 +575,19 @@ namespace Barotrauma
                     rects.RemoveAt(i); i--;
                 }
             }*/
+        }
+
+        /// <summary>
+        /// Returns a position in a curve.
+        /// </summary>
+        public static Vector2 Bezier(Vector2 start, Vector2 control, Vector2 end, float t)
+        {
+            return Pow(1 - t, 2) * start + 2 * t * (1 - t) * control + Pow(t, 2) * end;
+        }
+
+        public static float Pow(float f, float p)
+        {
+            return (float)Math.Pow(f, p);
         }
     }
 
