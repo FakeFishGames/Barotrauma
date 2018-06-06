@@ -355,36 +355,87 @@ namespace Barotrauma
                 Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
-                var currentAnimParams = character.AnimController.CurrentAnimationParams;
-                var groundedAnimParams = currentAnimParams as GroundedMovementParams;
+                var animParams = character.AnimController.CurrentAnimationParams;
+                var groundedParams = animParams as GroundedMovementParams;
+                var humanGroundedParams = animParams as HumanGroundedParams;
+                // TODO: update the value in the editor
+                // TODO: could we get the value directly from the mouse position?
+                //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
+                //grounded.HeadPosition = newPos.Y;
+                Point widgetSize = new Point(10, 10);
                 switch (limb.type)
                 {
                     case LimbType.Head:
-                        if (groundedAnimParams == null) { break; }
-                        DrawVerticalWidget(spriteBatch, groundedAnimParams, limb, new Point(10, 10), Color.Red, "Head Position", () => groundedAnimParams.HeadPosition -= 0.015f * PlayerInput.MouseSpeed.Y);
-                        // TODO: update the value in the editor
-                        // TODO: could we get the value directly from the mouse position?
-                        //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
-                        //grounded.HeadPosition = newPos.Y;
+                        if (animParams.IsGroundedAnimation)
+                        {
+
+                            if (humanGroundedParams != null)
+                            {
+                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, groundedParams, limb, widgetSize, Color.Red, "Head", () =>
+                                {
+                                    humanGroundedParams.HeadLeanAmount += 0.01f * -PlayerInput.MouseSpeed.X;
+                                    humanGroundedParams.HeadPosition += 0.015f * -PlayerInput.MouseSpeed.Y;
+                                });
+                                var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
+                                GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                            }
+                            else
+                            {
+                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, groundedParams, limb, widgetSize, Color.Red, "Head Position",
+                                    () => groundedParams.HeadPosition += 0.015f * -PlayerInput.MouseSpeed.Y);
+                            }
+                        }
+                        else if (animParams.IsSwimAnimation)
+                        {
+                        }
                         break;
                     case LimbType.Torso:
-                        if (groundedAnimParams == null) { break; }
-                        DrawVerticalWidget(spriteBatch, groundedAnimParams, limb, new Point(10, 10), Color.Red, "Torso Position", () => groundedAnimParams.TorsoPosition -= 0.015f * PlayerInput.MouseSpeed.Y);
+                        if (animParams.IsGroundedAnimation)
+                        {
+
+                            if (humanGroundedParams != null)
+                            {
+                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.TorsoLeanAmount, limb.SimPosition.Y);
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, groundedParams, limb, widgetSize, Color.Red, "Torso", () =>
+                                {
+                                    humanGroundedParams.TorsoLeanAmount += 0.01f * -PlayerInput.MouseSpeed.X;
+                                    humanGroundedParams.TorsoPosition += 0.015f * -PlayerInput.MouseSpeed.Y;
+                                });
+                                var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
+                                GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                            }
+                            else
+                            {
+                                // TODO: implement torso leaning on fishes?
+                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, groundedParams, limb, widgetSize, Color.Red, "Torso Position",
+                                    () => groundedParams.TorsoPosition += 0.015f * -PlayerInput.MouseSpeed.Y);
+                            }
+                        }
+                        else if (animParams.IsSwimAnimation)
+                        {
+                        }
                         break;
                 }
             }
         }
 
-        private void DrawVerticalWidget(SpriteBatch spriteBatch, GroundedMovementParams animParams, Limb limb, Point size, Color color, string text, Action onPressed, int thickness = 3)
+        private Vector2 SimToScreenPoint(float x, float y) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(x, y)));
+        private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+
+        private void DrawWidget(Point drawPoint, SpriteBatch spriteBatch, GroundedMovementParams animParams, Limb limb, Point size, Color color, string text, Action onPressed, int thickness = 3)
         {
-            var drawPoint = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y))).ToPoint();
             var drawRect = new Rectangle(new Point(drawPoint.X - size.X / 2, drawPoint.Y - size.Y / 2), size);
             var inputRect = drawRect;
             inputRect.Inflate(size.X, size.Y);
+            // TODO: allow to select only one widget at a time
             bool isSelected = inputRect.Contains(PlayerInput.MousePosition);
             if (isSelected)
             {
-                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y), text, Color.White, Color.Black * 0.5f);
+                // Label/tooltip
+                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), text, Color.White, Color.Black * 0.5f);
                 GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: thickness);
                 if (PlayerInput.LeftButtonHeld())
                 {
@@ -396,24 +447,25 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, drawRect, color);
                 //ShapeExtensions.DrawCircle(spriteBatch, drawPoint.ToVector2(), 10, 10, Color.White, thickness: 1);
             }
-            if (PlayerInput.LeftButtonHeld())
-            {
-                Vector2 start = drawPoint.ToVector2();
-                Vector2 end = start + new Vector2(50, 0);
-                Vector2 dir = end - start;
-                Vector2 control = start + dir / 2 + new Vector2(0, -20);
-                var points = new Vector2[10];
-                for (int i = 0; i < points.Length; i++)
-                {
-                    float t = (float)i / (points.Length - 1);
-                    Vector2 pos = MathUtils.Bezier(start, control, end, t);
-                    points[i] = pos;
-                    //DebugConsole.NewMessage(i.ToString(), Color.White);
-                    //DebugConsole.NewMessage(t.ToString(), Color.Blue);
-                    //DebugConsole.NewMessage(pos.ToString(), Color.Red);
-                    ShapeExtensions.DrawPoint(spriteBatch, pos, Color.White, size: 2);
-                }
-            }
+            // Bezier test
+            //if (PlayerInput.LeftButtonHeld())
+            //{
+            //    Vector2 start = drawPoint.ToVector2();
+            //    Vector2 end = start + new Vector2(50, 0);
+            //    Vector2 dir = end - start;
+            //    Vector2 control = start + dir / 2 + new Vector2(0, -20);
+            //    var points = new Vector2[10];
+            //    for (int i = 0; i < points.Length; i++)
+            //    {
+            //        float t = (float)i / (points.Length - 1);
+            //        Vector2 pos = MathUtils.Bezier(start, control, end, t);
+            //        points[i] = pos;
+            //        //DebugConsole.NewMessage(i.ToString(), Color.White);
+            //        //DebugConsole.NewMessage(t.ToString(), Color.Blue);
+            //        //DebugConsole.NewMessage(pos.ToString(), Color.Red);
+            //        ShapeExtensions.DrawPoint(spriteBatch, pos, Color.White, size: 2);
+            //    }
+            //}
         }
         #endregion
 
