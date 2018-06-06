@@ -94,7 +94,7 @@ namespace Barotrauma
         {
             OverrideMusicType = null;
 
-            List<string> soundFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Sounds);
+            var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);
 
             List<XElement> soundElements = new List<XElement>();
             foreach (string soundFile in soundFiles)

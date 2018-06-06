@@ -727,12 +727,12 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
+                    var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
 
-                    humanConfigFile = characterFiles.Find(c => c.EndsWith("human.xml"));
+                    humanConfigFile = characterFiles.FirstOrDefault(c => c.EndsWith("human.xml"));
                     if (humanConfigFile == null)
                     {
-                        DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content package!");
+                        DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content packages!");
                         DebugConsole.ThrowError("(The config file must end with \"human.xml\")");
                         return "";
                     }

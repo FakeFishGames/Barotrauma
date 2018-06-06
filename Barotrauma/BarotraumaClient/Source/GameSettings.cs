@@ -67,8 +67,10 @@ namespace Barotrauma
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), settingsFrame.RectTransform, Anchor.Center)
                 { RelativeOffset = new Vector2(0.0f, 0.04f) }, style: null);
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.48f, 1.0f), paddedFrame.RectTransform)) { RelativeSpacing = 0.02f };
-            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.48f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight)) { RelativeSpacing = 0.02f };
+            var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.48f, 0.92f), paddedFrame.RectTransform)) { RelativeSpacing = 0.01f, Stretch = true };
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.48f, 0.92f), paddedFrame.RectTransform, Anchor.TopRight)) { RelativeSpacing = 0.01f, Stretch = true };
+
+            var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.08f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform))
@@ -121,7 +123,7 @@ namespace Barotrauma
                 },
                 Selected = VSyncEnabled
             };
-            
+                      
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
 
@@ -133,12 +135,33 @@ namespace Barotrauma
                 OnMoved = ChangeParticleLimit,
                 Step = 0.1f
             };
-            
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+            
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ContentPackages"));
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
+            {
+                CanBeFocused = false
+            };
+            
+            foreach (ContentPackage contentPackage in ContentPackage.List)
+            {
+                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
+                {
+                    UserData = contentPackage,
+                    OnSelected = SelectContentPackage,
+                    Selected = SelectedContentPackages.Contains(contentPackage)
+                };
+            }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("SoundVolume"));
-            GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
+            //----------------------------------------------------------
+            //right column
+            //----------------------------------------------------------
+
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("SoundVolume"));
+            GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
                 BarScroll = SoundVolume,
@@ -146,32 +169,21 @@ namespace Barotrauma
                 Step = 0.05f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("MusicVolume"));
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("MusicVolume"));
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                 barSize: 0.1f)
             {
                 BarScroll = MusicVolume,
                 OnMoved = ChangeMusicVolume,
                 Step = 0.05f
             };
-            
-            //----------------------------------------------------------
-            //right column
-            //----------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ContentPackage"));
-            var contentPackageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
-            contentPackageDD.OnSelected = SelectContentPackage;
-
-            foreach (ContentPackage contentPackage in ContentPackage.List)
-            {
-                contentPackageDD.AddItem(contentPackage.Name, contentPackage);
-                if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
-            }
-            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("Controls"));
 
-            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform));
+            var inputFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
+            {
+                Stretch = true
+            };
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
@@ -186,7 +198,7 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
-            new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), leftColumn.RectTransform, Anchor.BottomLeft),
+            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
             {
                 IgnoreLayoutGroups = true,
@@ -199,7 +211,7 @@ namespace Barotrauma
                 }
             };
 
-            applyButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.07f), rightColumn.RectTransform, Anchor.BottomRight),
+            applyButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
                 TextManager.Get("ApplySettingsButton"))
             {
                 IgnoreLayoutGroups = true,
@@ -229,13 +241,39 @@ namespace Barotrauma
             return true;
         }
 
-        private bool SelectContentPackage(GUIComponent select, object userData)
+        private bool SelectContentPackage(GUITickBox tickBox)
         {
-            if (GameMain.Config.SelectedContentPackage != (ContentPackage)userData)
+            var contentPackage = tickBox.UserData as ContentPackage;
+            if (contentPackage.CorePackage)
             {
-                UnsavedSettings = true;
+                if (tickBox.Selected)
+                {
+                    //make sure no other core packages are selected
+                    SelectedContentPackages.RemoveWhere(cp => cp.CorePackage && cp != contentPackage);
+                    SelectedContentPackages.Add(contentPackage);
+                    foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
+                    {
+                        otherTickBox.Selected = SelectedContentPackages.Contains(otherTickBox.UserData as ContentPackage);
+                    }
+                }
+                else
+                {
+                    //core packages cannot be deselected, only switched by selecting another core package
+                    new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
+                    tickBox.Selected = true;
+                }
             }
-            GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
+            else
+            {
+                if (tickBox.Selected)
+                {
+                    SelectedContentPackages.Add(contentPackage);
+                }
+                else
+                {
+                    SelectedContentPackages.Remove(contentPackage);
+                }
+            }
             return true;
         }
 

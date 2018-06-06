@@ -108,7 +108,7 @@ namespace Barotrauma
             }
         }
 
-        public ContentPackage SelectedContentPackage { get; set; }
+        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
 
         public string   MasterServerUrl { get; set; }
         public bool     AutoCheckUpdates { get; set; }
@@ -138,6 +138,8 @@ namespace Barotrauma
 
         public GameSettings(string filePath)
         {
+            SelectedContentPackages = new HashSet<ContentPackage>();
+
             ContentPackage.LoadAll(ContentPackage.Folder);
             CompletedTutorialNames = new List<string>();
             Load(filePath);
@@ -166,7 +168,7 @@ namespace Barotrauma
 
                 MasterServerUrl = "";
 
-                SelectedContentPackage = ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage("");
+                SelectedContentPackages.Add(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
 
                 jobNamePreferences = new List<string>();
                 foreach (JobPrefab job in JobPrefab.List)
@@ -288,10 +290,16 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-                        
-                        SelectedContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
+                        var matchingContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
 
-                        if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
+                        if (matchingContentPackage == null)
+                        {
+                            DebugConsole.ThrowError("Content package \"" + path + "\" not found!");
+                        }
+                        else
+                        {
+                            SelectedContentPackages.Add(matchingContentPackage);
+                        }
                         break;
                 }
             }
@@ -351,10 +359,10 @@ namespace Barotrauma
 
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
 
-            if (SelectedContentPackage != null)
+            foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
                 doc.Root.Add(new XElement("contentpackage",
-                    new XAttribute("path", SelectedContentPackage.Path)));
+                    new XAttribute("path", contentPackage.Path)));
             }
 
             var keyMappingElement = new XElement("keymapping");

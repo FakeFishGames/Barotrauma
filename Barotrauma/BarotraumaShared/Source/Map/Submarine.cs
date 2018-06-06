@@ -88,7 +88,7 @@ namespace Barotrauma
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
         public string RecommendedCrewExperience;
 
-        public HashSet<string> CompatibleContentPackages = new HashSet<string>();
+        public HashSet<string> RequiredContentPackages = new HashSet<string>();
         
         //properties ----------------------------------------------------
 
@@ -289,7 +289,7 @@ namespace Barotrauma
                     string[] contentPackageNames = doc.Root.GetAttributeStringArray("compatiblecontentpackages", new string[0]);
                     foreach (string contentPackageName in contentPackageNames)
                     {
-                        CompatibleContentPackages.Add(contentPackageName);
+                        RequiredContentPackages.Add(contentPackageName);
                     }
 
 #if CLIENT                    
@@ -1183,7 +1183,7 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
-            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", CompatibleContentPackages)));
+            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", RequiredContentPackages)));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {

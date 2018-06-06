@@ -186,7 +186,7 @@ namespace Barotrauma
 
         private void SerializeAll()
         {
-            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Particles))
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) continue;

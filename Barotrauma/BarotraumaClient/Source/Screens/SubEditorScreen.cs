@@ -482,7 +482,10 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
-            Submarine.MainSub.CompatibleContentPackages.Add(GameMain.Config.SelectedContentPackage.Name);
+            foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
+            {
+                Submarine.MainSub.RequiredContentPackages.Add(contentPackage.Name);
+            }
 
             MemoryStream imgStream = new MemoryStream();
             CreateImage(256, 128, imgStream);
@@ -581,7 +584,7 @@ namespace Barotrauma
                     AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height)
                 });
 
-            List<string> contentPacks = Submarine.MainSub.CompatibleContentPackages.ToList();
+            List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
             {
                 if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
@@ -591,18 +594,18 @@ namespace Barotrauma
             {
                 var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
-                    Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName),
+                    Selected = Submarine.MainSub.RequiredContentPackages.Contains(contentPackageName),
                     UserData = contentPackageName
                 };
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>
                 {
                     if (tickBox.Selected)
                     {
-                        Submarine.MainSub.CompatibleContentPackages.Add((string)tickBox.UserData);
+                        Submarine.MainSub.RequiredContentPackages.Add((string)tickBox.UserData);
                     }
                     else
                     {
-                        Submarine.MainSub.CompatibleContentPackages.Remove((string)tickBox.UserData);
+                        Submarine.MainSub.RequiredContentPackages.Remove((string)tickBox.UserData);
                     }
                     return true;
                 };
