@@ -247,7 +247,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/[clientid]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given clientid, or at a random spawnpoint if the last parameter is omitted.",
             (string[] args) =>
             {
                 string errorMsg;
@@ -2140,8 +2140,26 @@ namespace Barotrauma
                     spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     break;
                 default:
-                    extraParams = 0;
+                    //Check if last arg matches the clientid of an in-game player
+                    int id = 0;
+                    int.TryParse(args.Last(), out id);
+                    if(id > 0) {
+                        var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                        if (client != null && client.Character != null) {
+                            //If a client id was provided and matched an in-game player, set the target inventory to their inventory
+                            spawnInventory = client.Character.Inventory;
+                        }else{
+                            //If the last arg was an int, but not one of a player who is in-game, throw an error
+                            errorMsg = "Client with ID \"" + id + "\" isn't currently playing";
+                            return;
+                        }
+                        extraParams = 1;
+                    }else{
+                        //If the last arg wasn't an int, proceed as normal
+                        extraParams = 0;
+                    }
                     break;
+
             }
 
             string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
