@@ -394,6 +394,25 @@ namespace Barotrauma
             else
             {
                 GUI.DrawRectangle(spriteBatch, drawRect, color);
+                //ShapeExtensions.DrawCircle(spriteBatch, drawPoint.ToVector2(), 10, 10, Color.White, thickness: 1);
+            }
+            if (PlayerInput.LeftButtonHeld())
+            {
+                Vector2 start = drawPoint.ToVector2();
+                Vector2 end = start + new Vector2(50, 0);
+                Vector2 dir = end - start;
+                Vector2 control = start + dir / 2 + new Vector2(0, -20);
+                var points = new Vector2[10];
+                for (int i = 0; i < points.Length; i++)
+                {
+                    float t = (float)i / (points.Length - 1);
+                    Vector2 pos = MathUtils.Bezier(start, control, end, t);
+                    points[i] = pos;
+                    //DebugConsole.NewMessage(i.ToString(), Color.White);
+                    //DebugConsole.NewMessage(t.ToString(), Color.Blue);
+                    //DebugConsole.NewMessage(pos.ToString(), Color.Red);
+                    ShapeExtensions.DrawPoint(spriteBatch, pos, Color.White, size: 2);
+                }
             }
         }
         #endregion
