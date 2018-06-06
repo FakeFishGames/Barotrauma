@@ -54,7 +54,7 @@ namespace Barotrauma.Particles
         public void LoadPrefabs()
         {
             prefabs = new Dictionary<string, ParticlePrefab>();
-            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Particles))
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) continue;

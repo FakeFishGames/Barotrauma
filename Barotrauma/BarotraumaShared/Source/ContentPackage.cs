@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 
@@ -75,6 +76,15 @@ namespace Barotrauma
             }
         }
 
+        //core packages are content packages that are required for the game to work
+        //e.g. they include the executable, some location types, level generation params and other files the game won't work without
+        //one (and only one) core package must always be selected
+        public bool CorePackage
+        {
+            get;
+            private set;
+        }
+
         public List<ContentFile> files;
 
         private ContentPackage()
@@ -96,6 +106,8 @@ namespace Barotrauma
             }
 
             name = doc.Root.GetAttributeString("name", "");
+
+            CorePackage = doc.Root.GetAttributeBool("corepackage", false);
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -145,7 +157,8 @@ namespace Barotrauma
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", name),
-                new XAttribute("path", Path)));
+                new XAttribute("path", Path),
+                new XAttribute("corepackage", CorePackage)));
 
             foreach (ContentFile file in files)
             {
@@ -196,16 +209,14 @@ namespace Barotrauma
             md5Hash = new Md5Hash(bytes);
         }
 
-        public List<string> GetFilesOfType(ContentType type)
+        public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
-            List<ContentFile> contentFiles = files.FindAll(f => f.Type == type);
+            return contentPackages.SelectMany(f => f.files).Where(f => f.Type == type).Select(f => f.Path);
+        }
 
-            List<string> filePaths = new List<string>();
-            foreach (ContentFile contentFile in contentFiles)
-            {
-                filePaths.Add(contentFile.Path);
-            }
-            return filePaths;
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return files.Where(f => f.Type == type).Select(f => f.Path);
         }
 
         public static void LoadAll(string folder)

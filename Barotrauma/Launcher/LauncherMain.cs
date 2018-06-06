@@ -94,7 +94,7 @@ namespace Launcher
 
             TextureLoader.Init(GraphicsDevice);
 
-            GUI.Init(Window, settings.SelectedContentPackage, GraphicsDevice);
+            GUI.Init(Window, settings.SelectedContentPackages, GraphicsDevice);
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -167,7 +167,8 @@ namespace Launcher
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
 
-                if (settings.SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
+                //TODO: allow selecting multiple content packages
+                //if (settings.SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
             
             new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 130) }, "Display mode");
@@ -257,7 +258,8 @@ namespace Launcher
 
             settings.GraphicsWidth = selectedMode.Width;
             settings.GraphicsHeight = selectedMode.Height;
-            settings.SelectedContentPackage = selectedPackage;
+            //TODO: allow selecting multiple content packages
+            //settings.SelectedContentPackage = selectedPackage;
             settings.Save();
 
             return true;
@@ -267,14 +269,14 @@ namespace Launcher
         {
             if (!TrySaveSettings(configPath)) return false;
             
-            var executables = settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable);
-            if (executables.Count == 0)
+            var executables = ContentPackage.GetFilesOfType(settings.SelectedContentPackages, ContentType.Executable);
+            if (!executables.Any())
             {
                 ShowError("Error", "The game executable isn't configured in the selected content package.");
                 return false;
             }
 
-            string exePath = Directory.GetCurrentDirectory() + "//" + executables[0];
+            string exePath = Path.Combine(Directory.GetCurrentDirectory(), executables.First());
             if (!File.Exists(exePath))
             {
                 ShowError("Error", "Couldn't find the executable \"" + exePath + "\"!");

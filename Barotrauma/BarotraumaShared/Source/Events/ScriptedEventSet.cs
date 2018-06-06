@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
@@ -80,9 +81,9 @@ namespace Barotrauma
         public static void LoadPrefabs()
         {
             List = new List<ScriptedEventSet>();
-            var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
+            var configFiles = GameMain.Instance.GetFilesOfType(ContentType.RandomEvents);
 
-            if (configFiles.Count == 0)
+            if (!configFiles.Any())
             {
                 DebugConsole.ThrowError("No config files for random events found in the selected content package");
                 return;

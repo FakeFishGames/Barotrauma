@@ -161,7 +161,7 @@ namespace Barotrauma
 
         public static void Init()
         {
-            var locationTypeFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.LocationTypes);
+            var locationTypeFiles = GameMain.Instance.GetFilesOfType(ContentType.LocationTypes);
 
             foreach (string file in locationTypeFiles)
             {
