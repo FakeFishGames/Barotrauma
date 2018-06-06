@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -22,6 +23,9 @@ namespace Barotrauma
 
         private GUIFrame[] tabs;
 
+        private ContentPackage itemContentPackage;
+        private Facepunch.Steamworks.Workshop.Editor itemEditor;
+
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -32,12 +36,35 @@ namespace Barotrauma
             tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
 
             menu = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.9f), GUI.Canvas, Anchor.Center));
+
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.05f), menu.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
+            var tabContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }, style: null);
             
+            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform),
+                TextManager.Get("Back"))
+            {
+                OnClicked = GameMain.MainMenuScreen.SelectTab
+            };
+            backButton.SelectedColor = backButton.Color;
+
+            int i = 0;
+            foreach (Tab tab in Enum.GetValues(typeof(Tab)))
+            {
+                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), buttonContainer.RectTransform) { RelativeOffset = new Vector2(0.4f + 0.15f * i, 0.0f) },
+                    tab.ToString())
+                {
+                    UserData = tab,
+                    OnClicked = (btn, userData) => { SelectTab((Tab)userData); return true; }
+                };
+                i++;
+            }
+
+
             //-------------------------------------------------------------------------------
             //Browse tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center), style: null);
+            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
 
             var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
             {
@@ -45,12 +72,6 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            GUIButton button = new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), listContainer.RectTransform),
-                TextManager.Get("Back"))
-            {
-                OnClicked = GameMain.MainMenuScreen.SelectTab
-            };
-            button.SelectedColor = button.Color;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), listContainer.RectTransform), "Installed items");
             installedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), listContainer.RectTransform))
@@ -78,7 +99,7 @@ namespace Barotrauma
             //Publish tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Publish] = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menu.RectTransform, Anchor.Center), style: null);
+            tabs[(int)Tab.Publish] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
 
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Publish].RectTransform))
             {
@@ -87,10 +108,22 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Published items");
-            new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), leftColumn.RectTransform));
+            new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Your items");
-            new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), leftColumn.RectTransform));
+            new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
+
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), tabs[(int)Tab.Publish].RectTransform) { RelativeOffset = new Vector2(0.5f, 0.2f) },
+                "Create item")
+            {
+                OnClicked = (btn, userData) => { CreateWorkshopItem(); return true; }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), tabs[(int)Tab.Publish].RectTransform) { RelativeOffset = new Vector2(0.5f, 0.31f) },
+                "Publish item")
+            {
+                OnClicked = (btn, userData) => { PublishWorkshopItem(); return true; }
+            };
 
             SelectTab(Tab.Browse);
         }
@@ -196,6 +229,19 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Created: " + item.Created);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Modified: " + item.Modified);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), "Url: " + item.Url);
+        }
+
+        private void CreateWorkshopItem()
+        {
+            SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
+        }
+
+        private void PublishWorkshopItem()
+        {
+            if (itemContentPackage == null || itemEditor == null) return;
+            itemEditor.Title = "TestMonster";
+            itemEditor.Description = "asdfasdjhnsdjkfgnsjkdfg";
+            SteamManager.StartPublishItem(itemContentPackage, itemEditor);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
