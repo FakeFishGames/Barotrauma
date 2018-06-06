@@ -1,4 +1,5 @@
-﻿using Barotrauma.Steam;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,7 +14,13 @@ namespace Barotrauma
         private GUIListBox installedItemList;
         private GUIListBox availableItemList;
 
+        //shows information of a selected workshop item
         private GUIFrame itemPreviewFrame;
+
+        //menu for creating new items
+        private GUIFrame createItemFrame;
+        //listbox that shows the files included in the item being created
+        private GUIListBox createItemFileList;
 
         private enum Tab
         {
@@ -25,7 +32,7 @@ namespace Barotrauma
 
         private ContentPackage itemContentPackage;
         private Facepunch.Steamworks.Workshop.Editor itemEditor;
-
+        
         public SteamWorkshopScreen()
         {
             int width = Math.Min(GameMain.GraphicsWidth - 160, 1000);
@@ -113,17 +120,18 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), "Your items");
             new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform));
 
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), tabs[(int)Tab.Publish].RectTransform) { RelativeOffset = new Vector2(0.5f, 0.2f) },
+            new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), leftColumn.RectTransform),
                 "Create item")
             {
-                OnClicked = (btn, userData) => { CreateWorkshopItem(); return true; }
+                OnClicked = (btn, userData) => 
+                {
+                    CreateWorkshopItem();
+                    ShowCreateItemFrame();
+                    return true;
+                }
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.15f, 0.1f), tabs[(int)Tab.Publish].RectTransform) { RelativeOffset = new Vector2(0.5f, 0.31f) },
-                "Publish item")
-            {
-                OnClicked = (btn, userData) => { PublishWorkshopItem(); return true; }
-            };
+            createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: "InnerFrame");
 
             SelectTab(Tab.Browse);
         }
@@ -165,12 +173,25 @@ namespace Barotrauma
                 
                 if (item.Installed)
                 {
-                    new GUITickBox(new RectTransform(new Vector2(0.25f, 0.5f), itemFrame.RectTransform, Anchor.CenterRight), "Enabled")
+                    var enabledTickBox = new GUITickBox(new RectTransform(new Vector2(0.25f, 0.5f), itemFrame.RectTransform, Anchor.CenterRight), "Enabled")
                     {
-                        Selected = SteamManager.CheckWorkshopItemEnabled(item),
                         UserData = item,
                         OnSelected = ToggleItemEnabled
                     };
+
+                    try
+                    {
+                        enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                    }
+                    catch (Exception e)
+                    {
+                        new GUIMessageBox("Error", e.Message);
+                        enabledTickBox.Enabled = false;
+                        itemFrame.Color = Color.Red;
+                        itemFrame.HoverColor = Color.Red;
+                        itemFrame.SelectedColor = Color.Red;
+                        itemFrame.GetChild<GUITextBlock>().TextColor = Color.Red;
+                    }
                 }
                 else if (item.Downloading)
                 {
@@ -236,13 +257,99 @@ namespace Barotrauma
             SteamManager.CreateWorkshopItemStaging(new List<ContentFile>(), out itemEditor, out itemContentPackage);
         }
 
+        private void ShowCreateItemFrame()
+        {
+            createItemFrame.ClearChildren();
+
+            if (itemEditor == null) return;
+
+            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), createItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.02f };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.2f,0.05f), createItemContent.RectTransform), "Title");
+            var titleBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.05f), createItemContent.RectTransform), itemEditor.Title);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.05f), createItemContent.RectTransform), "Description");
+            var descriptionBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 0.1f), createItemContent.RectTransform), itemEditor.Description)
+            {
+                OnTextChanged = (textBox, text) => { itemEditor.Description = text; return true; }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.TopRight), "Show folder")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (btn, userdata) => { System.Diagnostics.Process.Start(Path.GetFullPath(SteamManager.WorkshopItemStagingFolder)); return true; }
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.05f), createItemContent.RectTransform), "Files included in the item");
+            createItemFileList = new GUIListBox(new RectTransform(new Vector2(0.8f, 0.4f), createItemContent.RectTransform));
+            RefreshCreateItemFileList();
+
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.TopRight), "Refresh")
+            {
+                OnClicked = (btn, userdata) => 
+                {
+                    itemContentPackage = new ContentPackage(itemContentPackage.Path);
+                    RefreshCreateItemFileList();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), createItemContent.RectTransform, Anchor.BottomRight),
+                "Publish item")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (btn, userData) => 
+                {
+                    itemEditor.Title = titleBox.Text;
+                    itemEditor.Description = descriptionBox.Text;
+                    if (string.IsNullOrWhiteSpace(itemEditor.Title))
+                    {
+                        titleBox.Flash(Color.Red);
+                        return false;
+                    }
+                    if (string.IsNullOrWhiteSpace(itemEditor.Description))
+                    {
+                        descriptionBox.Flash(Color.Red);
+                        return false;
+                    }
+                    PublishWorkshopItem();
+                    return true;
+                }
+            };
+        }
+
+        private void RefreshCreateItemFileList()
+        {
+            createItemFileList.ClearChildren();
+            if (itemContentPackage == null) return;
+            var contentTypes = Enum.GetValues(typeof(ContentType));
+            
+            foreach (ContentFile contentFile in itemContentPackage.Files)
+            {
+                var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                    style: "ListBoxElement")
+                {
+                    UserData = contentFile
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), fileFrame.RectTransform, Anchor.CenterLeft), contentFile.Path);
+
+                var contentTypeSelection = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), fileFrame.RectTransform, Anchor.CenterRight),
+                    elementCount: contentTypes.Length);
+                foreach (ContentType contentType in contentTypes)
+                {
+                    contentTypeSelection.AddItem(contentType.ToString(), contentType);
+                }
+                contentTypeSelection.SelectItem(contentFile.Type);
+            }            
+        }
+
         private void PublishWorkshopItem()
         {
             if (itemContentPackage == null || itemEditor == null) return;
-            itemEditor.Title = "TestMonster";
-            itemEditor.Description = "asdfasdjhnsdjkfgnsjkdfg";
             SteamManager.StartPublishItem(itemContentPackage, itemEditor);
         }
+
+        #region UI management
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -266,5 +373,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
         }
+
+        #endregion
     }
 }
