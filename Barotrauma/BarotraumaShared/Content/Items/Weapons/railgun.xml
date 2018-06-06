@@ -14,6 +14,10 @@
             powerconsumption="20000.0"
             showchargeindicator="true"
             showprojectileindicator="true"
+            recoildistance="100"
+            springstiffnesslowskill="2" springstiffnesshighskill="50"
+            springdampinglowskill="0.5" springdampinghighskill="10"
+            rotationspeedlowskill="1" rotationspeedhighskill="8"
             hudtint="0.4,0.6,0.7,0.05">
       <StatusEffect type="OnUse" target="This">
         <sound file="Content/Items/Weapons/railgun.ogg" range="5000"/>
@@ -21,6 +25,10 @@
       </StatusEffect>
       <Crosshair texture="crosshair.png"/>
       <DisabledCrosshair texture="disabledCrosshair.png"/>
+      <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
+      <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
+      <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
+      <RequiredSkill name="Weapons" level="50"/>
     </Turret>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">

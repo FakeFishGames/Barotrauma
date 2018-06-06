@@ -14,7 +14,10 @@
       rotationlimits="180,360"
       powerconsumption="10000.0"
       showchargeindicator="false"
-      showprojectileindicator="false"
+      showprojectileindicator="false"            
+      springstiffnesslowskill="25" springstiffnesshighskill="25"
+      springdampinglowskill="5" springdampinghighskill="5"
+      rotationspeedlowskill="0.5" rotationspeedhighskill="0.5"
       hudtint="0.4,0.6,0.7,0.05">
 
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.0" range="2500" IsOn="true">
@@ -29,7 +32,6 @@
       <input name="toggle"/>
       <input name="power_in"/>
       <input name="position_in"/>
-      <input name="trigger_in"/>
     </ConnectionPanel>
   </Item>
 </Items>

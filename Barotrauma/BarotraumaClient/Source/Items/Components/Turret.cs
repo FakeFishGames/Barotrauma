@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,6 +16,12 @@ namespace Barotrauma.Items.Components
         private Sprite crosshairSprite, disabledCrossHairSprite;
 
         private GUIProgressBar powerIndicator;
+
+        private float recoilTimer;
+
+        private Sound startMoveSound, endMoveSound, moveSound;
+
+        private SoundChannel moveSoundChannel;
 
         [Editable, Serialize("0.0,0.0,0.0,0.0", true)]
         public Color HudTint
@@ -37,6 +44,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(0.0f, false)]
+        public float RecoilDistance
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -50,6 +64,15 @@ namespace Barotrauma.Items.Components
                     case "disabledcrosshair":
                         disabledCrossHairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
                         break;
+                    case "startmovesound":
+                        startMoveSound = Submarine.LoadRoundSound(subElement, false);
+                        break;
+                    case "endmovesound":
+                        endMoveSound = Submarine.LoadRoundSound(subElement, false);
+                        break;
+                    case "movesound":
+                        moveSound = Submarine.LoadRoundSound(subElement, false);
+                        break;
                 }
             }
             
@@ -61,16 +84,82 @@ namespace Barotrauma.Items.Components
             barSize: 0.0f);
         }
 
+        partial void LaunchProjSpecific()
+        {
+            recoilTimer = Math.Max(Reload, 0.1f);
+        }
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            recoilTimer -= deltaTime;
+
+            if (Math.Abs(angularVelocity) > 0.1f)
+            {
+                if (moveSoundChannel == null && startMoveSound != null)
+                {
+                    moveSoundChannel = startMoveSound.Play(item.WorldPosition);
+                }
+                else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
+                {
+                    if (moveSound != null)
+                    {
+                        moveSoundChannel.Dispose();
+                        moveSoundChannel = moveSound.Play(item.WorldPosition);
+                        moveSoundChannel.Looping = true;
+                    }
+                }
+            }
+            else if (Math.Abs(angularVelocity) < 0.05f)
+            {
+                if (moveSoundChannel != null)
+                {
+                    if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound)
+                    {
+                        moveSoundChannel.Dispose();
+                        moveSoundChannel = endMoveSound.Play(item.WorldPosition);
+                        moveSoundChannel.Looping = false;
+                    }
+                    else if (!moveSoundChannel.IsPlaying)
+                    {
+                        moveSoundChannel.Dispose();
+                        moveSoundChannel = null;
+
+                    }
+                }
+            }
+
+            if (moveSoundChannel != null && moveSoundChannel.IsPlaying)
+            {
+                moveSoundChannel.Gain = MathHelper.Clamp(Math.Abs(angularVelocity), 0.5f, 1.0f);
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             Vector2 drawPos = new Vector2(item.Rect.X, item.Rect.Y);
             if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
+            float recoilOffset = 0.0f;
+            if (RecoilDistance > 0.0f && recoilTimer > 0.0f)
+            {
+                //move the barrel backwards 0.1 seconds after launching
+                if (recoilTimer >= Math.Max(Reload, 0.1f) - 0.1f)
+                {
+                    recoilOffset = RecoilDistance * (1.0f - (recoilTimer - (Math.Max(Reload, 0.1f) - 0.1f)) / 0.1f);
+                }
+                //move back to normal position while reloading
+                else
+                {
+                    recoilOffset = RecoilDistance * recoilTimer / (Math.Max(Reload, 0.1f) - 0.1f);
+                }
+            }
+
             if (barrelSprite != null)
             {
                 barrelSprite.Draw(spriteBatch,
-                     drawPos + barrelPos, Color.White,
+                    drawPos + barrelPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset, 
+                    Color.White,
                     rotation + MathHelper.PiOver2, 1.0f,
                     SpriteEffects.None, item.Sprite.Depth + 0.01f);
             }
@@ -146,7 +235,7 @@ namespace Barotrauma.Items.Components
                 if (disabledCrossHairSprite != null) disabledCrossHairSprite.Draw(spriteBatch, PlayerInput.MousePosition);
             }
         }
-
+        
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
