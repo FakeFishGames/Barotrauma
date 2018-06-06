@@ -40,7 +40,7 @@ namespace Barotrauma
 
         public static Sounds.SoundManager SoundManager;
 
-        public static List<ContentPackage> SelectedPackages
+        public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config.SelectedContentPackages; }
         }

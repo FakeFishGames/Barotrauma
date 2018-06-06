@@ -51,7 +51,7 @@ namespace Barotrauma
         
         public static bool ShouldRun = true;
 
-        public static List<ContentPackage> SelectedPackages
+        public static HashSet<ContentPackage> SelectedPackages
         {
             get { return Config.SelectedContentPackages; }
         }
