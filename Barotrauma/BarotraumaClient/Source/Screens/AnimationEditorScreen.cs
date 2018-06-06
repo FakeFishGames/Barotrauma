@@ -353,12 +353,12 @@ namespace Barotrauma
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
+                // Limb positions
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
                 var animParams = character.AnimController.CurrentAnimationParams;
                 var groundedParams = animParams as GroundedMovementParams;
                 var humanGroundedParams = animParams as HumanGroundedParams;
-                // TODO: update the value in the editor
                 // TODO: could we get the value directly from the mouse position?
                 //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
                 //grounded.HeadPosition = newPos.Y;
@@ -368,7 +368,6 @@ namespace Barotrauma
                     case LimbType.Head:
                         if (animParams.IsGroundedAnimation)
                         {
-
                             if (humanGroundedParams != null)
                             {
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
@@ -376,12 +375,22 @@ namespace Barotrauma
                                 {
                                     humanGroundedParams.HeadLeanAmount += 0.01f * -PlayerInput.MouseSpeed.X;
                                     humanGroundedParams.HeadPosition += 0.015f * -PlayerInput.MouseSpeed.Y;
+                                    SerializableProperty p;
+                                    if (humanGroundedParams.SerializableProperties.TryGetValue("headleanamount", out p))
+                                    {
+                                        RefreshField(p, animParams, humanGroundedParams.HeadLeanAmount);
+                                    }
+                                    if (humanGroundedParams.SerializableProperties.TryGetValue("headposition", out p))
+                                    {
+                                        RefreshField(p, animParams, humanGroundedParams.HeadPosition);
+                                    }
                                 });
                                 var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
                                 GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
                             }
                             else
                             {
+                                // TODO: implement head leaning on fishes?
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
                                 DrawWidget(drawPoint.ToPoint(), spriteBatch, groundedParams, limb, widgetSize, Color.Red, "Head Position",
                                     () => groundedParams.HeadPosition += 0.015f * -PlayerInput.MouseSpeed.Y);
@@ -394,7 +403,6 @@ namespace Barotrauma
                     case LimbType.Torso:
                         if (animParams.IsGroundedAnimation)
                         {
-
                             if (humanGroundedParams != null)
                             {
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.TorsoLeanAmount, limb.SimPosition.Y);
@@ -402,6 +410,15 @@ namespace Barotrauma
                                 {
                                     humanGroundedParams.TorsoLeanAmount += 0.01f * -PlayerInput.MouseSpeed.X;
                                     humanGroundedParams.TorsoPosition += 0.015f * -PlayerInput.MouseSpeed.Y;
+                                    SerializableProperty p;
+                                    if (humanGroundedParams.SerializableProperties.TryGetValue("torsoleanamount", out p))
+                                    {
+                                        RefreshField(p, animParams, humanGroundedParams.TorsoLeanAmount);
+                                    }
+                                    if (humanGroundedParams.SerializableProperties.TryGetValue("torsoposition", out p))
+                                    {
+                                        RefreshField(p, animParams, humanGroundedParams.TorsoPosition);
+                                    }
                                 });
                                 var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
                                 GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
@@ -418,6 +435,28 @@ namespace Barotrauma
                         {
                         }
                         break;
+                }
+            }
+        }
+
+        // Note: currently only handles floats.
+        private void RefreshField(SerializableProperty property, AnimationParams animationParams, object newValue)
+        {
+            if (!animationParams.SerializableEntityEditor.Fields.TryGetValue(property, out IEnumerable<GUIComponent> fields))
+            {
+                return;
+            }
+            if (newValue is float f)
+            {
+                foreach (var field in fields)
+                {
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = f;
+                        }
+                    }
                 }
             }
         }
