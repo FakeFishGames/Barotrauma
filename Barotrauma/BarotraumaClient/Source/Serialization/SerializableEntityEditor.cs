@@ -26,6 +26,11 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Holds the references to the input fields.
+        /// </summary>
+        public Dictionary<SerializableProperty, IEnumerable<GUIComponent>> Fields { get; private set; } = new Dictionary<SerializableProperty, IEnumerable<GUIComponent>>();
+
+        /// <summary>
         /// This is the new editor.
         /// </summary>
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 20) : base(style, new RectTransform(Vector2.One, parent))
@@ -126,6 +131,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            Fields.Add(property, new GUIComponent[] { propertyTickBox });
             return propertyTickBox;
         }
 
@@ -153,6 +159,7 @@ namespace Barotrauma
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+            Fields.Add(property, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -175,11 +182,13 @@ namespace Barotrauma
             numberInput.FloatValue = value;
             numberInput.OnValueChanged += (numInput) =>
             {
+                DebugConsole.NewMessage("value changed", Color.White);
                 if (property.TrySetValue(numInput.FloatValue))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+            Fields.Add(property, new GUIComponent[] { numberInput });
             return frame;
         }
 
@@ -207,6 +216,7 @@ namespace Barotrauma
                 return true;
             };
             enumDropDown.SelectItem(value);
+            Fields.Add(property, new GUIComponent[] { enumDropDown });
             return frame;
         }
 
@@ -233,6 +243,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            Fields.Add(property, new GUIComponent[] { propertyBox });
             return frame;
         }
 
@@ -248,6 +259,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.05f
             };
+            var fields = new GUIComponent[2];
             for (int i = 0; i < 2; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), color: Color.Transparent);
@@ -277,7 +289,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -293,6 +307,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.03f
             };
+            var fields = new GUIComponent[3];
             for (int i = 0; i < 3; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.3f, 1), inputArea.RectTransform), color: Color.Transparent);
@@ -326,7 +341,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -342,6 +359,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.03f
             };
+            var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent);
@@ -379,7 +397,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -400,7 +420,7 @@ namespace Barotrauma
                 Stretch = false,
                 RelativeSpacing = 0.03f
             };
-
+            var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform));
@@ -444,7 +464,9 @@ namespace Barotrauma
                     }
                 };
                 colorBox.Color = (Color)property.GetValue();
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
 
@@ -455,6 +477,7 @@ namespace Barotrauma
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
+            var fields = new GUIComponent[4];
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true) { Stretch = true };
             for (int i = 0; i < 4; i++)
             {
@@ -493,7 +516,9 @@ namespace Barotrauma
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                fields[i] = numberInput;
             }
+            Fields.Add(property, fields);
             return frame;
         }
         
