@@ -331,9 +331,9 @@ namespace Barotrauma
                     UserData = contentFile
                 };
 
-                new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), fileFrame.RectTransform, Anchor.CenterLeft), contentFile.Path);
+                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), fileFrame.RectTransform, Anchor.CenterLeft), contentFile.Path);
 
-                var contentTypeSelection = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), fileFrame.RectTransform, Anchor.CenterRight),
+                var contentTypeSelection = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), fileFrame.RectTransform, Anchor.CenterRight),
                     elementCount: contentTypes.Length);
                 foreach (ContentType contentType in contentTypes)
                 {
