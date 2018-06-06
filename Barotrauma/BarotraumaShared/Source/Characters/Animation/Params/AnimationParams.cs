@@ -160,6 +160,8 @@ namespace Barotrauma
             editor = new GUIListBox(new RectTransform(new Vector2(0.25f, 1), GUI.Canvas) { MinSize = new Point(200, GameMain.GraphicsHeight) });
         }
 
+        public SerializableEntityEditor SerializableEntityEditor { get; private set; }
+
         public void AddToEditor()
         {
             if (!isLoaded)
@@ -167,7 +169,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Animation params not loaded!");
                 return;
             }
-            new SerializableEntityEditor(Editor.Content.RectTransform, this, false, true);
+            SerializableEntityEditor = new SerializableEntityEditor(Editor.Content.RectTransform, this, false, true);
         }
 
         public bool Save()
