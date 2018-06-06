@@ -14,25 +14,26 @@ namespace Barotrauma.Networking
         public bool HasPassword;
 
         public string GameVersion;
-        public HashSet<string> ContentPackageNames
+        public List<string> ContentPackageNames
         {
             get;
             private set;
-        } = new HashSet<string>();
-        public HashSet<string> ContentPackageHashes
+        } = new List<string>();
+        public List<string> ContentPackageHashes
         {
             get;
             private set;
-        } = new HashSet<string>();
+        } = new List<string>();
 
         public bool ContentPackagesMatch(IEnumerable<ContentPackage> myContentPackages)
         {
-            return ContentPackagesMatch(myContentPackages.Select(cp => cp.Name), myContentPackages.Select(cp => cp.MD5hash.Hash));
+            return ContentPackagesMatch(myContentPackages.Select(cp => cp.MD5hash.Hash));
         }
 
-        public bool ContentPackagesMatch(IEnumerable<string> myContentPackageNames, IEnumerable<string> myContentPackageHashes)
+        public bool ContentPackagesMatch(IEnumerable<string> myContentPackageHashes)
         {
-            return ContentPackageNames.SetEquals(myContentPackageNames) && ContentPackageHashes.SetEquals(myContentPackageHashes);
+            HashSet<string> contentPackageHashes = new HashSet<string>(ContentPackageHashes);
+            return contentPackageHashes.SetEquals(myContentPackageHashes);
         }
     }
 }
