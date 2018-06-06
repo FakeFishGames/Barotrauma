@@ -2291,27 +2291,25 @@ namespace Barotrauma
                     extraParams = 1;
                     spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     break;
-                default:
-                    //Check if last arg matches the clientid of an in-game player
-                    int id = 0;
-                    int.TryParse(args.Last(), out id);
-                    if(id > 0) {
-                        var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                        if (client != null && client.Character != null) {
-                            //If a client id was provided and matched an in-game player, set the target inventory to their inventory
-                            spawnInventory = client.Character.Inventory;
-                        }else{
-                            //If the last arg was an int, but not one of a player who is in-game, throw an error
-                            errorMsg = "Client with ID \"" + id + "\" isn't currently playing";
-                            return;
-                        }
-                        extraParams = 1;
-                    }else{
-                        //If the last arg wasn't an int, proceed as normal
-                        extraParams = 0;
-                    }
+                case "random":
+                    extraParams = 1;
                     break;
-
+                default:
+                    //Check if last arg matches the name of an in-game player
+                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
+                    if (client == null) {
+                        extraParams = 0;
+                        NewMessage("No player found with the name \"" + args.Last() + "\".  Spawning item at random location.  If the player you want to give the item to has a space in their name, try surrounding their name with quotes (\").  To silence this message, add \"random\" as your last argument.", Color.Red);
+                        break;
+                    } else if (client.Character == null) {
+                        errorMsg = "The player \""  +args.Last() + "\" is connected, but hasn't spawned yet.";
+                        return;
+                    } else {
+                        //If the last arg matches the name of an in-game player, set the destination to their inventory.
+                        spawnInventory = client.Character.Inventory;
+                        extraParams = 1;
+                        break;
+                    }
             }
 
             string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
