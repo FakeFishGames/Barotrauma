@@ -347,7 +347,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        #region Widgets (test)
+        #region Widgets
         private void DrawWidgetEditor(SpriteBatch spriteBatch)
         {
             foreach (Limb limb in character.AnimController.Limbs)
@@ -355,37 +355,45 @@ namespace Barotrauma
                 Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
-
-                if (limb.type == LimbType.Head)
+                var currentAnimParams = character.AnimController.CurrentAnimationParams;
+                var groundedAnimParams = currentAnimParams as GroundedMovementParams;
+                switch (limb.type)
                 {
-                    var currentAnimParams = character.AnimController.CurrentAnimationParams;
-                    if (currentAnimParams is GroundedMovementParams grounded)
-                    {
-                        Point rectSize = new Point(10, 10);
-                        Point drawPoint = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y))).ToPoint();
-                        var drawRect = new Rectangle(new Point(drawPoint.X - rectSize.X / 2, drawPoint.Y - rectSize.Y / 2), rectSize);
-                        var inflatedRect = new Rectangle(drawRect.Location, drawRect.Size);
-                        inflatedRect.Inflate(10, 10);
-                        bool isSelected = inflatedRect.Contains(PlayerInput.MousePosition);
-                        if (isSelected)
-                        {
-                            GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y), "Head Position", Color.White, Color.Black * 0.5f);
-                            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, false, thickness: 3);
-                            if (PlayerInput.LeftButtonHeld())
-                            {
-                                grounded.HeadPosition -= 0.015f * PlayerInput.MouseSpeed.Y;
-                                // TODO: update the value in the editor
-                                // TODO: could we get the value directly from the mouse position?
-                                //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
-                                //grounded.HeadPosition = newPos.Y;
-                            }
-                        }
-                        else
-                        {
-                            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red);
-                        }
-                    }
+                    case LimbType.Head:
+                        if (groundedAnimParams == null) { break; }
+                        DrawVerticalWidget(spriteBatch, groundedAnimParams, limb, new Point(10, 10), Color.Red, "Head Position", () => groundedAnimParams.HeadPosition -= 0.015f * PlayerInput.MouseSpeed.Y);
+                        // TODO: update the value in the editor
+                        // TODO: could we get the value directly from the mouse position?
+                        //var newPos = ConvertUnits.ToSimUnits(Cam.ScreenToWorld(PlayerInput.MousePosition)) - character.AnimController.GetColliderBottom();
+                        //grounded.HeadPosition = newPos.Y;
+                        break;
+                    case LimbType.Torso:
+                        if (groundedAnimParams == null) { break; }
+                        DrawVerticalWidget(spriteBatch, groundedAnimParams, limb, new Point(10, 10), Color.Red, "Torso Position", () => groundedAnimParams.TorsoPosition -= 0.015f * PlayerInput.MouseSpeed.Y);
+                        break;
                 }
+            }
+        }
+
+        private void DrawVerticalWidget(SpriteBatch spriteBatch, GroundedMovementParams animParams, Limb limb, Point size, Color color, string text, Action onPressed, int thickness = 3)
+        {
+            var drawPoint = Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y))).ToPoint();
+            var drawRect = new Rectangle(new Point(drawPoint.X - size.X / 2, drawPoint.Y - size.Y / 2), size);
+            var inputRect = drawRect;
+            inputRect.Inflate(size.X, size.Y);
+            bool isSelected = inputRect.Contains(PlayerInput.MousePosition);
+            if (isSelected)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y), text, Color.White, Color.Black * 0.5f);
+                GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: thickness);
+                if (PlayerInput.LeftButtonHeld())
+                {
+                    onPressed();
+                }
+            }
+            else
+            {
+                GUI.DrawRectangle(spriteBatch, drawRect, color);
             }
         }
         #endregion
