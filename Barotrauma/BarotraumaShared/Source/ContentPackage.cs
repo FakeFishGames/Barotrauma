@@ -58,6 +58,7 @@ namespace Barotrauma
         public string Name
         {
             get { return name; }
+            set { name = value; }
         }
 
         public string Path
@@ -85,11 +86,11 @@ namespace Barotrauma
             private set;
         }
 
-        public List<ContentFile> files;
+        public List<ContentFile> Files;
 
         private ContentPackage()
         {
-            files = new List<ContentFile>();
+            Files = new List<ContentFile>();
         }
 
         public ContentPackage(string filePath)
@@ -116,7 +117,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in content package \"" + name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     continue;
                 }
-                files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
             }
         }
 
@@ -125,31 +126,30 @@ namespace Barotrauma
             return name;
         }
 
-        public static ContentPackage CreatePackage(string name)
+        public static ContentPackage CreatePackage(string name, string path)
         {
-            ContentPackage newPackage = new ContentPackage("Content/Data/" + name)
+            ContentPackage newPackage = new ContentPackage()
             {
                 name = name,
-                Path = Folder + name
+                Path = path
             };
-            List.Add(newPackage);
 
             return newPackage;
         }
 
         public ContentFile AddFile(string path, ContentType type)
         {
-            if (files.Find(file => file.Path == path && file.Type == type) != null) return null;
+            if (Files.Find(file => file.Path == path && file.Type == type) != null) return null;
 
             ContentFile cf = new ContentFile(path, type);
-            files.Add(cf);
+            Files.Add(cf);
 
             return cf;
         }
 
         public void RemoveFile(ContentFile file)
         {
-            files.Remove(file);
+            Files.Remove(file);
         }
 
         public void Save(string filePath)
@@ -160,12 +160,12 @@ namespace Barotrauma
                 new XAttribute("path", Path),
                 new XAttribute("corepackage", CorePackage)));
 
-            foreach (ContentFile file in files)
+            foreach (ContentFile file in Files)
             {
                 doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path)));
             }
 
-            doc.Save(System.IO.Path.Combine(filePath, name + ".xml"));
+            doc.Save(filePath);
         }
 
         private void CalculateHash()
@@ -173,7 +173,7 @@ namespace Barotrauma
             List<byte[]> hashes = new List<byte[]>();
             
             var md5 = MD5.Create();
-            foreach (ContentFile file in files)
+            foreach (ContentFile file in Files)
             {
                 if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
 
@@ -211,12 +211,12 @@ namespace Barotrauma
 
         public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
-            return contentPackages.SelectMany(f => f.files).Where(f => f.Type == type).Select(f => f.Path);
+            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type).Select(f => f.Path);
         }
 
         public IEnumerable<string> GetFilesOfType(ContentType type)
         {
-            return files.Where(f => f.Type == type).Select(f => f.Path);
+            return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
 
         public static void LoadAll(string folder)
