@@ -195,7 +195,7 @@
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
-  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
+  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
 
   <!-- Campaign menu -->
   <Map>Map</Map>

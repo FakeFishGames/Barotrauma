@@ -350,10 +350,10 @@ namespace Barotrauma
             levelParams = new List<LevelGenerationParams>();
             biomes = new List<Biome>();
 
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.LevelGenerationParameters);
+            var files = GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters);
             if (!files.Any())
             {
-                files.Add("Content/Map/LevelGenerationParameters.xml");
+                files = new List<string>() { "Content/Map/LevelGenerationParameters.xml" };
             }
             
             List<XElement> biomeElements = new List<XElement>();

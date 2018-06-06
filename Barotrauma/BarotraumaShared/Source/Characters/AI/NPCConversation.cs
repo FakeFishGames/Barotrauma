@@ -34,7 +34,7 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             foreach (string filePath in filePaths)
             {

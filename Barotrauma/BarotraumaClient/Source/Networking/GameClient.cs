@@ -268,27 +268,21 @@ namespace Barotrauma.Networking
                     else
                     {
                         //request init again
-                        if (!requiresPw)
+                        NetOutgoingMessage outmsg = client.CreateMessage();
+                        outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
+                        if (requiresPw)
                         {
-                            NetOutgoingMessage outmsg = client.CreateMessage();
-                            outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
-                            outmsg.Write(GameMain.Version.ToString());
-                            outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
-                            outmsg.Write(name);
-                            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
-                        }
-                        else
-                        {
-                            NetOutgoingMessage outmsg = client.CreateMessage();
-                            outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
                             outmsg.Write(saltedPw);
-                            outmsg.Write(GameMain.Version.ToString());
-                            outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
-                            outmsg.Write(name);
-                            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                         }
+                        outmsg.Write(GameMain.Version.ToString());
+                        outmsg.Write((UInt16)GameMain.SelectedPackages.Count());
+                        foreach (ContentPackage contentPackage in GameMain.SelectedPackages)
+                        {
+                            outmsg.Write(contentPackage.Name);
+                            outmsg.Write(contentPackage.MD5hash.Hash);
+                        }
+                        outmsg.Write(name);
+                        client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                     }
                     reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 1);
                 }
@@ -792,7 +786,7 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (monsterEnabled == null)
             {
-                List<string> monsterNames1 = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
                 for (int i = 0; i < monsterNames1.Count; i++)
                 {
                     monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));

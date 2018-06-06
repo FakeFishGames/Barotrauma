@@ -207,8 +207,8 @@ namespace Barotrauma.Steam
             instance.server.MaxPlayers = server.MaxPlayers;
             instance.server.Passworded = server.HasPassword;
             Instance.server.SetKey("version", GameMain.Version.ToString());
-            Instance.server.SetKey("contentpackage", GameMain.Config.SelectedContentPackage.Name);
-            Instance.server.SetKey("contentpackagehash", GameMain.Config.SelectedContentPackage.MD5hash.Hash);
+            Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
+            Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
 #if SERVER
             instance.server.DedicatedServer = true;
 #endif

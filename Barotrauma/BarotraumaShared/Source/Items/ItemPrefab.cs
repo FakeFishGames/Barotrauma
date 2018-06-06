@@ -248,7 +248,7 @@ namespace Barotrauma
 
         }
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             if (GameSettings.VerboseLogging)
             {

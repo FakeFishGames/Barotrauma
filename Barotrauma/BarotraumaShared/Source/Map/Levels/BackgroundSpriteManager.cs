@@ -99,7 +99,7 @@ namespace Barotrauma
         {
             LoadConfig(configPath);
         }
-        public BackgroundSpriteManager(List<string> files)
+        public BackgroundSpriteManager(IEnumerable<string> files)
         {
             foreach (var file in files)
             {

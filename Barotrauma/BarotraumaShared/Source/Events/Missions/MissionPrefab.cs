@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public static void Init()
         {
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
+            var files = GameMain.Instance.GetFilesOfType(ContentType.Missions);
             foreach (string file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);

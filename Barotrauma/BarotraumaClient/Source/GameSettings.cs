@@ -166,7 +166,8 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
-                if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
+                //TODO: allow selecting multiple content packages
+                //if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("Controls"));
@@ -231,11 +232,12 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUIComponent select, object userData)
         {
-            if (GameMain.Config.SelectedContentPackage != (ContentPackage)userData)
+            //TODO: allow selecting multiple content packages
+            /*if (GameMain.Config.SelectedContentPackage != (ContentPackage)userData)
             {
                 UnsavedSettings = true;
             }
-            GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
+            GameMain.Config.SelectedContentPackage = (ContentPackage)userData;*/
             return true;
         }
 
