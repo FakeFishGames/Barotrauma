@@ -108,7 +108,7 @@ namespace Barotrauma
             }
         }
 
-        public List<ContentPackage> SelectedContentPackages { get; set; }
+        public HashSet<ContentPackage> SelectedContentPackages { get; set; }
 
         public string   MasterServerUrl { get; set; }
         public bool     AutoCheckUpdates { get; set; }
@@ -138,7 +138,7 @@ namespace Barotrauma
 
         public GameSettings(string filePath)
         {
-            SelectedContentPackages = new List<ContentPackage>();
+            SelectedContentPackages = new HashSet<ContentPackage>();
 
             ContentPackage.LoadAll(ContentPackage.Folder);
             CompletedTutorialNames = new List<string>();
