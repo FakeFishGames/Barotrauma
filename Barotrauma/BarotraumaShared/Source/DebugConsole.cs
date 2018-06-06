@@ -264,7 +264,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/[clientid]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given clientid, or at a random spawnpoint if the last parameter is omitted.",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 string errorMsg;
