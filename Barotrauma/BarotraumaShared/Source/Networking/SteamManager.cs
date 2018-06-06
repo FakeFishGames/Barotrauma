@@ -243,7 +243,7 @@ namespace Barotrauma.Steam
 
         #region Workshop
 
-        const string WorkshopItemStagingFolder = "NewWorkshopItem";
+        public const string WorkshopItemStagingFolder = "NewWorkshopItem";
         const string MetadataFileName = "metadata.xml";
         const string PreviewImageName = "PreviewImage.png";
 
@@ -339,7 +339,6 @@ namespace Barotrauma.Steam
 
             string previewImagePath = Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
             File.Copy("Content/DefaultWorkshopPreviewImage.png", previewImagePath);
-            item.PreviewImage = previewImagePath;
 
             //copy content files to the staging folder
             List<string> copiedFilePaths = new List<string>();
@@ -355,7 +354,7 @@ namespace Barotrauma.Steam
             System.Diagnostics.Debug.Assert(copiedFilePaths.Count == contentFiles.Count);
 
             //create a new content package and include the copied files in it
-            contentPackage = ContentPackage.CreatePackage("ContentPackage", MetadataFileName);
+            contentPackage = ContentPackage.CreatePackage("ContentPackage", Path.Combine(item.Folder, MetadataFileName));
             for (int i = 0; i < copiedFilePaths.Count; i++)
             {
                 contentPackage.AddFile(copiedFilePaths[i], contentFiles[i].Type);
@@ -381,9 +380,10 @@ namespace Barotrauma.Steam
 
             contentPackage.Name = item.Title;
 
-            //move the preview image out of the staging folder, it does not need to be included in the folder sent to Workshop
             if (File.Exists(PreviewImageName)) File.Delete(PreviewImageName);
+            //move the preview image out of the staging folder, it does not need to be included in the folder sent to Workshop
             File.Move(Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName)), PreviewImageName);
+            item.PreviewImage = Path.GetFullPath(PreviewImageName);
 
             CoroutineManager.StartCoroutine(PublishItem(item));
         }
@@ -428,11 +428,7 @@ namespace Barotrauma.Steam
                 return false;
             }
             
-            string newContentPackageFileName = item.Title + ".xml";
-            string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            foreach (char c in invalidChars) newContentPackageFileName = newContentPackageFileName.Replace(c.ToString(), "");
-            string newContentPackagePath = Path.Combine("Data", "ContentPackages", newContentPackageFileName);            
-
+            string newContentPackagePath = GetWorkshopItemContentPackagePath(item);
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
             
             if (!allowFileOverwrite)
@@ -456,7 +452,12 @@ namespace Barotrauma.Steam
 
             try
             {
-                File.Copy(contentPackage.Path, newContentPackagePath);
+                //we only need to create a new content package for the item if it contains content with a type other than None
+                //e.g. items that are just a sub file are just copied to the game folder
+                if (contentPackage.Files.Any(f => f.Type != ContentType.None))
+                {
+                    File.Copy(contentPackage.Path, newContentPackagePath);
+                }
 
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
@@ -500,20 +501,15 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var metaDoc = GetWorkshopItemMetaData(item);
-            if (metaDoc?.Root == null) return false;
+            ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
 
-            List<string> filePaths = new List<string>();
-            foreach (XElement fileElement in metaDoc.Root.Elements())
-            {
-                filePaths.Add(fileElement.GetAttributeString("path", ""));
-            }
-            
+            string installedContentPackagePath = GetWorkshopItemContentPackagePath(item);
+            if (File.Exists(installedContentPackagePath)) File.Delete(installedContentPackagePath);
             try
             {
-                foreach (string filePath in filePaths)
+                foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    File.Delete(filePath);
+                    File.Delete(contentFile.Path);
                 }
             }
             catch (Exception e)
@@ -527,41 +523,30 @@ namespace Barotrauma.Steam
         {
             if (!item.Installed) return false;
 
-            var metaDoc = GetWorkshopItemMetaData(item);
-            if (metaDoc?.Root == null) return false;
-            
-            foreach (XElement fileElement in metaDoc.Root.Elements())
+            string metaDataPath = Path.Combine(item.Directory.FullName, MetadataFileName);
+            if (!File.Exists(metaDataPath))
             {
-                string filePath = fileElement.GetAttributeString("path", "");
-                if (!File.Exists(filePath))
-                {
-                    //TODO: check the MD5 hash of the file
-                    return false;
-                }
+                throw new FileNotFoundException("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
             }
 
+            ContentPackage contentPackage = new ContentPackage(metaDataPath);
+            if (!File.Exists(GetWorkshopItemContentPackagePath(item))) return false;
+            foreach (ContentFile contentFile in contentPackage.Files)
+            {
+                if (!File.Exists(contentFile.Path)) return false;
+            }
+            
             return true;
         }
 
-        private static XDocument GetWorkshopItemMetaData(Workshop.Item item)
+        private static string GetWorkshopItemContentPackagePath(Workshop.Item item)
         {
-            string metaFilePath = Path.Combine(item.Directory.FullName, MetadataFileName);
-            if (!File.Exists(metaFilePath))
-            {
-                DebugConsole.ThrowError("Error: could not find a metadata file of the workshop item \"" + item.Title + "\". The item may be corrupted.");
-                return null;
-            }
-            XDocument metaDoc = XMLExtensions.TryLoadXml(metaFilePath);
-            if (metaDoc?.Root == null)
-            {
-                DebugConsole.ThrowError("Error: could not read the metadata file of the workshop item \"" + item.Title + "\". The item may be corrupted.");
-                return null;
-            }
-
-            return metaDoc;
+            string fileName = item.Title + ".xml";
+            string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            foreach (char c in invalidChars) fileName = fileName.Replace(c.ToString(), "");
+            return Path.Combine("Data", "ContentPackages", fileName);
         }
-
-
+        
         #endregion
 
         public static void Update()

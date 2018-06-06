@@ -39,7 +39,7 @@ namespace Barotrauma
 
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
-        private HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
+        private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
         {
             ContentType.Jobs,
             ContentType.Item,
