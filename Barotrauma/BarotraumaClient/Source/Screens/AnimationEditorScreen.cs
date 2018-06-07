@@ -158,6 +158,7 @@ namespace Barotrauma
             var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.IsHumanoid;
+            character.dontFollowCursor = true;
             Character.Controlled = character;
             float size = ConvertUnits.ToDisplayUnits(character.AnimController.Collider.radius * 2);
             float margin = 100;
