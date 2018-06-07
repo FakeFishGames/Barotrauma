@@ -123,6 +123,7 @@ namespace Barotrauma.Steam
         {
             foreach (ServerList.Server s in query.Responded)
             {
+                DebugConsole.Log(s.Name + " responded to server query.");
                 var serverInfo = new Networking.ServerInfo()
                 {
                     ServerName = s.Name,
@@ -138,6 +139,10 @@ namespace Barotrauma.Steam
                     DebugConsole.Log(string.Join(", ", s.Rules.Values));
                 };
                 onServerFound(serverInfo);
+            }
+            foreach (ServerList.Server s in query.Unresponsive)
+            {
+                DebugConsole.Log(s.Name + " did not respond to server query.");
             }
             query.Responded.Clear();
         }
@@ -166,7 +171,7 @@ namespace Barotrauma.Steam
             ServerInit options = new ServerInit("Barotrauma", "Barotrauma")
             {
                 GamePort = (ushort)server.Port,
-                //QueryPort = (ushort)server.Port
+                QueryPort = (ushort)server.QueryPort
             };
             //options.QueryShareGamePort();
 

@@ -18,6 +18,9 @@
   <!-- Host server menu -->
   <ServerName>Server name</ServerName>
   <ServerPort>Server port</ServerPort>
+  <ServerPortToolTip>The port used to communicate with clients. If clients fail to connect to your server, you may need to enable UPnP port forwarding on forward the port manually.</ServerPortToolTip>
+  <ServerQueryPort>Query port</ServerQueryPort>
+  <ServerQueryPortToolTip>The port used to communicate with Steam's server browser and respond to info pings from clients. If clients don't see your server in the server list or if authenticating their Steam ID fails, you may need to enable UPnP port forwarding on forward the port manually.</ServerQueryPortToolTip>
   <MaxPlayers>Max players</MaxPlayers>
   <Password>Password</Password>
   <PublicServer>Public server</PublicServer>

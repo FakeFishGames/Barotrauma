@@ -58,6 +58,16 @@ namespace Barotrauma
             get { return box; }
         }
 
+        public override string ToolTip
+        {
+            get { return base.ToolTip; }
+            set
+            {
+                base.ToolTip = value;
+                box.ToolTip = value;
+            }
+        }
+
         /// <summary>
         /// This is the new constructor.
         /// </summary>

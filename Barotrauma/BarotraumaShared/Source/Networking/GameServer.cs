@@ -75,8 +75,15 @@ namespace Barotrauma.Networking
         {
             get { return !string.IsNullOrEmpty(password); }
         }
+        
+        //only used when connected to steam
+        public int QueryPort
+        {
+            get;
+            set;
+        }
 
-        public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
+        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -108,6 +115,7 @@ namespace Barotrauma.Networking
 #endif
             config.Port = port;
             Port = port;
+            QueryPort = queryPort;
 
             if (attemptUPnP)
             {
