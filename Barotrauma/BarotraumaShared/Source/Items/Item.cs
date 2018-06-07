@@ -17,7 +17,7 @@ namespace Barotrauma
     public enum ActionType
     {
         Always, OnPicked, OnUse, OnSecondaryUse,
-        OnWearing, OnContaining, OnContained, 
+        OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
         OnImpact,
@@ -885,8 +885,8 @@ namespace Barotrauma
 #endif
                 ic.WasUsed = false;
 
-                if (parentInventory!=null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
-                
+                ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime);
+
                 if (!ic.IsActive) continue;
 
                 if (condition > 0.0f)
