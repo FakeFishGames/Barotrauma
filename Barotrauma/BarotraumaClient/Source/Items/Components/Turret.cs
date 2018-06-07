@@ -193,11 +193,23 @@ namespace Barotrauma.Items.Components
 
             GetAvailablePower(out float batteryCharge, out float batteryCapacity);
 
-            List<Projectile> projectiles = GetLoadedProjectiles(false, true);
+            List<Item> availableAmmo = new List<Item>();
+            foreach (MapEntity e in item.linkedTo)
+            {
+                var linkedItem = e as Item;
+                if (linkedItem == null) continue;
+
+                var itemContainer = linkedItem.GetComponent<ItemContainer>();
+                if (itemContainer?.Inventory?.Items == null) continue;   
+                
+                availableAmmo.AddRange(itemContainer.Inventory.Items);                
+            }
+
+            
 
             float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
-            bool readyToFire = reload <= 0.0f && charged && projectiles.Any(p => p != null);
+            bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
 
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
             {
@@ -215,14 +227,14 @@ namespace Barotrauma.Items.Components
             {
                 Point slotSize = new Point(60, 30);
                 int spacing = 5;
-                int slotsPerRow = Math.Min(projectiles.Count, 6);
+                int slotsPerRow = Math.Min(availableAmmo.Count, 6);
                 int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);
                 Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, 60);
-                for (int i = 0; i < projectiles.Count; i++)
+                for (int i = 0; i < availableAmmo.Count; i++)
                 {
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
-                        projectiles[i]?.Item, true);
+                        availableAmmo[i], true);
                 }
             }
 

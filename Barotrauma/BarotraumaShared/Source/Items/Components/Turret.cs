@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
             set { launchImpulse = value; }
         }
 
-        [Serialize(5.0f, false)]
+        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
         public float Reload
         {
             get { return reloadTime; }
@@ -215,14 +215,23 @@ namespace Barotrauma.Items.Components
             if (GameMain.Client != null) return false;
 
             if (reload > 0.0f) return false;
+            
+            if (GetAvailablePower() < powerConsumption) return false;
+
+            foreach (MapEntity e in item.linkedTo)
+            {
+                //use linked projectile containers in case they have to react to it somehow
+                //(play a sound, spawn more projectiles)
+                Item linkedItem = e as Item;
+                if (linkedItem == null) continue;
+                ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                if (projectileContainer != null) linkedItem.Use(deltaTime, null);
+            }
 
             var projectiles = GetLoadedProjectiles(true);
             if (projectiles.Count == 0) return false;
-
-            if (GetAvailablePower() < powerConsumption) return false;
             
             var batteries = item.GetConnectedComponents<PowerContainer>();
-
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
             {
@@ -417,40 +426,39 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false, bool returnNull = false)
+        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
         {
             List<Projectile> projectiles = new List<Projectile>();
-
             foreach (MapEntity e in item.linkedTo)
             {
                 var projectileContainer = e as Item;
                 if (projectileContainer == null) continue;
 
-                if (returnNull)
-                {
-                    var itemContainer = projectileContainer.GetComponent<ItemContainer>();
-                    if (itemContainer == null) continue;
-                    if (itemContainer.Inventory == null) continue;
-                    if (itemContainer.Inventory.Items == null) continue;
-                    for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
-                    {
-                        projectiles.Add(itemContainer.Inventory.Items[i]?.GetComponent<Projectile>());                        
-                    }
-                }
-                else
-                {
-                    var containedItems = projectileContainer.ContainedItems;
-                    if (containedItems == null) continue;
+                var containedItems = projectileContainer.ContainedItems;
+                if (containedItems == null) continue;
 
-                    for (int i = 0; i < containedItems.Length; i++)
+                for (int i = 0; i < containedItems.Length; i++)
+                {
+                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                    if (projectileComponent != null)
                     {
-                        var projectileComponent = containedItems[i].GetComponent<Projectile>();
-                        if (projectileComponent != null)
-                        {
-                            projectiles.Add(projectileComponent);
-                            if (returnFirst) return projectiles;
-                        }
+                        projectiles.Add(projectileComponent);
+                        if (returnFirst) return projectiles;
                     }
+                    else
+                    {
+                        //check if the contained item is another itemcontainer with projectiles inside it
+                        if (containedItems[i].ContainedItems == null) continue;
+                        for (int j = 0; j < containedItems[i].ContainedItems.Length; j++)
+                        {
+                            projectileComponent = containedItems[i].ContainedItems[j].GetComponent<Projectile>();
+                            if (projectileComponent != null)
+                            {
+                                projectiles.Add(projectileComponent);
+                                if (returnFirst) return projectiles;
+                            }
+                        }
+                    }                    
                 }
             }
 
