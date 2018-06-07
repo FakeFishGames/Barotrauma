@@ -589,6 +589,27 @@ namespace Barotrauma
         {
             return (float)Math.Pow(f, p);
         }
+
+        /// <summary>
+        /// Rotates a point in 2d space around another point.
+        /// Modified from:
+        /// http://www.gamefromscratch.com/post/2012/11/24/GameDev-math-recipes-Rotating-one-point-around-another-point.aspx
+        /// </summary>
+        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float degrees, bool clockWise = true)
+        {
+            // (Math.PI / 180) * degrees
+            var angle = MathHelper.ToRadians(degrees);
+            var sin = Math.Sin(angle);
+            var cos = Math.Cos(angle);
+            if (!clockWise)
+            {
+                sin = -sin;
+            }
+            Vector2 dir = point - target;
+            var x = (cos * dir.X) - (sin * dir.Y) + target.X;
+            var y = (sin * dir.X) + (cos * dir.Y) + target.Y;
+            return new Vector2((float)x, (float)y);
+        }
     }
 
     class CompareCCW : IComparer<Vector2>
