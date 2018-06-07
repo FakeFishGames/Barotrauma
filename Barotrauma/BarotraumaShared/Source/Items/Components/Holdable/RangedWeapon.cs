@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
                 limbBodies.Add(l.body.FarseerBody);
             }
 
-            float degreeOfFailure = (100.0f - DegreeOfSuccess(character)) / 100.0f;
+            float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
 
             degreeOfFailure *= degreeOfFailure;
 
@@ -90,50 +90,61 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             }
 
+            Projectile projectile = null;
             Item[] containedItems = item.ContainedItems;
-            if (containedItems != null)
+            foreach (Item item in containedItems)
             {
-                foreach (Item projectile in containedItems)
+                projectile = item.GetComponent<Projectile>();
+                if (projectile != null) break;
+            }
+            //projectile not found, see if one of the contained items contains projectiles
+            if (projectile == null)
+            {
+                foreach (Item item in containedItems)
                 {
-                    if (projectile == null) continue;
-                    //find the projectile-itemcomponent of the projectile,
-                    //and add the limbs of the shooter to the list of bodies to be ignored
-                    //so that the player can't shoot himself
-                    Projectile projectileComponent= projectile.GetComponent<Projectile>();
-                    if (projectileComponent == null) continue;
-
-                    float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
-                    float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
-                    rotation += spread * Rand.Range(-0.5f, 0.5f);
-                
-                    projectile.body.ResetDynamics();
-                    projectile.SetTransform(TransformedBarrelPos, rotation);
-
-                    projectileComponent.User = character;
-                    projectileComponent.IgnoredBodies = new List<Body>(limbBodies);
-                    projectile.Use(deltaTime);
-                    projectileComponent.User = character;
-
-                    projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
-
-                    //set the rotation of the projectile again because dropping the projectile resets the rotation
-                    projectile.SetTransform(projectile.SimPosition, rotation);
-
-                    //recoil
-                    item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);                
-
-                    item.RemoveContained(projectile);
-                
-                    Rope rope = item.GetComponent<Rope>();
-                    if (rope != null) rope.Attach(projectile);
-
-                    return true;
+                    Item[] containedSubItems = item.ContainedItems;
+                    foreach (Item subItem in containedSubItems)
+                    {
+                        projectile = subItem.GetComponent<Projectile>();
+                        
+                        //apply OnUse statuseffects to the container in case it has to react to it somehow
+                        //(play a sound, spawn more projectiles, reduce condition...)
+                        subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
+                        if (projectile != null) break;
+                    }
                 }
             }
-
-            return true;      
-        }
+            if (projectile == null) return true;
             
+            float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+            float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+            rotation += spread * Rand.Range(-0.5f, 0.5f);
+                
+            projectile.Item.body.ResetDynamics();
+            projectile.Item.SetTransform(TransformedBarrelPos, rotation);
+
+            projectile.User = character;
+            //add the limbs of the shooter to the list of bodies to be ignored
+            //so that the player can't shoot himself
+            projectile.IgnoredBodies = new List<Body>(limbBodies);
+            projectile.Use(deltaTime);
+            projectile.User = character;
+
+            projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+
+            //set the rotation of the projectile again because dropping the projectile resets the rotation
+            projectile.Item.SetTransform(projectile.Item.SimPosition, rotation);
+
+            //recoil
+            item.body.ApplyLinearImpulse(
+                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f);                
+
+            item.RemoveContained(projectile.Item);
+                
+            Rope rope = item.GetComponent<Rope>();
+            if (rope != null) rope.Attach(projectile.Item);
+
+            return true;
+        }            
     }
 }
