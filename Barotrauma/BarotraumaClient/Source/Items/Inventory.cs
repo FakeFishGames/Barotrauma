@@ -287,8 +287,13 @@ namespace Barotrauma
 
         public void UpdateSubInventory(float deltaTime, int slotIndex)
         {
-            Inventory subInventory = GetSubInventory(slotIndex);
-            if (subInventory == null) return;
+            var item = Items[slotIndex];
+            if (item == null) return;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null || !container.DrawInventory) return;
+
+            var subInventory = container.Inventory;            
             if (subInventory.slots == null) subInventory.CreateSlots();
 
             int itemCapacity = subInventory.Items.Length;
@@ -402,7 +407,7 @@ namespace Barotrauma
             if (item == null) return;
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null) return;
+            if (container == null || !container.DrawInventory) return;
 
             if (container.Inventory.slots == null || !container.Inventory.isSubInventory) return;
 
