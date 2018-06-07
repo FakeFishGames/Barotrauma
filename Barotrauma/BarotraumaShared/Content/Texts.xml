@@ -374,7 +374,7 @@
   <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
   <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
   <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
-  <CompatibleContentPackages>Compatible content packages</CompatibleContentPackages>
+  <RequiredContentPackages>Required content packages</RequiredContentPackages>
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>

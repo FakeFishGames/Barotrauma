@@ -219,7 +219,7 @@ namespace Barotrauma
                 font: GUI.SmallFont, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
-                $"{TextManager.Get("CompatibleContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
+                $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
                 font: GUI.SmallFont, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.RectTransform, Anchor.TopLeft), Description, font: GUI.SmallFont, wrap: true)

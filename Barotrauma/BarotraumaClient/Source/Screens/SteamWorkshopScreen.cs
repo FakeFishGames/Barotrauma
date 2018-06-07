@@ -334,18 +334,28 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), fileFrame.RectTransform, Anchor.CenterLeft), contentFile.Path);
 
                 var contentTypeSelection = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), fileFrame.RectTransform, Anchor.CenterRight),
-                    elementCount: contentTypes.Length);
+                    elementCount: contentTypes.Length)
+                {
+                    UserData = contentFile,
+                };
+                contentTypeSelection.OnSelected = (GUIComponent selected, object userdata) =>
+                {
+                    ((ContentFile)contentTypeSelection.UserData).Type = (ContentType)userdata;
+                    itemContentPackage.Save(itemContentPackage.Path);
+                    return true;
+                };
                 foreach (ContentType contentType in contentTypes)
                 {
                     contentTypeSelection.AddItem(contentType.ToString(), contentType);
                 }
                 contentTypeSelection.SelectItem(contentFile.Type);
-            }            
+            }
         }
 
         private void PublishWorkshopItem()
         {
             if (itemContentPackage == null || itemEditor == null) return;
+            
             SteamManager.StartPublishItem(itemContentPackage, itemEditor);
         }
 

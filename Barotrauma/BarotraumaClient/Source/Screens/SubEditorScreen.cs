@@ -482,10 +482,10 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
-            foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
+            /*foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
             {
                 Submarine.MainSub.RequiredContentPackages.Add(contentPackage.Name);
-            }
+            }*/
 
             MemoryStream imgStream = new MemoryStream();
             CreateImage(256, 128, imgStream);
@@ -574,7 +574,7 @@ namespace Barotrauma
             }
             
             var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), 
-                TextManager.Get("CompatibleContentPackages"), font: GUI.SmallFont);
+                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
 
             var contentPackList = new GUIListBox(new RectTransform(
                 new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
