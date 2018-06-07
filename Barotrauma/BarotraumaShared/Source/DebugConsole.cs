@@ -264,7 +264,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 string errorMsg;
@@ -2290,9 +2290,25 @@ namespace Barotrauma
                     extraParams = 1;
                     spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
                     break;
-                default:
-                    extraParams = 0;
+                case "random":
+                    extraParams = 1;
                     break;
+                default:
+                    //Check if last arg matches the name of an in-game player
+                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
+                    if (client == null) {
+                        extraParams = 0;
+                        NewMessage("No player found with the name \"" + args.Last() + "\".  Spawning item at random location.  If the player you want to give the item to has a space in their name, try surrounding their name with quotes (\").  To silence this message, add \"random\" as your last argument.", Color.Red);
+                        break;
+                    } else if (client.Character == null) {
+                        errorMsg = "The player \""  +args.Last() + "\" is connected, but hasn't spawned yet.";
+                        return;
+                    } else {
+                        //If the last arg matches the name of an in-game player, set the destination to their inventory.
+                        spawnInventory = client.Character.Inventory;
+                        extraParams = 1;
+                        break;
+                    }
             }
 
             string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
