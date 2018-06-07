@@ -2,8 +2,9 @@
 {
     static class NetConfig
     {
-        public const int DefaultPort = 14242;
-        
+        public const int DefaultPort = 27015;
+        public const int DefaultQueryPort = 27016;
+
         public const int MaxPlayers = 16;
 
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;

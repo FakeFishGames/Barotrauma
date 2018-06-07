@@ -116,13 +116,14 @@ namespace Barotrauma
             if (doc == null)
             {
                 DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
-                Server = new GameServer("Server", 14242, false, "", false, 10);
+                Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
                 return;
             }
 
             Server = new GameServer(
                 doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", 14242),
+                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
+                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
                 doc.Root.GetAttributeBool("public", false),
                 doc.Root.GetAttributeString("password", ""),
                 doc.Root.GetAttributeBool("enableupnp", false),

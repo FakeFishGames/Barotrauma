@@ -330,6 +330,7 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
             doc.Root.SetAttributeValue("port", config.Port);
+            if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
             doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
 

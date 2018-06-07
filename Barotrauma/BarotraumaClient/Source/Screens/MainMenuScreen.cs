@@ -21,7 +21,7 @@ namespace Barotrauma
 
         private CampaignSetupUI campaignSetupUI;
 
-        private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
+        private GUITextBox serverNameBox, portBox, queryPortBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
 
         private GUIButton steamWorkshopButton;
@@ -316,10 +316,21 @@ namespace Barotrauma
                 return false;
             }
 
+            int queryPort = 0;
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                if (!int.TryParse(queryPortBox.Text, out queryPort) || queryPort < 0 || queryPort > 65535)
+                {
+                    portBox.Text = NetConfig.DefaultQueryPort.ToString();
+                    portBox.Flash();
+                    return false;
+                }
+            }
+
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                GameMain.NetworkMember = new GameServer(name, port, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
+                GameMain.NetworkMember = new GameServer(name, port, queryPort, isPublicBox.Selected, passwordBox.Text, useUpnpBox.Selected, int.Parse(maxPlayersBox.Text));
             }
 
             catch (Exception e)
@@ -460,8 +471,18 @@ namespace Barotrauma
             portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
                 Text = NetConfig.DefaultPort.ToString(),
-                ToolTip = TextManager.Get("ServerPort")
+                ToolTip = TextManager.Get("ServerPortToolTip")
             };
+
+            if (Steam.SteamManager.USE_STEAM)
+            {
+                label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
+                queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+                {
+                    Text = NetConfig.DefaultQueryPort.ToString(),
+                    ToolTip = TextManager.Get("ServerQueryPortToolTip")
+                };
+            }
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
             var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
@@ -485,8 +506,7 @@ namespace Barotrauma
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
             };
-
-
+            
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment);
             
