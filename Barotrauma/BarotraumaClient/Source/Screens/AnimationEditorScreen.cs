@@ -134,16 +134,43 @@ namespace Barotrauma
 
         private string GetNextConfigFile()
         {
+            CheckAndGetIndex();
+            IncreaseIndex();
+            return AllFiles[characterIndex];
+        }
+
+        private string GetPreviousConfigFile()
+        {
+            CheckAndGetIndex();
+            ReduceIndex();
+            return AllFiles[characterIndex];
+        }
+
+        // Check if the index is not set, in which case we'll get the index from the current species name.
+        private void CheckAndGetIndex()
+        {
             if (characterIndex == -1)
             {
                 characterIndex = AllFiles.IndexOf(GetConfigFile(character.SpeciesName));
             }
+        }
+
+        private void IncreaseIndex()
+        {
             characterIndex++;
             if (characterIndex == AllFiles.Count - 1)
             {
                 characterIndex = 0;
             }
-            return AllFiles[characterIndex];
+        }
+
+        private void ReduceIndex()
+        {
+            characterIndex--;
+            if (characterIndex == AllFiles.Count - 1)
+            {
+                characterIndex = 0;
+            }
         }
 
         private string GetConfigFile(string speciesName)
@@ -176,17 +203,26 @@ namespace Barotrauma
         #endregion
 
         #region GUI
-        private GUIFrame frame;
+        private GUIFrame panel;
         private void CreateButtons()
         {
-            if (frame != null)
+            if (panel != null)
             {
-                frame.RectTransform.Parent = null;
+                panel.RectTransform.Parent = null;
             }
-            frame = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform));
-            var switchCharacterButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Switch Character");
-            switchCharacterButton.OnClicked += (b, obj) =>
+            panel = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, panel.RectTransform));
+            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.1f), parent: layoutGroup.RectTransform), style: null);
+            var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopLeft), "Previous \nCharacter");
+            prevCharacterButton.OnClicked += (b, obj) =>
+            {
+                character = SpawnCharacter(GetPreviousConfigFile());
+                ResetEditor();
+                CreateButtons();
+                return true;
+            };
+            var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopRight), "Next \nCharacter");
+            nextCharacterButton.OnClicked += (b, obj) =>
             {
                 character = SpawnCharacter(GetNextConfigFile());
                 ResetEditor();
