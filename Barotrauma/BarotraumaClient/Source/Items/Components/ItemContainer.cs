@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
         {
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item
-            if (item.ParentInventory?.Owner == character) return;
+            if (item.ParentInventory?.Owner == character || !DrawInventory) return;
 
             Inventory.Update(deltaTime);
         }
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
         {
             //if the item is in the character's inventory, no need to draw the item's inventory 
             //because the player can see it by hovering the cursor over the item
-            if (item.ParentInventory?.Owner == character) return;
+            if (item.ParentInventory?.Owner == character || !DrawInventory) return;
             
             Inventory.Draw(spriteBatch);            
         }
