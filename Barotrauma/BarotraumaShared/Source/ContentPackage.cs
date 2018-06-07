@@ -249,7 +249,7 @@ namespace Barotrauma
     public class ContentFile
     {
         public readonly string Path;
-        public readonly ContentType Type;
+        public ContentType Type;
 
         public Workshop.Item WorkShopItem;
 

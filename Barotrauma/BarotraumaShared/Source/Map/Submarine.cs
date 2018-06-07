@@ -286,12 +286,11 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
-                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("compatiblecontentpackages", new string[0]);
+                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("requiredcontentpackages", new string[0]);
                     foreach (string contentPackageName in contentPackageNames)
                     {
                         RequiredContentPackages.Add(contentPackageName);
                     }
-
 #if CLIENT                    
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
                     if (!string.IsNullOrEmpty(previewImageData))
@@ -1183,7 +1182,7 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
-            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", RequiredContentPackages)));
+            element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", RequiredContentPackages)));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
