@@ -402,7 +402,7 @@ namespace Barotrauma
                 {
                     case LimbType.Head:
                         // Head angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", angle =>
+                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", "headangle", angle =>
                         {
                             if (animParams.SerializableProperties.TryGetValue("headangle", out SerializableProperty p))
                             {
@@ -415,7 +415,7 @@ namespace Barotrauma
                             if (humanGroundedParams != null)
                             {
                                 var widgetDrawPos = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head", () =>
+                                DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head", "head", () =>
                                 {
                                     var lean = humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X;
                                     var position = humanGroundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y;
@@ -435,7 +435,7 @@ namespace Barotrauma
                             {
                                 // TODO: implement head leaning on fishes?
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position", "head",
                                     () => groundedParams.HeadPosition += 0.015f * -PlayerInput.MouseSpeed.Y);
                             }
                         }
@@ -445,7 +445,7 @@ namespace Barotrauma
                         break;
                     case LimbType.Torso:
                         // Torso angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", angle =>
+                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", "torsoangle", angle =>
                         {
                             if (animParams.SerializableProperties.TryGetValue("torsoangle", out SerializableProperty p))
                             {
@@ -458,7 +458,7 @@ namespace Barotrauma
                             if (humanGroundedParams != null)
                             {
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.TorsoLeanAmount, limb.SimPosition.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", "torso", () =>
                                 {
                                     var lean = humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X;
                                     var position = humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y;
@@ -478,7 +478,7 @@ namespace Barotrauma
                             {
                                 // TODO: implement torso leaning on fishes?
                                 Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso Position",
+                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso Position", "torso position",
                                     () => groundedParams.TorsoPosition += 0.015f * -PlayerInput.MouseSpeed.Y);
                             }
                         }
@@ -517,7 +517,7 @@ namespace Barotrauma
         private Vector2 SimToScreenPoint(float x, float y) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(x, y)));
         private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
 
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, string id, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
         {
             Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
             ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, circleRadius, 40, Color.White, thickness: 1);
@@ -531,7 +531,7 @@ namespace Barotrauma
             var widgetDrawPos = limbDrawPos - forward;
             widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, limbDrawPos, angle, clockWise: true);
             GUI.DrawLine(spriteBatch, limbDrawPos, widgetDrawPos, Color.White);
-            DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, new Point(widgetSize), Color.White, toolTip, () =>
+            DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, new Point(widgetSize), Color.White, toolTip, id, () =>
             {
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
@@ -555,18 +555,25 @@ namespace Barotrauma
             });
         }
 
-        private void DrawWidget(Point drawPoint, SpriteBatch spriteBatch, Point size, Color color, string text, Action onPressed, int thickness = 3)
+        private string selectedWidget;
+        private void DrawWidget(Point drawPoint, SpriteBatch spriteBatch, Point size, Color color, string text, string id, Action onPressed)
         {
             var drawRect = new Rectangle(new Point(drawPoint.X - size.X / 2, drawPoint.Y - size.Y / 2), size);
             var inputRect = drawRect;
             inputRect.Inflate(size.X, size.Y);
-            // TODO: allow to select only one widget at a time
-            bool isSelected = inputRect.Contains(PlayerInput.MousePosition);
+            bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
+            // Unselect
+            if (!isMouseOn && selectedWidget == id)
+            {
+                selectedWidget = null;
+            }
+            bool isSelected = isMouseOn && (selectedWidget == null || selectedWidget == id);
             if (isSelected)
             {
+                selectedWidget = id;
                 // Label/tooltip
                 GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), text, Color.White, Color.Black * 0.5f);
-                GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: thickness);
+                GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: 3);
                 if (PlayerInput.LeftButtonHeld())
                 {
                     onPressed();
