@@ -420,6 +420,9 @@ namespace Barotrauma
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
 
+            if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+            if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
+
             if (!onGround)
             {
                 Vector2 move =  torso.pullJoint.WorldAnchorB - torso.SimPosition;
