@@ -513,7 +513,6 @@ namespace Barotrauma
         private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, string id, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
         {
             Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
-            ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, circleRadius, 40, Color.White, thickness: 1);
             var angle = value;
             if (!MathUtils.IsValid(angle))
             {
@@ -526,6 +525,7 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, limbDrawPos, widgetDrawPos, Color.White);
             DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, new Point(widgetSize), Color.White, toolTip, id, () =>
             {
+                ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, circleRadius, 40, Color.White, thickness: 1);
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
                 var widgetRot = MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
