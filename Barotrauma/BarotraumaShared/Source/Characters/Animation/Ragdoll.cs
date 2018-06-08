@@ -1515,7 +1515,7 @@ namespace Barotrauma
             return limb;
         }
 
-        private Vector2? GetMouthPosition()
+        public Vector2? GetMouthPosition()
         {
             Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
             if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
