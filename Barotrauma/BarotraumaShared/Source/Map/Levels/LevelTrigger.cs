@@ -9,6 +9,17 @@ namespace Barotrauma
 {
     partial class LevelTrigger
     {
+        [Flags]
+        enum TriggererType
+        {
+            None = 0,
+            Human = 1,
+            Creature = 2,
+            Character = Human | Creature,
+            Submarine = 4,
+            Item = 8
+        }
+
         private PhysicsBody physicsBody;
 
         /// <summary>
@@ -27,6 +38,8 @@ namespace Barotrauma
 
         private Vector2 force;
 
+        private TriggererType triggeredBy;
+
         public Vector2 WorldPosition
         {
             get { return physicsBody.Position; }
@@ -44,11 +57,18 @@ namespace Barotrauma
             get { return physicsBody; }
         }
 
+        public bool IsTriggered
+        {
+            get { return triggerers.Count > 0; }
+        }
+
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
-            physicsBody = new PhysicsBody(element, scale);
-            physicsBody.CollisionCategories = Physics.CollisionLevel;
-            physicsBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall;
+            physicsBody = new PhysicsBody(element, scale)
+            {
+                CollisionCategories = Physics.CollisionLevel,
+                CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
+            };
             physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
             physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
             physicsBody.FarseerBody.IsSensor = true;
@@ -60,7 +80,13 @@ namespace Barotrauma
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
 
             force = element.GetAttributeVector2("force", Vector2.Zero);
-            
+
+            string triggeredByStr = element.GetAttributeString("triggeredby", "Character");
+            if (!Enum.TryParse(triggeredByStr, out triggeredBy))
+            {
+                DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -80,6 +106,26 @@ namespace Barotrauma
         {
             Entity entity = GetEntity(fixtureB);
             if (entity == null) return false;
+
+            if (entity is Character character)
+            {
+                if (character.ConfigPath == Character.HumanConfigFile)
+                {
+                    if (!triggeredBy.HasFlag(TriggererType.Human)) return false;
+                }
+                else
+                {
+                    if (!triggeredBy.HasFlag(TriggererType.Creature)) return false;
+                }
+            }
+            else if (entity is Item)
+            {
+                if (!triggeredBy.HasFlag(TriggererType.Item)) return false;
+            }
+            else if (entity is Submarine)
+            {
+                if (!triggeredBy.HasFlag(TriggererType.Submarine)) return false;
+            }
 
             if (!triggerers.Contains(entity))
             {
@@ -102,12 +148,8 @@ namespace Barotrauma
         private Entity GetEntity(Fixture fixture)
         {
             if (fixture.Body == null || fixture.Body.UserData == null) return null;
-
-            var entity = fixture.Body.UserData as Entity;
-            if (entity != null) return entity;
-            
-            var limb = fixture.Body.UserData as Limb;
-            if (limb != null) return limb.character;
+            if (fixture.Body.UserData is Entity entity) return entity;
+            if (fixture.Body.UserData is Limb limb) return limb.character;
 
             return null;
         }
@@ -129,8 +171,7 @@ namespace Barotrauma
                     }
                 }
 
-                IDamageable damageable = triggerer as IDamageable;
-                if (damageable != null)
+                if (triggerer is IDamageable damageable)
                 {
                     foreach (Attack attack in attacks)
                     {

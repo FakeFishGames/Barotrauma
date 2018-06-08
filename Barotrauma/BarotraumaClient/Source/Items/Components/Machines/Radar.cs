@@ -82,9 +82,11 @@ namespace Barotrauma.Items.Components
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
 
+
             if (IsActive)
             {
                 float pingRadius = displayRadius * pingState;
+                UpdateDisruptions(item.WorldPosition, pingRadius / displayScale, prevPingRadius / displayScale);
                 Ping(item.WorldPosition, pingRadius, prevPingRadius, displayScale, range, 2.0f);
                 prevPingRadius = pingRadius;
                 return;
@@ -93,11 +95,12 @@ namespace Barotrauma.Items.Components
             float passivePingRadius = (float)Math.Sin(Timing.TotalTime * 10);
             if (passivePingRadius > 0.0f)
             {
+                disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
                     if (t.SoundRange <= 0.0f) continue;
 
-                    if (Vector2.Distance(t.WorldPosition, item.WorldPosition) < t.SoundRange)
+                    if (Vector2.DistanceSquared(t.WorldPosition, item.WorldPosition) < t.SoundRange * t.SoundRange)
                     {
                         Ping(t.WorldPosition, t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
                         radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
@@ -223,12 +226,51 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        //Vector2 = vector from the ping source to the position of the disruption
+        //float = strength of the disruption, between 0-1
+        List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
+        private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)
+        {
+            float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
+            float worldPrevPingRadiusSqr = worldPrevPingRadius * worldPrevPingRadius;
+
+            disruptedDirections.Clear();
+            for (float x = pingSource.X - worldPingRadius; x < pingSource.X + worldPingRadius; x += Level.GridCellSize)
+            {
+                for (float y = pingSource.Y - worldPingRadius; y < pingSource.Y + worldPingRadius; y += Level.GridCellSize)
+                {
+                    Vector2 disruptionPos = new Vector2(
+                        MathUtils.RoundTowardsClosest(x, Level.GridCellSize) + Level.GridCellSize / 2,
+                        MathUtils.RoundTowardsClosest(y, Level.GridCellSize) + Level.GridCellSize / 2);
+
+                    float disruptionStrength = Level.Loaded.GetSonarDisruptionStrength(disruptionPos);
+                    if (disruptionStrength > 0.0f)
+                    {
+                        disruptedDirections.Add(new Pair<Vector2, float>(disruptionPos - pingSource, disruptionStrength));
+
+                        float disruptionDistSqr = Vector2.DistanceSquared(pingSource, disruptionPos);
+                        if (disruptionDistSqr > worldPrevPingRadiusSqr && disruptionDistSqr <= worldPingRadiusSqr)
+                        {
+                            var blip2 = new RadarBlip(disruptionPos, 2, 5);
+                            radarBlips.Add(blip2);
+
+                            for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.03f; i++)
+                            {
+                                var blip = new RadarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 3 * disruptionStrength)), MathHelper.Lerp(1.0f, 2.0f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                                radarBlips.Add(blip);
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
 
         private void Ping(Vector2 pingSource, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
         {
             float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
             float pingRadiusSqr = pingRadius * pingRadius;
-
+                        
             //inside a hull -> only show the edges of the hull
             if (item.CurrentHull != null && DetectSubmarineWalls)
             {
@@ -380,6 +422,14 @@ namespace Barotrauma.Items.Components
             float length = (point1 - point2).Length();
 
             Vector2 lineDir = (point2 - point1) / length;
+            foreach (Pair<Vector2, float> disruptDir in disruptedDirections)
+            {
+                float dot = Vector2.Dot(lineDir, disruptDir.First);
+                if (dot > 0.9f && Rand.Range(0.0f, 1.0f) < disruptDir.Second)
+                {
+                    return;
+                }
+            }
 
             range *= displayScale;
 

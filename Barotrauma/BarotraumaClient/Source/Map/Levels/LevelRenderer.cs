@@ -121,10 +121,9 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
-                cam.Transform);
-            
+                cam.Transform);            
 
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam, drawFront: false);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
 
             if (level.GenerationParams.WaterParticles != null)
@@ -162,6 +161,13 @@ namespace Barotrauma
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp, DepthStencilState.Default, null, null,
+                cam.Transform);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam, drawFront: true);
+            spriteBatch.End();
         }
 
         public void Draw(SpriteBatch spriteBatch)

@@ -50,6 +50,8 @@ namespace Barotrauma
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
+        private float[,] sonarDisruptionStrength;
+
         private LevelWall[] extraWalls;
 
         //private float shaftHeight;
@@ -452,9 +454,7 @@ namespace Barotrauma
             endPosition.Y = borders.Height;
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-
-            List<Vector2[]> triangles;
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
+            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out List<Vector2[]> triangles);
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
@@ -501,6 +501,8 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
+
+            sonarDisruptionStrength = new float[cellGrid.GetLength(0), cellGrid.GetLength(1)];
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
@@ -978,6 +980,15 @@ namespace Barotrauma
         {
             backgroundSpriteManager.Update(deltaTime);
 
+            for (int x = 0; x < sonarDisruptionStrength.GetLength(0); x++)
+            {
+                for (int y = 0; y < sonarDisruptionStrength.GetLength(1); y++)
+                {
+                    //disruption fades out over time if the entities causing it stop calling SetSonarDisruptionStrength
+                    sonarDisruptionStrength[x, y] = Math.Max(0.0f, sonarDisruptionStrength[x, y] - deltaTime);
+                }
+            }
+
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
 
@@ -1003,10 +1014,30 @@ namespace Barotrauma
             return new Vector2(xPosition, yPos);
         }
 
-        public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
+        public float GetSonarDisruptionStrength(Vector2 worldPos)
         {
-            int gridPosX = (int)Math.Floor(pos.X / GridCellSize);
-            int gridPosY = (int)Math.Floor(pos.Y / GridCellSize);
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return 0.0f;
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
+            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return 0.0f;
+
+            return sonarDisruptionStrength[gridPosX, gridPosY];
+        }
+
+        public void SetSonarDisruptionStrength(Vector2 worldPos, float strength)
+        {
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return;
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
+            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return;
+
+            sonarDisruptionStrength[gridPosX, gridPosY] = MathHelper.Clamp(strength, 0.0f, 1.0f);
+        }
+
+        public List<VoronoiCell> GetCells(Vector2 worldPos, int searchDepth = 2)
+        {
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
 
             int startX = Math.Max(gridPosX - searchDepth, 0);
             int endX = Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1);
@@ -1030,11 +1061,11 @@ namespace Barotrauma
             if (extraWalls != null)
             {
                 Debug.Assert(extraWalls.Count() == 1, "Level.GetCells may need to be updated to support extra walls other than the ocean floor.");
-                if (pos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
+                if (worldPos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
                 {
                     foreach (VoronoiCell cell in extraWalls[0].Cells)
                     {
-                        if (Math.Abs(cell.Center.X - pos.X) < searchDepth * GridCellSize)
+                        if (Math.Abs(cell.Center.X - worldPos.X) < searchDepth * GridCellSize)
                         {
                             cells.Add(cell);
                         }
