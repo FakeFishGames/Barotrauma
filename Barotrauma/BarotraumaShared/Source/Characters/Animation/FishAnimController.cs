@@ -214,20 +214,9 @@ namespace Barotrauma
 
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
-
             eatTimer += (float)Timing.Step * eatSpeed;
 
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
-            }
-
+            Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
@@ -250,7 +239,8 @@ namespace Barotrauma
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints,
+                        l => !l.IsSevered && l.CanBeSevered && l.LimbA != null && !l.LimbA.IsSevered && l.LimbB != null && !l.LimbB.IsSevered);
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten

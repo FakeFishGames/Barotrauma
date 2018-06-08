@@ -413,7 +413,7 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-            MainLimb = torso == null ? head : torso;
+            MainLimb = torso ?? head;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -1511,9 +1511,26 @@ namespace Barotrauma
 
         public Limb GetLimb(LimbType limbType)
         {
-            Limb limb = null;
-            limbDictionary.TryGetValue(limbType, out limb);
+            limbDictionary.TryGetValue(limbType, out Limb limb);
             return limb;
+        }
+
+        private Vector2? GetMouthPosition()
+        {
+            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
+            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
+            if (mouthLimb == null) return null;
+
+            Vector2 mouthPos = mouthLimb.SimPosition;
+            if (mouthLimb.MouthPos.HasValue)
+            {
+                float cos = (float)Math.Cos(mouthLimb.Rotation);
+                float sin = (float)Math.Sin(mouthLimb.Rotation);
+                mouthPos += new Vector2(
+                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
+                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
+            }
+            return mouthPos;
         }
 
 
