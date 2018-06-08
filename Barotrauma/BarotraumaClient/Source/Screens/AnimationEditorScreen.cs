@@ -295,25 +295,12 @@ namespace Barotrauma
             Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             Submarine.MainSub.Update((float)deltaTime);
 
-            //Vector2 mouseSimPos = ConvertUnits.ToSimUnits(character.CursorPosition);
-            //foreach (Limb limb in character.AnimController.Limbs)
-            //{
-            //    limb.body.SetTransform(mouseSimPos, 0.0f);
-            //}
-            //character.AnimController.Collider.SetTransform(mouseSimPos, 0.0f);
-
             PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
 
             character.ControlLocalPlayer((float)deltaTime, Cam, false);
             character.Control((float)deltaTime, Cam);
             character.AnimController.UpdateAnim((float)deltaTime);
             character.AnimController.Update((float)deltaTime, Cam);
-
-            // Teleports the character -> not very smooth
-            //if (_character.Position.X < min || _character.Position.X > max)
-            //{
-            //    _character.AnimController.SetPosition(ConvertUnits.ToSimUnits(new Vector2(spawnPosition.X, _character.Position.Y)), false);
-            //}
 
             if (character.Position.X < min)
             {
