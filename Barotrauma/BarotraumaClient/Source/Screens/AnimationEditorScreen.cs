@@ -158,7 +158,7 @@ namespace Barotrauma
         private void IncreaseIndex()
         {
             characterIndex++;
-            if (characterIndex == AllFiles.Count - 1)
+            if (characterIndex > AllFiles.Count - 1)
             {
                 characterIndex = 0;
             }
@@ -167,9 +167,9 @@ namespace Barotrauma
         private void ReduceIndex()
         {
             characterIndex--;
-            if (characterIndex == AllFiles.Count - 1)
+            if (characterIndex < 0)
             {
-                characterIndex = 0;
+                characterIndex = AllFiles.Count - 1;
             }
         }
 
@@ -402,13 +402,13 @@ namespace Barotrauma
                 {
                     case LimbType.Head:
                         // Head angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", "headangle", angle =>
+                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", "head angle", angle =>
                         {
                             if (animParams.SerializableProperties.TryGetValue("headangle", out SerializableProperty p))
                             {
                                 RefreshField(p, animParams, angle);
                             }
-                        });
+                        }, circleRadius: 25);
                         // Head position and leaning
                         if (animParams.IsGroundedAnimation)
                         {
@@ -445,7 +445,7 @@ namespace Barotrauma
                         break;
                     case LimbType.Torso:
                         // Torso angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", "torsoangle", angle =>
+                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", "torso angle", angle =>
                         {
                             if (animParams.SerializableProperties.TryGetValue("torsoangle", out SerializableProperty p))
                             {
