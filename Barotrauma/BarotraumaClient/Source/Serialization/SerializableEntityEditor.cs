@@ -184,7 +184,6 @@ namespace Barotrauma
             numberInput.FloatValue = value;
             numberInput.OnValueChanged += (numInput) =>
             {
-                DebugConsole.NewMessage("value changed", Color.White);
                 if (property.TrySetValue(numInput.FloatValue))
                 {
                     TrySendNetworkUpdate(entity, property);
