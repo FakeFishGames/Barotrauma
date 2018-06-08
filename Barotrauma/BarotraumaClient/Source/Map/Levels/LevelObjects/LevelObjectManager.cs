@@ -7,16 +7,6 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class LevelObject
-    {
-        public List<LevelTrigger> ParticleEmitterTrigger = new List<LevelTrigger>();
-        public List<ParticleEmitter> ParticleEmitters;
-
-        public LevelTrigger SoundTrigger;
-        public Sound Sound;
-        public SoundChannel SoundChannel;
-    }
-
     partial class LevelObjectManager
     {
         private List<LevelObject> visibleObjectsBack = new List<LevelObject>();
@@ -40,9 +30,9 @@ namespace Barotrauma
         {
             if (obj.ParticleEmitters != null)
             {
-                for (int i = 0; i < obj.ParticleEmitters.Count; i++)
+                for (int i = 0; i < obj.ParticleEmitters.Length; i++)
                 {
-                    if (obj.ParticleEmitterTrigger[i] != null && !obj.ParticleEmitterTrigger[i].IsTriggered) continue;
+                    if (obj.ParticleEmitterTriggers[i] != null && !obj.ParticleEmitterTriggers[i].IsTriggered) continue;
                     Vector2 emitterPos = obj.LocalToWorld(obj.Prefab.EmitterPositions[i]);
                     obj.ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
                         angle: obj.ParticleEmitters[i].Prefab.CopyEntityAngle ? obj.Rotation : 0.0f);
@@ -61,28 +51,26 @@ namespace Barotrauma
                 obj.ScaleOscillateTimer = obj.ScaleOscillateTimer % MathHelper.TwoPi;
             }
 
-            if (obj.Sound != null)
+            for (int i = 0; i< obj.Sounds.Length; i++)
             {
-                if (obj.SoundTrigger == null || obj.SoundTrigger.IsTriggered)
+                if (obj.SoundTriggers[i] == null || obj.SoundTriggers[i].IsTriggered)
                 {
-                    Vector2 soundPos = obj.LocalToWorld(new Vector2(obj.Prefab.SoundPosition.X, obj.Prefab.SoundPosition.Y));
-                    if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), soundPos) < obj.Sound.BaseFar * obj.Sound.BaseFar)
+                    Sound sound = obj.Sounds[i];
+                    Vector2 soundPos = obj.LocalToWorld(new Vector2(obj.Prefab.Sounds[i].Position.X, obj.Prefab.Sounds[i].Position.Y));
+                    if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), soundPos) <
+                        sound.BaseFar * sound.BaseFar)
                     {
-                        if (!GameMain.SoundManager.IsPlaying(obj.Sound))
+                        if (obj.SoundChannels[i] == null || !obj.SoundChannels[i].IsPlaying)
                         {
-                            obj.SoundChannel = obj.Sound.Play(1.0f, obj.Sound.BaseFar, soundPos);
+                            obj.SoundChannels[i] = sound.Play(1.0f, sound.BaseFar, soundPos);
                         }
-                        else
-                        {
-                            obj.SoundChannel = GameMain.SoundManager.GetChannelFromSound(obj.Sound);
-                        }
-                        obj.SoundChannel.Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
+                        obj.SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
                     }
                 }
-                else if (GameMain.SoundManager.IsPlaying(obj.Sound))
+                else if (obj.SoundChannels[i] != null && obj.SoundChannels[i].IsPlaying)
                 {
-                    obj.SoundChannel?.Dispose();
-                    obj.SoundChannel = null;
+                    obj.SoundChannels[i].Dispose();
+                    obj.SoundChannels[i] = null;
                 }
             }
         }
@@ -192,10 +180,11 @@ namespace Barotrauma
                 {
                     GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
 
-                    if (obj.Trigger != null && obj.Trigger.PhysicsBody != null)
+                    foreach (LevelTrigger trigger in obj.Triggers)
                     {
-                        obj.Trigger.PhysicsBody.UpdateDrawPosition();
-                        obj.Trigger.PhysicsBody.DebugDraw(spriteBatch, Color.Cyan);
+                        if (trigger.PhysicsBody == null) continue;
+                        trigger.PhysicsBody.UpdateDrawPosition();
+                        trigger.PhysicsBody.DebugDraw(spriteBatch, Color.Cyan);
                     }
                 }
 

@@ -14,7 +14,6 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)changelog.txt">
@@ -1791,6 +1790,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Optimizable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\ItemAssemblyPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\MapGenerationParams.cs" />

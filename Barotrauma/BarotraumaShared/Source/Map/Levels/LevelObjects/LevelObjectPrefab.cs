@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public SpawnPosType SpawnPos;
 
-        public readonly XElement LevelTriggerElement;
+        public readonly List<XElement> LevelTriggerElements;
         public Dictionary<string, float> OverrideCommonness;
 
         [Serialize("0.0,1.0", false)]
@@ -116,6 +116,8 @@ namespace Barotrauma
 
         public LevelObjectPrefab(XElement element)
         {
+            LevelTriggerElements = new List<XElement>();
+
             string alignmentStr = element.GetAttributeString("alignment", "");
 
             SerializableProperty.DeserializeProperties(this, element);
@@ -155,7 +157,7 @@ namespace Barotrauma
                         break;
                     case "leveltrigger":
                     case "trigger":
-                        LevelTriggerElement = subElement;
+                        LevelTriggerElements.Add(subElement);
                         break;
                 }
             }

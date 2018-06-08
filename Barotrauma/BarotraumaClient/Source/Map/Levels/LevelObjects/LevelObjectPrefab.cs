@@ -7,6 +7,20 @@ namespace Barotrauma
 {
     partial class LevelObjectPrefab
     {
+        public class SoundConfig
+        {
+            public readonly XElement SoundElement;
+            public readonly Vector2 Position;
+            public readonly int TriggerIndex;
+
+            public SoundConfig(XElement element, int triggerIndex)
+            {
+                SoundElement = element;
+                Position = element.GetAttributeVector2("position", Vector2.Zero);
+                TriggerIndex = triggerIndex;
+            }
+        }
+
         public List<int> ParticleEmitterTriggerIndex
         {
             get;
@@ -23,17 +37,7 @@ namespace Barotrauma
             private set;
         }
 
-        public int SoundTriggerIndex
-        {
-            get;
-            private set;
-        }
-        public XElement SoundElement
-        {
-            get;
-            private set;
-        }
-        public Vector2 SoundPosition
+        public List<SoundConfig> Sounds
         {
             get;
             private set;
@@ -41,13 +45,12 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element)
         {
-            SoundTriggerIndex = -1;
+            Sounds = new List<SoundConfig>();
             LoadElements(element, -1);
         }
 
         private void LoadElements(XElement element, int parentTriggerIndex)
         {
-            //TODO: allow multiple triggers
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -69,9 +72,7 @@ namespace Barotrauma
                         EmitterPositions.Add(subElement.GetAttributeVector2("position", Vector2.Zero));
                         break;
                     case "sound":
-                        SoundElement = subElement;
-                        SoundPosition = subElement.GetAttributeVector2("position", Vector2.Zero);
-                        SoundTriggerIndex = parentTriggerIndex;
+                        Sounds.Add(new SoundConfig(subElement, parentTriggerIndex));
                         break;
                 }
             }
