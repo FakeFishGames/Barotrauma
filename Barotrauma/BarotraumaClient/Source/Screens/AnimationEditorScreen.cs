@@ -312,7 +312,7 @@ namespace Barotrauma
             }
 
             //Cam.TargetPos = Vector2.Zero;
-            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: true);
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
  
             GameMain.World.Step((float)deltaTime);
