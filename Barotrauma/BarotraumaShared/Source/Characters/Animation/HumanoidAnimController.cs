@@ -63,11 +63,12 @@ namespace Barotrauma
         }
 
         public new HumanGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as HumanGroundedParams;
+        public new HumanSwimParams CurrentSwimParams => base.CurrentSwimParams as HumanSwimParams;
 
         public override GroundedMovementParams WalkParams => HumanWalkParams;
         public override GroundedMovementParams RunParams => HumanRunParams;
-        public override AnimationParams SwimSlowParams => HumanSwimSlowParams;
-        public override AnimationParams SwimFastParams => HumanSwimFastParams;
+        public override SwimParams SwimSlowParams => HumanSwimSlowParams;
+        public override SwimParams SwimFastParams => HumanSwimFastParams;
 
         public bool Crouching;
 
@@ -685,7 +686,16 @@ namespace Barotrauma
 
             torso.body.SmoothRotate(Collider.Rotation);
             torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation))*0.4f, 5.0f);
-            
+
+            if (TorsoAngle.HasValue)
+            {
+                torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+            }
+            if (HeadAngle.HasValue)
+            {
+                head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+            }
+
             if (TargetMovement == Vector2.Zero) return;
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);

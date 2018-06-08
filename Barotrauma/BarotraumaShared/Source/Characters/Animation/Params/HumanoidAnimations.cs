@@ -18,7 +18,7 @@ namespace Barotrauma
         }
     }
 
-    class HumanSwimFastParams: AnimationParams
+    class HumanSwimFastParams: HumanSwimParams
     {
         public static HumanSwimFastParams GetAnimParams(Character character)
         {
@@ -26,13 +26,15 @@ namespace Barotrauma
         }
     }
 
-    class HumanSwimSlowParams : AnimationParams
+    class HumanSwimSlowParams : HumanSwimParams
     {
         public static HumanSwimSlowParams GetAnimParams(Character character)
         {
             return GetAnimParams<HumanSwimSlowParams>(character, AnimationType.SwimSlow);
         }
     }
+
+    abstract class HumanSwimParams : SwimParams { }
 
     abstract class HumanGroundedParams : GroundedMovementParams
     {

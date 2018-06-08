@@ -10,10 +10,10 @@ namespace Barotrauma
     {
         public abstract GroundedMovementParams WalkParams { get; }
         public abstract GroundedMovementParams RunParams { get; }
-        public abstract AnimationParams SwimSlowParams { get; }
-        public abstract AnimationParams SwimFastParams { get; }
+        public abstract SwimParams SwimSlowParams { get; }
+        public abstract SwimParams SwimFastParams { get; }
 
-        public AnimationParams CurrentAnimationParams => (InWater || !CanWalk) ? CurrentSwimParams : CurrentGroundedParams;
+        public AnimationParams CurrentAnimationParams => (InWater || !CanWalk) ? (AnimationParams)CurrentSwimParams : CurrentGroundedParams;
         public GroundedMovementParams CurrentGroundedParams
         {
             get
@@ -29,7 +29,7 @@ namespace Barotrauma
                 }
             }
         }
-        public AnimationParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
+        public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
 
         public bool CanWalk => CanEnterSubmarine;
         public bool IsMovingFast
