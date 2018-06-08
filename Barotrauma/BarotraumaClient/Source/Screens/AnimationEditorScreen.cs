@@ -402,39 +402,8 @@ namespace Barotrauma
                 {
                     case LimbType.Head:
                         // Head angle
-                        float radius = 30;
-                        ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, radius, 40, Color.White, thickness: 1);
-                        var angle = animParams.HeadAngle;
-                        if (!MathUtils.IsValid(angle))
+                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", angle =>
                         {
-                            angle = 0;
-                        }
-                        var forward = VectorExtensions.Forward(limb.Rotation, radius);
-                        GUI.DrawLine(spriteBatch, limbDrawPos, limbDrawPos - forward, Color.Red);
-                        var widgetDrawPos = limbDrawPos - forward;
-                        widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, limbDrawPos, angle, clockWise: true);
-                        GUI.DrawLine(spriteBatch, limbDrawPos, widgetDrawPos, Color.White);
-                        DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.White, "Head Angle", () =>
-                        {
-                            float x = PlayerInput.MouseSpeed.X * 1.5f;
-                            float y = PlayerInput.MouseSpeed.Y * 1.5f;
-                            var widgetRot = MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
-                            //DebugConsole.NewMessage(widgetRot.ToString(), Color.White);
-                            var transformedRot = angle + widgetRot;
-                            if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
-                            {
-                                x = -x;
-                            }
-                            if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-                            {
-                                y = -y;
-                            }
-                            angle += x + y;
-                            if (angle > 360 || angle < -360)
-                            {
-                                angle = 0;
-                            }
-                            //animParams.HeadAngle = angle;
                             if (animParams.SerializableProperties.TryGetValue("headangle", out SerializableProperty p))
                             {
                                 RefreshField(p, animParams, angle);
@@ -445,7 +414,7 @@ namespace Barotrauma
                         {
                             if (humanGroundedParams != null)
                             {
-                                widgetDrawPos = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
+                                var widgetDrawPos = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
                                 DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head", () =>
                                 {
                                     var lean = humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X;
@@ -475,6 +444,14 @@ namespace Barotrauma
                         }
                         break;
                     case LimbType.Torso:
+                        // Torso angle
+                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", angle =>
+                        {
+                            if (animParams.SerializableProperties.TryGetValue("torsoangle", out SerializableProperty p))
+                            {
+                                RefreshField(p, animParams, angle);
+                            }
+                        });
                         if (animParams.IsGroundedAnimation)
                         {
                             // Torso position and leaning
@@ -539,6 +516,44 @@ namespace Barotrauma
         private Vector2 ScreenToSimPoint(Vector2 p) => Cam.ScreenToWorld(ConvertUnits.ToSimUnits(p));
         private Vector2 SimToScreenPoint(float x, float y) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(x, y)));
         private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
+        {
+            Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
+            ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, circleRadius, 40, Color.White, thickness: 1);
+            var angle = value;
+            if (!MathUtils.IsValid(angle))
+            {
+                angle = 0;
+            }
+            var forward = VectorExtensions.Forward(limb.Rotation, circleRadius);
+            GUI.DrawLine(spriteBatch, limbDrawPos, limbDrawPos - forward, Color.Red);
+            var widgetDrawPos = limbDrawPos - forward;
+            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, limbDrawPos, angle, clockWise: true);
+            GUI.DrawLine(spriteBatch, limbDrawPos, widgetDrawPos, Color.White);
+            DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, new Point(widgetSize), Color.White, toolTip, () =>
+            {
+                float x = PlayerInput.MouseSpeed.X * 1.5f;
+                float y = PlayerInput.MouseSpeed.Y * 1.5f;
+                var widgetRot = MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
+                //DebugConsole.NewMessage(widgetRot.ToString(), Color.White);
+                var transformedRot = angle + widgetRot;
+                if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
+                {
+                    x = -x;
+                }
+                if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
+                {
+                    y = -y;
+                }
+                angle += x + y;
+                if (angle > 360 || angle < -360)
+                {
+                    angle = 0;
+                }
+                onClick(angle);
+            });
+        }
 
         private void DrawWidget(Point drawPoint, SpriteBatch spriteBatch, Point size, Color color, string text, Action onPressed, int thickness = 3)
         {
