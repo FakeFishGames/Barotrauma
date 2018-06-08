@@ -75,7 +75,7 @@ namespace Barotrauma
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
 
-        private static BackgroundSpriteManager backgroundSpriteManager;
+        private static LevelObjectManager levelObjectManager;
 
         private List<Vector2> bottomPositions;
 
@@ -201,13 +201,13 @@ namespace Barotrauma
 
         public void Generate(bool mirror = false)
         {
-            if (backgroundSpriteManager == null)
+            if (levelObjectManager == null)
             {
-                var files = GameMain.Instance.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
+                var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
                 if (files.Count() > 0)
-                    backgroundSpriteManager = new BackgroundSpriteManager(files);
+                    levelObjectManager = new LevelObjectManager(files);
                 else
-                    backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+                    levelObjectManager = new LevelObjectManager("Content/LevelObjects/LevelObject/Prefabs.xml");
             }
 #if CLIENT
             if (backgroundCreatureManager == null)
@@ -216,7 +216,7 @@ namespace Barotrauma
                 if (files.Count() > 0)
                     backgroundCreatureManager = new BackgroundCreatureManager(files);
                 else
-                    backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
+                    backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml");
             }
 #endif
 
@@ -473,7 +473,7 @@ namespace Barotrauma
 
             GenerateSeaFloor();
 
-            backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
+            levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
 #if CLIENT
             backgroundCreatureManager.SpawnSprites(80);
 #endif
@@ -978,7 +978,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            backgroundSpriteManager.Update(deltaTime);
+            levelObjectManager.Update(deltaTime);
 
             for (int x = 0; x < sonarDisruptionStrength.GetLength(0); x++)
             {

@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class BackgroundSpritePrefab : ISerializableEntity
+    partial class LevelObjectPrefab : ISerializableEntity
     {
         [Flags]
         public enum SpawnPosType
@@ -111,10 +111,10 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "BackgroundSpritePrefab (" + Name + ")";
+            return "LevelObjectPrefab (" + Name + ")";
         }
 
-        public BackgroundSpritePrefab(XElement element)
+        public LevelObjectPrefab(XElement element)
         {
             string alignmentStr = element.GetAttributeString("alignment", "");
 

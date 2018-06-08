@@ -11,8 +11,10 @@
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)changelog.txt">
@@ -24,40 +26,40 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Afflictions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\BackgroundCreaturePrefabs.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\BackgroundCreaturePrefabs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\BackgroundSpritePrefabs.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\LevelObjectPrefabs.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\bgFish1.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\bgFish1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\ice.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\ice.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\seafloor.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\seafloor.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\SonarFloraBodies.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\SonarFloraBodies.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\SonarFloraBranches.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\SonarFloraBranches.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\vegetation.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\vegetation.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\vegetation2.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\vegetation2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\vegetation3.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\vegetation3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\vegetation4.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\vegetation4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\vegetation5.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\LevelObjects\vegetation5.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\carrier.png">
@@ -1891,10 +1893,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\BackgroundSpriteManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\BackgroundSpritePrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObjectManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelObjectPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelTrigger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelObjects\LevelTrigger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\BTRoom.cs" />

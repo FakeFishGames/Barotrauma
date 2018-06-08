@@ -59,8 +59,8 @@
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <RuinConfig file="Content/Map/RuinConfig.xml" />
-  <BackgroundCreaturePrefabs file="Content/BackgroundSprites/BackgroundCreaturePrefabs.xml"/>
-  <BackgroundSpritePrefabs file="Content/BackgroundSprites/BackgroundSpritePrefabs.xml" />
+  <BackgroundCreaturePrefabs file="Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml"/>
+  <LevelObjectPrefabs file="Content/LevelObjects/LevelObjectPrefabs.xml" />
   <Particles file="Content/Particles/ParticlePrefabs.xml"/>
   <Decals file="Content/Particles/DecalPrefabs.xml"/>
   <RandomEvents file="Content/randomevents.xml" />

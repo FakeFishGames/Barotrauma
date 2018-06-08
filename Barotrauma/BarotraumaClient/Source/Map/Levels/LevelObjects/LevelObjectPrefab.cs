@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class BackgroundSpritePrefab
+    partial class LevelObjectPrefab
     {
         public List<int> ParticleEmitterTriggerIndex
         {

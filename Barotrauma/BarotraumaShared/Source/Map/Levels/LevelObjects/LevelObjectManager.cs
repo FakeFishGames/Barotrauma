@@ -11,9 +11,9 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class BackgroundSprite
+    partial class LevelObject
     {
-        public readonly BackgroundSpritePrefab Prefab;
+        public readonly LevelObjectPrefab Prefab;
         public Vector3 Position;
 
         public float Scale;
@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public LevelTrigger Trigger;
         
-        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
+        public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
             this.Prefab = prefab;
             this.Position = position;
@@ -91,20 +91,20 @@ namespace Barotrauma
         }
     }
 
-    partial class BackgroundSpriteManager
+    partial class LevelObjectManager
     {
         const int GridSize = 2000;
 
-        private List<BackgroundSpritePrefab> prefabs = new List<BackgroundSpritePrefab>();
+        private List<LevelObjectPrefab> prefabs = new List<LevelObjectPrefab>();
 
-        private List<BackgroundSprite> sprites;
-        private List<BackgroundSprite>[,] spriteGrid;
+        private List<LevelObject> objects;
+        private List<LevelObject>[,] objectGrid;
         
-        public BackgroundSpriteManager(string configPath)
+        public LevelObjectManager(string configPath)
         {
             LoadConfig(configPath);
         }
-        public BackgroundSpriteManager(IEnumerable<string> files)
+        public LevelObjectManager(IEnumerable<string> files)
         {
             foreach (var file in files)
             {
@@ -120,30 +120,30 @@ namespace Barotrauma
 
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    prefabs.Add(new BackgroundSpritePrefab(element));
+                    prefabs.Add(new LevelObjectPrefab(element));
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError(String.Format("Failed to load BackgroundSprites from {0}", configPath), e);
+                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
             }
         }
 
 
-        public void PlaceSprites(Level level, int amount)
+        public void PlaceObjects(Level level, int amount)
         {
-            spriteGrid = new List<BackgroundSprite>[
+            objectGrid = new List<LevelObject>[
                 (int)Math.Ceiling(level.Size.X / GridSize),
                 (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
 
-            sprites = new List<BackgroundSprite>();
+            objects = new List<LevelObject>();
             
             for (int i = 0 ; i < amount; i++)
             {
-                BackgroundSpritePrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
+                LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
                 GraphEdge selectedEdge = null;
                 Vector2 edgeNormal = Vector2.One;
-                Vector2? pos = FindSpritePosition(level, prefab, out selectedEdge, out edgeNormal);
+                Vector2? pos = FindObjectPosition(level, prefab, out selectedEdge, out edgeNormal);
 
                 if (pos == null) continue;
 
@@ -155,18 +155,18 @@ namespace Barotrauma
 
                 rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
 
-                var newSprite = new BackgroundSprite(prefab,
+                var newObject = new LevelObject(prefab,
                     new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
                 
                 //calculate the positions of the corners of the rotated sprite
-                Vector2 halfSize = newSprite.Prefab.Sprite.size * newSprite.Scale / 2;
+                Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
                 var spriteCorners = new List<Vector2>
                 {
                     -halfSize, new Vector2(-halfSize.X, halfSize.Y),
                     halfSize, new Vector2(halfSize.X, -halfSize.Y)
                 };
 
-                Vector2 pivotOffset = newSprite.Prefab.Sprite.Origin * newSprite.Scale - halfSize;
+                Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
                 pivotOffset.X = -pivotOffset.X;
                 pivotOffset = new Vector2(
                     (float)(pivotOffset.X * Math.Cos(-rotation) - pivotOffset.Y * Math.Sin(-rotation)),
@@ -181,16 +181,16 @@ namespace Barotrauma
                     spriteCorners[j] += pos.Value + pivotOffset;
                 }
 
-                float minX = spriteCorners.Min(c => c.X) - newSprite.Position.Z;
-                float maxX = spriteCorners.Max(c => c.X) + newSprite.Position.Z;
+                float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
+                float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
                 
-                float minY = spriteCorners.Min(c => c.Y) - newSprite.Position.Z - level.BottomPos;
-                float maxY = spriteCorners.Max(c => c.Y) + newSprite.Position.Z - level.BottomPos;
+                float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
+                float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
 
 #if CLIENT
-                if (newSprite.ParticleEmitters != null)
+                if (newObject.ParticleEmitters != null)
                 {
-                    foreach (ParticleEmitter emitter in newSprite.ParticleEmitters)
+                    foreach (ParticleEmitter emitter in newObject.ParticleEmitters)
                     {
                         Rectangle particleBounds = emitter.CalculateParticleBounds(pos.Value);
                         minX = Math.Min(minX, particleBounds.X);
@@ -201,33 +201,33 @@ namespace Barotrauma
                 }
 #endif
 
-                sprites.Add(newSprite);
+                objects.Add(newObject);
 
                 int xStart  = (int)Math.Floor(minX / GridSize);
                 int xEnd    = (int)Math.Floor(maxX / GridSize);
-                if (xEnd < 0 || xStart >= spriteGrid.GetLength(0)) continue;
+                if (xEnd < 0 || xStart >= objectGrid.GetLength(0)) continue;
 
                 int yStart  = (int)Math.Floor(minY / GridSize);
                 int yEnd    = (int)Math.Floor(maxY / GridSize);
-                if (yEnd < 0 || yStart >= spriteGrid.GetLength(1)) continue;
+                if (yEnd < 0 || yStart >= objectGrid.GetLength(1)) continue;
 
                 xStart  = Math.Max(xStart, 0);
-                xEnd    = Math.Min(xEnd, spriteGrid.GetLength(0) - 1);
+                xEnd    = Math.Min(xEnd, objectGrid.GetLength(0) - 1);
                 yStart  = Math.Max(yStart, 0);
-                yEnd    = Math.Min(yEnd, spriteGrid.GetLength(1) - 1);
+                yEnd    = Math.Min(yEnd, objectGrid.GetLength(1) - 1);
 
                 for (int x = xStart; x <= xEnd; x++)
                 {
                     for (int y = yStart; y <= yEnd; y++)
                     {
-                        if (spriteGrid[x, y] == null) spriteGrid[x, y] = new List<BackgroundSprite>();
-                        spriteGrid[x, y].Add(newSprite);
+                        if (objectGrid[x, y] == null) objectGrid[x, y] = new List<LevelObject>();
+                        objectGrid[x, y].Add(newObject);
                     }
                 }
             }
         }
 
-        private Vector2? FindSpritePosition(Level level, BackgroundSpritePrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
+        private Vector2? FindObjectPosition(Level level, LevelObjectPrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
         {
             closestEdge = null;
             edgeNormal = Vector2.One;
@@ -236,7 +236,7 @@ namespace Barotrauma
                 Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server), 
                 Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
 
-            if (prefab.SpawnPos == BackgroundSpritePrefab.SpawnPosType.None) return randomPos;
+            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None) return randomPos;
 
             List<GraphEdge> edges = new List<GraphEdge>();
             List<Vector2> normals = new List<Vector2>();
@@ -244,8 +244,8 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(level.ExtraWalls.Length == 1);
             List<VoronoiCell> cells = new List<VoronoiCell>();
 
-            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
-            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
+            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
+            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
             
             if (cells.Any())
             {
@@ -282,7 +282,7 @@ namespace Barotrauma
                 }
             }
             
-            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.RuinWall))
+            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.RuinWall))
             {
                 foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
                 {
@@ -318,7 +318,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            foreach (BackgroundSprite sprite in sprites)
+            foreach (LevelObject sprite in objects)
             {
                 sprite.Trigger?.Update(deltaTime);
                 if (sprite.Prefab.SonarDisruption > 0.0f)
@@ -332,7 +332,7 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        private BackgroundSpritePrefab GetRandomPrefab(string levelType)
+        private LevelObjectPrefab GetRandomPrefab(string levelType)
         {
             return ToolBox.SelectWeightedRandom(prefabs, prefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
         }
