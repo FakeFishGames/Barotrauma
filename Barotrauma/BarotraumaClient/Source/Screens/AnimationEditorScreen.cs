@@ -125,7 +125,7 @@ namespace Barotrauma
             {
                 if (allFiles == null)
                 {
-                    allFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character).FindAll(f => !f.Contains("husk"));
+                    allFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Where(f => !f.Contains("husk")).ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
