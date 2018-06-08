@@ -1,57 +1,57 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<backgroundsprites>
+<levelobjects>
   <hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15"/>
   </hanging1>
 
   <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
   </hanging2>
 
   <kelp1 spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
   </kelp1>
 
   <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" swingfrequency="0.2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="5" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
   </stalk>
 
   <spike spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" alignwithsurface="true" randomrotation="-20,20" commonness="2">
     <overridecommonness commonness="0" leveltype="Open" />
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
   </spike>
 
   <leaves spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
+    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
     <overridecommonness commonness="0" leveltype="Wastes" />
   </leaves>
 
   <branches1 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
   </branches1>
 
   <branches2 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
   </branches2>
 
   <branches3 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
   </branches3>
 
   <fungus spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="10" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
   </fungus>
 
   <thistle spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="Open" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
   </thistle>
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10">
@@ -59,7 +59,7 @@
     <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
-    <Sprite texture="Content/BackgroundSprites/vegetation3.png" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation3.png" origin="0.5,0.95"/>
   </branch>
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10">
@@ -67,27 +67,27 @@
     <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
-    <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="0,0,818,1024" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="0,0,818,1024" origin="0.5,0.95"/>
   </branch>
 
   <hay spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="0" leveltype="Wastes" />
-    <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95"/>
   </hay>
 
   <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="Wastes" />
-    <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95"/>
   </branch>
 
   <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="Wastes" />
-    <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
+    <Sprite texture="Content/LevelObjects/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
   </branch>
 
   <sonarflora1 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
@@ -101,7 +101,7 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="492,0,521,288" origin="0.5,0.35"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="492,0,521,288" origin="0.5,0.35"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>
@@ -118,7 +118,7 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="151,383,488,341" origin="0.5,0.1"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="151,383,488,341" origin="0.5,0.1"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>
@@ -135,7 +135,7 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.2"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>    
@@ -152,7 +152,7 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.3"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.3"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>
@@ -169,7 +169,7 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>
@@ -186,32 +186,32 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/SonarFloraBodies.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
     </Trigger>
   </sonarflora6>
   
   <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="669,0,335,513" origin="0.5,0.5"/>
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,335,513" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
   </icechunk>
 
   <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500" triggeredby="Human, Submarine">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
@@ -236,7 +236,7 @@
 
   <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
-    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500" triggeredby="Human, Submarine">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
@@ -261,7 +261,7 @@
 
   <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
-    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
+    <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="5" force="0,500" triggeredby="Human, Submarine">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
@@ -283,4 +283,4 @@
       velocitymin="100"
       velocitymax="600"/>
   </blacksmoker> 
-</backgroundsprites>
+</levelobjects>

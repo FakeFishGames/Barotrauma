@@ -116,9 +116,9 @@
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Optimizable.cs" />
     <Compile Include="Source\Items\ItemInventory.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreaturePrefab.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreature.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreatureManager.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreaturePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
     <Compile Include="Source\Characters\CharacterHUD.cs" />
     <Compile Include="Source\Characters\CharacterInfo.cs" />
@@ -195,8 +195,8 @@
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Gap.cs" />
     <Compile Include="Source\Map\Hull.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundSpriteManager.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundSpritePrefab.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectManager.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectPrefab.cs" />
     <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="Source\Map\Levels\Level.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />

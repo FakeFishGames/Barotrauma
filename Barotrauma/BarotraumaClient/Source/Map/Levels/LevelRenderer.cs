@@ -85,7 +85,7 @@ namespace Barotrauma
         }
 
         public void DrawBackground(SpriteBatch spriteBatch, Camera cam, 
-            BackgroundSpriteManager backgroundSpriteManager = null, 
+            LevelObjectManager backgroundSpriteManager = null, 
             BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
@@ -123,7 +123,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);            
 
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam, drawFront: false);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
 
             if (level.GenerationParams.WaterParticles != null)
@@ -166,7 +166,7 @@ namespace Barotrauma
                 BlendState.AlphaBlend,
                 SamplerState.LinearClamp, DepthStencilState.Default, null, null,
                 cam.Transform);
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam, drawFront: true);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
             spriteBatch.End();
         }
 

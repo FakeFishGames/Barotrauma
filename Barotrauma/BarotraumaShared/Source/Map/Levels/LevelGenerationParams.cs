@@ -102,7 +102,7 @@ namespace Barotrauma
         }
 
         [Serialize(1000, false)]
-        public int BackgroundSpriteAmount
+        public int LevelObjectAmount
         {
             get;
             set;
