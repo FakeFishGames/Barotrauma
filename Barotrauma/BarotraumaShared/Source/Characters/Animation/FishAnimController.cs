@@ -320,13 +320,13 @@ namespace Barotrauma
             }
 
             Limb tail = GetLimb(LimbType.Tail);
-            if (tail != null && CurrentSwimParams.WaveAmplitude > 0.0f)
+            if (tail != null)
             {
                 walkPos -= movement.Length();
 
-                float waveRotation = (float)Math.Sin(walkPos / CurrentSwimParams.WaveLength);
+                float waveRotation = (float)Math.Sin(walkPos / Math.Abs(CurrentSwimParams.WaveLength));
 
-                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * CurrentSwimParams.WaveAmplitude);
+                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * Math.Abs(CurrentSwimParams.WaveAmplitude));
             }
 
 
