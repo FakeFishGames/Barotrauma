@@ -126,9 +126,8 @@ namespace Barotrauma
             emitter = new Emitter();
             var emitterEditorContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedRightPanel.RectTransform), style: null);
             var emitterEditor = new SerializableEntityEditor(emitterEditorContainer.RectTransform, emitter, false, true, elementHeight: 20);
-            emitterEditorContainer.RectTransform.NonScaledSize = new Point(
-                emitterEditorContainer.RectTransform.NonScaledSize.X,
-                emitterEditor.ContentHeight);
+            emitterEditor.RectTransform.RelativeSize = Vector2.One;
+            emitterEditorContainer.RectTransform.Resize(new Point(emitterEditorContainer.RectTransform.NonScaledSize.X, emitterEditor.ContentHeight), false);
 
             var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedRightPanel.RectTransform));
 
