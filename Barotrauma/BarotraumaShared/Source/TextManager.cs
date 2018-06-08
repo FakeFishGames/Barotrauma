@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    static class TextManager
+    public static class TextManager
     {
         private static Dictionary<string, List<string>> texts;
 

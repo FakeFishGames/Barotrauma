@@ -29,7 +29,8 @@ namespace Barotrauma
                     for (int i = 0; i < s.ParticleEmitters.Count; i++)
                     {
                         Vector2 emitterPos = s.LocalToWorld(s.Prefab.EmitterPositions[i]);
-                        s.ParticleEmitters[i].Emit(deltaTime, emitterPos);
+                        s.ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null, 
+                            angle: s.ParticleEmitters[i].Prefab.CopyEntityAngle ? s.Rotation : 0.0f);
                     }
                 }
 

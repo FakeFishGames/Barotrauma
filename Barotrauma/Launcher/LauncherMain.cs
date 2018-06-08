@@ -32,7 +32,8 @@ namespace Launcher
 
         private List<DisplayMode> supportedModes;
 
-        private GUIDropDown resolutionDD, contentPackageDD, displayModeDD;
+        private GUIDropDown resolutionDD, displayModeDD;
+        private GUIListBox contentPackageList;
 
         private GUITextBlock updateInfoText;
         private GUIListBox updateInfoBox;
@@ -94,7 +95,8 @@ namespace Launcher
 
             TextureLoader.Init(GraphicsDevice);
 
-            GUI.Init(Window, settings.SelectedContentPackage, GraphicsDevice);
+            GUI.Init(Window, settings.SelectedContentPackages, GraphicsDevice);
+            GUICanvas.Instance.NonScaledSize = new Point(graphicsWidth, graphicsHeight);
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -159,19 +161,9 @@ namespace Launcher
             {
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
-
-            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Content package");
-            contentPackageDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
-
-            foreach (ContentPackage contentPackage in ContentPackage.list)
-            {
-                contentPackageDD.AddItem(contentPackage.Name, contentPackage);
-
-                if (settings.SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
-            }
-            
-            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 130) }, "Display mode");
-            displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 150) });
+                        
+            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 50) }, "Display mode");
+            displayModeDD = new GUIDropDown(new RectTransform(new Point(200, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 70) });
 #if !OSX
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
@@ -181,6 +173,20 @@ namespace Launcher
             displayModeDD.AddItem("Fullscreen", WindowMode.BorderlessWindowed);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
 #endif
+
+
+            new GUITextBlock(new RectTransform(new Point(20, 20), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 100) }, "Content packages");
+            contentPackageList = new GUIListBox(new RectTransform(new Point(200, 120), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y + 120) });
+
+            foreach (ContentPackage contentPackage in ContentPackage.List)
+            {
+                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), contentPackageList.Content.RectTransform, minSize: new Point(0, 15)), contentPackage.Name)
+                {
+                    UserData = contentPackage,
+                    OnSelected = SelectContentPackage,
+                    Selected = settings.SelectedContentPackages.Contains(contentPackage)
+                };
+            }
 
             displayModeDD.SelectItem(settings.WindowMode);
 
@@ -248,33 +254,61 @@ namespace Launcher
                 return false;
             }
 
-            ContentPackage selectedPackage = contentPackageDD.SelectedItemData as ContentPackage;
-            if (selectedPackage == null)
-            {
-                contentPackageDD.Flash();
-                return false;
-            }
-
             settings.GraphicsWidth = selectedMode.Width;
             settings.GraphicsHeight = selectedMode.Height;
-            settings.SelectedContentPackage = selectedPackage;
             settings.Save();
 
             return true;
         }
-        
+
+        private bool SelectContentPackage(GUITickBox tickBox)
+        {
+            var contentPackage = tickBox.UserData as ContentPackage;
+            if (contentPackage.CorePackage)
+            {
+                if (tickBox.Selected)
+                {
+                    //make sure no other core packages are selected
+                    settings.SelectedContentPackages.RemoveWhere(cp => cp.CorePackage && cp != contentPackage);
+                    settings.SelectedContentPackages.Add(contentPackage);
+                    foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
+                    {
+                        otherTickBox.Selected = settings.SelectedContentPackages.Contains(otherTickBox.UserData as ContentPackage);
+                    }
+                }
+                else
+                {
+                    //core packages cannot be deselected, only switched by selecting another core package
+                    new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
+                    tickBox.Selected = true;
+                }
+            }
+            else
+            {
+                if (tickBox.Selected)
+                {
+                    settings.SelectedContentPackages.Add(contentPackage);
+                }
+                else
+                {
+                    settings.SelectedContentPackages.Remove(contentPackage);
+                }
+            }
+            return true;
+        }
+
         private bool LaunchClick(GUIButton button, object obj)
         {
             if (!TrySaveSettings(configPath)) return false;
             
-            var executables = settings.SelectedContentPackage.GetFilesOfType(ContentType.Executable);
-            if (executables.Count == 0)
+            var executables = ContentPackage.GetFilesOfType(settings.SelectedContentPackages, ContentType.Executable);
+            if (!executables.Any())
             {
                 ShowError("Error", "The game executable isn't configured in the selected content package.");
                 return false;
             }
 
-            string exePath = Directory.GetCurrentDirectory() + "//" + executables[0];
+            string exePath = Path.Combine(Directory.GetCurrentDirectory(), executables.First());
             if (!File.Exists(exePath))
             {
                 ShowError("Error", "Couldn't find the executable \"" + exePath + "\"!");

@@ -103,11 +103,11 @@ namespace Barotrauma
 
         public static bool DisableHUD;
 
-        public static void Init(GameWindow window, ContentPackage selectedContentPackage, GraphicsDevice graphicsDevice)
+        public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GUI.graphicsDevice = graphicsDevice;
             KeyboardDispatcher = new KeyboardDispatcher(window);
-            var uiStyles = selectedContentPackage.GetFilesOfType(ContentType.UIStyle);
+            var uiStyles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle).ToList();
             if (uiStyles.Count == 0)
             {
                 DebugConsole.ThrowError("No UI styles defined in the selected content package!");

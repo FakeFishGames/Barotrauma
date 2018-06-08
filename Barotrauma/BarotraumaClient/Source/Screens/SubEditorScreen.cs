@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public GUIComponent topPanel, leftPanel;
 
-        private bool entityMenuOpen;
+        private bool entityMenuOpen, entityMenuOpened;
         private GUIComponent entityMenu;
         private GUITextBox entityFilterBox;
         private GUIListBox entityList;
@@ -47,6 +47,8 @@ namespace Barotrauma
         private GUIListBox previouslyUsedList;
 
         private GUIDropDown linkedSubBox;
+
+        private GUITickBox characterModeTickBox, wiringModeTickBox;
 
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
@@ -213,7 +215,7 @@ namespace Barotrauma
                 return true;
             };
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(130, 0) }, "GUIFrameLeft");
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), GUI.Canvas) { MinSize = new Point(170, 0) }, "GUIFrameLeft");
             GUILayoutGroup paddedLeftPanel = new GUILayoutGroup(new RectTransform(
                 new Point((int)(leftPanel.Rect.Width * 0.8f), (int)(GameMain.GraphicsHeight - topPanel.Rect.Height * 0.95f)),
                 leftPanel.RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, topPanel.Rect.Height) }) { AbsoluteSpacing = 5 };
@@ -265,18 +267,30 @@ namespace Barotrauma
             UpdateEntityList();                       
 
             //empty guiframe as a separator
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
 
-            button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("CharacterModeButton"))
+            characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("CharacterModeButton"))
             {
                 ToolTip = TextManager.Get("CharacterModeToolTip"),
-                OnClicked = ToggleCharacterMode
+                OnSelected = (GUITickBox tBox) =>
+                {
+                    SetCharacterMode(tBox.Selected);
+                    return true;
+                }
             };
-            button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("WiringModeButton"))
+            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("WiringModeButton"))
             {
                 ToolTip = TextManager.Get("WiringModeToolTip"),
-                OnClicked = ToggleWiringMode
+                OnSelected = (GUITickBox tBox) =>
+                {
+                    SetWiringMode(tBox.Selected);
+                    return true;
+                }
             };
+
+            //empty guiframe as a separator
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), paddedLeftPanel.RectTransform), style: null);
+
             button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), TextManager.Get("GenerateWaypointsButton"))
             {
                 ToolTip = TextManager.Get("GenerateWaypointsToolTip"),
@@ -385,7 +399,7 @@ namespace Barotrauma
             base.Select();
 
             GUI.ForceMouseOn(null);
-            characterMode = false;
+            SetCharacterMode(false);
 
             if (Submarine.MainSub != null)
             {
@@ -421,9 +435,8 @@ namespace Barotrauma
 
             MapEntity.DeselectAll();
 
-            if (characterMode) ToggleCharacterMode();
-
-            if (wiringMode) ToggleWiringMode();
+            if (characterMode) SetCharacterMode(false);
+            if (wiringMode) SetWiringMode(false);
 
             SoundPlayer.OverrideMusicType = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("default", GameMain.Config.SoundVolume);
@@ -482,7 +495,10 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
-            Submarine.MainSub.CompatibleContentPackages.Add(GameMain.Config.SelectedContentPackage.Name);
+            /*foreach (var contentPackage in GameMain.Config.SelectedContentPackages)
+            {
+                Submarine.MainSub.RequiredContentPackages.Add(contentPackage.Name);
+            }*/
 
             MemoryStream imgStream = new MemoryStream();
             CreateImage(256, 128, imgStream);
@@ -506,8 +522,8 @@ namespace Barotrauma
 
         private void CreateSaveScreen()
         {
-            if (characterMode) ToggleCharacterMode();
-            if (wiringMode) ToggleWiringMode();
+            if (characterMode) SetCharacterMode(false);
+            if (wiringMode) SetWiringMode(false);
             
             saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.36f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 400) });
             GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
@@ -571,7 +587,7 @@ namespace Barotrauma
             }
             
             var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.45f, 0.0f), horizontalArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), 
-                TextManager.Get("CompatibleContentPackages"), font: GUI.SmallFont);
+                TextManager.Get("RequiredContentPackages"), font: GUI.SmallFont);
 
             var contentPackList = new GUIListBox(new RectTransform(
                 new Point(horizontalArea.Rect.Width / 2, horizontalArea.Rect.Height - settingsLabel.Rect.Height), 
@@ -581,8 +597,8 @@ namespace Barotrauma
                     AbsoluteOffset = new Point(0, contentPackagesLabel.Rect.Height)
                 });
 
-            List<string> contentPacks = Submarine.MainSub.CompatibleContentPackages.ToList();
-            foreach (ContentPackage contentPack in ContentPackage.list)
+            List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
+            foreach (ContentPackage contentPack in ContentPackage.List)
             {
                 if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
             }
@@ -591,18 +607,18 @@ namespace Barotrauma
             {
                 var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
-                    Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName),
+                    Selected = Submarine.MainSub.RequiredContentPackages.Contains(contentPackageName),
                     UserData = contentPackageName
                 };
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>
                 {
                     if (tickBox.Selected)
                     {
-                        Submarine.MainSub.CompatibleContentPackages.Add((string)tickBox.UserData);
+                        Submarine.MainSub.RequiredContentPackages.Add((string)tickBox.UserData);
                     }
                     else
                     {
-                        Submarine.MainSub.CompatibleContentPackages.Remove((string)tickBox.UserData);
+                        Submarine.MainSub.RequiredContentPackages.Remove((string)tickBox.UserData);
                     }
                     return true;
                 };
@@ -701,8 +717,8 @@ namespace Barotrauma
 
         private void CreateSaveAssemblyScreen()
         {
-            if (characterMode) ToggleCharacterMode();
-            if (wiringMode) ToggleWiringMode();
+            if (characterMode) SetCharacterMode(false);
+            if (wiringMode) SetWiringMode(false);
 
             saveFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.2f), GUI.Canvas, Anchor.Center) { MinSize = new Point(400, 200) });
             GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), saveFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
@@ -775,8 +791,8 @@ namespace Barotrauma
 
         private bool CreateLoadScreen()
         {
-            if (characterMode) ToggleCharacterMode();
-            if (wiringMode) ToggleWiringMode();
+            if (characterMode) SetCharacterMode(false);
+            if (wiringMode) SetWiringMode(false);
 
             Submarine.RefreshSavedSubs();
             
@@ -908,15 +924,14 @@ namespace Barotrauma
 
         private bool OpenEntityMenu(MapEntityCategory selectedCategory)
         {
-            if (characterMode) ToggleCharacterMode();
-            if (wiringMode) ToggleWiringMode();
+            if (characterMode) SetCharacterMode(false);
+            if (wiringMode) SetWiringMode(false);
 
             saveFrame = null;
             loadFrame = null;
 
             ClearFilter();
-            entityFilterBox.Text = "";
-            entityFilterBox.Select();
+            entityMenuOpened = true;
 
             foreach (GUIComponent child in entityList.Content.Children)
             {
@@ -955,16 +970,13 @@ namespace Barotrauma
             return true;
         }
 
-        public void ToggleCharacterMode()
+        public bool SetCharacterMode(bool enabled)
         {
-            ToggleCharacterMode(null,null);
-        }
-
-        private bool ToggleCharacterMode(GUIButton button, object obj)
-        {
-            entityMenuOpen = false;
+            characterModeTickBox.Selected = enabled;
+            characterMode = enabled;
+            wiringModeTickBox.Selected = false;
             wiringMode = false;
-            characterMode = !characterMode;
+            entityMenuOpen = false;
 
             if (characterMode)
             {
@@ -985,15 +997,11 @@ namespace Barotrauma
             return true;
         }
 
-        private void ToggleWiringMode()
+        public bool SetWiringMode(bool enabled)
         {
-            ToggleWiringMode(null, null);
-        }
-        
-        private bool ToggleWiringMode(GUIButton button, object obj)
-        {
-            wiringMode = !wiringMode;
-
+            wiringModeTickBox.Selected = enabled;
+            wiringMode = enabled;
+            characterModeTickBox.Selected = false;
             characterMode = false;
 
             if (wiringMode)
@@ -1031,10 +1039,10 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.27f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(65, 300) },
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(120, 300) },
                 style: "GUIFrameRight");
 
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.8f, 0.85f), frame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) })
             {
                 OnSelected = SelectWire
             };
@@ -1045,7 +1053,7 @@ namespace Barotrauma
                 if (itemPrefab == null || itemPrefab.Name == null) continue;
                 if (!itemPrefab.Name.Contains("Wire") && (itemPrefab.Aliases == null || !itemPrefab.Aliases.Any(a => a.Contains("Wire")))) continue;
 
-                GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width, listBox.Rect.Width), listBox.Content.RectTransform), style: "ListBoxElement")
+                GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width - 20, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = itemPrefab
                 };
@@ -1175,10 +1183,11 @@ namespace Barotrauma
 
             string name = ToolBox.LimitString(mapEntityPrefab.Name,15);
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), previouslyUsedList.Content.RectTransform) { MinSize = new Point(0, 15) }, 
-                ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), font: GUI.SmallFont);
-
-            textBlock.UserData = mapEntityPrefab;
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), previouslyUsedList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), font: GUI.SmallFont)
+            {
+                UserData = mapEntityPrefab
+            };
             textBlock.RectTransform.SetAsFirstChild();
         }
         
@@ -1244,8 +1253,10 @@ namespace Barotrauma
                 max.Y = Math.Max(max.Y, wallPoints[i].Y);
             }
 
-            List<Rectangle> hullRects = new List<Rectangle>();
-            hullRects.Add(new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y)));
+            List<Rectangle> hullRects = new List<Rectangle>
+            {
+                new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y))
+            };
             foreach (Vector2 point in wallPoints)
             {
                 MathUtils.SplitRectanglesHorizontal(hullRects, point);
@@ -1536,6 +1547,13 @@ namespace Barotrauma
         {
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
+            if (entityMenuOpened)
+            {
+                entityFilterBox.Text = "";
+                entityFilterBox.Select();
+                entityMenuOpened = false;
+            }
+
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
             
@@ -1551,7 +1569,7 @@ namespace Barotrauma
             {
                 if (dummyCharacter == null || Entity.FindEntityByID(dummyCharacter.ID) != dummyCharacter)
                 {
-                    ToggleCharacterMode(null, null);
+                    SetCharacterMode(false);
                 }
                 else
                 {

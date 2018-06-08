@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 #endif
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -209,8 +210,8 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
-            var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
+            var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+            var configFile = characterFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
 
             if (string.IsNullOrEmpty(configFile))
             {

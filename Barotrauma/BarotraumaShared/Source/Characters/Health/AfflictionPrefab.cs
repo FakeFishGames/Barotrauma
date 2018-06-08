@@ -107,7 +107,7 @@ namespace Barotrauma
 
         private readonly ConstructorInfo constructor;
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             foreach (string filePath in filePaths)
             {

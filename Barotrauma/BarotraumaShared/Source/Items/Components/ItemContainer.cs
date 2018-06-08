@@ -35,13 +35,12 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-
-        private bool drawInventory;
-        [Serialize(false, false)]
+        
+        [Serialize(true, false)]
         public bool DrawInventory
         {
-            get { return drawInventory; }
-            set { drawInventory = value; }
+            get;
+            set;
         }
 
         //the position of the first item in the container

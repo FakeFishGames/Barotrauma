@@ -419,10 +419,12 @@ namespace Barotrauma
                 }
             }
 
+#if DEBUG
             if (generationParams.ShowNoiseMap)
             {
                 GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
             }
+#endif
             Vector2 topLeft = rectCenter + drawOffset * zoom;
             topLeft.X = (int)topLeft.X;
             topLeft.Y = (int)topLeft.Y;

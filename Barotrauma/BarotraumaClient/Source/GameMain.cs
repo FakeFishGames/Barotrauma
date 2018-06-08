@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace Barotrauma
@@ -39,9 +40,9 @@ namespace Barotrauma
 
         public static Sounds.SoundManager SoundManager;
 
-        public static ContentPackage SelectedPackage
+        public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackage; }
+            get { return Config.SelectedContentPackages; }
         }
 
         public static GameSession GameSession;
@@ -257,12 +258,20 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume);
             
-            GUI.Init(Window, Config.SelectedContentPackage, GraphicsDevice);
+            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
             SteamManager.Initialize();
 
-            DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
+            if (SelectedPackages.Count == 0)
+            {
+                DebugConsole.Log("No content packages selected");
+            }
+            else
+            {
+                DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
+            }
+
         yield return CoroutineStatus.Running;
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
@@ -280,24 +289,24 @@ namespace Barotrauma
             Tutorials.Tutorial.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
-            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
-            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             // Add any missing jobs from the prefab into Config.JobNamePreferences.
             foreach (JobPrefab job in JobPrefab.List)
             {
                 if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
             }
 
-            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
-            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;
 
-            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             TitleScreen.LoadState = 30.0f;
         yield return CoroutineStatus.Running;
 
@@ -373,6 +382,14 @@ namespace Barotrauma
         protected override void UnloadContent()
         {
             SoundManager.Dispose();
+        }
+
+        /// <summary>
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
+        /// </summary>
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
         }
         
         /// <summary>

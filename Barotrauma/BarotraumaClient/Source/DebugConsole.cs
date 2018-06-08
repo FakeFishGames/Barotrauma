@@ -354,7 +354,7 @@ namespace Barotrauma
 
                 if (GameMain.SubEditorScreen.CharacterMode)
                 {
-                    GameMain.SubEditorScreen.ToggleCharacterMode();
+                    GameMain.SubEditorScreen.SetCharacterMode(false);
                 }
 
                 string fileName = string.Join(" ", args);

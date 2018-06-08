@@ -91,8 +91,12 @@ namespace Barotrauma
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center) : base(style, rectT)
         {
-            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: textAlignment, style: style);
-            textBox.OnTextChanged += TextChanged;
+            textBox = new GUITextBox(new RectTransform(Vector2.One, rectT), textAlignment: textAlignment, style: style)
+            {
+                ClampText = false,
+                OnTextChanged = TextChanged
+            };
+            
 
             int height = Rect.Height / 2;
             var buttonSize = new Point(height, height);

@@ -23,7 +23,6 @@ namespace Barotrauma.Items.Components
                 MaxValue = 0.75f
             };
             var sliderHandle = isActiveSlider.GetChild<GUIButton>();
-            sliderHandle.RectTransform.AbsoluteOffset -= new Point((88 - sliderHandle.Rect.Width) / 2, 0);
             sliderHandle.RectTransform.NonScaledSize = new Point(84, sliderHandle.Rect.Height);
             
             isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>

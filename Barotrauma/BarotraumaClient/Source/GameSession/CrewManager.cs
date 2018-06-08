@@ -421,7 +421,7 @@ namespace Barotrauma
 
         public void ReviveCharacter(Character revivedCharacter)
         {
-            if (characterListBox.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
+            if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
             {
                 characterBlock.Color = Color.Transparent;
             }
@@ -433,7 +433,7 @@ namespace Barotrauma
 
         public void KillCharacter(Character killedCharacter)
         {
-            if (characterListBox.GetChildByUserData(killedCharacter) is GUIComponent characterBlock)
+            if (characterListBox.Content.GetChildByUserData(killedCharacter) is GUIComponent characterBlock)
             {
                 CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
             }

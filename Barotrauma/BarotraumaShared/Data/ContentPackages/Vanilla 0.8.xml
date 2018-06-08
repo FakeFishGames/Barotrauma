@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Vanilla 0.8" path="Data/ContentPackages/Vanilla 0.8">
+<contentpackage name="Vanilla 0.8" path="Data/ContentPackages/Vanilla 0.8" corepackage="true">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />
@@ -27,6 +27,7 @@
   <Item file="Content/Items/SearchLight/searchlight.xml" />
   <Item file="Content/Items/Reactor/reactor.xml" />
   <Item file="Content/Items/Tools/tools.xml" />
+  <Item file="Content/Items/Weapons/coilgun.xml" />
   <Item file="Content/Items/Weapons/depthcharge.xml" />
   <Item file="Content/Items/Weapons/explosives.xml" />
   <Item file="Content/Items/Weapons/railgun.xml" />

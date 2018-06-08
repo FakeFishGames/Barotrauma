@@ -20,6 +20,8 @@ namespace Barotrauma
         {
             get
             {
+                if (layoutGroup.NeedsToRecalculate) layoutGroup.Recalculate();
+
                 int spacing = layoutGroup.CountChildren == 0 ? 0 : ((layoutGroup.CountChildren - 1) * layoutGroup.AbsoluteSpacing);
                 return spacing + layoutGroup.Children.Sum(c => c.RectTransform.NonScaledSize.Y);
             }
@@ -350,21 +352,21 @@ namespace Barotrauma
         private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
-            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
             {
-                Stretch = false,
-                RelativeSpacing = 0.03f
+                Stretch = true,
+                RelativeSpacing = 0.02f
             };
             var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
-                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), vectorComponentLabels[i], textAlignment: Alignment.Center, font: GUI.SmallFont);
-                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
+                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent, style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), element.RectTransform), vectorComponentLabels[i], textAlignment: Alignment.Center, font: GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.8f, 1), element.RectTransform, Anchor.TopRight),
                     GUINumberInput.NumberType.Float)
                 {
                     Font = GUI.SmallFont
@@ -417,14 +419,14 @@ namespace Barotrauma
             var colorBox = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
             {
-                Stretch = false,
-                RelativeSpacing = 0.03f
+                Stretch = true,
+                RelativeSpacing = 0.01f
             };
             var fields = new GUIComponent[4];
             for (int i = 0; i < 4; i++)
             {
-                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform));
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), colorComponentLabels[i], textAlignment: Alignment.Center, font: GUI.SmallFont);
+                var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform), color: Color.Transparent, style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.25f, 1), element.RectTransform), colorComponentLabels[i], textAlignment: Alignment.Center, font: GUI.SmallFont);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
                     GUINumberInput.NumberType.Int)
                 {
@@ -473,16 +475,20 @@ namespace Barotrauma
         private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value)
         {
             var frame = new GUIFrame(new RectTransform(new Point(Rect.Width, elementHeight), layoutGroup.RectTransform), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), frame.RectTransform), property.Name, font: GUI.SmallFont)
             {
                 ToolTip = property.GetAttribute<Editable>().ToolTip
             };
             var fields = new GUIComponent[4];
-            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true) { Stretch = true };
+            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
             for (int i = 0; i < 4; i++)
             {
-                var element = new GUIFrame(new RectTransform(new Vector2(0.5f, 1), inputArea.RectTransform), color: Color.Transparent);
-                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform), rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
+                var element = new GUIFrame(new RectTransform(new Vector2(0.5f, 1), inputArea.RectTransform), color: Color.Transparent, style: null);
+                new GUITextBlock(new RectTransform(new Vector2(0.25f, 1), element.RectTransform), rectComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.TopRight),
                     GUINumberInput.NumberType.Int)
                 {

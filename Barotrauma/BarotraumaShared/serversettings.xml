@@ -2,7 +2,8 @@
 <serversettings
   name="Server"
   ServerMessage=""
-  port="14242"
+  port="27015"
+  queryport="27016"
   password=""
   public="True"
   maxplayers="10"

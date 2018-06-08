@@ -278,24 +278,27 @@ namespace Barotrauma.Items.Components
             Character character = null;
             if (attack != null)
             {
-                var submarine = target.Body.UserData as Submarine;
-                if (submarine != null)
+                if (target.Body.UserData is Submarine submarine)
                 {
                     item.Move(-submarine.Position);
                     item.Submarine = submarine;
                     item.body.Submarine = submarine;
                     return true;
                 }
-
-                Limb limb = target.Body.UserData as Limb;
-                Structure structure;
-                if (limb != null)
+                else if (target.Body.UserData is Limb limb)
                 {
+                    //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
+                    if (limb.IsSevered)
+                    {
+                        target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
+                        return true;
+                    }
+
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
                     if (limb.character != null)
                         character = limb.character;
                 }
-                else if ((structure = (target.Body.UserData as Structure)) != null)
+                else if (target.Body.UserData is Structure structure)
                 {
                     attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f);
                 }
