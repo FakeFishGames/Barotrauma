@@ -73,13 +73,15 @@ namespace Barotrauma
                     if (selectedSub == null) return false;
 
                     string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                    if (selectedSub.HasTag(SubmarineTag.Shuttle) || !selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
+                    bool hasRequiredContentPackages = selectedSub.RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+
+                    if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
                     {
-                        if (!selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
+                        if (!hasRequiredContentPackages)
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
                                 TextManager.Get("ContentPackageMismatchWarning")
-                                    .Replace("[selectedcontentpackage]", GameMain.SelectedPackage.Name),
+                                    .Replace("[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
@@ -142,21 +144,6 @@ namespace Barotrauma
                         UserData = sub
                     };
 
-                if (sub.HasTag(SubmarineTag.Shuttle))
-                {
-                    textBlock.TextColor = textBlock.TextColor * 0.85f;
-
-                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
-                    {
-                        IsFixedSize = false,
-                        AbsoluteOffset = new Point(40, 0)
-                    },
-                        TextManager.Get("Shuttle"), font: GUI.SmallFont)
-                    {
-                        TextColor = textBlock.TextColor * 0.8f,
-                        ToolTip = textBlock.ToolTip
-                    };
-                }
 
                 var infoButton = new GUIButton(new RectTransform(new Vector2(0.12f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), text: "?")
                 {
@@ -168,6 +155,22 @@ namespace Barotrauma
                     ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", 550, 400));
                     return true;
                 };
+
+                if (sub.HasTag(SubmarineTag.Shuttle))
+                {
+                    textBlock.TextColor = textBlock.TextColor * 0.85f;
+
+                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
+                    {
+                        IsFixedSize = false,
+                        RelativeOffset = new Vector2(infoButton.RectTransform.RelativeSize.X + 0.01f, 0)
+                    },
+                        TextManager.Get("Shuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
+                    {
+                        TextColor = textBlock.TextColor * 0.8f,
+                        ToolTip = textBlock.ToolTip
+                    };
+                }
             }
             if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
         }

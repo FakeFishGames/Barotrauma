@@ -75,8 +75,15 @@ namespace Barotrauma.Networking
         {
             get { return !string.IsNullOrEmpty(password); }
         }
+        
+        //only used when connected to steam
+        public int QueryPort
+        {
+            get;
+            set;
+        }
 
-        public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
+        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -108,6 +115,7 @@ namespace Barotrauma.Networking
 #endif
             config.Port = port;
             Port = port;
+            QueryPort = queryPort;
 
             if (attemptUPnP)
             {
@@ -246,9 +254,9 @@ namespace Barotrauma.Networking
             request.AddParameter("maxplayers", maxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
             request.AddParameter("version", GameMain.Version.ToString());
-            if (GameMain.Config.SelectedContentPackage != null)
+            if (GameMain.Config.SelectedContentPackages.Count > 0)
             {
-                request.AddParameter("contentpackage", GameMain.Config.SelectedContentPackage.Name);
+                request.AddParameter("contentpackages", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             }
 
             masterServerResponded = false;
@@ -2106,15 +2114,29 @@ namespace Barotrauma.Networking
 
         public void UpdateClientPermissions(Client client)
         {           
-            clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
-
-            if (client.Permissions != ClientPermissions.None)
+            if (client.SteamID > 0)
             {
-                clientPermissions.Add(new SavedClientPermission(
-                    client.Name, 
-                    client.Connection.RemoteEndPoint.Address.ToString(), 
-                    client.Permissions,
-                    client.PermittedConsoleCommands));
+                clientPermissions.RemoveAll(cp => cp.SteamID == client.SteamID);
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    clientPermissions.Add(new SavedClientPermission(
+                        client.Name, 
+                        client.SteamID, 
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
+            }
+            else
+            {
+                clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
+                if (client.Permissions != ClientPermissions.None)
+                {
+                    clientPermissions.Add(new SavedClientPermission(
+                        client.Name, 
+                        client.Connection.RemoteEndPoint.Address.ToString(), 
+                        client.Permissions,
+                        client.PermittedConsoleCommands));
+                }
             }
 
             var msg = server.CreateMessage();

@@ -370,7 +370,7 @@ namespace Barotrauma
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list.
         /// </summary>
-        public void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
+        public virtual void DrawManually(SpriteBatch spriteBatch, bool alsoChildren = false, bool recursive = true)
         {
             if (!Visible) return;
 

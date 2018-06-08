@@ -120,7 +120,7 @@ namespace Barotrauma
             return List[Rand.Int(List.Count)];
         }
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             List = new List<JobPrefab>();
 

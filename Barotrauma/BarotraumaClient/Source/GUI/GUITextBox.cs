@@ -30,7 +30,7 @@ namespace Barotrauma
         public OnTextChangedHandler OnTextChanged;
 
         public bool CaretEnabled;
-
+        
         private int? maxTextLength;
 
         private int caretIndex;
@@ -52,7 +52,18 @@ namespace Barotrauma
         public bool Wrap
         {
             get { return textBlock.Wrap; }
-            set { textBlock.Wrap = value; }
+            set
+            {
+                textBlock.Wrap = value;
+            }
+        }
+
+        //should the text be limited to the size of the box
+        //ignored when MaxTextLength is set or text wrapping is enabled
+        public bool ClampText
+        {
+            get;
+            set;
         }
 
         public int? MaxTextLength
@@ -152,7 +163,7 @@ namespace Barotrauma
                             Text = textBlock.Text.Substring(0, (int)maxTextLength);
                         }
                     }
-                    else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
+                    else if (ClampText && Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                     {
                         Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                     }                    

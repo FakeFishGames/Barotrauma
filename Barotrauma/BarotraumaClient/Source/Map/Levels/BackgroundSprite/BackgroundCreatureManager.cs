@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             LoadConfig(configPath);
         }
-        public BackgroundCreatureManager(List<string> files)
+        public BackgroundCreatureManager(IEnumerable<string> files)
         {
             foreach(var file in files)
             {

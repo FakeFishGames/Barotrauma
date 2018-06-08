@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -49,7 +50,7 @@ namespace Barotrauma
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/.");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version);
-            sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
+            sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));

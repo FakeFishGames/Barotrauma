@@ -43,7 +43,7 @@ namespace Barotrauma.Tutorials
         public static void Init()
         {
             Tutorials = new List<Tutorial>();
-            foreach (string file in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Tutorials))
+            foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.Tutorials))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
                 if (doc?.Root == null) continue;

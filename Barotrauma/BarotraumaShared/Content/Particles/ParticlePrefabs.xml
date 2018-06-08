@@ -647,7 +647,38 @@
     animduration="3"
     loopanim="True">
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
-  </fleshsmoke>  
+  </fleshsmoke>
+  
+  <ammotrailwater
+    lifetime="1"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="0"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0"
+    velocitychangewater="0,0"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.0"
+    restitution="0.0"
+    startsizemin="1,0.1"
+    startsizemax="2,0.2"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.1,0.1"
+    growtime="0.0"
+    startcolor="1,1,1,1"
+    startalpha="0.4"
+    colorchange="0,0,0,0"
+    drawtarget="Water"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </ammotrailwater>
   
   <extinguisher
     startsizemin="1.2,1.2" startsizemax="1.5,1.5"

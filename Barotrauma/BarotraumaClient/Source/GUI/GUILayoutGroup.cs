@@ -63,6 +63,12 @@ namespace Barotrauma
             }
         }
 
+        private bool needsToRecalculate;
+        public bool NeedsToRecalculate
+        {
+            get { return needsToRecalculate; }
+        }
+
         public GUILayoutGroup(RectTransform rectT, bool isHorizontal = false, Anchor childAnchor = Anchor.TopLeft) : base(null, rectT)
         {
             this.isHorizontal = isHorizontal;
@@ -72,8 +78,7 @@ namespace Barotrauma
             rectT.SizeChanged += () => needsToRecalculate = true;
         }
 
-        private bool needsToRecalculate;
-        protected void Recalculate()
+        public void Recalculate()
         {
             float stretchFactor = 1.0f;
             if (stretch && RectTransform.Children.Count() > 0)

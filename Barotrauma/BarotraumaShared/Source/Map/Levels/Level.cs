@@ -201,8 +201,8 @@ namespace Barotrauma
         {
             if (backgroundSpriteManager == null)
             {
-                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
-                if (files.Count > 0)
+                var files = GameMain.Instance.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
+                if (files.Count() > 0)
                     backgroundSpriteManager = new BackgroundSpriteManager(files);
                 else
                     backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
@@ -210,8 +210,8 @@ namespace Barotrauma
 #if CLIENT
             if (backgroundCreatureManager == null)
             {
-                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
-                if (files.Count > 0)
+                var files = GameMain.Instance.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
+                if (files.Count() > 0)
                     backgroundCreatureManager = new BackgroundCreatureManager(files);
                 else
                     backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");

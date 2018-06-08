@@ -19,6 +19,9 @@
   <!-- Host server menu -->
   <ServerName>Server name</ServerName>
   <ServerPort>Server port</ServerPort>
+  <ServerPortToolTip>The port used to communicate with clients. If clients fail to connect to your server, you may need to enable UPnP port forwarding on forward the port manually.</ServerPortToolTip>
+  <ServerQueryPort>Query port</ServerQueryPort>
+  <ServerQueryPortToolTip>The port used to communicate with Steam's server browser and respond to info pings from clients. If clients don't see your server in the server list or if authenticating their Steam ID fails, you may need to enable UPnP port forwarding on forward the port manually.</ServerQueryPortToolTip>
   <MaxPlayers>Max players</MaxPlayers>
   <Password>Password</Password>
   <PublicServer>Public server</PublicServer>
@@ -43,6 +46,8 @@
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
   <ContentPackage>Content package</ContentPackage>
+  <ContentPackages>Content packages</ContentPackages>
+  <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
   <ApplySettingsButton>Apply</ApplySettingsButton>
   <ApplySettingsLabel>Apply changes?</ApplySettingsLabel>
   <ApplySettingsQuestion>Do you want to apply the settings or discard the changes?</ApplySettingsQuestion>
@@ -196,7 +201,7 @@
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
-  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
+  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content packages, because it requires the content packages [requiredcontentpackages]. Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
 
   <!-- Campaign menu -->
   <Map>Map</Map>
@@ -231,7 +236,7 @@
   <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
   <ServerListUnknownContentPackage>Could not determine compatibility (unknown content package)</ServerListUnknownContentPackage>
   <ServerListIncompatibleVersion>This server is not compatible with your version of Barotrauma [version] required).</ServerListIncompatibleVersion>
-  <ServerListIncompatibleContentPackage>You need the content package "[contentpackage]" (MD5: [hash]) to play on this server.</ServerListIncompatibleContentPackage>
+  <ServerListIncompatibleContentPackage>Content package "[contentpackage]" (MD5: [hash]) required to play on this server.</ServerListIncompatibleContentPackage>
   <FilterServers>Filter servers</FilterServers>
   <FilterPassword>No password required</FilterPassword>
   <FilterIncompatibleServers>Hide incompatible servers</FilterIncompatibleServers>
@@ -370,7 +375,7 @@
   <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
   <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
   <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
-  <CompatibleContentPackages>Compatible content packages</CompatibleContentPackages>
+  <RequiredContentPackages>Required content packages</RequiredContentPackages>
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>

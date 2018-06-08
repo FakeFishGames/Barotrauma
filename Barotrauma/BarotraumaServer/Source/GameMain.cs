@@ -51,17 +51,15 @@ namespace Barotrauma
         
         public static bool ShouldRun = true;
 
-        public static ContentPackage SelectedPackage
+        public static HashSet<ContentPackage> SelectedPackages
         {
-            get { return Config.SelectedContentPackage; }
+            get { return Config.SelectedContentPackages; }
         }
 
         public GameMain()
         {
             Instance = this;
-
-            SteamManager.Initialize();
-
+            
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -76,6 +74,7 @@ namespace Barotrauma
                 Config.Save();
             }
 
+            SteamManager.Initialize();
             GameScreen = new GameScreen();
         }
 
@@ -86,11 +85,11 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
-            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
-            NPCConversation.LoadAll(SelectedPackage.GetFilesOfType(ContentType.NPCConversations));
-            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
-            AfflictionPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Afflictions));
+            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
+            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
             LocationType.Init();
@@ -102,19 +101,28 @@ namespace Barotrauma
             NetLobbyScreen = new NetLobbyScreen();
         }
 
+        /// <summary>
+        /// Returns the file paths of all files of the given type in the currently selected content packages.
+        /// </summary>
+        public IEnumerable<string> GetFilesOfType(ContentType type)
+        {
+            return ContentPackage.GetFilesOfType(SelectedPackages, type);
+        }
+
         public void StartServer()
         {
             XDocument doc = XMLExtensions.TryLoadXml(GameServer.SettingsFile);
             if (doc == null)
             {
                 DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
-                Server = new GameServer("Server", 14242, false, "", false, 10);
+                Server = new GameServer("Server", NetConfig.DefaultPort, NetConfig.DefaultQueryPort, false, "", false, 10);
                 return;
             }
 
             Server = new GameServer(
                 doc.Root.GetAttributeString("name", "Server"),
-                doc.Root.GetAttributeInt("port", 14242),
+                doc.Root.GetAttributeInt("port", NetConfig.DefaultPort),
+                doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort),
                 doc.Root.GetAttributeBool("public", false),
                 doc.Root.GetAttributeString("password", ""),
                 doc.Root.GetAttributeBool("enableupnp", false),

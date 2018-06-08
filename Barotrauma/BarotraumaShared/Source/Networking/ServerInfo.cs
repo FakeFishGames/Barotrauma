@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    public struct ServerInfo
+    public class ServerInfo
     {
         public string IP;
         public string Port;
@@ -15,7 +14,26 @@ namespace Barotrauma.Networking
         public bool HasPassword;
 
         public string GameVersion;
-        public string ContentPackageName;
-        public string ContentPackageHash;
+        public List<string> ContentPackageNames
+        {
+            get;
+            private set;
+        } = new List<string>();
+        public List<string> ContentPackageHashes
+        {
+            get;
+            private set;
+        } = new List<string>();
+
+        public bool ContentPackagesMatch(IEnumerable<ContentPackage> myContentPackages)
+        {
+            return ContentPackagesMatch(myContentPackages.Select(cp => cp.MD5hash.Hash));
+        }
+
+        public bool ContentPackagesMatch(IEnumerable<string> myContentPackageHashes)
+        {
+            HashSet<string> contentPackageHashes = new HashSet<string>(ContentPackageHashes);
+            return contentPackageHashes.SetEquals(myContentPackageHashes);
+        }
     }
 }

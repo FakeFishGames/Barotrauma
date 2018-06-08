@@ -216,8 +216,15 @@ namespace Barotrauma.Networking
                 }
             }
             string clVersion = inc.ReadString();
-            string clPackageName = inc.ReadString();
-            string clPackageHash = inc.ReadString();
+
+            UInt16 contentPackageCount = inc.ReadUInt16();
+            List<string> contentPackageNames = new List<string>();
+            List<string> contentPackageHashes = new List<string>();
+            for (int i = 0; i < contentPackageCount; i++)
+            {
+                contentPackageNames.Add(inc.ReadString());
+                contentPackageHashes.Add(inc.ReadString());
+            }
 
             string clName = Client.SanitizeName(inc.ReadString());
             if (string.IsNullOrWhiteSpace(clName))
@@ -237,7 +244,9 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", Color.Red);
                 return;
             }
-            if (clPackageName != GameMain.SelectedPackage.Name)
+
+            //TODO: check that content packages match and tell the client which ones are missing / which ones the server isn't using
+            /*if (clPackageName != GameMain.SelectedPackage.Name)
             {
                 DisconnectUnauthClient(inc, unauthClient, "Your content package (" + clPackageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package name)", ServerLog.MessageType.Error);
@@ -250,7 +259,7 @@ namespace Barotrauma.Networking
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package hash)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package hash)", Color.Red);
                 return;
-            }
+            }*/
             
             if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
@@ -310,7 +319,11 @@ namespace Barotrauma.Networking
 #endif
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
-            var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+            var savedPermissions = clientPermissions.Find(cp => 
+                cp.SteamID > 0 ? 
+                cp.SteamID == newClient.SteamID :            
+                cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+
             if (savedPermissions != null)
             {
                 newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
