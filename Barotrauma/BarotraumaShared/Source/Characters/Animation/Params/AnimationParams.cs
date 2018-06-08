@@ -34,6 +34,12 @@ namespace Barotrauma
         public float TorsoPosition { get; set; }
     }
 
+    abstract class SwimParams : AnimationParams
+    {
+        [Serialize(25.0f, true), Editable]
+        public float SteerTorque { get; set; }
+    }
+
     // TODO: add some of the ragdoll params here?
     abstract class AnimationParams : ISerializableEntity
     {

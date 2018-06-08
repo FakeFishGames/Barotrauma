@@ -66,8 +66,8 @@ namespace Barotrauma
 
         public override GroundedMovementParams WalkParams => FishWalkParams;
         public override GroundedMovementParams RunParams => FishRunParams;
-        public override AnimationParams SwimSlowParams => FishSwimSlowParams;
-        public override AnimationParams SwimFastParams => FishSwimFastParams;
+        public override SwimParams SwimSlowParams => FishSwimSlowParams;
+        public override SwimParams SwimFastParams => FishSwimFastParams;
 
         private float flipTimer;
 

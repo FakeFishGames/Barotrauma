@@ -86,7 +86,7 @@ namespace Barotrauma
         public float FootRotationInRadians { get; private set; } = float.NaN;
     }
 
-    abstract class FishSwimParams : AnimationParams, IFishAnimation
+    abstract class FishSwimParams : SwimParams, IFishAnimation
     {
         [Serialize(true, true), Editable]
         public bool Flip { get; set; }
@@ -99,9 +99,6 @@ namespace Barotrauma
 
         [Serialize(1f, true), Editable]
         public float WaveLength { get; set; }
-
-        [Serialize(25.0f, true), Editable]
-        public float SteerTorque { get; set; }
 
         [Serialize(true, true), Editable]
         public bool RotateTowardsMovement { get; set; }
