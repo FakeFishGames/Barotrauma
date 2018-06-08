@@ -195,6 +195,7 @@
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Gap.cs" />
     <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObject.cs" />
     <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectManager.cs" />
     <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectPrefab.cs" />
     <Compile Include="Source\Map\Levels\CaveGenerator.cs" />

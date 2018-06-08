@@ -11,86 +11,6 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class LevelObject
-    {
-        public readonly LevelObjectPrefab Prefab;
-        public Vector3 Position;
-
-        public float Scale;
-
-        public float Rotation;
-
-        public float SwingTimer;
-        public float ScaleOscillateTimer;
-
-        public LevelTrigger Trigger;
-        
-        public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
-        {
-            this.Prefab = prefab;
-            this.Position = position;
-
-            this.Scale = scale;
-
-            this.Rotation = rotation;
-
-            if (prefab.LevelTriggerElement != null)
-            {
-                Vector2 triggerPosition = prefab.LevelTriggerElement.GetAttributeVector2("position", Vector2.Zero) * scale;
-
-                if (rotation != 0.0f)
-                {
-                    var ca = (float)Math.Cos(rotation);
-                    var sa = (float)Math.Sin(rotation);
-
-                    triggerPosition = new Vector2(
-                        ca * triggerPosition.X + sa * triggerPosition.Y,
-                        -sa * triggerPosition.X + ca * triggerPosition.Y);
-                }
-
-                this.Trigger = new LevelTrigger(prefab.LevelTriggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
-            }
-
-#if CLIENT
-            if (prefab.ParticleEmitterPrefabs != null)
-            {
-                ParticleEmitters = new List<ParticleEmitter>();
-                int i = 0;
-                foreach (ParticleEmitterPrefab emitterPrefab in prefab.ParticleEmitterPrefabs)
-                {
-                    ParticleEmitters.Add(new ParticleEmitter(emitterPrefab));
-                    ParticleEmitterTrigger.Add(prefab.ParticleEmitterTriggerIndex[i] > -1 ? Trigger : null);
-                    i++;
-                }
-            }
-
-            if (prefab.SoundElement != null)
-            {
-                Sound = Submarine.LoadRoundSound(prefab.SoundElement, false);
-                if (prefab.SoundTriggerIndex > -1) SoundTrigger = Trigger;
-            }
-#endif
-        }
-
-        public Vector2 LocalToWorld(Vector2 localPosition, float swingState = 0.0f)
-        {
-            Vector2 emitterPos = localPosition * Scale;
-
-            if (Rotation != 0.0f || Prefab.SwingAmount != 0.0f)
-            {
-                float rot = Rotation + swingState * Prefab.SwingAmount;
-
-                var ca = (float)Math.Cos(rot);
-                var sa = (float)Math.Sin(rot);
-
-                emitterPos = new Vector2(
-                    ca * emitterPos.X + sa * emitterPos.Y,
-                    -sa * emitterPos.X + ca * emitterPos.Y);
-            }
-            return new Vector2(Position.X, Position.Y) + emitterPos;
-        }
-    }
-
     partial class LevelObjectManager
     {
         const int GridSize = 2000;
@@ -318,12 +238,15 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            foreach (LevelObject sprite in objects)
+            foreach (LevelObject obj in objects)
             {
-                sprite.Trigger?.Update(deltaTime);
-                if (sprite.Prefab.SonarDisruption > 0.0f)
+                foreach (LevelTrigger trigger in obj.Triggers)
                 {
-                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(sprite.Position.X, sprite.Position.Y), sprite.Prefab.SonarDisruption);
+                    trigger.Update(deltaTime);
+                }
+                if (obj.Prefab.SonarDisruption > 0.0f)
+                {
+                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(obj.Position.X, obj.Position.Y), obj.Prefab.SonarDisruption);
                 }
             }
             
