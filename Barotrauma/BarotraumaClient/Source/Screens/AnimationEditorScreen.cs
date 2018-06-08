@@ -351,9 +351,9 @@ namespace Barotrauma
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
-            Structure clone = clones.FirstOrDefault();
-            Vector2 pos = clone == null ? OriginalWalls.First().DrawPosition : clone.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, pos, Cam, 700, GUI.SubmarineIcon, Color.White);
+            Structure wall = clones.FirstOrDefault();
+            Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
+            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
 
             DrawWidgetEditor(spriteBatch);
