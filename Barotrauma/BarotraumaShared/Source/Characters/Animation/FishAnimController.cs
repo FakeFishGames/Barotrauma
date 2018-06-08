@@ -314,19 +314,19 @@ namespace Barotrauma
                 }
                 else if (MainLimb.type == LimbType.Head && TorsoAngle.HasValue)
                 {
-                    Collider.SmoothRotate(HeadAngle.Value * Dir, 25.0f);
+                    Collider.SmoothRotate(TorsoAngle.Value * Dir, 25.0f);
                 }
+            }
 
-                if (TorsoAngle.HasValue)
-                {
-                    Limb torso = GetLimb(LimbType.Torso);
-                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
-                }
-                if (HeadAngle.HasValue)
-                {
-                    Limb head = GetLimb(LimbType.Head);
-                    head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
-                }
+            if (TorsoAngle.HasValue)
+            {
+                Limb torso = GetLimb(LimbType.Torso);
+                torso?.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+            }
+            if (HeadAngle.HasValue)
+            {
+                Limb head = GetLimb(LimbType.Head);
+                head?.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
             }
 
             Limb tail = GetLimb(LimbType.Tail);
