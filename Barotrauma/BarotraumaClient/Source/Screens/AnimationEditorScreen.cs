@@ -194,9 +194,6 @@ namespace Barotrauma
             {
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
             }
-            Cam.Position = character.WorldPosition;
-            Cam.TargetPos = character.WorldPosition;
-            Cam.UpdateTransform(true);
             GameMain.World.ProcessChanges();
             return character;
         }
@@ -327,9 +324,10 @@ namespace Barotrauma
                 CloneWalls(true);
             }
 
-            Cam.MoveCamera((float)deltaTime);
+            //Cam.TargetPos = Vector2.Zero;
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: true);
             Cam.Position = character.Position;
-
+ 
             GameMain.World.Step((float)deltaTime);
         }
 
@@ -389,7 +387,6 @@ namespace Barotrauma
                 var endPos = colliderDrawPos + VectorExtensions.Forward(collider.Rotation, radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
             }
-
             spriteBatch.End();
         }
 
