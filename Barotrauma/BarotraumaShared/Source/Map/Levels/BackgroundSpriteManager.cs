@@ -20,6 +20,9 @@ namespace Barotrauma
 
         public float Rotation;
 
+        public float SwingTimer;
+        public float ScaleOscillateTimer;
+
         public LevelTrigger Trigger;
         
         public BackgroundSprite(BackgroundSpritePrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
@@ -52,15 +55,19 @@ namespace Barotrauma
             if (prefab.ParticleEmitterPrefabs != null)
             {
                 ParticleEmitters = new List<ParticleEmitter>();
+                int i = 0;
                 foreach (ParticleEmitterPrefab emitterPrefab in prefab.ParticleEmitterPrefabs)
                 {
                     ParticleEmitters.Add(new ParticleEmitter(emitterPrefab));
+                    ParticleEmitterTrigger.Add(prefab.ParticleEmitterTriggerIndex[i] > -1 ? Trigger : null);
+                    i++;
                 }
             }
 
             if (prefab.SoundElement != null)
             {
-                Sound = Submarine.LoadRoundSound(prefab.SoundElement, false);//Sound.Load(prefab.SoundElement, true);
+                Sound = Submarine.LoadRoundSound(prefab.SoundElement, false);
+                if (prefab.SoundTriggerIndex > -1) SoundTrigger = Trigger;
             }
 #endif
         }
@@ -93,8 +100,6 @@ namespace Barotrauma
         private List<BackgroundSprite> sprites;
         private List<BackgroundSprite>[,] spriteGrid;
         
-        private float swingTimer, swingState;
-
         public BackgroundSpriteManager(string configPath)
         {
             LoadConfig(configPath);
@@ -313,12 +318,13 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            swingTimer += deltaTime;
-            swingState = (float)Math.Sin(swingTimer * 0.1f);
-
             foreach (BackgroundSprite sprite in sprites)
             {
                 sprite.Trigger?.Update(deltaTime);
+                if (sprite.Prefab.SonarDisruption > 0.0f)
+                {
+                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(sprite.Position.X, sprite.Position.Y), sprite.Prefab.SonarDisruption);
+                }
             }
             
             UpdateProjSpecific(deltaTime);            
@@ -328,25 +334,7 @@ namespace Barotrauma
 
         private BackgroundSpritePrefab GetRandomPrefab(string levelType)
         {
-            int totalCommonness = 0;
-            foreach (BackgroundSpritePrefab prefab in prefabs)
-            {
-                totalCommonness += prefab.GetCommonness(levelType);
-            }
-
-            float randomNumber = Rand.Int(totalCommonness+1, Rand.RandSync.Server);
-
-            foreach (BackgroundSpritePrefab prefab in prefabs)
-            {
-                if (randomNumber <= prefab.GetCommonness(levelType))
-                {
-                    return prefab;
-                }
-
-                randomNumber -= prefab.GetCommonness(levelType);
-            }
-
-            return null;
+            return ToolBox.SelectWeightedRandom(prefabs, prefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
         }
     }
 }

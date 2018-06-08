@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class BackgroundSpritePrefab
+    partial class BackgroundSpritePrefab : ISerializableEntity
     {
         [Flags]
         public enum SpawnPosType
@@ -17,43 +17,118 @@ namespace Barotrauma
         }
         
         public readonly Alignment Alignment;
-
-        public readonly Vector2 DepthRange;
-
+        
         public readonly Sprite Sprite;
 
         public readonly Vector2 Scale;
 
         public SpawnPosType SpawnPos;
 
-        public readonly bool AlignWithSurface;
-        
-        public readonly Vector2 RandomRotation;
-        
-        public readonly float SwingAmount;
-
-        public readonly int Commonness;
-
-        public Dictionary<string, int> OverrideCommonness;
-
         public readonly XElement LevelTriggerElement;
+        public Dictionary<string, float> OverrideCommonness;
+
+        [Serialize("0.0,1.0", false)]
+        public Vector2 DepthRange
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool AlignWithSurface
+        {
+            get;
+            private set;
+        }
+
+        private Vector2 randomRotation;
+        [Serialize("0.0,0.0", false)]
+        public Vector2 RandomRotation
+        {
+            get { return randomRotation; }
+            private set
+            {
+                randomRotation = new Vector2(MathHelper.ToRadians(value.X), MathHelper.ToRadians(value.Y));
+            }
+        }
+
+        private float swingAmount;
+        [Serialize(0.0f, false)]
+        public float SwingAmount
+        {
+            get { return swingAmount; }
+            private set
+            {
+                swingAmount = MathHelper.ToRadians(value);
+            }
+        }
+
+        [Serialize(0.0f, false)]
+        public float SwingFrequency
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("0.0,0.0", false)]
+        public Vector2 ScaleOscillation
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float ScaleOscillationFrequency
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1.0f, false)]
+        public float Commonness
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        public float SonarDisruption
+        {
+            get;
+            private set;
+        }
+
+        public string Name
+        {
+            get;
+            private set;
+        }
+        
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get; private set;
+        }
+
+        public override string ToString()
+        {
+            return "BackgroundSpritePrefab (" + Name + ")";
+        }
 
         public BackgroundSpritePrefab(XElement element)
         {
             string alignmentStr = element.GetAttributeString("alignment", "");
 
+            SerializableProperty.DeserializeProperties(this, element);
+
             if (string.IsNullOrEmpty(alignmentStr) || !Enum.TryParse(alignmentStr, out Alignment))
             {
                 Alignment = Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right;
             }
-
-            Commonness = element.GetAttributeInt("commonness", 1);
             
             string[] spawnPosStrs = element.GetAttributeString("spawnpos", "Wall").Split(',');
             foreach (string spawnPosStr in spawnPosStrs)
             {
-                SpawnPosType parsedSpawnPos;
-                if (Enum.TryParse(spawnPosStr.Trim(), out parsedSpawnPos))
+                if (Enum.TryParse(spawnPosStr.Trim(), out SpawnPosType parsedSpawnPos))
                 {
                     SpawnPos |= parsedSpawnPos;
                 }
@@ -61,18 +136,8 @@ namespace Barotrauma
 
             Scale.X = element.GetAttributeFloat("minsize", 1.0f);
             Scale.Y = element.GetAttributeFloat("maxsize", 1.0f);
-
-            DepthRange = element.GetAttributeVector2("depthrange", new Vector2(0.0f, 1.0f));
-
-            AlignWithSurface = element.GetAttributeBool("alignwithsurface", false);
-
-            RandomRotation = element.GetAttributeVector2("randomrotation", Vector2.Zero);
-            RandomRotation.X = MathHelper.ToRadians(RandomRotation.X);
-            RandomRotation.Y = MathHelper.ToRadians(RandomRotation.Y);
-
-            SwingAmount = MathHelper.ToRadians(element.GetAttributeFloat("swingamount", 0.0f));
-
-            OverrideCommonness = new Dictionary<string, int>();
+            
+            OverrideCommonness = new Dictionary<string, float>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -85,43 +150,28 @@ namespace Barotrauma
                         string levelType = subElement.GetAttributeString("leveltype", "");
                         if (!OverrideCommonness.ContainsKey(levelType))
                         {
-                            OverrideCommonness.Add(levelType, subElement.GetAttributeInt("commonness", 1));
+                            OverrideCommonness.Add(levelType, subElement.GetAttributeFloat("commonness", 1.0f));
                         }
                         break;
                     case "leveltrigger":
                     case "trigger":
                         LevelTriggerElement = subElement;
                         break;
-#if CLIENT
-                    case "particleemitter":
-                        if (ParticleEmitterPrefabs == null)
-                        {
-                            ParticleEmitterPrefabs = new List<Particles.ParticleEmitterPrefab>();
-                            EmitterPositions = new List<Vector2>();
-                        }
-
-                        ParticleEmitterPrefabs.Add(new Particles.ParticleEmitterPrefab(subElement));
-                        EmitterPositions.Add(subElement.GetAttributeVector2("position", Vector2.Zero));
-                        break;
-                    case "sound":
-                        SoundElement = subElement;
-                        SoundPosition = subElement.GetAttributeVector2("position", Vector2.Zero);
-                        break;
-#endif
                 }
             }
+
+            InitProjSpecific(element);
         }
 
-        public int GetCommonness(string levelType)
+        partial void InitProjSpecific(XElement element);
+
+        public float GetCommonness(string levelType)
         {
-            int commonness = 0;
-            if (!OverrideCommonness.TryGetValue(levelType, out commonness))
+            if (!OverrideCommonness.TryGetValue(levelType, out float commonness))
             {
                 return Commonness;
             }
-
             return commonness;
         }
-
     }
 }
