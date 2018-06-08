@@ -390,6 +390,7 @@ namespace Barotrauma
                 var animParams = character.AnimController.CurrentAnimationParams;
                 var groundedParams = animParams as GroundedMovementParams;
                 var humanGroundedParams = animParams as HumanGroundedParams;
+                var fishGroundedParams = animParams as FishGroundedParams;
                 Point widgetSize = new Point(10, 10);
                 switch (limb.type)
                 {
@@ -477,6 +478,19 @@ namespace Barotrauma
                         }
                         else if (animParams.IsSwimAnimation)
                         {
+                        }
+                        break;
+                    case LimbType.RightFoot:
+                    case LimbType.LeftFoot:
+                        if (fishGroundedParams != null)
+                        {
+                            DrawCircularWidget(spriteBatch, limb, fishGroundedParams.FootRotation, "Foot Rotation", "foot rotation", angle =>
+                            {
+                                if (animParams.SerializableProperties.TryGetValue("footrotation", out SerializableProperty p))
+                                {
+                                    RefreshField(p, animParams, angle);
+                                }
+                            }, circleRadius: 20);
                         }
                         break;
                 }
