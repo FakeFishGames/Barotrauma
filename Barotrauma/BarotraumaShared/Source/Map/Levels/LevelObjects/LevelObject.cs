@@ -17,6 +17,8 @@ namespace Barotrauma
 
         public float Rotation;
 
+        public LevelObjectPrefab ActivePrefab;
+
         public List<LevelTrigger> Triggers
         {
             get;
@@ -27,7 +29,7 @@ namespace Barotrauma
         {
             Triggers = new List<LevelTrigger>();
 
-            Prefab = prefab;
+            ActivePrefab = Prefab = prefab;
             Position = position;
             Scale = scale;
             Rotation = rotation;

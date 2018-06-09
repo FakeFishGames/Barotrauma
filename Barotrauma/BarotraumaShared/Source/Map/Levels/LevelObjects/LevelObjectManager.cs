@@ -240,16 +240,22 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
-                foreach (LevelTrigger trigger in obj.Triggers)
+                obj.ActivePrefab = obj.Prefab;
+                for (int i = 0; i < obj.Triggers.Count; i++)
                 {
-                    trigger.Update(deltaTime);
+                    obj.Triggers[i].Update(deltaTime);
+                    if (obj.Triggers[i].IsTriggered && obj.Prefab.OverrideProperties[i] != null)
+                    {
+                        obj.ActivePrefab = obj.Prefab.OverrideProperties[i];
+                    }
                 }
-                if (obj.Prefab.SonarDisruption > 0.0f)
+
+                if (obj.ActivePrefab.SonarDisruption > 0.0f)
                 {
-                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(obj.Position.X, obj.Position.Y), obj.Prefab.SonarDisruption);
+                    Level.Loaded?.SetSonarDisruptionStrength(new Vector2(obj.Position.X, obj.Position.Y), obj.ActivePrefab.SonarDisruption);
                 }
             }
-            
+
             UpdateProjSpecific(deltaTime);            
         }
 
