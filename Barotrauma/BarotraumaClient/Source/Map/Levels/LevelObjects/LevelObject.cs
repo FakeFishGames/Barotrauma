@@ -10,6 +10,9 @@ namespace Barotrauma
         public float SwingTimer;
         public float ScaleOscillateTimer;
 
+        public float CurrentSwingAmount;
+        public Vector2 CurrentScaleOscillation;
+
         public ParticleEmitter[] ParticleEmitters
         {
             get;
@@ -39,6 +42,9 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
+            CurrentSwingAmount = Prefab.SwingAmount;
+            CurrentScaleOscillation = Prefab.ScaleOscillation;
+
             SwingTimer = Rand.Range(0.0f, MathHelper.TwoPi);
             ScaleOscillateTimer = Rand.Range(0.0f, MathHelper.TwoPi);
 

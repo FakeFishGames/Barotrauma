@@ -16,15 +16,27 @@ namespace Barotrauma
             SeaFloor = 4
         }
         
+        /// <summary>
+        /// Which sides of a wall the object can appear on.
+        /// </summary>
         public readonly Alignment Alignment;
         
-        public readonly Sprite Sprite;
+        public Sprite Sprite
+        {
+            get;
+            private set;
+        }
 
         public readonly Vector2 Scale;
 
         public SpawnPosType SpawnPos;
 
         public readonly List<XElement> LevelTriggerElements;
+
+        /// <summary>
+        /// Overrides the commonness of the object in a specific level type. 
+        /// Key = name of the level type, value = commonness in that level type.
+        /// </summary>
         public Dictionary<string, float> OverrideCommonness;
 
         [Serialize("0.0,1.0", false)]
@@ -109,6 +121,16 @@ namespace Barotrauma
             get; private set;
         }
 
+        /// <summary>
+        /// A list of prefabs whose properties override this one's properties when a trigger is active.
+        /// E.g. if a trigger in the index 1 of the trigger list is active, the properties in index 1 in this list are used (unless it's null)
+        /// </summary>
+        public List<LevelObjectPrefab> OverrideProperties
+        {
+            get;
+            private set;
+        }
+
         public override string ToString()
         {
             return "LevelObjectPrefab (" + Name + ")";
@@ -117,10 +139,9 @@ namespace Barotrauma
         public LevelObjectPrefab(XElement element)
         {
             LevelTriggerElements = new List<XElement>();
+            OverrideProperties = new List<LevelObjectPrefab>();
 
             string alignmentStr = element.GetAttributeString("alignment", "");
-
-            SerializableProperty.DeserializeProperties(this, element);
 
             if (string.IsNullOrEmpty(alignmentStr) || !Enum.TryParse(alignmentStr, out Alignment))
             {
@@ -158,9 +179,23 @@ namespace Barotrauma
                     case "leveltrigger":
                     case "trigger":
                         LevelTriggerElements.Add(subElement);
+                        OverrideProperties.Add(null);
+                        foreach (XElement overridePropertiesElement in subElement.Elements())
+                        {
+                            if (overridePropertiesElement.Name.ToString().ToLowerInvariant() == "overrideproperties")
+                            {
+                                var propertyOverride = new LevelObjectPrefab(overridePropertiesElement);
+                                OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
+                                if (propertyOverride.Sprite == null) propertyOverride.Sprite = Sprite;
+
+                                break;
+                            }
+                        }
                         break;
                 }
             }
+
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             InitProjSpecific(element);
         }

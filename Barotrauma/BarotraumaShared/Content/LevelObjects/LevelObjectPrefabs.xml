@@ -92,8 +92,7 @@
 
   <sonarflora1 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -104,13 +103,13 @@
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="492,0,521,288" origin="0.5,0.35"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora1>
   
   <sonarflora2 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
                scaleoscillation="0.0,0.2" scaleoscillationfrequency="0.3"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -121,13 +120,13 @@
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="151,383,488,341" origin="0.5,0.1"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora2>
   
   <sonarflora3 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -135,16 +134,16 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.2"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.15"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="1.0"/>
     </Trigger>    
   </sonarflora3>
   
   <sonarflora4 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -152,16 +151,16 @@
     <overridecommonness commonness="3" leveltype="Pillars" />
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.3"/>
+    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora4>
   
   <sonarflora5 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true"
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" 
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -172,13 +171,13 @@
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora5>
   
   <sonarflora6 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true"
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2"
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01"
-               sonardisruption="0.5">
+               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="1" leveltype="Default" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <overridecommonness commonness="1" leveltype="Maze" />
@@ -189,6 +188,7 @@
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
     <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
       <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora6>
   

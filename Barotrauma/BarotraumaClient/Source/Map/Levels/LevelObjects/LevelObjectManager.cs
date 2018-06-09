@@ -39,19 +39,23 @@ namespace Barotrauma
                 }
             }
 
-            if (obj.Prefab.SwingFrequency > 0.0f)
+            if (obj.ActivePrefab.SwingFrequency > 0.0f)
             {
-                obj.SwingTimer += deltaTime * obj.Prefab.SwingFrequency;
+                obj.SwingTimer += deltaTime * obj.ActivePrefab.SwingFrequency;
                 obj.SwingTimer = obj.SwingTimer % MathHelper.TwoPi;
+                //lerp the swing amount to the correct value to prevent it from abruptly changing to a different value
+                //when a trigger changes the swing amoung
+                obj.CurrentSwingAmount = MathHelper.Lerp(obj.CurrentSwingAmount, obj.ActivePrefab.SwingAmount, deltaTime * 10.0f);
             }
 
-            if (obj.Prefab.ScaleOscillationFrequency > 0.0f)
+            if (obj.ActivePrefab.ScaleOscillationFrequency > 0.0f)
             {
-                obj.ScaleOscillateTimer += deltaTime * obj.Prefab.ScaleOscillationFrequency;
+                obj.ScaleOscillateTimer += deltaTime * obj.ActivePrefab.ScaleOscillationFrequency;
                 obj.ScaleOscillateTimer = obj.ScaleOscillateTimer % MathHelper.TwoPi;
+                obj.CurrentScaleOscillation = Vector2.Lerp(obj.CurrentScaleOscillation, obj.ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
             }
 
-            for (int i = 0; i< obj.Sounds.Length; i++)
+            for (int i = 0; i < obj.Sounds.Length; i++)
             {
                 if (obj.SoundTriggers[i] == null || obj.SoundTriggers[i].IsTriggered)
                 {
@@ -124,20 +128,20 @@ namespace Barotrauma
         public void DrawObjects(SpriteBatch spriteBatch, Camera cam, bool drawFront)
         {
             Rectangle indices = Rectangle.Empty;
-            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);            
+            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);
             if (indices.X >= objectGrid.GetLength(0)) return;
             indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height - Level.Loaded.BottomPos) / (float)GridSize);
             if (indices.Y >= objectGrid.GetLength(1)) return;
 
-            indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize)+1;
+            indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize) + 1;
             if (indices.Width < 0) return;
-            indices.Height = (int)Math.Floor((cam.WorldView.Y - Level.Loaded.BottomPos) / (float)GridSize)+1;
+            indices.Height = (int)Math.Floor((cam.WorldView.Y - Level.Loaded.BottomPos) / (float)GridSize) + 1;
             if (indices.Height < 0) return;
 
             indices.X = Math.Max(indices.X, 0);
             indices.Y = Math.Max(indices.Y, 0);
-            indices.Width = Math.Min(indices.Width, objectGrid.GetLength(0)-1);
-            indices.Height = Math.Min(indices.Height, objectGrid.GetLength(1)-1);
+            indices.Width = Math.Min(indices.Width, objectGrid.GetLength(0) - 1);
+            indices.Height = Math.Min(indices.Height, objectGrid.GetLength(1) - 1);
 
             float z = 0.0f;
             if (currentGridIndices != indices)
@@ -152,25 +156,25 @@ namespace Barotrauma
                 camDiff.Y = -camDiff.Y;
 
                 Vector2 scale = Vector2.One * obj.Scale;
-                if (obj.Prefab.ScaleOscillationFrequency > 0.0f)
+                if (obj.ActivePrefab.ScaleOscillationFrequency > 0.0f)
                 {
                     float sin = (float)Math.Sin(obj.ScaleOscillateTimer);
                     scale *= new Vector2(
-                        1.0f + sin * obj.Prefab.ScaleOscillation.X,
-                        1.0f + sin * obj.Prefab.ScaleOscillation.Y);
+                        1.0f + sin * obj.CurrentScaleOscillation.X,
+                        1.0f + sin * obj.CurrentScaleOscillation.Y);
                 }
 
                 float swingAmount = 0.0f;
-                if (obj.Prefab.SwingAmount > 0.0f)
+                if (obj.ActivePrefab.SwingAmount > 0.0f)
                 {
-                    swingAmount = (float)Math.Sin(obj.SwingTimer) * obj.Prefab.SwingAmount;
+                    swingAmount = (float)Math.Sin(obj.SwingTimer) * obj.CurrentSwingAmount;
                 }
 
-                obj.Prefab.Sprite.Draw(
+                obj.ActivePrefab.Sprite.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
                     Color.Lerp(Color.White, Level.Loaded.BackgroundColor, obj.Position.Z / 5000.0f),
-                    obj.Prefab.Sprite.Origin,
+                    obj.ActivePrefab.Sprite.Origin,
                     obj.Rotation + swingAmount,
                     scale,
                     SpriteEffects.None,
