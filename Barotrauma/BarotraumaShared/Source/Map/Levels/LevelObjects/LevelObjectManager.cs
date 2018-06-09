@@ -56,14 +56,12 @@ namespace Barotrauma
                 (int)Math.Ceiling(level.Size.X / GridSize),
                 (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
 
-            objects = new List<LevelObject>();
-            
+            objects = new List<LevelObject>();            
             for (int i = 0 ; i < amount; i++)
             {
                 LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
-                GraphEdge selectedEdge = null;
                 Vector2 edgeNormal = Vector2.One;
-                Vector2? pos = FindObjectPosition(level, prefab, out selectedEdge, out edgeNormal);
+                Vector2? pos = FindObjectPosition(level, prefab, out GraphEdge selectedEdge, out edgeNormal);
 
                 if (pos == null) continue;
 
@@ -77,7 +75,14 @@ namespace Barotrauma
 
                 var newObject = new LevelObject(prefab,
                     new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
-                
+                foreach (LevelTrigger trigger in newObject.Triggers)
+                {
+                    trigger.OnTriggered += (levelTrigger, obj) =>
+                    {
+                        OnObjectTriggered(newObject, levelTrigger, obj);
+                    };
+                }
+
                 //calculate the positions of the corners of the rotated sprite
                 Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
                 var spriteCorners = new List<Vector2>
@@ -260,6 +265,19 @@ namespace Barotrauma
         }
 
         partial void UpdateProjSpecific(float deltaTime);
+
+        private void OnObjectTriggered(LevelObject triggeredObject, LevelTrigger trigger, Entity triggerer)
+        {
+            if (trigger.TriggerOthersDistance <= 0.0f) return;
+            foreach (LevelObject obj in objects)
+            {
+                if (obj == triggeredObject) continue;
+                foreach (LevelTrigger otherTrigger in obj.Triggers)
+                {
+                    otherTrigger.OtherTriggered(triggeredObject, trigger);
+                }
+            }
+        }
 
         private LevelObjectPrefab GetRandomPrefab(string levelType)
         {

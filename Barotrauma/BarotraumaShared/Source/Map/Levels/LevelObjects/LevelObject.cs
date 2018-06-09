@@ -48,14 +48,15 @@ namespace Barotrauma
                         -sa * triggerPosition.X + ca * triggerPosition.Y);
                 }
 
-                Triggers.Add(new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale));
+                var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
+                Triggers.Add(newTrigger);
             }
 
             InitProjSpecific();
         }
-
+        
         partial void InitProjSpecific();
-
+        
         public Vector2 LocalToWorld(Vector2 localPosition, float swingState = 0.0f)
         {
             Vector2 emitterPos = localPosition * Scale;
