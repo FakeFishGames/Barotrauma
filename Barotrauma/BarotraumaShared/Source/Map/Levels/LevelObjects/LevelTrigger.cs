@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -17,8 +18,11 @@ namespace Barotrauma
             Creature = 2,
             Character = Human | Creature,
             Submarine = 4,
-            Item = 8
+            Item = 8,
+            OtherTrigger = 16
         }
+
+        public Action<LevelTrigger, Entity> OnTriggered;
 
         private PhysicsBody physicsBody;
 
@@ -32,13 +36,27 @@ namespace Barotrauma
         /// </summary>
         private List<Attack> attacks = new List<Attack>();
 
-        private List<Entity> triggerers = new List<Entity>();
-
         private float cameraShake;
-
         private Vector2 force;
 
+        private HashSet<Entity> triggerers = new HashSet<Entity>();
+
         private TriggererType triggeredBy;
+
+        private float triggeredTimer;
+
+        //how far away this trigger can activate other triggers from
+        private float triggerOthersDistance;
+
+        private HashSet<string> tags = new HashSet<string>();
+
+        //other triggers have to have at least one of these tags to trigger this one
+        private HashSet<string> allowedOtherTriggerTags = new HashSet<string>();
+
+        /// <summary>
+        /// How long the trigger stays in the triggered state after triggerers have left
+        /// </summary>
+        private float stayTriggeredDelay;
 
         public Vector2 WorldPosition
         {
@@ -57,9 +75,14 @@ namespace Barotrauma
             get { return physicsBody; }
         }
 
+        public float TriggerOthersDistance
+        {
+            get { return triggerOthersDistance; }
+        }
+        
         public bool IsTriggered
         {
-            get { return triggerers.Count > 0; }
+            get { return triggerers.Count > 0 || triggeredTimer > 0.0f; }
         }
 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
@@ -79,12 +102,31 @@ namespace Barotrauma
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
 
-            force = element.GetAttributeVector2("force", Vector2.Zero);
+            stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
 
+            force = element.GetAttributeVector2("force", Vector2.Zero);
+            
             string triggeredByStr = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByStr, out triggeredBy))
             {
                 DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");
+            }
+
+            triggerOthersDistance = element.GetAttributeFloat("triggerothersdistance", 0.0f);
+
+            var tagsArray = element.GetAttributeStringArray("tags", new string[0]);
+            foreach (string tag in tagsArray)
+            {
+                tags.Add(tag.ToLower());
+            }
+
+            if (triggeredBy.HasFlag(TriggererType.OtherTrigger))
+            {
+                var otherTagsArray = element.GetAttributeStringArray("allowedothertriggertags", new string[0]);
+                foreach (string tag in otherTagsArray)
+                {
+                    allowedOtherTriggerTags.Add(tag.ToLower());
+                }
             }
 
             foreach (XElement subElement in element.Elements())
@@ -129,6 +171,10 @@ namespace Barotrauma
 
             if (!triggerers.Contains(entity))
             {
+                if (!IsTriggered)
+                {
+                    OnTriggered?.Invoke(this, entity);
+                }
                 triggerers.Add(entity);
             }
             return true;
@@ -154,9 +200,46 @@ namespace Barotrauma
             return null;
         }
 
+        /// <summary>
+        /// Another trigger was triggered, check if this one should react to it
+        /// </summary>
+        public void OtherTriggered(LevelObject levelObject, LevelTrigger otherTrigger)
+        {
+            if (!triggeredBy.HasFlag(TriggererType.OtherTrigger) || stayTriggeredDelay <= 0.0f) return;
+
+            //check if the other trigger has appropriate tags
+            if (allowedOtherTriggerTags.Count > 0)
+            {
+                if (!allowedOtherTriggerTags.Any(t => otherTrigger.tags.Contains(t))) return;
+            }
+
+            if (Vector2.DistanceSquared(WorldPosition, otherTrigger.WorldPosition) <= otherTrigger.triggerOthersDistance * otherTrigger.triggerOthersDistance)
+            {
+                bool wasAlreadyTriggered = IsTriggered;
+                triggeredTimer = stayTriggeredDelay;
+                if (!wasAlreadyTriggered)
+                {
+                    OnTriggered?.Invoke(this, null);
+                }
+            }
+        }
+
         public void Update(float deltaTime)
         {
-            triggerers.RemoveAll(t => t.Removed);
+            triggerers.RemoveWhere(t => t.Removed);
+
+            if (stayTriggeredDelay > 0.0f)
+            {
+                if (triggerers.Count == 0)
+                {
+                    triggeredTimer -= deltaTime;
+                }
+                else
+                {
+                    triggeredTimer = stayTriggeredDelay;
+                }
+            }
+
             foreach (Entity triggerer in triggerers)
             {
                 foreach (StatusEffect effect in statusEffects)

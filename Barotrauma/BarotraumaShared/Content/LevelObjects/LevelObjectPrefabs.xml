@@ -101,8 +101,9 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="492,0,521,288" origin="0.5,0.35"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora1>
@@ -118,8 +119,9 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="151,383,488,341" origin="0.5,0.1"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora2>
@@ -135,10 +137,11 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.15"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
-      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="1.0"/>
-    </Trigger>    
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
+      <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
+    </Trigger>  
   </sonarflora3>
   
   <sonarflora4 spawnpos="Wall" minsize="1" maxsize="2" alignwithsurface="true" 
@@ -152,8 +155,9 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.2"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora4>
@@ -169,8 +173,9 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" 
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora5>
@@ -186,8 +191,9 @@
     <overridecommonness commonness="20" leveltype="Wastes" />
     <overridecommonness commonness="10" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
-    <Trigger position="0,0" radius="500" triggeredby="Character, Submarine">
-      <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="500" position="0,0"/>
+    <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
+    <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
+             tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
   </sonarflora6>
