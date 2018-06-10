@@ -121,6 +121,7 @@
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora1>
   
   <sonarflora2 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -140,6 +141,7 @@
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora2>
   
   <sonarflora3 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -158,7 +160,8 @@
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
-    </Trigger>  
+    </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora3>
   
   <sonarflora4 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -178,6 +181,7 @@
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora4>
   
   <sonarflora5 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -197,6 +201,7 @@
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora5>
   
   <sonarflora6 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -216,7 +221,29 @@
              tags="sonarflora" triggerothersdistance="2000" allowedothertriggertags="sonarflora">
       <OverrideProperties scaleoscillation="0.0,0.3" scaleoscillationfrequency="0.7" sonardisruption="0.7"/>
     </Trigger>
+    <ChildObject names="sonarflorabranch1,sonarflorabranch2,sonarflorabranch3,sonarflorabranch4" mincount="1" maxcount="3"/>
   </sonarflora6>
+
+  <sonarflorabranch1 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30" 
+                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1" 
+                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="44,10,319,279" origin="0.5,0.1"/>
+  </sonarflorabranch1>
+  <sonarflorabranch2 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30"
+                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
+                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="406,15,206,315" origin="0.5,0.1"/>
+  </sonarflorabranch2>
+  <sonarflorabranch3 spawnpos="None" minsize="1" maxsize="2" randomrotation="-30,30"
+                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
+                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="656,16,366,266" origin="0.8,0.1"/>
+  </sonarflorabranch3>
+  <sonarflorabranch4 spawnpos="None" minsize="0.8" maxsize="1.2" randomrotation="-30,30"
+                     swingamount="8" swingfrequency="0.1" scaleoscillation="0.0,0.1"
+                     scaleoscillationfrequency="0.2" commonness="0" depthrange="-0.02,-0.02">
+    <Sprite texture="Content/LevelObjects/SonarFloraBranches.png" sourcerect="38,374,499,355" origin="0.9,0.1"/>
+  </sonarflorabranch4>
   
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">

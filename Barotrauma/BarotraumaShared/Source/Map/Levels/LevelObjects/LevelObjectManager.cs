@@ -2,7 +2,6 @@
 using Barotrauma.Particles;
 #endif
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -109,100 +108,141 @@ namespace Barotrauma
                 }            
             }
                         
-            objects = new List<LevelObject>();            
-            for (int i = 0 ; i < amount; i++)
+            objects = new List<LevelObject>();
+            for (int i = 0; i < amount; i++)
             {
+                //get a random prefab and find a place to spawn it
                 LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
-                Vector2 edgeNormal = Vector2.One;
-                Vector2? pos = FindObjectPosition(availableSpawnPositions, level, prefab, out GraphEdge selectedEdge, out edgeNormal);
+                SpawnPosition spawnPosition = FindObjectPosition(availableSpawnPositions, level, prefab);
 
-                if (pos == null) continue;
+                if (spawnPosition == null && prefab.SpawnPos != LevelObjectPrefab.SpawnPosType.None) continue;
 
                 float rotation = 0.0f;
-                if (prefab.AlignWithSurface)
+                if (prefab.AlignWithSurface && spawnPosition != null)
                 {
-                    rotation = MathUtils.VectorToAngle(new Vector2(edgeNormal.Y, edgeNormal.X));
+                    rotation = MathUtils.VectorToAngle(new Vector2(spawnPosition.Normal.Y, spawnPosition.Normal.X));
                 }
-
                 rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
 
+                Vector2 position = Vector2.Zero;
+                Vector2 edgeDir = Vector2.UnitX;
+                if (spawnPosition == null)
+                {
+                    position = new Vector2(
+                        Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server),
+                        Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
+                }
+                else
+                {
+                    edgeDir = (spawnPosition.GraphEdge.Point1 - spawnPosition.GraphEdge.Point2) / spawnPosition.Length;
+                    position = spawnPosition.GraphEdge.Point2 + edgeDir * Rand.Range(prefab.MinSurfaceWidth / 2.0f, spawnPosition.Length - prefab.MinSurfaceWidth / 2.0f, Rand.RandSync.Server);
+                }
+
                 var newObject = new LevelObject(prefab,
-                    new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
-                foreach (LevelTrigger trigger in newObject.Triggers)
+                    new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
+                AddObject(newObject, level);
+
+                foreach (LevelObjectPrefab.ChildObject child in prefab.ChildObjects)
                 {
-                    trigger.OnTriggered += (levelTrigger, obj) =>
+                    int childCount = Rand.Range(child.MinCount, child.MaxCount, Rand.RandSync.Server);
+                    for (int j = 0; j < childCount; j++)
                     {
-                        OnObjectTriggered(newObject, levelTrigger, obj);
-                    };
+                        var matchingPrefabs = prefabs.Where(p => child.AllowedNames.Contains(p.Name));
+                        int prefabCount = matchingPrefabs.Count();
+                        var childPrefab = prefabCount == 0 ? null : matchingPrefabs.ElementAt(Rand.Range(0, prefabCount, Rand.RandSync.Server));
+                        if (childPrefab == null) continue;
+
+                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * prefab.MinSurfaceWidth;
+
+                        var childObject = new LevelObject(childPrefab,
+                            new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
+                            Rand.Range(childPrefab.Scale.X, childPrefab.Scale.Y, Rand.RandSync.Server),
+                            rotation + Rand.Range(childPrefab.RandomRotation.X, childPrefab.RandomRotation.Y, Rand.RandSync.Server));
+
+                        AddObject(childObject, level);
+                    }
                 }
 
-                //calculate the positions of the corners of the rotated sprite
-                Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
-                var spriteCorners = new List<Vector2>
-                {
-                    -halfSize, new Vector2(-halfSize.X, halfSize.Y),
-                    halfSize, new Vector2(halfSize.X, -halfSize.Y)
-                };
-
-                Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
-                pivotOffset.X = -pivotOffset.X;
-                pivotOffset = new Vector2(
-                    (float)(pivotOffset.X * Math.Cos(-rotation) - pivotOffset.Y * Math.Sin(-rotation)),
-                    (float)(pivotOffset.X * Math.Sin(-rotation) + pivotOffset.Y * Math.Cos(-rotation)));                
-
-                for (int j = 0; j < 4; j++)
-                {
-                    spriteCorners[j] = new Vector2(
-                        (float)(spriteCorners[j].X * Math.Cos(-rotation) - spriteCorners[j].Y * Math.Sin(-rotation)),
-                        (float)(spriteCorners[j].X * Math.Sin(-rotation) + spriteCorners[j].Y * Math.Cos(-rotation)));
-
-                    spriteCorners[j] += pos.Value + pivotOffset;
-                }
-
-                float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
-                float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
+            }
                 
-                float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
-                float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
+        }
+
+        private void AddObject(LevelObject newObject, Level level)
+        {
+            foreach (LevelTrigger trigger in newObject.Triggers)
+            {
+                trigger.OnTriggered += (levelTrigger, obj) =>
+                {
+                    OnObjectTriggered(newObject, levelTrigger, obj);
+                };
+            }
+
+            //calculate the positions of the corners of the rotated sprite
+            Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
+            var spriteCorners = new List<Vector2>
+            {
+                -halfSize, new Vector2(-halfSize.X, halfSize.Y),
+                halfSize, new Vector2(halfSize.X, -halfSize.Y)
+            };
+
+            Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
+            pivotOffset.X = -pivotOffset.X;
+            pivotOffset = new Vector2(
+                (float)(pivotOffset.X * Math.Cos(-newObject.Rotation) - pivotOffset.Y * Math.Sin(-newObject.Rotation)),
+                (float)(pivotOffset.X * Math.Sin(-newObject.Rotation) + pivotOffset.Y * Math.Cos(-newObject.Rotation)));
+
+            for (int j = 0; j < 4; j++)
+            {
+                spriteCorners[j] = new Vector2(
+                    (float)(spriteCorners[j].X * Math.Cos(-newObject.Rotation) - spriteCorners[j].Y * Math.Sin(-newObject.Rotation)),
+                    (float)(spriteCorners[j].X * Math.Sin(-newObject.Rotation) + spriteCorners[j].Y * Math.Cos(-newObject.Rotation)));
+
+                spriteCorners[j] += new Vector2(newObject.Position.X, newObject.Position.Y) + pivotOffset;
+            }
+
+            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
+            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z;
+
+            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
+            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
 
 #if CLIENT
-                if (newObject.ParticleEmitters != null)
+            if (newObject.ParticleEmitters != null)
+            {
+                foreach (ParticleEmitter emitter in newObject.ParticleEmitters)
                 {
-                    foreach (ParticleEmitter emitter in newObject.ParticleEmitters)
-                    {
-                        Rectangle particleBounds = emitter.CalculateParticleBounds(pos.Value);
-                        minX = Math.Min(minX, particleBounds.X);
-                        maxX = Math.Max(maxX, particleBounds.Right);
-                        minY = Math.Min(minY, particleBounds.Y - level.BottomPos);
-                        maxY = Math.Max(maxY, particleBounds.Bottom - level.BottomPos);
-                    }
-                }
-#endif
-
-                objects.Add(newObject);
-
-                int xStart  = (int)Math.Floor(minX / GridSize);
-                int xEnd    = (int)Math.Floor(maxX / GridSize);
-                if (xEnd < 0 || xStart >= objectGrid.GetLength(0)) continue;
-
-                int yStart  = (int)Math.Floor(minY / GridSize);
-                int yEnd    = (int)Math.Floor(maxY / GridSize);
-                if (yEnd < 0 || yStart >= objectGrid.GetLength(1)) continue;
-
-                xStart  = Math.Max(xStart, 0);
-                xEnd    = Math.Min(xEnd, objectGrid.GetLength(0) - 1);
-                yStart  = Math.Max(yStart, 0);
-                yEnd    = Math.Min(yEnd, objectGrid.GetLength(1) - 1);
-
-                for (int x = xStart; x <= xEnd; x++)
-                {
-                    for (int y = yStart; y <= yEnd; y++)
-                    {
-                        if (objectGrid[x, y] == null) objectGrid[x, y] = new List<LevelObject>();
-                        objectGrid[x, y].Add(newObject);
-                    }
+                    Rectangle particleBounds = emitter.CalculateParticleBounds(new Vector2(newObject.Position.X, newObject.Position.Y));
+                    minX = Math.Min(minX, particleBounds.X);
+                    maxX = Math.Max(maxX, particleBounds.Right);
+                    minY = Math.Min(minY, particleBounds.Y - level.BottomPos);
+                    maxY = Math.Max(maxY, particleBounds.Bottom - level.BottomPos);
                 }
             }
+#endif
+
+            objects.Add(newObject);
+
+            int xStart = (int)Math.Floor(minX / GridSize);
+            int xEnd = (int)Math.Floor(maxX / GridSize);
+            if (xEnd < 0 || xStart >= objectGrid.GetLength(0)) return;
+
+            int yStart = (int)Math.Floor(minY / GridSize);
+            int yEnd = (int)Math.Floor(maxY / GridSize);
+            if (yEnd < 0 || yStart >= objectGrid.GetLength(1)) return;
+
+            xStart = Math.Max(xStart, 0);
+            xEnd = Math.Min(xEnd, objectGrid.GetLength(0) - 1);
+            yStart = Math.Max(yStart, 0);
+            yEnd = Math.Min(yEnd, objectGrid.GetLength(1) - 1);
+
+            for (int x = xStart; x <= xEnd; x++)
+            {
+                for (int y = yStart; y <= yEnd; y++)
+                {
+                    if (objectGrid[x, y] == null) objectGrid[x, y] = new List<LevelObject>();
+                    objectGrid[x, y].Add(newObject);
+                }
+            }            
         }
 
         private List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
@@ -227,38 +267,16 @@ namespace Barotrauma
             return availableSpawnPositions;
         }
 
-        private Vector2? FindObjectPosition(List<SpawnPosition> availableSpawnPositions, Level level, LevelObjectPrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
+        private SpawnPosition FindObjectPosition(List<SpawnPosition> availableSpawnPositions, Level level, LevelObjectPrefab prefab)
         {
-            closestEdge = null;
-            edgeNormal = Vector2.One;
-            
-            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None)
-            {
-                return new Vector2(
-                    Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server),
-                    Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
-            }
+            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None) return null;
 
             var suitableSpawnPositions = availableSpawnPositions.Where(sp => 
                 prefab.SpawnPos.HasFlag(sp.SpawnPosType) && sp.Length >= prefab.MinSurfaceWidth).ToList();
 
-            var selectedSpawnPos = ToolBox.SelectWeightedRandom(suitableSpawnPositions, suitableSpawnPositions.Select(sp => sp.GetSpawnProbability(prefab)).ToList(), Rand.RandSync.Server);
-            if (selectedSpawnPos == null)
-            {
-                return new Vector2(
-                    Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server),
-                    Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
-            }
-
-            closestEdge = selectedSpawnPos.GraphEdge;
-            edgeNormal = selectedSpawnPos.Normal;
-
-            Vector2 dir = (closestEdge.Point1 - closestEdge.Point2) / selectedSpawnPos.Length;
-            Vector2 pos = closestEdge.Point2 + dir * Rand.Range(prefab.MinSurfaceWidth / 2.0f, selectedSpawnPos.Length - prefab.MinSurfaceWidth / 2.0f, Rand.RandSync.Server);
-            
-            return pos;
+            return ToolBox.SelectWeightedRandom(suitableSpawnPositions, suitableSpawnPositions.Select(sp => sp.GetSpawnProbability(prefab)).ToList(), Rand.RandSync.Server);
         }
-
+        
         public void Update(float deltaTime)
         {
             foreach (LevelObject obj in objects)
