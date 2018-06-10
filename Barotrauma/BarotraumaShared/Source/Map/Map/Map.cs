@@ -209,20 +209,20 @@ namespace Barotrauma
             sites.Clear();
             foreach (GraphEdge edge in edges)
             {
-                if (edge.point1 == edge.point2) continue;
+                if (edge.Point1 == edge.Point2) continue;
                 
-                if (Vector2.DistanceSquared(edge.point1, mapCenter) >= locationRadius * locationRadius ||
-                    Vector2.DistanceSquared(edge.point2, mapCenter) >= locationRadius * locationRadius) continue;
+                if (Vector2.DistanceSquared(edge.Point1, mapCenter) >= locationRadius * locationRadius ||
+                    Vector2.DistanceSquared(edge.Point2, mapCenter) >= locationRadius * locationRadius) continue;
 
                 Location[] newLocations = new Location[2];
-                newLocations[0] = locations.Find(l => l.MapPosition == edge.point1 || l.MapPosition == edge.point2);
-                newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.point1 || l.MapPosition == edge.point2));
+                newLocations[0] = locations.Find(l => l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2);
+                newLocations[1] = locations.Find(l => l != newLocations[0] && (l.MapPosition == edge.Point1 || l.MapPosition == edge.Point2));
 
                 for (int i = 0; i < 2; i++)
                 {
                     if (newLocations[i] != null) continue;
 
-                    Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
+                    Vector2[] points = new Vector2[] { edge.Point1, edge.Point2 };
 
                     int positionIndex = Rand.Int(1, Rand.RandSync.Server);
 

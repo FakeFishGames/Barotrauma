@@ -49,19 +49,72 @@ namespace Barotrauma
             }
         }
 
+        class SpawnPosition
+        {
+            public readonly GraphEdge GraphEdge;
+            public readonly Vector2 Normal;
+            public readonly LevelObjectPrefab.SpawnPosType SpawnPosType;
+            public readonly Alignment Alignment;
+            public readonly float Length;
+
+            public SpawnPosition(GraphEdge graphEdge, Vector2 normal, LevelObjectPrefab.SpawnPosType spawnPosType, Alignment alignment)
+            {
+                GraphEdge = graphEdge;
+                Normal = normal;
+                SpawnPosType = spawnPosType;
+                Alignment = alignment;
+                
+                Length = Vector2.Distance(graphEdge.Point1, graphEdge.Point2);
+            }
+
+            public float GetSpawnProbability(LevelObjectPrefab prefab)
+            {
+                if (prefab.ClusteringAmount <= 0.0f) return Length;
+
+                float noise = (float)(
+                    PerlinNoise.Perlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
+                    PerlinNoise.Perlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
+
+                return Length * (float)Math.Pow(noise, prefab.ClusteringAmount);
+            }
+        }
 
         public void PlaceObjects(Level level, int amount)
         {
             objectGrid = new List<LevelObject>[
                 (int)Math.Ceiling(level.Size.X / GridSize),
                 (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+            
+            List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
+            var levelCells = level.GetAllCells();
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));
 
+            foreach (var extraWall in level.ExtraWalls)
+            {
+                availableSpawnPositions.AddRange(GetAvailableSpawnPositions(extraWall.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
+            }
+
+            foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+            {
+                foreach (var ruinShape in ruin.RuinShapes)
+                {
+                    foreach (var wall in ruinShape.Walls)
+                    {
+                        availableSpawnPositions.Add(new SpawnPosition(
+                            new GraphEdge(wall.A, wall.B),
+                            (wall.A + wall.B) / 2.0f - ruinShape.Center,
+                            LevelObjectPrefab.SpawnPosType.RuinWall,
+                            ruinShape.GetLineAlignment(wall)));
+                    }
+                }            
+            }
+                        
             objects = new List<LevelObject>();            
             for (int i = 0 ; i < amount; i++)
             {
                 LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
                 Vector2 edgeNormal = Vector2.One;
-                Vector2? pos = FindObjectPosition(level, prefab, out GraphEdge selectedEdge, out edgeNormal);
+                Vector2? pos = FindObjectPosition(availableSpawnPositions, level, prefab, out GraphEdge selectedEdge, out edgeNormal);
 
                 if (pos == null) continue;
 
@@ -152,92 +205,57 @@ namespace Barotrauma
             }
         }
 
-        private Vector2? FindObjectPosition(Level level, LevelObjectPrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
+        private List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
+        {
+            List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
+            foreach (var cell in cells)
+            {
+                foreach (var edge in cell.edges)
+                {
+                    if (!edge.IsSolid || edge.OutsideLevel) continue;
+                    Vector2 normal = edge.GetNormal(cell);
+
+                    Alignment edgeAlignment = 0;
+                    if (normal.Y < -0.5f) edgeAlignment |= Alignment.Bottom;
+                    if (normal.Y > 0.5f) edgeAlignment |= Alignment.Top;
+                    if (normal.X < -0.5f) edgeAlignment |= Alignment.Left;
+                    if (normal.X > 0.5f) edgeAlignment |= Alignment.Right;
+
+                    availableSpawnPositions.Add(new SpawnPosition(edge, normal, spawnPosType, edgeAlignment));
+                }
+            }
+            return availableSpawnPositions;
+        }
+
+        private Vector2? FindObjectPosition(List<SpawnPosition> availableSpawnPositions, Level level, LevelObjectPrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
         {
             closestEdge = null;
             edgeNormal = Vector2.One;
-
-            Vector2 randomPos = new Vector2(
-                Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server), 
-                Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
-
-            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None) return randomPos;
-
-            List<GraphEdge> edges = new List<GraphEdge>();
-            List<Vector2> normals = new List<Vector2>();
-
-            System.Diagnostics.Debug.Assert(level.ExtraWalls.Length == 1);
-            List<VoronoiCell> cells = new List<VoronoiCell>();
-
-            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
-            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
             
-            if (cells.Any())
+            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None)
             {
-                VoronoiCell cell = cells[Rand.Int(cells.Count, Rand.RandSync.Server)];
-
-                foreach (GraphEdge edge in cell.edges)
-                {
-                    if (!edge.isSolid || edge.OutsideLevel) continue;
-
-                    Vector2 normal = edge.GetNormal(cell);
-                
-                    if (prefab.Alignment.HasFlag(Alignment.Bottom) && normal.Y < -0.5f)
-                    {
-                        edges.Add(edge);
-                    }
-                    else if (prefab.Alignment.HasFlag(Alignment.Top) && normal.Y > 0.5f)
-                    {
-                        edges.Add(edge);
-                    }
-                    else if (prefab.Alignment.HasFlag(Alignment.Left) && normal.X < -0.5f)
-                    {
-                        edges.Add(edge);
-                    }
-                    else if (prefab.Alignment.HasFlag(Alignment.Right) && normal.X > 0.5f)
-                    {
-                        edges.Add(edge);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-
-                    normals.Add(normal);
-                }
-            }
-            
-            if (prefab.SpawnPos.HasFlag(LevelObjectPrefab.SpawnPosType.RuinWall))
-            {
-                foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
-                {
-                    Rectangle expandedArea = ruin.Area;
-                    expandedArea.Inflate(ruin.Area.Width, ruin.Area.Height);
-                    if (!expandedArea.Contains(randomPos)) continue;
-
-                    foreach (var ruinShape in ruin.RuinShapes)
-                    {
-                        foreach (var wall in ruinShape.Walls)
-                        {
-                            if (!prefab.Alignment.HasFlag(ruinShape.GetLineAlignment(wall))) continue;
-
-                            edges.Add(new GraphEdge(wall.A, wall.B));
-                            normals.Add((wall.A + wall.B) / 2.0f - ruinShape.Center);
-                        }
-                    }
-                }
+                return new Vector2(
+                    Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server),
+                    Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
             }
 
-            if (!edges.Any()) return null;
+            var suitableSpawnPositions = availableSpawnPositions.Where(sp => 
+                prefab.SpawnPos.HasFlag(sp.SpawnPosType) && sp.Length >= prefab.MinSurfaceWidth).ToList();
 
-            int index = Rand.Int(edges.Count, Rand.RandSync.Server);
-            closestEdge = edges[index];
-            edgeNormal = normals[index];
+            var selectedSpawnPos = ToolBox.SelectWeightedRandom(suitableSpawnPositions, suitableSpawnPositions.Select(sp => sp.GetSpawnProbability(prefab)).ToList(), Rand.RandSync.Server);
+            if (selectedSpawnPos == null)
+            {
+                return new Vector2(
+                    Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server),
+                    Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
+            }
 
-            float length = Vector2.Distance(closestEdge.point1, closestEdge.point2);
-            Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
-            Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, Rand.RandSync.Server);
+            closestEdge = selectedSpawnPos.GraphEdge;
+            edgeNormal = selectedSpawnPos.Normal;
 
+            Vector2 dir = (closestEdge.Point1 - closestEdge.Point2) / selectedSpawnPos.Length;
+            Vector2 pos = closestEdge.Point2 + dir * Rand.Range(prefab.MinSurfaceWidth / 2.0f, selectedSpawnPos.Length - prefab.MinSurfaceWidth / 2.0f, Rand.RandSync.Server);
+            
             return pos;
         }
 

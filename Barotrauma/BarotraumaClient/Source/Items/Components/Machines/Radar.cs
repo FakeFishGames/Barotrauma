@@ -337,17 +337,17 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Voronoi2.GraphEdge edge in cell.edges)
                     {
-                        if (!edge.isSolid) continue;
+                        if (!edge.IsSolid) continue;
                         float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);
                         if (cellDot > 0) continue;
 
                         float facingDot = Vector2.Dot(
-                            Vector2.Normalize(edge.point1 - edge.point2),
+                            Vector2.Normalize(edge.Point1 - edge.Point2),
                             Vector2.Normalize(cell.Center - pingSource));
 
                         CreateBlipsForLine(
-                            edge.point1 + cell.Translation,
-                            edge.point2 + cell.Translation,
+                            edge.Point1 + cell.Translation,
+                            edge.Point2 + cell.Translation,
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength);
                     }

@@ -38,15 +38,15 @@ namespace Barotrauma
                 //if (cell.body == null) continue;
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    if (edge.cell1 != null && edge.cell1.body == null && edge.cell1.CellType != CellType.Empty) edge.cell1 = null;
-                    if (edge.cell2 != null && edge.cell2.body == null && edge.cell2.CellType != CellType.Empty) edge.cell2 = null;
+                    if (edge.Cell1 != null && edge.Cell1.body == null && edge.Cell1.CellType != CellType.Empty) edge.Cell1 = null;
+                    if (edge.Cell2 != null && edge.Cell2.body == null && edge.Cell2.CellType != CellType.Empty) edge.Cell2 = null;
 
                     CompareCCW compare = new CompareCCW(cell.Center);
-                    if (compare.Compare(edge.point1, edge.point2) == -1)
+                    if (compare.Compare(edge.Point1, edge.Point2) == -1)
                     {
-                        var temp = edge.point1;
-                        edge.point1 = edge.point2;
-                        edge.point2 = temp;
+                        var temp = edge.Point1;
+                        edge.Point1 = edge.Point2;
+                        edge.Point2 = temp;
                     }
                 }
             }
@@ -56,10 +56,10 @@ namespace Barotrauma
                 //if (cell.body == null) continue;
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    if (!edge.isSolid) continue;
+                    if (!edge.IsSolid) continue;
 
-                    GraphEdge leftEdge = cell.edges.Find(e => e != edge && (edge.point1 == e.point1 || edge.point1 == e.point2));
-                    GraphEdge rightEdge = cell.edges.Find(e => e != edge && (edge.point2 == e.point1 || edge.point2 == e.point2));
+                    GraphEdge leftEdge = cell.edges.Find(e => e != edge && (edge.Point1 == e.Point1 || edge.Point1 == e.Point2));
+                    GraphEdge rightEdge = cell.edges.Find(e => e != edge && (edge.Point2 == e.Point1 || edge.Point2 == e.Point2));
 
                     Vector2 leftNormal = Vector2.Zero, rightNormal = Vector2.Zero;
 
@@ -69,9 +69,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        leftNormal = (leftEdge.isSolid) ?
+                        leftNormal = (leftEdge.IsSolid) ?
                             Vector2.Normalize(GetEdgeNormal(leftEdge) + GetEdgeNormal(edge, cell)) :
-                            Vector2.Normalize(leftEdge.Center - edge.point1);
+                            Vector2.Normalize(leftEdge.Center - edge.Point1);
                     }
 
 
@@ -96,9 +96,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        rightNormal = (rightEdge.isSolid) ?
+                        rightNormal = (rightEdge.IsSolid) ?
                             Vector2.Normalize(GetEdgeNormal(rightEdge) + GetEdgeNormal(edge, cell)) :
-                            Vector2.Normalize(rightEdge.Center - edge.point2);
+                            Vector2.Normalize(rightEdge.Center - edge.Point2);
                     }
 
                     if (!MathUtils.IsValid(rightNormal))
@@ -123,9 +123,9 @@ namespace Barotrauma
 
                         if (i == 0)
                         {
-                            verts[0] = edge.point1 - leftNormal * outWardThickness;
-                            verts[1] = edge.point2 - rightNormal * outWardThickness;
-                            verts[2] = edge.point1 + leftNormal * inwardThickness;
+                            verts[0] = edge.Point1 - leftNormal * outWardThickness;
+                            verts[1] = edge.Point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.Point1 + leftNormal * inwardThickness;
 
                             vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), Vector2.Zero);
                             vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);
@@ -133,9 +133,9 @@ namespace Barotrauma
                         }
                         else
                         {
-                            verts[0] = edge.point1 + leftNormal * inwardThickness;
-                            verts[1] = edge.point2 - rightNormal * outWardThickness;
-                            verts[2] = edge.point2 + rightNormal * inwardThickness;
+                            verts[0] = edge.Point1 + leftNormal * inwardThickness;
+                            verts[1] = edge.Point2 - rightNormal * outWardThickness;
+                            verts[2] = edge.Point2 + rightNormal * inwardThickness;
 
                             vertPos[0] = new VertexPositionTexture(new Vector3(verts[0], 0.0f), new Vector2(0.0f, 0.5f));
                             vertPos[1] = new VertexPositionTexture(new Vector3(verts[1], 0.0f), Vector2.UnitX);

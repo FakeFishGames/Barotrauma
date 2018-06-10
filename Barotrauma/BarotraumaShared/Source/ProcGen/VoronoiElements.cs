@@ -156,7 +156,7 @@ namespace Voronoi2
             {
                 GraphEdge ge = new GraphEdge(vertices[i-1], vertices[i]);
 
-                System.Diagnostics.Debug.Assert(ge.point1 != ge.point2);
+                System.Diagnostics.Debug.Assert(ge.Point1 != ge.Point2);
 
                 edges.Add(ge);
             }
@@ -181,7 +181,7 @@ namespace Voronoi2
         {
             foreach (GraphEdge edge in edges)
             {
-                if (MathUtils.LinesIntersect(point, Center, edge.point1, edge.point2)) return false;
+                if (MathUtils.LinesIntersect(point, Center, edge.Point1, edge.Point2)) return false;
             }
 
             return true;
@@ -190,37 +190,37 @@ namespace Voronoi2
     
     public class GraphEdge
     {
-        public Vector2 point1, point2;
-        public Site site1, site2;
-        public VoronoiCell cell1, cell2;
+        public Vector2 Point1, Point2;
+        public Site Site1, Site2;
+        public VoronoiCell Cell1, Cell2;
 
-        public bool isSolid;
+        public bool IsSolid;
 
         public bool OutsideLevel;
 
         public Vector2 Center
         {
-            get { return (point1 + point2) / 2.0f; }
+            get { return (Point1 + Point2) / 2.0f; }
         }
 
         public GraphEdge(Vector2 point1, Vector2 point2)
         {
-            this.point1 = point1;
-            this.point2 = point2;
+            this.Point1 = point1;
+            this.Point2 = point2;
         }
 
         public VoronoiCell AdjacentCell(VoronoiCell cell)
         {
-            if (cell1==cell)
+            if (Cell1 == cell)
             {
-                return cell2;
+                return Cell2;
             }
-            else if (cell2==cell)
+            else if (Cell2 == cell)
             {
-                return cell1;
+                return Cell1;
             }
 
-            return null;            
+            return null;
         }
 
         /// <summary>
@@ -228,15 +228,12 @@ namespace Voronoi2
         /// </summary>
         public Vector2 GetNormal(VoronoiCell cell)
         {
-            Vector2 dir = Vector2.Normalize(point1 - point2);
-
+            Vector2 dir = Vector2.Normalize(Point1 - Point2);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-
             if (cell != null && Vector2.Dot(normal, Vector2.Normalize(Center - cell.Center)) < 0)
             {
                 normal = -normal;
             }
-
             return normal;
         }
     }
