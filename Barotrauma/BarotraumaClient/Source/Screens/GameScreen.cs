@@ -253,8 +253,9 @@ namespace Barotrauma
                 //of the ambient light color and the luminance of the damage overlight color
                 float r = Character.Controlled?.CharacterHealth == null ? 
                     0.0f : Math.Min(Character.Controlled.CharacterHealth.DamageOverlayTimer * 0.5f, 0.5f);
+                Vector3 ambientLightHls = GameMain.LightManager.AmbientLight.RgbToHLS();
                 Vector3 losColorHls = Color.Lerp(GameMain.LightManager.AmbientLight, Color.Red, r).RgbToHLS();
-                losColorHls.Y = 0.1f;
+                losColorHls.Y = ambientLightHls.Y;
                 Color losColor = ToolBox.HLSToRGB(losColorHls);
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);
