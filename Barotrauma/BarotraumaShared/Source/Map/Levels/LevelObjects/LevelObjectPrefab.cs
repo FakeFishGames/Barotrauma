@@ -1,12 +1,26 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class LevelObjectPrefab : ISerializableEntity
     {
+        public class ChildObject
+        {
+            public readonly List<string> AllowedNames;
+            public readonly int MinCount, MaxCount;
+
+            public ChildObject(XElement element)
+            {
+                AllowedNames = element.GetAttributeStringArray("names", new string[0]).ToList();
+                MinCount = element.GetAttributeInt("mincount", 1);
+                MinCount = element.GetAttributeInt("maxcount", 1);
+            }
+        }
+
         [Flags]
         public enum SpawnPosType
         {
@@ -149,6 +163,12 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public List<ChildObject> ChildObjects
+        {
+            get;
+            private set;
+        }
         
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -172,6 +192,9 @@ namespace Barotrauma
 
         public LevelObjectPrefab(XElement element)
         {
+            Name = element.Name.ToString();
+
+            ChildObjects = new List<ChildObject>();
             LevelTriggerElements = new List<XElement>();
             OverrideProperties = new List<LevelObjectPrefab>();
 
@@ -225,6 +248,9 @@ namespace Barotrauma
                                 break;
                             }
                         }
+                        break;
+                    case "childobject":
+                        ChildObjects.Add(new ChildObject(subElement));
                         break;
                 }
             }
