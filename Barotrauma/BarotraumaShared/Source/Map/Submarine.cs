@@ -404,7 +404,7 @@ namespace Barotrauma
 
                     foreach (GraphEdge e in cell.edges)
                     {
-                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.point1, e.point2, worldBorders);
+                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.Point1, e.Point2, worldBorders);
                         foreach (Vector2 intersection in intersections)
                         {
                             wallTooClose = true;

@@ -177,17 +177,17 @@ namespace Barotrauma
                 var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y-10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
+                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
-                    GUI.DrawLine(spriteBatch, 
-                        new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
-                        new Vector2(cell.Center.X, -cell.Center.Y), 
-                        Color.Blue*0.5f);
-                
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(cell.edges[0].Point1.X, -cell.edges[0].Point1.Y),
+                        new Vector2(cell.Center.X, -cell.Center.Y),
+                        Color.Blue * 0.5f);
+
                     foreach (GraphEdge edge in cell.edges)
                     {
-                        GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Cyan*0.5f : Color.White);
+                        GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X, -edge.Point1.Y),
+                            new Vector2(edge.Point2.X, -edge.Point2.Y), cell.body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)
@@ -198,13 +198,12 @@ namespace Barotrauma
 
                 foreach (List<Vector2> nodeList in level.SmallTunnels)
                 {
-                    for (int i = 1; i<nodeList.Count; i++)
+                    for (int i = 1; i < nodeList.Count; i++)
                     {
-                        GUI.DrawLine(spriteBatch, 
-                            new Vector2(nodeList[i-1].X, -nodeList[i - 1].Y),
-                            new Vector2(nodeList[i].X, -nodeList[i].Y), 
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
+                            new Vector2(nodeList[i].X, -nodeList[i].Y),
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
-
                     }
                 }
             }

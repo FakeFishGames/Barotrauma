@@ -46,8 +46,42 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// The tendency for the prefab to form clusters. Used as an exponent for perlin noise values 
+        /// that are used to determine the probability for an object to spawn at a specific position.
+        /// </summary>
+        public float ClusteringAmount
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// A value between 0-1 that determines the z-coordinate to sample perlin noise from when
+        /// determining the probability  for an object to spawn at a specific position.
+        /// Using the same (or close) value for different objects means the objects tend to form clusters
+        /// in the same areas.
+        /// </summary>
+        public float ClusteringGroup
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool AlignWithSurface
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.0f, false)]
+        /// <summary>
+        /// Minimum length of a graph edge the object can spawn on.
+        /// </summary>
+        public float MinSurfaceWidth
         {
             get;
             private set;
@@ -198,6 +232,12 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             InitProjSpecific(element);
+
+            //use the maximum width of the sprite as the minimum surface width if no value is given
+            if (element.Attributes("minsurfacewidth") == null && Sprite != null)
+            {
+                MinSurfaceWidth = Sprite.size.X * Scale.Y;
+            }
         }
 
         partial void InitProjSpecific(XElement element);

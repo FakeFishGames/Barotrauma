@@ -482,10 +482,10 @@ namespace Barotrauma
             {
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    edge.cell1 = null;
-                    edge.cell2 = null;
-                    edge.site1 = null;
-                    edge.site2 = null;
+                    edge.Cell1 = null;
+                    edge.Cell2 = null;
+                    edge.Site1 = null;
+                    edge.Site2 = null;
                 }
             }
             
@@ -635,8 +635,8 @@ namespace Barotrauma
                 foreach (GraphEdge edge in cell.edges)
                 {
                     
-                    if (Vector2.Distance(edge.point1, position) < minDistance ||
-                        Vector2.Distance(edge.point2, position) < minDistance)
+                    if (Vector2.Distance(edge.Point1, position) < minDistance ||
+                        Vector2.Distance(edge.Point2, position) < minDistance)
                     {
                         tooClose = true;
                         break;
@@ -886,8 +886,8 @@ namespace Barotrauma
                     {
                         Rectangle rect = ruinShape.Rect;
                         rect.Y += rect.Height;
-                        if (ruinShape.Rect.Contains(e.point1) || ruinShape.Rect.Contains(e.point2) ||
-                            MathUtils.GetLineRectangleIntersection(e.point1, e.point2, rect) != null)
+                        if (ruinShape.Rect.Contains(e.Point1) || ruinShape.Rect.Contains(e.Point2) ||
+                            MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, rect) != null)
                         {
                             cell.CellType = CellType.Removed;
 
@@ -1034,6 +1034,19 @@ namespace Barotrauma
             sonarDisruptionStrength[gridPosX, gridPosY] = MathHelper.Clamp(strength, 0.0f, 1.0f);
         }
 
+        public List<VoronoiCell> GetAllCells()
+        {
+            List<VoronoiCell> cells = new List<VoronoiCell>();
+            for (int x = 0; x < cellGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < cellGrid.GetLength(1); y++)
+                {
+                    cells.AddRange(cellGrid[x, y]);
+                }
+            }
+            return cells;
+        }
+
         public List<VoronoiCell> GetCells(Vector2 worldPos, int searchDepth = 2)
         {
             int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
@@ -1046,15 +1059,11 @@ namespace Barotrauma
             int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
 
             List<VoronoiCell> cells = new List<VoronoiCell>();
-
             for (int x = startX; x <= endX; x++)
             {
                 for (int y = startY; y <= endY; y++)
                 {
-                    foreach (VoronoiCell cell in cellGrid[x, y])
-                    {
-                        cells.Add(cell);
-                    }
+                    cells.AddRange(cellGrid[x, y]);
                 }
             }
 
