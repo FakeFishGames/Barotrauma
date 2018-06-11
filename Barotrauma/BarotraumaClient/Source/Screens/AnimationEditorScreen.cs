@@ -459,20 +459,46 @@ namespace Barotrauma
             }
             if (tail != null && fishSwimParams != null)
             {
-                // TODO: use transform matrix to rotate the widget relative to the character rotation -> also on other widgets
                 float amplitudeMultiplier = 0.01f;
                 float lengthMultiplier = 0.1f;
-                Vector2 referencePoint = charDrawPos;
-                // TODO: move the reference point towards tail, but don't use the limb, because it moves
-                float x = referencePoint.X + fishSwimParams.WaveLength / lengthMultiplier;
-                float y = referencePoint.Y + fishSwimParams.WaveAmplitude / amplitudeMultiplier;
+
+                // In screen space
+                float x = charDrawPos.X + fishSwimParams.WaveLength / lengthMultiplier;
+                float y = charDrawPos.Y + fishSwimParams.WaveAmplitude / amplitudeMultiplier;
                 var widgetDrawPos = new Vector2(x, y);
+
+                // In sim space (test)
+                //Vector2 widgetSimPos = ScreenToSimPoint(widgetDrawPos);
+                //var dir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(character.AnimController.Collider.Rotation));
+                //float length = (character.SimPosition - widgetSimPos).Length();
+                //var transformedPos = widgetSimPos + dir * length;
+                //widgetDrawPos = SimToScreenPoint(transformedPos);
+
                 DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Tail", () =>
                 {
                     TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude + PlayerInput.MouseSpeed.Y * amplitudeMultiplier);
                     TryUpdateValue("wavelength", fishSwimParams.WaveLength + PlayerInput.MouseSpeed.X * lengthMultiplier);
-                    GUI.DrawLine(spriteBatch, referencePoint, widgetDrawPos, Color.Red);
+                    GUI.DrawLine(spriteBatch, charDrawPos, widgetDrawPos, Color.Red);
                 });
+
+                // In sim space, rotation works, but input is worse
+                //Vector2 referencePoint = character.SimPosition;
+                //float x = referencePoint.X + fishSwimParams.WaveLength * 0.1f;
+                //float y = referencePoint.Y;//+ fishSwimParams.WaveAmplitude * amplitudeMultiplier;
+                //Vector2 widgetSimPos = new Vector2(x, y);
+
+                //var dir = referencePoint - widgetSimPos;
+                //var transformedDir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(character.AnimController.Collider.Rotation));
+                //var transformedPos = widgetSimPos + transformedDir * dir.Length();
+
+                //var widgetDrawPos = SimToScreenPoint(transformedPos);
+                //DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Tail", () =>
+                //{
+                //    TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude);
+                //    TryUpdateValue("wavelength", fishSwimParams.WaveLength + PlayerInput.MouseSpeed.X * 0.05f);
+                //});
+
+                //GUI.DrawLine(spriteBatch, charDrawPos, widgetDrawPos, Color.Red);
             }
             var foot = rightFoot ?? leftFoot;
             if (foot != null)
