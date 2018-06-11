@@ -371,7 +371,7 @@ namespace Barotrauma
                 var colliderDrawPos = SimToScreenPoint(collider.SimPosition);
                 float radius = ConvertUnits.ToDisplayUnits(collider.radius);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, radius, 40, Color.LightGreen);
-                var endPos = colliderDrawPos + VectorExtensions.Forward(collider.Rotation, radius);
+                var endPos = colliderDrawPos - VectorExtensions.Forward(collider.Rotation, radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
             }
             spriteBatch.End();
