@@ -30,7 +30,7 @@ namespace Barotrauma
         /// <summary>
         /// Holds the references to the input fields.
         /// </summary>
-        public Dictionary<SerializableProperty, IEnumerable<GUIComponent>> Fields { get; private set; } = new Dictionary<SerializableProperty, IEnumerable<GUIComponent>>();
+        public Dictionary<SerializableProperty, GUIComponent[]> Fields { get; private set; } = new Dictionary<SerializableProperty, GUIComponent[]>();
 
         /// <summary>
         /// This is the new editor.
