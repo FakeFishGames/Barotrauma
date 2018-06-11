@@ -85,6 +85,11 @@ namespace Barotrauma
             get { return triggerers.Count > 0 || triggeredTimer > 0.0f; }
         }
 
+        public Vector2 Force
+        {
+            get { return force; }
+        }
+
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
             physicsBody = new PhysicsBody(element, scale)

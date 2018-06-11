@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -77,6 +78,11 @@ namespace Barotrauma
                     obj.SoundChannels[i] = null;
                 }
             }
+        }
+
+        public IEnumerable<LevelObject> GetVisibleObjects()
+        {
+            return visibleObjectsBack.Union(visibleObjectsFront);
         }
 
         /// <summary>

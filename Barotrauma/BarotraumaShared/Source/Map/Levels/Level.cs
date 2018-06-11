@@ -16,7 +16,7 @@ namespace Barotrauma
         //all entities are disabled after they reach this depth
         public const float MaxEntityDepth = -300000.0f;
         public const float ShaftHeight = 1000.0f;
-        
+
         public static Level Loaded
         {
             get { return loaded; }
@@ -25,9 +25,9 @@ namespace Barotrauma
         [Flags]
         public enum PositionType
         {
-            MainPath=1, Cave=2, Ruin=4
+            MainPath = 1, Cave = 2, Ruin = 4
         }
-        
+
         public struct InterestingPosition
         {
             public readonly Vector2 Position;
@@ -46,7 +46,7 @@ namespace Barotrauma
         public const float ExitDistance = 6000.0f;
 
         private string seed;
-        
+
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
@@ -70,7 +70,7 @@ namespace Barotrauma
         private List<InterestingPosition> positionsOfInterest;
 
         private List<Ruin> ruins;
-        
+
         private LevelGenerationParams generationParams;
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get { return ruins; }
         }
-        
+
         public LevelWall[] ExtraWalls
         {
             get { return extraWalls; }
@@ -149,7 +149,10 @@ namespace Barotrauma
             private set;
         }
 
-
+        public LevelObjectManager LevelObjectManager
+        {
+            get { return levelObjectManager; }
+        }
 
         public LevelGenerationParams GenerationParams
         {
@@ -997,7 +1000,7 @@ namespace Barotrauma
                 WaterRenderer.Instance.ScrollWater((float)deltaTime);
             }
 
-            renderer.Update(deltaTime);
+            renderer.Update(deltaTime, cam);
 #endif
         }
 
