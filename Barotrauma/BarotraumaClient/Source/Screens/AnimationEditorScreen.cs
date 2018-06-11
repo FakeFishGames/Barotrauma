@@ -543,9 +543,9 @@ namespace Barotrauma
             }
         }
 
-        private Vector2 ScreenToSimPoint(float x, float y) => Cam.ScreenToWorld(ConvertUnits.ToSimUnits(new Vector2(x, y)));
-        private Vector2 ScreenToSimPoint(Vector2 p) => Cam.ScreenToWorld(ConvertUnits.ToSimUnits(p));
-        private Vector2 SimToScreenPoint(float x, float y) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(new Vector2(x, y)));
+        private Vector2 ScreenToSimPoint(float x, float y) => ScreenToSimPoint(new Vector2(x, y));
+        private Vector2 ScreenToSimPoint(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
+        private Vector2 SimToScreenPoint(float x, float y) => SimToScreenPoint(new Vector2(x, y));
         private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
 
         private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, Color color, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
