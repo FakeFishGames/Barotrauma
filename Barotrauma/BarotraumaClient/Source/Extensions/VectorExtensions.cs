@@ -18,7 +18,7 @@ namespace Barotrauma
         /// <summary>
         /// Creates a forward pointing vector based on the rotation (in radians).
         /// </summary>
-        public static Vector2 Forward(float radians, float radius = 1)
+        public static Vector2 Forward(float radians, float radius)
         {
             return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * radius;
         }
