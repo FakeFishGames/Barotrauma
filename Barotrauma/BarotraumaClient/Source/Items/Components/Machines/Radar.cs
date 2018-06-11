@@ -83,10 +83,37 @@ namespace Barotrauma.Items.Components
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {
                 radarBlips[i].FadeTimer -= deltaTime * 0.5f;
+                radarBlips[i].Position += radarBlips[i].Velocity * deltaTime;
+
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
+            
+            //TODO: get all levelobjects in sonar range (GetVisibleObjects only returns ones that are in camera view)
+            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetVisibleObjects())
+            {
+                foreach (LevelTrigger trigger in levelObject.Triggers)
+                {
+                    Vector2 flow = trigger.GetWaterFlowVelocity();
+                    float flowMagnitude = flow.Length();
 
-
+                    if (flowMagnitude <= 0.1f) continue;
+                    {
+                        float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(trigger.PhysicsBody.radius, trigger.PhysicsBody.width / 2.0f), trigger.PhysicsBody.height / 2.0f));
+                        
+                        if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 500.0f)
+                        {
+                            var flowBlip = new RadarBlip(trigger.WorldPosition + Rand.Vector(Rand.Range(0.0f,triggerSize)), Rand.Range(0.5f, 1.0f), 1.0f)
+                            {
+                                Velocity = flow * Rand.Range(1.0f, 10.0f),
+                                Size = new Vector2(3, 0.2f),
+                                Rotation = (float)Math.Atan2(-flow.Y, flow.X)
+                            };
+                            radarBlips.Add(flowBlip);
+                        }                        
+                    }
+                }
+            }
+            
             if (IsActive)
             {
                 float pingRadius = displayRadius * pingState;
@@ -504,8 +531,8 @@ namespace Barotrauma.Items.Components
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale;
 
-            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, MathUtils.VectorToAngle(pos),
-                new Vector2(scale * 0.5f, scale) * 0.04f, SpriteEffects.None, 0);
+            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
+                blip.Size * scale * 0.04f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
@@ -575,12 +602,16 @@ namespace Barotrauma.Items.Components
         public float FadeTimer;
         public Vector2 Position;
         public float Scale;
+        public Vector2 Velocity;
+        public float? Rotation;
+        public Vector2 Size;
 
         public RadarBlip(Vector2 pos, float fadeTimer, float scale)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);
             Scale = scale;
+            Size = new Vector2(0.5f, 1.0f);
         }
     }
 }

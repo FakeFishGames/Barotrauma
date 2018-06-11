@@ -270,8 +270,8 @@
     <overridecommonness commonness="3" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger> 
     <ParticleEmitter
@@ -296,8 +296,8 @@
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger>
     <ParticleEmitter
@@ -322,8 +322,8 @@
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
-    <Trigger position="0,0" radius="5000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" force="0,0.5" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
+    <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" force="0,4" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character">
       <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
     </Trigger>
     <ParticleEmitter
@@ -345,8 +345,8 @@
   </blacksmoker>
 
   <watercurrent1 spawnpos="MainPath" alignment="Top, Left, Right, Bottom" minsize="0.5" maxsize="2.0" randomrotation="0,360" commonness="0">
-    <overridecommonness commonness="1" leveltype="Wastes" />
-    <overridecommonness commonness="3" leveltype="Ridge" />
+    <overridecommonness commonness="0.5" leveltype="Wastes" />
+    <overridecommonness commonness="1.5" leveltype="Ridge" />
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,0"/>
     <Trigger position="0,0" radius="5000" camerashake="1" force="0,1" forcemode="Acceleration" forcevelocitylimit="200" triggeredby="Submarine"/>
     <Trigger position="0,0" radius="5000" camerashake="1" force="0,5" forcemode="Acceleration" forcevelocitylimit="300" triggeredby="Character"/>
