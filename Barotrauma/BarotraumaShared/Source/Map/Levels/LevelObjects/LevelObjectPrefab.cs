@@ -27,7 +27,8 @@ namespace Barotrauma
             None = 0,
             Wall = 1,
             RuinWall = 2,
-            SeaFloor = 4
+            SeaFloor = 4,
+            MainPath = 8
         }
         
         /// <summary>

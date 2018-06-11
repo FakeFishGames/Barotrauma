@@ -1,6 +1,7 @@
 ﻿#if CLIENT
 using Barotrauma.Particles;
 #endif
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -93,7 +94,7 @@ namespace Barotrauma
                 availableSpawnPositions.AddRange(GetAvailableSpawnPositions(extraWall.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
             }
 
-            foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+            foreach (RuinGeneration.Ruin ruin in level.Ruins)
             {
                 foreach (var ruinShape in ruin.RuinShapes)
                 {
@@ -107,12 +108,24 @@ namespace Barotrauma
                     }
                 }            
             }
-                        
+
+            foreach (var posOfInterest in level.PositionsOfInterest)
+            {
+                if (posOfInterest.PositionType != Level.PositionType.MainPath) continue;
+
+                availableSpawnPositions.Add(new SpawnPosition(
+                    new GraphEdge(posOfInterest.Position, posOfInterest.Position + Vector2.UnitX), 
+                    Vector2.UnitY, 
+                    LevelObjectPrefab.SpawnPosType.MainPath, 
+                    Alignment.Top));
+            }
+
             objects = new List<LevelObject>();
             for (int i = 0; i < amount; i++)
             {
                 //get a random prefab and find a place to spawn it
                 LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
+                
                 SpawnPosition spawnPosition = FindObjectPosition(availableSpawnPositions, level, prefab);
 
                 if (spawnPosition == null && prefab.SpawnPos != LevelObjectPrefab.SpawnPosType.None) continue;
@@ -176,28 +189,35 @@ namespace Barotrauma
                     OnObjectTriggered(newObject, levelTrigger, obj);
                 };
             }
-
-            //calculate the positions of the corners of the rotated sprite
-            Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
+            
             var spriteCorners = new List<Vector2>
             {
-                -halfSize, new Vector2(-halfSize.X, halfSize.Y),
-                halfSize, new Vector2(halfSize.X, -halfSize.Y)
+                Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero
             };
 
-            Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
-            pivotOffset.X = -pivotOffset.X;
-            pivotOffset = new Vector2(
-                (float)(pivotOffset.X * Math.Cos(-newObject.Rotation) - pivotOffset.Y * Math.Sin(-newObject.Rotation)),
-                (float)(pivotOffset.X * Math.Sin(-newObject.Rotation) + pivotOffset.Y * Math.Cos(-newObject.Rotation)));
-
-            for (int j = 0; j < 4; j++)
+            //calculate the positions of the corners of the rotated sprite
+            if (newObject.Prefab.Sprite != null)
             {
-                spriteCorners[j] = new Vector2(
-                    (float)(spriteCorners[j].X * Math.Cos(-newObject.Rotation) - spriteCorners[j].Y * Math.Sin(-newObject.Rotation)),
-                    (float)(spriteCorners[j].X * Math.Sin(-newObject.Rotation) + spriteCorners[j].Y * Math.Cos(-newObject.Rotation)));
+                Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
+                spriteCorners[0] = -halfSize;
+                spriteCorners[1] = new Vector2(-halfSize.X, halfSize.Y);
+                spriteCorners[2] = halfSize;
+                spriteCorners[3] = new Vector2(halfSize.X, -halfSize.Y);
 
-                spriteCorners[j] += new Vector2(newObject.Position.X, newObject.Position.Y) + pivotOffset;
+                Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
+                pivotOffset.X = -pivotOffset.X;
+                pivotOffset = new Vector2(
+                    (float)(pivotOffset.X * Math.Cos(-newObject.Rotation) - pivotOffset.Y * Math.Sin(-newObject.Rotation)),
+                    (float)(pivotOffset.X * Math.Sin(-newObject.Rotation) + pivotOffset.Y * Math.Cos(-newObject.Rotation)));
+
+                for (int j = 0; j < 4; j++)
+                {
+                    spriteCorners[j] = new Vector2(
+                        (float)(spriteCorners[j].X * Math.Cos(-newObject.Rotation) - spriteCorners[j].Y * Math.Sin(-newObject.Rotation)),
+                        (float)(spriteCorners[j].X * Math.Sin(-newObject.Rotation) + spriteCorners[j].Y * Math.Cos(-newObject.Rotation)));
+
+                    spriteCorners[j] += new Vector2(newObject.Position.X, newObject.Position.Y) + pivotOffset;
+                }
             }
 
             float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z;
@@ -205,6 +225,21 @@ namespace Barotrauma
 
             float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z - level.BottomPos;
             float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z - level.BottomPos;
+
+            foreach (LevelTrigger trigger in newObject.Triggers)
+            {
+                for (int i = 0; i<trigger.PhysicsBody.FarseerBody.FixtureList.Count; i++)
+                {
+                    trigger.PhysicsBody.FarseerBody.GetTransform(out FarseerPhysics.Common.Transform transform);
+                    trigger.PhysicsBody.FarseerBody.FixtureList[i].Shape.ComputeAABB(out FarseerPhysics.Collision.AABB aabb, ref transform, i);
+
+                    minX = Math.Min(minX, ConvertUnits.ToDisplayUnits(aabb.LowerBound.X));
+                    maxX = Math.Max(maxX, ConvertUnits.ToDisplayUnits(aabb.UpperBound.X));
+                    minY = Math.Min(minY, ConvertUnits.ToDisplayUnits(aabb.LowerBound.Y) - level.BottomPos);
+                    maxY = Math.Max(maxY, ConvertUnits.ToDisplayUnits(aabb.UpperBound.Y) - level.BottomPos);
+                }
+            }
+
 
 #if CLIENT
             if (newObject.ParticleEmitters != null)

@@ -176,7 +176,7 @@ namespace Barotrauma
                     swingAmount = (float)Math.Sin(obj.SwingTimer) * obj.CurrentSwingAmount;
                 }
 
-                obj.ActivePrefab.Sprite.Draw(
+                obj.ActivePrefab.Sprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
                     Color.Lerp(Color.White, Level.Loaded.BackgroundColor, obj.Position.Z / 5000.0f),
@@ -193,6 +193,8 @@ namespace Barotrauma
                     foreach (LevelTrigger trigger in obj.Triggers)
                     {
                         if (trigger.PhysicsBody == null) continue;
+                        GUI.DrawLine(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), Color.Cyan, 0, 3);
+
                         trigger.PhysicsBody.UpdateDrawPosition();
                         trigger.PhysicsBody.DebugDraw(spriteBatch, Color.Cyan);
                     }
