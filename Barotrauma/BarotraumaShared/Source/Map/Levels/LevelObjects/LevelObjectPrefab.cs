@@ -260,7 +260,7 @@ namespace Barotrauma
             InitProjSpecific(element);
 
             //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (element.Attributes("minsurfacewidth") == null && Sprite != null)
+            if (!element.Attributes("minsurfacewidth").Any() && Sprite != null)
             {
                 MinSurfaceWidth = Sprite.size.X * Scale.Y;
             }

@@ -256,10 +256,14 @@ namespace Barotrauma
                     Vector2 normal = edge.GetNormal(cell);
 
                     Alignment edgeAlignment = 0;
-                    if (normal.Y < -0.5f) edgeAlignment |= Alignment.Bottom;
-                    if (normal.Y > 0.5f) edgeAlignment |= Alignment.Top;
-                    if (normal.X < -0.5f) edgeAlignment |= Alignment.Left;
-                    if (normal.X > 0.5f) edgeAlignment |= Alignment.Right;
+                    if (normal.Y < -0.5f)
+                        edgeAlignment |= Alignment.Bottom;
+                    else if (normal.Y > 0.5f)
+                        edgeAlignment |= Alignment.Top;
+                    else if (normal.X < -0.5f)
+                        edgeAlignment |= Alignment.Left;
+                    else if(normal.X > 0.5f)
+                        edgeAlignment |= Alignment.Right;
 
                     availableSpawnPositions.Add(new SpawnPosition(edge, normal, spawnPosType, edgeAlignment));
                 }
@@ -272,7 +276,7 @@ namespace Barotrauma
             if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None) return null;
 
             var suitableSpawnPositions = availableSpawnPositions.Where(sp => 
-                prefab.SpawnPos.HasFlag(sp.SpawnPosType) && sp.Length >= prefab.MinSurfaceWidth).ToList();
+                prefab.SpawnPos.HasFlag(sp.SpawnPosType) && sp.Length >= prefab.MinSurfaceWidth && prefab.Alignment.HasFlag(sp.Alignment)).ToList();
 
             return ToolBox.SelectWeightedRandom(suitableSpawnPositions, suitableSpawnPositions.Select(sp => sp.GetSpawnProbability(prefab)).ToList(), Rand.RandSync.Server);
         }
