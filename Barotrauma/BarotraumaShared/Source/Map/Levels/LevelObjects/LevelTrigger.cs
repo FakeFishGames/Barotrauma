@@ -22,6 +22,13 @@ namespace Barotrauma
             OtherTrigger = 16
         }
 
+        public enum TriggerForceMode
+        {
+            Force, //default, apply a force to the object over time
+            Acceleration, //apply an acceleration to the object, ignoring it's mass
+            Impulse //apply an instant force, ignoring deltaTime
+        }
+
         public Action<LevelTrigger, Entity> OnTriggered;
 
         private PhysicsBody physicsBody;
@@ -37,7 +44,7 @@ namespace Barotrauma
         private List<Attack> attacks = new List<Attack>();
 
         private float cameraShake;
-        private Vector2 force;
+        private Vector2 unrotatedForce;
 
         private HashSet<Entity> triggerers = new HashSet<Entity>();
 
@@ -57,7 +64,7 @@ namespace Barotrauma
         /// How long the trigger stays in the triggered state after triggerers have left
         /// </summary>
         private float stayTriggeredDelay;
-
+        
         public Vector2 WorldPosition
         {
             get { return physicsBody.Position; }
@@ -67,7 +74,11 @@ namespace Barotrauma
         public float Rotation
         {
             get { return physicsBody.Rotation; }
-            set { physicsBody.SetTransform(physicsBody.Position, value); }
+            set
+            {
+                physicsBody.SetTransform(physicsBody.Position, value);
+                CalculateDirectionalForce();
+            }
         }
 
         public PhysicsBody PhysicsBody
@@ -87,9 +98,25 @@ namespace Barotrauma
 
         public Vector2 Force
         {
-            get { return force; }
+            get;
+            private set;
         }
 
+        private TriggerForceMode forceMode;
+        public TriggerForceMode ForceMode
+        {
+            get { return forceMode; }
+        }
+
+        /// <summary>
+        /// Stop applying forces to objects if they're moving faster than this
+        /// </summary>
+        public float ForceVelocityLimit
+        {
+            get;
+            private set;
+        }
+                
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
             physicsBody = new PhysicsBody(element, scale)
@@ -109,8 +136,15 @@ namespace Barotrauma
 
             stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
 
-            force = element.GetAttributeVector2("force", Vector2.Zero);
-            
+            unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
+            ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
+            string forceModeStr = element.GetAttributeString("forcemode", "Force");
+            if (!Enum.TryParse(forceModeStr, out forceMode))
+            {
+                DebugConsole.ThrowError("Error in LevelTrigger config: \"" + forceModeStr + "\" is not a valid force mode.");
+            }
+            CalculateDirectionalForce();
+
             string triggeredByStr = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByStr, out triggeredBy))
             {
@@ -147,6 +181,16 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
+
+        private void CalculateDirectionalForce()
+        {
+            var ca = (float)Math.Cos(Rotation);
+            var sa = (float)Math.Sin(Rotation);
+
+            Force = new Vector2(
+                ca * unrotatedForce.X + sa * unrotatedForce.Y,
+                -sa * unrotatedForce.X + ca * unrotatedForce.Y);      
         }
 
         private bool PhysicsBody_OnCollision(Fixture fixtureA, Fixture fixtureB, FarseerPhysics.Dynamics.Contacts.Contact contact)
@@ -267,15 +311,20 @@ namespace Barotrauma
                     }
                 }
 
-                if (force != Vector2.Zero)
+                if (Force != Vector2.Zero)
                 {
-                    if (triggerer is Character)
+                    Vector2 force = Force * deltaTime;
+                    if (triggerer is Character character)
                     {
-                        ((Character)triggerer).AnimController.Collider.ApplyForce(force * deltaTime);
+                        ApplyForce(character.AnimController.Collider, deltaTime);
+                        foreach (Limb limb in character.AnimController.Limbs)
+                        {
+                            ApplyForce(limb.body, deltaTime);
+                        }
                     }
-                    else if (triggerer is Submarine)
+                    else if (triggerer is Submarine submarine)
                     {
-                        ((Submarine)triggerer).ApplyForce(force * deltaTime);
+                        ApplyForce(submarine.SubBody.Body, deltaTime);
                     }
                 }
 
@@ -284,6 +333,59 @@ namespace Barotrauma
                     GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, cameraShake);
                 }
             }
+        }
+
+        private void ApplyForce(PhysicsBody body, float deltaTime)
+        {
+            switch (ForceMode)
+            {
+                case TriggerForceMode.Force:
+                    if (ForceVelocityLimit < 1000.0f)
+                        body.ApplyForce(Force, ForceVelocityLimit);
+                    else
+                        body.ApplyForce(Force);
+                    break;
+                case TriggerForceMode.Acceleration:
+                    if (ForceVelocityLimit < 1000.0f)
+                        body.ApplyForce(Force * body.Mass, ForceVelocityLimit);
+                    else
+                        body.ApplyForce(Force * body.Mass);
+                    break;
+                case TriggerForceMode.Impulse:
+                    if (ForceVelocityLimit < 1000.0f)
+                        body.ApplyLinearImpulse(Force, ForceVelocityLimit);
+                    else
+                        body.ApplyLinearImpulse(Force);
+                    break;
+            }
+        }
+
+        public Vector2 GetWaterFlowVelocity(Vector2 viewPosition)
+        {
+            Vector2 baseVel = GetWaterFlowVelocity();
+            if (baseVel.LengthSquared() < 0.1f) return Vector2.Zero;
+
+            float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+            float dist = Vector2.Distance(viewPosition, WorldPosition);
+            if (dist > triggerSize) return Vector2.Zero;
+
+            return baseVel * (1.0f - dist / triggerSize);
+        }
+
+        public Vector2 GetWaterFlowVelocity()
+        {
+            if (Force == Vector2.Zero) return Vector2.Zero;
+            
+            Vector2 vel = Force;
+            if (ForceMode == TriggerForceMode.Acceleration)
+            {
+                vel *= 1000.0f;
+            }
+            else if (ForceMode == TriggerForceMode.Impulse)
+            {
+                vel /= (float)Timing.Step;
+            }
+            return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit));            
         }
     }
 }

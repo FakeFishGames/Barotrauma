@@ -997,7 +997,7 @@ namespace Barotrauma
 
             if (WaterRenderer.Instance != null)
             {
-                WaterRenderer.Instance.ScrollWater((float)deltaTime);
+                WaterRenderer.Instance.ScrollWater(Vector2.UnitY * 10.0f, (float)deltaTime);
             }
 
             renderer.Update(deltaTime, cam);

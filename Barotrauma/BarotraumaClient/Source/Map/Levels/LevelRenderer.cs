@@ -51,24 +51,29 @@ namespace Barotrauma
         
         public void Update(float deltaTime, Camera cam)
         {
+            //calculate the sum of the forces of nearby level triggers
+            //and use it to move the dust texture and water distortion effect
             Vector2 currentDustVel = defaultDustVelocity;
             foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
             {
+                //use the largest water flow velocity of all the triggers
+                Vector2 objectMaxFlow = Vector2.Zero;
                 foreach (LevelTrigger trigger in levelObject.Triggers)
                 {
-                    if (trigger.Force == Vector2.Zero) continue;
-
-                    float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(trigger.PhysicsBody.radius, trigger.PhysicsBody.width / 2.0f), trigger.PhysicsBody.height / 2.0f));
-                    float dist = Vector2.Distance(cam.WorldViewCenter, trigger.WorldPosition);
-                    if (dist > triggerSize) continue;
-
-                    currentDustVel += (trigger.Force * (1.0f - dist / triggerSize));
+                    Vector2 vel = trigger.GetWaterFlowVelocity(cam.WorldViewCenter);
+                    if (vel.LengthSquared() > objectMaxFlow.LengthSquared())
+                    {
+                        objectMaxFlow = vel;
+                    }
                 }
+                currentDustVel += objectMaxFlow;
             }
-
+            
             dustVelocity = Vector2.Lerp(dustVelocity, currentDustVel, deltaTime);
+            
+            WaterRenderer.Instance?.ScrollWater(dustVelocity, deltaTime);
 
-            dustOffset -= dustVelocity * deltaTime;
+            dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * deltaTime;
             while (dustOffset.X <= -2048.0f) dustOffset.X += 2048.0f;
             while (dustOffset.X >= 2048.0f) dustOffset.X -= 2048.0f;
             while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
