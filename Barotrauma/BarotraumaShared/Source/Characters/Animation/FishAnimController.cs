@@ -323,10 +323,13 @@ namespace Barotrauma
             if (tail != null)
             {
                 walkPos -= movement.Length();
-
-                float waveRotation = (float)Math.Sin(walkPos / Math.Abs(CurrentSwimParams.WaveLength));
-
-                tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * Math.Abs(CurrentSwimParams.WaveAmplitude));
+                var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
+                var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+                if (waveLength > 0 && waveAmplitude > 0)
+                {
+                    float waveRotation = (float)Math.Sin(walkPos / waveLength);
+                    tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
+                }
             }
 
 
