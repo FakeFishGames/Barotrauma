@@ -369,10 +369,11 @@ namespace Barotrauma
                 // Collider
                 var collider = character.AnimController.Collider;
                 var colliderDrawPos = SimToScreenPoint(collider.SimPosition);
-                float radius = ConvertUnits.ToDisplayUnits(collider.radius);
-                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, radius, 40, Color.LightGreen);
-                var endPos = colliderDrawPos - VectorExtensions.Forward(collider.Rotation, radius);
+                Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
+                var endPos = SimToScreenPoint(collider.SimPosition + Vector2.Normalize(forward) * collider.radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
+                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(collider.Rotation)}", Color.White, font: GUI.SmallFont);
             }
             spriteBatch.End();
         }
