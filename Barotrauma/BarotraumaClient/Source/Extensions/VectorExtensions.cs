@@ -8,7 +8,7 @@ namespace Barotrauma
         /// <summary>
         /// Unity's Angle implementation.
         /// Returns the angle in degrees.
-        /// Min -180, max 180.
+        /// 0 - 180.
         /// </summary>
         public static float Angle(this Vector2 from, Vector2 to)
         {
