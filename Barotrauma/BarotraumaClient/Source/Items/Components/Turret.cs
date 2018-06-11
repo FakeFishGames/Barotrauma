@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
-        private Sprite crosshairSprite, disabledCrossHairSprite;
+        private Sprite crosshairSprite, crosshairPointerSprite;
 
         private GUIProgressBar powerIndicator;
 
@@ -22,6 +22,8 @@ namespace Barotrauma.Items.Components
         private Sound startMoveSound, endMoveSound, moveSound;
 
         private SoundChannel moveSoundChannel;
+
+        private Vector2 crosshairPos, crosshairPointerPos;
 
         [Editable, Serialize("0.0,0.0,0.0,0.0", true)]
         public Color HudTint
@@ -61,8 +63,8 @@ namespace Barotrauma.Items.Components
                     case "crosshair":
                         crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
                         break;
-                    case "disabledcrosshair":
-                        disabledCrossHairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                    case "crosshairpointer":
+                        crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
                         break;
                     case "startmovesound":
                         startMoveSound = Submarine.LoadRoundSound(subElement, false);
@@ -92,6 +94,19 @@ namespace Barotrauma.Items.Components
         partial void UpdateProjSpecific(float deltaTime)
         {
             recoilTimer -= deltaTime;
+
+            if (crosshairSprite != null)
+            {
+                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+
+                Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
+                crosshairPos = new Vector2(
+                    MathHelper.Clamp(itemPos.X + turretDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
+                    MathHelper.Clamp(itemPos.Y + turretDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
+            }
+
+            crosshairPointerPos = PlayerInput.MousePosition;
 
             if (Math.Abs(angularVelocity) > 0.1f)
             {
@@ -132,6 +147,22 @@ namespace Barotrauma.Items.Components
             {
                 moveSoundChannel.Gain = MathHelper.Clamp(Math.Abs(angularVelocity), 0.5f, 1.0f);
             }
+        }
+
+        public override void UpdateHUD(Character character, float deltaTime)
+        {
+            if (crosshairSprite != null)
+            {
+                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                Vector2 turretDir = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+
+                Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
+                crosshairPos = new Vector2(
+                    MathHelper.Clamp(itemPos.X + turretDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
+                    MathHelper.Clamp(itemPos.Y + turretDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
+            }
+
+            crosshairPointerPos = PlayerInput.MousePosition;
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false)
@@ -180,7 +211,6 @@ namespace Barotrauma.Items.Components
                 drawPos + barrelPos,
                 drawPos + barrelPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * 60.0f,
                 Color.LightGreen);
-
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -203,9 +233,7 @@ namespace Barotrauma.Items.Components
                 if (itemContainer?.Inventory?.Items == null) continue;   
                 
                 availableAmmo.AddRange(itemContainer.Inventory.Items);                
-            }
-
-            
+            }            
 
             float chargeRate = powerConsumption <= 0.0f ? 1.0f : batteryCharge / batteryCapacity;
             bool charged = batteryCharge * 3600.0f > powerConsumption;
@@ -238,14 +266,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (readyToFire)
+            if (crosshairSprite != null)
             {
-                if (crosshairSprite != null) crosshairSprite.Draw(spriteBatch, PlayerInput.MousePosition);
+                crosshairSprite.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, (float)Math.Sqrt(cam.Zoom));
             }
-            else
-            {
-                if (disabledCrossHairSprite != null) disabledCrossHairSprite.Draw(spriteBatch, PlayerInput.MousePosition);
-            }
+            if (crosshairPointerSprite != null) crosshairPointerSprite.Draw(spriteBatch, crosshairPointerPos, 0, (float)Math.Sqrt(cam.Zoom));            
         }
         
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)

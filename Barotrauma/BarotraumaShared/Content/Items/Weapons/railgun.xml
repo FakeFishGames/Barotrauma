@@ -24,7 +24,7 @@
         <Explosion range="1000.0" structuredamage="0" force="0.01" camerashake="10.0" flames="false" smoke="false" sparks="false"/>
       </StatusEffect>
       <Crosshair texture="crosshair.png"/>
-      <DisabledCrosshair texture="disabledCrosshair.png"/>
+      <CrosshairPointer texture="crosshairPointer.png"/>
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>

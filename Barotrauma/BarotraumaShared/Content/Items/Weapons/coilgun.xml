@@ -24,7 +24,7 @@
       hudtint="0.4,0.6,0.7,0.05">
       <sound file="Content/Items/Weapons/coilgun.ogg" range="2000" type="OnUse"/>
       <Crosshair texture="crosshair.png"/>
-      <DisabledCrosshair texture="disabledCrosshair.png"/>
+      <CrosshairPointer texture="crosshairPointer.png"/>
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
