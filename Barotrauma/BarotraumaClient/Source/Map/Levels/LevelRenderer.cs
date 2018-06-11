@@ -1,3 +1,4 @@
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,6 +12,8 @@ namespace Barotrauma
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
         private Vector2 dustOffset;
+        private Vector2 defaultDustVelocity;
+        private Vector2 dustVelocity;
 
         private Level level;
 
@@ -18,6 +21,8 @@ namespace Barotrauma
 
         public LevelRenderer(Level level)
         {
+            defaultDustVelocity = Vector2.UnitY * 10.0f;
+
             if (wallEdgeEffect == null)
             {
                 wallEdgeEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
@@ -44,10 +49,30 @@ namespace Barotrauma
             this.level = level;
         }
         
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
-            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
+            Vector2 currentDustVel = defaultDustVelocity;
+            foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
+            {
+                foreach (LevelTrigger trigger in levelObject.Triggers)
+                {
+                    if (trigger.Force == Vector2.Zero) continue;
+
+                    float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(trigger.PhysicsBody.radius, trigger.PhysicsBody.width / 2.0f), trigger.PhysicsBody.height / 2.0f));
+                    float dist = Vector2.Distance(cam.WorldViewCenter, trigger.WorldPosition);
+                    if (dist > triggerSize) continue;
+
+                    currentDustVel += (trigger.Force * (1.0f - dist / triggerSize));
+                }
+            }
+
+            dustVelocity = Vector2.Lerp(dustVelocity, currentDustVel, deltaTime);
+
+            dustOffset -= dustVelocity * deltaTime;
+            while (dustOffset.X <= -2048.0f) dustOffset.X += 2048.0f;
+            while (dustOffset.X >= 2048.0f) dustOffset.X -= 2048.0f;
             while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
+            while (dustOffset.Y >= 2048.0f) dustOffset.Y -= 2048.0f;
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)

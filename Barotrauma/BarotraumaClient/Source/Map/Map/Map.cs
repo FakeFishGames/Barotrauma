@@ -522,11 +522,11 @@ namespace Barotrauma
                         /*GUI.DrawLine(spriteBatch, start, end, Color.Red * MathHelper.Clamp(a * 0.2f, 0.05f, 0.3f), 0, (int)(6 * zoom));*/
                     }
 
-                    /*if (GameMain.DebugDraw)
+                    if (GameMain.DebugDraw)
                     {
                         Vector2 center = rectCenter + (connection.CenterPos + drawOffset) * zoom;
                         GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
-                    }*/
+                    }
                 }
 
                 for (int i = 0; i < generationParams.DifficultyZones; i++)
