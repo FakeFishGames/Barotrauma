@@ -386,98 +386,112 @@ namespace Barotrauma
             var humanGroundedParams = animParams as HumanGroundedParams;
             var fishGroundedParams = animParams as FishGroundedParams;
             var fishSwimParams = animParams as FishSwimParams;
+            var head = character.AnimController.GetLimb(LimbType.Head);
+            var torso = character.AnimController.GetLimb(LimbType.Torso);
+            var tail = character.AnimController.GetLimb(LimbType.Tail);
+            var rightFoot = character.AnimController.GetLimb(LimbType.RightFoot);
+            var leftFoot = character.AnimController.GetLimb(LimbType.LeftFoot);
+            Point widgetSize = new Point(10, 10);
+            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+            Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
                 // Limb positions
                 GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
-                Point widgetSize = new Point(10, 10);
-                switch (limb.type)
+            }
+            if (head != null)
+            {
+                // Head angle
+                DrawCircularWidget(spriteBatch, head, animParams.HeadAngle, "Head Angle", Color.White, angle => TryUpdateValue("headangle", angle), circleRadius: 25);
+                // Head position and leaning
+                if (animParams.IsGroundedAnimation)
                 {
-                    case LimbType.Head:
-                        // Head angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.HeadAngle, "Head Angle", Color.White, angle => TryUpdateValue("headangle", angle), circleRadius: 25);
-                        // Head position and leaning
-                        if (animParams.IsGroundedAnimation)
+                    if (humanGroundedParams != null)
+                    {
+                        var widgetDrawPos = SimToScreenPoint(head.SimPosition.X - humanGroundedParams.HeadLeanAmount, head.pullJoint.WorldAnchorB.Y);
+                        DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head", () =>
                         {
-                            if (humanGroundedParams != null)
-                            {
-                                var widgetDrawPos = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.HeadLeanAmount, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head", () =>
-                                {
-                                    TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
-                                    TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
-                                });
-                                var origin = widgetDrawPos - new Vector2(widgetSize.X / 2, 0);
-                                GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
-                            }
-                            else
-                            {
-                                // TODO: implement head leaning on fishes?
-                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
-                                    () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
-                            }
-                        }
-                        else if (animParams.IsSwimAnimation)
+                            TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
+                            TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
+                        });
+                        var origin = widgetDrawPos - new Vector2(widgetSize.X / 2, 0);
+                        GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                    }
+                    else
+                    {
+                        // TODO: implement head leaning on fishes?
+                        Vector2 drawPoint = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
+                        DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
+                            () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
+                    }
+                }
+            }
+            if (torso != null)
+            {
+                // Torso angle
+                DrawCircularWidget(spriteBatch, torso, animParams.TorsoAngle, "Torso Angle", Color.White, angle => TryUpdateValue("torsoangle", angle));
+                if (animParams.IsGroundedAnimation)
+                {
+                    // Torso position and leaning
+                    if (humanGroundedParams != null)
+                    {
+                        Vector2 drawPoint = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
+                        DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
                         {
-                        }
-                        break;
-                    case LimbType.Torso:
-                        // Torso angle
-                        DrawCircularWidget(spriteBatch, limb, animParams.TorsoAngle, "Torso Angle", Color.White, angle => TryUpdateValue("torsoangle", angle));
-                        if (animParams.IsGroundedAnimation)
-                        {
-                            // Torso position and leaning
-                            if (humanGroundedParams != null)
-                            {
-                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X - humanGroundedParams.TorsoLeanAmount, limb.SimPosition.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
-                                {
-                                    TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
-                                    TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
-                                });
-                                var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
-                                GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
-                            }
-                            else
-                            {
-                                // TODO: implement torso leaning on fishes?
-                                Vector2 drawPoint = SimToScreenPoint(limb.SimPosition.X, limb.pullJoint.WorldAnchorB.Y);
-                                DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso Position",
-                                    () => TryUpdateValue("torsoposition", groundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
-                            }
-                        }
-                        else if (animParams.IsSwimAnimation)
-                        {
-                        }
-                        break;
-                    case LimbType.RightFoot:
-                    case LimbType.LeftFoot:
-                        if (fishGroundedParams != null)
-                        {
-                            DrawCircularWidget(spriteBatch, limb, fishGroundedParams.FootRotation, "Foot Rotation", Color.White, angle =>
-                                TryUpdateValue("footrotation", angle), circleRadius: 20);
-                        }
-                        break;
-                    case LimbType.Tail:
-                        if (fishSwimParams != null)
-                        {
-                            var origin = new Vector2(SimToScreenPoint(character.AnimController.GetCenterOfMass()).X, charDrawPos.Y);
-                            float amplitudeMultiplier = 100;
-                            float lengthMultiplier = 5;
-                            float x = origin.X + fishSwimParams.WaveLength * lengthMultiplier;
-                            float y = origin.Y + fishSwimParams.WaveAmplitude * amplitudeMultiplier;
-                            var widgetDrawPos = new Vector2(x, y);
-                            DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Tail", () =>
-                            {
-                                TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude + PlayerInput.MouseSpeed.Y / amplitudeMultiplier);
-                                TryUpdateValue("wavelength", fishSwimParams.WaveLength + PlayerInput.MouseSpeed.X / lengthMultiplier);
-                                GUI.DrawLine(spriteBatch, origin, widgetDrawPos, Color.Red);
-                            });
-                        }
-                        break;
+                            TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
+                            TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
+                        });
+                        var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
+                        GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                    }
+                    else
+                    {
+                        // TODO: implement torso leaning on fishes?
+                        Vector2 drawPoint = SimToScreenPoint(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
+                        DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso Position",
+                            () => TryUpdateValue("torsoposition", groundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
+                    }
+                }
+            }
+            if (tail != null && fishSwimParams != null)
+            {
+                // TODO: use transform matrix to rotate the widget relative to the character rotation -> also on other widgets
+                float amplitudeMultiplier = 0.01f;
+                float lengthMultiplier = 0.1f;
+                Vector2 referencePoint = charDrawPos;
+                // TODO: move the reference point towards tail, but don't use the limb, because it moves
+                float x = referencePoint.X + fishSwimParams.WaveLength / lengthMultiplier;
+                float y = referencePoint.Y + fishSwimParams.WaveAmplitude / amplitudeMultiplier;
+                var widgetDrawPos = new Vector2(x, y);
+                DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Tail", () =>
+                {
+                    TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude + PlayerInput.MouseSpeed.Y * amplitudeMultiplier);
+                    TryUpdateValue("wavelength", fishSwimParams.WaveLength + PlayerInput.MouseSpeed.X * lengthMultiplier);
+                    GUI.DrawLine(spriteBatch, referencePoint, widgetDrawPos, Color.Red);
+                });
+            }
+            var foot = rightFoot ?? leftFoot;
+            if (foot != null)
+            {
+                if (fishGroundedParams != null)
+                {
+                    DrawCircularWidget(spriteBatch, foot, fishGroundedParams.FootRotation, "Foot Rotation", Color.White, angle =>
+                        TryUpdateValue("footrotation", angle), circleRadius: 20);
+                }
+                if (groundedParams != null)
+                {
+                    float multiplier = 0.005f;
+                    Vector2 referencePoint = SimToScreenPoint(colliderBottom);
+                    Vector2 drawPoint = referencePoint - groundedParams.StepSize / multiplier;
+                    var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
+                    DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Step Size", () =>
+                    {
+                        TryUpdateValue("stepsize", groundedParams.StepSize -PlayerInput.MouseSpeed * multiplier);
+                        GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Red);
+                    });
+                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
                 }
             }
         }
@@ -491,10 +505,12 @@ namespace Barotrauma
             }
         }
 
-        // Note: currently only handles floats.
+        /// <summary>
+        /// Note: currently only handles floats and vector2s.
+        /// </summary>
         private void UpdateValue(SerializableProperty property, AnimationParams animationParams, object newValue)
         {
-            if (!animationParams.SerializableEntityEditor.Fields.TryGetValue(property, out IEnumerable<GUIComponent> fields))
+            if (!animationParams.SerializableEntityEditor.Fields.TryGetValue(property, out GUIComponent[] fields))
             {
                 return;
             }
@@ -507,6 +523,20 @@ namespace Barotrauma
                         if (numInput.InputType == GUINumberInput.NumberType.Float)
                         {
                             numInput.FloatValue = f;
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector2 v)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput .InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = i == 0 ? v.X : v.Y;
                         }
                     }
                 }
