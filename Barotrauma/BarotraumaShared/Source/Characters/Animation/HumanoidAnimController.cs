@@ -742,8 +742,8 @@ namespace Barotrauma
                     thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(walkPos) * i * 0.3f, 2.0f);
                 }
             }
-            
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.5f, 0.0f);
+
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * CurrentSwimParams.LegMovementAmount, 0.0f);
             transformedFootPos = Vector2.Transform(
                 transformedFootPos,
                 Matrix.CreateRotationZ(Collider.Rotation));
