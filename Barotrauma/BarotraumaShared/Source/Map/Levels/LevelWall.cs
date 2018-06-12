@@ -31,17 +31,17 @@ namespace Barotrauma
                 vertices[3] = vertices[1] + extendAmount;
 
                 VoronoiCell wallCell = new VoronoiCell(vertices);
-                wallCell.edges[0].cell1 = wallCell;
-                wallCell.edges[1].cell1 = wallCell;
-                wallCell.edges[2].cell1 = wallCell;
-                wallCell.edges[3].cell1 = wallCell;
+                wallCell.edges[0].Cell1 = wallCell;
+                wallCell.edges[1].Cell1 = wallCell;
+                wallCell.edges[2].Cell1 = wallCell;
+                wallCell.edges[3].Cell1 = wallCell;
 
-                wallCell.edges[0].isSolid = true;
+                wallCell.edges[0].IsSolid = true;
 
                 if (i > 1)
                 {
-                    wallCell.edges[3].cell2 = cells[i - 1];
-                    cells[i - 1].edges[1].cell2 = wallCell;
+                    wallCell.edges[3].Cell2 = cells[i - 1];
+                    cells[i - 1].edges[1].Cell2 = wallCell;
                 }
 
                 cells.Add(wallCell);

@@ -243,8 +243,11 @@ namespace Barotrauma.Networking
 
             respawnShuttle.Velocity = Vector2.Zero;
 
-            shuttleSteering.AutoPilot = false;
-            shuttleSteering.MaintainPos = false;
+            if (shuttleSteering != null)
+            {
+                shuttleSteering.AutoPilot = false;
+                shuttleSteering.MaintainPos = false;
+            }
         }
 
         private void UpdateTransporting(float deltaTime)
@@ -303,7 +306,10 @@ namespace Barotrauma.Networking
 
                 respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
-                shuttleSteering.SetDestinationLevelStart();
+                if (shuttleSteering != null)
+                {
+                    shuttleSteering.SetDestinationLevelStart();
+                }
 
                 foreach (Door door in shuttleDoors)
                 {
@@ -323,7 +329,7 @@ namespace Barotrauma.Networking
 
                 if (!CoroutineManager.IsCoroutineRunning("forcepos"))
                 {
-                    if (shuttleSteering.SteeringPath != null && shuttleSteering.SteeringPath.Finished
+                    if ((shuttleSteering?.SteeringPath != null && shuttleSteering.SteeringPath.Finished)
                         || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight &&
                             Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
                     {
@@ -362,7 +368,10 @@ namespace Barotrauma.Networking
 
                 ResetShuttle();
 
-                shuttleSteering.TargetVelocity = Vector2.Zero;
+                if (shuttleSteering != null)
+                {
+                    shuttleSteering.TargetVelocity = Vector2.Zero;
+                }
 
                 GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
 

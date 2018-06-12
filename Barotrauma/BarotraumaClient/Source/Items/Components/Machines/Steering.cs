@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
                 TextGetter = () =>
                 {
                     var realWorldVel = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
-                    return steeringVelY.Replace("[kph]", ((int)realWorldVel).ToString());
+                    return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
                 }
             };
             new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")

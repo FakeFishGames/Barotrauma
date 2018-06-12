@@ -36,7 +36,7 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.4"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="0"
     MountainCountMax="3"
     SeaFloorDepth="-300000.0"
@@ -61,7 +61,7 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="1"
-    BackgroundSpriteAmount="800">
+    levelobjectamount="800">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
     <WaterParticles texture="Content/Map/dustparticles.png"/>
@@ -81,7 +81,7 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.5"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="1"
     MountainCountMax="2"
     SeaFloorDepth="-150000.0"
@@ -107,7 +107,7 @@
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
     BottomHoleProbability="0.0"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     SeaFloorVariance="10000.0">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
@@ -128,7 +128,7 @@
     SmallTunnelLengthRange="5000,50000"
     RuinCount="3"
     BottomHoleProbability="0.5"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-300000.0"
@@ -155,7 +155,7 @@
     SmallTunnelLengthRange="5000,50000"
     RuinCount="1"
     BottomHoleProbability="0.8"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     MountainCountMin="2"
     MountainCountMax="3"
     SeaFloorDepth="-50000.0"
@@ -182,7 +182,7 @@
     SmallTunnelLengthRange="5000,50000"
     RuinCount="3"
     BottomHoleProbability="0.6"
-    BackgroundSpriteAmount="1500"
+    levelobjectamount="1500"
     MountainCountMin="1"
     MountainCountMax="1"
     SeaFloorDepth="-100000.0"
@@ -206,7 +206,7 @@
     BackgroundColor="14,13,25"
     RuinCount="1"
     BottomHoleProbability="0.9"
-    BackgroundSpriteAmount="1000"
+    levelobjectamount="1000"
     SeaFloorDepth="0.0"
     SeaFloorVariance="500"
     MountainCountMin="1"

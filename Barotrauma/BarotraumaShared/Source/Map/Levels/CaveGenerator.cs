@@ -23,10 +23,10 @@ namespace Barotrauma
             float siteVariance = siteInterval * 0.4f;
 
             Vector4 edges = new Vector4(
-                cells.Min(x => x.edges.Min(e => e.point1.X)),
-                cells.Min(x => x.edges.Min(e => e.point1.Y)),
-                cells.Max(x => x.edges.Max(e => e.point1.X)),
-                cells.Max(x => x.edges.Max(e => e.point1.Y)));
+                cells.Min(x => x.edges.Min(e => e.Point1.X)),
+                cells.Min(x => x.edges.Min(e => e.Point1.Y)),
+                cells.Max(x => x.edges.Max(e => e.Point1.X)),
+                cells.Max(x => x.edges.Max(e => e.Point1.Y)));
 
             edges.X -= siteInterval * 2;
             edges.Y -= siteInterval * 2;
@@ -54,8 +54,8 @@ namespace Barotrauma
             {
                 //if the cell is at the edge of the graph, remove it
                 if (cell.edges.Any(e => 
-                    e.point1.X == edges.X || e.point1.X == edges.Z ||
-                    e.point1.Y == edges.Z || e.point1.Y == edges.W))
+                    e.Point1.X == edges.X || e.Point1.X == edges.Z ||
+                    e.Point1.Y == edges.Z || e.Point1.Y == edges.W))
                 {
                     cell.CellType = CellType.Removed;
                     continue;
@@ -152,10 +152,10 @@ namespace Barotrauma
                 var cell = path[i];
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    if (edge.point1 == edge.point2) continue;
-                    if (Vector2.Distance(edge.point1, edge.point2) > minPathWidth) continue;
+                    if (edge.Point1 == edge.Point2) continue;
+                    if (Vector2.Distance(edge.Point1, edge.Point2) > minPathWidth) continue;
                     
-                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.point1 == edge.point1 || e.point2 == edge.point1));
+                    GraphEdge adjacentEdge = cell.edges.Find(e => e != edge && (e.Point1 == edge.Point1 || e.Point2 == edge.Point1));
 
                     var adjacentCell = adjacentEdge.AdjacentCell(cell);
                     if (i>0 && (adjacentCell.CellType == CellType.Path || adjacentCell.CellType == CellType.Edge)) continue;
@@ -183,11 +183,11 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (ge.point1 == ge.point2) continue;
+                if (ge.Point1 == ge.Point2) continue;
 
                 for (int i = 0; i < 2; i++)
                 {
-                    Site site = (i == 0) ? ge.site1 : ge.site2;
+                    Site site = (i == 0) ? ge.Site1 : ge.Site2;
 
                     int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
                     int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
@@ -204,13 +204,13 @@ namespace Barotrauma
                         cells.Add(cell);
                     }
 
-                    if (ge.cell1 == null)
+                    if (ge.Cell1 == null)
                     {
-                        ge.cell1 = cell;
+                        ge.Cell1 = cell;
                     }
                     else
                     {
-                        ge.cell2 = cell;
+                        ge.Cell2 = cell;
                     }
                     cell.edges.Add(ge);
                 }
@@ -226,20 +226,19 @@ namespace Barotrauma
             if (cell == null) return Vector2.UnitX;
 
             CompareCCW compare = new CompareCCW(cell.Center);
-            if (compare.Compare(edge.point1, edge.point2) == -1)
+            if (compare.Compare(edge.Point1, edge.Point2) == -1)
             {
-                var temp = edge.point1;
-                edge.point1 = edge.point2;
-                edge.point2 = temp;
+                var temp = edge.Point1;
+                edge.Point1 = edge.Point2;
+                edge.Point2 = temp;
             }
 
             Vector2 normal = Vector2.Zero;
 
-            normal = Vector2.Normalize(edge.point2 - edge.point1);
-            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.point2);
+            normal = Vector2.Normalize(edge.Point2 - edge.Point1);
+            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.Point2);
 
             normal = new Vector2(-normal.Y, normal.X);
-
             if (Vector2.Dot(normal, diffToCell) < 0)
             {
                 normal = -normal;
@@ -315,7 +314,7 @@ namespace Barotrauma
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
                         if (!MathUtils.LinesIntersect(currentCell.Center, targetCells[currentTargetIndex].Center,
-                            currentCell.edges[i].point1, currentCell.edges[i].point2)) continue;
+                            currentCell.edges[i].Point1, currentCell.edges[i].Point2)) continue;
                         edgeIndex = i;
                         break;
                     }
@@ -374,17 +373,17 @@ namespace Barotrauma
                 tempVertices.Clear();
                 foreach (GraphEdge ge in cell.edges)
                 {
-                    if (Math.Abs(Vector2.Distance(ge.point1, ge.point2))<0.1f) continue;
-                    if (!tempVertices.Contains(ge.point1)) tempVertices.Add(ge.point1);
-                    if (!tempVertices.Contains(ge.point2)) tempVertices.Add(ge.point2);
+                    if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.01f) continue;
+                    if (!tempVertices.Contains(ge.Point1)) tempVertices.Add(ge.Point1);
+                    if (!tempVertices.Contains(ge.Point2)) tempVertices.Add(ge.Point2);
 
                     VoronoiCell adjacentCell = ge.AdjacentCell(cell);
                     //if (adjacentCell!=null && cells.Contains(adjacentCell)) continue;
 
-                    if (setSolid) ge.isSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
+                    if (setSolid) ge.IsSolid = (adjacentCell == null || !cells.Contains(adjacentCell));
 
-                    if (!bodyPoints.Contains(ge.point1)) bodyPoints.Add(ge.point1);
-                    if (!bodyPoints.Contains(ge.point2)) bodyPoints.Add(ge.point2);
+                    if (!bodyPoints.Contains(ge.Point1)) bodyPoints.Add(ge.Point1);
+                    if (!bodyPoints.Contains(ge.Point2)) bodyPoints.Add(ge.Point2);
                 }
 
                 if (tempVertices.Count < 3 || bodyPoints.Count < 2)

@@ -176,9 +176,9 @@ namespace Barotrauma
             }
         }
 
-        public void ScrollWater(float deltaTime)
+        public void ScrollWater(Vector2 vel, float deltaTime)
         {
-            WavePos = WavePos + Vector2.One * 10.0f * deltaTime;
+            WavePos = WavePos - vel * deltaTime;
         }
 
         public void RenderAir(GraphicsDevice graphicsDevice, Camera cam, RenderTarget2D texture, Matrix transform)

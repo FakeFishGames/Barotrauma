@@ -187,6 +187,8 @@ namespace Barotrauma
             CaretEnabled = true;
             caretPosDirty = true;
 
+            Font = textBlock.Font;
+            
             rectT.SizeChanged += () => { caretPosDirty = true; };
             rectT.ScaleChanged += () => { caretPosDirty = true; };
         }

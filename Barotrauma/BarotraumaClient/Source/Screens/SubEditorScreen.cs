@@ -377,6 +377,7 @@ namespace Barotrauma
                             ItemAssemblyPrefab assemblyPrefab = userData as ItemAssemblyPrefab;
                             assemblyPrefab.Delete();
                             UpdateEntityList();
+                            OpenEntityMenu(MapEntityCategory.ItemAssembly);
                             return true;
                         }
                     };
@@ -386,14 +387,7 @@ namespace Barotrauma
             entityList.Content.RectTransform.SortChildren((i1, i2) => 
                 (i1.GUIComponent.UserData as MapEntityPrefab).Name.CompareTo((i2.GUIComponent.UserData as MapEntityPrefab).Name));
         }
-
-        /*public void StartTutorial()
-        {
-            tutorial = new Tutorials.EditorTutorial("EditorTutorial");
-
-            CoroutineManager.StartCoroutine(tutorial.UpdateState());
-        }*/
-
+        
         public override void Select()
         {
             base.Select();
@@ -776,7 +770,7 @@ namespace Barotrauma
                 }
             }
 
-            string description = ((GUITextBox)saveFrame.GetChildByUserData("description")).Text;
+            string description = ((GUITextBox)saveFrame.Children.First().GetChildByUserData("description")).Text;
 
             string saveFolder = Path.Combine("Content", "Items", "Assemblies");
             XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, description));
@@ -1151,6 +1145,8 @@ namespace Barotrauma
         
         private bool SelectPrefab(GUIComponent component, object obj)
         {
+            if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) return false;
+
             AddPreviouslyUsed(obj as MapEntityPrefab);
 
             MapEntityPrefab.SelectPrefab(obj);

@@ -25,6 +25,10 @@ namespace Barotrauma.Items.Components
         private float displayRadius;
         private float displayScale;
 
+        //Vector2 = vector from the ping source to the position of the disruption
+        //float = strength of the disruption, between 0-1
+        List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
+
         private static Color[] blipColorGradient =
         {
             Color.TransparentBlack,
@@ -79,12 +83,58 @@ namespace Barotrauma.Items.Components
             for (int i = radarBlips.Count - 1; i >= 0; i--)
             {
                 radarBlips[i].FadeTimer -= deltaTime * 0.5f;
+                radarBlips[i].Position += radarBlips[i].Velocity * deltaTime;
+
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
 
+            Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
+            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(item.WorldPosition, range * pingState))
+            {
+                //gather all nearby triggers that are causing the water to flow into the dictionary
+                foreach (LevelTrigger trigger in levelObject.Triggers)
+                {
+                    Vector2 flow = trigger.GetWaterFlowVelocity();
+                    //ignore ones that are barely doing anything (flow^2 < 1)
+                    if (flow.LengthSquared() > 1.0f) levelTriggerFlows.Add(trigger, flow);
+                }
+            }
+
+            foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow in levelTriggerFlows)
+            {
+                LevelTrigger trigger = triggerFlow.Key;
+                Vector2 flow = triggerFlow.Value;
+                                
+                float flowMagnitude = flow.Length();
+                if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 1000.0f)
+                {
+                    float edgeDist = Rand.Range(0.0f, 1.0f);
+                    Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
+                    Vector2 blipVel = flow * (1.0f - edgeDist);
+
+                    //go through other triggers in range and add the flows of the ones that the blip is inside
+                    foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
+                    {
+                        LevelTrigger trigger2 = triggerFlow2.Key;
+                        if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
+                        {
+                            blipVel += triggerFlow2.Value * (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                        }
+                    }
+                    var flowBlip = new RadarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
+                    {
+                        Velocity = blipVel * Rand.Range(1.0f, 5.0f),
+                        Size = new Vector2(MathHelper.Lerp(0.4f, 5f, flowMagnitude / 500.0f), 0.2f),
+                        Rotation = (float)Math.Atan2(-blipVel.Y, blipVel.X)
+                    };
+                    radarBlips.Add(flowBlip);
+                }
+            }
+            
             if (IsActive)
             {
                 float pingRadius = displayRadius * pingState;
+                UpdateDisruptions(item.WorldPosition, pingRadius / displayScale, prevPingRadius / displayScale);
                 Ping(item.WorldPosition, pingRadius, prevPingRadius, displayScale, range, 2.0f);
                 prevPingRadius = pingRadius;
                 return;
@@ -93,11 +143,12 @@ namespace Barotrauma.Items.Components
             float passivePingRadius = (float)Math.Sin(Timing.TotalTime * 10);
             if (passivePingRadius > 0.0f)
             {
+                disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
                     if (t.SoundRange <= 0.0f) continue;
 
-                    if (Vector2.Distance(t.WorldPosition, item.WorldPosition) < t.SoundRange)
+                    if (Vector2.DistanceSquared(t.WorldPosition, item.WorldPosition) < t.SoundRange * t.SoundRange)
                     {
                         Ping(t.WorldPosition, t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
                         radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
@@ -223,12 +274,46 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)
+        {
+            float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
+            float worldPrevPingRadiusSqr = worldPrevPingRadius * worldPrevPingRadius;
+
+            disruptedDirections.Clear();
+
+            float searchRadius = Math.Min(range, worldPingRadius * 2);
+            for (float x = pingSource.X - searchRadius; x < pingSource.X + searchRadius; x += Level.GridCellSize)
+            {
+                for (float y = pingSource.Y - searchRadius; y < pingSource.Y + searchRadius; y += Level.GridCellSize)
+                {
+                    Vector2 disruptionPos = new Vector2(
+                        MathUtils.RoundTowardsClosest(x, Level.GridCellSize) + Level.GridCellSize / 2,
+                        MathUtils.RoundTowardsClosest(y, Level.GridCellSize) + Level.GridCellSize / 2);
+
+                    float disruptionStrength = Level.Loaded.GetSonarDisruptionStrength(disruptionPos);
+                    if (disruptionStrength > 0.0f)
+                    {
+                        float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
+                        disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
+
+                        if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
+                        {
+                            for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
+                            {
+                                var blip = new RadarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                                radarBlips.Add(blip);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         private void Ping(Vector2 pingSource, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
         {
             float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
             float pingRadiusSqr = pingRadius * pingRadius;
-
+                        
             //inside a hull -> only show the edges of the hull
             if (item.CurrentHull != null && DetectSubmarineWalls)
             {
@@ -296,17 +381,17 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Voronoi2.GraphEdge edge in cell.edges)
                     {
-                        if (!edge.isSolid) continue;
+                        if (!edge.IsSolid) continue;
                         float cellDot = Vector2.Dot(cell.Center - pingSource, (edge.Center + cell.Translation) - cell.Center);
                         if (cellDot > 0) continue;
 
                         float facingDot = Vector2.Dot(
-                            Vector2.Normalize(edge.point1 - edge.point2),
+                            Vector2.Normalize(edge.Point1 - edge.Point2),
                             Vector2.Normalize(cell.Center - pingSource));
 
                         CreateBlipsForLine(
-                            edge.point1 + cell.Translation,
-                            edge.point2 + cell.Translation,
+                            edge.Point1 + cell.Translation,
+                            edge.Point2 + cell.Translation,
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength);
                     }
@@ -377,32 +462,45 @@ namespace Barotrauma.Items.Components
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength)
         {
-            float length = (point1 - point2).Length();
 
-            Vector2 lineDir = (point2 - point1) / length;
 
             range *= displayScale;
-
+            float length = (point1 - point2).Length();
+            Vector2 lineDir = (point2 - point1) / length;
             for (float x = 0; x < length; x += lineStep * Rand.Range(0.8f, 1.2f))
             {
                 Vector2 point = point1 + lineDir * x;
                 //point += cell.Translation;
 
-                float pointDist = Vector2.Distance(item.WorldPosition, point) * displayScale;
+                Vector2 pointDiff = point - item.WorldPosition;
+                float pointDist = pointDiff.Length();
+                float displayPointDist = pointDist * displayScale;
 
-                if (pointDist > displayRadius) continue;
-                if (pointDist < prevPingRadius || pointDist > pingRadius) continue;
+                if (displayPointDist > displayRadius) continue;
+                if (displayPointDist < prevPingRadius || displayPointDist > pingRadius) continue;
+
+                bool disrupted = false;
+                foreach (Pair<Vector2, float> disruptDir in disruptedDirections)
+                {
+                    float dot = Vector2.Dot(pointDiff / pointDist, disruptDir.First);
+                    if (dot >  1.0f - disruptDir.Second)
+                    {
+                        disrupted = true;
+                        break;
+                    }
+                }
+                if (disrupted) continue;
 
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
-                for (float z = 0; z < displayRadius - pointDist * displayScale; z += zStep)
+                for (float z = 0; z < displayRadius - displayPointDist; z += zStep)
                 {
                     Vector2 pos = point + Rand.Vector(150.0f) + Vector2.Normalize(point - item.WorldPosition) * z / displayScale;
-                    float fadeTimer = alpha * (1.0f - pointDist / range);
+                    float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
                     int minDist = 200;
                     radarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new RadarBlip(pos, fadeTimer, 1.0f + ((pointDist+z) / displayRadius));
+                    var blip = new RadarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
 
                     radarBlips.Add(blip);
                     zStep += 0.5f;
@@ -450,8 +548,8 @@ namespace Barotrauma.Items.Components
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale;
 
-            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, MathUtils.VectorToAngle(pos),
-                new Vector2(scale * 0.5f, scale) * 0.04f, SpriteEffects.None, 0);
+            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
+                blip.Size * scale * 0.04f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
@@ -521,12 +619,16 @@ namespace Barotrauma.Items.Components
         public float FadeTimer;
         public Vector2 Position;
         public float Scale;
+        public Vector2 Velocity;
+        public float? Rotation;
+        public Vector2 Size;
 
         public RadarBlip(Vector2 pos, float fadeTimer, float scale)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);
             Scale = scale;
+            Size = new Vector2(0.5f, 1.0f);
         }
     }
 }

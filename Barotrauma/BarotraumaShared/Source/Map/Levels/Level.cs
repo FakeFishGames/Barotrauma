@@ -16,7 +16,7 @@ namespace Barotrauma
         //all entities are disabled after they reach this depth
         public const float MaxEntityDepth = -300000.0f;
         public const float ShaftHeight = 1000.0f;
-        
+
         public static Level Loaded
         {
             get { return loaded; }
@@ -25,9 +25,9 @@ namespace Barotrauma
         [Flags]
         public enum PositionType
         {
-            MainPath=1, Cave=2, Ruin=4
+            MainPath = 1, Cave = 2, Ruin = 4
         }
-        
+
         public struct InterestingPosition
         {
             public readonly Vector2 Position;
@@ -46,9 +46,11 @@ namespace Barotrauma
         public const float ExitDistance = 6000.0f;
 
         private string seed;
-        
+
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
+
+        private float[,] sonarDisruptionStrength;
 
         private LevelWall[] extraWalls;
 
@@ -68,12 +70,12 @@ namespace Barotrauma
         private List<InterestingPosition> positionsOfInterest;
 
         private List<Ruin> ruins;
-        
+
         private LevelGenerationParams generationParams;
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
 
-        private static BackgroundSpriteManager backgroundSpriteManager;
+        private static LevelObjectManager levelObjectManager;
 
         private List<Vector2> bottomPositions;
 
@@ -108,7 +110,7 @@ namespace Barotrauma
         {
             get { return ruins; }
         }
-        
+
         public LevelWall[] ExtraWalls
         {
             get { return extraWalls; }
@@ -147,7 +149,10 @@ namespace Barotrauma
             private set;
         }
 
-
+        public LevelObjectManager LevelObjectManager
+        {
+            get { return levelObjectManager; }
+        }
 
         public LevelGenerationParams GenerationParams
         {
@@ -199,13 +204,13 @@ namespace Barotrauma
 
         public void Generate(bool mirror = false)
         {
-            if (backgroundSpriteManager == null)
+            if (levelObjectManager == null)
             {
-                var files = GameMain.Instance.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
+                var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
                 if (files.Count() > 0)
-                    backgroundSpriteManager = new BackgroundSpriteManager(files);
+                    levelObjectManager = new LevelObjectManager(files);
                 else
-                    backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+                    levelObjectManager = new LevelObjectManager("Content/LevelObjects/LevelObject/Prefabs.xml");
             }
 #if CLIENT
             if (backgroundCreatureManager == null)
@@ -214,7 +219,7 @@ namespace Barotrauma
                 if (files.Count() > 0)
                     backgroundCreatureManager = new BackgroundCreatureManager(files);
                 else
-                    backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
+                    backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml");
             }
 #endif
 
@@ -452,9 +457,7 @@ namespace Barotrauma
             endPosition.Y = borders.Height;
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-
-            List<Vector2[]> triangles;
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
+            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out List<Vector2[]> triangles);
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
@@ -473,7 +476,7 @@ namespace Barotrauma
 
             GenerateSeaFloor();
 
-            backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
+            levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
 #if CLIENT
             backgroundCreatureManager.SpawnSprites(80);
 #endif
@@ -482,10 +485,10 @@ namespace Barotrauma
             {
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    edge.cell1 = null;
-                    edge.cell2 = null;
-                    edge.site1 = null;
-                    edge.site2 = null;
+                    edge.Cell1 = null;
+                    edge.Cell2 = null;
+                    edge.Site1 = null;
+                    edge.Site2 = null;
                 }
             }
             
@@ -501,6 +504,8 @@ namespace Barotrauma
                 startPosition = endPosition;
                 endPosition = temp;
             }
+
+            sonarDisruptionStrength = new float[cellGrid.GetLength(0), cellGrid.GetLength(1)];
 
             Debug.WriteLine("**********************************************************************************");
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
@@ -633,8 +638,8 @@ namespace Barotrauma
                 foreach (GraphEdge edge in cell.edges)
                 {
                     
-                    if (Vector2.Distance(edge.point1, position) < minDistance ||
-                        Vector2.Distance(edge.point2, position) < minDistance)
+                    if (Vector2.Distance(edge.Point1, position) < minDistance ||
+                        Vector2.Distance(edge.Point2, position) < minDistance)
                     {
                         tooClose = true;
                         break;
@@ -884,8 +889,8 @@ namespace Barotrauma
                     {
                         Rectangle rect = ruinShape.Rect;
                         rect.Y += rect.Height;
-                        if (ruinShape.Rect.Contains(e.point1) || ruinShape.Rect.Contains(e.point2) ||
-                            MathUtils.GetLineRectangleIntersection(e.point1, e.point2, rect) != null)
+                        if (ruinShape.Rect.Contains(e.Point1) || ruinShape.Rect.Contains(e.Point2) ||
+                            MathUtils.GetLineRectangleIntersection(e.Point1, e.Point2, rect) != null)
                         {
                             cell.CellType = CellType.Removed;
 
@@ -976,17 +981,26 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            backgroundSpriteManager.Update(deltaTime);
+            levelObjectManager.Update(deltaTime);
+
+            for (int x = 0; x < sonarDisruptionStrength.GetLength(0); x++)
+            {
+                for (int y = 0; y < sonarDisruptionStrength.GetLength(1); y++)
+                {
+                    //disruption fades out over time if the entities causing it stop calling SetSonarDisruptionStrength
+                    sonarDisruptionStrength[x, y] = Math.Max(0.0f, sonarDisruptionStrength[x, y] - deltaTime);
+                }
+            }
 
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
 
             if (WaterRenderer.Instance != null)
             {
-                WaterRenderer.Instance.ScrollWater((float)deltaTime);
+                WaterRenderer.Instance.ScrollWater(Vector2.UnitY * 10.0f, (float)deltaTime);
             }
 
-            renderer.Update(deltaTime);
+            renderer.Update(deltaTime, cam);
 #endif
         }
 
@@ -1003,10 +1017,43 @@ namespace Barotrauma
             return new Vector2(xPosition, yPos);
         }
 
-        public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
+        public float GetSonarDisruptionStrength(Vector2 worldPos)
         {
-            int gridPosX = (int)Math.Floor(pos.X / GridCellSize);
-            int gridPosY = (int)Math.Floor(pos.Y / GridCellSize);
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return 0.0f;
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
+            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return 0.0f;
+
+            return sonarDisruptionStrength[gridPosX, gridPosY];
+        }
+
+        public void SetSonarDisruptionStrength(Vector2 worldPos, float strength)
+        {
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            if (gridPosX < 0 || gridPosX >= sonarDisruptionStrength.GetLength(0)) return;
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
+            if (gridPosY < 0 || gridPosY >= sonarDisruptionStrength.GetLength(1)) return;
+
+            sonarDisruptionStrength[gridPosX, gridPosY] = MathHelper.Clamp(strength, 0.0f, 1.0f);
+        }
+
+        public List<VoronoiCell> GetAllCells()
+        {
+            List<VoronoiCell> cells = new List<VoronoiCell>();
+            for (int x = 0; x < cellGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < cellGrid.GetLength(1); y++)
+                {
+                    cells.AddRange(cellGrid[x, y]);
+                }
+            }
+            return cells;
+        }
+
+        public List<VoronoiCell> GetCells(Vector2 worldPos, int searchDepth = 2)
+        {
+            int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
+            int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
 
             int startX = Math.Max(gridPosX - searchDepth, 0);
             int endX = Math.Min(gridPosX + searchDepth, cellGrid.GetLength(0) - 1);
@@ -1015,26 +1062,22 @@ namespace Barotrauma
             int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
 
             List<VoronoiCell> cells = new List<VoronoiCell>();
-
             for (int x = startX; x <= endX; x++)
             {
                 for (int y = startY; y <= endY; y++)
                 {
-                    foreach (VoronoiCell cell in cellGrid[x, y])
-                    {
-                        cells.Add(cell);
-                    }
+                    cells.AddRange(cellGrid[x, y]);
                 }
             }
 
             if (extraWalls != null)
             {
                 Debug.Assert(extraWalls.Count() == 1, "Level.GetCells may need to be updated to support extra walls other than the ocean floor.");
-                if (pos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
+                if (worldPos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
                 {
                     foreach (VoronoiCell cell in extraWalls[0].Cells)
                     {
-                        if (Math.Abs(cell.Center.X - pos.X) < searchDepth * GridCellSize)
+                        if (Math.Abs(cell.Center.X - worldPos.X) < searchDepth * GridCellSize)
                         {
                             cells.Add(cell);
                         }
