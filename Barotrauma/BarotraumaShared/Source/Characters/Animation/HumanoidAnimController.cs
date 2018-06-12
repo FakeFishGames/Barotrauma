@@ -676,21 +676,28 @@ namespace Barotrauma
                 }
             }
 
-            torso.body.SmoothRotate(Collider.Rotation);
-            torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation))*0.4f, 5.0f);
-
-            if (TorsoAngle.HasValue)
-            {
-                torso.body.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
-            }
-            if (HeadAngle.HasValue)
-            {
-                head.body.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
-            }
-
             if (TargetMovement == Vector2.Zero) return;
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
+
+            if (TorsoAngle.HasValue)
+            {
+                torso.body.SmoothRotate(Collider.Rotation + TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+            }
+            else
+            {
+                torso.body.SmoothRotate(Collider.Rotation, CurrentSwimParams.SteerTorque);
+            }
+            if (HeadAngle.HasValue)
+            {
+                head.body.SmoothRotate(Collider.Rotation + HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+            }
+            else
+            {
+                head.body.SmoothRotate(Collider.Rotation, CurrentSwimParams.SteerTorque);
+            }
+
+            torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f, 5.0f);
 
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
@@ -743,10 +750,8 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * CurrentSwimParams.LegMovementAmount, 0.0f);
-            transformedFootPos = Vector2.Transform(
-                transformedFootPos,
-                Matrix.CreateRotationZ(Collider.Rotation));
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * CurrentSwimParams.LegMoveAmount, 0.0f);
+            transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
             MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
             MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);            
@@ -780,15 +785,19 @@ namespace Barotrauma
             handPos += head.LinearVelocity * 0.1f;
 
             float handCyclePos = walkPos / 2.0f * -Dir;
-            float handPosX = (float)Math.Cos(handCyclePos) * 0.4f;
-            float handPosY = (float)Math.Sin(handCyclePos) * 1.0f;
-            handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
+
+            // Not sure why the params has to be flipped, but it works.
+            var handMoveAmount = CurrentSwimParams.HandMoveAmount.Flip();
+            var handMoveOffset = CurrentSwimParams.HandMoveOffset.Flip();
+            float handPosX = (float)Math.Cos(handCyclePos) * handMoveAmount.X;
+            float handPosY = (float)Math.Sin(handCyclePos) * handMoveAmount.Y;
+            //handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(torso.Rotation);
 
             if (!rightHand.Disabled)
             {
-                Vector2 rightHandPos = new Vector2(-handPosX, -handPosY);
+                Vector2 rightHandPos = new Vector2(-handPosX, -handPosY) + handMoveOffset;
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
 
@@ -797,7 +806,7 @@ namespace Barotrauma
 
             if (!leftHand.Disabled)
             {
-                Vector2 leftHandPos = new Vector2(handPosX, handPosY);
+                Vector2 leftHandPos = new Vector2(handPosX, handPosY) + handMoveOffset;
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 

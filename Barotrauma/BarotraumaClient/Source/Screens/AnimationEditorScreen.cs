@@ -475,6 +475,7 @@ namespace Barotrauma
                 // Torso angle
                 DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
                     angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation);
+
                 if (animParams.IsGroundedAnimation)
                 {
                     // Torso position and leaning
@@ -591,8 +592,8 @@ namespace Barotrauma
             else if (humanSwimParams != null)
             {
                 multiplier = 100;
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(character.SimPosition + Vector2.UnitX), humanSwimParams.LegMovementAmount * multiplier, "Leg Movement", Color.Blue,
-                    amount => TryUpdateValue("legmovementamount", amount / multiplier), circleRadius: 20);
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(character.SimPosition + Vector2.UnitX), humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Blue,
+                    amount => TryUpdateValue("legmoveamount", amount / multiplier), circleRadius: 20);
             }
         }
 
