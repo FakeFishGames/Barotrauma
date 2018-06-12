@@ -1,2 +1,7 @@
 ﻿<HumanSwimSlow
-  speed="1.2"/>
+  speed="0.8600008"
+  legmovementamount="0.5749996"
+  handmovementamount="0.5,0.5"
+  steertorque="25"
+  headangle="-51"
+  torsoangle="-90" />
