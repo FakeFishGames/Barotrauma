@@ -392,10 +392,11 @@ namespace Barotrauma
             var head = character.AnimController.GetLimb(LimbType.Head);
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             var tail = character.AnimController.GetLimb(LimbType.Tail);
-            var rightFoot = character.AnimController.GetLimb(LimbType.RightFoot);
-            var leftFoot = character.AnimController.GetLimb(LimbType.LeftFoot);
             var legs = character.AnimController.GetLimb(LimbType.Legs);
             var thigh = character.AnimController.GetLimb(LimbType.RightThigh) ?? character.AnimController.GetLimb(LimbType.RightThigh);
+            var foot = character.AnimController.GetLimb(LimbType.RightFoot) ?? character.AnimController.GetLimb(LimbType.LeftFoot);
+            var hand = character.AnimController.GetLimb(LimbType.RightHand) ?? character.AnimController.GetLimb(LimbType.LeftHand);
+            var arm = character.AnimController.GetLimb(LimbType.RightArm) ?? character.AnimController.GetLimb(LimbType.LeftArm);
             Point widgetSize = new Point(10, 10);
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
@@ -409,7 +410,8 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: head.Rotation);
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, 
+                    angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -427,8 +429,8 @@ namespace Barotrauma
                     else
                     {
                         // TODO: implement head leaning on fishes?
-                        Vector2 drawPoint = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
-                        DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
+                        Vector2 drawPos = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
+                        DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
                             () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
                     }
                 }
@@ -436,19 +438,20 @@ namespace Barotrauma
             if (torso != null)
             {
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, angle => TryUpdateValue("torsoangle", angle), rotationOffset: torso.Rotation);
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
+                    angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation);
                 if (animParams.IsGroundedAnimation)
                 {
                     // Torso position and leaning
                     if (humanGroundedParams != null)
                     {
-                        Vector2 drawPoint = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
-                        DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
+                        Vector2 drawPos = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
+                        DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
                         {
                             TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
                             TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
                         });
-                        var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
+                        var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
                         GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
                     }
                     else
@@ -460,7 +463,55 @@ namespace Barotrauma
                     }
                 }
             }
-            if (tail != null && fishSwimParams != null)
+            if (foot != null)
+            {
+                if (fishGroundedParams != null)
+                {
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
+                        angle => TryUpdateValue("footrotation", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                }
+                if (groundedParams != null)
+                {
+                    float multiplier = 0.005f;
+                    Vector2 referencePoint = SimToScreenPoint(colliderBottom);
+                    Vector2 drawPos = referencePoint - groundedParams.StepSize / multiplier;
+                    var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+                    DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Blue, "Step Size", () =>
+                    {
+                        TryUpdateValue("stepsize", groundedParams.StepSize -PlayerInput.MouseSpeed * multiplier);
+                        GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
+                    });
+                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
+                }
+            }
+            if (humanGroundedParams != null)
+            {
+                if (legs != null || foot != null)
+                {
+                    // TODO: does not seem to have any effect
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque, "Leg Correction Torque", Color.Chartreuse,
+                        angle => TryUpdateValue("legcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                }
+                if (thigh != null)
+                {
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(collider.SimPosition), humanGroundedParams.ThighCorrectionTorque, "Thigh Correction Torque", Color.Chartreuse, 
+                        angle => TryUpdateValue("thighcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                }
+                if (hand != null || arm != null)
+                {
+                    float multiplier = 0.02f;
+                    Vector2 referencePoint = SimToScreenPoint(character.SimPosition) + Vector2.UnitX;
+                    Vector2 drawPos = referencePoint - humanGroundedParams.HandMoveAmount / multiplier;
+                    var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+                    DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Blue, "Hand Move Amount", () =>
+                    {
+                        TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount - PlayerInput.MouseSpeed * multiplier);
+                        GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
+                    });
+                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
+                }
+            }
+            else if (tail != null && fishSwimParams != null)
             {
                 float amplitudeMultiplier = 0.01f;
                 float lengthMultiplier = 0.1f;
@@ -502,45 +553,6 @@ namespace Barotrauma
                 //});
 
                 //GUI.DrawLine(spriteBatch, charDrawPos, widgetDrawPos, Color.Red);
-            }
-            var foot = rightFoot ?? leftFoot;
-            if (foot != null)
-            {
-                if (fishGroundedParams != null)
-                {
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White, angle =>
-                        TryUpdateValue("footrotation", angle), circleRadius: 20, rotationOffset: collider.Rotation);
-                }
-                if (groundedParams != null)
-                {
-                    float multiplier = 0.005f;
-                    Vector2 referencePoint = SimToScreenPoint(colliderBottom);
-                    Vector2 drawPoint = referencePoint - groundedParams.StepSize / multiplier;
-                    var origin = drawPoint - new Vector2(widgetSize.X / 2, 0);
-                    DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Step Size", () =>
-                    {
-                        TryUpdateValue("stepsize", groundedParams.StepSize -PlayerInput.MouseSpeed * multiplier);
-                        GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Red);
-                    });
-                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
-                }
-            }
-            if (legs != null || foot != null)
-            {
-                if (humanGroundedParams != null)
-                {
-                    // TODO: does not seem to have any effect
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque, "Leg Correction Torque", Color.White, angle =>
-                        TryUpdateValue("legcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
-                }
-            }
-            if (thigh != null)
-            {
-                if (humanGroundedParams != null)
-                {
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(collider.SimPosition), humanGroundedParams.ThighCorrectionTorque, "Thigh Correction Torque", Color.White, angle =>
-                        TryUpdateValue("thighcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
-                }
             }
         }
 
