@@ -183,7 +183,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");
             }
-
+            UpdateCollisionCategories();
             triggerOthersDistance = element.GetAttributeFloat("triggerothersdistance", 0.0f);
 
             var tagsArray = element.GetAttributeStringArray("tags", new string[0]);
@@ -214,6 +214,16 @@ namespace Barotrauma
                         break;
                 }
             }
+        }
+
+        private void UpdateCollisionCategories()
+        {
+            var collidesWith = Physics.CollisionNone;
+            if (triggeredBy.HasFlag(TriggererType.Character) || triggeredBy.HasFlag(TriggererType.Creature)) collidesWith |= Physics.CollisionCharacter;
+            if (triggeredBy.HasFlag(TriggererType.Item)) collidesWith |= Physics.CollisionItem | Physics.CollisionProjectile;
+            if (triggeredBy.HasFlag(TriggererType.Submarine)) collidesWith |= Physics.CollisionWall;
+
+            physicsBody.CollidesWith = collidesWith;
         }
 
         private void CalculateDirectionalForce()

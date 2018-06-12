@@ -1127,21 +1127,18 @@ namespace Barotrauma
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
                     float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + colliderHeightFromFloor;
-                    
-                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
+
+                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
-                        Vector2 newSpeed = Collider.LinearVelocity;
-                        newSpeed.Y = (targetY - Collider.SimPosition.Y)*5.0f;
-                        Collider.LinearVelocity = newSpeed;
-                    }
-                    else
-                    {
-                        Vector2 newSpeed = Collider.LinearVelocity;
-                        newSpeed.Y = 0.0f;
-                        Collider.LinearVelocity = newSpeed;
-                        Vector2 newPos = Collider.SimPosition;
-                        newPos.Y = targetY;
-                        Collider.SetTransform(newPos, Collider.Rotation);
+                        if (Collider.SimPosition.Y < targetY && !forceImmediate)
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
+                        }
+                        else
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 0);
+                            Collider.SetTransform(new Vector2(Collider.SimPosition.X, targetY), Collider.Rotation);                            
+                        }
                     }
                 }
             }
