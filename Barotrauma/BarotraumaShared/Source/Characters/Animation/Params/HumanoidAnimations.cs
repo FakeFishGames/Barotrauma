@@ -34,7 +34,22 @@ namespace Barotrauma
         }
     }
 
-    abstract class HumanSwimParams : SwimParams { }
+    abstract class HumanSwimParams : SwimParams
+    {
+        [Serialize(0.5f, true), Editable]
+        public float LegMovementAmount
+        {
+            get;
+            set;
+        }
+
+        [Serialize("0.5, 0.5", true), Editable]
+        public Vector2 HandMovementAmount
+        {
+            get;
+            set;
+        }
+    }
 
     abstract class HumanGroundedParams : GroundedMovementParams
     {

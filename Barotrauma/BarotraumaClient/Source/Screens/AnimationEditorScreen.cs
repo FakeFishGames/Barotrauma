@@ -25,6 +25,7 @@ namespace Barotrauma
 
         private Character character;
         private Vector2 spawnPosition;
+        private bool showWidgets;
 
         public override void Select()
         {
@@ -201,6 +202,7 @@ namespace Barotrauma
 
         #region GUI
         private GUIFrame panel;
+        private GUIButton widgetsButton;
         private void CreateButtons()
         {
             if (panel != null)
@@ -227,6 +229,14 @@ namespace Barotrauma
                 return true;
             };
             // TODO: use tick boxes?
+            widgetsButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), showWidgets ? "Hide Widgets" : "Show Widgets");
+            widgetsButton.OnClicked += (b, obj) =>
+            {
+                if (character.AnimController.TargetDir == Direction.Right) { return false; }
+                showWidgets = !showWidgets;
+                widgetsButton.Text = showWidgets ? "Hide Widgets" : "Show Widgets";
+                return true;
+            };
             var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.AnimController.forceStanding ? "Swim" : "Grounded");
             swimButton.OnClicked += (b, obj) =>
             {
@@ -235,11 +245,11 @@ namespace Barotrauma
                 return true;
             };
             swimButton.Enabled = character.AnimController.CanWalk;
-            var moveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.OverrideMovement.HasValue ? "Stop" : "Move");
-            moveButton.OnClicked += (b, obj) =>
+            var autoMoveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.OverrideMovement.HasValue ? "Disable Auto Move" : "Auto Move");
+            autoMoveButton.OnClicked += (b, obj) =>
             {
                 character.OverrideMovement = character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
-                moveButton.Text = character.OverrideMovement.HasValue ? "Stop" : "Move";
+                autoMoveButton.Text = character.OverrideMovement.HasValue ? "Disable Auto Move" : "Auto Move";
                 return true;
             };
             var speedButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.ForceRun ? "Slow" : "Fast");
@@ -249,11 +259,11 @@ namespace Barotrauma
                 speedButton.Text = character.ForceRun ? "Slow" : "Fast";
                 return true;
             };
-            var turnButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.dontFollowCursor ? "Enable Turning" : "Disable Turning");
-            turnButton.OnClicked += (b, obj) =>
+            var followCursorButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.dontFollowCursor ? "Follow Cursor" : "Don't Follow Cursor");
+            followCursorButton.OnClicked += (b, obj) =>
             {
                 character.dontFollowCursor = !character.dontFollowCursor;
-                turnButton.Text = character.dontFollowCursor ? "Enable Turning" : "Disable Turning";
+                followCursorButton.Text = character.dontFollowCursor ? "Follow Cursor" : "Don't Follow Cursor";
                 return true;
             };
             var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
@@ -291,6 +301,13 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+
+            // autohide widgets if facing right
+            if (showWidgets && character.AnimController.TargetDir == Direction.Right)
+            {
+                showWidgets = false;
+                widgetsButton.Text = "Show Widgets";
+            }
 
             Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             Submarine.MainSub.Update((float)deltaTime);
@@ -341,7 +358,10 @@ namespace Barotrauma
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
 
-            DrawWidgetEditor(spriteBatch);
+            if (showWidgets)
+            {
+                DrawWidgetEditor(spriteBatch);
+            }
             //DrawJointEditor(spriteBatch);
 
             // Debug
@@ -397,6 +417,7 @@ namespace Barotrauma
             var humanGroundedParams = animParams as HumanGroundedParams;
             var fishGroundedParams = animParams as FishGroundedParams;
             var fishSwimParams = animParams as FishSwimParams;
+            var humanSwimParams = animParams as HumanSwimParams;
             var head = character.AnimController.GetLimb(LimbType.Head);
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             var tail = character.AnimController.GetLimb(LimbType.Tail);
@@ -409,6 +430,7 @@ namespace Barotrauma
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
 
+            // Widgets for all anims -->
             // Speed
             float multiplier = 0.02f;
             Vector2 referencePoint = SimToScreenPoint(collider.SimPosition);
@@ -421,7 +443,6 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Turquoise);
             });
             GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 10, Color.Turquoise);
-
             if (head != null)
             {
                 // Head angle
@@ -478,11 +499,13 @@ namespace Barotrauma
             }
             if (foot != null)
             {
+                // Fish grounded only
                 if (fishGroundedParams != null)
                 {
                     DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
                         angle => TryUpdateValue("footrotation", angle), circleRadius: 20, rotationOffset: collider.Rotation);
                 }
+                // Both
                 if (groundedParams != null)
                 {
                     multiplier = 0.005f;
@@ -497,12 +520,14 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
                 }
             }
+            // Human grounded only -->
             if (humanGroundedParams != null)
             {
                 if (legs != null || foot != null)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque, "Leg Correction Torque", Color.Chartreuse,
-                        angle => TryUpdateValue("legcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                    multiplier = 10;
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Correction Torque", Color.Chartreuse,
+                        angle => TryUpdateValue("legcorrectiontorque", angle / multiplier), circleRadius: 20, rotationOffset: collider.Rotation);
                 }
                 if (hand != null || arm != null)
                 {
@@ -518,6 +543,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
                 }
             }
+            // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
                 float amplitudeMultiplier = 0.01f;
@@ -560,6 +586,13 @@ namespace Barotrauma
                 //});
 
                 //GUI.DrawLine(spriteBatch, charDrawPos, widgetDrawPos, Color.Red);
+            }
+            // Human swim only -->
+            else if (humanSwimParams != null)
+            {
+                multiplier = 100;
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(character.SimPosition + Vector2.UnitX), humanSwimParams.LegMovementAmount * multiplier, "Leg Movement", Color.Blue,
+                    amount => TryUpdateValue("legmovementamount", amount / multiplier), circleRadius: 20);
             }
         }
 
