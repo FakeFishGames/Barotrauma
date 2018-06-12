@@ -19,67 +19,14 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in visibleObjectsBack)
             {
-                UpdateObject(obj, deltaTime);
+                obj.Update(deltaTime);
             }
             foreach (LevelObject obj in visibleObjectsFront)
             {
-                UpdateObject(obj, deltaTime);
+                obj.Update(deltaTime);
             }
         }
-
-        private void UpdateObject(LevelObject obj, float deltaTime)
-        {
-            if (obj.ParticleEmitters != null)
-            {
-                for (int i = 0; i < obj.ParticleEmitters.Length; i++)
-                {
-                    if (obj.ParticleEmitterTriggers[i] != null && !obj.ParticleEmitterTriggers[i].IsTriggered) continue;
-                    Vector2 emitterPos = obj.LocalToWorld(obj.Prefab.EmitterPositions[i]);
-                    obj.ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
-                        angle: obj.ParticleEmitters[i].Prefab.CopyEntityAngle ? obj.Rotation : 0.0f);
-                }
-            }
-
-            if (obj.ActivePrefab.SwingFrequency > 0.0f)
-            {
-                obj.SwingTimer += deltaTime * obj.ActivePrefab.SwingFrequency;
-                obj.SwingTimer = obj.SwingTimer % MathHelper.TwoPi;
-                //lerp the swing amount to the correct value to prevent it from abruptly changing to a different value
-                //when a trigger changes the swing amoung
-                obj.CurrentSwingAmount = MathHelper.Lerp(obj.CurrentSwingAmount, obj.ActivePrefab.SwingAmount, deltaTime * 10.0f);
-            }
-
-            if (obj.ActivePrefab.ScaleOscillationFrequency > 0.0f)
-            {
-                obj.ScaleOscillateTimer += deltaTime * obj.ActivePrefab.ScaleOscillationFrequency;
-                obj.ScaleOscillateTimer = obj.ScaleOscillateTimer % MathHelper.TwoPi;
-                obj.CurrentScaleOscillation = Vector2.Lerp(obj.CurrentScaleOscillation, obj.ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
-            }
-
-            for (int i = 0; i < obj.Sounds.Length; i++)
-            {
-                if (obj.SoundTriggers[i] == null || obj.SoundTriggers[i].IsTriggered)
-                {
-                    Sound sound = obj.Sounds[i];
-                    Vector2 soundPos = obj.LocalToWorld(new Vector2(obj.Prefab.Sounds[i].Position.X, obj.Prefab.Sounds[i].Position.Y));
-                    if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), soundPos) <
-                        sound.BaseFar * sound.BaseFar)
-                    {
-                        if (obj.SoundChannels[i] == null || !obj.SoundChannels[i].IsPlaying)
-                        {
-                            obj.SoundChannels[i] = sound.Play(1.0f, sound.BaseFar, soundPos);
-                        }
-                        obj.SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
-                    }
-                }
-                else if (obj.SoundChannels[i] != null && obj.SoundChannels[i].IsPlaying)
-                {
-                    obj.SoundChannels[i].Dispose();
-                    obj.SoundChannels[i] = null;
-                }
-            }
-        }
-
+        
         public IEnumerable<LevelObject> GetVisibleObjects()
         {
             return visibleObjectsBack.Union(visibleObjectsFront);
@@ -169,19 +116,13 @@ namespace Barotrauma
                         1.0f + sin * obj.CurrentScaleOscillation.X,
                         1.0f + sin * obj.CurrentScaleOscillation.Y);
                 }
-
-                float swingAmount = 0.0f;
-                if (obj.ActivePrefab.SwingAmount > 0.0f)
-                {
-                    swingAmount = (float)Math.Sin(obj.SwingTimer) * obj.CurrentSwingAmount;
-                }
-
+                
                 obj.ActivePrefab.Sprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
                     Color.Lerp(Color.White, Level.Loaded.BackgroundColor, obj.Position.Z / 5000.0f),
                     obj.ActivePrefab.Sprite.Origin,
-                    obj.Rotation + swingAmount,
+                    obj.CurrentRotation,
                     scale,
                     SpriteEffects.None,
                     z);

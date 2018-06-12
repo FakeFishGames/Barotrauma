@@ -175,22 +175,58 @@ namespace Barotrauma.Lights
             graphics.Clear(AmbientLight);
             graphics.BlendState = BlendState.Additive;
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, null, null, cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
-            
+            Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-            Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
-
+            //draw background lights
+            bool backgroundSpritesDrawn = false;
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in lights)
             {
+                if (!light.IsBackground) continue;
+                if (light.Color.A < 1 || light.Range < 1.0f || !light.Enabled) continue;
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
+
+                light.Draw(spriteBatch, lightEffect, transform);
+                backgroundSpritesDrawn = true;
+            }
+            spriteBatch.End();
+
+            //draw an ambient light -colored rectangle on hulls to hide background lights behind subs
+            //TODO: check if this can be optimized by only drawing rects that are in view
+            //TODO: cache the drawrects of the hulls so we don't need to recalculate them when drawing hull ambient lights
+            if (backgroundSpritesDrawn)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
+                foreach (Hull hull in Hull.hullList)
+                {
+                    var drawRect =
+                        hull.Submarine == null ?
+                        hull.Rect :
+                        new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
+                    //TODO: draw some sort of smoothed rectangle
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(drawRect.X, -drawRect.Y),
+                        new Vector2(hull.Rect.Width, hull.Rect.Height),
+                        AmbientLight, true);
+                }
+                spriteBatch.End();
+                graphics.BlendState = BlendState.Additive;
+            }
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
+            foreach (LightSource light in lights)
+            {
+                if (light.IsBackground) continue;
                 if (light.Color.A < 1 || light.Range < 1.0f || !light.Enabled) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch, lightEffect, transform);
             }
 
-            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
+            Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
+            lightEffect.World = Matrix.CreateTranslation(Vector3.Zero) * transform;
             
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 
