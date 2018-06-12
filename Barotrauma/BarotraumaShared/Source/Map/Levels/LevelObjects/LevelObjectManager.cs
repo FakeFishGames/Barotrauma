@@ -280,6 +280,42 @@ namespace Barotrauma
             }            
         }
 
+        public Microsoft.Xna.Framework.Point GetGridIndices(Vector2 worldPosition)        
+        {
+            return new Microsoft.Xna.Framework.Point(
+                (int)Math.Floor(worldPosition.X / GridSize),
+                (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
+        }
+
+        public List<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
+        {
+            var minIndices = GetGridIndices(worldPosition - Vector2.One * radius);
+            if (minIndices.X >= objectGrid.GetLength(0) || minIndices.Y >= objectGrid.GetLength(1)) return new List<LevelObject>();
+
+            var maxIndices = GetGridIndices(worldPosition + Vector2.One * radius);
+            if (maxIndices.X < 0 || maxIndices.Y < 0) return new List<LevelObject>();
+
+            minIndices.X = Math.Max(0, minIndices.X);
+            minIndices.Y = Math.Max(0, minIndices.Y);
+            maxIndices.X = Math.Min(objectGrid.GetLength(0), minIndices.X);
+            maxIndices.Y = Math.Min(objectGrid.GetLength(1), minIndices.Y);
+
+            List<LevelObject> objects = new List<LevelObject>();
+            for (int x = minIndices.X; x <= maxIndices.X; x++)
+            {
+                for (int y = minIndices.Y; y <= maxIndices.Y; y++)
+                {
+                    if (objectGrid[x, y] == null) continue;
+                    foreach (LevelObject obj in objectGrid[x, y])
+                    {
+                        if (!objects.Contains(obj)) objects.Add(obj);
+                    }
+                }
+            }
+
+            return objects;
+        }
+
         private List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
         {
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();

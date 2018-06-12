@@ -31,7 +31,7 @@ namespace Barotrauma
         public static Vector2 ClampLength(this Vector2 v, float length)
         {
             float currLength = v.Length();
-            if (v.Length() > length)
+            if (currLength > length)
             {
                 return v / currLength * length;
             }
