@@ -30,9 +30,9 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool ShowOverlay { get; set; }
 #else
-        public const bool ShowLocations = true;
-        public const bool ShowLevelTypeNames = false;
-        public const bool ShowOverlay = true;
+        public readonly bool ShowLocations = true;
+        public readonly bool ShowLevelTypeNames = false;
+        public readonly bool ShowOverlay = true;
 #endif
 
         [Serialize(9, true)]        
