@@ -195,6 +195,12 @@ namespace Barotrauma
                         if (trigger.PhysicsBody == null) continue;
                         GUI.DrawLine(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), Color.Cyan, 0, 3);
 
+                        Vector2 flowForce = trigger.GetWaterFlowVelocity();
+                        if (flowForce.LengthSquared() > 1)
+                        {
+                            flowForce.Y = -flowForce.Y;
+                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, Color.Orange, 0, 5);
+                        }
                         trigger.PhysicsBody.UpdateDrawPosition();
                         trigger.PhysicsBody.DebugDraw(spriteBatch, Color.Cyan);
                     }

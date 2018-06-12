@@ -45,6 +45,7 @@ namespace Barotrauma
 
         private float cameraShake;
         private Vector2 unrotatedForce;
+        private float forceFluctuationTimer, currentForceFluctuation = 1.0f;
 
         private HashSet<Entity> triggerers = new HashSet<Entity>();
 
@@ -101,6 +102,17 @@ namespace Barotrauma
             get;
             private set;
         }
+        
+        public float ForceFluctuationFrequency
+        {
+            get;
+            private set;
+        }
+        public float ForceFluctuationStrength
+        {
+            get;
+            private set;
+        }
 
         private TriggerForceMode forceMode;
         public TriggerForceMode ForceMode
@@ -112,6 +124,12 @@ namespace Barotrauma
         /// Stop applying forces to objects if they're moving faster than this
         /// </summary>
         public float ForceVelocityLimit
+        {
+            get;
+            private set;
+        }
+
+        public float ColliderRadius
         {
             get;
             private set;
@@ -130,6 +148,8 @@ namespace Barotrauma
             physicsBody.FarseerBody.IsStatic = true;
             physicsBody.FarseerBody.IsKinematic = true;
 
+            ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+
             physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
@@ -137,6 +157,9 @@ namespace Barotrauma
             stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
 
             unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
+            ForceFluctuationFrequency = element.GetAttributeFloat("forcefluctuationfrequency", 0.01f);
+            ForceFluctuationStrength = element.GetAttributeFloat("forcefluctuationstrength", 0.0f);
+
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
             string forceModeStr = element.GetAttributeString("forcemode", "Force");
             if (!Enum.TryParse(forceModeStr, out forceMode))
@@ -277,6 +300,15 @@ namespace Barotrauma
         {
             triggerers.RemoveWhere(t => t.Removed);
 
+            if (ForceFluctuationStrength > 0.0f)
+            {
+                forceFluctuationTimer = (forceFluctuationTimer + ForceFluctuationFrequency * deltaTime) % 255.0f;
+                //use the position of the trigger as the y and z coordinates to sample from
+                //so different triggers won't fluctuate in the same rhythm
+                float noiseVal = MathHelper.Clamp((float)PerlinNoise.Perlin(forceFluctuationTimer, WorldPosition.X / 1000.0f, WorldPosition.Y / 1000.0f), 0.0f, 1.0f);
+                currentForceFluctuation = (float)Math.Pow(noiseVal, ForceFluctuationStrength);
+            }
+            
             if (stayTriggeredDelay > 0.0f)
             {
                 if (triggerers.Count == 0)
@@ -313,7 +345,6 @@ namespace Barotrauma
 
                 if (Force != Vector2.Zero)
                 {
-                    Vector2 force = Force * deltaTime;
                     if (triggerer is Character character)
                     {
                         ApplyForce(character.AnimController.Collider, deltaTime);
@@ -341,21 +372,21 @@ namespace Barotrauma
             {
                 case TriggerForceMode.Force:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyForce(Force, ForceVelocityLimit);
+                        body.ApplyForce(Force * currentForceFluctuation, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force);
+                        body.ApplyForce(Force * currentForceFluctuation);
                     break;
                 case TriggerForceMode.Acceleration:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyForce(Force * body.Mass, ForceVelocityLimit);
+                        body.ApplyForce(Force * body.Mass * currentForceFluctuation, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force * body.Mass);
+                        body.ApplyForce(Force * body.Mass * currentForceFluctuation);
                     break;
                 case TriggerForceMode.Impulse:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyLinearImpulse(Force, ForceVelocityLimit);
+                        body.ApplyLinearImpulse(Force * currentForceFluctuation, ForceVelocityLimit);
                     else
-                        body.ApplyLinearImpulse(Force);
+                        body.ApplyLinearImpulse(Force * currentForceFluctuation);
                     break;
             }
         }
@@ -385,7 +416,7 @@ namespace Barotrauma
             {
                 vel /= (float)Timing.Step;
             }
-            return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit));            
+            return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit)) * currentForceFluctuation;            
         }
     }
 }

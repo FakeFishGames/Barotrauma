@@ -87,30 +87,47 @@ namespace Barotrauma.Items.Components
 
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
-            
-            //TODO: get all levelobjects in sonar range (GetVisibleObjects only returns ones that are in camera view)
-            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetVisibleObjects())
+
+            Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
+            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(item.WorldPosition, range * pingState))
             {
+                //gather all nearby triggers that are causing the water to flow into the dictionary
                 foreach (LevelTrigger trigger in levelObject.Triggers)
                 {
                     Vector2 flow = trigger.GetWaterFlowVelocity();
-                    float flowMagnitude = flow.Length();
+                    //ignore ones that are barely doing anything (flow^2 < 1)
+                    if (flow.LengthSquared() > 1.0f) levelTriggerFlows.Add(trigger, flow);
+                }
+            }
 
-                    if (flowMagnitude <= 0.1f) continue;
+            foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow in levelTriggerFlows)
+            {
+                LevelTrigger trigger = triggerFlow.Key;
+                Vector2 flow = triggerFlow.Value;
+                                
+                float flowMagnitude = flow.Length();
+                if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 1000.0f)
+                {
+                    float edgeDist = Rand.Range(0.0f, 1.0f);
+                    Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
+                    Vector2 blipVel = flow * (1.0f - edgeDist);
+
+                    //go through other triggers in range and add the flows of the ones that the blip is inside
+                    foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
                     {
-                        float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(trigger.PhysicsBody.radius, trigger.PhysicsBody.width / 2.0f), trigger.PhysicsBody.height / 2.0f));
-                        
-                        if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 500.0f)
+                        LevelTrigger trigger2 = triggerFlow2.Key;
+                        if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
                         {
-                            var flowBlip = new RadarBlip(trigger.WorldPosition + Rand.Vector(Rand.Range(0.0f,triggerSize)), Rand.Range(0.5f, 1.0f), 1.0f)
-                            {
-                                Velocity = flow * Rand.Range(1.0f, 10.0f),
-                                Size = new Vector2(3, 0.2f),
-                                Rotation = (float)Math.Atan2(-flow.Y, flow.X)
-                            };
-                            radarBlips.Add(flowBlip);
-                        }                        
+                            blipVel += triggerFlow2.Value * (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                        }
                     }
+                    var flowBlip = new RadarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
+                    {
+                        Velocity = blipVel * Rand.Range(1.0f, 5.0f),
+                        Size = new Vector2(MathHelper.Lerp(0.4f, 5f, flowMagnitude / 500.0f), 0.2f),
+                        Rotation = (float)Math.Atan2(-blipVel.Y, blipVel.X)
+                    };
+                    radarBlips.Add(flowBlip);
                 }
             }
             
