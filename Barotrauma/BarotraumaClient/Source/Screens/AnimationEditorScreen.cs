@@ -347,6 +347,14 @@ namespace Barotrauma
             // Debug
             if (GameMain.DebugDraw)
             {
+                // Limb positions
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
+                    GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
+                }
+
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), $"Cursor World Pos: {character.CursorWorldPosition}", Color.White, font: GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), $"Cursor Pos: {character.CursorPosition}", Color.White, font: GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 40), $"Cursor Screen Pos: {PlayerInput.MousePosition}", Color.White, font: GUI.SmallFont);
@@ -400,13 +408,20 @@ namespace Barotrauma
             Point widgetSize = new Point(10, 10);
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
-            foreach (Limb limb in character.AnimController.Limbs)
+
+            // Speed
+            float multiplier = 0.02f;
+            Vector2 referencePoint = SimToScreenPoint(collider.SimPosition);
+            Vector2 drawPos = SimToScreenPoint(collider.SimPosition.X, collider.SimPosition.Y);
+            drawPos.X -= animParams.Speed / multiplier;
+            Vector2 origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+            DrawWidget(drawPos.ToPoint(), spriteBatch, new Point(20, 20), Color.Turquoise, "Speed", () =>
             {
-                Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
-                // Limb positions
-                GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitY * 5.0f, limbDrawPos - Vector2.UnitY * 5.0f, Color.White);
-                GUI.DrawLine(spriteBatch, limbDrawPos + Vector2.UnitX * 5.0f, limbDrawPos - Vector2.UnitX * 5.0f, Color.White);
-            }
+                TryUpdateValue("speed", MathHelper.Clamp(animParams.Speed - PlayerInput.MouseSpeed.X * multiplier, 0.1f, 6));
+                GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Turquoise);
+            });
+            GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 10, Color.Turquoise);
+
             if (head != null)
             {
                 // Head angle
@@ -423,13 +438,12 @@ namespace Barotrauma
                             TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
                             TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
                         });
-                        var origin = widgetDrawPos - new Vector2(widgetSize.X / 2, 0);
+                        origin = widgetDrawPos - new Vector2(widgetSize.X / 2, 0);
                         GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
                     }
                     else
                     {
-                        // TODO: implement head leaning on fishes?
-                        Vector2 drawPos = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Head Position",
                             () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
                     }
@@ -445,18 +459,17 @@ namespace Barotrauma
                     // Torso position and leaning
                     if (humanGroundedParams != null)
                     {
-                        Vector2 drawPos = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
+                        drawPos = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
                         DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso", () =>
                         {
                             TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
                             TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
                         });
-                        var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+                        origin = drawPos - new Vector2(widgetSize.X / 2, 0);
                         GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
                     }
                     else
                     {
-                        // TODO: implement torso leaning on fishes?
                         Vector2 drawPoint = SimToScreenPoint(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
                         DrawWidget(drawPoint.ToPoint(), spriteBatch, widgetSize, Color.Red, "Torso Position",
                             () => TryUpdateValue("torsoposition", groundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
@@ -472,10 +485,10 @@ namespace Barotrauma
                 }
                 if (groundedParams != null)
                 {
-                    float multiplier = 0.005f;
-                    Vector2 referencePoint = SimToScreenPoint(colliderBottom);
-                    Vector2 drawPos = referencePoint - groundedParams.StepSize / multiplier;
-                    var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+                    multiplier = 0.005f;
+                    referencePoint = SimToScreenPoint(colliderBottom);
+                    drawPos = referencePoint - groundedParams.StepSize / multiplier;
+                    origin = drawPos - new Vector2(widgetSize.X / 2, 0);
                     DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Blue, "Step Size", () =>
                     {
                         TryUpdateValue("stepsize", groundedParams.StepSize -PlayerInput.MouseSpeed * multiplier);
@@ -493,10 +506,10 @@ namespace Barotrauma
                 }
                 if (hand != null || arm != null)
                 {
-                    float multiplier = 0.02f;
-                    Vector2 referencePoint = SimToScreenPoint(character.SimPosition) + Vector2.UnitX;
-                    Vector2 drawPos = referencePoint - humanGroundedParams.HandMoveAmount / multiplier;
-                    var origin = drawPos - new Vector2(widgetSize.X / 2, 0);
+                    multiplier = 0.02f;
+                    referencePoint = SimToScreenPoint(character.SimPosition) + Vector2.UnitX;
+                    drawPos = referencePoint - humanGroundedParams.HandMoveAmount / multiplier;
+                    origin = drawPos - new Vector2(widgetSize.X / 2, 0);
                     DrawWidget(drawPos.ToPoint(), spriteBatch, widgetSize, Color.Blue, "Hand Move Amount", () =>
                     {
                         TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount - PlayerInput.MouseSpeed * multiplier);
