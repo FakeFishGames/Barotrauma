@@ -26,12 +26,35 @@ namespace Barotrauma
             set
             {
                 inputType = value;
-                plusButton.Visible = inputType == NumberType.Int;
-                minusButton.Visible = inputType == NumberType.Int;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
             }
         }
 
-        public float? MinValueFloat, MaxValueFloat;
+        private float? minValueFloat, maxValueFloat;
+        public float? MinValueFloat
+        {
+            get { return minValueFloat; }
+            set
+            {
+                minValueFloat = value;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
+            }                
+        }
+        public float? MaxValueFloat
+        {
+            get { return maxValueFloat; }
+            set
+            {
+                maxValueFloat = value;
+                plusButton.Visible = inputType == NumberType.Int ||
+                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue);
+                minusButton.Visible = plusButton.Visible;
+            }
+        }
 
         private float floatValue;
         public float FloatValue
@@ -110,12 +133,19 @@ namespace Barotrauma
                 pressedTimer = pressedDelay;
                 return true;
             };
-            plusButton.OnClicked += ChangeIntValue;
+            plusButton.OnClicked += PlusButtonClicked;
             plusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    IntValue++;
+                    if (inputType == NumberType.Int)
+                    {
+                        IntValue++;
+                    }
+                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+                    {
+                        FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
+                    }
                 }
                 return true;
             };
@@ -131,12 +161,19 @@ namespace Barotrauma
                 pressedTimer = pressedDelay;
                 return true;
             };
-            minusButton.OnClicked += ChangeIntValue;
+            minusButton.OnClicked += MinusButtonClicked;
             minusButton.OnPressed += () =>
             {
                 if (!IsPressedTimerRunning)
                 {
-                    IntValue--;
+                    if (inputType == NumberType.Int)
+                    {
+                        IntValue--;
+                    }
+                    else if (maxValueFloat.HasValue && minValueFloat.HasValue)
+                    {                        
+                        FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 100.0f;
+                    }
                 }
                 return true;
             };
@@ -175,15 +212,31 @@ namespace Barotrauma
             InputType = inputType;
         }
 
-        private bool ChangeIntValue(GUIButton button, object userData)
+        private bool PlusButtonClicked(GUIButton button, object userData)
         {
-            if (button == plusButton)
+            if (inputType == NumberType.Int)
             {
                 IntValue++;
             }
-            else
+            else if (inputType == NumberType.Float)
+            {
+                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                FloatValue += (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
+            }
+
+            return false;
+        }
+
+        private bool MinusButtonClicked(GUIButton button, object userData)
+        {
+            if (inputType == NumberType.Int)
             {
                 IntValue--;
+            }
+            else if (inputType == NumberType.Float)
+            {
+                if (!maxValueFloat.HasValue || !minValueFloat.HasValue) return false;
+                FloatValue -= (MaxValueFloat.Value - minValueFloat.Value) / 10.0f;
             }
 
             return false;
