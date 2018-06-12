@@ -382,7 +382,8 @@ namespace Barotrauma
         #region Widgets
         private void DrawWidgetEditor(SpriteBatch spriteBatch)
         {
-            var charDrawPos = SimToScreenPoint(character.AnimController.Collider.SimPosition);
+            var collider = character.AnimController.Collider;
+            var charDrawPos = SimToScreenPoint(collider.SimPosition);
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
             var humanGroundedParams = animParams as HumanGroundedParams;
@@ -393,6 +394,8 @@ namespace Barotrauma
             var tail = character.AnimController.GetLimb(LimbType.Tail);
             var rightFoot = character.AnimController.GetLimb(LimbType.RightFoot);
             var leftFoot = character.AnimController.GetLimb(LimbType.LeftFoot);
+            var legs = character.AnimController.GetLimb(LimbType.Legs);
+            var thigh = character.AnimController.GetLimb(LimbType.RightThigh) ?? character.AnimController.GetLimb(LimbType.RightThigh);
             Point widgetSize = new Point(10, 10);
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
@@ -406,7 +409,7 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, head, animParams.HeadAngle, "Head Angle", Color.White, angle => TryUpdateValue("headangle", angle), circleRadius: 25);
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: head.Rotation);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -433,7 +436,7 @@ namespace Barotrauma
             if (torso != null)
             {
                 // Torso angle
-                DrawCircularWidget(spriteBatch, torso, animParams.TorsoAngle, "Torso Angle", Color.White, angle => TryUpdateValue("torsoangle", angle));
+                DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, angle => TryUpdateValue("torsoangle", angle), rotationOffset: torso.Rotation);
                 if (animParams.IsGroundedAnimation)
                 {
                     // Torso position and leaning
@@ -469,7 +472,7 @@ namespace Barotrauma
 
                 // In sim space (test)
                 //Vector2 widgetSimPos = ScreenToSimPoint(widgetDrawPos);
-                //var dir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(character.AnimController.Collider.Rotation));
+                //var dir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
                 //float length = (character.SimPosition - widgetSimPos).Length();
                 //var transformedPos = widgetSimPos + dir * length;
                 //widgetDrawPos = SimToScreenPoint(transformedPos);
@@ -488,7 +491,7 @@ namespace Barotrauma
                 //Vector2 widgetSimPos = new Vector2(x, y);
 
                 //var dir = referencePoint - widgetSimPos;
-                //var transformedDir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(character.AnimController.Collider.Rotation));
+                //var transformedDir = Vector2.Transform(-Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
                 //var transformedPos = widgetSimPos + transformedDir * dir.Length();
 
                 //var widgetDrawPos = SimToScreenPoint(transformedPos);
@@ -505,8 +508,8 @@ namespace Barotrauma
             {
                 if (fishGroundedParams != null)
                 {
-                    DrawCircularWidget(spriteBatch, foot, fishGroundedParams.FootRotation, "Foot Rotation", Color.White, angle =>
-                        TryUpdateValue("footrotation", angle), circleRadius: 20);
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White, angle =>
+                        TryUpdateValue("footrotation", angle), circleRadius: 20, rotationOffset: collider.Rotation);
                 }
                 if (groundedParams != null)
                 {
@@ -520,6 +523,23 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Red);
                     });
                     GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                }
+            }
+            if (legs != null || foot != null)
+            {
+                if (humanGroundedParams != null)
+                {
+                    // TODO: does not seem to have any effect
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque, "Leg Correction Torque", Color.White, angle =>
+                        TryUpdateValue("legcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                }
+            }
+            if (thigh != null)
+            {
+                if (humanGroundedParams != null)
+                {
+                    DrawCircularWidget(spriteBatch, SimToScreenPoint(collider.SimPosition), humanGroundedParams.ThighCorrectionTorque, "Thigh Correction Torque", Color.White, angle =>
+                        TryUpdateValue("thighcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
                 }
             }
         }
@@ -576,22 +596,21 @@ namespace Barotrauma
         private Vector2 SimToScreenPoint(float x, float y) => SimToScreenPoint(new Vector2(x, y));
         private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
 
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Limb limb, float value, string toolTip, Color color, Action<float> onClick, float circleRadius = 30, int widgetSize = 10)
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick, float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0)
         {
-            Vector2 limbDrawPos = Cam.WorldToScreen(limb.WorldPosition);
             var angle = value;
             if (!MathUtils.IsValid(angle))
             {
                 angle = 0;
             }
-            var forward = VectorExtensions.Forward(limb.Rotation, circleRadius);
-            var widgetDrawPos = limbDrawPos - forward;
-            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, limbDrawPos, angle, clockWise: true);
-            GUI.DrawLine(spriteBatch, limbDrawPos, widgetDrawPos, color);
+            var forward = VectorExtensions.Forward(rotationOffset, circleRadius);
+            var widgetDrawPos = drawPos - forward;
+            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise: true);
+            GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(widgetDrawPos.ToPoint(), spriteBatch, new Point(widgetSize), color, toolTip, () =>
             {
-                GUI.DrawLine(spriteBatch, limbDrawPos, limbDrawPos - forward, Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, limbDrawPos, circleRadius, 40, color, thickness: 1);
+                GUI.DrawLine(spriteBatch, drawPos, drawPos - forward, Color.Red);
+                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
                 var widgetRot = MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
