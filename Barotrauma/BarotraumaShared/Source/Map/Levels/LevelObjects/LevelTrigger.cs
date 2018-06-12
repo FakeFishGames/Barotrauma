@@ -102,6 +102,15 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        /// <summary>
+        /// does the force diminish by distance
+        /// </summary>
+        public bool ForceFalloff
+        {
+            get;
+            private set;
+        }
         
         public float ForceFluctuationFrequency
         {
@@ -159,6 +168,7 @@ namespace Barotrauma
             unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
             ForceFluctuationFrequency = element.GetAttributeFloat("forcefluctuationfrequency", 0.01f);
             ForceFluctuationStrength = element.GetAttributeFloat("forcefluctuationstrength", 0.0f);
+            ForceFalloff = element.GetAttributeBool("forcefalloff", true);
 
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
             string forceModeStr = element.GetAttributeString("forcemode", "Force");
@@ -368,25 +378,32 @@ namespace Barotrauma
 
         private void ApplyForce(PhysicsBody body, float deltaTime)
         {
+            float distFactor = 1.0f;
+            if (ForceFalloff)
+            {
+                distFactor = 1.0f - ConvertUnits.ToDisplayUnits(Vector2.Distance(body.SimPosition, PhysicsBody.SimPosition)) / ColliderRadius;
+                if (distFactor < 0.0f) return;
+            }
+
             switch (ForceMode)
             {
                 case TriggerForceMode.Force:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyForce(Force * currentForceFluctuation, ForceVelocityLimit);
+                        body.ApplyForce(Force * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force * currentForceFluctuation);
+                        body.ApplyForce(Force * currentForceFluctuation * distFactor);
                     break;
                 case TriggerForceMode.Acceleration:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyForce(Force * body.Mass * currentForceFluctuation, ForceVelocityLimit);
+                        body.ApplyForce(Force * body.Mass * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
-                        body.ApplyForce(Force * body.Mass * currentForceFluctuation);
+                        body.ApplyForce(Force * body.Mass * currentForceFluctuation * distFactor);
                     break;
                 case TriggerForceMode.Impulse:
                     if (ForceVelocityLimit < 1000.0f)
-                        body.ApplyLinearImpulse(Force * currentForceFluctuation, ForceVelocityLimit);
+                        body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor, ForceVelocityLimit);
                     else
-                        body.ApplyLinearImpulse(Force * currentForceFluctuation);
+                        body.ApplyLinearImpulse(Force * currentForceFluctuation * distFactor);
                     break;
             }
         }
