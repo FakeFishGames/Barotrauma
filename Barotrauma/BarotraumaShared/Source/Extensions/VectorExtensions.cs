@@ -22,5 +22,10 @@ namespace Barotrauma
         {
             return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * radius;
         }
+
+        /// <summary>
+        /// Flips the x and y properties.
+        /// </summary>
+        public static Vector2 Flip(this Vector2 v) => new Vector2(v.Y, v.X);
     }
 }
