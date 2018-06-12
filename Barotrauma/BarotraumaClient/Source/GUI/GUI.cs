@@ -199,6 +199,20 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
+                DrawString(spriteBatch, new Vector2(10, 90),
+                    "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
+                    Color.Lerp(Color.Green, Color.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+
+                /*var activeParticles = GameMain.ParticleManager.CountActiveParticles();
+                int y = 115;
+                foreach (KeyValuePair<Particles.ParticlePrefab, int> particleCount in activeParticles)
+                {
+                    DrawString(spriteBatch, new Vector2(15, y),
+                        particleCount.Key.Name+": "+ particleCount.Value,
+                        Color.Lerp(Color.Green, Color.Red, (particleCount.Value / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+                    y += 15;
+                }*/
+
                 for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                 {
                     Color clr = Color.White;

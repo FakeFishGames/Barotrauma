@@ -92,6 +92,11 @@ namespace Barotrauma.Particles
         {
             get { return currentHull; }
         }
+
+        public ParticlePrefab Prefab
+        {
+            get { return prefab; }
+        }
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
         {
