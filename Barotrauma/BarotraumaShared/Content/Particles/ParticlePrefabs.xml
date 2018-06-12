@@ -396,6 +396,39 @@
     <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
   </hydrosmokesmall>
 
+  <lavasplash
+    lifetime="2"
+    angularvelocitymin="-10"
+    angularvelocitymax="10"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,-10"
+    velocitychangewater="0,-10"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0"
+    restitution="0"
+    startsizemin="2,2"
+    startsizemax="4,4"
+    sizechangemin="2,2"
+    sizechangemax="8,8"
+    growtime="0.15"
+    startcolor="1,0.4,0,1"
+    startalpha="1"
+    colorchange="-0.5,-1,0,0"
+    drawtarget="Water"
+    blendstate="Additive"
+    animduration="2"
+    loopanim="False">
+    <animatedsprite texture="Content/Particles/Spatter1.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.2,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter2.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.5,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter3.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.3,0.5"/>
+  </lavasplash>
+
   <explosionfire
     lifetime="1"
     angularvelocitymin="0"
