@@ -353,6 +353,7 @@ namespace Barotrauma
 
             movement.Y = 0.0f;
 
+            // Doesn't seem to have much (positive) effect. The ragdoll breaks anyway.
             for (int i = 0; i < 2; i++)
             {
                 Limb leg = GetLimb((i == 0) ? LimbType.LeftThigh : LimbType.RightThigh);// : leftLeg;
@@ -466,27 +467,15 @@ namespace Barotrauma
                     foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
                 }
 
-                /*if (runningModifier > 1.0f)
-                {
-                    if (walkPosY > 0.0f)
-                    {
-                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
-                    }
-                    else
-                    {
-                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
-                    }
-                }*/
-
-                if (CurrentGroundedParams.ThighCorrectionTorque > 0.0f)
+                if (CurrentGroundedParams.LegCorrectionTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegCorrectionTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.ThighCorrectionTorque);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * CurrentGroundedParams.LegCorrectionTorque);
                     }
                 }
 

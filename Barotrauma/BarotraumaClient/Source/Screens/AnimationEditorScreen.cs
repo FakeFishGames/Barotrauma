@@ -488,14 +488,8 @@ namespace Barotrauma
             {
                 if (legs != null || foot != null)
                 {
-                    // TODO: does not seem to have any effect
                     DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque, "Leg Correction Torque", Color.Chartreuse,
                         angle => TryUpdateValue("legcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
-                }
-                if (thigh != null)
-                {
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(collider.SimPosition), humanGroundedParams.ThighCorrectionTorque, "Thigh Correction Torque", Color.Chartreuse, 
-                        angle => TryUpdateValue("thighcorrectiontorque", angle), circleRadius: 20, rotationOffset: collider.Rotation);
                 }
                 if (hand != null || arm != null)
                 {
