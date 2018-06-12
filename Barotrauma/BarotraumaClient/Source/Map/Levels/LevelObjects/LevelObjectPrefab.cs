@@ -43,6 +43,12 @@ namespace Barotrauma
             private set;
         }
 
+        public XElement LightSourceConfig
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             Sounds = new List<SoundConfig>();
@@ -58,6 +64,9 @@ namespace Barotrauma
                     case "leveltrigger":
                     case "trigger":
                         LoadElements(subElement, 0);
+                        break;
+                    case "lightsource":
+                        LightSourceConfig = subElement;
                         break;
                     case "particleemitter":
                         if (ParticleEmitterPrefabs == null)
