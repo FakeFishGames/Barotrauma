@@ -1,3 +1,4 @@
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,6 +12,8 @@ namespace Barotrauma
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
         private Vector2 dustOffset;
+        private Vector2 defaultDustVelocity;
+        private Vector2 dustVelocity;
 
         private Level level;
 
@@ -18,6 +21,8 @@ namespace Barotrauma
 
         public LevelRenderer(Level level)
         {
+            defaultDustVelocity = Vector2.UnitY * 10.0f;
+
             if (wallEdgeEffect == null)
             {
                 wallEdgeEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
@@ -44,10 +49,35 @@ namespace Barotrauma
             this.level = level;
         }
         
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
-            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
+            //calculate the sum of the forces of nearby level triggers
+            //and use it to move the dust texture and water distortion effect
+            Vector2 currentDustVel = defaultDustVelocity;
+            foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
+            {
+                //use the largest water flow velocity of all the triggers
+                Vector2 objectMaxFlow = Vector2.Zero;
+                foreach (LevelTrigger trigger in levelObject.Triggers)
+                {
+                    Vector2 vel = trigger.GetWaterFlowVelocity(cam.WorldViewCenter);
+                    if (vel.LengthSquared() > objectMaxFlow.LengthSquared())
+                    {
+                        objectMaxFlow = vel;
+                    }
+                }
+                currentDustVel += objectMaxFlow;
+            }
+            
+            dustVelocity = Vector2.Lerp(dustVelocity, currentDustVel, deltaTime);
+            
+            WaterRenderer.Instance?.ScrollWater(dustVelocity, deltaTime);
+
+            dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * deltaTime;
+            while (dustOffset.X <= -2048.0f) dustOffset.X += 2048.0f;
+            while (dustOffset.X >= 2048.0f) dustOffset.X -= 2048.0f;
             while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
+            while (dustOffset.Y >= 2048.0f) dustOffset.Y -= 2048.0f;
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -85,7 +115,7 @@ namespace Barotrauma
         }
 
         public void DrawBackground(SpriteBatch spriteBatch, Camera cam, 
-            BackgroundSpriteManager backgroundSpriteManager = null, 
+            LevelObjectManager backgroundSpriteManager = null, 
             BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
@@ -121,10 +151,9 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
-                cam.Transform);
-            
+                cam.Transform);            
 
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
 
             if (level.GenerationParams.WaterParticles != null)
@@ -162,6 +191,13 @@ namespace Barotrauma
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp, DepthStencilState.Default, null, null,
+                cam.Transform);
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
+            spriteBatch.End();
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -171,17 +207,17 @@ namespace Barotrauma
                 var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y-10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
+                    GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
-                    GUI.DrawLine(spriteBatch, 
-                        new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
-                        new Vector2(cell.Center.X, -cell.Center.Y), 
-                        Color.Blue*0.5f);
-                
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(cell.edges[0].Point1.X, -cell.edges[0].Point1.Y),
+                        new Vector2(cell.Center.X, -cell.Center.Y),
+                        Color.Blue * 0.5f);
+
                     foreach (GraphEdge edge in cell.edges)
                     {
-                        GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Cyan*0.5f : Color.White);
+                        GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X, -edge.Point1.Y),
+                            new Vector2(edge.Point2.X, -edge.Point2.Y), cell.body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)
@@ -192,13 +228,12 @@ namespace Barotrauma
 
                 foreach (List<Vector2> nodeList in level.SmallTunnels)
                 {
-                    for (int i = 1; i<nodeList.Count; i++)
+                    for (int i = 1; i < nodeList.Count; i++)
                     {
-                        GUI.DrawLine(spriteBatch, 
-                            new Vector2(nodeList[i-1].X, -nodeList[i - 1].Y),
-                            new Vector2(nodeList[i].X, -nodeList[i].Y), 
+                        GUI.DrawLine(spriteBatch,
+                            new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
+                            new Vector2(nodeList[i].X, -nodeList[i].Y),
                             Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
-
                     }
                 }
             }

@@ -272,7 +272,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GraphEdge edge in cell.edges)
                 {
-                    var intersection = MathUtils.GetLineIntersection(edge.point1, edge.point2, item.Submarine.WorldPosition, cell.Center);
+                    var intersection = MathUtils.GetLineIntersection(edge.Point1, edge.Point2, item.Submarine.WorldPosition, cell.Center);
                     if (intersection != null)
                     {
                         Vector2 diff = item.Submarine.WorldPosition - (Vector2)intersection;

@@ -289,20 +289,7 @@ namespace Barotrauma
                 }
                 return;
             }
-
-            //GenerateNoiseMap(4, 0.5f);
-
-            if (PlayerInput.KeyHit(Keys.D1))
-            {
-                drawOverlay = !drawOverlay;
-            }
-            if (PlayerInput.KeyDown(Keys.D2)) xScale -= 0.05f * deltaTime;
-            if (PlayerInput.KeyDown(Keys.D3)) xScale += 0.05f * deltaTime;
-            if (PlayerInput.KeyDown(Keys.D4)) yScale -= 0.05f * deltaTime;
-            if (PlayerInput.KeyDown(Keys.D5)) yScale += 0.05f * deltaTime;
-            if (PlayerInput.KeyDown(Keys.D6)) randomOffsetScale -= 0.05f * deltaTime;
-            if (PlayerInput.KeyDown(Keys.D7)) randomOffsetScale += 0.05f * deltaTime;
-
+            
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
 
             float maxDist = 20.0f;
@@ -369,32 +356,19 @@ namespace Barotrauma
             }
 #endif
         }
-
-        private float xScale = 1.0f, yScale = 1.0f, randomOffsetScale = 0.0f;
-        private bool drawOverlay = true;
         
         public void Draw(SpriteBatch spriteBatch, Rectangle rect)
         {
-
             Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
             float edgeBuffer = size * (BackgroundScale - 1.0f) / 2;
             drawOffset.X = MathHelper.Clamp(drawOffset.X, -size - edgeBuffer + viewSize.X / 2.0f, edgeBuffer -viewSize.X / 2.0f);
             drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -size - edgeBuffer + viewSize.Y / 2.0f, edgeBuffer -viewSize.Y / 2.0f);
-
-
-
-            GUI.DrawString(spriteBatch, new Vector2(10, 10), "Num key 1 to toggle location visibility", Color.White);
-            GUI.DrawString(spriteBatch, new Vector2(10, 30), "Num keys 2-5 to edit map tile spacing", Color.White);
-            GUI.DrawString(spriteBatch, new Vector2(10, 50), "Tile spacing: "+xScale+"x"+yScale, Color.White);
-            GUI.DrawString(spriteBatch, new Vector2(10, 70), "Random offset scale: "+ randomOffsetScale, Color.White);
-            
+                        
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
             
-            //GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.CadetBlue, true);
-
             for (int x = 0; x < mapTiles.GetLength(0); x++)
             {
                 for (int y = 0; y < mapTiles.GetLength(1); y++)
@@ -402,15 +376,10 @@ namespace Barotrauma
                     Vector2 mapPos = new Vector2(
                         x * generationParams.TileSpriteSpacing.X + ((y % 2 == 0) ? 0.0f : generationParams.TileSpriteSpacing.X * 0.5f), 
                         y * generationParams.TileSpriteSpacing.Y);
-
-                    mapPos.X *= xScale;
-                    mapPos.Y *= yScale;
-
+                    
                     mapPos.X -= size / 2 * (BackgroundScale - 1.0f);
                     mapPos.Y -= size / 2 * (BackgroundScale - 1.0f);
-
-                    mapPos += mapTiles[x, y].Offset * randomOffsetScale * 100.0f;
-
+                    
                     Vector2 scale = new Vector2(
                         generationParams.TileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
                         generationParams.TileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
@@ -418,7 +387,6 @@ namespace Barotrauma
                         origin: new Vector2(256.0f, 256.0f), rotate: 0, scale: scale * zoom, spriteEffect: mapTiles[x, y].SpriteEffect);
                 }
             }
-
 #if DEBUG
             if (generationParams.ShowNoiseMap)
             {
@@ -447,7 +415,7 @@ namespace Barotrauma
             if (bottomRight.Y < rect.Bottom)
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(rect.Bottom - bottomRight.Y)), Color.Black * 0.8f, true);
 
-            if (drawOverlay)
+            if (generationParams.ShowLocations)
             {
                 for (int i = 0; i < locations.Count; i++)
                 {
@@ -511,33 +479,25 @@ namespace Barotrauma
                         float distFromPlayer = Vector2.Distance(currentLocation.MapPosition, (segment[0] + segment[1]) / 2.0f);
                         float dist = Vector2.Distance(start, end);
 
-                        int width = (int)(3 * zoom);// (int)(MathHelper.Lerp(1.0f, 4.0f, connection.Difficulty / 100.0f) * zoom);
+                        int width = (int)(3 * zoom);
 
                         float a = (200.0f - distFromPlayer) / 200.0f;
                         spriteBatch.Draw(iceCrack,
                             new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
                             null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
-
-                        /*GUI.DrawLine(spriteBatch, start, end, Color.Red * MathHelper.Clamp(a * 0.2f, 0.05f, 0.3f), 0, (int)(6 * zoom));*/
                     }
 
-                    /*if (GameMain.DebugDraw)
+                    if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
                     {
                         Vector2 center = rectCenter + (connection.CenterPos + drawOffset) * zoom;
-                        GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
-                    }*/
+                        if (rect.Contains(center))
+                        {
+                            GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
+                        }
+                    }
                 }
-
-                for (int i = 0; i < generationParams.DifficultyZones; i++)
-                {
-                    float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
-                    float textureSize = (radius / (circleTexture.Width / 2) * zoom);
-
-                    spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.White, 0.0f,
-                        new Vector2(512, 512), textureSize, SpriteEffects.None, 0);
-                }
-
+                
                 rect.Inflate(8, 8);
                 GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
                 GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
@@ -572,6 +532,18 @@ namespace Barotrauma
                     pos.Y = (int)(pos.Y - 10);
                     GUI.DrawString(spriteBatch, pos, location.Name, Color.White, Color.Black * 0.8f, 3);
                     GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, location.Type.DisplayName, Color.White, Color.Black * 0.8f, 3);
+                }
+            }
+
+            if (generationParams.ShowOverlay)
+            {
+                for (int i = 0; i < generationParams.DifficultyZones; i++)
+                {
+                    float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
+                    float textureSize = (radius / (circleTexture.Width / 2) * zoom);
+
+                    spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.White, 0.0f,
+                        new Vector2(512, 512), textureSize, SpriteEffects.None, 0);
                 }
             }
             

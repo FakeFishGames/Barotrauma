@@ -410,6 +410,19 @@ namespace Barotrauma
             body.ApplyForce(force);
         }
 
+        /// <summary>
+        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// </summary>
+        public void ApplyForce(Vector2 force, float maxVelocity)
+        {
+            float currSpeed = body.LinearVelocity.Length();
+            Vector2 velocityAddition = force / Mass * (float)Timing.Step;
+            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            newVelocity = newVelocity.ClampLength(Math.Max(currSpeed, maxVelocity));
+
+            body.ApplyForce((newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step);
+        }
+
         public void ApplyForce(Vector2 force, Vector2 point)
         {
             body.ApplyForce(force, point);

@@ -18,9 +18,10 @@ namespace Barotrauma
         Executable, 
         LocationTypes, 
         LevelGenerationParameters,
+        LevelObjectPrefabs,
         RandomEvents, 
         Missions, 
-        BackgroundCreaturePrefabs, BackgroundSpritePrefabs,
+        BackgroundCreaturePrefabs,
         Sounds,
         RuinConfig,
         Particles,
@@ -49,7 +50,7 @@ namespace Barotrauma
             ContentType.LevelGenerationParameters,
             ContentType.RandomEvents, //TODO: is it enough if only the server has the random event configs?
             ContentType.Missions,
-            ContentType.BackgroundSpritePrefabs,
+            ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Afflictions
         };

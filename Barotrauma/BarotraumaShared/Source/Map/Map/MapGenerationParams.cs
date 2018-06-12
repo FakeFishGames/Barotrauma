@@ -20,6 +20,19 @@ namespace Barotrauma
 #if DEBUG
         [Serialize(false, true), Editable]
         public bool ShowNoiseMap { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool ShowLocations { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool ShowLevelTypeNames { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool ShowOverlay { get; set; }
+#else
+        public const bool ShowLocations = true;
+        public const bool ShowLevelTypeNames = false;
+        public const bool ShowOverlay = true;
 #endif
 
         [Serialize(9, true)]        

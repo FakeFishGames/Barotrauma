@@ -42,7 +42,7 @@ namespace Barotrauma
             graphics.Clear(BackgroundColor);
 
             if (renderer == null) return;
-            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager, backgroundCreatureManager);
+            renderer.DrawBackground(spriteBatch, cam, levelObjectManager, backgroundCreatureManager);
         }
     }
 }

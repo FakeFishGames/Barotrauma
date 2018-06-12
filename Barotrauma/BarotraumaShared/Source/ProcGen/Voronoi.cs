@@ -541,8 +541,8 @@ namespace Voronoi2
             GraphEdge newEdge = new GraphEdge(point1, point2);
             allEdges.Add ( newEdge );
                 
-            newEdge.site1 = leftSite;
-            newEdge.site2 = rightSite;
+            newEdge.Site1 = leftSite;
+            newEdge.Site2 = rightSite;
         }
         
         private void clip_line( Edge e )
