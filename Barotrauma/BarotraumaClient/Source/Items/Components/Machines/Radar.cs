@@ -110,7 +110,8 @@ namespace Barotrauma.Items.Components
                 {
                     float edgeDist = Rand.Range(0.0f, 1.0f);
                     Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
-                    Vector2 blipVel = flow * (1.0f - edgeDist);
+                    Vector2 blipVel = flow;
+                    if (trigger.ForceFalloff) flow *= (1.0f - edgeDist);
 
                     //go through other triggers in range and add the flows of the ones that the blip is inside
                     foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
@@ -118,7 +119,9 @@ namespace Barotrauma.Items.Components
                         LevelTrigger trigger2 = triggerFlow2.Key;
                         if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
                         {
-                            blipVel += triggerFlow2.Value * (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                            Vector2 trigger2flow = triggerFlow2.Value;
+                            if (trigger2.ForceFalloff) trigger2flow *= (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                            blipVel += trigger2flow;
                         }
                     }
                     var flowBlip = new RadarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
