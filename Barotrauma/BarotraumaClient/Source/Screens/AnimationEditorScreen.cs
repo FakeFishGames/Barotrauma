@@ -396,7 +396,7 @@ namespace Barotrauma
                 //var endPos = SimToScreenPoint(collider.SimPosition) - forward * ConvertUnits.ToDisplayUnits(collider.radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(collider.Rotation)}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
             }
             spriteBatch.End();
         }
@@ -429,10 +429,10 @@ namespace Barotrauma
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
 
-            //Vector2 worldSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
-            //Vector2 worldSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
+            Vector2 simSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
+            //Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
-            Vector2 screenSpaceLeft = -VectorExtensions.Forward(collider.Rotation + MathHelper.ToRadians(90), 1);
+            Vector2 screenSpaceLeft = -VectorExtensions.Forward(MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation)) + MathHelper.ToRadians(90), 1);
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : screenSpaceLeft;
             float dir = character.AnimController.Dir;
 
@@ -452,7 +452,7 @@ namespace Barotrauma
             {
                 // Head angle
                 DrawCircularWidget(spriteBatch, SimToScreenPoint(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, 
-                    angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation);
+                    angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -479,7 +479,7 @@ namespace Barotrauma
             {
                 // Torso angle
                 DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
-                    angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation);
+                    angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
                 {
@@ -509,7 +509,7 @@ namespace Barotrauma
                 if (fishGroundedParams != null)
                 {
                     DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
-                        angle => TryUpdateValue("footrotation", angle), circleRadius: 20, rotationOffset: collider.Rotation);
+                        angle => TryUpdateValue("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 }
                 // Both
                 if (groundedParams != null)
@@ -532,8 +532,12 @@ namespace Barotrauma
                 if (legs != null || foot != null)
                 {
                     multiplier = 10;
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Correction Torque", Color.Chartreuse,
-                        angle => TryUpdateValue("legcorrectiontorque", angle / multiplier), circleRadius: 20, rotationOffset: collider.Rotation);
+                    drawPos = SimToScreenPoint(colliderBottom + simSpaceForward * 0.3f);
+                    DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Correction Torque", Color.Chartreuse, angle =>
+                    {
+                        TryUpdateValue("legcorrectiontorque", angle / multiplier);
+                        GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
+                    },circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
                 }
                 if (hand != null || arm != null)
                 {
@@ -572,8 +576,12 @@ namespace Barotrauma
             else if (humanSwimParams != null)
             {
                 multiplier = 100;
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(character.SimPosition + Vector2.UnitX), humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Blue,
-                    amount => TryUpdateValue("legmoveamount", amount / multiplier), circleRadius: 20, rotationOffset: collider.Rotation);
+                drawPos = SimToScreenPoint(character.SimPosition - simSpaceForward / 2);
+                DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Blue, amount =>
+                {
+                    TryUpdateValue("legmoveamount", amount / multiplier);
+                    GUI.DrawString(spriteBatch, drawPos, humanSwimParams.LegMoveAmount.FormatAsSingleDecimal(), Color.Black, Color.Blue, font: GUI.SmallFont);
+                }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: true, displayAngle: false);
             }
         }
 
@@ -624,7 +632,8 @@ namespace Barotrauma
             }
         }
 
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick, float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0)
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick, 
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -633,7 +642,7 @@ namespace Barotrauma
             }
             var forward = VectorExtensions.Forward(rotationOffset, circleRadius);
             var widgetDrawPos = drawPos - forward;
-            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise: true);
+            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
@@ -641,8 +650,21 @@ namespace Barotrauma
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
-                var widgetRot = MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
-                var transformedRot = angle + widgetRot;
+                var transformedRot = angle + MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
+                if (!clockWise)
+                {
+                    // TODO: replace this hack with a proper calculation (doesn't work when swimming diagonally toward south east or north east)
+                    var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotationOffset));
+                    //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.White);
+                    if (rotationOffsetInDegrees > 180 && rotationOffsetInDegrees < 359)
+                    {
+                        y = -y;
+                    }
+                    if (rotationOffsetInDegrees > 270 || rotationOffsetInDegrees < 90)
+                    {
+                        x = -x;
+                    }
+                }
                 if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
                 {
                     x = -x;
@@ -655,6 +677,10 @@ namespace Barotrauma
                 if (angle > 360 || angle < -360)
                 {
                     angle = 0;
+                }
+                if (displayAngle)
+                {
+                    GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
                 }
                 onClick(angle);
             });
