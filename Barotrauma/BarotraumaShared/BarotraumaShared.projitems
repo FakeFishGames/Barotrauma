@@ -9,7 +9,6 @@
     <Import_RootNamespace>BarotraumaShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
@@ -1188,6 +1187,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\watch6.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Effects\deformshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Fonts\Code Pro Bold.otf">

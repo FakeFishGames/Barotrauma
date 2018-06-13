@@ -13,15 +13,13 @@ namespace Barotrauma
 
         private Rectangle currentGridIndices;
 
-        private BasicEffect effect;
+        private Effect effect;
 
         partial void InitProjSpecific()
         {
-            effect = new BasicEffect(GameMain.Instance.GraphicsDevice)
-            {
-                TextureEnabled = true,
-                VertexColorEnabled = true
-            };
+            //TODO: OpenGL version of the deform shader
+            //TODO: move deform shader to DeformableSprite?
+            effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader");
         }
 
         partial void UpdateProjSpecific(float deltaTime)
