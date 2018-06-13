@@ -567,6 +567,7 @@ namespace Barotrauma
                     fishSwimParams.WaveAmplitude / amplitudeMultiplier * -screenSpaceLeft.Y * dir);
                 DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Tail", () =>
                 {
+                    // TODO: fix the input
                     TryUpdateValue("wavelength", fishSwimParams.WaveLength - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * lengthMultiplier);
                     TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft * -dir).Combine() * amplitudeMultiplier);
                     GUI.DrawLine(spriteBatch, referencePoint, widgetDrawPos, Color.Red);
