@@ -421,7 +421,7 @@ namespace Barotrauma
             var torso = character.AnimController.GetLimb(LimbType.Torso);
             var tail = character.AnimController.GetLimb(LimbType.Tail);
             var legs = character.AnimController.GetLimb(LimbType.Legs);
-            var thigh = character.AnimController.GetLimb(LimbType.RightThigh) ?? character.AnimController.GetLimb(LimbType.RightThigh);
+            var thigh = character.AnimController.GetLimb(LimbType.RightThigh) ?? character.AnimController.GetLimb(LimbType.LeftThigh);
             var foot = character.AnimController.GetLimb(LimbType.RightFoot) ?? character.AnimController.GetLimb(LimbType.LeftFoot);
             var hand = character.AnimController.GetLimb(LimbType.RightHand) ?? character.AnimController.GetLimb(LimbType.LeftHand);
             var arm = character.AnimController.GetLimb(LimbType.RightArm) ?? character.AnimController.GetLimb(LimbType.LeftArm);
