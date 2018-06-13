@@ -143,17 +143,17 @@ namespace Barotrauma
             vertexBuffer.SetData(vertices);
         }
 
-        public void Draw(BasicEffect effect, Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
+        public void Draw(Effect effect, Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
         {
             Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
                 Matrix.CreateRotationZ(-rotate) *
                 Matrix.CreateTranslation(pos.X, pos.Y, 0.0f);
 
-            effect.World = matrix * cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+            effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
             effect.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-            effect.Texture = sprite.Texture;
+            effect.Parameters["xTexture"].SetValue(sprite.Texture);
             effect.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();
