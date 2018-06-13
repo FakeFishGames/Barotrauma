@@ -676,6 +676,8 @@ namespace Barotrauma
                 }
             }
 
+            torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f, 5.0f);
+
             if (TargetMovement == Vector2.Zero) return;
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
@@ -696,8 +698,6 @@ namespace Barotrauma
             {
                 head.body.SmoothRotate(Collider.Rotation, CurrentSwimParams.SteerTorque);
             }
-
-            torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f, 5.0f);
 
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
