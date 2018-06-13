@@ -24,8 +24,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Flips the x and y properties.
+        /// Flips the x and y components.
         /// </summary>
         public static Vector2 Flip(this Vector2 v) => new Vector2(v.Y, v.X);
+
+        /// <summary>
+        /// Returns the sum of the x and y components.
+        /// </summary>
+        public static float Combine(this Vector2 v) => v.X + v.Y;
     }
 }
