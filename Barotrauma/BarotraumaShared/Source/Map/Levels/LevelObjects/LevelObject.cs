@@ -74,6 +74,12 @@ namespace Barotrauma
             }
             return new Vector2(Position.X, Position.Y) + emitterPos;
         }
-    }
 
+        public void Remove()
+        {
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
+    }
 }

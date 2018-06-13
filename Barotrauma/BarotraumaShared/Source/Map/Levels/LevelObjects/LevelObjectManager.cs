@@ -23,6 +23,7 @@ namespace Barotrauma
         public LevelObjectManager(string configPath)
         {
             LoadConfig(configPath);
+            InitProjSpecific();
         }
         public LevelObjectManager(IEnumerable<string> files)
         {
@@ -30,7 +31,11 @@ namespace Barotrauma
             {
                 LoadConfig(file);
             }
+            InitProjSpecific();
         }
+
+        partial void InitProjSpecific();
+
         private void LoadConfig(string configPath)
         {
             try
@@ -394,5 +399,17 @@ namespace Barotrauma
         {
             return ToolBox.SelectWeightedRandom(prefabs, prefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
         }
+
+        public void Remove()
+        {
+            foreach (LevelObject obj in objects)
+            {
+                obj.Remove();
+            }
+            objects.Clear();
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
     }
 }

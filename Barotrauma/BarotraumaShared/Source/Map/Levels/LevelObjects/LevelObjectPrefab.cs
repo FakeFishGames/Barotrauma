@@ -17,7 +17,7 @@ namespace Barotrauma
             {
                 AllowedNames = element.GetAttributeStringArray("names", new string[0]).ToList();
                 MinCount = element.GetAttributeInt("mincount", 1);
-                MinCount = element.GetAttributeInt("maxcount", 1);
+                MaxCount = Math.Max(element.GetAttributeInt("maxcount", 1), MinCount);
             }
         }
 
@@ -37,6 +37,12 @@ namespace Barotrauma
         public readonly Alignment Alignment;
         
         public Sprite Sprite
+        {
+            get;
+            private set;
+        }
+
+        public DeformableSprite DeformableSprite
         {
             get;
             private set;
@@ -227,6 +233,9 @@ namespace Barotrauma
                     case "sprite":
                         Sprite = new Sprite(subElement);
                         break;
+                    case "deformablesprite":
+                        DeformableSprite = new DeformableSprite(subElement, 1, 1);
+                        break;
                     case "overridecommonness":
                         string levelType = subElement.GetAttributeString("leveltype", "");
                         if (!OverrideCommonness.ContainsKey(levelType))
@@ -261,9 +270,10 @@ namespace Barotrauma
             InitProjSpecific(element);
 
             //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (!element.Attributes("minsurfacewidth").Any() && Sprite != null)
+            if (!element.Attributes("minsurfacewidth").Any())
             {
-                MinSurfaceWidth = Sprite.size.X * Scale.Y;
+                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
+                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
             }
         }
 

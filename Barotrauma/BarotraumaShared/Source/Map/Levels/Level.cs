@@ -1099,12 +1099,17 @@ namespace Barotrauma
             }
 #endif
 
+            if (levelObjectManager != null)
+            {
+                levelObjectManager.Remove();
+                levelObjectManager = null;
+            }
+
             if (ruins != null)
             {
                 ruins.Clear();
                 ruins = null;
             }
-
 
             if (extraWalls != null)
             {
