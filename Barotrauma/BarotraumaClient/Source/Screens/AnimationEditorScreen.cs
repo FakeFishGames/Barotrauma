@@ -432,7 +432,9 @@ namespace Barotrauma
             Vector2 simSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
             //Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
-            Vector2 screenSpaceLeft = -VectorExtensions.Forward(MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation)) + MathHelper.ToRadians(90), 1);
+            // TODO: not right?
+            Vector2 screenSpaceLeft = -VectorExtensions.Forward(MathHelper.ToDegrees(collider.Rotation) + MathHelper.ToRadians(90), 1);
+            // TODO: use simspaceforward and convert it?
             Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : screenSpaceLeft;
             float dir = character.AnimController.Dir;
 
@@ -563,7 +565,6 @@ namespace Barotrauma
                 Vector2 widgetDrawPos = referencePoint + new Vector2(
                     fishSwimParams.WaveLength / lengthMultiplier * -screenSpaceForward.X,
                     fishSwimParams.WaveAmplitude / amplitudeMultiplier * -screenSpaceLeft.Y * dir);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), widgetDrawPos.ToString(), Color.White);
                 DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Tail", () =>
                 {
                     TryUpdateValue("wavelength", fishSwimParams.WaveLength - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * lengthMultiplier);
