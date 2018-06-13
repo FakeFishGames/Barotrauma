@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -14,7 +15,10 @@ namespace Barotrauma
         private VertexBuffer vertexBuffer;
         private IndexBuffer indexBuffer;
 
-        int subDivX, subDivY;
+        private Vector2[] deformAmount;
+        private int deformArrayWidth, deformArrayHeight;
+
+        private int subDivX, subDivY;
 
         partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
@@ -72,75 +76,60 @@ namespace Barotrauma
             vertexBuffer.SetData(vertices);
             indexBuffer = new IndexBuffer(GameMain.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Length, BufferUsage.None);
             indexBuffer.SetData(indices);
+
+            Deform(new Vector2[,]
+            {
+                { Vector2.Zero, Vector2.Zero },
+                { Vector2.Zero, Vector2.Zero }
+            });
         }
 
 
         /// <summary>
-        /// Distort the vertices of the sprite using an arbitrary function. The in-parameter of the function is the
+        /// Deform the vertices of the sprite using an arbitrary function. The in-parameter of the function is the
         /// normalized position of the vertex (i.e. 0,0 = top-left corner of the sprite, 1,1 = bottom-right) and the output
-        /// is the amount of distortion.
+        /// is the amount of deformation.
         /// </summary>
-        public void Distort(Func<Vector2, Vector2> distortFunction)
+        public void Deform(Func<Vector2, Vector2> deformFunction)
         {
-            var distortedVertices = new VertexPositionColorTexture[vertices.Length];
+            //TODO: set deformAmount instead of modifying vertices
+            var deformedVertices = new VertexPositionColorTexture[vertices.Length];
             for (int x = 0; x <= subDivX; x++)
             {
                 for (int y = 0; y <= subDivY; y++)
                 {
-                    Vector3 distort = new Vector3(distortFunction(new Vector2(x / (float)subDivX, y / (float)subDivY)), 0.0f);
+                    Vector3 deform = new Vector3(deformFunction(new Vector2(x / (float)subDivX, y / (float)subDivY)), 0.0f);
                     int vertexIndex = x + y * (subDivX + 1);
-                    distortedVertices[vertexIndex] = new VertexPositionColorTexture(
-                        position: vertices[vertexIndex].Position + distort,
+                    deformedVertices[vertexIndex] = new VertexPositionColorTexture(
+                        position: vertices[vertexIndex].Position + deform,
                         color: vertices[vertexIndex].Color,
                         textureCoordinate: vertices[vertexIndex].TextureCoordinate);
                 }
             }
-            vertexBuffer.SetData(distortedVertices);
+            vertexBuffer.SetData(deformedVertices);
         }
-        
-        public void Distort(Vector2[,] distortDir)
+
+        public void Deform(Vector2[,] deform)
         {
-            var distortedVertices = new VertexPositionColorTexture[vertices.Length];
-            Vector2 div = new Vector2(1.0f / subDivX, 1.0f / subDivY);
-            Vector2 div2 = new Vector2(1.0f / distortDir.GetLength(0), 1.0f / distortDir.GetLength(1));
-            
-            for (int x = 0; x <= subDivX; x++)
+            deformArrayWidth = deform.GetLength(0);
+            deformArrayHeight = deform.GetLength(1);
+            deformAmount = new Vector2[deformArrayWidth * deformArrayHeight];
+            for (int x = 0; x < deformArrayWidth; x++)
             {
-                for (int y = 0; y <= subDivY; y++)
+                for (int y = 0; y < deformArrayHeight; y++)
                 {
-                    float normalizedX = x / (float)subDivX;
-                    float normalizedY = y / (float)subDivY;
-
-                    Point distortIndexTopLeft = new Point(
-                        Math.Min((int)Math.Floor(normalizedX * distortDir.GetLength(0)), distortDir.GetLength(0) - 1),
-                        Math.Min((int)Math.Floor(normalizedY * distortDir.GetLength(1)), distortDir.GetLength(1) - 1));
-
-                    Point distortIndexBottomRight = new Point(
-                        Math.Min(distortIndexTopLeft.X + 1, distortDir.GetLength(0) - 1),
-                        Math.Min(distortIndexTopLeft.Y + 1, distortDir.GetLength(1) - 1));
-
-                    Vector2 distortTopLeft = distortDir[distortIndexTopLeft.X, distortIndexTopLeft.Y];
-                    Vector2 distortBottomRight = distortDir[distortIndexBottomRight.X, distortIndexBottomRight.Y];
-
-                    Vector3 distort = new Vector3(
-                        MathHelper.Lerp(distortTopLeft.X, distortBottomRight.X, (normalizedX % div2.X) / div2.X),
-                        MathHelper.Lerp(distortTopLeft.Y, distortBottomRight.Y, (normalizedY % div2.Y) / div2.Y), 
-                        0.0f);
-                    
-                    int vertexIndex = x + y * (subDivX + 1);
-                    distortedVertices[vertexIndex] = new VertexPositionColorTexture(
-                        position: vertices[vertexIndex].Position + distort,
-                        color: vertices[vertexIndex].Color,
-                        textureCoordinate: vertices[vertexIndex].TextureCoordinate);
+                    deformAmount[x + y * deformArrayWidth] = deform[x, y];
                 }
             }
-
-            vertexBuffer.SetData(distortedVertices);
         }
 
         public void Reset()
         {
-            vertexBuffer.SetData(vertices);
+            Deform(new Vector2[,]
+            {
+                { Vector2.Zero, Vector2.Zero },
+                { Vector2.Zero, Vector2.Zero }
+            });
         }
 
         public void Draw(Effect effect, Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
@@ -152,8 +141,13 @@ namespace Barotrauma
 
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
-            effect.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             effect.Parameters["xTexture"].SetValue(sprite.Texture);
+            effect.Parameters["deformArray"].SetValue(deformAmount);
+            effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
+            effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
+            effect.Parameters["uvTopLeft"].SetValue(vertices[0].TextureCoordinate);
+            effect.Parameters["uvBottomRight"].SetValue(vertices.Last().TextureCoordinate);
+            effect.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             effect.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();
