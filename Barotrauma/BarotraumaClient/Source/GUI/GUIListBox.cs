@@ -208,9 +208,11 @@ namespace Barotrauma
         
         private void UpdateChildrenRect()
         {
-            int i = 0;
-            foreach (GUIComponent child in Content.Children)
+            for (int i = 0; i < Content.CountChildren; i++)
             {
+                var child = Content.RectTransform.GetChild(i)?.GUIComponent;
+                if (child == null) continue;
+
                 // selecting
                 if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
@@ -233,7 +235,6 @@ namespace Barotrauma
                 {
                     child.State = ComponentState.None;
                 }
-                i++;
             }
         }
 
