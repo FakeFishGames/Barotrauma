@@ -74,6 +74,30 @@ namespace Barotrauma
             indexBuffer.SetData(indices);
         }
 
+
+        /// <summary>
+        /// Distort the vertices of the sprite using an arbitrary function. The in-parameter of the function is the
+        /// normalized position of the vertex (i.e. 0,0 = top-left corner of the sprite, 1,1 = bottom-right) and the output
+        /// is the amount of distortion.
+        /// </summary>
+        public void Distort(Func<Vector2, Vector2> distortFunction)
+        {
+            var distortedVertices = new VertexPositionColorTexture[vertices.Length];
+            for (int x = 0; x <= subDivX; x++)
+            {
+                for (int y = 0; y <= subDivY; y++)
+                {
+                    Vector3 distort = new Vector3(distortFunction(new Vector2(x / (float)subDivX, y / (float)subDivY)), 0.0f);
+                    int vertexIndex = x + y * (subDivX + 1);
+                    distortedVertices[vertexIndex] = new VertexPositionColorTexture(
+                        position: vertices[vertexIndex].Position + distort,
+                        color: vertices[vertexIndex].Color,
+                        textureCoordinate: vertices[vertexIndex].TextureCoordinate);
+                }
+            }
+            vertexBuffer.SetData(distortedVertices);
+        }
+        
         public void Distort(Vector2[,] distortDir)
         {
             var distortedVertices = new VertexPositionColorTexture[vertices.Length];
