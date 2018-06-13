@@ -204,6 +204,9 @@ namespace Barotrauma
 
         public void Generate(bool mirror = false)
         {
+            if (loaded != null) loaded.Unload();            
+            loaded = this;
+
             if (levelObjectManager == null)
             {
                 var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
@@ -226,8 +229,6 @@ namespace Barotrauma
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            if (loaded != null) loaded.Unload();            
-            loaded = this;
 
             positionsOfInterest = new List<InterestingPosition>();
             

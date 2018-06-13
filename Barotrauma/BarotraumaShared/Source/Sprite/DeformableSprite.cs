@@ -12,7 +12,13 @@ namespace Barotrauma
             get { return sprite.size; }
         }
 
-        public DeformableSprite(XElement element, int? subdivisionsX, int? subdivisionsY)
+        public Vector2 Origin
+        {
+            get { return sprite.Origin; }
+            set { sprite.Origin = value; }
+        }
+
+        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null)
         {
             sprite = new Sprite(element);
             InitProjSpecific(element, subdivisionsX, subdivisionsY);

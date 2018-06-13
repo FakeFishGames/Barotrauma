@@ -139,10 +139,10 @@ namespace Barotrauma
 
                 obj.ActivePrefab.DeformableSprite?.Draw(effect, cam,
                     new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
-                    obj.ActivePrefab.Sprite.Origin,
+                    obj.ActivePrefab.DeformableSprite.Origin,
                     obj.CurrentRotation,
                     scale);
-                                
+                
                 if (GameMain.DebugDraw)
                 {
                     GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);

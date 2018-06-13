@@ -234,7 +234,7 @@ namespace Barotrauma
                         Sprite = new Sprite(subElement);
                         break;
                     case "deformablesprite":
-                        DeformableSprite = new DeformableSprite(subElement, 1, 1);
+                        DeformableSprite = new DeformableSprite(subElement);
                         break;
                     case "overridecommonness":
                         string levelType = subElement.GetAttributeString("leveltype", "");
@@ -253,7 +253,11 @@ namespace Barotrauma
                             {
                                 var propertyOverride = new LevelObjectPrefab(overridePropertiesElement);
                                 OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
-                                if (propertyOverride.Sprite == null) propertyOverride.Sprite = Sprite;
+                                if (propertyOverride.Sprite == null && propertyOverride.DeformableSprite == null)
+                                {
+                                    propertyOverride.Sprite = Sprite;
+                                    propertyOverride.DeformableSprite = DeformableSprite;
+                                }
 
                                 break;
                             }
