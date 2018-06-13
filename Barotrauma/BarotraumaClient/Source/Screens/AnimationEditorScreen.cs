@@ -428,7 +428,7 @@ namespace Barotrauma
             int widgetDefaultSize = 10;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
-
+            // TODO: solve collider does not always point forward
             Vector2 simSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
             //Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
@@ -577,10 +577,10 @@ namespace Barotrauma
             {
                 multiplier = 100;
                 drawPos = SimToScreenPoint(character.SimPosition - simSpaceForward / 2);
-                DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Blue, amount =>
+                DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Chartreuse, amount =>
                 {
                     TryUpdateValue("legmoveamount", amount / multiplier);
-                    GUI.DrawString(spriteBatch, drawPos, humanSwimParams.LegMoveAmount.FormatAsSingleDecimal(), Color.Black, Color.Blue, font: GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, drawPos, humanSwimParams.LegMoveAmount.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
                 }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: true, displayAngle: false);
             }
         }
