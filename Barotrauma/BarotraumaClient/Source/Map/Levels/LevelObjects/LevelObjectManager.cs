@@ -1,6 +1,4 @@
-﻿using Barotrauma.Particles;
-using Barotrauma.Sounds;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -14,6 +12,17 @@ namespace Barotrauma
         private List<LevelObject> visibleObjectsFront = new List<LevelObject>();
 
         private Rectangle currentGridIndices;
+
+        private BasicEffect effect;
+
+        partial void InitProjSpecific()
+        {
+            effect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+            {
+                TextureEnabled = true,
+                VertexColorEnabled = true
+            };
+        }
 
         partial void UpdateProjSpecific(float deltaTime)
         {
@@ -78,6 +87,7 @@ namespace Barotrauma
             currentGridIndices = currentIndices;
         }
 
+
         public void DrawObjects(SpriteBatch spriteBatch, Camera cam, bool drawFront)
         {
             Rectangle indices = Rectangle.Empty;
@@ -116,7 +126,7 @@ namespace Barotrauma
                         1.0f + sin * obj.CurrentScaleOscillation.X,
                         1.0f + sin * obj.CurrentScaleOscillation.Y);
                 }
-                
+
                 obj.ActivePrefab.Sprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
@@ -126,7 +136,13 @@ namespace Barotrauma
                     scale,
                     SpriteEffects.None,
                     z);
-                
+
+                obj.ActivePrefab.DeformableSprite?.Draw(effect, cam,
+                    new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
+                    obj.ActivePrefab.Sprite.Origin,
+                    obj.CurrentRotation,
+                    scale);
+                                
                 if (GameMain.DebugDraw)
                 {
                     GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
@@ -149,6 +165,12 @@ namespace Barotrauma
 
                 z += 0.0001f;
             }
-        }        
+        }
+
+        partial void RemoveProjSpecific()
+        {
+            effect?.Dispose();
+            effect = null;
+        }
     }
 }

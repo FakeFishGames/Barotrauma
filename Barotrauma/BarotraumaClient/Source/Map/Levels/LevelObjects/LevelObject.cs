@@ -152,5 +152,16 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void RemoveProjSpecific()
+        {
+            for (int i = 0; i < Sounds.Length; i++)
+            {
+                SoundChannels[i]?.Dispose();
+                SoundChannels[i] = null;
+                Sounds[i]?.Dispose();
+                Sounds[i] = null;
+            }
+        }
     }
 }
