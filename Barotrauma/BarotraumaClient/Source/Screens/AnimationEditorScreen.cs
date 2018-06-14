@@ -341,6 +341,7 @@ namespace Barotrauma
             // Character
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
             character.Draw(spriteBatch);
+            //character.AnimController.Collider.DebugDraw(spriteBatch, Color.LightGreen);
             spriteBatch.End();
 
             // GUI
@@ -389,9 +390,9 @@ namespace Barotrauma
 
                 // Collider
                 var collider = character.AnimController.Collider;
-                var colliderDrawPos = SimToScreenPoint(collider.SimPosition);
+                var colliderDrawPos = SimToScreen(collider.SimPosition);
                 Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreenPoint(collider.SimPosition + Vector2.Normalize(forward) * collider.radius);
+                var endPos = SimToScreen(collider.SimPosition + Vector2.Normalize(forward) * collider.radius);
                 //Vector2 forward = VectorExtensions.Forward(collider.Rotation, 1);
                 //var endPos = SimToScreenPoint(collider.SimPosition) - forward * ConvertUnits.ToDisplayUnits(collider.radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
@@ -402,15 +403,15 @@ namespace Barotrauma
         }
 
         #region Widgets
-        private Vector2 ScreenToSimPoint(float x, float y) => ScreenToSimPoint(new Vector2(x, y));
-        private Vector2 ScreenToSimPoint(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
-        private Vector2 SimToScreenPoint(float x, float y) => SimToScreenPoint(new Vector2(x, y));
-        private Vector2 SimToScreenPoint(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+        private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
+        private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
+        private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
+        private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
 
         private void DrawWidgetEditor(SpriteBatch spriteBatch)
         {
             var collider = character.AnimController.Collider;
-            var charDrawPos = SimToScreenPoint(collider.SimPosition);
+            var charDrawPos = SimToScreen(collider.SimPosition);
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
             var humanGroundedParams = animParams as HumanGroundedParams;
@@ -426,22 +427,29 @@ namespace Barotrauma
             var hand = character.AnimController.GetLimb(LimbType.RightHand) ?? character.AnimController.GetLimb(LimbType.LeftHand);
             var arm = character.AnimController.GetLimb(LimbType.RightArm) ?? character.AnimController.GetLimb(LimbType.LeftArm);
             int widgetDefaultSize = 10;
+            // collider does not rotate when the sprite is flipped -> rotates only when swimming
+            float dir = character.AnimController.Dir;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
-            // TODO: solve collider does not always point forward
             Vector2 simSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
-            //Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
+            Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
-            // TODO: not right?
-            Vector2 screenSpaceLeft = -VectorExtensions.Forward(MathHelper.ToDegrees(collider.Rotation) + MathHelper.ToRadians(90), 1);
-            // TODO: use simspaceforward and convert it?
-            Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : screenSpaceLeft;
-            float dir = character.AnimController.Dir;
+            Vector2 screenSpaceLeft = screenSpaceForward.Right();
+            // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
+            Vector2 forward = animParams.IsSwimAnimation ? screenSpaceForward : Vector2.UnitX * dir;
+
+            if (GameMain.DebugDraw)
+            {
+                GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceForward * 40, Color.Blue);
+                GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceLeft * 40, Color.Red);
+                //GUI.DrawLine(spriteBatch, charDrawPos, SimToScreen(character.SimPosition + Vector2.Normalize(simSpaceForward)), Color.Blue);
+                //GUI.DrawLine(spriteBatch, charDrawPos, SimToScreen(character.SimPosition + Vector2.Normalize(simSpaceLeft)), Color.Red);
+            }
 
             // Widgets for all anims -->
             // Speed
             float multiplier = 0.02f;
-            Vector2 referencePoint = SimToScreenPoint(collider.SimPosition);
+            Vector2 referencePoint = SimToScreen(collider.SimPosition);
             Vector2 drawPos = referencePoint;
             drawPos += forward * animParams.Speed / multiplier;
             DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Speed", () =>
@@ -453,14 +461,14 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, 
+                DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, 
                     angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
                     if (humanGroundedParams != null)
                     {
-                        var widgetDrawPos = SimToScreenPoint(head.SimPosition.X - humanGroundedParams.HeadLeanAmount, head.pullJoint.WorldAnchorB.Y);
+                        var widgetDrawPos = SimToScreen(head.SimPosition.X - humanGroundedParams.HeadLeanAmount, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
                             TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
@@ -471,7 +479,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        drawPos = SimToScreenPoint(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position",
                             () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
                     }
@@ -480,7 +488,7 @@ namespace Barotrauma
             if (torso != null)
             {
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreenPoint(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
+                DrawCircularWidget(spriteBatch, SimToScreen(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
                     angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
@@ -488,7 +496,7 @@ namespace Barotrauma
                     // Torso position and leaning
                     if (humanGroundedParams != null)
                     {
-                        drawPos = SimToScreenPoint(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
+                        drawPos = SimToScreen(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso", () =>
                         {
                             TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
@@ -499,7 +507,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        drawPos = SimToScreenPoint(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
+                        drawPos = SimToScreen(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso Position",
                             () => TryUpdateValue("torsoposition", groundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
                     }
@@ -510,14 +518,14 @@ namespace Barotrauma
                 // Fish grounded only
                 if (fishGroundedParams != null)
                 {
-                    DrawCircularWidget(spriteBatch, SimToScreenPoint(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
+                    DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
                         angle => TryUpdateValue("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 }
                 // Both
                 if (groundedParams != null)
                 {
                     multiplier = 0.005f;
-                    referencePoint = SimToScreenPoint(colliderBottom);
+                    referencePoint = SimToScreen(colliderBottom);
                     drawPos = referencePoint - groundedParams.StepSize / multiplier;
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0);
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Step Size", () =>
@@ -534,7 +542,7 @@ namespace Barotrauma
                 if (legs != null || foot != null)
                 {
                     multiplier = 10;
-                    drawPos = SimToScreenPoint(colliderBottom + simSpaceForward * 0.3f);
+                    drawPos = SimToScreen(colliderBottom + simSpaceForward * 0.3f);
                     DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Correction Torque", Color.Chartreuse, angle =>
                     {
                         TryUpdateValue("legcorrectiontorque", angle / multiplier);
@@ -544,7 +552,7 @@ namespace Barotrauma
                 if (hand != null || arm != null)
                 {
                     multiplier = 0.02f;
-                    referencePoint = SimToScreenPoint(character.SimPosition) + Vector2.UnitX;
+                    referencePoint = SimToScreen(character.SimPosition) + Vector2.UnitX;
                     drawPos = referencePoint - humanGroundedParams.HandMoveAmount / multiplier;
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0);
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
@@ -578,7 +586,7 @@ namespace Barotrauma
             else if (humanSwimParams != null)
             {
                 multiplier = 100;
-                drawPos = SimToScreenPoint(character.SimPosition - simSpaceForward / 2);
+                drawPos = SimToScreen(character.SimPosition - simSpaceForward / 2);
                 DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Chartreuse, amount =>
                 {
                     TryUpdateValue("legmoveamount", amount / multiplier);

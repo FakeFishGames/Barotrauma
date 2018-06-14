@@ -24,6 +24,15 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Creates a normalized perpendicular vector to the right from a forward vector.
+        /// </summary>
+        public static Vector2 Right(this Vector2 forward)
+        {
+            var normV = Vector2.Normalize(forward);
+            return new Vector2(normV.Y, -normV.X);
+        }
+
+        /// <summary>
         /// Flips the x and y components.
         /// </summary>
         public static Vector2 Flip(this Vector2 v) => new Vector2(v.Y, v.X);
