@@ -671,6 +671,22 @@ namespace Barotrauma
             if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
         }
 
+        /// <summary>
+        /// Draws a bezier curve with dots.
+        /// </summary>
+        public static void DrawBezierWithDots(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Vector2 control, int pointCount, Color color, int dotSize = 2)
+        {
+            Vector2 dir = end - start;
+            var points = new Vector2[pointCount];
+            for (int i = 0; i < points.Length; i++)
+            {
+                float t = (float)i / (points.Length - 1);
+                Vector2 pos = MathUtils.Bezier(start, control, end, t);
+                points[i] = pos;
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
+
         #endregion
 
         #region Element creation
