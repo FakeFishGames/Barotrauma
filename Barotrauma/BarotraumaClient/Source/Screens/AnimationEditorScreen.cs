@@ -615,23 +615,47 @@ namespace Barotrauma
             else if (humanSwimParams != null)
             {
                 // Legs
-                multiplier = 100;
-                drawPos = SimToScreen(character.SimPosition - simSpaceForward / 2);
-                DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Chartreuse, amount =>
+                var movementMultiplier = 0.01f;
+                var cycleMultiplier = 0.1f;
+                referencePoint = SimToScreen(character.SimPosition - simSpaceForward / 2);
+                drawPos = referencePoint;
+                drawPos -= screenSpaceForward * humanSwimParams.LegCycleSpeed / cycleMultiplier;
+                Vector2 toRefPoint = referencePoint - drawPos;
+                var start = drawPos + toRefPoint / 2;
+                var control = start + (screenSpaceLeft * dir * humanSwimParams.LegMoveAmount / movementMultiplier);
+                int points = (int)toRefPoint.Length() / 10;
+                // Cycle speed
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Leg Movement Speed", () =>
                 {
-                    TryUpdateValue("legmoveamount", amount / multiplier);
-                    GUI.DrawString(spriteBatch, drawPos, humanSwimParams.LegMoveAmount.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
-                }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: true, displayAngle: false);
+                    TryUpdateValue("legcyclespeed", MathHelper.Clamp(humanSwimParams.LegCycleSpeed - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * cycleMultiplier, 0, 20));
+                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
+                    if (points > 0)
+                    {
+                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    }
+                });
+                // Movement amount
+                DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Leg Movement Amount", () =>
+                {
+                    TryUpdateValue("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * movementMultiplier * dir, -2, 2));
+                    GUI.DrawLine(spriteBatch, start, control, Color.Purple);
+                    if (points > 0)
+                    {
+                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    }
+                });
                 // Arms
                 multiplier = 0.01f;
                 referencePoint = charDrawPos + screenSpaceForward * 10;
-                var v = humanSwimParams.HandMoveAmount / multiplier;
+                Vector2 v = humanSwimParams.HandMoveAmount / multiplier;
                 drawPos = referencePoint + new Vector2(v.X * dir, v.Y);
                 var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                 DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                 {
                     var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier;
-                    TryUpdateValue("handmoveamount", humanSwimParams.HandMoveAmount + transformedInput);
+                    var handMovement = humanSwimParams.HandMoveAmount + transformedInput;
+                    TryUpdateValue("handmoveamount", handMovement);
+                    TryUpdateValue("handcyclespeed", handMovement.X * 4);
                     GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                 });
                 GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);

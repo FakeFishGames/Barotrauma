@@ -615,6 +615,8 @@ namespace Barotrauma
             }
         }
 
+        private float handCyclePos;
+        private float legCyclePos;
         void UpdateSwimming()
         {
             IgnorePlatforms = true;
@@ -727,8 +729,12 @@ namespace Barotrauma
             {
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
-                        
-            walkPos += movement.Length() * 0.2f;
+
+            //walkPos += movement.Length() * 0.2f;
+            //float handCyclePos = walkPos / 2.0f * -Dir;
+            legCyclePos += MathHelper.ToRadians(CurrentSwimParams.LegCycleSpeed) * Math.Sign(movement.X);
+            handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
+
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
             
             for (int i = -1; i<2; i+=2)
@@ -746,11 +752,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(walkPos) * i * 0.3f, 2.0f);
+                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos) * i * 0.3f, 2.0f);
                 }
             }
 
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * CurrentSwimParams.LegMoveAmount, 0.0f);
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos) * CurrentSwimParams.LegMoveAmount, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
             MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
@@ -768,23 +774,21 @@ namespace Barotrauma
                 if (!rightHand.Disabled)
                 {
                     MoveLimb(rightHand, new Vector2(
-                        handPos.X + (float)Math.Sin(walkPos / 1.5f) * wobbleAmount,
-                        handPos.Y + (float)Math.Sin(walkPos / 3.5f) * wobbleAmount - 0.25f), 1.5f);
+                        handPos.X + (float)Math.Sin(handCyclePos / 1.5f) * wobbleAmount,
+                        handPos.Y + (float)Math.Sin(handCyclePos / 3.5f) * wobbleAmount - 0.25f), 1.5f);
                 }
 
                 if (!leftHand.Disabled)
                 {
                     MoveLimb(leftHand, new Vector2(
-                        handPos.X + (float)Math.Sin(walkPos / 2.0f) * wobbleAmount,
-                        handPos.Y + (float)Math.Sin(walkPos / 3.0f) * wobbleAmount - 0.25f), 1.5f);
+                        handPos.X + (float)Math.Sin(handCyclePos / 2.0f) * wobbleAmount,
+                        handPos.Y + (float)Math.Sin(handCyclePos / 3.0f) * wobbleAmount - 0.25f), 1.5f);
                 }
 
                 return;
             }
 
             handPos += head.LinearVelocity * 0.1f;
-
-            float handCyclePos = walkPos / 2.0f * -Dir;
 
             // Not sure why the params has to be flipped, but it works.
             var handMoveAmount = CurrentSwimParams.HandMoveAmount.Flip();
