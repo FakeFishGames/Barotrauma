@@ -1,6 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Particles;
@@ -23,6 +26,12 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public bool NeedsNetworkSyncing
+        {
+            get { return Triggers.Any(t => t.NeedsNetworkSyncing); }
+            set { Triggers.ForEach(t => t.NeedsNetworkSyncing = false); }
         }
 
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
@@ -87,6 +96,15 @@ namespace Barotrauma
         public override string ToString()
         {
             return "LevelObject (" + ActivePrefab.Name + ")";
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c)
+        {
+            for (int j = 0; j < Triggers.Count; j++)
+            {
+                if (!Triggers[j].UseNetworkSyncing) continue;
+                Triggers[j].ServerWrite(msg, c);
+            }
         }
     }
 }
