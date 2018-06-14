@@ -468,14 +468,14 @@ namespace Barotrauma
                 {
                     if (humanGroundedParams != null)
                     {
-                        var widgetDrawPos = SimToScreen(head.SimPosition.X - humanGroundedParams.HeadLeanAmount, head.pullJoint.WorldAnchorB.Y);
+                        var widgetDrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
-                            TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
-                            TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
+                            TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * PlayerInput.MouseSpeed.X * dir);
+                            TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * - PlayerInput.MouseSpeed.Y);
                         });
-                        var origin = widgetDrawPos - new Vector2(widgetDefaultSize / 2, 0);
-                        GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                        var origin = widgetDrawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
+                        GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
                     }
                     else
                     {
@@ -496,14 +496,14 @@ namespace Barotrauma
                     // Torso position and leaning
                     if (humanGroundedParams != null)
                     {
-                        drawPos = SimToScreen(torso.SimPosition.X - humanGroundedParams.TorsoLeanAmount, torso.SimPosition.Y);
+                        drawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * dir, torso.SimPosition.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso", () =>
                         {
-                            TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * -PlayerInput.MouseSpeed.X);
-                            TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
+                            TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * + PlayerInput.MouseSpeed.X * dir);
+                            TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * - PlayerInput.MouseSpeed.Y);
                         });
-                        var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0);
-                        GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Red);
+                        var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
+                        GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
                     }
                     else
                     {
