@@ -32,6 +32,9 @@ namespace Barotrauma
         public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
 
         public bool CanWalk => CanEnterSubmarine;
+        // TODO: Presupposes that the slow speed is lower than the high speed. 
+        // This is how it should be, but when the parameters are modified in the anim editor, it may be vice versa. 
+        // How should we solve this? Restrict the slow speed value or refactor how the current params are handled?
         public bool IsMovingFast
         {
             get
