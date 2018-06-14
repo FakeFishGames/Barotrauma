@@ -37,6 +37,8 @@ namespace Barotrauma.SpriteDeformations
                     deformation[x, y] = (centerDiff / centerDist) * Math.Min(1.0f, centerDist);
                 }
             }
+
+            phase = Rand.Range(0.0f, MathHelper.TwoPi);
         }
 
         protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)

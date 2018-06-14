@@ -21,7 +21,7 @@ namespace Barotrauma.SpriteDeformations
 
             deformation = new Vector2[resolution.X, resolution.Y];
 
-            phase = Rand.Range(0.0f, MathHelper.TwoPi);
+            phase = Rand.Range(0.0f, 255.0f);
 
             UpdateNoise();
         }

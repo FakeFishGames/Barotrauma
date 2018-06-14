@@ -62,21 +62,31 @@
   </thistle>
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
-          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10">
+          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
-    <Sprite texture="Content/LevelObjects/vegetation3.png" origin="0.5,0.95"/>
+    <DeformableSprite texture="Content/LevelObjects/vegetation3.png" subdivisions="5,5" origin="0.5,0.95">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="1,0.5 1,0.5 1.0,0.5"
+                         row1="0,0 0,0 0,0"/>
+    </DeformableSprite>
   </branch>
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
-          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10">
+          minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" commonness="10" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
-    <Sprite texture="Content/LevelObjects/vegetation4.png" sourcerect="0,0,818,1024" origin="0.5,0.95"/>
+    <DeformableSprite texture="Content/LevelObjects/vegetation4.png" subdivisions="5,5" sourcerect="0,0,818,1024" origin="0.5,0.95">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="1,0.5 1,0.5 1.0,0.5"
+                         row1="0,0 0,0 0,0"/>
+    </DeformableSprite>
   </branch>
 
   <hay spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.15"
@@ -87,21 +97,31 @@
   </hay>
 
   <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1" 
-          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" 
+          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30"  depthrange="-0.01,-0.01"
           swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="Wastes" />
-    <Sprite texture="Content/LevelObjects/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95"/>
+    <DeformableSprite texture="Content/LevelObjects/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="1,0.5 1,0.5 1.0,0.5"
+                         row1="0,0 0,0 0,0"/>
+    </DeformableSprite>
   </branch>
 
   <branch spawnpos="Wall, RuinWall" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.1"
-          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" 
+          minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" depthrange="-0.01,-0.01" 
           swingamount="10" swingfrequency="0.1" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="Wastes" />
-    <Sprite texture="Content/LevelObjects/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
+    <DeformableSprite texture="Content/LevelObjects/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="1,0.5 1,0.5 1.0,0.5"
+                         row1="0,0 0,0 0,0"/>
+    </DeformableSprite>
   </branch>
 
   <sonarflora1 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
@@ -115,11 +135,11 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="5,5" sourcerect="492,0,521,288" origin="0.5,0.35">
-      <SpriteDeformation type="inflate" resolution="5,5" frequency="0.5" scale="2"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply" 
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="5,3" sourcerect="492,0,521,288" origin="0.5,0.35">
+      <SpriteDeformation type="inflate" resolution="5,3" frequency="0.5" scale="1"/>
+      <SpriteDeformation type="custom" resolution="5,3" frequency="0.0" blendmode="multiply" 
                          row0="0,0 0,0 0,0" 
-                         row1="0.5,0.5 1,1 0.5,0.5"/>
+                         row1="0.1,0.5 1,1 0.1,0.5"/>
     </DeformableSprite>
     <LightSource range="1500" color="1.0,0.85,0.8,0.4"/>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
@@ -141,9 +161,9 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="10,10" sourcerect="151,383,488,341" origin="0.5,0.1">
-      <SpriteDeformation type="inflate" resolution="5,5" frequency="0.5" scale="3"/>
-      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,4" sourcerect="151,383,488,341" origin="0.5,0.1">
+      <SpriteDeformation type="inflate" resolution="4,4" frequency="0.5" scale="1"/>
+      <SpriteDeformation type="custom" resolution="4,4" frequency="0.0" blendmode="multiply"
                          row0="0,0 0,0 0,0"
                          row1="0.5,0.5 1,1 0.5,0.5"/>
     </DeformableSprite>
@@ -167,7 +187,12 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="644,366,380,357" origin="0.5,0.15"/>
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,3" sourcerect="644,366,380,357" origin="0.5,0.15">
+      <SpriteDeformation type="inflate" resolution="4,3" frequency="0.5" scale="0.5"/>
+      <SpriteDeformation type="custom" resolution="4,3" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0"
+                         row1="1.0,0.1 1,0.1 1.0,0.1"/>
+    </DeformableSprite>
     <LightSource range="1200" color="1.0,0.85,0.8,0.4"/>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
@@ -188,7 +213,12 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="47,788,318,236" origin="0.6,0.2"/>
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="47,788,318,236" origin="0.6,0.2">
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0"
+                         row1="0.5,0.5 1,1 0.5,0.5"/>
+    </DeformableSprite>
     <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
@@ -209,7 +239,12 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="395,723,309,301" origin="0.5,0.2"/>
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="395,723,309,301" origin="0.5,0.2">
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0"
+                         row1="0.5,0.1 1,0.2 0.5,0.1"/>
+    </DeformableSprite>
     <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120" 
@@ -230,7 +265,12 @@
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="5" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
-    <Sprite texture="Content/LevelObjects/SonarFloraBodies.png" sourcerect="709,779,304,234" origin="0.5,0.2"/>
+    <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="709,779,304,234" origin="0.5,0.2">
+      <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
+      <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
+                         row0="0,0 0,0 0,0"
+                         row1="0.5,0.5 1,1 0.5,0.5"/>
+    </DeformableSprite>
     <LightSource range="1000" color="1.0,0.85,0.8,0.4"/>
     <Sound file="Content\Sounds\Ambient\Ambient3.ogg" range="2000" position="0,0"/>
     <Trigger position="0,0" radius="1000" triggeredby="Character, Submarine, OtherTrigger" staytriggereddelay="120"
