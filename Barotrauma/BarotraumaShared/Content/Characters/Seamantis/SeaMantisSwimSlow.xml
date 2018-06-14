@@ -1,10 +1,10 @@
 ﻿<SeamantisSwimSlow
   speed="3"
-  waveamplitude="0.3"
-  wavelength="25"
+  waveamplitude="0.7199997"
+  wavelength="42.5"
   steertorque="25"
   flip="True"
   mirror="True"
   rotatetowardsmovement="True"
-  headangle="-90"
-  torsoangle="-90"/>
+  headangle="-121.5"
+  torsoangle="-51" />
