@@ -63,7 +63,7 @@ namespace Barotrauma
                 {
                     case "leveltrigger":
                     case "trigger":
-                        LoadElements(subElement, 0);
+                        LoadElements(subElement, LevelTriggerElements.IndexOf(subElement));
                         break;
                     case "lightsource":
                         LightSourceConfig = subElement;

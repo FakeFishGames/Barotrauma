@@ -1,5 +1,6 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -50,6 +51,10 @@ namespace Barotrauma
         private HashSet<Entity> triggerers = new HashSet<Entity>();
 
         private TriggererType triggeredBy;
+        
+        private float randomTriggerInterval;
+        private float randomTriggerProbability;
+        private float randomTriggerTimer;
 
         private float triggeredTimer;
 
@@ -65,18 +70,27 @@ namespace Barotrauma
         /// How long the trigger stays in the triggered state after triggerers have left
         /// </summary>
         private float stayTriggeredDelay;
+
+        public LevelTrigger ParentTrigger;
+
+        private Vector2 worldPosition;
         
         public Vector2 WorldPosition
         {
-            get { return physicsBody.Position; }
-            set { physicsBody.SetTransform(ConvertUnits.ToSimUnits(value), physicsBody.Rotation); }
+            get { return worldPosition; }
+            set
+            {
+                worldPosition = value;
+                physicsBody?.SetTransform(ConvertUnits.ToSimUnits(value), physicsBody.Rotation);
+            }
         }
 
         public float Rotation
         {
-            get { return physicsBody.Rotation; }
+            get { return physicsBody == null ? 0.0f : physicsBody.Rotation; }
             set
             {
+                if (physicsBody == null) return;
                 physicsBody.SetTransform(physicsBody.Position, value);
                 CalculateDirectionalForce();
             }
@@ -91,10 +105,14 @@ namespace Barotrauma
         {
             get { return triggerOthersDistance; }
         }
-        
+
         public bool IsTriggered
         {
-            get { return triggerers.Count > 0 || triggeredTimer > 0.0f; }
+            get
+            {
+                return (triggerers.Count > 0 || triggeredTimer > 0.0f) &&
+                    (ParentTrigger == null || ParentTrigger.IsTriggered);
+            }
         }
 
         public Vector2 Force
@@ -146,24 +164,30 @@ namespace Barotrauma
                 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
-            physicsBody = new PhysicsBody(element, scale)
+            worldPosition = position;
+            if (element.Attributes("radius").Any() || element.Attributes("width").Any() || element.Attributes("height").Any())
             {
-                CollisionCategories = Physics.CollisionLevel,
-                CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
-            };
-            physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
-            physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
-            physicsBody.FarseerBody.IsSensor = true;
-            physicsBody.FarseerBody.IsStatic = true;
-            physicsBody.FarseerBody.IsKinematic = true;
+                physicsBody = new PhysicsBody(element, scale)
+                {
+                    CollisionCategories = Physics.CollisionLevel,
+                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
+                };
+                physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
+                physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
+                physicsBody.FarseerBody.IsSensor = true;
+                physicsBody.FarseerBody.IsStatic = true;
+                physicsBody.FarseerBody.IsKinematic = true;
 
-            ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+                ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
 
-            physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
+                physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
+            }
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
 
             stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
+            randomTriggerInterval = element.GetAttributeFloat("randomtriggerinterval", 0.0f);
+            randomTriggerProbability = element.GetAttributeFloat("randomtriggerprobability", 0.0f);
 
             unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
             ForceFluctuationFrequency = element.GetAttributeFloat("forcefluctuationfrequency", 0.01f);
@@ -210,7 +234,14 @@ namespace Barotrauma
                         break;
                     case "attack":
                     case "damage":
-                        attacks.Add(new Attack(subElement));
+                        var attack = new Attack(subElement);
+                        var multipliedAfflictions = attack.GetMultipliedAfflictions((float)Timing.Step);
+                        attack.Afflictions.Clear();
+                        foreach (Affliction affliction in multipliedAfflictions)
+                        {
+                            attack.Afflictions.Add(affliction);
+                        }
+                        attacks.Add(attack);
                         break;
                 }
             }
@@ -218,6 +249,8 @@ namespace Barotrauma
 
         private void UpdateCollisionCategories()
         {
+            if (physicsBody == null) return;
+
             var collidesWith = Physics.CollisionNone;
             if (triggeredBy.HasFlag(TriggererType.Character) || triggeredBy.HasFlag(TriggererType.Creature)) collidesWith |= Physics.CollisionCharacter;
             if (triggeredBy.HasFlag(TriggererType.Item)) collidesWith |= Physics.CollisionItem | Physics.CollisionProjectile;
@@ -228,8 +261,8 @@ namespace Barotrauma
 
         private void CalculateDirectionalForce()
         {
-            var ca = (float)Math.Cos(Rotation);
-            var sa = (float)Math.Sin(Rotation);
+            var ca = (float)Math.Cos(-Rotation);
+            var sa = (float)Math.Sin(-Rotation);
 
             Force = new Vector2(
                 ca * unrotatedForce.X + sa * unrotatedForce.Y,
@@ -277,6 +310,21 @@ namespace Barotrauma
             Entity entity = GetEntity(fixtureB);
             if (entity == null) return;
 
+            //check if there are any other contacts with the entity
+            //(the OnSeparation callback happens when two fixtures separate, 
+            //e.g. if a body stops touching the circular fixture at the end of a capsule-shaped body)
+            ContactEdge contactEdge = fixtureA.Body.ContactList;
+            while (contactEdge != null)
+            {
+                if (contactEdge.Contact != null &&
+                    contactEdge.Contact.IsTouching)
+                {
+                    var otherEntity = GetEntity(contactEdge.Contact.FixtureB);
+                    if (otherEntity == entity) return;
+                }
+                contactEdge = contactEdge.Next;
+            }
+
             if (triggerers.Contains(entity))
             {
                 triggerers.Remove(entity);
@@ -318,6 +366,19 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            if (triggerers.Count > 0)
+            {
+                int adfdg = 1;
+            }
+
+            if (ParentTrigger != null)
+            {
+                int dfkmklgmh = 1;
+            }
+
+            if (ParentTrigger != null && !ParentTrigger.IsTriggered) return;
+
+
             triggerers.RemoveWhere(t => t.Removed);
 
             if (ForceFluctuationStrength > 0.0f)
@@ -327,6 +388,16 @@ namespace Barotrauma
                 //so different triggers won't fluctuate in the same rhythm
                 float noiseVal = MathHelper.Clamp((float)PerlinNoise.Perlin(forceFluctuationTimer, WorldPosition.X / 1000.0f, WorldPosition.Y / 1000.0f), 0.0f, 1.0f);
                 currentForceFluctuation = (float)Math.Pow(noiseVal, ForceFluctuationStrength);
+            }
+
+            if (randomTriggerProbability > 0.0f)
+            {
+                randomTriggerTimer += deltaTime;
+                if (randomTriggerTimer > randomTriggerInterval)
+                {
+                    if (Rand.Range(0.0f, 1.0f) < randomTriggerProbability) triggeredTimer = stayTriggeredDelay;
+                    randomTriggerTimer = 0.0f;
+                }
             }
             
             if (stayTriggeredDelay > 0.0f)

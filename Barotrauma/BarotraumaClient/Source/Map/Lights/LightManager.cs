@@ -191,6 +191,8 @@ namespace Barotrauma.Lights
                 light.Draw(spriteBatch, lightEffect, transform);
                 backgroundSpritesDrawn = true;
             }
+
+            GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
 
             //draw an ambient light -colored rectangle on hulls to hide background lights behind subs

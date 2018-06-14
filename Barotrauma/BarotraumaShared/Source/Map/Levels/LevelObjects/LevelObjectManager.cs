@@ -235,7 +235,8 @@ namespace Barotrauma
 
             foreach (LevelTrigger trigger in newObject.Triggers)
             {
-                for (int i = 0; i<trigger.PhysicsBody.FarseerBody.FixtureList.Count; i++)
+                if (trigger.PhysicsBody == null) continue;
+                for (int i = 0; i < trigger.PhysicsBody.FarseerBody.FixtureList.Count; i++)
                 {
                     trigger.PhysicsBody.FarseerBody.GetTransform(out FarseerPhysics.Common.Transform transform);
                     trigger.PhysicsBody.FarseerBody.FixtureList[i].Shape.ComputeAABB(out FarseerPhysics.Collision.AABB aabb, ref transform, i);

@@ -164,7 +164,7 @@ namespace Barotrauma
                             GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, Color.Orange, 0, 5);
                         }
                         trigger.PhysicsBody.UpdateDrawPosition();
-                        trigger.PhysicsBody.DebugDraw(spriteBatch, Color.Cyan);
+                        trigger.PhysicsBody.DebugDraw(spriteBatch, trigger.IsTriggered ? Color.Cyan : Color.DarkCyan);
                     }
                 }
 

@@ -150,8 +150,7 @@ namespace Barotrauma
             {
                 LightSource.Rotation = CurrentRotation;
             }
-
-            //TODO: only do this if the sprite is visible?
+            
             if (spriteDeformations.Count > 0)
             {
                 foreach (SpriteDeformation deformation in spriteDeformations)
