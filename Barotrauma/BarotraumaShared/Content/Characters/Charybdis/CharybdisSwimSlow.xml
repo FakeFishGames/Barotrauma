@@ -5,6 +5,4 @@
   steertorque="100"
   flip="True"
   mirror="False"
-  rotatetowardsmovement="True"
-  headangle="0"
-  torsoangle="0" />
+  rotatetowardsmovement="True" />
