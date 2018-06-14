@@ -392,10 +392,11 @@ namespace Barotrauma
                 var collider = character.AnimController.Collider;
                 var colliderDrawPos = SimToScreen(collider.SimPosition);
                 Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreen(collider.SimPosition + Vector2.Normalize(forward) * collider.radius);
-                //Vector2 forward = VectorExtensions.Forward(collider.Rotation, 1);
-                //var endPos = SimToScreenPoint(collider.SimPosition) - forward * ConvertUnits.ToDisplayUnits(collider.radius);
+                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
+                Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
             }
@@ -431,8 +432,8 @@ namespace Barotrauma
             float dir = character.AnimController.Dir;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
             Vector2 centerOfMass = character.AnimController.GetCenterOfMass();
-            Vector2 simSpaceForward = Vector2.Normalize(Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation)));
-            Vector2 simSpaceLeft = Vector2.Normalize(Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation)));
+            Vector2 simSpaceForward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
+            Vector2 simSpaceLeft = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
             Vector2 screenSpaceForward = -VectorExtensions.Forward(collider.Rotation, 1);
             Vector2 screenSpaceLeft = screenSpaceForward.Right();
             // The forward vector is left or right in screen space when the unit is not swimming. Cannot rely on the collider here, because the rotation may vary on ground.
@@ -440,10 +441,8 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceForward * 40, Color.Blue);
-                GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceLeft * 40, Color.Red);
-                //GUI.DrawLine(spriteBatch, charDrawPos, SimToScreen(character.SimPosition + Vector2.Normalize(simSpaceForward)), Color.Blue);
-                //GUI.DrawLine(spriteBatch, charDrawPos, SimToScreen(character.SimPosition + Vector2.Normalize(simSpaceLeft)), Color.Red);
+                //GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceForward * 40, Color.Blue);
+                //GUI.DrawLine(spriteBatch, charDrawPos, charDrawPos + screenSpaceLeft * 40, Color.Red);
             }
 
             // Widgets for all anims -->
@@ -570,21 +569,36 @@ namespace Barotrauma
             // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
-                float lengthMultiplier = 0.1f;
-                float amplitudeMultiplier = 0.01f;
+                // TODO: draw a sine curve instead?
+                var lengthMultiplier = 0.25f;
+                var amplitudeMultiplier = 0.005f;
                 referencePoint = charDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2;
-                // TODO: the widget is at the wrong position when moving vertically
-                Vector2 widgetDrawPos = referencePoint + new Vector2(
-                    fishSwimParams.WaveLength / lengthMultiplier * -screenSpaceForward.X,
-                    fishSwimParams.WaveAmplitude / amplitudeMultiplier * -screenSpaceLeft.Y * dir);
-                DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Tail", () =>
+                drawPos = referencePoint;
+                drawPos -= screenSpaceForward * fishSwimParams.WaveLength / lengthMultiplier;
+                Vector2 toRefPoint = referencePoint - drawPos;
+                var start = drawPos + toRefPoint / 2;
+                var control = start + (screenSpaceLeft * dir * fishSwimParams.WaveAmplitude / amplitudeMultiplier);
+                int points = (int)toRefPoint.Length() / 10;
+                // Length
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Wave Length", () =>
                 {
-                    // TODO: fix the input
-                    TryUpdateValue("wavelength", fishSwimParams.WaveLength - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * lengthMultiplier);
-                    TryUpdateValue("waveamplitude", fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft * -dir).Combine() * amplitudeMultiplier);
-                    GUI.DrawLine(spriteBatch, referencePoint, widgetDrawPos, Color.Red);
+                    TryUpdateValue("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * lengthMultiplier, 0, 100));
+                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
+                    if (points > 0)
+                    {
+                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    }
                 });
-                GUI.DrawLine(spriteBatch, referencePoint, widgetDrawPos, Color.Red);
+                // Amplitude
+                DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Wave Amplitude", () =>
+                {
+                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * amplitudeMultiplier * dir, -2, 2));
+                    GUI.DrawLine(spriteBatch, start, control, Color.Purple);
+                    if (points > 0)
+                    {
+                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    }
+                });
             }
             // Human swim only -->
             else if (humanSwimParams != null)
@@ -734,25 +748,6 @@ namespace Barotrauma
                     onPressed();
                 }
             }
-            // Bezier test
-            //if (PlayerInput.LeftButtonHeld())
-            //{
-            //    Vector2 start = drawPoint.ToVector2();
-            //    Vector2 end = start + new Vector2(50, 0);
-            //    Vector2 dir = end - start;
-            //    Vector2 control = start + dir / 2 + new Vector2(0, -20);
-            //    var points = new Vector2[10];
-            //    for (int i = 0; i < points.Length; i++)
-            //    {
-            //        float t = (float)i / (points.Length - 1);
-            //        Vector2 pos = MathUtils.Bezier(start, control, end, t);
-            //        points[i] = pos;
-            //        //DebugConsole.NewMessage(i.ToString(), Color.White);
-            //        //DebugConsole.NewMessage(t.ToString(), Color.Blue);
-            //        //DebugConsole.NewMessage(pos.ToString(), Color.Red);
-            //        ShapeExtensions.DrawPoint(spriteBatch, pos, Color.White, size: 2);
-            //    }
-            //}
         }
         #endregion
 
