@@ -453,7 +453,7 @@ namespace Barotrauma
             drawPos += forward * animParams.Speed / multiplier;
             DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Speed", () =>
             {
-                TryUpdateValue("speed", MathHelper.Clamp(animParams.Speed + Vector2.Multiply(PlayerInput.MouseSpeed, forward).Combine() * multiplier, 0.1f, 6));
+                TryUpdateValue("speed", MathHelper.Clamp(animParams.Speed + Vector2.Multiply(PlayerInput.MouseSpeed, forward).Combine() * multiplier, 0.1f, Ragdoll.MAX_SPEED));
                 GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
             });
             GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
