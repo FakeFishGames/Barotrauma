@@ -461,9 +461,6 @@ namespace Barotrauma
         /// </summary>
         public static GUIComponent UpdateMouseOn()
         {
-            //TODO: Optimize this. Calculating the MouseRect requires calculating the Rects of all the parents, 
-            //which adds up to a huge number of calculations per frame when there are lots of components on the screen.
-            //Maybe ClampMouseRectToParent should default to false and be enabled only when needed (mainly listboxes?)
             MouseOn = null;
             for (int i = updateList.Count - 1; i >= 0; i--)
             {

@@ -202,7 +202,7 @@ namespace Barotrauma
             get { return RectTransform.Rect; }
         }
 
-        public virtual bool ClampMouseRectToParent { get; set; } = true;
+        public bool ClampMouseRectToParent { get; set; } = false;
         public virtual Rectangle MouseRect
         {
             get

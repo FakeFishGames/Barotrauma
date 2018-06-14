@@ -955,8 +955,7 @@ namespace Barotrauma
         public bool VotableClicked(GUIComponent component, object userData)
         {
             if (GameMain.Client == null) return false;
-
-            //TODO: test voting
+            
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
@@ -1472,10 +1471,7 @@ namespace Barotrauma
                     };
 
                     var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
-                        TextManager.Get("Back"))
-                    {
-                        ClampMouseRectToParent = false
-                    };
+                        TextManager.Get("Back"));
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
                     var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.1f), campaignContainer.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
@@ -1489,10 +1485,7 @@ namespace Barotrauma
                     List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
-                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString())
-                        {
-                            ClampMouseRectToParent = false
-                        };
+                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString());
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);

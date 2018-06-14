@@ -85,7 +85,6 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             toggleCrewButton = new GUIButton(new RectTransform(new Point(25,70), crewArea.RectTransform, Anchor.CenterLeft), "", style: "GUIButtonHorizontalArrow");
-            toggleCrewButton.ClampMouseRectToParent = false;
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleCrewAreaOpen = !toggleCrewAreaOpen;
@@ -105,13 +104,9 @@ namespace Barotrauma
 
             scrollButtonUp = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
             {
-                ClampMouseRectToParent = false,
                 Visible = false
             };
-            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                ClampMouseRectToParent = false
-            };
+            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow");
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
             scrollButtonDown.Visible = false;
 

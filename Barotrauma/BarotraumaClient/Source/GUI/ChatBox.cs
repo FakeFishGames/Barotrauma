@@ -103,10 +103,7 @@ namespace Barotrauma
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
 
             toggleButton = new GUIButton(new RectTransform(new Point(25, 70), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(10, 0) },
-                style: "GUIButtonHorizontalArrow")
-            {
-                ClampMouseRectToParent = false
-            };
+                style: "GUIButtonHorizontalArrow");
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleOpen = !toggleOpen;
@@ -123,10 +120,7 @@ namespace Barotrauma
             if (isSinglePlayer)
             {
                 radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), guiFrame.RectTransform, Anchor.BottomRight, Pivot.Center),
-                    style: null)
-                {
-                    ClampMouseRectToParent = false
-                };
+                    style: null);
                 new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
                 {
                     Color = Color.White * 0.8f
@@ -147,10 +141,7 @@ namespace Barotrauma
                 };
 
                 radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
-                    style: null)
-                {
-                    ClampMouseRectToParent = false
-                };
+                    style: null);
                 new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
                 {

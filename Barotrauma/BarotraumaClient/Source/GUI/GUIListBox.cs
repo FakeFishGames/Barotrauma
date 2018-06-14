@@ -244,6 +244,10 @@ namespace Barotrauma
 
             if (childrenNeedsRecalculation)
             {
+                foreach (GUIComponent child in Content.Children)
+                {
+                    ClampChildMouseRects(child);
+                }
                 RepositionChildren();
                 childrenNeedsRecalculation = false;
             }
@@ -275,6 +279,15 @@ namespace Barotrauma
                 ScrollBar.AddToGUIUpdateList(false, order);
             }
             OnAddedToGUIUpdateList?.Invoke(this);
+        }
+
+        private void ClampChildMouseRects(GUIComponent child)
+        {
+            child.ClampMouseRectToParent = true;
+            foreach (GUIComponent grandChild in child.Children)
+            {
+                ClampChildMouseRects(grandChild);
+            }
         }
 
         protected override void Update(float deltaTime)
