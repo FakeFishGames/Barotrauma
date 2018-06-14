@@ -7,4 +7,5 @@
   headposition="0.5"
   torsoposition="0.4"
   headangle="-90"
-  torsoangle="-120"/>
+  torsoangle="-120"
+  footrotation="NaN" />

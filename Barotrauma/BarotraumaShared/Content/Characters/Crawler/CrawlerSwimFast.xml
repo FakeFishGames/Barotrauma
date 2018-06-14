@@ -1,7 +1,7 @@
 ﻿<CrawlerSwimFast
-  speed="9"
+  speed="4"
   steertorque="20"
-  waveamplitude="0.05"
+  waveamplitude="0.08"
   wavelength="30"
   flip="True"
   headangle="-70"
