@@ -321,16 +321,18 @@
     <Sprite texture="Content/LevelObjects/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
   </icechunk>
 
-  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
+  <blacksmoker1 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-5,5" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <overridecommonness commonness="3" leveltype="Ridge" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine"
-             force="0,1.0" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
+             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
-             force="0,4" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
-      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
+             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
+      <Attack onlyhumans="true">
+        <affliction name="Burn" strength="1"/>
+      </Attack>
     </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
@@ -348,17 +350,19 @@
       anglemax="120"
       velocitymin="100"
       velocitymax="600"/>
-  </blacksmoker>
+  </blacksmoker1>
 
-  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
+  <blacksmoker2 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine"
-             force="0,1.0" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
+             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character"
-             force="0,4" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
-      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
+             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
+      <Attack onlyhumans="true">
+        <affliction name="Burn" strength="1"/>
+      </Attack>
     </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
@@ -376,17 +380,19 @@
       anglemax="120"
       velocitymin="100"
       velocitymax="600"/>
-  </blacksmoker>
+  </blacksmoker2>
 
-  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
+  <blacksmoker3 spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
     <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,4000"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="3" triggeredby="Submarine" 
-             force="0,1.0" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
+             force="0,1.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1"/>
     <Trigger position="0,7000" radius="2000" height="10000" camerashake="1" triggeredby="Character" 
-             force="0,4" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
-      <Attack burndamage="10.0" duration="1.0" onlyhumans="true"/>
+             force="0,4" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="300" forcefluctuationstrength="0.5" forcefluctuationfrequency="0.1">
+      <Attack onlyhumans="true">
+        <affliction name="Burn" strength="1"/>
+      </Attack>
     </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
@@ -404,20 +410,40 @@
       anglemax="120"
       velocitymin="100"
       velocitymax="600"/>
-  </blacksmoker>
+  </blacksmoker3>
 
   <lavavent spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
-    <LightSource range="4000" color="1,0.8,0.6,1"/>
+    <LightSource range="4000" color="1,0.0,0.0,1"/>
+    <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5">
+      <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character"
+              force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
+        <Attack>
+          <affliction name="Burn" strength="20"/>
+        </Attack>
+      </Trigger>
+      <Sound file ="Content/Sounds/Water/BlackSmoker.ogg" range="7000" position="0,700"/>
+      <ParticleEmitter
+        particle="lavasplash"
+        particlespersecond="100"
+        position="-50,700"
+        anglemin="70" anglemax="110"
+        velocitymin="500" velocitymax="5000"/>
+      <ParticleEmitter
+        particle="lavachunk"
+        particlespersecond="40"
+        position="-50,700"
+        anglemin="70" anglemax="110"
+        velocitymin="2500" velocitymax="4000"/>
+    </Trigger>
+
     <ParticleEmitter
-      particle="lavasplash"
-      particlespersecond="100"
+      particle="hydrosmokesmall"
+      particlespersecond="10"
       position="-50,700"
-      anglemin="70"
-      anglemax="110"
-      velocitymin="100"
-      velocitymax="3000"/>
+      anglemin="60" anglemax="120"
+      velocitymin="100" velocitymax="600"/>
   </lavavent>
 
   <watercurrent1 spawnpos="MainPath" alignment="Top, Left, Right, Bottom" minsize="0.5" maxsize="2.0" randomrotation="0,360" commonness="0">

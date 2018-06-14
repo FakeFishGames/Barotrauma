@@ -249,23 +249,7 @@ namespace Barotrauma
                         break;
                     case "leveltrigger":
                     case "trigger":
-                        LevelTriggerElements.Add(subElement);
-                        OverrideProperties.Add(null);
-                        foreach (XElement overridePropertiesElement in subElement.Elements())
-                        {
-                            if (overridePropertiesElement.Name.ToString().ToLowerInvariant() == "overrideproperties")
-                            {
-                                var propertyOverride = new LevelObjectPrefab(overridePropertiesElement);
-                                OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
-                                if (propertyOverride.Sprite == null && propertyOverride.DeformableSprite == null)
-                                {
-                                    propertyOverride.Sprite = Sprite;
-                                    propertyOverride.DeformableSprite = DeformableSprite;
-                                }
-
-                                break;
-                            }
-                        }
+                        LoadTrigger(subElement);
                         break;
                     case "childobject":
                         ChildObjects.Add(new ChildObject(subElement));
@@ -282,6 +266,31 @@ namespace Barotrauma
             {
                 if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
                 if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
+            }
+        }
+
+        private void LoadTrigger(XElement element)
+        {
+            LevelTriggerElements.Add(element);
+            OverrideProperties.Add(null);
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "overrideproperties":
+                        var propertyOverride = new LevelObjectPrefab(subElement);
+                        OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
+                        if (propertyOverride.Sprite == null && propertyOverride.DeformableSprite == null)
+                        {
+                            propertyOverride.Sprite = Sprite;
+                            propertyOverride.DeformableSprite = DeformableSprite;
+                        }
+                        break;
+                    case "leveltrigger":
+                    case "trigger":
+                        LoadTrigger(subElement);
+                        break;
+                }
             }
         }
 

@@ -88,6 +88,7 @@
     startcolor="1.0, 1.0, 1.0" startalpha="0.8"
     colorchange="0.0, 0.0, 0.0, -0.5"
     lifetime="3"
+    growtime="0.1"
     deleteoncollision="true"
     drawtarget="water"
     velocitychange="0.0, 0.1">
@@ -413,7 +414,7 @@
     friction="0"
     restitution="0"
     startsizemin="2,2"
-    startsizemax="4,4"
+    startsizemax="6,6"
     sizechangemin="2,2"
     sizechangemax="8,8"
     growtime="0.15"
@@ -428,6 +429,43 @@
     <animatedsprite texture="Content/Particles/Spatter2.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.5,0.5"/>
     <animatedsprite texture="Content/Particles/Spatter3.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.3,0.5"/>
   </lavasplash>
+  
+  <lavachunk
+    lifetime="2"
+    angularvelocitymin="-200"
+    angularvelocitymax="200"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,-8"
+    velocitychangewater="0,-20"
+    collisionradius="10"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="1,1"
+    startsizemax="5,5"
+    sizechangemin="-1,-1"
+    sizechangemax="-1,-1"
+    growtime="0.1"
+    startcolor="1,1,1,1"
+    startalpha="1"
+    colorchange="-0.25,-3,-5,0"
+    drawtarget="Water"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+  </lavachunk>
 
   <explosionfire
     lifetime="1"
