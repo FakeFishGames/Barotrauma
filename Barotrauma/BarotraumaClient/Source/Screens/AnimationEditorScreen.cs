@@ -467,20 +467,24 @@ namespace Barotrauma
                 {
                     if (humanGroundedParams != null)
                     {
-                        var widgetDrawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.pullJoint.WorldAnchorB.Y);
-                        DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
+                        drawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.pullJoint.WorldAnchorB.Y);
+                        DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
                             TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + 0.01f * PlayerInput.MouseSpeed.X * dir);
                             TryUpdateValue("headposition", humanGroundedParams.HeadPosition + 0.015f * - PlayerInput.MouseSpeed.Y);
+                            GUI.DrawLine(spriteBatch, drawPos, SimToScreen(head.SimPosition), Color.Red);
                         });
-                        var origin = widgetDrawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
+                        var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
                         GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
                     }
                     else
                     {
                         drawPos = SimToScreen(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
-                        DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position",
-                            () => TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y));
+                        DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position", () =>
+                        {
+                            TryUpdateValue("headposition", groundedParams.HeadPosition + 0.015f * -PlayerInput.MouseSpeed.Y);
+                            GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
+                        });
                     }
                 }
             }
@@ -500,6 +504,7 @@ namespace Barotrauma
                         {
                             TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + 0.01f * + PlayerInput.MouseSpeed.X * dir);
                             TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition + 0.015f * - PlayerInput.MouseSpeed.Y);
+                            GUI.DrawLine(spriteBatch, drawPos, SimToScreen(torso.SimPosition), Color.Red);
                         });
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
                         GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Red);
@@ -523,15 +528,21 @@ namespace Barotrauma
                 // Both
                 if (groundedParams != null)
                 {
-                    multiplier = 0.005f;
+                    multiplier = 0.01f;
                     referencePoint = SimToScreen(colliderBottom);
                     var v = groundedParams.StepSize / multiplier;
                     drawPos = referencePoint + new Vector2(v.X * dir, -v.Y);
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Step Size", () =>
                     {
-                        var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, -PlayerInput.MouseSpeed.Y) * multiplier;
-                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput);
+                        var input = new Vector2(PlayerInput.MouseSpeed.X, PlayerInput.MouseSpeed.Y);
+                        var transformedInput = input * dir;
+                        if (dir > 0)
+                        {
+                            transformedInput.Y = -transformedInput.Y;
+                        }
+                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsHeight / 2, 20), "transformed input: " + transformedInput.ToString(), Color.White);
+                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput * multiplier);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
                     GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
@@ -603,6 +614,7 @@ namespace Barotrauma
             // Human swim only -->
             else if (humanSwimParams != null)
             {
+                // Legs
                 multiplier = 100;
                 drawPos = SimToScreen(character.SimPosition - simSpaceForward / 2);
                 DrawCircularWidget(spriteBatch, drawPos, humanSwimParams.LegMoveAmount * multiplier, "Leg Movement", Color.Chartreuse, amount =>
@@ -610,6 +622,19 @@ namespace Barotrauma
                     TryUpdateValue("legmoveamount", amount / multiplier);
                     GUI.DrawString(spriteBatch, drawPos, humanSwimParams.LegMoveAmount.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
                 }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: true, displayAngle: false);
+                // Arms
+                multiplier = 0.01f;
+                referencePoint = charDrawPos + screenSpaceForward * 10;
+                var v = humanSwimParams.HandMoveAmount / multiplier;
+                drawPos = referencePoint + new Vector2(v.X * dir, v.Y);
+                var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
+                DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
+                {
+                    var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier;
+                    TryUpdateValue("handmoveamount", humanSwimParams.HandMoveAmount + transformedInput);
+                    GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
+                });
+                GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
             }
         }
 
@@ -618,45 +643,7 @@ namespace Barotrauma
             var animParams = character.AnimController.CurrentAnimationParams;
             if (animParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                UpdateValue(p, animParams, value);
-            }
-        }
-
-        /// <summary>
-        /// Note: currently only handles floats and vector2s.
-        /// </summary>
-        private void UpdateValue(SerializableProperty property, AnimationParams animationParams, object newValue)
-        {
-            if (!animationParams.SerializableEntityEditor.Fields.TryGetValue(property, out GUIComponent[] fields))
-            {
-                return;
-            }
-            if (newValue is float f)
-            {
-                foreach (var field in fields)
-                {
-                    if (field is GUINumberInput numInput)
-                    {
-                        if (numInput.InputType == GUINumberInput.NumberType.Float)
-                        {
-                            numInput.FloatValue = f;
-                        }
-                    }
-                }
-            }
-            else if (newValue is Vector2 v)
-            {
-                for (int i = 0; i < fields.Length; i++)
-                {
-                    var field = fields[i];
-                    if (field is GUINumberInput numInput)
-                    {
-                        if (numInput .InputType == GUINumberInput.NumberType.Float)
-                        {
-                            numInput.FloatValue = i == 0 ? v.X : v.Y;
-                        }
-                    }
-                }
+                animParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
 

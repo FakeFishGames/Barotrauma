@@ -33,6 +33,44 @@ namespace Barotrauma
         public Dictionary<SerializableProperty, GUIComponent[]> Fields { get; private set; } = new Dictionary<SerializableProperty, GUIComponent[]>();
 
         /// <summary>
+        /// Note: currently only handles floats and vector2s.
+        /// </summary>
+        public void UpdateValue(SerializableProperty property, object newValue)
+        {
+            if (!Fields.TryGetValue(property, out GUIComponent[] fields))
+            {
+                return;
+            }
+            if (newValue is float f)
+            {
+                foreach (var field in fields)
+                {
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = f;
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector2 v)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            numInput.FloatValue = i == 0 ? v.X : v.Y;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// This is the new editor.
         /// </summary>
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 20) : base(style, new RectTransform(Vector2.One, parent))
