@@ -4,6 +4,8 @@ using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
+using Barotrauma.SpriteDeformations;
 
 namespace Barotrauma
 {
@@ -16,6 +18,8 @@ namespace Barotrauma
         public Vector2 CurrentScaleOscillation;
 
         public float CurrentRotation;
+
+        private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
         public LightSource LightSource
         {
@@ -50,6 +54,12 @@ namespace Barotrauma
             private set;
         }
 
+        public Vector2[,] CurrentSpriteDeformation
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific()
         {
             CurrentSwingAmount = Prefab.SwingAmount;
@@ -78,7 +88,7 @@ namespace Barotrauma
                     IsBackground = true
                 };
             }
-
+            
             Sounds = new Sound[Prefab.Sounds.Count];
             SoundChannels = new SoundChannel[Prefab.Sounds.Count];
             SoundTriggers = new LevelTrigger[Prefab.Sounds.Count];
@@ -86,6 +96,18 @@ namespace Barotrauma
             {
                 Sounds[i] = Submarine.LoadRoundSound(Prefab.Sounds[i].SoundElement, false);
                 SoundTriggers[i] = Prefab.Sounds[i].TriggerIndex > -1 ? Triggers[Prefab.Sounds[i].TriggerIndex] : null;
+            }
+
+            foreach (XElement subElement in Prefab.Config.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "deformablesprite")
+                {
+                    foreach (XElement animationElement in subElement.Elements())
+                    {
+                        var newDeformation = SpriteDeformation.Load(animationElement);
+                        if (newDeformation != null) spriteDeformations.Add(newDeformation);
+                    }
+                }
             }
         }
 
@@ -127,6 +149,17 @@ namespace Barotrauma
             if (LightSource != null)
             {
                 LightSource.Rotation = CurrentRotation;
+            }
+
+            //TODO: only do this if the sprite is visible?
+            if (spriteDeformations.Count > 0)
+            {
+                foreach (SpriteDeformation deformation in spriteDeformations)
+                {
+                    deformation.Update(deltaTime);
+                }
+
+                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations);
             }
 
             for (int i = 0; i < Sounds.Length; i++)

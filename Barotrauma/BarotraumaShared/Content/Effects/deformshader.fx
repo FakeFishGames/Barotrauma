@@ -56,7 +56,7 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
 	{
         lerp(
 			lerp(deformTopLeft, deformTopRight, (normalizedUv.x % divX) / divX),
-			lerp(deformBottomLeft, deformBottomRight, (normalizedUv.y % divY) / divY),
+			lerp(deformBottomLeft, deformBottomRight, (normalizedUv.x % divX) / divX),
 			(normalizedUv.y % divY) / divY)
     };
 

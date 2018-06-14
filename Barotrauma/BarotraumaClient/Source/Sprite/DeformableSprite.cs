@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -8,20 +9,30 @@ namespace Barotrauma
 {
     partial class DeformableSprite
     {
+        private static List<DeformableSprite> list = new List<DeformableSprite>();
+
         private int triangleCount;
-        private VertexPositionColorTexture[] vertices;
-        private ushort[] indices;
 
         private VertexBuffer vertexBuffer;
         private IndexBuffer indexBuffer;
+
+        Vector2 uvTopLeft, uvBottomRight;
 
         private Vector2[] deformAmount;
         private int deformArrayWidth, deformArrayHeight;
 
         private int subDivX, subDivY;
 
+        //TODO: OpenGL version of the deform shader
+        private static Effect effect;
+
         partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
+            if (effect == null)
+            {
+                effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader");
+            }
+
             sprite = new Sprite(element);
 
             //use subdivisions configured in the xml if the arguments passed to the method are null
@@ -34,16 +45,37 @@ namespace Barotrauma
                 throw new ArgumentException("Deformable sprites must have one or more subdivisions on each axis.");
             }
 
+            foreach (DeformableSprite existing in list)
+            {
+                //share vertex and index buffers if there's already 
+                //an existing sprite with the same texture and subdivisions
+                if (existing.sprite.Texture == sprite.Texture && existing.subDivX == subDivX && existing.subDivY == subDivY)
+                {
+                    vertexBuffer = existing.vertexBuffer;
+                    indexBuffer = existing.indexBuffer;
+                    triangleCount = existing.triangleCount;
+                    uvTopLeft = existing.uvTopLeft;
+                    uvBottomRight = existing.uvBottomRight;
+                    
+                    Deform(new Vector2[,]
+                    {
+                        { Vector2.Zero, Vector2.Zero },
+                        { Vector2.Zero, Vector2.Zero }
+                    });
+                    return;
+                }
+            }
+
             Vector2 textureSize = new Vector2(sprite.Texture.Width, sprite.Texture.Height);
-            Vector2 texelTopLeft = Vector2.Divide(sprite.SourceRect.Location.ToVector2(), textureSize);
-            Vector2 texelBottomRight = Vector2.Divide((sprite.SourceRect.Location + sprite.SourceRect.Size).ToVector2(), textureSize);
+            uvTopLeft = Vector2.Divide(sprite.SourceRect.Location.ToVector2(), textureSize);
+            uvBottomRight = Vector2.Divide((sprite.SourceRect.Location + sprite.SourceRect.Size).ToVector2(), textureSize);
 
-            System.Diagnostics.Debug.Assert(texelTopLeft.X < texelBottomRight.X);
-            System.Diagnostics.Debug.Assert(texelTopLeft.Y < texelBottomRight.Y);
+            System.Diagnostics.Debug.Assert(uvTopLeft.X < uvBottomRight.X);
+            System.Diagnostics.Debug.Assert(uvTopLeft.Y < uvBottomRight.Y);
 
-            vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
+            var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
             triangleCount = subDivX * subDivY * 2;
-            indices = new ushort[triangleCount * 3];
+            var indices = new ushort[triangleCount * 3];
             for (int x = 0; x <= subDivX; x++)
             {
                 for (int y = 0; y <= subDivY; y++)
@@ -54,7 +86,7 @@ namespace Barotrauma
                     vertices[x + y * (subDivX + 1)] = new VertexPositionColorTexture(
                         position: new Vector3(relativePos.X * sprite.SourceRect.Width, relativePos.Y * sprite.SourceRect.Height, 0.0f),
                         color: Color.White,
-                        textureCoordinate: texelTopLeft + (texelBottomRight - texelTopLeft) * relativePos);
+                        textureCoordinate: uvTopLeft + (uvBottomRight - uvTopLeft) * relativePos);
                 }
             }
 
@@ -82,6 +114,8 @@ namespace Barotrauma
                 { Vector2.Zero, Vector2.Zero },
                 { Vector2.Zero, Vector2.Zero }
             });
+
+            list.Add(this);
         }
 
 
@@ -92,21 +126,15 @@ namespace Barotrauma
         /// </summary>
         public void Deform(Func<Vector2, Vector2> deformFunction)
         {
-            //TODO: set deformAmount instead of modifying vertices
-            var deformedVertices = new VertexPositionColorTexture[vertices.Length];
+            var deformAmount = new Vector2[subDivX + 1, subDivY + 1];
             for (int x = 0; x <= subDivX; x++)
             {
                 for (int y = 0; y <= subDivY; y++)
                 {
-                    Vector3 deform = new Vector3(deformFunction(new Vector2(x / (float)subDivX, y / (float)subDivY)), 0.0f);
-                    int vertexIndex = x + y * (subDivX + 1);
-                    deformedVertices[vertexIndex] = new VertexPositionColorTexture(
-                        position: vertices[vertexIndex].Position + deform,
-                        color: vertices[vertexIndex].Color,
-                        textureCoordinate: vertices[vertexIndex].TextureCoordinate);
+                    deformAmount[x, y] = deformFunction(new Vector2(x / (float)subDivX, y / (float)subDivY));
                 }
             }
-            vertexBuffer.SetData(deformedVertices);
+            Deform(deformAmount);
         }
 
         public void Deform(Vector2[,] deform)
@@ -132,7 +160,7 @@ namespace Barotrauma
             });
         }
 
-        public void Draw(Effect effect, Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
+        public void Draw(Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
         {
             Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
@@ -145,8 +173,8 @@ namespace Barotrauma
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
-            effect.Parameters["uvTopLeft"].SetValue(vertices[0].TextureCoordinate);
-            effect.Parameters["uvBottomRight"].SetValue(vertices.Last().TextureCoordinate);
+            effect.Parameters["uvTopLeft"].SetValue(uvTopLeft);
+            effect.Parameters["uvBottomRight"].SetValue(uvBottomRight);
             effect.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             effect.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
@@ -158,6 +186,15 @@ namespace Barotrauma
         {
             sprite?.Remove();
             sprite = null;
+
+            list.Remove(this);
+
+            foreach (DeformableSprite otherSprite in list)
+            {
+                //another sprite is using the same vertex buffer, cannot dispose it yet
+                if (otherSprite.vertexBuffer == vertexBuffer) return;
+            }
+
             vertexBuffer?.Dispose();
             vertexBuffer = null;
             indexBuffer?.Dispose();

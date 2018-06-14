@@ -12,14 +12,9 @@ namespace Barotrauma
         private List<LevelObject> visibleObjectsFront = new List<LevelObject>();
 
         private Rectangle currentGridIndices;
-
-        private Effect effect;
-
+        
         partial void InitProjSpecific()
         {
-            //TODO: OpenGL version of the deform shader
-            //TODO: move deform shader to DeformableSprite?
-            effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader");
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -135,11 +130,23 @@ namespace Barotrauma
                     SpriteEffects.None,
                     z);
 
-                obj.ActivePrefab.DeformableSprite?.Draw(effect, cam,
-                    new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
-                    obj.ActivePrefab.DeformableSprite.Origin,
-                    obj.CurrentRotation,
-                    scale);
+                if (obj.ActivePrefab.DeformableSprite != null)
+                {
+                    if (obj.CurrentSpriteDeformation != null)
+                    {
+                        obj.ActivePrefab.DeformableSprite.Deform(obj.CurrentSpriteDeformation);
+                    }
+                    else
+                    {
+                        obj.ActivePrefab.DeformableSprite.Reset();
+                    }
+                    obj.ActivePrefab.DeformableSprite?.Draw(cam,
+                        new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
+                        obj.ActivePrefab.DeformableSprite.Origin,
+                        obj.CurrentRotation,
+                        scale);
+                }
+
                 
                 if (GameMain.DebugDraw)
                 {
@@ -163,12 +170,6 @@ namespace Barotrauma
 
                 z += 0.0001f;
             }
-        }
-
-        partial void RemoveProjSpecific()
-        {
-            effect?.Dispose();
-            effect = null;
         }
     }
 }

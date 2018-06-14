@@ -52,6 +52,8 @@ namespace Barotrauma
 
         public SpawnPosType SpawnPos;
 
+        public readonly XElement Config;
+
         public readonly List<XElement> LevelTriggerElements;
 
         /// <summary>
@@ -199,6 +201,8 @@ namespace Barotrauma
 
         public LevelObjectPrefab(XElement element)
         {
+            Config = element;
+
             Name = element.Name.ToString();
 
             ChildObjects = new List<ChildObject>();
