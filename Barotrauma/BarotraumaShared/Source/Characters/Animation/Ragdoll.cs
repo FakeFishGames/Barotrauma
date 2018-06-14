@@ -196,6 +196,8 @@ namespace Barotrauma
             }
         }
 
+        public const float MAX_SPEED = 6;
+
         public Vector2 TargetMovement
         {
             get 
@@ -205,8 +207,8 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                targetMovement.X = MathHelper.Clamp(value.X, -5.0f, 5.0f);
-                targetMovement.Y = MathHelper.Clamp(value.Y, -5.0f, 5.0f);
+                targetMovement.X = MathHelper.Clamp(value.X, -MAX_SPEED, MAX_SPEED);
+                targetMovement.Y = MathHelper.Clamp(value.Y, -MAX_SPEED, MAX_SPEED);
             }
         }
 
