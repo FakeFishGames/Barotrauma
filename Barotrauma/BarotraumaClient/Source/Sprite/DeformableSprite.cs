@@ -22,15 +22,19 @@ namespace Barotrauma
         private int deformArrayWidth, deformArrayHeight;
 
         private int subDivX, subDivY;
-
-        //TODO: OpenGL version of the deform shader
+        
         private static Effect effect;
 
         partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY)
         {
             if (effect == null)
             {
+#if WINDOWS
                 effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader");
+#endif
+#if LINUX || OSX                
+                effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader_opengl");
+#endif
             }
 
             sprite = new Sprite(element);
