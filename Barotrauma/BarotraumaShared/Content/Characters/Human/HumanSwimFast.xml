@@ -1,8 +1,10 @@
 ﻿<HumanSwimFast
-  speed="0.9600011"
+  speed="1.6"
   steertorque="25"
   headangle="19.5"
   torsoangle="0"
-  legmoveamount="1"
-  handmoveamount="1,0"
-  handmoveoffset="0,0"/>
+  legmoveamount="1.05"
+  handmoveamount="2,0"
+  handmoveoffset="0,0"
+  legcyclespeed="11.4"
+  handcyclespeed="5" />
