@@ -526,14 +526,16 @@ namespace Barotrauma
                 {
                     multiplier = 0.005f;
                     referencePoint = SimToScreen(colliderBottom);
-                    drawPos = referencePoint - groundedParams.StepSize / multiplier;
-                    var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0);
+                    var v = groundedParams.StepSize / multiplier;
+                    drawPos = referencePoint + new Vector2(v.X * dir, -v.Y);
+                    var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Step Size", () =>
                     {
-                        TryUpdateValue("stepsize", groundedParams.StepSize -PlayerInput.MouseSpeed * multiplier);
+                        var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, -PlayerInput.MouseSpeed.Y) * multiplier;
+                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
-                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
+                    GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
                 }
             }
             // Human grounded only -->
@@ -552,15 +554,17 @@ namespace Barotrauma
                 if (hand != null || arm != null)
                 {
                     multiplier = 0.02f;
-                    referencePoint = SimToScreen(character.SimPosition) + Vector2.UnitX;
-                    drawPos = referencePoint - humanGroundedParams.HandMoveAmount / multiplier;
-                    var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0);
+                    referencePoint = charDrawPos;
+                    var v = humanGroundedParams.HandMoveAmount / multiplier;
+                    drawPos = referencePoint + new Vector2(v.X * dir, v.Y);
+                    var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                     {
-                        TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount - PlayerInput.MouseSpeed * multiplier);
+                        var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier;
+                        TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
-                    GUI.DrawLine(spriteBatch, origin, origin - Vector2.UnitX * 5, Color.Blue);
+                    GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
                 }
             }
             // Fish swim only -->
