@@ -8,6 +8,12 @@ namespace Barotrauma
 {
     partial class LevelObjectPrefab : ISerializableEntity
     {
+        private static List<LevelObjectPrefab> list = new List<LevelObjectPrefab>();
+        public static List<LevelObjectPrefab> List
+        {
+            get { return list; }
+        }
+
         public class ChildObject
         {
             public readonly List<string> AllowedNames;
@@ -197,6 +203,40 @@ namespace Barotrauma
         public override string ToString()
         {
             return "LevelObjectPrefab (" + Name + ")";
+        }
+
+        public static void LoadAll()
+        {
+            var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
+            if (files.Count() > 0)
+            {
+                foreach (var file in files)
+                {
+                    LoadConfig(file);
+                }
+            }
+            else
+            {
+                LoadConfig("Content/LevelObjects/LevelObject/Prefabs.xml");
+            }
+        }
+
+        private static void LoadConfig(string configPath)
+        {
+            try
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(configPath);
+                if (doc == null || doc.Root == null) return;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    list.Add(new LevelObjectPrefab(element));
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
+            }
         }
 
         public LevelObjectPrefab(XElement element)

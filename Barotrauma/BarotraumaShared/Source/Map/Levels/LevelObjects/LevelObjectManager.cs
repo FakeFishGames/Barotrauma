@@ -1,7 +1,9 @@
 ﻿#if CLIENT
 using Barotrauma.Particles;
 #endif
+using Barotrauma.Networking;
 using FarseerPhysics;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,47 +13,15 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class LevelObjectManager
+    partial class LevelObjectManager : Entity, IServerSerializable
     {
         const int GridSize = 2000;
 
-        private List<LevelObjectPrefab> prefabs = new List<LevelObjectPrefab>();
-
         private List<LevelObject> objects;
         private List<LevelObject>[,] objectGrid;
-        
-        public LevelObjectManager(string configPath)
-        {
-            LoadConfig(configPath);
-            InitProjSpecific();
-        }
-        public LevelObjectManager(IEnumerable<string> files)
-        {
-            foreach (var file in files)
-            {
-                LoadConfig(file);
-            }
-            InitProjSpecific();
-        }
 
-        partial void InitProjSpecific();
-
-        private void LoadConfig(string configPath)
+        public LevelObjectManager() : base(null)
         {
-            try
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null || doc.Root == null) return;
-
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    prefabs.Add(new LevelObjectPrefab(element));
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
-            }
         }
 
         class SpawnPosition
@@ -165,7 +135,7 @@ namespace Barotrauma
                     int childCount = Rand.Range(child.MinCount, child.MaxCount, Rand.RandSync.Server);
                     for (int j = 0; j < childCount; j++)
                     {
-                        var matchingPrefabs = prefabs.Where(p => child.AllowedNames.Contains(p.Name));
+                        var matchingPrefabs = LevelObjectPrefab.List.Where(p => child.AllowedNames.Contains(p.Name));
                         int prefabCount = matchingPrefabs.Count();
                         var childPrefab = prefabCount == 0 ? null : matchingPrefabs.ElementAt(Rand.Range(0, prefabCount, Rand.RandSync.Server));
                         if (childPrefab == null) continue;
@@ -364,6 +334,15 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
+                if (GameMain.Server != null)
+                {
+                    if (obj.NeedsNetworkSyncing)
+                    {
+                        GameMain.Server.CreateEntityEvent(this, new object[] { obj });
+                        obj.NeedsNetworkSyncing = false;
+                    }
+                }
+
                 obj.ActivePrefab = obj.Prefab;
                 for (int i = 0; i < obj.Triggers.Count; i++)
                 {
@@ -400,10 +379,12 @@ namespace Barotrauma
 
         private LevelObjectPrefab GetRandomPrefab(string levelType)
         {
-            return ToolBox.SelectWeightedRandom(prefabs, prefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
+            return ToolBox.SelectWeightedRandom(
+                LevelObjectPrefab.List, 
+                LevelObjectPrefab.List.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
         }
 
-        public void Remove()
+        public override void Remove()
         {
             foreach (LevelObject obj in objects)
             {
@@ -411,8 +392,17 @@ namespace Barotrauma
             }
             objects.Clear();
             RemoveProjSpecific();
+
+            base.Remove();
         }
 
         partial void RemoveProjSpecific();
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            LevelObject obj = extraData[0] as LevelObject;
+            msg.WriteRangedInteger(0, objects.Count, objects.IndexOf(obj));
+            obj.ServerWrite(msg, c);
+        }
     }
 }
