@@ -130,7 +130,6 @@ namespace Barotrauma
                 }, category.ToString());
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
-                categoryButton.ClampMouseRectToParent = false;
 
                 if (category == MapEntityCategory.Equipment)
                 {

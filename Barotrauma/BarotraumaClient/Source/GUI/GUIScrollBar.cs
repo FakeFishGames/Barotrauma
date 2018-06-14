@@ -20,12 +20,7 @@ namespace Barotrauma
         
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
-
-        /// <summary>
-        /// Scroll bar can be positioned outside of the parent. Clamping to parent, effectively makes the scroll bar non-interactive.
-        /// </summary>
-        public override bool ClampMouseRectToParent { get; set; } = false;
-
+        
         public bool IsBooleanSwitch;
 
         private float minValue;

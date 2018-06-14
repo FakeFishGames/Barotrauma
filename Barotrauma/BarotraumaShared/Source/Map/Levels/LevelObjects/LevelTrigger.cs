@@ -366,18 +366,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (triggerers.Count > 0)
-            {
-                int adfdg = 1;
-            }
-
-            if (ParentTrigger != null)
-            {
-                int dfkmklgmh = 1;
-            }
-
             if (ParentTrigger != null && !ParentTrigger.IsTriggered) return;
-
 
             triggerers.RemoveWhere(t => t.Removed);
 

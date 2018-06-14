@@ -49,14 +49,12 @@ namespace Barotrauma
 
             var crewButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"))
             {
-                ClampMouseRectToParent = false,
                 UserData = InfoFrameTab.Crew,
                 OnClicked = SelectInfoFrameTab
             };
 
             var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"))
             {
-                ClampMouseRectToParent = false,
                 UserData = InfoFrameTab.Mission,
                 OnClicked = SelectInfoFrameTab
             };
@@ -65,7 +63,6 @@ namespace Barotrauma
             {
                 var manageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("ManagePlayers"))
                 {
-                    ClampMouseRectToParent = false,
                     UserData = InfoFrameTab.ManagePlayers,
                     OnClicked = SelectInfoFrameTab
                 };
