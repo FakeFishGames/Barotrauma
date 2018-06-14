@@ -571,7 +571,7 @@ namespace Barotrauma
             {
                 // TODO: draw a sine curve instead?
                 var lengthMultiplier = 0.25f;
-                var amplitudeMultiplier = 0.005f;
+                var amplitudeMultiplier = 0.01f;
                 referencePoint = charDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2;
                 drawPos = referencePoint;
                 drawPos -= screenSpaceForward * fishSwimParams.WaveLength / lengthMultiplier;
@@ -592,7 +592,7 @@ namespace Barotrauma
                 // Amplitude
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Wave Amplitude", () =>
                 {
-                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * amplitudeMultiplier * dir, -2, 2));
+                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * amplitudeMultiplier * dir, -3, 3));
                     GUI.DrawLine(spriteBatch, start, control, Color.Purple);
                     if (points > 0)
                     {
