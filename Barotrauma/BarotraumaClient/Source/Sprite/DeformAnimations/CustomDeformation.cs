@@ -19,7 +19,9 @@ namespace Barotrauma.SpriteDeformations
         {
             frequency = element.GetAttributeFloat("frequency", 0.0f);
             amplitude = element.GetAttributeFloat("amplitude", 1.0f);
-            
+
+            phase = Rand.Range(0.0f, MathHelper.TwoPi);
+
             List<Vector2[]> deformRows = new List<Vector2[]>();
             for (int i = 0; ; i++)
             {
