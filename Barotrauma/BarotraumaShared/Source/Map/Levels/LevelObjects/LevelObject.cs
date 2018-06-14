@@ -81,5 +81,10 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
+        public override string ToString()
+        {
+            return "LevelObject (" + ActivePrefab.Name + ")";
+        }
     }
 }

@@ -18,6 +18,11 @@ namespace Barotrauma
             set { sprite.Origin = value; }
         }
 
+        public Sprite Sprite
+        {
+            get { return sprite; }
+        }
+
         public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null)
         {
             sprite = new Sprite(element);

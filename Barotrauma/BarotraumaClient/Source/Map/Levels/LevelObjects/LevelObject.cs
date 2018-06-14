@@ -159,7 +159,7 @@ namespace Barotrauma
                     deformation.Update(deltaTime);
                 }
 
-                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations);
+                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
             }
 
             for (int i = 0; i < Sounds.Length; i++)

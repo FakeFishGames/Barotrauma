@@ -200,16 +200,18 @@ namespace Barotrauma
                 Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero
             };
 
+            Sprite sprite = newObject.Prefab.Sprite ?? newObject.Prefab.DeformableSprite.Sprite;
+
             //calculate the positions of the corners of the rotated sprite
-            if (newObject.Prefab.Sprite != null)
+            if (sprite != null)
             {
-                Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
+                Vector2 halfSize = sprite.size * newObject.Scale / 2;
                 spriteCorners[0] = -halfSize;
                 spriteCorners[1] = new Vector2(-halfSize.X, halfSize.Y);
                 spriteCorners[2] = halfSize;
                 spriteCorners[3] = new Vector2(halfSize.X, -halfSize.Y);
 
-                Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
+                Vector2 pivotOffset = sprite.Origin * newObject.Scale - halfSize;
                 pivotOffset.X = -pivotOffset.X;
                 pivotOffset = new Vector2(
                     (float)(pivotOffset.X * Math.Cos(-newObject.Rotation) - pivotOffset.Y * Math.Sin(-newObject.Rotation)),
