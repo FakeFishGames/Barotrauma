@@ -28,6 +28,8 @@ namespace Barotrauma.SpriteDeformations
                     return new Inflate(element);
                 case "custom":
                     return new CustomDeformation(element);
+                case "noise":
+                    return new NoiseDeformation(element);
                 default:
                     DebugConsole.ThrowError("Could not load sprite deformation animation - \""+typeName+"\" is not a valid deformation type.");
                     return null;
@@ -50,7 +52,7 @@ namespace Barotrauma.SpriteDeformations
 
         public abstract void Update(float deltaTime);
 
-        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations)
+        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale)
         {
             Point resolution = animations.First().resolution;
             foreach (SpriteDeformation animation in animations)
@@ -75,10 +77,10 @@ namespace Barotrauma.SpriteDeformations
                         switch (animation.blendMode)
                         {
                             case BlendMode.Override:
-                                deformation[x,y] = animDeformation[x,y] * multiplier;
+                                deformation[x,y] = animDeformation[x,y] * scale * multiplier;
                                 break;
                             case BlendMode.Add:
-                                deformation[x, y] += animDeformation[x, y] * multiplier;
+                                deformation[x, y] += animDeformation[x, y] * scale * multiplier;
                                 break;
                             case BlendMode.Multiply:
                                 deformation[x, y] *= animDeformation[x, y] * multiplier;

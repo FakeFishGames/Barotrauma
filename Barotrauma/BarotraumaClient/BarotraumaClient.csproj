@@ -264,8 +264,9 @@
     <Compile Include="Source\Sprite\DeformableSprite.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\CustomDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
-    <Compile Include="Source\Sprite\Sprite.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\NoiseDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
+    <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
     <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />

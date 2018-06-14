@@ -35,9 +35,9 @@ VertexShaderOutput mainVS(in VertexShaderInput input)
 
 	int2 deformIndexTopLeft =
 	{ 
-		min(floor(normalizedUv.x * deformArrayWidth), deformArrayWidth - 1),
-		min(floor(normalizedUv.y * deformArrayHeight), deformArrayHeight - 1)
-	};
+        min(floor(normalizedUv.x * (deformArrayWidth - 1)), deformArrayWidth - 1),
+		min(floor(normalizedUv.y * (deformArrayHeight - 1)), deformArrayHeight - 1)
+    };
 	int2 deformIndexBottomRight =
 	{
 		min(deformIndexTopLeft.x + 1, deformArrayWidth - 1),
