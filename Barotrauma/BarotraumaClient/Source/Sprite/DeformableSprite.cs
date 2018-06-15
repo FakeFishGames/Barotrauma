@@ -53,7 +53,10 @@ namespace Barotrauma
             {
                 //share vertex and index buffers if there's already 
                 //an existing sprite with the same texture and subdivisions
-                if (existing.sprite.Texture == sprite.Texture && existing.subDivX == subDivX && existing.subDivY == subDivY)
+                if (existing.sprite.Texture == sprite.Texture && 
+                    existing.subDivX == subDivX && 
+                    existing.subDivY == subDivY && 
+                    existing.Sprite.SourceRect == Sprite.SourceRect)
                 {
                     vertexBuffer = existing.vertexBuffer;
                     indexBuffer = existing.indexBuffer;
