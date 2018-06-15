@@ -202,6 +202,8 @@ namespace Barotrauma
                 levelSeed = value;
                 backgroundSprite = LocationType.Random(levelSeed).Background;
                 seedBox.Text = levelSeed;
+
+                lastUpdateID++;
             }
         }
 
@@ -260,7 +262,6 @@ namespace Barotrauma
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
-            clientHiddenElements.Add(playYourself);
 
             //player list ------------------------------------------------------------------
 
@@ -597,6 +598,11 @@ namespace Barotrauma
             else if (GameMain.Client != null)
             {
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
+                if (!playYourself.Selected)
+                {
+                    playYourself.Selected = true;
+                    TogglePlayYourself(playYourself);
+                }
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
             }
 
@@ -1457,7 +1463,7 @@ namespace Barotrauma
             seedBox.Enabled = !enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (StartButton != null) StartButton.Visible = !enabled;            
+            if (StartButton != null) StartButton.Visible = !enabled && GameMain.Server != null;            
 
             if (enabled)
             {
@@ -1517,10 +1523,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
             if (string.IsNullOrWhiteSpace(seed)) return false;
-
             LevelSeed = seed;
-            lastUpdateID++;
-
             return true;
         }
         
@@ -1607,9 +1610,16 @@ namespace Barotrauma
             var matchingListSub = subList.Content.GetChildByUserData(sub);
             if (matchingListSub != null)
             {
-                subList.OnSelected -= VotableClicked;
-                subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
-                subList.OnSelected += VotableClicked;
+                if (subList.Parent is GUIDropDown subDropDown)
+                {
+                    subDropDown.SelectItem(sub);
+                }
+                else
+                {
+                    subList.OnSelected -= VotableClicked;
+                    subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
+                    subList.OnSelected += VotableClicked;
+                }
 
                 if (subList == SubList)
                     FailedSelectedSub = null;
