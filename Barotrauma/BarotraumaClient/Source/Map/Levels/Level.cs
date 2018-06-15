@@ -36,8 +36,11 @@ namespace Barotrauma
 
         public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
-            float brightness = MathHelper.Clamp(1.1f + (cam.Position.Y - Size.Y) / 100000.0f, 0.1f, 1.0f);            
-            GameMain.LightManager.AmbientLight = new Color(BackgroundColor * brightness, 1.0f);
+            float brightness = MathHelper.Clamp(1.1f + (cam.Position.Y - Size.Y) / 100000.0f, 0.1f, 1.0f);
+            var lightColorHLS = generationParams.AmbientLightColor.RgbToHLS();
+            lightColorHLS.Y *= brightness;
+
+            GameMain.LightManager.AmbientLight = ToolBox.HLSToRGB(lightColorHLS);
 
             graphics.Clear(BackgroundColor);
 

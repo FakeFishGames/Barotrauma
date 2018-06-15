@@ -303,12 +303,14 @@ namespace Barotrauma
 
         private void AssignBiomes()
         {
+            float locationRadius = size * 0.5f * generationParams.LocationRadius;
+
             var biomes = LevelGenerationParams.GetBiomes();
             Vector2 centerPos = new Vector2(size, size) / 2;
-            for (int i = 0; i< generationParams.DifficultyZones; i++)
+            for (int i = 0; i < generationParams.DifficultyZones; i++)
             {
-                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i + 1));
-                float zoneRadius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
+                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i));
+                float zoneRadius = locationRadius * ((i + 1.0f) / generationParams.DifficultyZones);
                 foreach (LocationConnection connection in connections)
                 {
                     if (connection.Biome != null) continue;

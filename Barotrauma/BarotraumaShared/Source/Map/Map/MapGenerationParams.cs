@@ -35,7 +35,7 @@ namespace Barotrauma
         public readonly bool ShowOverlay = true;
 #endif
 
-        [Serialize(9, true)]        
+        [Serialize(6, true)]        
         public int DifficultyZones { get; set; } //Number of difficulty zones
         
         [Serialize(2000, true)]
