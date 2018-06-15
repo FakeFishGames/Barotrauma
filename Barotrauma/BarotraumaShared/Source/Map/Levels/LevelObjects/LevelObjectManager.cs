@@ -262,8 +262,8 @@ namespace Barotrauma
                 }
             }
 #endif
-
             objects.Add(newObject);
+            newObject.Position.Z += (minX + minY) % 100.0f * 0.00001f;
 
             int xStart = (int)Math.Floor(minX / GridSize);
             int xEnd = (int)Math.Floor(maxX / GridSize);

@@ -34,11 +34,7 @@ namespace Barotrauma.SpriteDeformations
                 for (int y = 0; y < resolution.Y; y++)
                 {
                     float normalizedY = y / (float)(resolution.X - 1);
-
-                    Vector2 centerDiff = new Vector2(normalizedX - 0.5f, normalizedY - 0.5f);
-                    float centerDist = centerDiff.Length() * 2.0f;
-                    if (centerDist == 0.0f) continue;
-
+                    
                     deformation[x, y] = new Vector2(
                         (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase) - 0.5f,
                         (float)PerlinNoise.Perlin(normalizedX * frequency, normalizedY * frequency, phase + 0.5f) - 0.5f);
