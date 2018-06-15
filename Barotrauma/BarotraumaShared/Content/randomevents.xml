@@ -4,9 +4,9 @@
   <!-- easiest event set -->
   <EventSet minleveldifficulty="0" maxleveldifficulty="15" chooserandom="false">	 
 	  <Commonness commonness="5">
-	    <Override leveltype="Ridge" commonness="10"/>
-	    <Override leveltype="Wastes" commonness="10"/>
-	    <Override leveltype="Open" commonness="2"/>	   
+	    <Override leveltype="RidgeBasic" commonness="10"/>
+	    <Override leveltype="WastesBasic" commonness="10"/>
+	    <Override leveltype="VoidBasic" commonness="2"/>	   
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
@@ -68,9 +68,9 @@
   <!-- another easiest event set, with different trigger times -->
   <EventSet minleveldifficulty="0" maxleveldifficulty="15" chooserandom="false">	 
 	  <Commonness commonness="5">
-	    <Override leveltype="Ridge" commonness="10"/>
-	    <Override leveltype="Wastes" commonness="10"/>
-	    <Override leveltype="Open" commonness="2"/>	   
+	    <Override leveltype="RidgeBasic" commonness="10"/>
+	    <Override leveltype="WastesBasic" commonness="10"/>
+	    <Override leveltype="VoidBasic" commonness="2"/>	   
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
@@ -135,9 +135,9 @@
   <!-- easyish basic event set (a bunch of crawlers, mantises and a thresher) -->
   <EventSet minleveldifficulty="10" maxleveldifficulty="25" chooserandom="false">	 
 	  <Commonness commonness="5">
-	    <Override leveltype="Ridge" commonness="10"/>
-	    <Override leveltype="Wastes" commonness="10"/>
-	    <Override leveltype="Open" commonness="2"/>	   
+	    <Override leveltype="RidgeBasic" commonness="10"/>
+	    <Override leveltype="WastesBasic" commonness="10"/>
+	    <Override leveltype="VoidBasic" commonness="2"/>	   
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
@@ -198,9 +198,9 @@
   <!-- medium difficulty (a bunch of crawlers or mantises, moloch and some more crawlers or a thresher) -->
   <EventSet minleveldifficulty="20" maxleveldifficulty="40" chooserandom="false">
 	  <Commonness commonness="5">
-	    <Override leveltype="Ridge" commonness="10"/>
-	    <Override leveltype="Wastes" commonness="10"/>
-	    <Override leveltype="Open" commonness="2"/>
+	    <Override leveltype="RidgeBasic" commonness="10"/>
+	    <Override leveltype="WastesBasic" commonness="10"/>
+	    <Override leveltype="VoidBasic" commonness="2"/>
 	  </Commonness>
 
 	  <!-- always spawn a couple of artifacts	 -->
@@ -262,9 +262,9 @@
   <!-- medium difficulty (a bunch of husks, moloch, crawlers and mantises) -->
   <EventSet minleveldifficulty="30" maxleveldifficulty="60" chooserandom="false">
     <Commonness commonness="5">
-      <Override leveltype="Ridge" commonness="10"/>
-      <Override leveltype="Wastes" commonness="10"/>
-      <Override leveltype="Open" commonness="2"/>
+      <Override leveltype="RidgeBasic" commonness="10"/>
+      <Override leveltype="WastesBasic" commonness="10"/>
+      <Override leveltype="VoidBasic" commonness="2"/>
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
@@ -321,7 +321,7 @@
   <!-- high difficulty, common in open levels (multiple molochs and an endworm) -->
   <EventSet minleveldifficulty="50" maxleveldifficulty="80" chooserandom="false">
     <Commonness commonness="0">
-      <Override leveltype="Open" commonness="10"/>
+      <Override leveltype="VoidBasic" commonness="10"/>
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
@@ -373,9 +373,9 @@
   <!-- high difficulty (large swarm of crawlers, one moloch or one carrier, some husks, multiple threshers) -->
   <EventSet minleveldifficulty="80" maxleveldifficulty="100" chooserandom="false">
     <Commonness commonness="5">
-      <Override leveltype="Ridge" commonness="10"/>
-      <Override leveltype="Wastes" commonness="10"/>
-      <Override leveltype="Open" commonness="2"/>
+      <Override leveltype="RidgeBasic" commonness="10"/>
+      <Override leveltype="WastesBasic" commonness="10"/>
+      <Override leveltype="VoidBasic" commonness="2"/>
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->
@@ -461,9 +461,9 @@
   <!-- high difficulty (multiple mantises or crawlers almost immediately, a moloch or some threshers, more mantises, endworm) -->
   <EventSet minleveldifficulty="50" maxleveldifficulty="80">
     <Commonness commonness="5">
-      <Override leveltype="Ridge" commonness="10"/>
-      <Override leveltype="Wastes" commonness="10"/>
-      <Override leveltype="Open" commonness="2"/>
+      <Override leveltype="RidgeBasic" commonness="10"/>
+      <Override leveltype="WastesBasic" commonness="10"/>
+      <Override leveltype="VoidBasic" commonness="2"/>
     </Commonness>
 
     <!-- always spawn a couple of artifacts	 -->

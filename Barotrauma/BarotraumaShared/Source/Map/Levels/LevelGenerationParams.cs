@@ -89,6 +89,12 @@ namespace Barotrauma
         //which biomes can this type of level appear in
         private List<Biome> allowedBiomes = new List<Biome>();
 
+        public Color AmbientLightColor
+        {
+            get;
+            set;
+        }
+        
         public Color BackgroundColor
         {
             get;
@@ -287,6 +293,9 @@ namespace Barotrauma
 
             Vector3 colorVector = element.GetAttributeVector3("BackgroundColor", new Vector3(50, 46, 20));
             BackgroundColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
+
+            colorVector = element.GetAttributeVector3("AmbientLightColor", colorVector);
+            AmbientLightColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
             colorVector = element.GetAttributeVector3("WallColor", new Vector3(255,255,255));
             WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
