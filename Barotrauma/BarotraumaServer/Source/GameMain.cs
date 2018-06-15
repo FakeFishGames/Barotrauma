@@ -89,6 +89,7 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            LevelObjectPrefab.LoadAll();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();

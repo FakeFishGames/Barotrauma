@@ -75,7 +75,7 @@ namespace Barotrauma
 
         private List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
 
-        private static LevelObjectManager levelObjectManager;
+        private LevelObjectManager levelObjectManager;
 
         private List<Vector2> bottomPositions;
 
@@ -206,15 +206,8 @@ namespace Barotrauma
         {
             if (loaded != null) loaded.Unload();            
             loaded = this;
-
-            if (levelObjectManager == null)
-            {
-                var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
-                if (files.Count() > 0)
-                    levelObjectManager = new LevelObjectManager(files);
-                else
-                    levelObjectManager = new LevelObjectManager("Content/LevelObjects/LevelObject/Prefabs.xml");
-            }
+            
+            levelObjectManager = new LevelObjectManager();
 #if CLIENT
             if (backgroundCreatureManager == null)
             {

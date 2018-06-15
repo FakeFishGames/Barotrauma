@@ -359,6 +359,7 @@ namespace Barotrauma
 
             ParticleManager = new ParticleManager(GameScreen.Cam);
             ParticleManager.LoadPrefabs();
+            LevelObjectPrefab.LoadAll();
             DecalManager = new DecalManager();
         yield return CoroutineStatus.Running;
 

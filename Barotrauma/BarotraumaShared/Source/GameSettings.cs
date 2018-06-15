@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Xml;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -34,13 +35,34 @@ namespace Barotrauma
         private WindowMode windowMode;
 
         public List<string> jobNamePreferences;
-        
-        public bool UseSteamMatchmaking { get; set; }
-        public bool RequireSteamAuthentication { get; set; }
+
+        private bool useSteamMatchmaking;
+        private bool requireSteamAuthentication;
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
         public bool UseSteam;
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && UseSteam; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && UseSteam; }
+            set { useSteamMatchmaking = value; }
+        }
+#else
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
+            set { useSteamMatchmaking = value; }
+        }
 #endif
 
         public WindowMode WindowMode
@@ -206,11 +228,11 @@ namespace Barotrauma
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
 #if DEBUG
-            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && UseSteam;
-            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && UseSteam;
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #else
-            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && Steam.SteamManager.USE_STEAM;
-            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && Steam.SteamManager.USE_STEAM;
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
@@ -323,7 +345,9 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen));
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
 
             if (WasGameUpdated)
             {
@@ -410,8 +434,19 @@ namespace Barotrauma
                 tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
             }
             doc.Root.Add(tutorialElement);
+            
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
 
-            doc.Save(FilePath);
+            using (var writer = XmlWriter.Create(FilePath, settings))
+            {
+                doc.WriteTo(writer);
+                writer.Flush();
+            }
         }
     }
 }

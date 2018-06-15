@@ -1,6 +1,8 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -73,8 +75,7 @@ namespace Barotrauma
 
         public LevelTrigger ParentTrigger;
 
-        private Vector2 worldPosition;
-        
+        private Vector2 worldPosition;        
         public Vector2 WorldPosition
         {
             get { return worldPosition; }
@@ -130,7 +131,7 @@ namespace Barotrauma
             private set;
         }
         
-        public float ForceFluctuationFrequency
+        public float ForceFluctuationInterval
         {
             get;
             private set;
@@ -161,6 +162,19 @@ namespace Barotrauma
             get;
             private set;
         }
+
+
+        public bool UseNetworkSyncing
+        {
+            get;
+            private set;
+        }
+
+        public bool NeedsNetworkSyncing
+        {
+            get;
+            set;
+        }
                 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
@@ -189,9 +203,11 @@ namespace Barotrauma
             randomTriggerInterval = element.GetAttributeFloat("randomtriggerinterval", 0.0f);
             randomTriggerProbability = element.GetAttributeFloat("randomtriggerprobability", 0.0f);
 
+            UseNetworkSyncing = element.GetAttributeBool("networksyncing", false);
+
             unrotatedForce = element.GetAttributeVector2("force", Vector2.Zero);
-            ForceFluctuationFrequency = element.GetAttributeFloat("forcefluctuationfrequency", 0.01f);
-            ForceFluctuationStrength = element.GetAttributeFloat("forcefluctuationstrength", 0.0f);
+            ForceFluctuationInterval = element.GetAttributeFloat("forcefluctuationinterval", 0.01f);
+            ForceFluctuationStrength = MathHelper.Clamp(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f, 1.0f);
             ForceFalloff = element.GetAttributeBool("forcefalloff", true);
 
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
@@ -370,22 +386,31 @@ namespace Barotrauma
 
             triggerers.RemoveWhere(t => t.Removed);
 
-            if (ForceFluctuationStrength > 0.0f)
+            if (!UseNetworkSyncing || GameMain.Client == null)
             {
-                forceFluctuationTimer = (forceFluctuationTimer + ForceFluctuationFrequency * deltaTime) % 255.0f;
-                //use the position of the trigger as the y and z coordinates to sample from
-                //so different triggers won't fluctuate in the same rhythm
-                float noiseVal = MathHelper.Clamp((float)PerlinNoise.Perlin(forceFluctuationTimer, WorldPosition.X / 1000.0f, WorldPosition.Y / 1000.0f), 0.0f, 1.0f);
-                currentForceFluctuation = (float)Math.Pow(noiseVal, ForceFluctuationStrength);
-            }
-
-            if (randomTriggerProbability > 0.0f)
-            {
-                randomTriggerTimer += deltaTime;
-                if (randomTriggerTimer > randomTriggerInterval)
+                if (ForceFluctuationStrength > 0.0f)
                 {
-                    if (Rand.Range(0.0f, 1.0f) < randomTriggerProbability) triggeredTimer = stayTriggeredDelay;
-                    randomTriggerTimer = 0.0f;
+                    forceFluctuationTimer += deltaTime;
+                    if (forceFluctuationTimer > ForceFluctuationInterval)
+                    {
+                        NeedsNetworkSyncing = true;
+                        currentForceFluctuation = Rand.Range(1.0f - ForceFluctuationStrength, 1.0f);
+                        forceFluctuationTimer = 0.0f;
+                    }
+                }
+
+                if (randomTriggerProbability > 0.0f)
+                {
+                    randomTriggerTimer += deltaTime;
+                    if (randomTriggerTimer > randomTriggerInterval)
+                    {
+                        if (Rand.Range(0.0f, 1.0f) < randomTriggerProbability)
+                        {
+                            NeedsNetworkSyncing = true;
+                            triggeredTimer = stayTriggeredDelay;
+                        }
+                        randomTriggerTimer = 0.0f;
+                    }
                 }
             }
             
@@ -504,6 +529,18 @@ namespace Barotrauma
                 vel /= (float)Timing.Step;
             }
             return vel.ClampLength(ConvertUnits.ToDisplayUnits(ForceVelocityLimit)) * currentForceFluctuation;            
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c)
+        {
+            if (ForceFluctuationStrength > 0.0f)
+            {
+                msg.WriteRangedSingle(MathHelper.Clamp(currentForceFluctuation, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+            }
+            if (stayTriggeredDelay > 0.0f)
+            {
+                msg.WriteRangedSingle(MathHelper.Clamp(triggeredTimer, 0.0f, stayTriggeredDelay), 0.0f, stayTriggeredDelay, 16);
+            }
         }
     }
 }
