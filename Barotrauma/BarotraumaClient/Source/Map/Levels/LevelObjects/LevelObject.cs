@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.SpriteDeformations;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -182,6 +183,15 @@ namespace Barotrauma
                     SoundChannels[i].Dispose();
                     SoundChannels[i] = null;
                 }
+            }
+        }
+
+        public void ClientRead(NetBuffer msg)
+        {
+            for (int i = 0; i < Triggers.Count; i++)
+            {
+                if (!Triggers[i].UseNetworkSyncing) continue;
+                Triggers[i].ClientRead(msg);
             }
         }
 

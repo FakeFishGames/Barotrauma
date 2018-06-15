@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,10 +15,6 @@ namespace Barotrauma
 
         private Rectangle currentGridIndices;
         
-        partial void InitProjSpecific()
-        {
-        }
-
         partial void UpdateProjSpecific(float deltaTime)
         {
             foreach (LevelObject obj in visibleObjectsBack)
@@ -170,6 +168,12 @@ namespace Barotrauma
 
                 z += 0.0001f;
             }
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            int objIndex = msg.ReadRangedInteger(0, objects.Count);
+            objects[objIndex].ClientRead(msg);
         }
     }
 }
