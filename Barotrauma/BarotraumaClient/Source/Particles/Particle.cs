@@ -197,12 +197,14 @@ namespace Barotrauma.Particles
 
             size.X += sizeChange.X * deltaTime;
             size.Y += sizeChange.Y * deltaTime;  
-            
-            color.R = (byte)(color.R / 255.0f + colorChange.X * deltaTime);
-            color.G = (byte)(color.B / 255.0f + colorChange.Y * deltaTime);
-            color.B = (byte)(color.B / 255.0f + colorChange.Z * deltaTime);
-            alpha += colorChange.W * deltaTime;
-            
+
+            alpha += prefab.ColorChange.W * deltaTime;
+
+            color = new Color(
+                color.R / 255.0f + prefab.ColorChange.X * deltaTime,
+                color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
+                color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
+
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 animState += deltaTime;
