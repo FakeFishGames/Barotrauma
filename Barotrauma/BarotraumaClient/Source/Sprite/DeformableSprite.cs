@@ -164,12 +164,12 @@ namespace Barotrauma
             });
         }
 
-        public void Draw(Camera cam, Vector2 pos, Vector2 origin, float rotate, Vector2 scale)
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
         {
             Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
                 Matrix.CreateRotationZ(-rotate) *
-                Matrix.CreateTranslation(pos.X, pos.Y, 0.0f);
+                Matrix.CreateTranslation(pos);
 
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);
@@ -179,7 +179,6 @@ namespace Barotrauma
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
             effect.Parameters["uvTopLeft"].SetValue(uvTopLeft);
             effect.Parameters["uvBottomRight"].SetValue(uvBottomRight);
-            effect.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             effect.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();

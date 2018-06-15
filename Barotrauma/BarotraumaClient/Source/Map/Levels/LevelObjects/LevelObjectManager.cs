@@ -141,7 +141,7 @@ namespace Barotrauma
                         obj.ActivePrefab.DeformableSprite.Reset();
                     }
                     obj.ActivePrefab.DeformableSprite?.Draw(cam,
-                        new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
+                        new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f, z * 10.0f),
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
                         scale);
