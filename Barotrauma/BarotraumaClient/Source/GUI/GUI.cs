@@ -156,7 +156,7 @@ namespace Barotrauma
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
         /// </summary>
-        public static void Draw(float deltaTime, SpriteBatch spriteBatch)
+        public static void Draw(Camera cam, SpriteBatch spriteBatch)
         {
             updateList.ForEach(c => c.DrawAuto(spriteBatch));
 
@@ -274,7 +274,7 @@ namespace Barotrauma
                 }
             }
 
-            DrawMessages(spriteBatch, deltaTime);
+            DrawMessages(spriteBatch, cam);
 
             if (GameMain.DebugDraw)
             {
@@ -480,6 +480,44 @@ namespace Barotrauma
             RefreshUpdateList();
             UpdateMouseOn();
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
+            UpdateMessages(deltaTime);
+        }
+
+        private static void UpdateMessages(float deltaTime)
+        {
+            foreach (GUIMessage msg in messages)
+            {
+                if (msg.WorldSpace) continue;
+                msg.Timer -= deltaTime;
+
+                if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
+                {
+                    msg.Pos = Vector2.Lerp(Vector2.Zero, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), 1.0f - msg.Timer / msg.LifeTime);
+                }
+                else
+                {
+                    //enough space to show the full message, position it at the center of the msg area
+                    if (msg.Timer > 1.0f)
+                    {
+                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width / 2 - msg.Size.X / 2, 0), Math.Min(deltaTime * 10.0f, 1.0f));
+                    }
+                    else
+                    {
+                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), deltaTime * 10.0f);
+                    }
+                }
+                //only the first message (the currently visible one) is updated at a time
+                break;
+            }
+
+            foreach (GUIMessage msg in messages)
+            {
+                if (!msg.WorldSpace) continue;
+                msg.Timer -= deltaTime;                
+                msg.Pos += msg.Velocity * deltaTime;                
+            }
+
+            messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
         #region Element drawing
@@ -647,44 +685,43 @@ namespace Barotrauma
             return clicked;
         }
 
-        private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)
+        private static void DrawMessages(SpriteBatch spriteBatch, Camera cam)
         {
             if (messages.Count == 0) return;
 
-            Vector2 currPos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
+            bool useScissorRect = messages.Any(m => !m.WorldSpace);
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = HUDLayoutSettings.MessageAreaTop;
 
-            int i = 1;
             foreach (GUIMessage msg in messages)
             {
-                float alpha = 1.0f;
+                if (msg.WorldSpace) continue;
 
-                if (msg.LifeTime < 1.0f)
-                {
-                    alpha -= 1.0f - msg.LifeTime;
-                }
+                Vector2 drawPos = new Vector2(HUDLayoutSettings.MessageAreaTop.Right, HUDLayoutSettings.MessageAreaTop.Center.Y);
 
-                if (msg.AutoCenter)
-                {
-                    msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime * 20.0f);
-                    currPos.Y += 30.0f;
-                }
-
-                Font.DrawString(spriteBatch, msg.Text,
-                    new Vector2((int)msg.Pos.X - 1, (int)msg.Pos.Y - 1),
-                    Color.Black * alpha * 0.5f, 0.0f,
-                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
-
-                Font.DrawString(spriteBatch, msg.Text,
-                    new Vector2((int)msg.Pos.X, (int)msg.Pos.Y),
-                    msg.Color * alpha, 0.0f,
-                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
-
-                messages[0].LifeTime -= deltaTime / i;
-
-                i++;
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                break;                
             }
 
-            if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
+            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            
+            foreach (GUIMessage msg in messages)
+            {
+                if (!msg.WorldSpace) continue;
+                
+                if (cam != null)
+                {
+                    float alpha = 1.0f;
+                    if (msg.Timer < 1.0f) alpha -= 1.0f - msg.Timer;                    
+
+                    Vector2 drawPos = cam.WorldToScreen(msg.Pos);
+                    msg.Font.DrawString(spriteBatch, msg.Text, drawPos + Vector2.One, Color.Black * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                    msg.Font.DrawString(spriteBatch, msg.Text, drawPos, msg.Color * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                }                
+            }
+
+            messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
         #endregion
@@ -1045,33 +1082,21 @@ namespace Barotrauma
         /// <summary>
         /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
-        public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)
+        public static void AddMessage(string message, Color color, bool playSound = true)
         {
-            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
+            float lifeTime = MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f);
+            foreach (GUIMessage msg in messages)
             {
-                messages[messages.Count - 1].LifeTime = lifeTime;
-                return;
+                if (msg.Text == message) return;
             }
-
-            Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
-            pos.Y += messages.FindAll(m => m.AutoCenter).Count * 30;
-
-            messages.Add(new GUIMessage(message, color, pos, lifeTime, Alignment.Center, true));
+            
+            messages.Add(new GUIMessage(message, color, lifeTime, LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 
-        /// <summary>
-        /// Display and automatically fade out a piece of text at an arbitrary position on the screen
-        /// </summary>
-        public static void AddMessage(string message, Vector2 position, Alignment alignment, Color color, float lifeTime = 3.0f, bool playSound = true)
+        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true)
         {
-            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
-            {
-                messages[messages.Count - 1].LifeTime = lifeTime;
-                return;
-            }
-
-            messages.Add(new GUIMessage(message, color, position, lifeTime, alignment, false));
+            messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 

@@ -555,7 +555,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
             
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.End();
         }

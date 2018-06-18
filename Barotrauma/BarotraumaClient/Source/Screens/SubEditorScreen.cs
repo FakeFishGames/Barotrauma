@@ -462,7 +462,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
-                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), Color.Red, 3.0f);
+                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), Color.Red);
 
                 nameBox.Flash();
                 return false;
@@ -472,7 +472,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -499,7 +499,7 @@ namespace Barotrauma
             Submarine.SaveCurrent(savePath, imgStream);
             Submarine.MainSub.CheckForErrors();
             
-            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green, 3.0f);
+            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSubs();
             linkedSubBox.ClearChildren();
@@ -753,7 +753,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
-                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red, 3.0f);
+                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red);
 
                 nameBox.Flash();
                 return false;
@@ -763,7 +763,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -1755,7 +1755,7 @@ namespace Barotrauma
                 MapEntity.DrawEditor(spriteBatch, cam);
             }
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
                                               

@@ -1247,10 +1247,11 @@ namespace Barotrauma
 #if CLIENT
             if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.SubEditorScreen)
             {
-                GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
                 if (requiredSkill != null)
                 {
-                    GUI.AddMessage("(" + requiredSkill.Name + " level " + requiredSkill.Level + " required)", Color.Red, 5.0f);
+                    GUI.AddMessage(TextManager.Get("InsufficientSkills")
+                        .Replace("[requiredskill]", requiredSkill.Name)
+                        .Replace("[requiredlevel]", ((int)requiredSkill.Level).ToString()), Color.Red);
                 }
             }
 #endif

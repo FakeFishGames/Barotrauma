@@ -90,40 +90,8 @@ namespace Barotrauma
             campaignUI.UpdateCharacterLists();
         }
         
-        /*public override void AddToGUIUpdateList()
-        {
-            base.AddToGUIUpdateList();
-
-            //topPanel.AddToGUIUpdateList();
-            //bottomPanel.AddToGUIUpdateList();
-        }*/
-
-        /*public override void Update(double deltaTime)
-        {
-            base.Update(deltaTime);
-
-            //topPanel.UpdateManually((float)deltaTime);
-            //bottomPanel.UpdateManually((float)deltaTime);
-
-            campaignUI.Update((float)deltaTime);
-
-            mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
-
-            GameMain.GameSession.Map.Update((float)deltaTime, new Rectangle(
-                bottomPanel[selectedRightPanel].Rect.X + 20,
-                bottomPanel[selectedRightPanel].Rect.Y + 20,
-                bottomPanel[selectedRightPanel].Rect.Width - 310,
-                bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
-        }*/
-
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            /*if (characterList.CountChildren != CrewManager.CharacterInfos.Count)
-            {
-                UpdateCharacterLists();
-            }*/
-
             graphics.Clear(Color.Black);
             
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
@@ -132,26 +100,7 @@ namespace Barotrauma
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
                 Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
             
-            //topPanel.DrawManually(spriteBatch);
-            //bottomPanel.DrawManually(spriteBatch);
-
-            //campaignUI.Draw(spriteBatch);
-
-           /* if (selectedRightPanel == (int)PanelTab.Map)
-            {
-                GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
-                    bottomPanel[selectedRightPanel].Rect.X + 20, 
-                    bottomPanel[selectedRightPanel].Rect.Y + 20,
-                    bottomPanel[selectedRightPanel].Rect.Width - 310, 
-                    bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
-            }
-
-            if (topPanel.UserData as Location != GameMain.GameSession.Map.CurrentLocation)
-            {
-                UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
-            }*/
-
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.End();
 

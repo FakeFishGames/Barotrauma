@@ -1348,7 +1348,7 @@ namespace Barotrauma
                     scale, SpriteEffects.None, 0.0f);
             }
             
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             spriteBatch.End();
         }

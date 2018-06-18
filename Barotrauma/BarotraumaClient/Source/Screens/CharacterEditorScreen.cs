@@ -194,13 +194,9 @@ namespace Barotrauma
                 y += textures[i].Height;
             }
 
-            
-            GUI.Draw((float)deltaTime, spriteBatch);
 
-            //EntityPrefab.DrawList(spriteBatch, new Vector2(20,50));
+            GUI.Draw(Cam, spriteBatch);
 
-            //Entity.Edit(spriteBatch, cam);
-                      
             spriteBatch.End();
         }
 
