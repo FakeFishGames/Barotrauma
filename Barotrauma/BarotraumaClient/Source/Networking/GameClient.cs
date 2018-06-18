@@ -275,8 +275,10 @@ namespace Barotrauma.Networking
                             outmsg.Write(saltedPw);
                         }
                         outmsg.Write(GameMain.Version.ToString());
-                        outmsg.Write((UInt16)GameMain.SelectedPackages.Count());
-                        foreach (ContentPackage contentPackage in GameMain.SelectedPackages)
+
+                        var mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+                        outmsg.Write((UInt16)mpContentPackages.Count());
+                        foreach (ContentPackage contentPackage in mpContentPackages)
                         {
                             outmsg.Write(contentPackage.Name);
                             outmsg.Write(contentPackage.MD5hash.Hash);

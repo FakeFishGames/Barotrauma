@@ -89,6 +89,11 @@ namespace Barotrauma
 
         public List<ContentFile> Files;
 
+        public bool HasMultiplayerIncompatibleContent
+        {
+            get { return Files.Any(f => multiplayerIncompatibleContent.Contains(f.Type)); }
+        }
+
         private ContentPackage()
         {
             Files = new List<ContentFile>();
