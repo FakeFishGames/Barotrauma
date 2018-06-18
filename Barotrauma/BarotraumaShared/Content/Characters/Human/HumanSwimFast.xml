@@ -3,8 +3,8 @@
   steertorque="25"
   headangle="19.5"
   torsoangle="0"
-  legmoveamount="1.05"
+  legmoveamount="1.1"
   handmoveamount="2,0"
   handmoveoffset="0,0"
-  legcyclespeed="11.4"
-  handcyclespeed="5" />
+  handcyclespeed="5"
+  legcyclelength="9.149996" />

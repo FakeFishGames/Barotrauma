@@ -6,5 +6,5 @@
   legmoveamount="0.6500002"
   handmoveamount="0.7700002,0"
   handmoveoffset="0,0"
-  legcyclespeed="9.699995"
-  handcyclespeed="3.080001" />
+  handcyclespeed="3.080001"
+  legcyclelength="6.800001" />
