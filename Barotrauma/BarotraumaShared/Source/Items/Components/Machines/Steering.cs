@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != null && user.Info != null && user.SelectedConstruction == item)
                 {
-                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime);
+                    user.Info.IncreaseSkillLevel("Helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
 
                 Vector2 velocityDiff = steeringInput - targetVelocity;

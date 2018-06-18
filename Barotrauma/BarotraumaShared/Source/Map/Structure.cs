@@ -44,7 +44,7 @@ namespace Barotrauma
         public static List<Structure> WallList = new List<Structure>();
 
         //how much mechanic skill increases per damage removed from the wall by welding
-        public const float SkillIncreaseMultiplier = 0.0005f;
+        public const float SkillIncreaseMultiplier = 0.005f;
 
         const float LeakThreshold = 0.1f;
 
@@ -886,7 +886,9 @@ namespace Barotrauma
                 AdjustKarma(attacker, damageDiff);
                 if (damageDiff < 0.0f && GameMain.Client == null)
                 {
-                    attacker.Info.IncreaseSkillLevel("Mechanical Engineering", -damageDiff * SkillIncreaseMultiplier);                                    
+                    attacker.Info.IncreaseSkillLevel("Mechanical Engineering", 
+                        -damageDiff * SkillIncreaseMultiplier / Math.Min(attacker.GetSkillLevel("Mechanical Engineering"), 1.0f),
+                        SectionPosition(sectionIndex, true));                                    
                 }
             }
 

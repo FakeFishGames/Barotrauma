@@ -13,6 +13,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle MessageAreaTop
+        {
+            get; private set;
+        }
+
         public static Rectangle InventoryAreaUpper
         {
             get; private set;
@@ -91,6 +96,8 @@ namespace Barotrauma
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(padding, padding, GameMain.GraphicsWidth - padding * 2, (int)(50 * GUI.Scale));
 
+            MessageAreaTop = new Rectangle(GameMain.GraphicsWidth / 4, ButtonAreaTop.Bottom, GameMain.GraphicsWidth / 2, ButtonAreaTop.Height);
+
             //slice for the upper slots of the inventory (clothes, id card, headset)
             int inventoryAreaUpperWidth = (int)Math.Min(GameMain.GraphicsWidth* 0.2f, 300);
             int inventoryAreaUpperHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.2f, 200);
@@ -120,7 +127,7 @@ namespace Barotrauma
                 new Rectangle(GameMain.GraphicsWidth - padding - chatBoxWidth, InventoryAreaUpper.Bottom + padding, chatBoxWidth, chatBoxHeight);
             
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(ChatBoxArea.Right + 60, (int)(150 * GUI.Scale), GameMain.GraphicsWidth - ChatBoxArea.Width * 2 - 60 - padding, GameMain.GraphicsHeight - (int)(300 * GUI.Scale)) :
+                new Rectangle(ChatBoxArea.Right + 60, (int)Math.Max(150 * GUI.Scale, MessageAreaTop.Bottom), GameMain.GraphicsWidth - ChatBoxArea.Width * 2 - 60 - padding, GameMain.GraphicsHeight - (int)(300 * GUI.Scale)) :
                 new Rectangle(padding - ChatBoxArea.Width, (int)(150 * GUI.Scale), GameMain.GraphicsWidth - ChatBoxArea.Width * 2 - 60 - padding, GameMain.GraphicsHeight - (int)(300 * GUI.Scale));
 
             //split the health area vertically, left side for the player's own health and right side for the character they're treating
@@ -136,6 +143,7 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch)
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
+            GUI.DrawRectangle(spriteBatch, MessageAreaTop, Color.Orange * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaUpper, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);

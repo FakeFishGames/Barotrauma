@@ -379,14 +379,10 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
-            //Game1.GameScreen.DrawMap(graphics, spriteBatch);
-
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            GUI.Draw((float)deltaTime, spriteBatch);
-
-            //GUI.DrawString(spriteBatch, new Vector2(500, 100), "selected tab " + selectedTab, Color.White);
-
+            GUI.Draw(Cam, spriteBatch);
+            
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else

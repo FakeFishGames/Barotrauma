@@ -103,7 +103,7 @@ namespace Barotrauma
                 }
             }
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(cam, spriteBatch);
 
             spriteBatch.End();
         }
@@ -239,7 +239,8 @@ namespace Barotrauma
             {
                 GameMain.GameSession.EventManager.DebugDraw(spriteBatch);
             }
-			spriteBatch.End();
+
+            spriteBatch.End();
 
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
@@ -251,7 +252,7 @@ namespace Barotrauma
 
                 //convert the los color to HLS and make sure the luminance of the color is always the same regardless
                 //of the ambient light color and the luminance of the damage overlight color
-                float r = Character.Controlled?.CharacterHealth == null ? 
+                float r = Character.Controlled?.CharacterHealth == null ?
                     0.0f : Math.Min(Character.Controlled.CharacterHealth.DamageOverlayTimer * 0.5f, 0.5f);
                 Vector3 ambientLightHls = GameMain.LightManager.AmbientLight.RgbToHLS();
                 Vector3 losColorHls = Color.Lerp(GameMain.LightManager.AmbientLight, Color.Red, r).RgbToHLS();
@@ -260,7 +261,7 @@ namespace Barotrauma
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);
                 spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height), losColor);
-                spriteBatch.End();                
+                spriteBatch.End();
             }
             graphics.SetRenderTarget(null);
 

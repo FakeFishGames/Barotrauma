@@ -308,7 +308,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {
-                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier);
+                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
             }
 
