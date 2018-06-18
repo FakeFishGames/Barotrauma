@@ -75,6 +75,12 @@ namespace Barotrauma
 
         public LevelTrigger ParentTrigger;
 
+        public Dictionary<Entity, Vector2> TriggererPosition
+        {
+            get;
+            private set;
+        }
+
         private Vector2 worldPosition;        
         public Vector2 WorldPosition
         {
@@ -105,6 +111,11 @@ namespace Barotrauma
         public float TriggerOthersDistance
         {
             get { return triggerOthersDistance; }
+        }
+
+        public IEnumerable<Entity> Triggerers
+        {
+            get { return triggerers.AsEnumerable(); }
         }
 
         public bool IsTriggered
@@ -178,6 +189,8 @@ namespace Barotrauma
                 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f)
         {
+            TriggererPosition = new Dictionary<Entity, Vector2>();
+
             worldPosition = position;
             if (element.Attributes("radius").Any() || element.Attributes("width").Any() || element.Attributes("height").Any())
             {
@@ -316,6 +329,7 @@ namespace Barotrauma
                 {
                     OnTriggered?.Invoke(this, entity);
                 }
+                TriggererPosition[entity] = entity.WorldPosition;
                 triggerers.Add(entity);
             }
             return true;
@@ -335,7 +349,9 @@ namespace Barotrauma
                 if (contactEdge.Contact != null &&
                     contactEdge.Contact.IsTouching)
                 {
-                    var otherEntity = GetEntity(contactEdge.Contact.FixtureB);
+                    var otherEntity = GetEntity(contactEdge.Contact.FixtureB == fixtureB ? 
+                        contactEdge.Contact.FixtureB : 
+                        contactEdge.Contact.FixtureA);
                     if (otherEntity == entity) return;
                 }
                 contactEdge = contactEdge.Next;
@@ -343,6 +359,7 @@ namespace Barotrauma
 
             if (triggerers.Contains(entity))
             {
+                TriggererPosition.Remove(entity);
                 triggerers.Remove(entity);
             }
         }
@@ -352,6 +369,7 @@ namespace Barotrauma
             if (fixture.Body == null || fixture.Body.UserData == null) return null;
             if (fixture.Body.UserData is Entity entity) return entity;
             if (fixture.Body.UserData is Limb limb) return limb.character;
+            if (fixture.Body.UserData is SubmarineBody subBody) return subBody.Submarine;
 
             return null;
         }

@@ -68,6 +68,11 @@ namespace Barotrauma
             get { return Position.Y < DamageDepth; }
         }
 
+        public Submarine Submarine
+        {
+            get { return submarine; }
+        }
+
         public SubmarineBody(Submarine sub)
         {
             this.submarine = sub;
