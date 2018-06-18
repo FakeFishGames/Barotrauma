@@ -10,11 +10,6 @@
     <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
   </hanging2>
 
-  <kelp1 spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
-    <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
-  </kelp1>
-
   <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" swingfrequency="0.2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
     <overridecommonness commonness="5" leveltype="ColdCavernsMaze" />
@@ -29,28 +24,29 @@
   <leaves spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
     <Sprite texture="Content/LevelObjects/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
     <overridecommonness commonness="0" leveltype="WastesBasic" />
+    <overridecommonness commonness="0" leveltype="PlateauBasic" />
   </leaves>
 
-  <branches1 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="400"
+  <deadbranches1 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="400"
              minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
-  </branches1>
+  </deadbranches1>
 
-  <branches2 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200"
+  <deadbranches2 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200"
              minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
-  </branches2>
+  </deadbranches2>
 
-  <branches3 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200" 
+  <deadbranches3 spawnpos="Wall, RuinWall" clusteringamount="3" clusteringgroup="0.3" minsurfacewidth="200" 
              minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" swingfrequency="0.1" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
-  </branches3>
+  </deadbranches3>
 
   <fungus spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.6"
           minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" swingfrequency="0.1" commonness="3">
@@ -61,6 +57,7 @@
   <thistle spawnpos="Wall" alignment="Top" minsurfacewidth="100"
            minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" swingfrequency="0.1" commonness="3">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
+    <overridecommonness commonness="0" leveltype="PlateauBasic" />
     <Sprite texture="Content/LevelObjects/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
   </thistle>
 
@@ -131,6 +128,62 @@
     </DeformableSprite>
   </branch>
 
+  <fractalplant1 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />    
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="0,0,400,495" origin="0.5,0.8"/>
+  </fractalplant1>
+  
+  <fractalplant2 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="411,0,361,495" origin="0.5,0.85"/>
+  </fractalplant2>
+
+  <fractalplant3 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="32,510,387,324" origin="0.5,0.85"/>
+  </fractalplant3>
+  
+  <fractalplant4 spawnpos="Wall, RuinWall" clusteringamount="5" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants1.png" sourcerect="434,491,593,372" origin="0.4,0.85"/>
+  </fractalplant4>
+
+  <fractalplant5 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="21,1,367,329" origin="0.6,0.85"/>
+  </fractalplant5>
+
+  <fractalplant6 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="462,32,447,283" origin="0.4,0.85"/>
+  </fractalplant6>
+  
+  <fractalplant7 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="0,346,397,298" origin="0.5,0.85"/>
+  </fractalplant7>
+
+  <fractalplant8 spawnpos="Wall, RuinWall" clusteringamount="8" clusteringgroup="0.4"
+          minsize="1.0" maxsize="1.5" alignwithsurface="true"  randomrotation="-10,10" commonness="0">
+    <overridecommonness commonness="1" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.2" leveltype="VoidBasic" />
+    <Sprite texture="Content/LevelObjects/FractalPlants2.png" sourcerect="437,392,481,256" origin="0.6,0.85"/>
+  </fractalplant8>
+  
   <spikeplantmedium1 spawnpos="Wall, RuinWall" alignment="Top" minsurfacewidth="50" clusteringamount="4" clusteringgroup="0.8"
         minsize="1" maxsize="1.5" randomrotation="-30,30" swingamount="8" swingfrequency="0.1" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="VoidBasic" />
@@ -469,9 +522,10 @@
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="5,3" sourcerect="492,0,521,288" origin="0.5,0.35">
       <SpriteDeformation type="inflate" resolution="5,3" frequency="0.5" scale="1"/>
       <SpriteDeformation type="custom" resolution="5,3" frequency="0.0" blendmode="multiply" 
@@ -495,9 +549,10 @@
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,4" sourcerect="151,383,488,341" origin="0.5,0.1">
       <SpriteDeformation type="inflate" resolution="4,4" frequency="0.5" scale="1"/>
       <SpriteDeformation type="custom" resolution="4,4" frequency="0.0" blendmode="multiply"
@@ -521,9 +576,10 @@
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="4,3" sourcerect="644,366,380,357" origin="0.5,0.15">
       <SpriteDeformation type="inflate" resolution="4,3" frequency="0.5" scale="0.5"/>
       <SpriteDeformation type="custom" resolution="4,3" frequency="0.0" blendmode="multiply"
@@ -547,9 +603,10 @@
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="47,788,318,236" origin="0.6,0.2">
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
@@ -568,14 +625,15 @@
   <sonarflora5 spawnpos="Wall" clusteringamount="6" clusteringgroup="0.5"
                minsize="1" maxsize="2" alignwithsurface="true"
                scaleoscillation="0.0,0.1" scaleoscillationfrequency="0.2" 
-               randomrotation="180,180" commonness="1" depthrange="-0.01,-0.01">
+               randomrotation="180,180" commonness="0" depthrange="-0.01,-0.01">
     <overridecommonness commonness="0" leveltype="ColdCavernsBasic" />
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="395,723,309,301" origin="0.5,0.2">
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
@@ -599,9 +657,10 @@
     <overridecommonness commonness="0" leveltype="Slabs" />
     <overridecommonness commonness="0" leveltype="ColdCavernsMaze" />
     <overridecommonness commonness="0" leveltype="VoidBasic" />
-    <overridecommonness commonness="1" leveltype="Pillars" />
+    <overridecommonness commonness="0.1" leveltype="Pillars" />
+    <overridecommonness commonness="0.2" leveltype="PlateauBasic" />
+    <overridecommonness commonness="0.3" leveltype="RidgeBasic" />
     <overridecommonness commonness="5" leveltype="WastesBasic" />
-    <overridecommonness commonness="3" leveltype="RidgeBasic" />
     <DeformableSprite texture="Content/LevelObjects/SonarFloraBodies.png" subdivisions="3,3" sourcerect="709,779,304,234" origin="0.5,0.2">
       <SpriteDeformation type="inflate" resolution="3,3" frequency="0.5" scale="1"/>
       <SpriteDeformation type="custom" resolution="3,3" frequency="0.0" blendmode="multiply"
