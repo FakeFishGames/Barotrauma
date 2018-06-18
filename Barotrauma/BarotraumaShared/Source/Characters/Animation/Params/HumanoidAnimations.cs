@@ -44,7 +44,7 @@ namespace Barotrauma
         }
 
         [Serialize(5.0f, true), Editable]
-        public float LegCycleSpeed
+        public float LegCycleLength
         {
             get;
             set;

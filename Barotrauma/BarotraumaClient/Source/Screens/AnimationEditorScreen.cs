@@ -583,69 +583,66 @@ namespace Barotrauma
             // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
-                // TODO: draw a sine curve instead?
-                var lengthMultiplier = 0.25f;
-                var amplitudeMultiplier = 0.01f;
+                float lengthMultiplier = 5;
+                float amplitudeMultiplier = 200;
                 referencePoint = charDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2;
                 drawPos = referencePoint;
-                drawPos -= screenSpaceForward * fishSwimParams.WaveLength / lengthMultiplier;
+                drawPos -= screenSpaceForward * fishSwimParams.WaveLength * lengthMultiplier;
                 Vector2 toRefPoint = referencePoint - drawPos;
                 var start = drawPos + toRefPoint / 2;
-                var control = start + (screenSpaceLeft * dir * fishSwimParams.WaveAmplitude / amplitudeMultiplier);
-                int points = (int)toRefPoint.Length() / 10;
+                var control = start + (screenSpaceLeft * dir * fishSwimParams.WaveAmplitude * amplitudeMultiplier);
+                int points = 1000;
                 // Length
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Wave Length", () =>
                 {
-                    TryUpdateValue("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * lengthMultiplier, 0, 100));
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
-                    if (points > 0)
-                    {
-                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    }
+                    var input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() / lengthMultiplier;
+                    TryUpdateValue("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 100));
+                    //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
+                    //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000, points, Color.Purple);
+
                 });
                 // Amplitude
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Wave Amplitude", () =>
                 {
-                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * amplitudeMultiplier * dir, -3, 3));
-                    GUI.DrawLine(spriteBatch, start, control, Color.Purple);
-                    if (points > 0)
-                    {
-                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    }
+                    var input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() / amplitudeMultiplier * dir;
+                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -2, 2));
+                    //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
+                    //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000, points, Color.Purple);
+
                 });
             }
             // Human swim only -->
             else if (humanSwimParams != null)
             {
                 // Legs
-                var movementMultiplier = 0.01f;
-                var cycleMultiplier = 0.1f;
+                var amplitudeMultiplier = 20;
+                var lengthMultiplier = 20;
                 referencePoint = SimToScreen(character.SimPosition - simSpaceForward / 2);
                 drawPos = referencePoint;
-                drawPos -= screenSpaceForward * humanSwimParams.LegCycleSpeed / cycleMultiplier;
+                drawPos -= screenSpaceForward * (humanSwimParams.LegCycleLength * lengthMultiplier);
                 Vector2 toRefPoint = referencePoint - drawPos;
                 var start = drawPos + toRefPoint / 2;
-                var control = start + (screenSpaceLeft * dir * humanSwimParams.LegMoveAmount / movementMultiplier);
-                int points = (int)toRefPoint.Length() / 10;
-                // Cycle speed
+                var control = start + (screenSpaceLeft * dir * humanSwimParams.LegMoveAmount * amplitudeMultiplier);
+                int points = 1000;
+                // Cycle length
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Leg Movement Speed", () =>
                 {
-                    TryUpdateValue("legcyclespeed", MathHelper.Clamp(humanSwimParams.LegCycleSpeed - Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() * cycleMultiplier, 0, 20));
-                    GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
-                    if (points > 0)
-                    {
-                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    }
+                    float input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() / lengthMultiplier;
+                    TryUpdateValue("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
+                    //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
+                    //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000, points, Color.Purple);
                 });
                 // Movement amount
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Leg Movement Amount", () =>
                 {
-                    TryUpdateValue("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() * movementMultiplier * dir, -2, 2));
-                    GUI.DrawLine(spriteBatch, start, control, Color.Purple);
-                    if (points > 0)
-                    {
-                        GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    }
+                    float input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() / amplitudeMultiplier * dir;
+                    TryUpdateValue("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
+                    //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
+                    //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000, points, Color.Purple);
                 });
                 // Arms
                 multiplier = 0.01f;
@@ -692,6 +689,7 @@ namespace Barotrauma
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
+                // TODO: negating the atan might result wrong values?
                 var transformedRot = angle + MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
                 if (!clockWise)
                 {

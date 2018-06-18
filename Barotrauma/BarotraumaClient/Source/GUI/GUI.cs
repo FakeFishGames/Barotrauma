@@ -677,16 +677,31 @@ namespace Barotrauma
         public static void DrawBezierWithDots(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Vector2 control, int pointCount, Color color, int dotSize = 2)
         {
             Vector2 dir = end - start;
-            var points = new Vector2[pointCount];
-            for (int i = 0; i < points.Length; i++)
+            for (int i = 0; i < pointCount; i++)
             {
-                float t = (float)i / (points.Length - 1);
+                float t = (float)i / (pointCount - 1);
                 Vector2 pos = MathUtils.Bezier(start, control, end, t);
-                points[i] = pos;
                 ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
             }
         }
 
+        public static void DrawSineWithDots(SpriteBatch spriteBatch, Vector2 from, Vector2 dir, float amplitude, float length, float scale, int pointCount, Color color, int dotSize = 2)
+        {
+            Vector2 up = dir.Right();
+            //DrawLine(spriteBatch, from, from + dir, Color.Red);
+            //DrawLine(spriteBatch, from, from + up * dir.Length(), Color.Blue);
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 pos = from;
+                if (i > 0)
+                {
+                    float t = (float)i / (pointCount - 1);
+                    float sin = (float)Math.Sin(t / length * scale) * amplitude;
+                    pos += (up * sin) + (dir * t);
+                }
+                ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
+            }
+        }
         #endregion
 
         #region Element creation

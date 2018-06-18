@@ -616,7 +616,6 @@ namespace Barotrauma
         }
 
         private float handCyclePos;
-        private float legCyclePos;
         void UpdateSwimming()
         {
             IgnorePlatforms = true;
@@ -730,9 +729,10 @@ namespace Barotrauma
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
 
-            //walkPos += movement.Length() * 0.2f;
+            walkPos += movement.Length();
             //float handCyclePos = walkPos / 2.0f * -Dir;
-            legCyclePos += MathHelper.ToRadians(CurrentSwimParams.LegCycleSpeed) * Math.Sign(movement.X);
+            //float waveRotation = (float)Math.Sin(walkPos / waveLength);
+            var legCyclePos = walkPos / Math.Abs(CurrentSwimParams.LegCycleLength) * -Dir;
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
