@@ -244,23 +244,74 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", Color.Red);
                 return;
             }
-
-            //TODO: check that content packages match and tell the client which ones are missing / which ones the server isn't using
-            /*if (clPackageName != GameMain.SelectedPackage.Name)
+            
+            //check if the client is missing any of the content packages the server requires
+            List<ContentPackage> missingPackages = new List<ContentPackage>();
+            foreach (ContentPackage contentPackage in GameMain.SelectedPackages)
             {
-                DisconnectUnauthClient(inc, unauthClient, "Your content package (" + clPackageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
-                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package name)", ServerLog.MessageType.Error);
-                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package name)", Color.Red);
+                if (!contentPackage.HasMultiplayerIncompatibleContent) continue;
+                bool packageFound = false;
+                for (int i = 0; i < contentPackageCount; i++)
+                {
+                    if (contentPackageNames[i] == contentPackage.Name && contentPackageHashes[i] == contentPackage.MD5hash.Hash)
+                    {
+                        packageFound = true;
+                        break;
+                    }
+                }
+                if (!packageFound) missingPackages.Add(contentPackage);
+            }
+            
+            if (missingPackages.Count == 1)
+            {
+                DisconnectUnauthClient(inc, unauthClient, "You need the content package " + GetPackageStr(missingPackages[0]) + " to play on the server.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
-            if (clPackageHash != GameMain.SelectedPackage.MD5hash.Hash)
+            else if (missingPackages.Count > 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, "Your content package (MD5: " + clPackageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
-                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package hash)", ServerLog.MessageType.Error);
-                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong content package hash)", Color.Red);
+                List<string> packageStrs = new List<string>();
+                missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
+                DisconnectUnauthClient(inc, unauthClient, "You need the content packages " + string.Join(", ", packageStrs) + " to play on the server.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
-            }*/
+            }
             
+            string GetPackageStr(ContentPackage contentPackage)
+            {
+                return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
+            }
+
+            //check if the client is using any contentpackages that are not compatible with the server
+            List<Pair<string, string>> incompatiblePackages = new List<Pair<string, string>>();
+            for (int i = 0; i < contentPackageNames.Count; i++)
+            {
+                if (!GameMain.Config.SelectedContentPackages.Any(cp => cp.Name == contentPackageNames[i] && cp.MD5hash.Hash == contentPackageHashes[i]))
+                {
+                    incompatiblePackages.Add(new Pair<string, string>(contentPackageNames[i], contentPackageHashes[i]));
+                }
+            }
+
+            if (incompatiblePackages.Count == 1)
+            {
+                DisconnectUnauthClient(inc, unauthClient, "The content package " + GetPackageStr2(incompatiblePackages[0]) + " is not compatible with the server. You must disable it before joining.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content package " + GetPackageStr2(incompatiblePackages[0]) + ")", ServerLog.MessageType.Error);
+                return;
+            }
+            else if (incompatiblePackages.Count > 1)
+            {
+                List<string> packageStrs = new List<string>();
+                incompatiblePackages.ForEach(cp => packageStrs.Add(GetPackageStr2(cp)));
+                DisconnectUnauthClient(inc, unauthClient, "The content packages " + string.Join(", ", packageStrs) + " are not compatible with the server. You must disable them before joining.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                return;
+            }
+            
+            string GetPackageStr2(Pair<string, string> nameAndHash)
+            {
+                return "\"" + nameAndHash.First + "\" (hash " + Md5Hash.GetShortHash(nameAndHash.Second) + ")";
+            }
+
             if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 DisconnectUnauthClient(inc, unauthClient, "You're not in this server's whitelist.");
