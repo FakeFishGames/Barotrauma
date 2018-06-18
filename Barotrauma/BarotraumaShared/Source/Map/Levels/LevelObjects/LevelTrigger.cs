@@ -465,6 +465,17 @@ namespace Barotrauma
                         attack.DoDamage(null, damageable, WorldPosition, deltaTime, false);
                     }
                 }
+                else if (triggerer is Submarine submarine)
+                {
+                    foreach (Attack attack in attacks)
+                    {
+                        float structureDamage = attack.GetStructureDamage(deltaTime);
+                        if (structureDamage > 0.0f)
+                        {
+                            Explosion.RangedStructureDamage(worldPosition, attack.DamageRange, structureDamage);
+                        }
+                    }
+                }
 
                 if (Force != Vector2.Zero)
                 {
