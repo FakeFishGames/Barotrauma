@@ -167,12 +167,18 @@ namespace Barotrauma
             });
         }
 
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
+        public Matrix GetTransform(Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
         {
-            Matrix matrix = Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
+            return  
+                Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
                 Matrix.CreateRotationZ(-rotate) *
                 Matrix.CreateTranslation(pos);
+        }
+
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale)
+        {
+            Matrix matrix = GetTransform(pos, origin, rotate, scale);
 
             effect.Parameters["xTransform"].SetValue(matrix * cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f);

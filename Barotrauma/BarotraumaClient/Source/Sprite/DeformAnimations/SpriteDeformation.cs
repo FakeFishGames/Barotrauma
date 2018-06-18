@@ -30,8 +30,19 @@ namespace Barotrauma.SpriteDeformations
                     return new CustomDeformation(element);
                 case "noise":
                     return new NoiseDeformation(element);
+                case "reacttotriggerers":
                 default:
-                    DebugConsole.ThrowError("Could not load sprite deformation animation - \""+typeName+"\" is not a valid deformation type.");
+                    if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
+                    {
+                        return new PositionalDeformation(element)
+                        {
+                            Type = reactionType
+                        };
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Could not load sprite deformation animation - \"" + typeName + "\" is not a valid deformation type.");
+                    }
                     return null;
             }
         }

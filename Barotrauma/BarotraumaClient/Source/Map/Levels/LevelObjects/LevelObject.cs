@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.SpriteDeformations;
 using Lidgren.Network;
+using System.Linq;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
@@ -154,12 +156,7 @@ namespace Barotrauma
             
             if (spriteDeformations.Count > 0)
             {
-                foreach (SpriteDeformation deformation in spriteDeformations)
-                {
-                    deformation.Update(deltaTime);
-                }
-
-                CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+                UpdateDeformations(deltaTime);
             }
 
             for (int i = 0; i < Sounds.Length; i++)
@@ -182,6 +179,45 @@ namespace Barotrauma
                 {
                     SoundChannels[i].Dispose();
                     SoundChannels[i] = null;
+                }
+            }
+        }
+
+        private void UpdateDeformations(float deltaTime)
+        {
+            foreach (SpriteDeformation deformation in spriteDeformations)
+            {
+                if (deformation is PositionalDeformation positionalDeformation)
+                {
+                    UpdatePositionalDeformation(positionalDeformation, deltaTime);
+                }
+                deformation.Update(deltaTime);
+            }
+            CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
+        }
+
+        private void UpdatePositionalDeformation(PositionalDeformation positionalDeformation, float deltaTime)
+        {
+            Matrix matrix = ActivePrefab.DeformableSprite.GetTransform(
+                                Position,
+                                ActivePrefab.DeformableSprite.Origin,
+                                CurrentRotation,
+                                Vector2.One * Scale);
+
+            Matrix rotationMatrix = Matrix.CreateRotationZ(CurrentRotation);
+
+            foreach (LevelTrigger trigger in Triggers)
+            {
+                foreach (Entity triggerer in trigger.Triggerers)
+                {
+                    Vector2 moveAmount = triggerer.WorldPosition - trigger.TriggererPosition[triggerer];
+
+                    moveAmount = Vector2.Transform(moveAmount, rotationMatrix);
+                    moveAmount /= (ActivePrefab.DeformableSprite.Size * Scale);
+                    moveAmount.Y = -moveAmount.Y;
+
+                    positionalDeformation.Deform(triggerer.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
+                        Matrix.CreateScale(1.0f / ActivePrefab.DeformableSprite.Size.X, 1.0f / ActivePrefab.DeformableSprite.Size.Y, 1));
                 }
             }
         }
