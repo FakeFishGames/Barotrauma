@@ -221,19 +221,19 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Vector2(cell.Center.X - 10.0f, -cell.Center.Y - 10.0f), new Vector2(20.0f, 20.0f), Color.Cyan, true);
 
                     GUI.DrawLine(spriteBatch,
-                        new Vector2(cell.edges[0].Point1.X, -cell.edges[0].Point1.Y),
-                        new Vector2(cell.Center.X, -cell.Center.Y),
+                        new Vector2(cell.edges[0].Point1.X + cell.Translation.X, -(cell.edges[0].Point1.Y + cell.Translation.Y)),
+                        new Vector2(cell.Center.X, -(cell.Center.Y)),
                         Color.Blue * 0.5f);
 
                     foreach (GraphEdge edge in cell.edges)
                     {
-                        GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X, -edge.Point1.Y),
-                            new Vector2(edge.Point2.X, -edge.Point2.Y), cell.body == null ? Color.Cyan * 0.5f : Color.White);
+                        GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
+                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.body == null ? Color.Cyan * 0.5f : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)
                     {
-                        GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
+                        GUI.DrawRectangle(spriteBatch, new Vector2(point.X + cell.Translation.X, -(point.Y + cell.Translation.Y)), new Vector2(10.0f, 10.0f), Color.White, true);
                     }
                 }
 
@@ -303,9 +303,11 @@ namespace Barotrauma
 
             if (!renderLevel && !renderSeaFloor) return;
 
-            wallEdgeEffect.World = cam.ShaderTransform
+            Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
-            wallCenterEffect.World = wallEdgeEffect.World;
+
+            wallEdgeEffect.World = transformMatrix;
+            wallCenterEffect.World = transformMatrix;
             
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
             wallCenterEffect.CurrentTechnique.Passes[0].Apply();
@@ -315,15 +317,17 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(bodyVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
             }
-            if (renderSeaFloor)
-            {
-                foreach (LevelWall wall in level.ExtraWalls)
-                {
-                    graphicsDevice.SetVertexBuffer(wall.BodyVertices);
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
-                }
-            }
 
+            foreach (LevelWall wall in level.ExtraWalls)
+            {
+                if (!renderSeaFloor && wall == level.SeaFloor) continue;
+                wallCenterEffect.World = wall.GetTransform() * transformMatrix;
+                wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(wall.BodyVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
+            }
+            
+            wallEdgeEffect.World = transformMatrix;
             wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
             if (renderLevel)
@@ -332,28 +336,26 @@ namespace Barotrauma
                 graphicsDevice.SetVertexBuffer(wallVertices);
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
             }
-            if (renderSeaFloor)
+            foreach (LevelWall wall in level.ExtraWalls)
             {
-                foreach (LevelWall wall in level.ExtraWalls)
-                {
-                    graphicsDevice.SetVertexBuffer(wall.WallVertices);
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
-                }
-            }          
+                if (!renderSeaFloor && wall == level.SeaFloor) continue;
+                wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
+                wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(wall.WallVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
+            }                     
         }
 
         public void Dispose()
         {
             Dispose(true);
-
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (wallVertices!=null) wallVertices.Dispose();
+            if (wallVertices != null) wallVertices.Dispose();
             if (bodyVertices != null) bodyVertices.Dispose();
         }
-
     }
 }

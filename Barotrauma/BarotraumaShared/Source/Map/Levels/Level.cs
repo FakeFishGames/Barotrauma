@@ -52,9 +52,9 @@ namespace Barotrauma
 
         private float[,] sonarDisruptionStrength;
 
-        private LevelWall[] extraWalls;
+        private List<LevelWall> extraWalls;
 
-        //private float shaftHeight;
+        private LevelWall seaFloor;
 
         //List<Body> bodies;
         private List<VoronoiCell> cells;
@@ -106,12 +106,17 @@ namespace Barotrauma
             private set;
         }
 
+        public LevelWall SeaFloor
+        {
+            get { return seaFloor; }
+        }
+
         public List<Ruin> Ruins
         {
             get { return ruins; }
         }
 
-        public LevelWall[] ExtraWalls
+        public List<LevelWall> ExtraWalls
         {
             get { return extraWalls; }
         }
@@ -233,12 +238,13 @@ namespace Barotrauma
 
 
             positionsOfInterest = new List<InterestingPosition>();
+            extraWalls = new List<LevelWall>();
+            bodies = new List<Body>();
+            List<Vector2> sites = new List<Vector2>();
             
             Voronoi voronoi = new Voronoi(1.0);
 
-            List<Vector2> sites = new List<Vector2>();
 
-            bodies = new List<Body>();
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
@@ -301,6 +307,8 @@ namespace Barotrauma
 
             Vector2 siteInterval = generationParams.VoronoiSiteInterval;
             Vector2 siteVariance = generationParams.VoronoiSiteVariance;
+
+            float siteIntervalSqr = siteInterval.LengthSquared();
             for (float x = siteInterval.X / 2; x < borders.Width; x += siteInterval.X)
             {
                 for (float y = siteInterval.Y / 2; y < borders.Height; y += siteInterval.Y)
@@ -309,7 +317,7 @@ namespace Barotrauma
                         x + Rand.Range(-siteVariance.X, siteVariance.X, Rand.RandSync.Server),
                         y + Rand.Range(-siteVariance.Y, siteVariance.Y, Rand.RandSync.Server));
 
-                    if (smallTunnels.Any(t => t.Any(node => Vector2.Distance(node, site) < siteInterval.Length())))
+                    if (smallTunnels.Any(t => t.Any(node => Vector2.DistanceSquared(node, site) < siteIntervalSqr)))
                     {
                         //add some more sites around the small tunnels to generate more small voronoi cells
                         if (x < borders.Width - siteInterval.X) sites.Add(new Vector2(x, y) + Vector2.UnitX * siteInterval * 0.5f);
@@ -439,8 +447,7 @@ namespace Barotrauma
 
                 cellGrid[x, y].Add(cell);
             }
-
-
+            
             //----------------------------------------------------------------------------------
             // create some ruins
             //----------------------------------------------------------------------------------
@@ -451,6 +458,40 @@ namespace Barotrauma
                 GenerateRuin(mainPath);
             }
 
+            //----------------------------------------------------------------------------------
+            // create floating ice chunks
+            //----------------------------------------------------------------------------------
+
+            if (generationParams.FloatingIceChunkCount > 0)
+            {
+                List<Vector2> iceChunkPositions = new List<Vector2>();
+                foreach (InterestingPosition pos in positionsOfInterest)
+                {
+                    if (pos.PositionType != PositionType.MainPath || pos.Position.X < 5000 || pos.Position.X > Size.X - 5000) continue;
+                    if (GetTooCloseCells(pos.Position, minWidth * 0.7f).Count > 0) continue;
+                    iceChunkPositions.Add(pos.Position);
+                }
+                        
+                for (int i = 0; i < generationParams.FloatingIceChunkCount; i++)
+                {
+                    if (iceChunkPositions.Count == 0) break;
+                    Vector2 selectedPos = iceChunkPositions[Rand.Int(iceChunkPositions.Count, Rand.RandSync.Server)];
+                    float chunkRadius = Rand.Range(500.0f, 1000.0f, Rand.RandSync.Server);
+                    var newChunk = new LevelWall(CaveGenerator.CreateRandomChunk(chunkRadius, 8, chunkRadius * 0.8f), Color.White, true)
+                    {
+                        MoveSpeed = Rand.Range(100.0f, 200.0f, Rand.RandSync.Server),
+                        MoveAmount = new Vector2(0.0f, minWidth * 0.7f)
+                    };
+                    newChunk.Body.Position = ConvertUnits.ToSimUnits(selectedPos);
+                    newChunk.Body.BodyType = BodyType.Dynamic;
+                    newChunk.Body.FixedRotation = true;
+                    newChunk.Body.LinearDamping = 0.5f;
+                    newChunk.Body.GravityScale = 0.0f;
+                    newChunk.Body.Mass *= 10.0f;
+                    extraWalls.Add(newChunk);
+                    iceChunkPositions.Remove(selectedPos);
+                }
+            }
 
             //----------------------------------------------------------------------------------
             // generate the bodies and rendered triangles of the cells
@@ -460,7 +501,7 @@ namespace Barotrauma
             endPosition.Y = borders.Height;
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out List<Vector2[]> triangles);
+            bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, out List<Vector2[]> triangles));
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
@@ -609,10 +650,9 @@ namespace Barotrauma
 
             Vector2 position = emptyCells[0].Center;
 
-            if (minDistance == 0.0f) return tooCloseCells;
+            if (minDistance <= 0.0f) return tooCloseCells;
 
             float step = 100.0f;
-
             int targetCellIndex = 1;
 
             minDistance *= 0.5f;
@@ -635,14 +675,14 @@ namespace Barotrauma
 
             var closeCells = GetCells(position, 3);
 
+            float minDistSqr = minDistance * minDistance;
             foreach (VoronoiCell cell in closeCells)
             {
                 bool tooClose = false;
                 foreach (GraphEdge edge in cell.edges)
-                {
-                    
-                    if (Vector2.Distance(edge.Point1, position) < minDistance ||
-                        Vector2.Distance(edge.Point2, position) < minDistance)
+                {                    
+                    if (Vector2.DistanceSquared(edge.Point1, position) < minDistSqr ||
+                        Vector2.DistanceSquared(edge.Point2, position) < minDistSqr)
                     {
                         tooClose = true;
                         break;
@@ -712,8 +752,8 @@ namespace Barotrauma
             }
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
-            
-            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.WallColor) };
+            seaFloor = new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.WallColor);
+            extraWalls.Add(seaFloor);
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
@@ -837,7 +877,8 @@ namespace Barotrauma
 
             ruinPos.Y = Math.Min(ruinPos.Y, borders.Y + borders.Height - ruinSize.Y / 2);
             ruinPos.Y = Math.Max(ruinPos.Y, SeaFloorTopPos + ruinSize.Y / 2.0f);
-            
+
+            //try to move the ruins away from any cells in the main path
             int iter = 0;
             while (mainPath.Any(p => Vector2.Distance(ruinPos, p.Center) < ruinRadius * 2.0f))
             {
@@ -846,17 +887,16 @@ namespace Barotrauma
 
                 foreach (VoronoiCell pathCell in mainPath)
                 {
-                    float dist = Vector2.Distance(pathCell.Center, ruinPos);
-                    if (dist > 10000.0f) continue;
+                    float distSqr = Vector2.DistanceSquared(pathCell.Center, ruinPos);
+                    if (distSqr > 10000.0f * 10000.0f) continue;
 
-                    Vector2 moveAmount = Vector2.Normalize(ruinPos - pathCell.Center) * 100000.0f / dist;
+                    Vector2 moveAmount = Vector2.Normalize(ruinPos - pathCell.Center) * 100000.0f / (float)Math.Sqrt(distSqr);
                     
                     weighedPathPos += moveAmount;
                     weighedPathPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y / 2, weighedPathPos.Y);
                 }
 
                 ruinPos = weighedPathPos;
-
                 if (iter > 10000) break;
             }
 
@@ -864,7 +904,7 @@ namespace Barotrauma
             float closestDist = 0.0f;
             foreach (VoronoiCell pathCell in mainPath)
             {
-                float dist = Vector2.Distance(pathCell.Center, ruinPos);
+                float dist = Vector2.DistanceSquared(pathCell.Center, ruinPos);
                 if (closestPathCell == null || dist < closestDist)
                 {
                     closestPathCell = pathCell;
@@ -995,14 +1035,14 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            backgroundCreatureManager.Update(deltaTime, cam);
-
-            if (WaterRenderer.Instance != null)
+            foreach (LevelWall wall in ExtraWalls)
             {
-                WaterRenderer.Instance.ScrollWater(Vector2.UnitY, (float)deltaTime);
+                wall.Update(deltaTime);
             }
 
+#if CLIENT
+            backgroundCreatureManager.Update(deltaTime, cam);
+            WaterRenderer.Instance?.ScrollWater(Vector2.UnitY, (float)deltaTime);
             renderer.Update(deltaTime, cam);
 #endif
         }
@@ -1073,7 +1113,7 @@ namespace Barotrauma
                 }
             }
 
-            if (extraWalls != null)
+            /*if (extraWalls != null)
             {
                 Debug.Assert(extraWalls.Count() == 1, "Level.GetCells may need to be updated to support extra walls other than the ocean floor.");
                 if (worldPos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
@@ -1086,8 +1126,14 @@ namespace Barotrauma
                         }
                     }
                 }
+            }*/
+            foreach (LevelWall wall in extraWalls)
+            {
+                foreach (VoronoiCell cell in wall.Cells)
+                {
+                    cells.Add(cell);
+                }
             }
-
             
             return cells;
         }

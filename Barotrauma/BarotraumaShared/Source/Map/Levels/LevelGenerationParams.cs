@@ -139,6 +139,7 @@ namespace Barotrauma
             set { height = Math.Max(value, 2000.0f); }
         }
 
+        [Serialize("3000.0, 3000.0", false)]
         public Vector2 VoronoiSiteInterval
         {
             get { return voronoiSiteInterval; }
@@ -160,6 +161,7 @@ namespace Barotrauma
             }
         }
 
+        [Serialize("5000.0, 10000.0", false)]
         public Vector2 MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -177,6 +179,7 @@ namespace Barotrauma
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
 
+        [Serialize("5000.0, 10000.0", false)]
         public Vector2 SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }
@@ -185,6 +188,13 @@ namespace Barotrauma
                 smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, width);
                 smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, width);
             }
+        }
+
+        [Serialize(0, false)]
+        public int FloatingIceChunkCount
+        {
+            get;
+            set;
         }
 
         [Serialize(-300000.0f, false)]
@@ -311,14 +321,8 @@ namespace Barotrauma
 
             colorVector = element.GetAttributeVector3("WallColor", new Vector3(255,255,255));
             WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
-
-            VoronoiSiteInterval = element.GetAttributeVector2("VoronoiSiteInterval", new Vector2(3000, 3000));
-
+            
             VoronoiSiteVariance = element.GetAttributeVector2("VoronoiSiteVariance", new Vector2(voronoiSiteInterval.X, voronoiSiteInterval.Y) * 0.4f);
-
-            MainPathNodeIntervalRange = element.GetAttributeVector2("MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
-
-            SmallTunnelLengthRange = element.GetAttributeVector2("SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
             
             string biomeStr = element.GetAttributeString("biomes", "");
 

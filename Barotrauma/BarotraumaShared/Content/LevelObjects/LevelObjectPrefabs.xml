@@ -704,7 +704,7 @@
 
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
             minsize="5" maxsize="8" randomrotation="-180,180" commonness="10" depthrange="100,2000">
-    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,335,513" origin="0.5,0.5"/>
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="669,0,355,513" origin="0.5,0.5"/>
   </icechunk>
 
   <icechunk spawnpos="Wall, RuinWall" minsurfacewidth="0" 
@@ -852,11 +852,10 @@
              force="0,5" forcemode="Acceleration" forcefalloff="true" forcevelocitylimit="300" forcefluctuationstrength="0.9" forcefluctuationinterval="30"/>
   </watercurrent1>
 
-
-
-
-
-
-
+  <fallingicechunk spawnpos="Wall, RuinWall" minsurfacewidth="0"
+            minsize="0.5" maxsize="1" randomrotation="-180,180" commonness="10" depthrange="-0.5,-0.1">
+    <Sprite texture="Content/LevelObjects/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
+    <PhysicsBody radius="330"/>
+  </fallingicechunk>
 
 </levelobjects>

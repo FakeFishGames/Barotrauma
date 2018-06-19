@@ -62,13 +62,9 @@ namespace Barotrauma
             
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             var levelCells = level.GetAllCells();
-            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));
-
-            foreach (var extraWall in level.ExtraWalls)
-            {
-                availableSpawnPositions.AddRange(GetAvailableSpawnPositions(extraWall.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
-            }
-
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));            
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(level.SeaFloor.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
+            
             foreach (RuinGeneration.Ruin ruin in level.Ruins)
             {
                 foreach (var ruinShape in ruin.RuinShapes)
