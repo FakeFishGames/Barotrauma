@@ -13,9 +13,9 @@
     restitution="0.2"
     collisionradius="30.0"
     velocitychange="0.0, -9.8">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
   </watersplash>
   
   <mist
@@ -27,7 +27,7 @@
     growtime ="0.2"
     lifetime="3"
     velocitychange="0.0, -0.05">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
   </mist>
 
   <waterdrop
@@ -58,14 +58,14 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
   </waterdrop>
 
   <dustcloud
@@ -76,9 +76,9 @@
     colorchange="0.0, 0.0, 0.0, -0.3"
     lifetime="3"
     velocitychange="0.0, -5.0">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
   </dustcloud>
 
   <bubbles
@@ -93,7 +93,7 @@
     deleteoncollision="true"
     drawtarget="water"
     velocitychange="0.0, 0.1">
-    <sprite texture="Content/Particles/bubbles.png"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="270,5,103,119"/>
   </bubbles>
 
   <blood
@@ -150,14 +150,14 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
   </blooddrop>
   
   <bloodtrail
@@ -187,9 +187,9 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="256,254,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,128,128,128"/>
   </bloodtrail>
   
   <gib
@@ -220,13 +220,13 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="208,64,48,32"/>
   </gib>
 
   <heavygib
@@ -257,13 +257,13 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="208,64,48,32"/>
 
     <ParticleEmitter
       particle="bloodtrail"
@@ -301,7 +301,7 @@
     colorchange="0,0,0,0"
     drawtarget="Air"
     blendstate="Additive">
-    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="392,83,106,16"/>
   </spark>
 
   <shockwave
@@ -313,7 +313,7 @@
     lifetime="1.0"
     drawtarget="both"    
     velocitychange="0.0, 0.0">
-    <sprite texture="Content/Particles/explosion.png" sourcerect="0,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,256,128,128"/>
   </shockwave>
 
   <flame
@@ -344,7 +344,7 @@
     usecollision="true"
     collisionradius="30.0"
     velocitychange="0.0, 2.5">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
   </steam>
 
   <smoke
@@ -459,13 +459,13 @@
     blendstate="AlphaBlend"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="208,64,48,32"/>
   </lavachunk>
 
   <explosionfire
@@ -539,7 +539,7 @@
     drawtarget="both"
     blendstate="additive"
     velocitychange="0.0, 0.0">
-    <sprite texture="Content/Particles/flames.png" sourcerect="0,0,128,64" origin="0.15,0.5"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="394,13,102,12" origin="0.1,0.5"/>
   </weld>
 
   <weldspark
@@ -570,7 +570,7 @@
     blendstate="Additive"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="392,83,106,16"/>
   </weldspark>
 
   <weldsmoke
@@ -613,7 +613,7 @@
     drawtarget="both"
     blendstate="additive"
     velocitychange="0.0, 0.0">
-    <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="395,41,108,11" origin="0.1,0.5"/>
   </plasma>
 
   <plasmaspark
@@ -644,7 +644,7 @@
     blendstate="Additive"
     animduration="1"
     loopanim="True">
-    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="392,83,106,16"/>
   </plasmaspark>
   
   <plasmasmoke
@@ -687,7 +687,7 @@
     drawtarget="both"
     blendstate="additive"
     velocitychange="0.0, 0.0">
-    <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.0,0.5"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="395,41,108,11" origin="0.1,0.5"/>
   </largeplasma>
 
   <fleshsmoke
@@ -765,7 +765,7 @@
     friction="0.01"
     restitution="0.1"
     velocitychange="0.0, -0.5">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
   </extinguisher>
 
   <flare
@@ -780,7 +780,7 @@
     usecollision="true"
     blendstate="additive"
     velocitychange="0.0, 1.0">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="384,254,128,128"/>
   </flare>
   
   <shrapnel
@@ -796,22 +796,22 @@
     waterdrag="0.1"
     growtime ="0.0"
     velocitychange="0.0, -5.0">
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,0,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,32,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,0,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,32,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,32,32,32"/>
   </shrapnel>
   
   <iceshards
@@ -826,25 +826,22 @@
     collisionradius="10.0"
     waterdrag="0.3"
     growtime ="0.0"
-    velocitychange="0.0, -5.0">
+    velocitychange="0.0, -5.0">    
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="208,64,48,32"/>
     
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
-    
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
-    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
-  </iceshards>  
-  
-
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/ParticleAtlas.png" sourcerect="224,96,32,32"/>
+  </iceshards>
 </prefabs>
