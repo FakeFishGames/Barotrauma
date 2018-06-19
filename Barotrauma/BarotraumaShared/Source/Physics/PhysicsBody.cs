@@ -316,8 +316,9 @@ namespace Barotrauma
 
             body.Friction = element.GetAttributeFloat("friction", 0.3f);
             body.Restitution = element.GetAttributeFloat("restitution", 0.05f);
-            
-            body.BodyType = BodyType.Dynamic;
+                        
+            Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
+            body.BodyType = bodyType; ;
 
             body.UserData = this;
 

@@ -57,10 +57,10 @@ namespace Barotrauma
         partial void InitProjSpecific(XElement element)
         {
             Sounds = new List<SoundConfig>();
-            LoadElements(element, -1);
+            LoadElementsProjSpecific(element, -1);
         }
 
-        private void LoadElements(XElement element, int parentTriggerIndex)
+        private void LoadElementsProjSpecific(XElement element, int parentTriggerIndex)
         {
             foreach (XElement subElement in element.Elements())
             {
@@ -68,7 +68,7 @@ namespace Barotrauma
                 {
                     case "leveltrigger":
                     case "trigger":
-                        LoadElements(subElement, LevelTriggerElements.IndexOf(subElement));
+                        LoadElementsProjSpecific(subElement, LevelTriggerElements.IndexOf(subElement));
                         break;
                     case "lightsource":
                         if (LightSourceConfigs == null)

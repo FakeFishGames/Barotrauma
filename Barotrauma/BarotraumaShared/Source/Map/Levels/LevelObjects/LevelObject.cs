@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -18,6 +19,12 @@ namespace Barotrauma
         public float Rotation;
 
         public LevelObjectPrefab ActivePrefab;
+
+        public PhysicsBody PhysicsBody
+        {
+            get;
+            private set;
+        }
 
         public List<LevelTrigger> Triggers
         {
@@ -39,6 +46,11 @@ namespace Barotrauma
             Position = position;
             Scale = scale;
             Rotation = rotation;
+
+            if (prefab.PhysicsBodyElement != null)
+            {
+                PhysicsBody = new PhysicsBody(prefab.PhysicsBodyElement, ConvertUnits.ToSimUnits(new Vector2(position.X, position.Y)), Scale);
+            }
 
             foreach (XElement triggerElement in prefab.LevelTriggerElements)
             {
