@@ -254,7 +254,14 @@ namespace Barotrauma
             get { return bottomHoleProbability; }
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
-        
+
+        [Serialize(1.0f, false)]
+        public float WaterParticleScale
+        {
+            get;
+            private set;
+        }
+
         public Sprite BackgroundSprite { get; private set; }
         public Sprite BackgroundTopSprite { get; private set; }
         public Sprite WallSprite { get; private set; }

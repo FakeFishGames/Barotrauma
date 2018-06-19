@@ -108,7 +108,7 @@
     MountainHeightMax="120000">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
-    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <WaterParticles texture="Content/Map/BackgroundColorful.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
   </RidgeBasic>
@@ -181,10 +181,11 @@
     SeaFloorDepth="-50000.0"
     SeaFloorVariance="2000"
     MountainHeightMin="40000"
-    MountainHeightMax="50000">
+    MountainHeightMax="50000"
+    WaterParticleScale="5">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
     <BackgroundTop texture="Content/Map/iceBackground.png"/>
-    <WaterParticles texture="Content/Map/dustparticles.png"/>
+    <WaterParticles texture="Content/Map/BackgroundSmoke.png"/>
     <Wall texture="Content/Map/iceBackground.png"/>
     <WallEdge texture="Content/Map/iceWallEdge.png"/>
   </WastesBasic>

@@ -73,11 +73,16 @@ namespace Barotrauma
             
             WaterRenderer.Instance?.ScrollWater(dustVelocity, deltaTime);
 
-            dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * deltaTime;
-            while (dustOffset.X <= -2048.0f) dustOffset.X += 2048.0f;
-            while (dustOffset.X >= 2048.0f) dustOffset.X -= 2048.0f;
-            while (dustOffset.Y <= -2048.0f) dustOffset.Y += 2048.0f;
-            while (dustOffset.Y >= 2048.0f) dustOffset.Y -= 2048.0f;
+            if (level.GenerationParams.WaterParticles != null)
+            {
+                Vector2 waterTextureSize = level.GenerationParams.WaterParticles.size * level.GenerationParams.WaterParticleScale;
+                dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * level.GenerationParams.WaterParticleScale * deltaTime;
+                while (dustOffset.X <= -waterTextureSize.X) dustOffset.X += waterTextureSize.X;
+                while (dustOffset.X >= waterTextureSize.X) dustOffset.X -= waterTextureSize.X;
+                while (dustOffset.Y <= -waterTextureSize.Y) dustOffset.Y += waterTextureSize.Y;
+                while (dustOffset.Y >= waterTextureSize.Y) dustOffset.Y -= waterTextureSize.Y;
+            }
+
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -158,32 +163,38 @@ namespace Barotrauma
 
             if (level.GenerationParams.WaterParticles != null)
             {
+                float textureScale = level.GenerationParams.WaterParticleScale;
+
                 Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
                 Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
                 Vector2 offset = -origin + dustOffset;
-                while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
-                while (offset.X > 0.0f) offset.X -= srcRect.Width;
-                while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
-                while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
+                while (offset.X <= -srcRect.Width * textureScale) offset.X += srcRect.Width * textureScale;
+                while (offset.X > 0.0f) offset.X -= srcRect.Width * textureScale;
+                while (offset.Y <= -srcRect.Height * textureScale) offset.Y += srcRect.Height * textureScale;
+                while (offset.Y > 0.0f) offset.Y -= srcRect.Height * textureScale;
                 for (int i = 0; i < 4; i++)
                 {
-                    float scale = 1.0f - i * 0.2f;
-                    float recipScale = 1.0f / scale;
+                    float scale = (1.0f - i * 0.2f);
 
-                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.5-0.25
-                    float alpha = (cam.Zoom * scale) < 0.5f ? (cam.Zoom * scale - 0.25f) * 40.0f : 1.0f;
+                    //alpha goes from 1.0 to 0.0 when scale is in the range of 0.3-0.1
+                    float alpha = (cam.Zoom * scale) < 0.3f ? (cam.Zoom * scale - 0.1f) * 5.0f : 1.0f;
                     if (alpha <= 0.0f) continue;
 
-                    Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
-                    while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
-                    while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
-                    while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
-                    while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
+                    Vector2 offsetS = offset * scale
+                        + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f
+                        - new Vector2(256.0f * i);
+
+                    float texScale = scale * textureScale;
+
+                    while (offsetS.X <= -srcRect.Width * texScale) offsetS.X += srcRect.Width * texScale;
+                    while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * texScale;
+                    while (offsetS.Y <= -srcRect.Height * texScale) offsetS.Y += srcRect.Height * texScale;
+                    while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * texScale;
 
                     level.GenerationParams.WaterParticles.DrawTiled(
                         spriteBatch, origin + offsetS, 
                         new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
-                        rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(scale));
+                        rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
 
@@ -202,7 +213,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && GameMain.GameScreen.Cam.Zoom > 0.05f)
             {
                 var cells = level.GetCells(GameMain.GameScreen.Cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)
