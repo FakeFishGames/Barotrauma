@@ -24,7 +24,12 @@ namespace Barotrauma
 
         private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
-        public LightSource LightSource
+        public LightSource[] LightSources
+        {
+            get;
+            private set;
+        }
+        public LevelTrigger[] LightSourceTriggers
         {
             get;
             private set;
@@ -83,13 +88,20 @@ namespace Barotrauma
                 }
             }
 
-            if (Prefab.LightSourceConfig != null)
+            if (Prefab.LightSourceConfigs != null)
             {
-                LightSource = new LightSource(Prefab.LightSourceConfig)
+                LightSources = new LightSource[Prefab.LightSourceConfigs.Count];
+                LightSourceTriggers = new LevelTrigger[Prefab.LightSourceConfigs.Count];
+                for (int i = 0; i < Prefab.LightSourceConfigs.Count; i++)
                 {
-                    Position = new Vector2(Position.X, Position.Y),
-                    IsBackground = true
-                };
+                    LightSources[i] = new LightSource(Prefab.LightSourceConfigs[i])
+                    {
+                        Position = new Vector2(Position.X, Position.Y),
+                        IsBackground = true
+                    };
+                    LightSourceTriggers[i] = Prefab.LightSourceTriggerIndex[i] > -1 ?
+                        Triggers[Prefab.LightSourceTriggerIndex[i]] : null;
+                }
             }
             
             Sounds = new Sound[Prefab.Sounds.Count];
@@ -149,11 +161,15 @@ namespace Barotrauma
                 CurrentScaleOscillation = Vector2.Lerp(CurrentScaleOscillation, ActivePrefab.ScaleOscillation, deltaTime * 10.0f);
             }
 
-            if (LightSource != null)
+            if (LightSources != null)
             {
-                LightSource.Rotation = CurrentRotation;
+                for (int i = 0; i < LightSources.Length; i++)
+                {
+                    if (LightSourceTriggers[i] != null) LightSources[i].Enabled = LightSourceTriggers[i].IsTriggered;
+                    LightSources[i].Rotation = CurrentRotation;
+                }
             }
-            
+
             if (spriteDeformations.Count > 0)
             {
                 UpdateDeformations(deltaTime);

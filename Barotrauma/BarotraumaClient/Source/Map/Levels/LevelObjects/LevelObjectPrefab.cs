@@ -43,7 +43,12 @@ namespace Barotrauma
             private set;
         }
 
-        public XElement LightSourceConfig
+        public List<int> LightSourceTriggerIndex
+        {
+            get;
+            private set;
+        }
+        public List<XElement> LightSourceConfigs
         {
             get;
             private set;
@@ -66,7 +71,14 @@ namespace Barotrauma
                         LoadElements(subElement, LevelTriggerElements.IndexOf(subElement));
                         break;
                     case "lightsource":
-                        LightSourceConfig = subElement;
+                        if (LightSourceConfigs == null)
+                        {
+                            LightSourceConfigs = new List<XElement>();
+                            LightSourceTriggerIndex = new List<int>();
+                        }
+
+                        LightSourceTriggerIndex.Add(parentTriggerIndex);
+                        LightSourceConfigs.Add(subElement);
                         break;
                     case "particleemitter":
                         if (ParticleEmitterPrefabs == null)

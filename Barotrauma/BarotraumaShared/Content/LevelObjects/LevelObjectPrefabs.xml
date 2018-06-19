@@ -811,8 +811,8 @@
   <lavavent spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="1.2" randomrotation="-10,10">
     <overridecommonness commonness="1" leveltype="WastesBasic" />
     <Sprite texture="Content/LevelObjects/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
-    <LightSource range="4000" color="1,0.0,0.0,1"/>
     <Trigger randomtriggerinterval="10" randomtriggerprobability="0.5" staytriggereddelay="5" networksyncing="true">
+      <LightSource range="4000" color="1,0.0,0.0,1"/>
       <Trigger position="0,1500" radius="500" height="1600" camerashake="3" triggeredby="Submarine, Character"
               force="0,5.0" forcemode="Acceleration" forcefalloff="false" forcevelocitylimit="200">
         <Attack structuredamage="5" damagerange="500">
