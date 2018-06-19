@@ -48,7 +48,6 @@ namespace Barotrauma
             ContentType.Structure,
             ContentType.LocationTypes,
             ContentType.LevelGenerationParameters,
-            ContentType.RandomEvents, //TODO: is it enough if only the server has the random event configs?
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
