@@ -164,6 +164,7 @@
   <Days>Days</Days>
   <Hours>Hours</Hours>
   <ManagePlayers>Manage players</ManagePlayers>
+  <Destination>Destination</Destination>
 
   <DeleteDialogLabel>Delete file?</DeleteDialogLabel>
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>

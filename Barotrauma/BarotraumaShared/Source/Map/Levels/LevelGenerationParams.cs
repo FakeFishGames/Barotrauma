@@ -89,12 +89,17 @@ namespace Barotrauma
         //which biomes can this type of level appear in
         private List<Biome> allowedBiomes = new List<Biome>();
 
+        public IEnumerable<Biome> AllowedBiomes
+        {
+            get { return allowedBiomes; }
+        }
+
         public Color AmbientLightColor
         {
             get;
             set;
         }
-        
+
         public Color BackgroundColor
         {
             get;
