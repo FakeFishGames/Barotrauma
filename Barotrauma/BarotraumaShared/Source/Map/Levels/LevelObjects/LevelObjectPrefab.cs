@@ -61,12 +61,23 @@ namespace Barotrauma
         public readonly XElement Config;
 
         public readonly List<XElement> LevelTriggerElements;
-
+        
         /// <summary>
         /// Overrides the commonness of the object in a specific level type. 
         /// Key = name of the level type, value = commonness in that level type.
         /// </summary>
         public Dictionary<string, float> OverrideCommonness;
+
+        public XElement PhysicsBodyElement
+        {
+            get;
+            private set;
+        }
+        public int PhysicsBodyTriggerIndex
+        {
+            get;
+            private set;
+        }
 
         [Serialize("0.0,1.0", false)]
         public Vector2 DepthRange
@@ -270,9 +281,25 @@ namespace Barotrauma
             
             OverrideCommonness = new Dictionary<string, float>();
 
+            LoadElements(element, -1);
+
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            InitProjSpecific(element);
+
+            //use the maximum width of the sprite as the minimum surface width if no value is given
+            if (!element.Attributes("minsurfacewidth").Any())
+            {
+                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
+                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
+            }
+        }
+
+        private void LoadElements(XElement element, int parentTriggerIndex)
+        {
             foreach (XElement subElement in element.Elements())
             {
-                switch(subElement.Name.ToString().ToLowerInvariant())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement);
@@ -289,34 +316,13 @@ namespace Barotrauma
                         break;
                     case "leveltrigger":
                     case "trigger":
-                        LoadTrigger(subElement);
+                        OverrideProperties.Add(null);
+                        LevelTriggerElements.Add(subElement);
+                        LoadElements(subElement, LevelTriggerElements.Count - 1);
                         break;
                     case "childobject":
                         ChildObjects.Add(new ChildObject(subElement));
                         break;
-                }
-            }
-
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-
-            InitProjSpecific(element);
-
-            //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (!element.Attributes("minsurfacewidth").Any())
-            {
-                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
-                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
-            }
-        }
-
-        private void LoadTrigger(XElement element)
-        {
-            LevelTriggerElements.Add(element);
-            OverrideProperties.Add(null);
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
                     case "overrideproperties":
                         var propertyOverride = new LevelObjectPrefab(subElement);
                         OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
@@ -326,14 +332,15 @@ namespace Barotrauma
                             propertyOverride.DeformableSprite = DeformableSprite;
                         }
                         break;
-                    case "leveltrigger":
-                    case "trigger":
-                        LoadTrigger(subElement);
+                    case "body":
+                    case "physicsbody":
+                        PhysicsBodyElement = subElement;
+                        PhysicsBodyTriggerIndex = parentTriggerIndex;
                         break;
                 }
             }
         }
-
+        
         partial void InitProjSpecific(XElement element);
 
         public float GetCommonness(string levelType)

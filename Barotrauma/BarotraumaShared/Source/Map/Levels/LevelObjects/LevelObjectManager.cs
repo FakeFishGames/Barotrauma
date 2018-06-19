@@ -353,6 +353,13 @@ namespace Barotrauma
                     }
                 }
 
+                if (obj.PhysicsBody != null)
+                {
+                    if (obj.Prefab.PhysicsBodyTriggerIndex > -1) obj.PhysicsBody.Enabled = obj.Triggers[obj.Prefab.PhysicsBodyTriggerIndex].IsTriggered;
+                    obj.Position = new Vector3(obj.PhysicsBody.Position, obj.Position.Z);
+                    obj.Rotation = obj.PhysicsBody.Rotation;
+                }
+
                 if (obj.ActivePrefab.SonarDisruption > 0.0f)
                 {
                     Level.Loaded?.SetSonarDisruptionStrength(new Vector2(obj.Position.X, obj.Position.Y), obj.ActivePrefab.SonarDisruption);
