@@ -1082,15 +1082,14 @@ namespace Barotrauma
         /// <summary>
         /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
-        public static void AddMessage(string message, Color color, bool playSound = true)
+        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true)
         {
-            float lifeTime = MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f);
             foreach (GUIMessage msg in messages)
             {
                 if (msg.Text == message) return;
             }
             
-            messages.Add(new GUIMessage(message, color, lifeTime, LargeFont));
+            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 

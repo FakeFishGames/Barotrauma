@@ -131,6 +131,12 @@ namespace Barotrauma
             get { return seed; }
         }
 
+        public Biome Biome
+        {
+            get;
+            private set;
+        }
+
         public float Difficulty
         {
             get;
@@ -169,14 +175,13 @@ namespace Barotrauma
             get { return generationParams.WallColor; }
         }
 
-        public Level(string seed, float difficulty, LevelGenerationParams generationParams)
+        public Level(string seed, float difficulty, LevelGenerationParams generationParams, Biome biome)
         {
             this.seed = seed;
-            
+            this.Biome = biome;
             this.Difficulty = difficulty;
-
             this.generationParams = generationParams;
-
+            
             borders = new Rectangle(0, 0, (int)generationParams.Width, (int)generationParams.Height);
         }
 
@@ -184,7 +189,7 @@ namespace Barotrauma
         {
             string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
             
-            return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome));
+            return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome), locationConnection.Biome);
         }
 
         public static Level CreateRandom(string seed = "", float? difficulty = null)
@@ -196,10 +201,14 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
+            var generationParams = LevelGenerationParams.GetRandom(seed);
+            var biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
+
             return new Level(
                 seed, 
-                difficulty.HasValue ? difficulty.Value : Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), 
-                LevelGenerationParams.GetRandom(seed));
+                difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.Server),
+                generationParams,
+                biome);
         }
 
         public void Generate(bool mirror = false)

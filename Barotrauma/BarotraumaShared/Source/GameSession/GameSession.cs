@@ -235,6 +235,14 @@ namespace Barotrauma
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();
+
+            if (!(GameMode is TutorialMode))
+            {
+                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);   
+                GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);            
+                GUI.AddMessage(TextManager.Get("Destination") + ": " + EndLocation.Name, Color.CadetBlue, playSound: false);
+                GUI.AddMessage(TextManager.Get("Mission") + ": " + (Mission == null ? TextManager.Get("None") : Mission.Name), Color.CadetBlue, playSound: false);
+            }
 #endif
 
             RoundStartTime = Timing.TotalTime;
