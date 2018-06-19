@@ -13,7 +13,7 @@ namespace Barotrauma
 {
     static partial class CaveGenerator
     {
-        public static List<VoronoiCell> CarveCave(List<VoronoiCell> cells, Vector2 startPoint, out List<VoronoiCell> newCells)
+        /*public static List<VoronoiCell> CarveCave(List<VoronoiCell> cells, Vector2 startPoint, out List<VoronoiCell> newCells)
         {
             Voronoi voronoi = new Voronoi(1.0);
 
@@ -166,7 +166,7 @@ namespace Barotrauma
             }
 
             return path;
-        }
+        }*/
 
         public static List<VoronoiCell> GraphEdgesToCells(List<GraphEdge> graphEdges, Rectangle borders, float gridCellSize, out List<VoronoiCell>[,] cellGrid)
         {
@@ -348,10 +348,9 @@ namespace Barotrauma
             return pathCells;
         }
 
-        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid = true)
+        public static Body GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid = true)
         {
             renderTriangles = new List<Vector2[]>();
-            var bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
             List<Vector2> bodyPoints = new List<Vector2>();
@@ -362,7 +361,6 @@ namespace Barotrauma
                 BodyType = BodyType.Static,
                 CollisionCategories = Physics.CollisionLevel
             };
-            bodies.Add(cellBody);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -432,7 +430,24 @@ namespace Barotrauma
                 cell.body = cellBody;
             }
 
-            return bodies;
+            return cellBody;
+        }
+        
+        public static List<Vector2> CreateRandomChunk(float radius, int vertexCount, float radiusVariance)
+        {
+            Debug.Assert(radiusVariance < radius);
+            Debug.Assert(vertexCount >= 3);
+
+            List<Vector2> verts = new List<Vector2>();
+            float angleStep = MathHelper.TwoPi / vertexCount;
+            float angle = 0.0f;
+            for (int i = 0; i < vertexCount; i++)
+            {
+                verts.Add(new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                    (radius + Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.Server)));
+                angle += angleStep;
+            }
+            return verts;
         }
 
         /// <summary>

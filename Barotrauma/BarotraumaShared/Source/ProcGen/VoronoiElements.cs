@@ -136,7 +136,7 @@ namespace Voronoi2
 
         public Vector2 Center
         {
-            get { return new Vector2((float)site.coord.x, (float)site.coord.y)+Translation; }
+            get { return new Vector2((float)site.coord.x, (float)site.coord.y) + Translation; }
         }
 
         public VoronoiCell(Vector2[] vertices)

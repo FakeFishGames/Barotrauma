@@ -78,7 +78,7 @@ namespace Barotrauma
                     if (!MathUtils.IsValid(leftNormal))
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Invalid left normal");
+                        DebugConsole.ThrowError("Invalid left normal (" + leftNormal + "). LeftEdge: " + leftEdge + ", RightEdge: " + rightEdge);
 #endif
                         if (cell.body != null)
                         {
@@ -104,7 +104,7 @@ namespace Barotrauma
                     if (!MathUtils.IsValid(rightNormal))
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Invalid right normal");
+                        DebugConsole.ThrowError("Invalid right normal (" + rightNormal + "). LeftEdge: " + leftEdge + ", RightEdge: " + rightEdge);
 #endif
                         if (cell.body != null)
                         {
@@ -119,8 +119,7 @@ namespace Barotrauma
                     {
                         Vector2[] verts = new Vector2[3];
                         VertexPositionTexture[] vertPos = new VertexPositionTexture[3];
-
-
+                        
                         if (i == 0)
                         {
                             verts[0] = edge.Point1 - leftNormal * outWardThickness;

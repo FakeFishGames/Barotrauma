@@ -1,4 +1,5 @@
-﻿using FarseerPhysics.Dynamics;
+﻿using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,15 +10,59 @@ namespace Barotrauma
 {
     partial class LevelWall : IDisposable
     {        
-        private List<VoronoiCell> cells;
-                
+        private List<VoronoiCell> cells;                
         public List<VoronoiCell> Cells
         {
             get { return cells; }
         }
 
-        private List<Body> bodies;
-        
+        private Body body;
+        public Body Body
+        {
+            get { return body; }
+        }
+
+        private float moveState;
+        private float moveLength;
+
+        private Vector2 moveAmount;
+        public Vector2 MoveAmount
+        {
+            get { return moveAmount; }
+            set
+            {
+                moveAmount = value;
+                moveLength = moveAmount.Length();
+            }
+        }
+
+        public float MoveSpeed;
+
+        private Vector2? originalPos;
+
+        public LevelWall(List<Vector2> vertices, Color color, bool giftWrap = false)
+        {
+            if (giftWrap)
+            {
+                vertices = MathUtils.GiftWrap(vertices);
+            }
+
+            VoronoiCell wallCell = new VoronoiCell(vertices.ToArray());
+            for (int i = 0; i < wallCell.edges.Count; i++)
+            {
+                wallCell.edges[i].Cell1 = wallCell;
+                wallCell.edges[i].IsSolid = true;
+            }
+            cells = new List<VoronoiCell>() { wallCell };
+
+            body = CaveGenerator.GeneratePolygons(cells, out List<Vector2[]> triangles, false);
+#if CLIENT
+            List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
+            SetBodyVertices(bodyVertices.ToArray(), color);
+            SetWallVertices(CaveGenerator.GenerateWallShapes(cells), color);
+#endif
+        }
+
         public LevelWall(List<Vector2> edgePositions, Vector2 extendAmount, Color color)
         {
             cells = new List<VoronoiCell>();
@@ -34,7 +79,6 @@ namespace Barotrauma
                 wallCell.edges[1].Cell1 = wallCell;
                 wallCell.edges[2].Cell1 = wallCell;
                 wallCell.edges[3].Cell1 = wallCell;
-
                 wallCell.edges[0].IsSolid = true;
 
                 if (i > 1)
@@ -46,20 +90,37 @@ namespace Barotrauma
                 cells.Add(wallCell);
             }
 
-            bodies = CaveGenerator.GeneratePolygons(cells, out List<Vector2[]> triangles, false);
+            body = CaveGenerator.GeneratePolygons(cells, out List<Vector2[]> triangles, false);
 
 #if CLIENT
             List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
-
             SetBodyVertices(bodyVertices.ToArray(), color);
             SetWallVertices(CaveGenerator.GenerateWallShapes(cells), color);
 #endif
         }
 
+        public void Update(float deltaTime)
+        {
+            if (body.BodyType == BodyType.Static) return;
+
+            Vector2 bodyPos = ConvertUnits.ToDisplayUnits(body.Position);
+            Cells.ForEach(c => c.Translation = bodyPos);
+
+            if (!originalPos.HasValue) originalPos = bodyPos;
+
+            if (moveLength > 0.0f && MoveSpeed > 0.0f)
+            {
+                moveState += MoveSpeed / moveLength * deltaTime;
+                moveState %= MathHelper.TwoPi;
+
+                Vector2 targetPos = ConvertUnits.ToSimUnits(originalPos.Value + moveAmount * (float)Math.Sin(moveState));            
+                body.ApplyForce((targetPos - body.Position).ClampLength(1.0f) * body.Mass);
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
-
             GC.SuppressFinalize(this);
         }
 
@@ -77,12 +138,6 @@ namespace Barotrauma
                 bodyVertices = null;
             }
 #endif
-
-            if (bodies != null)
-            {
-                bodies.Clear();
-                bodies = null;
-            }
         }
     }
 }
