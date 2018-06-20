@@ -460,10 +460,17 @@ namespace Barotrauma
                     visibleSubs.Add(sub);
                 }
             }
+            
+            if (visibleEntities == null)
+            {
+                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count); 
+            }
+            else
+            {
+                visibleEntities.Clear();
+            }
 
             Rectangle worldView = cam.WorldView;
-
-            visibleEntities = new List<MapEntity>();
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 if (me.Submarine == null || visibleSubs.Contains(me.Submarine))

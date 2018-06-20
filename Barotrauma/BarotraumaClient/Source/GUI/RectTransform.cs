@@ -560,7 +560,18 @@ namespace Barotrauma
 
         public void RecalculateChildren(bool resize, bool scale = true)
         {
-            children.ForEach(c => c.RecalculateAll(resize, scale, withChildren: true));
+            for (int i = 0; i < children.Count; i++)
+            {
+                children[i].RecalculateAll(resize, scale, withChildren: true);
+            }
+        }
+
+        public void AddChildrenToGUIUpdateList(bool ignoreChildren = false, int order = 0)
+        {
+            for (int i = 0; i < children.Count; i++)
+            {
+                children[i].GUIComponent.AddToGUIUpdateList(ignoreChildren, order);
+            }
         }
         #endregion
 

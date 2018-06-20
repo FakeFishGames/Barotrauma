@@ -289,7 +289,6 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in PowerConnections)
             {
                 var recipients = c.Recipients;
-
                 foreach (Connection recipient in recipients)
                 {
                     if (recipient == null) continue;
@@ -299,8 +298,9 @@ namespace Barotrauma.Items.Components
 
                     if (it.Condition <= 0.0f) continue;
 
-                    foreach (Powered powered in it.GetComponents<Powered>())
+                    foreach (ItemComponent ic in it.components)
                     {
+                        Powered powered = ic as Powered;
                         if (powered == null || !powered.IsActive) continue;
                         if (connectedList.Contains(powered)) continue;
 
@@ -348,8 +348,7 @@ namespace Barotrauma.Items.Components
                                 fullPower -= powered.CurrPowerConsumption;
                             }
                         }
-                    }
-
+                    }                    
                 }
             }
         }

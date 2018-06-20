@@ -301,7 +301,7 @@ namespace Barotrauma
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
-                RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
+                RectTransform.AddChildrenToGUIUpdateList(ignoreChildren, order);
             }
             OnAddedToGUIUpdateList?.Invoke(this);
         }
