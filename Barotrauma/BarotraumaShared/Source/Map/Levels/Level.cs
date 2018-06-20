@@ -337,8 +337,7 @@ namespace Barotrauma
                     sites.Add(site);
                 }
             }
-
-
+            
             //----------------------------------------------------------------------------------
             // construct the voronoi graph and cells
             //----------------------------------------------------------------------------------
@@ -386,6 +385,8 @@ namespace Barotrauma
             // tunnels through the tunnel nodes
             //----------------------------------------------------------------------------------
 
+
+            List<List<Vector2>> validTunnels = new List<List<Vector2>>();
             foreach (List<Vector2> tunnel in smallTunnels)
             {
                 if (tunnel.Count < 2) continue;
@@ -397,14 +398,21 @@ namespace Barotrauma
                 //if it wasn't one of the cells in the main path, don't create a tunnel
                 if (cells[startCellIndex].CellType != CellType.Path) continue;
 
+                int mainPathCellCount = 0;
+                for (int j = 0; j < tunnel.Count; j++)
+                {
+                    int tunnelCellIndex = CaveGenerator.FindCellIndex(tunnel[j], cells, cellGrid, GridCellSize, 1);
+                    if (tunnelCellIndex > -1 && cells[tunnelCellIndex].CellType == CellType.Path) mainPathCellCount++;
+                }
+                if (mainPathCellCount > tunnel.Count / 2) continue;
+
                 var newPathCells = CaveGenerator.GeneratePath(tunnel, cells, cellGrid, GridCellSize, pathBorders);
-
                 positionsOfInterest.Add(new InterestingPosition(tunnel.Last(), PositionType.Cave));
-
                 if (tunnel.Count > 4) positionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count / 2], PositionType.Cave));
-                
+                validTunnels.Add(tunnel);
                 pathCells.AddRange(newPathCells);
             }
+            smallTunnels = validTunnels;
 
             Debug.WriteLine("path: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
@@ -475,6 +483,8 @@ namespace Barotrauma
                 foreach (InterestingPosition pos in positionsOfInterest)
                 {
                     if (pos.PositionType != PositionType.MainPath || pos.Position.X < 5000 || pos.Position.X > Size.X - 5000) continue;
+                    if (Vector2.DistanceSquared(pos.Position, startPosition) < 10000.0f * 10000.0f) continue;
+                    if (Vector2.DistanceSquared(pos.Position, endPosition) < 10000.0f * 10000.0f) continue;
                     if (GetTooCloseCells(pos.Position, minWidth * 0.7f).Count > 0) continue;
                     iceChunkPositions.Add(pos.Position);
                 }
@@ -854,17 +864,16 @@ namespace Barotrauma
                     //head back down if the tunnel has reached the top of the level
                     normalizedDir.Y = -normalizedDir.Y;
                 }
-                else if (tunnelNodes.Last().Y + normalizedDir.Y + normalizedDir.Y < 0.0f ||
-                    tunnelNodes.Last().Y + normalizedDir.Y + normalizedDir.Y < SeaFloorTopPos)
+                else if (tunnelNodes.Last().Y + normalizedDir.Y + normalizedDir.Y < 500.0f)
                 {
-                    //head back up if reached the sea floor
+                    //head back up if reached the bottom of the level
                     normalizedDir.Y = -normalizedDir.Y;
                 }
 
                 Vector2 nextNode = tunnelNodes.Last() + normalizedDir * sectionLength;
 
                 nextNode.X = MathHelper.Clamp(nextNode.X, 500.0f, Size.X - 500.0f);
-                nextNode.Y = MathHelper.Clamp(nextNode.Y, SeaFloorTopPos, Size.Y - 500.0f);
+                nextNode.Y = MathHelper.Clamp(nextNode.Y, 500.0f, Size.Y - 500.0f);
                 tunnelNodes.Add(nextNode);
                 currLength += sectionLength;
             }
