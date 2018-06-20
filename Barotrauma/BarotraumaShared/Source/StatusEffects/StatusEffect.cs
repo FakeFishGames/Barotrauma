@@ -104,12 +104,7 @@ namespace Barotrauma
         private List<ItemSpawnInfo> spawnItems;
 
         public readonly float FireSize;
-
-        public TargetType Targets
-        {
-            get { return targetTypes; }
-        }
-
+        
         public HashSet<string> TargetNames
         {
             get { return targetNames; }
@@ -316,6 +311,11 @@ namespace Barotrauma
 #endif
                 }
             }
+        }
+
+        public bool HasTargetType(TargetType targetType)
+        {
+            return (targetTypes & targetType) != 0;
         }
 
         public virtual bool HasRequiredItems(Entity entity)

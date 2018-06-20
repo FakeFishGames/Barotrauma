@@ -746,7 +746,7 @@ namespace Barotrauma
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
             if (containedItems != null)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     foreach (Item containedItem in containedItems)
                     {
@@ -773,12 +773,12 @@ namespace Barotrauma
 
             if (!hasTargets) return;
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Hull) && CurrentHull != null)
+            if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
             {
                 targets.Add(CurrentHull);
             }
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+            if (effect.HasTargetType(StatusEffect.TargetType.This))
             {
                 foreach (var pobject in AllPropertyObjects)
                 {
@@ -786,18 +786,18 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
+            if (effect.HasTargetType(StatusEffect.TargetType.Character)) targets.Add(character);
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
                 targets.Add(limb);
             }
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
 
-            if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
+            if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
         }

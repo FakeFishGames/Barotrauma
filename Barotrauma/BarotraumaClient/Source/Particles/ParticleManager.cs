@@ -191,7 +191,8 @@ namespace Barotrauma.Particles
             for (int i = 0; i < particleCount; i++)
             {
                 if (particles[i].BlendState != blendState) continue;
-                if (!particles[i].DrawTarget.HasFlag(drawTarget)) continue;
+                //equivalent to !particles[i].DrawTarget.HasFlag(drawTarget) but garbage free and faster
+                if ((particles[i].DrawTarget & drawTarget) == 0) continue;
                 if (inSub.HasValue && (particles[i].CurrentHull == null) == inSub.Value) continue;
                 
                 particles[i].Draw(spriteBatch);

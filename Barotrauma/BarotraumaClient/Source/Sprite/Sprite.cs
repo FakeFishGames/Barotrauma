@@ -117,15 +117,18 @@ namespace Barotrauma
             Vector2 scale = textureScale ?? Vector2.One;
             Color drawColor = color ?? Color.White;
 
+            bool flipHorizontal = (effects & SpriteEffects.FlipHorizontally) != 0;
+            bool flipVertical = (effects & SpriteEffects.FlipVertically) != 0;
+
             //wrap the drawOffset inside the sourceRect
             drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
             drawOffset.Y = (drawOffset.Y / scale.Y) % sourceRect.Height;
-            if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+            if (flipHorizontal)
             {
                 float diff =  targetSize.X % (sourceRect.Width * scale.X);
                 drawOffset.X += (sourceRect.Width * scale.X - diff) / scale.X;
             }
-            if (effects.HasFlag(SpriteEffects.FlipVertically))
+            if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
                 drawOffset.Y += (sourceRect.Height * scale.Y - diff) / scale.Y;
@@ -140,6 +143,7 @@ namespace Barotrauma
             Vector2 currDrawPosition = position - drawOffset;
             //which part of the texture we are currently drawing
             Rectangle texPerspective = sourceRect;
+
             
             for (int x = 0; x < xTiles; x++)
             {
@@ -153,7 +157,7 @@ namespace Barotrauma
                     float diff = (position.X - currDrawPosition.X);
                     currDrawPosition.X += diff;
                     texPerspective.Width -= (int)diff;
-                    if (!effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (!flipHorizontal)
                     {
                         texPerspective.X += (int)diff;
                     }
@@ -161,7 +165,7 @@ namespace Barotrauma
                 //drawing an offset flipped sprite, need to draw an extra slice to the left side
                 if (currDrawPosition.X > position.X && x == 0)
                 {
-                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (flipHorizontal)
                     {
                         int sliceWidth = (int)((currDrawPosition.X - position.X) * scale.X);
 
@@ -171,7 +175,7 @@ namespace Barotrauma
                         sliceRect.X = SourceRect.X;
                         sliceRect.Width = (int)(sliceWidth / scale.X);
                         
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             slicePos.Y += size.Y;
                         }
@@ -185,7 +189,7 @@ namespace Barotrauma
                 {
                     int diff = (int)(((currDrawPosition.X + texPerspective.Width * scale.X) - (position.X + targetSize.X)) / scale.X);
                     texPerspective.Width -= diff;
-                    if (effects.HasFlag(SpriteEffects.FlipHorizontally))
+                    if (flipHorizontal)
                     {
                         texPerspective.X += diff;
                     }
@@ -204,7 +208,7 @@ namespace Barotrauma
                         float diff = (position.Y - currDrawPosition.Y);
                         currDrawPosition.Y += diff;
                         texPerspective.Height -= (int)diff;
-                        if (!effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (!flipVertical)
                         {
                             texPerspective.Y += (int)diff;
                         }
@@ -213,7 +217,7 @@ namespace Barotrauma
                     //drawing an offset flipped sprite, need to draw an extra slice to the top
                     if (currDrawPosition.Y > position.Y && y == 0)
                     {
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             int sliceHeight = (int)((currDrawPosition.Y - position.Y) * scale.Y);
 
@@ -234,7 +238,7 @@ namespace Barotrauma
                     {
                         int diff = (int)(((currDrawPosition.Y + texPerspective.Height * scale.Y) - (position.Y + targetSize.Y)) / scale.Y);
                         texPerspective.Height -= diff;
-                        if (effects.HasFlag(SpriteEffects.FlipVertically))
+                        if (flipVertical)
                         {
                             texPerspective.Y += diff;
                         }

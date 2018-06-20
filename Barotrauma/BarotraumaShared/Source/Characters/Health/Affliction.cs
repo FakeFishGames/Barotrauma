@@ -72,15 +72,15 @@ namespace Barotrauma
             Strength += currentEffect.StrengthChange * deltaTime;
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
-                if (statusEffect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
                 }
-                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
                 }
-                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                 }

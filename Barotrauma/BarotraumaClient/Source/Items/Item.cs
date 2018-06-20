@@ -81,7 +81,10 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                    bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
+                    bool flipVertical = (SpriteEffects & SpriteEffects.FlipVertically) != 0;
+
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
                     {
                         selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
