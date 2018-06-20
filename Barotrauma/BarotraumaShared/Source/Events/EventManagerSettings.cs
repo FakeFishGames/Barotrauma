@@ -17,9 +17,7 @@ namespace Barotrauma
 
         //The threshold is reset to this value after an event has been triggered.
         public readonly float DefaultEventThreshold = 0.2f;
-
-        public readonly float IntensityUpdateInterval = 5.0f;
-
+        
         public readonly float EventCooldown = 360.0f;
         
         public readonly float MinEventDifficulty = 0.0f;
@@ -49,7 +47,6 @@ namespace Barotrauma
             Name = element.Name.ToString();
             EventThresholdIncrease = element.GetAttributeFloat("EventThresholdIncrease", 0.0005f);
             DefaultEventThreshold = element.GetAttributeFloat("DefaultEventThreshold", 0.2f);
-            IntensityUpdateInterval = element.GetAttributeFloat("IntensityUpdateInterval", 5.0f);
             EventCooldown = element.GetAttributeFloat("EventCooldown", 360.0f);
 
             MinEventDifficulty = element.GetAttributeFloat("MinEventDifficulty", 0.0f);

@@ -9,9 +9,6 @@
       How much the event threshold increases per second. Can be used to make sure that new events will be created
       eventually even if the current crisis situation is not resolved (e.g. sub laying flooded on the ocean floor...)-->
 
-  <!-- IntensityUpdateInterval
-      How often the event manager recalculates the intensity of the current situation.-->
-
   <!-- EventCooldown
       Minimum amount of time between creating new random events. -->
 
@@ -25,7 +22,6 @@
   <Easy
     DefaultEventThreshold="0.2"
     EventThresholdIncrease="0.0005"
-    IntensityUpdateInterval="5.0"
     EventCooldown="20.0"
     MinEventDifficulty="0.0"
     MaxEventDifficulty="10.0"
@@ -35,7 +31,6 @@
   <Medium
     DefaultEventThreshold="0.3"
     EventThresholdIncrease="0.0007"
-    IntensityUpdateInterval="5.0"
     EventCooldown="10.0"
     MinEventDifficulty="5.0"
     MaxEventDifficulty="25.0"
@@ -45,7 +40,6 @@
   <Hard
     DefaultEventThreshold="0.4"
     EventThresholdIncrease="0.0009"
-    IntensityUpdateInterval="5.0"
     EventCooldown="0.0"
     MinEventDifficulty="10.0"
     MaxEventDifficulty="40.0"
@@ -55,7 +49,6 @@
   <Hellish
     DefaultEventThreshold="0.5"
     EventThresholdIncrease="0.001"
-    IntensityUpdateInterval="5.0"
     EventCooldown="0.0"
     MinEventDifficulty="20.0"
     MaxEventDifficulty="100.0"
