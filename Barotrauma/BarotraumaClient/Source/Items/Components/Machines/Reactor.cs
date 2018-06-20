@@ -37,6 +37,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox lowTemperatureWarning;
         private GUITickBox criticalOutputWarning;
 
+        private GUIComponent leftHUDColumn;
+
         private Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
 
         private static string[] warningTexts = new string[]
@@ -46,8 +48,6 @@ namespace Barotrauma.Items.Components
             "ReactorWarningLowFuel", "ReactorWarningFuelOut",
             "ReactorWarningMeltdown","ReactorWarningSCRAM"
         };
-
-
 
         partial void InitProjSpecific(XElement element)
         {
@@ -89,6 +89,7 @@ namespace Barotrauma.Items.Components
             };
             
             GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
+            leftHUDColumn = columnLeft;
             GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
             GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.35f, 1.0f), paddedFrame.RectTransform), style: null);
 
@@ -249,9 +250,10 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
+            
             inventory.CenterPos = new Vector2(
-                GuiFrame.Children.First().Rect.Center.X / (float)GameMain.GraphicsWidth, 
-                (GuiFrame.Children.First().Rect.Y + GuiFrame.Children.First().Rect.Height * 0.75f) / GameMain.GraphicsHeight);
+                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth, 
+                (leftHUDColumn.Rect.Y + leftHUDColumn.Rect.Height * 0.85f) / GameMain.GraphicsHeight);
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
