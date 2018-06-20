@@ -40,6 +40,12 @@ namespace Barotrauma
 
         private Vector2? originalPos;
 
+        public float MoveState
+        {
+            get { return moveState; }
+            set { moveState = MathHelper.Clamp(value, 0.0f, MathHelper.TwoPi); }
+        }
+
         public LevelWall(List<Vector2> vertices, Color color, bool giftWrap = false)
         {
             if (giftWrap)

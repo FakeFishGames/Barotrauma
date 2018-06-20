@@ -1,7 +1,9 @@
-﻿using Barotrauma.RuinGeneration;
+﻿using Barotrauma.Networking;
+using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class Level
+    partial class Level : Entity, IServerSerializable
     {
         //all entities are disabled after they reach this depth
         public const float MaxEntityDepth = -300000.0f;
@@ -78,6 +80,11 @@ namespace Barotrauma
         private LevelObjectManager levelObjectManager;
 
         private List<Vector2> bottomPositions;
+
+        //no need for frequent network updates, as currently the only thing that's synced
+        //are the slowly moving ice chunks that move in a very predictable way
+        const float NetworkUpdateInterval = 5.0f;
+        private float networkUpdateTimer;
 
         public Vector2 StartPosition
         {
@@ -181,6 +188,7 @@ namespace Barotrauma
         }
 
         public Level(string seed, float difficulty, LevelGenerationParams generationParams, Biome biome)
+            : base(null)
         {
             this.seed = seed;
             this.Biome = biome;
@@ -188,6 +196,9 @@ namespace Barotrauma
             this.generationParams = generationParams;
             
             borders = new Rectangle(0, 0, (int)generationParams.Width, (int)generationParams.Height);
+
+            //remove from entity dictionary
+            base.Remove();
         }
 
         public static Level CreateRandom(LocationConnection locationConnection)
@@ -218,7 +229,7 @@ namespace Barotrauma
 
         public void Generate(bool mirror = false)
         {
-            if (loaded != null) loaded.Unload();            
+            if (loaded != null) loaded.Remove();            
             loaded = this;
             
             levelObjectManager = new LevelObjectManager();
@@ -232,20 +243,16 @@ namespace Barotrauma
                     backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml");
             }
 #endif
-
             Stopwatch sw = new Stopwatch();
             sw.Start();
-
-
+            
             positionsOfInterest = new List<InterestingPosition>();
             extraWalls = new List<LevelWall>();
             bodies = new List<Body>();
             List<Vector2> sites = new List<Vector2>();
             
             Voronoi voronoi = new Voronoi(1.0);
-
-
-
+            
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
 #if CLIENT
@@ -560,6 +567,9 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("Generated level with the seed " + seed + " (type: " + generationParams.Name + ")", Color.White);
             }
+
+            //assign an ID to make entity events work
+            ID = FindFreeID();
         }
 
 
@@ -1040,6 +1050,16 @@ namespace Barotrauma
                 wall.Update(deltaTime);
             }
 
+            if (GameMain.Server != null)
+            {
+                networkUpdateTimer += deltaTime;
+                if (networkUpdateTimer > NetworkUpdateInterval)
+                {
+                    GameMain.Server.CreateEntityEvent(this);
+                    networkUpdateTimer = 0.0f;
+                }
+            }
+
 #if CLIENT
             backgroundCreatureManager.Update(deltaTime, cam);
             WaterRenderer.Instance?.ScrollWater(Vector2.UnitY, (float)deltaTime);
@@ -1112,21 +1132,7 @@ namespace Barotrauma
                     cells.AddRange(cellGrid[x, y]);
                 }
             }
-
-            /*if (extraWalls != null)
-            {
-                Debug.Assert(extraWalls.Count() == 1, "Level.GetCells may need to be updated to support extra walls other than the ocean floor.");
-                if (worldPos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
-                {
-                    foreach (VoronoiCell cell in extraWalls[0].Cells)
-                    {
-                        if (Math.Abs(cell.Center.X - worldPos.X) < searchDepth * GridCellSize)
-                        {
-                            cells.Add(cell);
-                        }
-                    }
-                }
-            }*/
+            
             foreach (LevelWall wall in extraWalls)
             {
                 foreach (VoronoiCell cell in wall.Cells)
@@ -1138,8 +1144,9 @@ namespace Barotrauma
             return cells;
         }
 
-        private void Unload()
+        public override void Remove()
         {
+            base.Remove();
 #if CLIENT
             if (renderer != null) 
             {
@@ -1181,6 +1188,16 @@ namespace Barotrauma
             loaded = null;
         }
 
-    }
-      
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            foreach (LevelWall levelWall in extraWalls)
+            {
+                if (levelWall.Body.BodyType == BodyType.Static) continue;
+
+                msg.Write(levelWall.Body.Position.X);
+                msg.Write(levelWall.Body.Position.Y);
+                msg.WriteRangedSingle(levelWall.MoveState, 0.0f, MathHelper.TwoPi, 16);
+            }
+        }
+    }      
 }
