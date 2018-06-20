@@ -115,28 +115,18 @@ namespace Barotrauma.Items.Components
                 {
                     case "containable":
                         RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;
-                        
+                        if (containable == null) continue;                        
                         containableItems.Add(containable);
-
                         break;
-
-#if CLIENT
-                    case "topsprite":
-                        inventoryTopSprite = new Sprite(subElement);
-                        break;
-                    case "backsprite":
-                        inventoryBackSprite = new Sprite(subElement);
-                        break;
-                    case "bottomsprite":
-                        inventoryBottomSprite = new Sprite(subElement);
-                        break;
-#endif
                 }
             }
 
+            InitProjSpecific(element);
+
             itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public void OnItemContained(Item containedItem)
         {

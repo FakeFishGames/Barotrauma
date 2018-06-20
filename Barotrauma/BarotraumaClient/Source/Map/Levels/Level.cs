@@ -1,5 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
@@ -46,6 +49,27 @@ namespace Barotrauma
 
             if (renderer == null) return;
             renderer.DrawBackground(spriteBatch, cam, levelObjectManager, backgroundCreatureManager);
+        }
+        
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            if (GameMain.Server != null) return;
+
+            foreach (LevelWall levelWall in extraWalls)
+            {
+                if (levelWall.Body.BodyType == BodyType.Static) continue;
+
+                Vector2 bodyPos = new Vector2(
+                    msg.ReadSingle(), 
+                    msg.ReadSingle());
+                
+                levelWall.MoveState = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 16);
+
+                if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f)
+                {
+                    levelWall.Body.SetTransform(bodyPos, levelWall.Body.Rotation);
+                }
+            }
         }
     }
 }

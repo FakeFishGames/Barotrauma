@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     partial class EventManager
     {
+        const float IntensityUpdateInterval = 5.0f;
+
         private List<ScriptedEvent> events;
 
         private Level level;
@@ -162,11 +164,15 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (GameMain.Client != null || !Enabled) return;
+            if (!Enabled) return;
+
+            //clients only calculate the intensity but don't create any events
+            //(the intensity is used for controlling the background music)
+            CalculateCurrentIntensity(deltaTime);
+            
+            if (GameMain.Client != null) return;
 
             roundDuration += deltaTime;
-
-            CalculateCurrentIntensity(deltaTime);
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
             if (eventCoolDown > 0.0f)
@@ -194,7 +200,7 @@ namespace Barotrauma
         {
             intensityUpdateTimer -= deltaTime;
             if (intensityUpdateTimer > 0.0f) return;
-            intensityUpdateTimer = settings.IntensityUpdateInterval;
+            intensityUpdateTimer = IntensityUpdateInterval;
 
             // crew health --------------------------------------------------------
 
@@ -203,7 +209,8 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead) continue;
-                if (character.AIController is HumanAIController || character.IsRemotePlayer || character == Character.Controlled)
+                if ((character.AIController is HumanAIController || character.IsRemotePlayer ||  character == Character.Controlled) &&
+                    (GameMain.NetworkMember?.Character == null || GameMain.NetworkMember.Character.TeamID == character.TeamID))
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
@@ -273,12 +280,12 @@ namespace Barotrauma
             if (targetIntensity > currentIntensity)
             {
                 //50 seconds for intensity to go from 0.0 to 1.0
-                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * settings.IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * IntensityUpdateInterval, targetIntensity);
             }
             else
             {
                 //400 seconds for intensity to go from 1.0 to 0.0
-                currentIntensity = MathHelper.Max(0.0025f * settings.IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
             }
         }
     }

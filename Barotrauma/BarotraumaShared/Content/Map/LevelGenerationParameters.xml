@@ -98,6 +98,7 @@
     SmallTunnelCount="10"
     SmallTunnelLengthRange="5000,50000"
     RuinCount="3"
+    FloatingIceChunkCount="3"
     BottomHoleProbability="0.6"
     levelobjectamount="1500"
     MountainCountMin="1"
@@ -152,6 +153,7 @@
     SmallTunnelCount="3"
     SmallTunnelLengthRange="10000,20000"
     RuinCount="1"
+    FloatingIceChunkCount="20"
     BottomHoleProbability="1"
     levelobjectamount="800">
     <Background texture="Content/Map/iceBackgroundFade.png"/>
