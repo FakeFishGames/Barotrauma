@@ -185,9 +185,9 @@ namespace Barotrauma.Items.Components
 
                 StatusEffect effect = itemAndEffect.Second;
 
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))                 
+                if (effect.HasTargetType(StatusEffect.TargetType.This))                 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) 
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
             }
         }

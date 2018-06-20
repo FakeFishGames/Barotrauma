@@ -391,7 +391,7 @@ namespace Barotrauma.Items.Components
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.UseTarget))
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }
