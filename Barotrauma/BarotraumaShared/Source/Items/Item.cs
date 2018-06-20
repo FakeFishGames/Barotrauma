@@ -825,12 +825,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth)
-            {
-                Spawner.AddToRemoveQueue(this);
-                return;
-            }
-
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
@@ -893,6 +887,11 @@ namespace Barotrauma
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
                 {
                     UpdateTransform();
+                    if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
+                    {
+                        Spawner.AddToRemoveQueue(this);
+                        return;
+                    }
                 }
 
                 UpdateNetPosition();
