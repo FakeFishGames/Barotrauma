@@ -1130,14 +1130,14 @@ namespace Barotrauma
 
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
-                        if (Collider.SimPosition.Y < targetY && !forceImmediate)
+                        if (forceImmediate)
                         {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 0);
+                            Collider.SetTransform(new Vector2(Collider.SimPosition.X, targetY), Collider.Rotation);
                         }
                         else
                         {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 0);
-                            Collider.SetTransform(new Vector2(Collider.SimPosition.X, targetY), Collider.Rotation);                            
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
                         }
                     }
                 }
@@ -1487,22 +1487,17 @@ namespace Barotrauma
         
         private Vector2 GetFlowForce()
         {
-            Vector2 limbPos = ConvertUnits.ToDisplayUnits(Limbs[0].SimPosition);
+            Vector2 limbPos = Limbs[0].Position;
 
             Vector2 force = Vector2.Zero;
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (Gap gap in Gap.GapList)
             {
-                Gap gap = e as Gap;
-                if (gap == null || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
+                if (gap.Open <= 0.0f || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
 
                 Vector2 gapPos = gap.SimPosition;
-
                 float dist = Vector2.Distance(limbPos, gapPos);
-
                 force += Vector2.Normalize(gap.LerpedFlowForce) * (Math.Max(gap.LerpedFlowForce.Length() - dist, 0.0f) / 500.0f);
             }
-
-            if (force.Length() > 20.0f) return force;
             return force;
         }
 
