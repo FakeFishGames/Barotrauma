@@ -783,12 +783,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth)
-            {
-                Spawner.AddToRemoveQueue(this);
-                return;
-            }
-
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)
@@ -850,6 +844,12 @@ namespace Barotrauma
                         body.LinearVelocity = new Vector2(
                             MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
                             MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    }
+
+                    if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
+                    {
+                        Spawner.AddToRemoveQueue(this);
+                        return;
                     }
                 }
 
