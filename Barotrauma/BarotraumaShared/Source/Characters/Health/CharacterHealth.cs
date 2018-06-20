@@ -475,14 +475,20 @@ namespace Barotrauma
 
 #if CLIENT
             foreach (Limb limb in character.AnimController.Limbs)
-            {
-                limb.BurnOverlayStrength = limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha);
-                limb.DamageOverlayStrength = limb.IsSevered ?
-                    100.0f :
-                    limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
+            {            
+                limb.BurnOverlayStrength = 0.0f;
+                limb.DamageOverlayStrength = 0.0f;
+                if (limbHealths[limb.HealthIndex].Afflictions.Count == 0) continue;
+                foreach (Affliction a in limbHealths[limb.HealthIndex].Afflictions)
+                {
+                    limb.BurnOverlayStrength += a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha;
+                    limb.DamageOverlayStrength +=  a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha;
+                }
+                limb.BurnOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
+                limb.DamageOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;                
             }
 #endif
-            
+
             CalculateVitality();            
             if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());            
         }
