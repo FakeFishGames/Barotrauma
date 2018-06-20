@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
     {
         private Dictionary<ActionType, List<ItemSound>> sounds;
 
-        private GUIFrame guiFrame;
+        protected GUIFrame guiFrame;
 
         public GUIFrame GuiFrame
         {
