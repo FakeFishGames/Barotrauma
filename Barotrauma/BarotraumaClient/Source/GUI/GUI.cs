@@ -54,6 +54,11 @@ namespace Barotrauma
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
+        /// <summary>
+        /// Has the selected Screen changed since the last time the GUI was drawn.
+        /// </summary>
+        public static bool ScreenChanged;
+
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
@@ -158,6 +163,13 @@ namespace Barotrauma
         /// </summary>
         public static void Draw(Camera cam, SpriteBatch spriteBatch)
         {
+            if (ScreenChanged)
+            {
+                updateList.Clear();
+                Screen.Selected?.AddToGUIUpdateList();
+                ScreenChanged = false;
+            }
+
             updateList.ForEach(c => c.DrawAuto(spriteBatch));
 
             if (ScreenOverlayColor.A > 0.0f)
@@ -1097,6 +1109,11 @@ namespace Barotrauma
         {
             messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
+        }
+
+        public static void ClearMessages()
+        {
+            messages.Clear();
         }
 
         public static void PlayUISound(GUISoundType soundType)
