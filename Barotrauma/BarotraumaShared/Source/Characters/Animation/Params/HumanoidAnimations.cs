@@ -131,13 +131,6 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(15.0f, true), Editable]
-        public float ThighCorrectionTorque
-        {
-            get;
-            set;
-        }
-
         [Serialize("0.4, 0.15", true), Editable]
         public Vector2 HandMoveAmount
         {
