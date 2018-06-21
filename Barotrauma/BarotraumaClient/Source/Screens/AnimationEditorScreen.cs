@@ -82,6 +82,8 @@ namespace Barotrauma
             }
         }
 
+        private IEnumerable<Structure> AllWalls => clones.Concat(_originalWalls);
+
         private void CloneWalls(bool right)
         {
             previousWalls = CurrentWalls;
@@ -241,6 +243,15 @@ namespace Barotrauma
             {
                 character.AnimController.forceStanding = !character.AnimController.forceStanding;
                 swimButton.Text = character.AnimController.forceStanding ? "Swim" : "Grounded";
+                // Disable/enable ground colliders
+                var collisionCathegory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
+                AllWalls.ForEach(w => w.SetCollisionCategory(collisionCathegory));
+                if (character.AnimController.forceStanding)
+                {
+                    // Teleport
+                    character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
+                }
+                GameMain.World.ProcessChanges();
                 return true;
             };
             swimButton.Enabled = character.AnimController.CanWalk;
