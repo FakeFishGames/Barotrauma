@@ -243,9 +243,9 @@ namespace Barotrauma
             {
                 character.AnimController.forceStanding = !character.AnimController.forceStanding;
                 swimButton.Text = character.AnimController.forceStanding ? "Swim" : "Grounded";
-                // Disable/enable ground colliders
-                var collisionCathegory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
-                AllWalls.ForEach(w => w.SetCollisionCategory(collisionCathegory));
+                // Disable/enable collisions
+                var collisionCategory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
+                AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
                 if (character.AnimController.forceStanding)
                 {
                     // Teleport
