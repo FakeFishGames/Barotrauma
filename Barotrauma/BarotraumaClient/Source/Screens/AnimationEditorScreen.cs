@@ -26,6 +26,8 @@ namespace Barotrauma
         private Character character;
         private Vector2 spawnPosition;
         private bool showWidgets = true;
+        private bool showRagdollEditor;
+        private bool showParamsEditor;
 
         public override void Select()
         {
@@ -204,16 +206,18 @@ namespace Barotrauma
 
         #region GUI
         private GUIFrame panel;
-        private GUIButton widgetsButton;
         private void CreateButtons()
         {
             if (panel != null)
             {
                 panel.RectTransform.Parent = null;
             }
-            panel = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, panel.RectTransform));
-            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.1f), parent: layoutGroup.RectTransform), style: null);
+            Vector2 buttonSize = new Vector2(1, 0.05f);
+            Vector2 toggleSize = new Vector2(0.03f, 0.03f);
+            Point margin = new Point(40, 60);
+            panel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(panel.Rect.Width - margin.X, panel.Rect.Height - margin.Y), panel.RectTransform, Anchor.Center));
+            var charButtons = new GUIFrame(new RectTransform(buttonSize, parent: layoutGroup.RectTransform), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopLeft), "Previous \nCharacter");
             prevCharacterButton.OnClicked += (b, obj) =>
             {
@@ -230,59 +234,81 @@ namespace Barotrauma
                 CreateButtons();
                 return true;
             };
-            // TODO: use tick boxes?
-            widgetsButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), showWidgets ? "Hide Widgets" : "Show Widgets");
-            widgetsButton.OnClicked += (b, obj) =>
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Widgets")
             {
-                showWidgets = !showWidgets;
-                widgetsButton.Text = showWidgets ? "Hide Widgets" : "Show Widgets";
-                return true;
-            };
-            var swimButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.AnimController.forceStanding ? "Swim" : "Grounded");
-            swimButton.OnClicked += (b, obj) =>
-            {
-                character.AnimController.forceStanding = !character.AnimController.forceStanding;
-                swimButton.Text = character.AnimController.forceStanding ? "Swim" : "Grounded";
-                // Disable/enable collisions
-                var collisionCategory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
-                AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
-                if (character.AnimController.forceStanding)
+                Selected = true,
+                OnSelected = (GUITickBox box) =>
                 {
-                    // Teleport
-                    character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
+                    showWidgets = box.Selected;
+                    return true;
                 }
-                GameMain.World.ProcessChanges();
-                return true;
             };
-            swimButton.Enabled = character.AnimController.CanWalk;
-            var autoMoveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.OverrideMovement.HasValue ? "Disable Auto Move" : "Auto Move");
-            autoMoveButton.OnClicked += (b, obj) =>
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters")
             {
-                character.OverrideMovement = character.OverrideMovement.HasValue ? null : new Vector2(-1, 0) as Vector2?;
-                autoMoveButton.Text = character.OverrideMovement.HasValue ? "Disable Auto Move" : "Auto Move";
-                return true;
+                OnSelected = (GUITickBox box) =>
+                {
+                    showParamsEditor = box.Selected;
+                    return true;
+                }
             };
-            var speedButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.ForceRun ? "Slow" : "Fast");
-            speedButton.OnClicked += (b, obj) =>
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll")
             {
-                character.ForceRun = !character.ForceRun;
-                speedButton.Text = character.ForceRun ? "Slow" : "Fast";
-                return true;
+                OnSelected = (GUITickBox box) =>
+                {
+                    showRagdollEditor = box.Selected;
+                    return true;
+                }
             };
-            var followCursorButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), character.dontFollowCursor ? "Follow Cursor" : "Don't Follow Cursor");
-            followCursorButton.OnClicked += (b, obj) =>
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
             {
-                character.dontFollowCursor = !character.dontFollowCursor;
-                followCursorButton.Text = character.dontFollowCursor ? "Follow Cursor" : "Don't Follow Cursor";
-                return true;
+                Enabled = character.AnimController.CanWalk,
+                Selected = character.AnimController is FishAnimController,
+                OnSelected = (GUITickBox box) =>
+                {
+                    character.AnimController.forceStanding = !box.Selected;
+                    // Disable/enable collisions
+                    var collisionCategory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
+                    AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
+                    if (character.AnimController.forceStanding)
+                    {
+                        // Teleport
+                        character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
+                    }
+                    GameMain.World.ProcessChanges();
+                    return true;
+                }
             };
-            var saveButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Save");
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    character.OverrideMovement = box.Selected ? new Vector2(-1, 0) as Vector2? : null;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Force Fast Speed")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    character.ForceRun = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Follow Cursor")
+            {
+                OnSelected = (GUITickBox box) =>
+                {
+                    character.dontFollowCursor = !box.Selected;
+                    return true;
+                }
+            };
+            var saveButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save");
             saveButton.OnClicked += (b, obj) =>
             {
                 AnimParams.ForEach(p => p.Save());
                 return true;
             };
-            var resetButton = new GUIButton(new RectTransform(new Vector2(1, 0.1f), layoutGroup.RectTransform), "Reset");
+            var resetButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset");
             resetButton.OnClicked += (b, obj) =>
             {
                 AnimParams.ForEach(p => p.Reset());
@@ -305,7 +331,10 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            AnimationParams.Editor.AddToGUIUpdateList();
+            if (showParamsEditor)
+            {
+                AnimationParams.Editor.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(double deltaTime)
@@ -366,7 +395,10 @@ namespace Barotrauma
             {
                 DrawWidgetEditor(spriteBatch);
             }
-            //DrawJointEditor(spriteBatch);
+            if (showRagdollEditor)
+            {
+                DrawJointEditor(spriteBatch);
+            }
 
             // Debug
             if (GameMain.DebugDraw)
@@ -414,12 +446,14 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        #region Widgets
+        #region Helpers
         private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+        #endregion
 
+        #region Widgets
         private void DrawWidgetEditor(SpriteBatch spriteBatch)
         {
             var collider = character.AnimController.Collider;
