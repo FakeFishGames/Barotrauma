@@ -18,7 +18,7 @@ namespace Barotrauma
         /// <summary>
         /// Creates a forward pointing vector based on the rotation (in radians).
         /// </summary>
-        public static Vector2 Forward(float radians, float radius)
+        public static Vector2 Forward(float radians, float radius = 1)
         {
             return new Vector2((float)Math.Sin(radians), (float)Math.Cos(radians)) * radius;
         }
@@ -33,6 +33,14 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Transforms a vector relative to the given up vector.
+        /// </summary>
+        public static Vector2 Transform(this Vector2 v, Vector2 up)
+        {
+            return (up * v.Y) + (up.Right() * v.X);
+        }
+
+        /// <summary>
         /// Flips the x and y components.
         /// </summary>
         public static Vector2 Flip(this Vector2 v) => new Vector2(v.Y, v.X);
@@ -41,5 +49,10 @@ namespace Barotrauma
         /// Returns the sum of the x and y components.
         /// </summary>
         public static float Combine(this Vector2 v) => v.X + v.Y;
+
+        public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max)
+        {
+            return new Vector2(MathHelper.Clamp(v.X, min.X, max.X), MathHelper.Clamp(v.Y, min.Y, max.Y));
+        }
     }
 }
