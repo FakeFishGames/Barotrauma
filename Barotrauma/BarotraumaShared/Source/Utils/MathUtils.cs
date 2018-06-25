@@ -610,6 +610,34 @@ namespace Barotrauma
             var y = (sin * dir.X) + (cos * dir.Y) + target.Y;
             return new Vector2((float)x, (float)y);
         }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2 up, Vector2 center, Vector2 size)
+        {
+            return GetImaginaryRect(new Vector2[4], up, center, size);
+        }
+
+        /// <summary>
+        /// Returns the corners of an imaginary rectangle.
+        /// Unlike the XNA rectangle, this can be rotated with the up parameter.
+        /// </summary>
+        public static Vector2[] GetImaginaryRect(Vector2[] corners, Vector2 up, Vector2 center, Vector2 size)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length for the corners array. Must be 4.");
+            }
+            Vector2 halfSize = size / 2;
+            Vector2 left = up.Right();
+            corners[0] = center + up * halfSize.Y + left * halfSize.X;
+            corners[1] = center + up * halfSize.Y - left * halfSize.X;
+            corners[2] = center - up * halfSize.Y - left * halfSize.X;
+            corners[3] = center - up * halfSize.Y + left * halfSize.X;
+            return corners;
+        }
     }
 
     class CompareCCW : IComparer<Vector2>
