@@ -728,39 +728,50 @@ namespace Barotrauma
             {
                 angle = 0;
             }
-            var forward = VectorExtensions.Forward(rotationOffset, circleRadius);
-            var widgetDrawPos = drawPos - forward;
+            var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
+            var widgetDrawPos = drawPos + up;
             widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
             {
-                GUI.DrawLine(spriteBatch, drawPos, drawPos - forward, Color.Red);
+                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
+                var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
+                // Collider rotation is counter-clockwise
+                var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
+                if (transformedRot > 360)
+                {
+                    transformedRot -= 360;
+                }
+                else if (transformedRot < -360)
+                {
+                    transformedRot += 360;
+                }
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
                 float x = PlayerInput.MouseSpeed.X * 1.5f;
                 float y = PlayerInput.MouseSpeed.Y * 1.5f;
-                // TODO: negating the atan might result wrong values?
-                var transformedRot = angle + MathHelper.ToDegrees(-(float)Math.Atan2(forward.X, forward.Y));
-                if (!clockWise)
+                if (clockWise)
                 {
-                    // TODO: replace this hack with a proper calculation (doesn't work when swimming diagonally toward south east or north east)
-                    var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotationOffset));
-                    //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.White);
-                    if (rotationOffsetInDegrees > 180 && rotationOffsetInDegrees < 359)
-                    {
-                        y = -y;
-                    }
-                    if (rotationOffsetInDegrees > 270 || rotationOffsetInDegrees < 90)
+                    if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
                     {
                         x = -x;
                     }
+                    if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
+                    {
+                        y = -y;
+                    }
                 }
-                if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
+                else
                 {
-                    x = -x;
-                }
-                if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-                {
-                    y = -y;
+                    if (transformedRot < 90 && transformedRot > -90)
+                    {
+                        x = -x;
+                    }
+                    if (transformedRot < 0 && transformedRot > -180)
+                    {
+                        y = -y;
+                    }
                 }
                 angle += x + y;
                 if (angle > 360 || angle < -360)
