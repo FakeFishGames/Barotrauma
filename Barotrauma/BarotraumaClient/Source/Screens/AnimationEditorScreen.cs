@@ -435,7 +435,9 @@ namespace Barotrauma
                 var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
-                Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+                //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
+                //Vector2 left = -Vector2.UnitX.Transform(forward);
+                Vector2 left = -forward.Right();
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
@@ -824,23 +826,65 @@ namespace Barotrauma
         #endregion
 
         #region Joint edit (test)
+        private Vector2[] corners = new Vector2[4];
         private void DrawJointEditor(SpriteBatch spriteBatch)
         {
+            float inputMultiplier = 0.5f;
+            Limb selectedLimb = null;
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                Vector2 limbBodyPos = Cam.WorldToScreen(limb.WorldPosition);
+                if (limb == null || limb.sprite == null) { continue; }
+                Vector2 limbBodyPos = SimToScreen(limb.SimPosition);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(limbBodyPos.ToPoint(), new Point(5, 5)), Color.Red);
+                var size = limb.sprite.SourceRect.Size.Multiply(Cam.Zoom);
+                Vector2 up = -VectorExtensions.Forward(limb.Rotation);
+                corners = MathUtils.GetImaginaryRect(corners, up, limbBodyPos, size.ToVector2());
+                //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
+                //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
 
-                DrawJoints(spriteBatch, limb, limbBodyPos);
+                GUI.DrawLine(spriteBatch, corners[0], corners[1], Color.White);
+                GUI.DrawLine(spriteBatch, corners[1], corners[2], Color.White);
+                GUI.DrawLine(spriteBatch, corners[2], corners[3], Color.White);
+                GUI.DrawLine(spriteBatch, corners[3], corners[0], Color.White);
+                GUI.DrawLine(spriteBatch, limbBodyPos, limbBodyPos + up * 50, Color.Blue);
 
+                //DrawJoints(spriteBatch, limb, limbBodyPos);
+
+                // Joint positions
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
 
-                if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                if (PlayerInput.LeftButtonHeld() && Contains(corners, PlayerInput.MousePosition))
                 {
-                    limb.sprite.Origin += PlayerInput.MouseSpeed;
+                    if (selectedLimb == null)
+                    {
+                        selectedLimb = limb;
+                    }
+                }
+                else if (selectedLimb == limb)
+                {
+                    selectedLimb = null;
                 }
             }
+            if (selectedLimb != null)
+            {
+                Vector2 limbScreenPos = SimToScreen(selectedLimb.SimPosition);
+                Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
+                var input = -PlayerInput.MouseSpeed * inputMultiplier;
+                selectedLimb.sprite.Origin += input.Transform(up);
+                var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
+                selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
+            }
+        }
+
+        private bool Contains(Vector2[] corners, Vector2 pos)
+        {
+            // TODO: this is not accurate, because the rect rotates -> should check the point against the edge lines
+            float minX = corners.OrderBy(c => c.X).First().X;
+            float maxX = corners.OrderBy(c => c.X).Last().X;
+            float minY = corners.OrderBy(c => c.Y).First().Y;
+            float maxY = corners.OrderBy(c => c.Y).Last().Y;
+            return pos.X > minX && pos.X < maxX && pos.Y > minY && pos.Y < maxY;
         }
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
