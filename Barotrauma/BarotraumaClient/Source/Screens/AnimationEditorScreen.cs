@@ -199,7 +199,7 @@ namespace Barotrauma
             {
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
             }
-            GameMain.World.ProcessChanges();
+            SetWallCollisions(character.AnimController.forceStanding);
             return character;
         }
         #endregion
@@ -266,15 +266,12 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     character.AnimController.forceStanding = !box.Selected;
-                    // Disable/enable collisions
-                    var collisionCategory = character.AnimController.forceStanding ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
-                    AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
+                    SetWallCollisions(character.AnimController.forceStanding);
                     if (character.AnimController.forceStanding)
                     {
                         // Teleport
                         character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
                     }
-                    GameMain.World.ProcessChanges();
                     return true;
                 }
             };
@@ -451,6 +448,13 @@ namespace Barotrauma
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
+
+        private void SetWallCollisions(bool enabled)
+        {
+            var collisionCategory = enabled ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
+            AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
+            GameMain.World.ProcessChanges();
+        }
         #endregion
 
         #region Widgets
