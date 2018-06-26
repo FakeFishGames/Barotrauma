@@ -733,8 +733,9 @@ namespace Barotrauma
             walkPos += movement.Length();
             //float handCyclePos = walkPos / 2.0f * -Dir;
             //float waveRotation = (float)Math.Sin(walkPos / waveLength);
+            //walkPos -= movement.Length();
             //legCyclePos = walkPos / Math.Abs(CurrentSwimParams.LegCycleLength) * -Dir;
-            legCyclePos += MathHelper.ToRadians(CurrentSwimParams.LegCycleLength) * Math.Sign(movement.X);
+            legCyclePos += movement.Length();
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
@@ -754,11 +755,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos) * i * 0.3f, 2.0f);
+                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * i * 0.3f, 2.0f);
                 }
             }
 
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos) * CurrentSwimParams.LegMoveAmount, 0.0f);
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
             MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
