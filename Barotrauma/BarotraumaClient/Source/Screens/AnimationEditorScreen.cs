@@ -854,7 +854,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                 GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
 
-                if (PlayerInput.LeftButtonHeld() && Contains(corners, PlayerInput.MousePosition))
+                if (PlayerInput.LeftButtonHeld() && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
                     if (selectedLimb == null)
                     {
@@ -875,16 +875,6 @@ namespace Barotrauma
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
             }
-        }
-
-        private bool Contains(Vector2[] corners, Vector2 pos)
-        {
-            // TODO: this is not accurate, because the rect rotates -> should check the point against the edge lines
-            float minX = corners.OrderBy(c => c.X).First().X;
-            float maxX = corners.OrderBy(c => c.X).Last().X;
-            float minY = corners.OrderBy(c => c.Y).First().Y;
-            float maxY = corners.OrderBy(c => c.Y).Last().Y;
-            return pos.X > minX && pos.X < maxX && pos.Y > minY && pos.Y < maxY;
         }
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
