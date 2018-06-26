@@ -622,7 +622,7 @@ namespace Barotrauma
 
         /// <summary>
         /// Returns the corners of an imaginary rectangle.
-        /// Unlike the XNA rectangle, this can be rotated with the up parameter.
+        /// Unlike the XNA Rectangle, this can be rotated with the up parameter.
         /// </summary>
         public static Vector2[] GetImaginaryRect(Vector2[] corners, Vector2 up, Vector2 center, Vector2 size)
         {
@@ -637,6 +637,56 @@ namespace Barotrauma
             corners[2] = center - up * halfSize.Y - left * halfSize.X;
             corners[3] = center - up * halfSize.Y + left * halfSize.X;
             return corners;
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2[] corners, Vector2 point)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            return RectangleContainsPoint(corners[0], corners[1], corners[2], corners[3], point);
+        }
+
+        /// <summary>
+        /// Check if a point is inside a rectangle.
+        /// Unlike the XNA Rectangle, this rectangle might have been rotated.
+        /// For XNA Rectangles, use the Contains instance method.
+        /// </summary>
+        public static bool RectangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 c4, Vector2 point)
+        {
+            return TriangleContainsPoint(c1, c2, c3, point) || TriangleContainsPoint(c1, c3, c4, point);
+        }
+
+        /// <summary>
+        /// Slightly modified from https://gamedev.stackexchange.com/questions/110229/how-do-i-efficiently-check-if-a-point-is-inside-a-rotated-rectangle
+        /// </summary>
+        public static bool TriangleContainsPoint(Vector2 c1, Vector2 c2, Vector2 c3, Vector2 point)
+        {
+            // Compute vectors        
+            Vector2 v0 = c3 - c1;
+            Vector2 v1 = c2 - c1;
+            Vector2 v2 = point - c1;
+
+            // Compute dot products
+            float dot00 = Vector2.Dot(v0, v0);
+            float dot01 = Vector2.Dot(v0, v1);
+            float dot02 = Vector2.Dot(v0, v2);
+            float dot11 = Vector2.Dot(v1, v1);
+            float dot12 = Vector2.Dot(v1, v2);
+
+            // Compute barycentric coordinates
+            float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+            float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+            float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+            // Check if the point is in triangle
+            return u >= 0 && v >= 0 && (u + v) < 1;
         }
     }
 
