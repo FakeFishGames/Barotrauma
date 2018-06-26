@@ -479,7 +479,7 @@ namespace Barotrauma
         private void DrawWidgetEditor(SpriteBatch spriteBatch)
         {
             var collider = character.AnimController.Collider;
-            var charDrawPos = SimToScreen(collider.SimPosition);
+            var colliderDrawPos = SimToScreen(collider.SimPosition);
             var animParams = character.AnimController.CurrentAnimationParams;
             var groundedParams = animParams as GroundedMovementParams;
             var humanGroundedParams = animParams as HumanGroundedParams;
@@ -514,9 +514,9 @@ namespace Barotrauma
 
             // Widgets for all anims -->
             // Speed
-            float multiplier = 0.015f;
-            Vector2 referencePoint = SimToScreen(collider.SimPosition);
+            Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
             Vector2 drawPos = referencePoint;
+            float multiplier = 0.015f;
             drawPos += forward * animParams.Speed / multiplier * Cam.Zoom;
             DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
             {
@@ -561,8 +561,13 @@ namespace Barotrauma
             }
             if (torso != null)
             {
+                referencePoint = torso.SimPosition;
+                if (animParams is HumanGroundedParams || animParams is HumanSwimParams)
+                {
+                    referencePoint -= simSpaceForward * 0.25f;
+                }
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreen(torso.SimPosition), animParams.TorsoAngle, "Torso Angle", Color.White, 
+                DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White, 
                     angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
@@ -619,7 +624,7 @@ namespace Barotrauma
                             transformedInput.Y = -transformedInput.Y;
                         }
                         GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsHeight / 2, 20), "transformed input: " + transformedInput.ToString(), Color.White);
-                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput * multiplier);
+                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput * multiplier / Cam.Zoom);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
                     GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
@@ -641,13 +646,13 @@ namespace Barotrauma
                 if (hand != null || arm != null)
                 {
                     multiplier = 0.02f;
-                    referencePoint = charDrawPos;
+                    referencePoint = SimToScreen(collider.SimPosition + simSpaceForward * 0.2f);
                     var v = humanGroundedParams.HandMoveAmount / multiplier;
                     drawPos = referencePoint + new Vector2(v.X * dir, v.Y) * Cam.Zoom;
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                     {
-                        var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier;
+                        var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier / Cam.Zoom;
                         TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
@@ -659,7 +664,7 @@ namespace Barotrauma
             {
                 float lengthMultiplier = 5 * Cam.Zoom;
                 float amplitudeMultiplier = 200 * Cam.Zoom;
-                referencePoint = charDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2 * Cam.Zoom;
+                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2 * Cam.Zoom;
                 drawPos = referencePoint;
                 drawPos -= screenSpaceForward * fishSwimParams.WaveLength * lengthMultiplier;
                 Vector2 toRefPoint = referencePoint - drawPos;
@@ -719,7 +724,7 @@ namespace Barotrauma
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
                 });
                 // Arms
-                referencePoint = charDrawPos + screenSpaceForward * 10;
+                referencePoint = colliderDrawPos + screenSpaceForward * 10;
                 Vector2 v = ConvertUnits.ToDisplayUnits(humanSwimParams.HandMoveAmount) * Cam.Zoom;
                 drawPos = referencePoint + new Vector2(v.X * dir, v.Y);
                 var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
