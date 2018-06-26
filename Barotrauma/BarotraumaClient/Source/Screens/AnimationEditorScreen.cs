@@ -518,7 +518,7 @@ namespace Barotrauma
             Vector2 referencePoint = SimToScreen(collider.SimPosition);
             Vector2 drawPos = referencePoint;
             drawPos += forward * animParams.Speed / multiplier * Cam.Zoom;
-            DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Speed", () =>
+            DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
             {
                 float speed = animParams.Speed + Vector2.Multiply(PlayerInput.MouseSpeed, forward).Combine() * multiplier / Cam.Zoom;
                 TryUpdateValue("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
@@ -632,7 +632,7 @@ namespace Barotrauma
                 {
                     multiplier = 10;
                     drawPos = SimToScreen(colliderBottom + simSpaceForward * 0.3f);
-                    DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Correction Torque", Color.Chartreuse, angle =>
+                    DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Angle", Color.Chartreuse, angle =>
                     {
                         TryUpdateValue("legcorrectiontorque", angle / multiplier);
                         GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
