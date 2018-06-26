@@ -735,7 +735,7 @@ namespace Barotrauma
             //float waveRotation = (float)Math.Sin(walkPos / waveLength);
             //walkPos -= movement.Length();
             //legCyclePos = walkPos / Math.Abs(CurrentSwimParams.LegCycleLength) * -Dir;
-            legCyclePos += movement.Length();
+            legCyclePos += Vector2.Normalize(movement).Length();
             handCyclePos += MathHelper.ToRadians(CurrentSwimParams.HandCycleSpeed) * Math.Sign(movement.X);
 
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
