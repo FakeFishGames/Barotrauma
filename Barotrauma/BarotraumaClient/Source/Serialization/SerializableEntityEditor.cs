@@ -35,7 +35,7 @@ namespace Barotrauma
         /// <summary>
         /// Note: currently only handles floats and vector2s.
         /// </summary>
-        public void UpdateValue(SerializableProperty property, object newValue)
+        public void UpdateValue(SerializableProperty property, object newValue, bool flash = true)
         {
             if (!Fields.TryGetValue(property, out GUIComponent[] fields))
             {
@@ -50,6 +50,10 @@ namespace Barotrauma
                         if (numInput.InputType == GUINumberInput.NumberType.Float)
                         {
                             numInput.FloatValue = f;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
                         }
                     }
                 }
@@ -64,6 +68,10 @@ namespace Barotrauma
                         if (numInput.InputType == GUINumberInput.NumberType.Float)
                         {
                             numInput.FloatValue = i == 0 ? v.X : v.Y;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
                         }
                     }
                 }
