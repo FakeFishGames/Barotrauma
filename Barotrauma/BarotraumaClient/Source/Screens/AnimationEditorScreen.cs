@@ -436,7 +436,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 //Vector2 left = Vector2.Transform(-Vector2.UnitX, Matrix.CreateRotationZ(collider.Rotation));
-                //Vector2 left = -Vector2.UnitX.Transform(forward);
+                //Vector2 left = -Vector2.UnitX.TransformVector(forward);
                 Vector2 left = -forward.Right();
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
                 ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
@@ -871,7 +871,7 @@ namespace Barotrauma
                 Vector2 limbScreenPos = SimToScreen(selectedLimb.SimPosition);
                 Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
                 var input = -PlayerInput.MouseSpeed * inputMultiplier;
-                selectedLimb.sprite.Origin += input.Transform(up);
+                selectedLimb.sprite.Origin += input.TransformVector(up);
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
             }

@@ -35,7 +35,7 @@ namespace Barotrauma
         /// <summary>
         /// Transforms a vector relative to the given up vector.
         /// </summary>
-        public static Vector2 Transform(this Vector2 v, Vector2 up)
+        public static Vector2 TransformVector(this Vector2 v, Vector2 up)
         {
             return (up * v.Y) + (up.Right() * v.X);
         }
