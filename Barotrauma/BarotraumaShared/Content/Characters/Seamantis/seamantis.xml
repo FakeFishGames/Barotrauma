@@ -109,7 +109,7 @@
     </limb>
 
     <!-- belly -->
-    <limb id="11" radius="50" height="140">
+    <limb id="11" radius="50" height="140" flip="true">
       <sprite texture="Content/Characters/Seamantis/Seamantis.png" sourcerect="162,242,103,260" depth="0.01" origin="0.5,0.5"/>
     </limb>
 
