@@ -198,7 +198,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-
+            
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
@@ -228,6 +228,7 @@ namespace Barotrauma
             if (GameMode.Mission != null) Mission.Start(Level.Loaded);
 
             EventManager.StartRound(level);
+            SteamAchievementManager.OnStartRound();
 
             if (GameMode != null) GameMode.MsgBox();
 
@@ -248,6 +249,17 @@ namespace Barotrauma
             RoundStartTime = Timing.TotalTime;
         }
 
+        public void Update(float deltaTime)
+        {
+            EventManager.Update(deltaTime);
+            GameMode?.Update(deltaTime);
+            Mission?.Update(deltaTime);
+
+            UpdateProjSpecific(deltaTime);
+        }
+
+        partial void UpdateProjSpecific(float deltaTime);
+
         public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
@@ -266,6 +278,7 @@ namespace Barotrauma
 #endif
 
             EventManager.EndRound();
+            SteamAchievementManager.OnRoundEnded(this);
 
             currentMission = null;
 

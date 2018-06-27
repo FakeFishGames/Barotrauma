@@ -560,6 +560,8 @@ namespace Barotrauma.Steam
             
             instance.client?.Update();
             instance.server?.Update();
+
+            SteamAchievementManager.Update();
         }
 
         public static void ShutDown()

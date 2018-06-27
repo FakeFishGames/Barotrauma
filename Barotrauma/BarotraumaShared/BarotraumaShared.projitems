@@ -1878,6 +1878,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\SteamAchievementManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\DockingPort.cs" />
