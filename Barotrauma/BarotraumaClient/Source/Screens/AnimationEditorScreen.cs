@@ -953,9 +953,7 @@ namespace Barotrauma
                         continue;
                     }
 
-                    Vector2 tformedJointPos = jointPos /= limb.Scale;
-                    //tformedJointPos.Y = -tformedJointPos.Y;
-                    tformedJointPos += limbScreenPos;
+                    Vector2 tformedJointPos = jointPos + limbScreenPos;
 
                     //if (joint.BodyA == limb.body.FarseerBody)
                     //{
@@ -968,20 +966,21 @@ namespace Barotrauma
                     //}
 
                     var widgetSize = new Vector2(5, 5);
-                    var hitBoxSize = widgetSize * 3;
-                    GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, true);
                     Vector2 up = -VectorExtensions.Forward(limb.Rotation);
-                    corners = MathUtils.GetImaginaryRect(corners, up, tformedJointPos, hitBoxSize);
+                    //corners = MathUtils.GetImaginaryRect(corners, up, tformedJointPos, hitBoxSize);
                     //GUI.DrawRectangle(spriteBatch, corners, Color.Black);
+                    var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
+                    GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, true);
+                    var inputRect = rect;
+                    inputRect.Inflate(widgetSize.X, widgetSize.Y);
                     GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red);
                     GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
-
-                    if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                    if (inputRect.Contains(PlayerInput.MousePosition))
                     {
                         GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                         GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 3);
                         GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
-                        GUI.DrawRectangle(spriteBatch, tformedJointPos - hitBoxSize / 2, hitBoxSize, Color.Red, false, thickness: 1);
+                        GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                         if (PlayerInput.LeftButtonHeld())
                         {
                             Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
@@ -1060,13 +1059,13 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
-                        if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                        if (PlayerInput.LeftButtonHeld() && rect.Contains(PlayerInput.MousePosition))
                         {
                             limb.sprite.Origin += PlayerInput.MouseSpeed;
                         }
                     }
                 }
-                y += textures[i].Height;
+                y += Textures[i].Height;
             }
         }
 
@@ -1105,22 +1104,26 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
                 }
 
-                GUI.DrawRectangle(spriteBatch, tformedJointPos, new Vector2(5.0f, 5.0f), Color.Red, true);
-                if (Vector2.Distance(PlayerInput.MousePosition, tformedJointPos) < 10.0f)
+                Vector2 widgetSize = new Vector2(5.0f, 5.0f);;
+                var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
+                var inputRect = rect;
+                inputRect.Inflate(widgetSize.X * 0.75f, widgetSize.Y * 0.75f);
+                GUI.DrawRectangle(spriteBatch, rect, Color.Red, isFilled: true);
+                if (inputRect.Contains(PlayerInput.MousePosition))
                 {
                     GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
-                    GUI.DrawRectangle(spriteBatch, tformedJointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
+                    GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                     if (PlayerInput.LeftButtonHeld())
                     {
-                        Vector2 speed = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
-                        speed.Y = -speed.Y;
+                        Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
+                        input.Y = -input.Y;
                         if (joint.BodyA == limb.body.FarseerBody)
                         {
-                            joint.LocalAnchorA += speed;
+                            joint.LocalAnchorA += input * limb.Scale;
                         }
                         else
                         {
-                            joint.LocalAnchorB += speed;
+                            joint.LocalAnchorB += input * limb.Scale;
                         }
                     }
                 }
