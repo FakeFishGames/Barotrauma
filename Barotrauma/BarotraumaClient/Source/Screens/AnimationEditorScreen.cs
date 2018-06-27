@@ -886,16 +886,16 @@ namespace Barotrauma
         private Vector2[] corners = new Vector2[4];
         private void DrawOffsetEditor(SpriteBatch spriteBatch)
         {
-            float inputMultiplier = 0.5f / Cam.Zoom;
+            float inputMultiplier = 0.5f;
             Limb selectedLimb = null;
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb == null || limb.sprite == null) { continue; }
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
                 //GUI.DrawRectangle(spriteBatch, new Rectangle(limbBodyPos.ToPoint(), new Point(5, 5)), Color.Red);
-                var size = limb.sprite.SourceRect.Size.Multiply(Cam.Zoom);
+                Vector2 size = limb.sprite.SourceRect.Size.ToVector2() * Cam.Zoom * limb.Scale;
                 Vector2 up = -VectorExtensions.Forward(limb.Rotation);
-                corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size.ToVector2());
+                corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
                 //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
                 //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
 
@@ -921,7 +921,7 @@ namespace Barotrauma
             if (selectedLimb != null)
             {
                 Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
-                var input = -PlayerInput.MouseSpeed * inputMultiplier;
+                var input = -PlayerInput.MouseSpeed * inputMultiplier * Cam.Zoom / selectedLimb.Scale;
                 selectedLimb.sprite.Origin += input.TransformVector(up);
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
