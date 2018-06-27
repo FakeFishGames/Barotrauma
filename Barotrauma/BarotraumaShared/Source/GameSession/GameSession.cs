@@ -189,6 +189,7 @@ namespace Barotrauma
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
             this.level = level;
 

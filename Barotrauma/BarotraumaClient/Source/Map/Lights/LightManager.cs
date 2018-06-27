@@ -8,6 +8,7 @@ namespace Barotrauma.Lights
 {
     class LightManager
     {
+
         private const float AmbientLightUpdateInterval = 0.2f;
         private const float AmbientLightFalloff = 0.8f;
 
@@ -36,18 +37,17 @@ namespace Barotrauma.Lights
             private set;
         }
 
-        BasicEffect lightEffect;
+        private BasicEffect lightEffect;
 
         public Effect LosEffect
         {
             get; private set;
         }
         
-        private static Texture2D alphaClearTexture;
-
         private List<LightSource> lights;
 
         public bool LosEnabled = true;
+        public LosMode LosMode = LosMode.Transparent;
 
         public bool LightingEnabled = true;
 
@@ -91,11 +91,6 @@ namespace Barotrauma.Lights
 
             hullAmbientLights = new Dictionary<Hull, Color>();
             smoothedHullAmbientLights = new Dictionary<Hull, Color>();
-
-            if (alphaClearTexture == null)
-            {
-                alphaClearTexture = TextureLoader.FromFile("Content/Lights/alphaOne.png");
-            }
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -284,13 +279,12 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if (!LosEnabled && !ObstructVision) return;
+            if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
 
             graphics.SetRenderTarget(LosTexture);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
             
-
             if (ObstructVision)
             {
                 graphics.Clear(Color.Black);
@@ -313,7 +307,7 @@ namespace Barotrauma.Lights
 
             //--------------------------------------
 
-            if (LosEnabled && ViewTarget != null)
+            if (LosEnabled && LosMode != LosMode.None && ViewTarget != null)
             {
                 Vector2 pos = ViewTarget.WorldPosition;
 

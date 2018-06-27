@@ -767,6 +767,8 @@ namespace Barotrauma.Networking
             string levelSeed        = inc.ReadString();
             float levelDifficulty   = inc.ReadFloat();
 
+            byte losMode            = inc.ReadByte();
+
             int missionTypeIndex    = inc.ReadByte();
 
             string subName          = inc.ReadString();
@@ -819,6 +821,7 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
+            GameMain.LightManager.LosMode = (LosMode)losMode;
 
             if (campaign == null)
             {
