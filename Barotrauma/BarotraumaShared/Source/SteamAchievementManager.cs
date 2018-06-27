@@ -1,8 +1,10 @@
-﻿using Barotrauma.Steam;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma
@@ -13,6 +15,8 @@ namespace Barotrauma
 
         class RoundData
         {
+            public List<Reactor> Reactors = new List<Reactor>();
+
             public bool EnteredCrushDepth;
             public bool ReactorMeltdown;
         }
@@ -22,6 +26,11 @@ namespace Barotrauma
         public static void OnStartRound()
         {
             roundData = new RoundData();
+            foreach (Item item in Item.ItemList)
+            {
+                Reactor reactor = item.GetComponent<Reactor>();
+                if (reactor != null) roundData.Reactors.Add(reactor);
+            }
         }
 
         public static void Update()
@@ -37,6 +46,11 @@ namespace Barotrauma
 
                 if (Character.Controlled.Submarine != null)
                 {
+                    foreach (Reactor reactor in roundData.Reactors)
+                    {
+                        if (reactor.Item.Condition <= 0.0f) roundData.ReactorMeltdown = true;
+                    }
+
                     Submarine sub = Character.Controlled.Submarine;
                     //convert submarine velocity to km/h
                     Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
@@ -62,6 +76,15 @@ namespace Barotrauma
             }
         }
 
+        public static void OnItemRepaired(Item item, Character fixer)
+        {
+            if (fixer != null && fixer == Character.Controlled)
+            {
+                UnlockAchievement("repairdevice");
+                UnlockAchievement("repair" + item.Prefab.Identifier);
+            }
+        }
+
         public static void OnCharacterKilled(Character character, Character killer)
         {
             if (killer != null && killer == Character.Controlled)
@@ -70,6 +93,24 @@ namespace Barotrauma
                 if (character.CurrentHull == null)
                 {
                     UnlockAchievement("kill" + character.SpeciesName + "indoors");
+                }
+            }
+
+            if (GameMain.Server?.TraitorManager != null)
+            {
+                //TODO: give clients the appropriate achievement when they complete their traitor objective or kill a traitor
+                foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
+                {
+                    if (traitor.Character == Character.Controlled && killer == Character.Controlled && traitor.TargetCharacter == character)
+                    {
+                        //killed the target as a traitor
+                        UnlockAchievement("traitorwin");
+                    }
+                    else if (traitor.Character == character && killer != null && killer == Character.Controlled)
+                    {
+                        //killed a traitor
+                        UnlockAchievement("killtraitor");
+                    }
                 }
             }
         }
@@ -87,8 +128,7 @@ namespace Barotrauma
                 UnlockAchievement("survivereactormeltdown");
             }
         }
-
-
+        
         public static void UnlockAchievement(string identifier)
         {
             //already unlocked, no need to do anything
