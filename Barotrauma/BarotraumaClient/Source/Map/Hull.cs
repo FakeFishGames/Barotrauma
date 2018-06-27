@@ -15,11 +15,7 @@ namespace Barotrauma
         public const int MaxDecalsPerHull = 10;
         
         private List<Decal> decals = new List<Decal>();
-
-        private Sound currentFlowSound;
-        private SoundChannel soundChannel;
-        private float soundVolume;
-
+        
         public override bool DrawBelowWater
         {
             get
@@ -156,59 +152,7 @@ namespace Barotrauma
             }
 
             decals.RemoveAll(d => d.FadeTimer >= d.LifeTime);
-
-            float strongestFlow = 0.0f;
-            foreach (Gap gap in ConnectedGaps)
-            {
-                if (gap.IsRoomToRoom)
-                {
-                    //only the first linked hull plays the flow sound
-                    if (gap.linkedTo[1] == this) continue;
-                }
-
-                float gapFlow = gap.LerpedFlowForce.Length();
-
-                if (gapFlow > strongestFlow)
-                {
-                    strongestFlow = gapFlow;
-                }
-            }
-
-            if (strongestFlow > 1.0f)
-            {
-                soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
-                soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
-
-                int index = (int)Math.Floor(MathHelper.Lerp(0, SoundPlayer.FlowSounds.Count - 1, strongestFlow / 600.0f));
-                index = Math.Min(index, SoundPlayer.FlowSounds.Count - 1);
-
-                var flowSound = SoundPlayer.FlowSounds[index];
-                if (flowSound != currentFlowSound && soundChannel != null)
-                {
-                    soundChannel.Dispose(); soundChannel = null;
-                    currentFlowSound = null;
-                }
-
-                currentFlowSound = flowSound;
-                if (soundChannel == null || !soundChannel.IsPlaying)
-                {
-                    soundChannel = currentFlowSound.Play(new Vector3(WorldPosition.X, WorldPosition.Y, 0.0f), soundVolume);
-                    soundChannel.Looping = true;
-                    //TODO: tweak
-                    float range = Math.Min(strongestFlow * 5.0f, 2000.0f);
-                    soundChannel.Near = range * 0.4f;
-                    soundChannel.Far = range;
-                }
-            }
-            else
-            {
-                if (soundChannel != null)
-                {
-                    soundChannel.Dispose(); soundChannel = null;
-                    currentFlowSound = null;
-                }
-            }
-
+                        
             if (waterVolume < 1.0f) return;
             for (int i = 1; i < waveY.Length - 1; i++)
             {
