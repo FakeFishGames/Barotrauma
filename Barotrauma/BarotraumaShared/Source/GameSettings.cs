@@ -17,6 +17,13 @@ namespace Barotrauma
         Windowed, Fullscreen, BorderlessWindowed
     }
 
+    public enum LosMode
+    {
+        None,
+        Transparent,
+        Opaque
+    }
+
     public partial class GameSettings
     {
         const string FilePath = "config.xml";
@@ -33,6 +40,8 @@ namespace Barotrauma
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
+
+        private LosMode losMode;
 
         public List<string> jobNamePreferences;
 
@@ -153,6 +162,12 @@ namespace Barotrauma
             }
         }
 
+        public LosMode LosMode
+        {
+            get { return losMode; }
+            set { losMode = value; }
+        }
+
         public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
@@ -207,6 +222,12 @@ namespace Barotrauma
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+
+            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
+            if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
+            {
+                losMode = LosMode.Transparent;
+            }
 
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
@@ -382,6 +403,7 @@ namespace Barotrauma
             }
 
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
+            gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {

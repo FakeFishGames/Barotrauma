@@ -1064,7 +1064,10 @@ namespace Barotrauma
                 networkUpdateTimer += deltaTime;
                 if (networkUpdateTimer > NetworkUpdateInterval)
                 {
-                    GameMain.Server.CreateEntityEvent(this);
+                    if (extraWalls.Any(w => w.Body.BodyType != BodyType.Static))
+                    {
+                        GameMain.Server.CreateEntityEvent(this);
+                    }
                     networkUpdateTimer = 0.0f;
                 }
             }

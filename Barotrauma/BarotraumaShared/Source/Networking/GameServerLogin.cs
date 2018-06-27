@@ -112,10 +112,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            //TODO: kick connected client if status becomes invalid (e.g. VAC banned, not connected to steam)
-            //var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
+            //kick connected client if status becomes invalid (e.g. VAC banned, not connected to steam)
+            if (status != Facepunch.Steamworks.ServerAuth.Status.OK && GameMain.Config.RequireSteamAuthentication)
+            {
+                var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
+                if (connectedClient != null)
+                {
+                    KickClient(connectedClient, "Steam authentication is no longer valid (" + status.ToString() + ")");
+                }
+            }
         }
-        
+
         private void HandleClientAuthRequest(NetConnection connection, ulong steamID = 0)
         {
             if (GameMain.Config.RequireSteamAuthentication && steamID == 0)

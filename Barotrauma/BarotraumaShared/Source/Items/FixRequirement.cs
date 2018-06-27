@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -147,7 +148,12 @@ namespace Barotrauma
             {
                 lastSentProgress = FixProgress;
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Repair });
-            }            
+            }
+            
+            if (item.FixRequirements.All(f => f.Fixed))
+            {
+                SteamAchievementManager.OnItemRepaired(item, currentFixer);
+            }
         }
 
         private void UpdateFixAnimation(Character character)

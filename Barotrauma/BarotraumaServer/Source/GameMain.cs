@@ -41,13 +41,7 @@ namespace Barotrauma
         //null screens because they are not implemented by the server,
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
-        public static readonly Screen MainMenuScreen = UnimplementedScreen.Instance;
-        public static readonly Screen LobbyScreen = UnimplementedScreen.Instance;
-
-        public static readonly Screen ServerListScreen = UnimplementedScreen.Instance;
-
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
-        public static readonly Screen CharacterEditorScreen = UnimplementedScreen.Instance;
         
         public static bool ShouldRun = true;
 
@@ -82,6 +76,7 @@ namespace Barotrauma
         {
             MissionPrefab.Init();
             MapEntityPrefab.Init();
+            MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
