@@ -29,7 +29,7 @@ namespace Barotrauma
         private bool showOffsetEditor;
         private bool showJointEditor;
         private bool showParamsEditor;
-        private bool ragdollTestEdit;
+        private bool showSpritesheet;
 
         public override void Select()
         {
@@ -202,7 +202,7 @@ namespace Barotrauma
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
             }
             SetWallCollisions(character.AnimController.forceStanding);
-            if (ragdollTestEdit)
+            if (showSpritesheet)
             {
                 CreateTextures(character);
             }
@@ -240,55 +240,64 @@ namespace Barotrauma
                 CreateButtons();
                 return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Controls")
+            var controlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Controls") { Selected = showControls };
+            var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
+            var offsetsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Offsets") { Selected = showOffsetEditor };
+            var jointsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints") { Selected = showJointEditor };
+            var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
+            controlsToggle.OnSelected = box =>
             {
-                Selected = showControls,
-                OnSelected = (GUITickBox box) =>
+                showControls = box.Selected;
+                if (showControls)
                 {
-                    showControls = box.Selected;
-                    return true;
+                    spritesheetToggle.Selected = false;
+                    offsetsToggle.Selected = false;
+                    jointsToggle.Selected = false;
                 }
+                return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters")
+            paramsToggle.OnSelected = box =>
             {
-                Selected = showParamsEditor,
-                OnSelected = (GUITickBox box) =>
+                showParamsEditor = box.Selected;
+                if (showParamsEditor)
                 {
-                    showParamsEditor = box.Selected;
-                    return true;
+                    spritesheetToggle.Selected = false;
+                    offsetsToggle.Selected = false;
+                    jointsToggle.Selected = false;
                 }
+                return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Offsets")
+            offsetsToggle.OnSelected = box =>
             {
-                Selected = showOffsetEditor,
-                OnSelected = (GUITickBox box) =>
+                showOffsetEditor = box.Selected;
+                if (showOffsetEditor)
                 {
-                    showOffsetEditor = box.Selected;
-                    return true;
+                    jointsToggle.Selected = false;
+                    spritesheetToggle.Selected = true;
                 }
+                return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints")
+            jointsToggle.OnSelected = box =>
             {
-                Selected = showJointEditor,
-                OnSelected = (GUITickBox box) =>
+                showJointEditor = box.Selected;
+                if (showJointEditor)
                 {
-                    showJointEditor = box.Selected;
-                    return true;
+                    offsetsToggle.Selected = false;
+                    spritesheetToggle.Selected = true;
                 }
+                return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Test Edit")
+            spritesheetToggle.OnSelected = box =>
             {
-                Selected = ragdollTestEdit,
-                OnSelected = (GUITickBox box) =>
+                showSpritesheet = box.Selected;
+                if (showSpritesheet)
                 {
-                    ragdollTestEdit = box.Selected;
-                    if (ragdollTestEdit)
-                    {
-                        CreateTextures(character);
-                    }
-                    return true;
+                    controlsToggle.Selected = false;
+                    paramsToggle.Selected = false;
                 }
+                return true;
             };
+
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
             {
                 Enabled = character.AnimController.CanWalk,
@@ -428,9 +437,9 @@ namespace Barotrauma
             {
                 DrawJointEditor(spriteBatch);
             }
-            if (ragdollTestEdit)
+            if (showSpritesheet)
             {
-                DrawRagdollTestEdit(spriteBatch);
+                DrawSpritesheetEditor(spriteBatch);
             }
             GUI.Draw((float)deltaTime, spriteBatch);
 
@@ -890,8 +899,8 @@ namespace Barotrauma
                 //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
                 //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
 
-                GUI.DrawRectangle(spriteBatch, corners, Color.White);
-                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Blue);
+                GUI.DrawRectangle(spriteBatch, corners, Color.Red);
+                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White);
 
                 // Limb positions
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White);
@@ -945,31 +954,31 @@ namespace Barotrauma
                     //tformedJointPos.Y = -tformedJointPos.Y;
                     tformedJointPos += limbScreenPos;
 
-                    if (joint.BodyA == limb.body.FarseerBody)
-                    {
-                        float a1 = joint.UpperLimit - MathHelper.PiOver2;
-                        float a2 = joint.LowerLimit - MathHelper.PiOver2;
-                        float a3 = (a1 + a2) / 2.0f;
-                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
-                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.Blue);
+                    //if (joint.BodyA == limb.body.FarseerBody)
+                    //{
+                    //    float a1 = joint.UpperLimit - MathHelper.PiOver2;
+                    //    float a2 = joint.LowerLimit - MathHelper.PiOver2;
+                    //    float a3 = (a1 + a2) / 2.0f;
+                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
+                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.Blue);
+                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
+                    //}
 
-                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
-                    }
-
-                    var widgetSize = new Vector2(10, 10);
-                    var hitBoxSize = widgetSize * 2;
-                    GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, false);
+                    var widgetSize = new Vector2(5, 5);
+                    var hitBoxSize = widgetSize * 3;
+                    GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, true);
                     Vector2 up = -VectorExtensions.Forward(limb.Rotation);
                     corners = MathUtils.GetImaginaryRect(corners, up, tformedJointPos, hitBoxSize);
-                    GUI.DrawRectangle(spriteBatch, corners, Color.Black);
-                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 10, Color.Black);
+                    //GUI.DrawRectangle(spriteBatch, corners, Color.Black);
+                    GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
 
                     if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                     {
-                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 2);
-                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 2);
+                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
+                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 3);
                         GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
-                        GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, false, thickness: 3);
+                        GUI.DrawRectangle(spriteBatch, tformedJointPos - hitBoxSize / 2, hitBoxSize, Color.Red, false, thickness: 1);
                         if (PlayerInput.LeftButtonHeld())
                         {
                             Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
@@ -991,6 +1000,17 @@ namespace Barotrauma
 
         #region Ragdoll test
         private List<Texture2D> textures;
+        private List<Texture2D> Textures
+        {
+            get
+            {
+                if (textures == null)
+                {
+                    CreateTextures(character);
+                }
+                return textures;
+            }
+        }
         private List<string> texturePaths;
         private void CreateTextures(Character character)
         {
@@ -1005,13 +1025,13 @@ namespace Barotrauma
             }
         }
 
-        private void DrawRagdollTestEdit(SpriteBatch spriteBatch)
+        private void DrawSpritesheetEditor(SpriteBatch spriteBatch)
         {
             int y = 0;
             int x = 0;
-            for (int i = 0; i < textures.Count; i++)
+            for (int i = 0; i < Textures.Count; i++)
             {
-                spriteBatch.Draw(textures[i], new Vector2(x, y), Color.White);
+                spriteBatch.Draw(Textures[i], new Vector2(x, y), Color.White);
 
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
@@ -1026,14 +1046,18 @@ namespace Barotrauma
                         rect.X + limb.sprite.Origin.X,
                         rect.Y + limb.sprite.Origin.Y);
 
-                    DrawJoints(spriteBatch, limb, limbBodyPos);
-
-                    GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
-                    GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
-
-                    if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                    if (showJointEditor)
                     {
-                        limb.sprite.Origin += PlayerInput.MouseSpeed;
+                        DrawJoints(spriteBatch, limb, limbBodyPos);
+                    }
+                    if (showOffsetEditor)
+                    {
+                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
+                        GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);               
+                        if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                        {
+                            limb.sprite.Origin += PlayerInput.MouseSpeed;
+                        }
                     }
                 }
                 y += textures[i].Height;
