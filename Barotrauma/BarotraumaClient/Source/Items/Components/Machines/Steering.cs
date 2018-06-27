@@ -165,6 +165,20 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
             }
+            else if (posToMaintain.HasValue)
+            {
+                Radar radar = item.GetComponent<Radar>();
+                if (radar != null)
+                {
+                    Vector2 displayPosToMaintain = (posToMaintain.Value - item.WorldPosition) / radar.Range * radar.DisplayRadius;
+                    displayPosToMaintain.Y = -displayPosToMaintain.Y;
+                    displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width * 0.45f);
+
+                    displayPosToMaintain = velRect.Center.ToVector2() + displayPosToMaintain;
+                    
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)displayPosToMaintain.X - 5, (int)displayPosToMaintain.Y - 5, 10, 10), Color.Red);
+                }
+            }
 
             Vector2 steeringPos = new Vector2(velRect.Center.X + targetVelocity.X * 0.9f, velRect.Center.Y - targetVelocity.Y * 0.9f);
 
@@ -187,12 +201,19 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                    steeringInput.Y = -steeringInput.Y;
-
-                    steeringAdjustSpeed = character == null ? 
-                        0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
-
+                    if (AutoPilot)
+                    {
+                        Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                        inputPos.Y = -inputPos.Y;
+                        posToMaintain = item.WorldPosition + inputPos / radar.DisplayRadius * radar.Range;                        
+                    }
+                    else
+                    {
+                        SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                        steeringInput.Y = -steeringInput.Y;
+                        steeringAdjustSpeed = character == null ? 
+                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
+                    }
                     unsentChanges = true;
                 }
             }

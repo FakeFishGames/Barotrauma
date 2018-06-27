@@ -189,6 +189,7 @@ namespace Barotrauma
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
             this.level = level;
 
@@ -197,7 +198,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-
+            
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
@@ -227,6 +228,7 @@ namespace Barotrauma
             if (GameMode.Mission != null) Mission.Start(Level.Loaded);
 
             EventManager.StartRound(level);
+            SteamAchievementManager.OnStartRound();
 
             if (GameMode != null) GameMode.MsgBox();
 
@@ -234,7 +236,6 @@ namespace Barotrauma
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
-            SoundPlayer.SwitchMusic();
 
             if (!(GameMode is TutorialMode))
             {
@@ -247,6 +248,17 @@ namespace Barotrauma
 
             RoundStartTime = Timing.TotalTime;
         }
+
+        public void Update(float deltaTime)
+        {
+            EventManager.Update(deltaTime);
+            GameMode?.Update(deltaTime);
+            Mission?.Update(deltaTime);
+
+            UpdateProjSpecific(deltaTime);
+        }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         public void EndRound(string endMessage)
         {
@@ -266,6 +278,7 @@ namespace Barotrauma
 #endif
 
             EventManager.EndRound();
+            SteamAchievementManager.OnRoundEnded(this);
 
             currentMission = null;
 

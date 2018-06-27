@@ -113,18 +113,25 @@
   <ambient file="Content/Sounds/Ambient/DistantPod3.ogg"/>
   <ambient file="Content/Sounds/Ambient/GlacialMovement.ogg"/>
 
+  <!--
   <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
   <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
+  -->
+
+  <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
   
-  <music file="Content/Sounds/Music/The Descent.ogg" type="endround"/>
+  <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
   <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
+
+  <music file="Content/Sounds/Music/Layer 0 - Basic.ogg" type="intensity" intensityrange="0,100"/>
+  <music file="Content/Sounds/Music/Intensity Layer 1.ogg" type="intensity" intensityrange="10,30"/>
+  <music file="Content/Sounds/Music/Intensity Layer 2.ogg" type="intensity" intensityrange="30,50"/>
+  <music file="Content/Sounds/Music/Intensity Layer 3.ogg" type="intensity" intensityrange="50,70"/>
+  <music file="Content/Sounds/Music/Intensity Layer 4.ogg" type="intensity" intensityrange="70,100"/>
   
-  <music file="Content/Sounds/Music/Enter the Maze.ogg" type="repair" priorityrange="30,60"/>
-  <music file="Content/Sounds/Music/Static Motion.ogg" type="repair" priorityrange="50,80"/>
-  <music file="Content/Sounds/Music/Phantom From Space.ogg" type="monster" priorityrange="25,60"/>
-  <music file="Content/Sounds/Music/Unseen Horrors.ogg" type="monster" priorityrange="40,100"/>
+  <music file="Content/Sounds/Music/Layer 1 - Monsters Nearby.ogg" type="monster"/>
   
-  <music file="Content/Sounds/Music/amb_JD_drone_clattering_machine.ogg" type="deep"/>
-  <music file="Content/Sounds/Music/Controlled Chaos.ogg" type="ruins"/>
-  <music file="Content/Sounds/Music/Controlled Chaos 2.ogg" type="ruins"/>
+  <music file="Content/Sounds/Music/Layer 2 - In The Ruins.ogg" type="ruins"/>
+  <music file="Content/Sounds/Music/Layer 5 - Submarine Flooded.ogg" type="flooded"/>
+  <music file="Content/Sounds/Music/Layer 11 - Crush Depth.ogg" type="deep"/>
 </sounds>

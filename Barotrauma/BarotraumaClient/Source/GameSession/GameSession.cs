@@ -127,20 +127,14 @@ namespace Barotrauma
             if (infoFrame != null) infoFrame.AddToGUIUpdateList();
         }
 
-        public void Update(float deltaTime)
+        partial void UpdateProjSpecific(float deltaTime)
         {
-            EventManager.Update(deltaTime);
-
             if (GUI.DisableHUD) return;
-
-            //guiRoot.Update(deltaTime);
-            infoButton.UpdateManually(deltaTime);
-
-            if (GameMode != null) GameMode.Update(deltaTime);
-            if (Mission != null) Mission.Update(deltaTime);
-            if (infoFrame != null) infoFrame.UpdateManually(deltaTime);
+            
+            infoButton?.UpdateManually(deltaTime);
+            infoFrame?.UpdateManually(deltaTime);
         }
-
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;

@@ -1511,6 +1511,8 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.GameSession.Level.Seed);
             msg.Write(selectedLevelDifficulty);
 
+            msg.Write((byte)GameMain.Config.LosMode);
+
             msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 
             msg.Write(selectedSub.Name);

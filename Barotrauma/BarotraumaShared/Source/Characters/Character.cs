@@ -100,6 +100,7 @@ namespace Barotrauma
         private Character focusedCharacter, selectedCharacter, selectedBy;
 
         private bool isDead;
+        private Character lastAttacker;
         private Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath;
 
         public readonly bool IsHumanoid;
@@ -1954,8 +1955,7 @@ namespace Barotrauma
         
         public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f, Character attacker = null)
         {
-            Limb temp = null;
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out temp, attacker);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out _, attacker);
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
@@ -1995,6 +1995,11 @@ namespace Barotrauma
             health.ApplyDamage(hitLimb, attackResult);
             OnAttacked?.Invoke(attacker, attackResult);
             AdjustKarma(attacker, attackResult);
+
+            if (attacker != null && attackResult.Damage > 0.0f)
+            {
+                lastAttacker = attacker;
+            }
 
             return attackResult;
         }
@@ -2089,6 +2094,8 @@ namespace Barotrauma
 
             this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
             OnDeath?.Invoke(this, causeOfDeathType);
+
+            SteamAchievementManager.OnCharacterKilled(this, lastAttacker);
 
             KillProjSpecific();
 
