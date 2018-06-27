@@ -856,7 +856,7 @@ namespace Barotrauma
         private Vector2[] corners = new Vector2[4];
         private void DrawOffsetEditor(SpriteBatch spriteBatch)
         {
-            float inputMultiplier = 0.5f;
+            float inputMultiplier = 0.5f / Cam.Zoom;
             Limb selectedLimb = null;
             foreach (Limb limb in character.AnimController.Limbs)
             {
