@@ -79,11 +79,9 @@ namespace Barotrauma
                 e.IsHighlighted = false;
             }
 
-#if CLIENT
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
-            
-            GameMain.ParticleManager.Update((float)deltaTime);
-            
+#if CLIENT            
+            GameMain.ParticleManager.Update((float)deltaTime);            
             GameMain.LightManager.Update((float)deltaTime);
 #endif
 
