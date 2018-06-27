@@ -41,6 +41,10 @@
   <BorderlessWindowed>Borderless windowed</BorderlessWindowed>
   <EnableVSync>Enable vertical sync</EnableVSync>
   <ParticleLimit>Particle limit</ParticleLimit>
+  <LosEffect>Line of sight effect</LosEffect>
+  <LosModeNone>None</LosModeNone>
+  <LosModeTransparent>Transparent</LosModeTransparent>
+  <LosModeOpaque>Opaque</LosModeOpaque>
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
