@@ -869,11 +869,8 @@ namespace Barotrauma
                 //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
                 //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
 
-                GUI.DrawLine(spriteBatch, corners[0], corners[1], Color.White);
-                GUI.DrawLine(spriteBatch, corners[1], corners[2], Color.White);
-                GUI.DrawLine(spriteBatch, corners[2], corners[3], Color.White);
-                GUI.DrawLine(spriteBatch, corners[3], corners[0], Color.White);
-                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 50, Color.Blue);
+                GUI.DrawRectangle(spriteBatch, corners, Color.White);
+                GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Blue);
 
                 // Limb positions
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White);

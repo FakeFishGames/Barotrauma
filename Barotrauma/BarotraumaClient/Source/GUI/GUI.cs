@@ -585,6 +585,18 @@ namespace Barotrauma
             DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            if (corners.Length != 4)
+            {
+                throw new Exception("Invalid length of the corners array! Must be 4");
+            }
+            DrawLine(sb, corners[0], corners[1], clr, depth, thickness);
+            DrawLine(sb, corners[1], corners[2], clr, depth, thickness);
+            DrawLine(sb, corners[2], corners[3], clr, depth, thickness);
+            DrawLine(sb, corners[3], corners[0], clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);
