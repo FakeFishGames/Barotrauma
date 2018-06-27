@@ -390,7 +390,7 @@ namespace Barotrauma
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
- 
+
             GameMain.World.Step((float)deltaTime);
         }
 
@@ -416,8 +416,6 @@ namespace Barotrauma
             Structure wall = clones.FirstOrDefault();
             Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
-            GUI.Draw((float)deltaTime, spriteBatch);
-
             if (showControls)
             {
                 DrawWidgetEditor(spriteBatch);
@@ -434,6 +432,7 @@ namespace Barotrauma
             {
                 DrawRagdollTestEdit(spriteBatch);
             }
+            GUI.Draw((float)deltaTime, spriteBatch);
 
             // Debug
             if (GameMain.DebugDraw)
@@ -550,7 +549,7 @@ namespace Barotrauma
             if (head != null)
             {
                 // Head angle
-                DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White, 
+                DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
                     angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
@@ -589,7 +588,7 @@ namespace Barotrauma
                     referencePoint -= simSpaceForward * 0.25f;
                 }
                 // Torso angle
-                DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White, 
+                DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
                     angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
@@ -663,7 +662,7 @@ namespace Barotrauma
                     {
                         TryUpdateValue("legcorrectiontorque", angle / multiplier);
                         GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
-                    },circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
+                    }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
                 }
                 if (hand != null || arm != null)
                 {
@@ -771,7 +770,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick, 
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
             float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true)
         {
             var angle = value;
@@ -986,7 +985,7 @@ namespace Barotrauma
                         }
                     }
                 }
-            }   
+            }
         }
         #endregion
 
@@ -1028,13 +1027,6 @@ namespace Barotrauma
                         rect.Y + limb.sprite.Origin.Y);
 
                     DrawJoints(spriteBatch, limb, limbBodyPos);
-
-                    if (limb.body.BodyShapeTexture == null) continue;
-
-                    spriteBatch.Draw(limb.body.BodyShapeTexture, limbBodyPos,
-                        null, Color.White, 0.0f,
-                        new Vector2(limb.body.BodyShapeTexture.Width, limb.body.BodyShapeTexture.Height) / 2,
-                        1.0f, SpriteEffects.None, 0.0f);
 
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
