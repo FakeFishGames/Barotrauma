@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,7 +14,6 @@ namespace Barotrauma
         {
             get
             {
-                if (instance == null) instance = new MapGenerationParams();
                 return instance;
             }
         }
@@ -114,6 +115,10 @@ namespace Barotrauma
         [Serialize(0.1f, true), Editable(0.0f, 10.0f, ToolTip = "ConnectionDisplacementMultiplier for the UI indicator lines between locations.")]
         public float ConnectionIndicatorDisplacementMultiplier { get; set; }
 
+        public Sprite ConnectionSprite { get; private set; }
+
+        public List<Sprite> BackgroundTileSprites { get; private set; }
+
         public string Name
         {
             get { return GetType().ToString(); } 
@@ -124,9 +129,42 @@ namespace Barotrauma
             get; private set;
         }
 
-        private MapGenerationParams()
+        public static void Init()
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this);
+            var files = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.MapGenerationParameters);
+            if (!files.Any())
+            {
+                DebugConsole.ThrowError("No map generation parameters found in the selected content packages!");
+                return;
+            }
+
+            foreach (string file in files)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc?.Root == null) return;
+
+                instance = new MapGenerationParams(doc.Root);
+                break;
+            }
+        }
+
+        private MapGenerationParams(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            BackgroundTileSprites = new List<Sprite>();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "connectionsprite":
+                        ConnectionSprite = new Sprite(subElement);
+                        break;
+                    case "backgroundtile":
+                        BackgroundTileSprites.Add(new Sprite(subElement));
+                        break;
+                }
+            }
         }
     }
 }

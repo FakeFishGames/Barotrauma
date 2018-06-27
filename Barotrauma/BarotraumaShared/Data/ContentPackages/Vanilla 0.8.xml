@@ -65,6 +65,7 @@
   <Decals file="Content/Particles/DecalPrefabs.xml"/>
   <RandomEvents file="Content/randomevents.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
+  <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
   <NPCConversations file="Content/Characters/Human/NpcConversations.xml"/>

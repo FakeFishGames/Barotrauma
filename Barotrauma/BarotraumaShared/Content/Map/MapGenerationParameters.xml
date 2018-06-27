@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<MapGenerationParameters
+  DifficultyZones="6"
+  Size="2000"
+  NoiseResolution="1024"
+  NoiseFrequency="10"
+  NoiseOctaves="8"
+  NoisePersistence="0.5"
+  TileSpriteSize="200,200"
+  TileSpriteSpacing="280,80"
+  CenterDarkenStrength="1.0"
+  CenterDarkenRadius="0.9"
+  CenterDarkenWaveFrequency="5"
+  CenterDarkenWavePhaseNoise="15"
+  EdgeDarkenStrength="0.8"
+  EdgeDarkenRadius="0.9"
+  LocationRadius="0.9"
+  VoronoiSiteInterval="20"
+  VoronoiSitePlacementProbability="0.3"
+  VoronoiSitePlacementMinVal="0.1"
+  MinConnectionDistance="10"
+  ConnectionIterationMultiplier="0.2"
+  ConnectionDisplacementMultiplier="0.5"
+  ConnectionIndicatorIterationMultiplier="0.1"
+  ConnectionIndicatorDisplacementMultiplier="0.1">
+  <ConnectionSprite texture="Content/Map/MapLine.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_01.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_02.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_03.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_04.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_05.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_06.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_07.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_08.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_09.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_10.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_11.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_12.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_13.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_14.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_15.png"/>
+  <BackgroundTile texture="Content/Map/MapPieces/btMAP_Test_16.png"/>
+</MapGenerationParameters>
