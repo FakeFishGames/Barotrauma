@@ -29,6 +29,7 @@ namespace Barotrauma
         private bool showOffsetEditor;
         private bool showJointEditor;
         private bool showParamsEditor;
+        private bool ragdollTestEdit;
 
         public override void Select()
         {
@@ -201,6 +202,10 @@ namespace Barotrauma
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
             }
             SetWallCollisions(character.AnimController.forceStanding);
+            if (ragdollTestEdit)
+            {
+                CreateTextures(character);
+            }
             return character;
         }
         #endregion
@@ -268,6 +273,19 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     showJointEditor = box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Test Edit")
+            {
+                Selected = ragdollTestEdit,
+                OnSelected = (GUITickBox box) =>
+                {
+                    ragdollTestEdit = box.Selected;
+                    if (ragdollTestEdit)
+                    {
+                        CreateTextures(character);
+                    }
                     return true;
                 }
             };
@@ -411,6 +429,10 @@ namespace Barotrauma
             if (showJointEditor)
             {
                 DrawJointEditor(spriteBatch);
+            }
+            if (ragdollTestEdit)
+            {
+                DrawRagdollTestEdit(spriteBatch);
             }
 
             // Debug
@@ -965,6 +987,122 @@ namespace Barotrauma
                     }
                 }
             }   
+        }
+        #endregion
+
+        #region Ragdoll test
+        private List<Texture2D> textures;
+        private List<string> texturePaths;
+        private void CreateTextures(Character character)
+        {
+            DebugConsole.NewMessage("Creating textures", Color.White);
+            textures = new List<Texture2D>();
+            texturePaths = new List<string>();
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                if (limb.sprite == null || texturePaths.Contains(limb.sprite.FilePath)) continue;
+                textures.Add(limb.sprite.Texture);
+                texturePaths.Add(limb.sprite.FilePath);
+            }
+        }
+
+        private void DrawRagdollTestEdit(SpriteBatch spriteBatch)
+        {
+            int y = 0;
+            int x = 0;
+            for (int i = 0; i < textures.Count; i++)
+            {
+                spriteBatch.Draw(textures[i], new Vector2(x, y), Color.White);
+
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
+                    Rectangle rect = limb.sprite.SourceRect;
+                    rect.X += x;
+                    rect.Y += y;
+
+                    GUI.DrawRectangle(spriteBatch, rect, Color.Red);
+
+                    Vector2 limbBodyPos = new Vector2(
+                        rect.X + limb.sprite.Origin.X,
+                        rect.Y + limb.sprite.Origin.Y);
+
+                    DrawJoints(spriteBatch, limb, limbBodyPos);
+
+                    if (limb.body.BodyShapeTexture == null) continue;
+
+                    spriteBatch.Draw(limb.body.BodyShapeTexture, limbBodyPos,
+                        null, Color.White, 0.0f,
+                        new Vector2(limb.body.BodyShapeTexture.Width, limb.body.BodyShapeTexture.Height) / 2,
+                        1.0f, SpriteEffects.None, 0.0f);
+
+                    GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
+                    GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);
+
+                    if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos) < 5.0f && PlayerInput.LeftButtonHeld())
+                    {
+                        limb.sprite.Origin += PlayerInput.MouseSpeed;
+                    }
+                }
+                y += textures[i].Height;
+            }
+        }
+
+        private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
+        {
+            foreach (var joint in character.AnimController.LimbJoints)
+            {
+                Vector2 jointPos = Vector2.Zero;
+
+                if (joint.BodyA == limb.body.FarseerBody)
+                {
+                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+
+                }
+                else if (joint.BodyB == limb.body.FarseerBody)
+                {
+                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                }
+                else
+                {
+                    continue;
+                }
+
+                Vector2 tformedJointPos = jointPos /= limb.Scale;
+                tformedJointPos.Y = -tformedJointPos.Y;
+                tformedJointPos += limbBodyPos;
+
+                if (joint.BodyA == limb.body.FarseerBody)
+                {
+                    float a1 = joint.UpperLimit - MathHelper.PiOver2;
+                    float a2 = joint.LowerLimit - MathHelper.PiOver2;
+                    float a3 = (a1 + a2) / 2.0f;
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
+
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
+                }
+
+                GUI.DrawRectangle(spriteBatch, tformedJointPos, new Vector2(5.0f, 5.0f), Color.Red, true);
+                if (Vector2.Distance(PlayerInput.MousePosition, tformedJointPos) < 10.0f)
+                {
+                    GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
+                    GUI.DrawRectangle(spriteBatch, tformedJointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        Vector2 speed = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
+                        speed.Y = -speed.Y;
+                        if (joint.BodyA == limb.body.FarseerBody)
+                        {
+                            joint.LocalAnchorA += speed;
+                        }
+                        else
+                        {
+                            joint.LocalAnchorB += speed;
+                        }
+                    }
+                }
+            }
         }
         #endregion
     }
