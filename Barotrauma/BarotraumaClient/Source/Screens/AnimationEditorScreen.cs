@@ -1100,7 +1100,6 @@ namespace Barotrauma
                     float a3 = (a1 + a2) / 2.0f;
                     GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
                     GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
-
                     GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
                 }
 
@@ -1125,6 +1124,26 @@ namespace Barotrauma
                         {
                             joint.LocalAnchorB += input * limb.Scale;
                         }
+                        // TODO: Remove, for testing only
+                        float step = 0.001f;
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Up))
+                        {
+                            joint.UpperLimit = joint.UpperLimit + step;
+                        }
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Down))
+                        {
+                            joint.UpperLimit = joint.UpperLimit - step;
+                        }
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Right))
+                        {
+                            joint.LowerLimit = joint.LowerLimit + step;
+                        }
+                        if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Left))
+                        {
+                            joint.LowerLimit = joint.LowerLimit - step;
+                        }
+                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 0), "Upper limit: " + MathHelper.ToDegrees(joint.UpperLimit).ToString(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 20), "Lower limit: " + MathHelper.ToDegrees(joint.LowerLimit).ToString(), Color.White, Color.Black * 0.5f);
                     }
                 }
             }
