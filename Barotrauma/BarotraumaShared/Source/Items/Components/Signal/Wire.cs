@@ -84,13 +84,14 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[i] == null || connections[i].Item != item) continue;
 
-                for (int n = 0; n < connections[i].Wires.Length; n++)
+                foreach (Wire wire in connections[i].Wires)
                 {
-                    if (connections[i].Wires[n] != this) continue;
-                    
+                    if (wire != this) continue;
                     SetConnectedDirty();
-                    connections[i].Wires[n] = null;
+
+                    connections[i].SetWire(connections[i].FindWireIndex(wire), null);
                 }
+
                 connections[i] = null;
             }
         }
@@ -329,7 +330,7 @@ namespace Barotrauma.Items.Components
                 int wireIndex = connections[i].FindWireIndex(item);
 
                 if (wireIndex == -1) continue;
-                connections[i].AddLink(wireIndex, null);
+                connections[i].SetWire(wireIndex, null);
 
                 connections[i] = null;
             }

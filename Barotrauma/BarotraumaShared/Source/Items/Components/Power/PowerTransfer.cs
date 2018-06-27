@@ -389,7 +389,7 @@ namespace Barotrauma.Items.Components
 
             if (!connectedRecipients.ContainsKey(connection)) return;
 
-            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLowerInvariant() == "signal")
+            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6) == "signal")
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {

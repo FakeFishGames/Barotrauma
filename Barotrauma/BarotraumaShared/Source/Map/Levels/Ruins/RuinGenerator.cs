@@ -408,11 +408,11 @@ namespace Barotrauma.RuinGeneration
                 wire.Item.MoveWithLevel = false;
 
                 var conn1 = door.Connections.Find(c => c.Name == "set_state");
-                conn1.AddLink(0, wire);
+                conn1.SetWire(0, wire);
                 wire.Connect(conn1, false);
 
                 var conn2 = sensor.Connections.Find(c => c.Name == "state_out");
-                conn2.AddLink(0, wire);
+                conn2.SetWire(0, wire);
                 wire.Connect(conn2, false);
             }
 

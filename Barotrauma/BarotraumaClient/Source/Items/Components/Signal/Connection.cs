@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
                     int linkIndex = c.FindWireIndex(draggingConnected.Item);
                     if (linkIndex > -1)
                     {
-                        Inventory.draggingItem = c.Wires[linkIndex].Item;
+                        Inventory.draggingItem = c.wires[linkIndex].Item;
                     }
                 }
 
@@ -141,13 +141,13 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null || Wires[i].Hidden || draggingConnected == Wires[i]) continue;
+                if (wires[i] == null || wires[i].Hidden || draggingConnected == wires[i]) continue;
 
-                Connection recipient = Wires[i].OtherConnection(this);
+                Connection recipient = wires[i].OtherConnection(this);
 
                 string label = recipient == null ? "" :
-                    Wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
-                DrawWire(spriteBatch, Wires[i], (recipient == null) ? Wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, label);
+                    wires[i].Locked ? recipient.item.Name + "\n" + TextManager.Get("ConnectionLocked") : recipient.item.Name;
+                DrawWire(spriteBatch, wires[i], (recipient == null) ? wires[i].Item : recipient.item, position, wirePosition, mouseIn, equippedWire, label);
 
                 wirePosition.Y += wireInterval;
             }
@@ -159,8 +159,7 @@ namespace Barotrauma.Items.Components
                 if (!PlayerInput.LeftButtonHeld())
                 {
                     //find an empty cell for the new connection
-                    int index = FindWireIndex(null);
-
+                    int index = FindEmptyIndex();
                     if (index > -1 && !Wires.Contains(draggingConnected))
                     {
                         bool alreadyConnected = draggingConnected.IsConnectedTo(item);
@@ -181,7 +180,7 @@ namespace Barotrauma.Items.Components
                                     Item.Name + " (" + Name + ") to " + otherConnection.item.Name + " (" + otherConnection.Name + ")", ServerLog.MessageType.ItemInteraction);
                             }
 
-                            AddLink(index, draggingConnected);
+                            SetWire(index, draggingConnected);
                         }
                     }
                 }
