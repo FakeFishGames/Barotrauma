@@ -38,6 +38,11 @@ namespace Barotrauma.Items.Components
             new Color(255, 255, 255)
         };
 
+        public float DisplayRadius
+        {
+            get { return displayRadius; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
