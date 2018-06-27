@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private Character character;
         private Vector2 spawnPosition;
-        private bool showWidgets = true;
+        private bool showControls = true;
         private bool showOffsetEditor;
         private bool showJointEditor;
         private bool showParamsEditor;
@@ -235,12 +235,12 @@ namespace Barotrauma
                 CreateButtons();
                 return true;
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Widgets")
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Controls")
             {
-                Selected = showWidgets,
+                Selected = showControls,
                 OnSelected = (GUITickBox box) =>
                 {
-                    showWidgets = box.Selected;
+                    showControls = box.Selected;
                     return true;
                 }
             };
@@ -400,7 +400,7 @@ namespace Barotrauma
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
 
-            if (showWidgets)
+            if (showControls)
             {
                 DrawWidgetEditor(spriteBatch);
             }
