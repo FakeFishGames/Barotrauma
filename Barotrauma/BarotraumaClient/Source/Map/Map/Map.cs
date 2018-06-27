@@ -11,15 +11,9 @@ namespace Barotrauma
     {
         //how much larger the ice background is compared to the size of the map
         private const float BackgroundScale = 1.5f;
-
-        private static Sprite iceTexture;
-        private static Texture2D iceCraters;
-        private static Texture2D iceCrack;
-
+        
         private static Texture2D circleTexture;
-
-        private static List<Sprite> mapPieces = new List<Sprite>();
-
+        
         class MapAnim
         {
             public Location StartLocation;
@@ -125,7 +119,7 @@ namespace Barotrauma
                 for (int y = 0; y < mapTiles.GetLength(1); y++)
                 {
                     mapTiles[x, y] = new MapTile(
-                        mapPieces[Rand.Int(mapPieces.Count)], Rand.Range(0.0f, 1.0f) < 0.5f ? 
+                        generationParams.BackgroundTileSprites[Rand.Int(generationParams.BackgroundTileSprites.Count)], Rand.Range(0.0f, 1.0f) < 0.5f ? 
                         SpriteEffects.FlipHorizontally : SpriteEffects.None);
                 }
             }
@@ -482,7 +476,7 @@ namespace Barotrauma
                         int width = (int)(3 * zoom);
 
                         float a = (200.0f - distFromPlayer) / 200.0f;
-                        spriteBatch.Draw(iceCrack,
+                        spriteBatch.Draw(generationParams.ConnectionSprite.Texture,
                             new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
                             null, crackColor * MathHelper.Clamp(a, 0.1f, 0.5f), MathUtils.VectorToAngle(end - start),
                             new Vector2(0, 16), SpriteEffects.None, 0.01f);
