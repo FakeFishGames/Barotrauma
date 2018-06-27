@@ -104,7 +104,10 @@ namespace Barotrauma.Networking
                     {
                         foreach (Connection connection in connectionPanel.Connections)
                         {
-                            Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
+                            foreach (Wire wire in connection.Wires)
+                            {
+                                if (wire != null) wire.Locked = true;
+                            }
                         }
                     }
                 }
