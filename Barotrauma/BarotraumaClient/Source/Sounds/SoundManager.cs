@@ -9,7 +9,7 @@ namespace Barotrauma.Sounds
 {
     public class SoundManager : IDisposable
     {
-        public const int SOURCE_COUNT = 16;
+        public const int SOURCE_COUNT = 32;
         
         private IntPtr alcDevice;
         private OpenTK.ContextHandle alcContext;
