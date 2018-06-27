@@ -910,7 +910,6 @@ namespace Barotrauma
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
                         jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
-
                     }
                     else if (joint.BodyB == limb.body.FarseerBody)
                     {
@@ -925,34 +924,35 @@ namespace Barotrauma
                     //tformedJointPos.Y = -tformedJointPos.Y;
                     tformedJointPos += limbScreenPos;
 
-                    //if (joint.BodyA == limb.body.FarseerBody)
-                    //{
-                    //    float a1 = joint.UpperLimit - MathHelper.PiOver2;
-                    //    float a2 = joint.LowerLimit - MathHelper.PiOver2;
-                    //    float a3 = (a1 + a2) / 2.0f;
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
+                    if (joint.BodyA == limb.body.FarseerBody)
+                    {
+                        float a1 = joint.UpperLimit - MathHelper.PiOver2;
+                        float a2 = joint.LowerLimit - MathHelper.PiOver2;
+                        float a3 = (a1 + a2) / 2.0f;
+                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
+                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.Blue);
 
-                    //    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
-                    //}
+                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
+                    }
 
                     var widgetSize = new Vector2(10, 10);
                     var hitBoxSize = widgetSize * 2;
-
                     GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, false);
-
                     Vector2 up = -VectorExtensions.Forward(limb.Rotation);
                     corners = MathUtils.GetImaginaryRect(corners, up, tformedJointPos, hitBoxSize);
+                    GUI.DrawRectangle(spriteBatch, corners, Color.Black);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 10, Color.Black);
 
                     if (MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                     {
+                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 2);
+                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 2);
                         GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
                         GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, false, thickness: 3);
                         if (PlayerInput.LeftButtonHeld())
                         {
-                            Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
-                            input.Y = -input.Y;
-                            input = input.TransformVector(up);
+                            Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
+                            //input.Y = -input.Y;
                             if (joint.BodyA == limb.body.FarseerBody)
                             {
                                 joint.LocalAnchorA += input;
