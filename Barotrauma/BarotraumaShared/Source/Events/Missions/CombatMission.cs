@@ -196,10 +196,10 @@ namespace Barotrauma
             {
                 for (int i = 0; i < teamDead.Length; i++)
                 {
-                    if (!teamDead[i] && teamDead[1-i])
+                    if (!teamDead[i] && teamDead[1 - i])
                     {
                         //make sure nobody in the other team can be revived because that would be pretty weird
-                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
+                        crews[1 - i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
                         winner = i;
 
@@ -213,12 +213,10 @@ namespace Barotrauma
             }
             else
             {
-                if (winner>=0 && subs[winner] != null && 
-                    (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
-                    crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
+                if (winner >= 0)
                 {
 #if CLIENT
-                    GameMain.GameSession.CrewManager.WinningTeam = winner+1;
+                    GameMain.GameSession.CrewManager.WinningTeam = winner + 1;
 #endif
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }
