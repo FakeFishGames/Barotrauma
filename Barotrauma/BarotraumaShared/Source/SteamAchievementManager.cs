@@ -25,10 +25,12 @@ namespace Barotrauma
         /// </summary>
         class RoundData
         {
-            public List<Reactor> Reactors = new List<Reactor>();
+            public readonly List<Reactor> Reactors = new List<Reactor>();
 
-            public HashSet<Character> EnteredCrushDepth = new HashSet<Character>();
-            public HashSet<Character> ReactorMeltdown = new HashSet<Character>();
+            public readonly HashSet<Character> EnteredCrushDepth = new HashSet<Character>();
+            public readonly HashSet<Character> ReactorMeltdown = new HashSet<Character>();
+
+            public readonly HashSet<Character> Casualties = new HashSet<Character>();
         }
 
         private static RoundData roundData;
@@ -136,6 +138,8 @@ namespace Barotrauma
         {
             if (GameMain.Client != null) return;
 
+            roundData.Casualties.Add(character);
+
             UnlockAchievement(killer, "kill" + character.SpeciesName);
             if (character.CurrentHull != null)
             {
@@ -184,8 +188,8 @@ namespace Barotrauma
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier, true, c => c != null);
                 }
             }
-
-            //made it to the destination despite a reactor meltdown
+            
+            //made it to the destination
             if (gameSession.Submarine.AtEndPosition)
             {
                 if (GameMain.Server != null)
@@ -196,6 +200,20 @@ namespace Barotrauma
                 else if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
                 {
                     UnlockAchievement("survivereactormeltdown");
+                }
+
+                var charactersInSub = Character.CharacterList.FindAll(c => c.Submarine == gameSession.Submarine && !c.IsDead);
+                if (charactersInSub.Count == 1)
+                {
+                    //there must be some non-enemy casualties to get the last mant standing achievement
+                    if (roundData.Casualties.Any(c => !(c.AIController is EnemyAIController)))
+                    {
+                        UnlockAchievement(charactersInSub[0], "lastmanstanding");
+                    }
+                    else if (!Character.CharacterList.Any(c => !(c.AIController is EnemyAIController)))
+                    {
+                        UnlockAchievement(charactersInSub[0], "lonesailor");
+                    }
                 }
             }
         }
