@@ -94,7 +94,7 @@ namespace Barotrauma.Steam
 
 #region Connecting to servers
 
-        public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action onFinished)
+        public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -109,17 +109,17 @@ namespace Barotrauma.Steam
             };
 
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound); };
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived); };
             query.OnFinished = onFinished;
 
             var localQuery = instance.client.ServerList.Local(filter);
-            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound); };
+            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived); };
             localQuery.OnFinished = onFinished;
 
             return true;
         }
 
-        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound)
+        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived)
         {
             foreach (ServerList.Server s in query.Responded)
             {
@@ -131,13 +131,24 @@ namespace Barotrauma.Steam
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,
                     MaxPlayers = s.MaxPlayers,
-                    HasPassword = s.Passworded
+                    HasPassword = s.Passworded,
                 };
                 s.FetchRules();
-                s.OnReceivedRules += (bool asd) =>
+                s.OnReceivedRules += (_) =>
                 {
-                    DebugConsole.Log(string.Join(", ", s.Rules.Values));
+                    if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+                    if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
+                    if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+
+                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
+                    {
+                        //invalid contentpackage info
+                        serverInfo.ContentPackageNames.Clear();
+                        serverInfo.ContentPackageHashes.Clear();
+                    }
+                    onServerRulesReceived(serverInfo);
                 };
+
                 onServerFound(serverInfo);
             }
             foreach (ServerList.Server s in query.Unresponsive)
