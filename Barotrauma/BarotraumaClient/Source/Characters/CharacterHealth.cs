@@ -267,6 +267,7 @@ namespace Barotrauma
 
         public void UpdateHUD(float deltaTime)
         {
+            if (GUI.DisableHUD) return;
             if (openHealthWindow != null)
             {
                 if (openHealthWindow != Character.Controlled?.CharacterHealth && openHealthWindow != Character.Controlled?.SelectedCharacter?.CharacterHealth)
@@ -411,6 +412,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
             if (OpenHealthWindow == this)
             {
                 afflictionContainer.AddToGUIUpdateList();
@@ -428,6 +430,7 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch)
         {
+            if (GUI.DisableHUD) return;
             float damageOverlayAlpha = DamageOverlayTimer;
             if (vitality < MaxVitality * 0.1f)
             {

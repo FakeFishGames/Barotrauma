@@ -120,11 +120,10 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
             infoButton.AddToGUIUpdateList();
-
-            if (GameMode != null) GameMode.AddToGUIUpdateList();
-
-            if (infoFrame != null) infoFrame.AddToGUIUpdateList();
+            GameMode?.AddToGUIUpdateList();
+            infoFrame?.AddToGUIUpdateList();
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -141,8 +140,8 @@ namespace Barotrauma
 
             infoButton.DrawManually(spriteBatch);
 
-            if (GameMode != null) GameMode.Draw(spriteBatch);
-            if (infoFrame != null) infoFrame.DrawManually(spriteBatch);
+            GameMode?.Draw(spriteBatch);
+            infoFrame?.DrawManually(spriteBatch);
         }
     }
 }
