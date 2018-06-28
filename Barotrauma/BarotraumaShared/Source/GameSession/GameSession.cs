@@ -229,6 +229,10 @@ namespace Barotrauma
 
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();
+            if (GameMode is CampaignMode)
+            {
+                SteamAchievementManager.OnBiomeDiscovered(level.Biome);
+            }
 
             if (GameMode != null) GameMode.MsgBox();
 
