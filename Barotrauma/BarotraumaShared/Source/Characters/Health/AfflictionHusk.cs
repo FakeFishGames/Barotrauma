@@ -47,7 +47,7 @@ namespace Barotrauma
                 subscribedToDeathEvent = true;
             }
 
-            UpdateMessages(prevStrength, characterHealth.Character);
+            if (characterHealth.Character == Character.Controlled) UpdateMessages(prevStrength, characterHealth.Character);
             if (Strength < Prefab.MaxStrength * 0.5f)
             {
                 UpdateDormantState(deltaTime, characterHealth.Character);

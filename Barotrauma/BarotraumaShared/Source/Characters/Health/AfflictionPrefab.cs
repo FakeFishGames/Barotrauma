@@ -24,7 +24,7 @@ namespace Barotrauma
 
             public float MinScreenBlurStrength, MaxScreenBlurStrength;
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
-
+            
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -46,8 +46,7 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
-
-
+                
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
                 foreach (XElement subElement in element.Elements())
@@ -93,9 +92,12 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown in the UI
         public readonly float ShowIconThreshold = 0.0f;
         public readonly float MaxStrength = 100.0f;
-
+        
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
+
+        //steam achievement given when the affliction is removed from the controlled character
+        public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
 
@@ -177,6 +179,8 @@ namespace Barotrauma
 
             CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
             SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
+
+            AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
             foreach (XElement subElement in element.Elements())
             {

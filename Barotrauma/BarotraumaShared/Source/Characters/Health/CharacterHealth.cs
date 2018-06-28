@@ -329,6 +329,7 @@ namespace Barotrauma
                         amount -= matchingAffliction.Strength;
                         matchingAffliction.Strength = 0.0f;
                         matchingAfflictions.RemoveAt(i);
+                        SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, character);
                     }
                     else
                     {
@@ -452,10 +453,17 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
-                        
+
             for (int i = 0; i < limbHealths.Count; i++)
             {
-                limbHealths[i].Afflictions.RemoveAll(a => a.Strength <= 0.0f);
+                for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
+                {
+                    if (limbHealths[i].Afflictions[j].Strength <= 0.0f)
+                    {
+                        SteamAchievementManager.OnAfflictionRemoved(limbHealths[i].Afflictions[j], character);
+                        limbHealths[i].Afflictions.RemoveAt(j);
+                    }
+                }
                 foreach (Affliction affliction in limbHealths[i].Afflictions)
                 {
                     Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
@@ -466,8 +474,16 @@ namespace Barotrauma
                     }
                 }
             }
-
-            afflictions.RemoveAll(a => a.Strength <= 0.0f && !irremovableAfflictions.Contains(a));
+            
+            for (int i = afflictions.Count - 1; i >= 0; i--)
+            {
+                if (irremovableAfflictions.Contains(afflictions[i])) continue;
+                if (afflictions[i].Strength <= 0.0f)
+                {
+                    SteamAchievementManager.OnAfflictionRemoved(afflictions[i], character);
+                    afflictions.RemoveAt(i);
+                }
+            }
             for (int i = 0; i < afflictions.Count; i++)
             {
                 afflictions[i].Update(this, null, deltaTime);

@@ -77,6 +77,8 @@ namespace Barotrauma.Networking
         
         public float DeleteDisconnectedTimer;
 
+        public HashSet<string> GivenAchievements = new HashSet<string>();
+
         public ClientPermissions Permissions = ClientPermissions.None;
         public List<DebugConsole.Command> PermittedConsoleCommands
         {
