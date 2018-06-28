@@ -246,7 +246,7 @@ namespace Barotrauma
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 serverList.ClearChildren();
-                if (!SteamManager.GetServers(AddToServerList, ServerQueryFinished))
+                if (!SteamManager.GetServers(AddToServerList, UpdateServerInfo, ServerQueryFinished))
                 {
                     serverList.ClearChildren();
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverList.Content.RectTransform),
@@ -340,12 +340,22 @@ namespace Barotrauma
                 UserData = serverInfo
             };
             var serverContent = new GUILayoutGroup(new RectTransform(Vector2.One, serverFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-            
+            UpdateServerInfo(serverInfo);
+        }
+
+        private void UpdateServerInfo(ServerInfo serverInfo)
+        {
+            var serverFrame = serverList.Content.FindChild(serverInfo);
+            if (serverFrame == null) return;
+
+            var serverContent = serverFrame.Children.First();
+            serverContent.ClearChildren();
+
             var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.8f), serverContent.RectTransform), label: "")
             {
-                Selected = 
-                    serverInfo.GameVersion == GameMain.Version.ToString() && 
-                    serverInfo.ContentPackagesMatch(GameMain.SelectedPackages), 
+                Selected =
+                    serverInfo.GameVersion == GameMain.Version.ToString() &&
+                    serverInfo.ContentPackagesMatch(GameMain.SelectedPackages),
                 Enabled = false,
                 UserData = "compatible"
             };
