@@ -487,7 +487,7 @@ namespace Barotrauma
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
-                SteamManager.Update();
+                SteamManager.Update((float)Timing.Step);
 
                 Timing.Accumulator -= Timing.Step;
             }

@@ -1132,6 +1132,7 @@ namespace Barotrauma
 
         public bool HasEquippedItem(string itemName, bool allowBroken = true)
         {
+            if (inventory == null) return false;
             for (int i = 0; i < inventory.Capacity; i++)
             {
                 if (inventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
