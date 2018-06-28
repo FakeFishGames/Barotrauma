@@ -55,9 +55,9 @@
 
   <Item
     name="Clown Costume"
-    identifier="clowncostumes"
+    identifier="clowncostume"
     category="Equipment"
-    cargocontainername="Metal Crate"    
+    cargocontainername="Metal Crate"
     tags="smallitem"
     description="Praise the honkmother.">
 

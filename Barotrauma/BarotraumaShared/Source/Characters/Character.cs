@@ -1137,6 +1137,7 @@ namespace Barotrauma
                 if (inventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
                 if (!allowBroken && inventory.Items[i].Condition <= 0.0f) continue;
                 if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
+                if (!string.IsNullOrEmpty(inventory.Items[i].Prefab.Identifier) && inventory.Items[i].Prefab.Identifier == itemName) return true;
             }
 
             return false;

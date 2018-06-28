@@ -80,79 +80,54 @@ namespace Barotrauma
         public static void OnItemRepaired(Item item, Character fixer)
         {
             if (GameMain.Client != null || fixer == null) return;
-
-            if (fixer == Character.Controlled)
-            {
-                UnlockAchievement("repairdevice");
-                UnlockAchievement("repair" + item.Prefab.Identifier);
-            }
-            else
-            {
-                GameMain.Server?.GiveAchievement(fixer, "repairdevice");
-                GameMain.Server?.GiveAchievement(fixer, "repair" + item.Prefab.Identifier);
-            }
+            
+            UnlockAchievement(fixer, "repairdevice");
+            UnlockAchievement(fixer, "repair" + item.Prefab.Identifier);
         }
 
         public static void OnAfflictionRemoved(Affliction affliction, Character character)
         {
             if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
 
-            if (GameMain.Client != null) return;
-            
-            if (character == Character.Controlled)
-            {
-                UnlockAchievement(affliction.Prefab.AchievementOnRemoved);
-            }
-            else
-            {
-                GameMain.Server.GiveAchievement(character, affliction.Prefab.AchievementOnRemoved);
-            }
+            if (GameMain.Client != null) return;            
+            UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
+        }
+
+        public static void OnCharacterRevived(Character character, Character reviver)
+        {
+            if (reviver == null || GameMain.Client != null) return;
+            UnlockAchievement(reviver, "healcrit");
         }
 
         public static void OnCharacterKilled(Character character, Character killer)
         {
             if (GameMain.Client != null) return;
 
-            if (killer != null && killer == Character.Controlled)
+            UnlockAchievement(killer, "kill" + character.SpeciesName);
+            if (character.CurrentHull != null)
             {
-                UnlockAchievement("kill" + character.SpeciesName);
-                if (character.CurrentHull == null)
-                {
-                    UnlockAchievement("kill" + character.SpeciesName + "indoors");
-                }
+                UnlockAchievement(killer, "kill" + character.SpeciesName + "indoors");
             }
 
-            GameMain.Server?.GiveAchievement(killer, "kill" + character.SpeciesName);
-            if (character.CurrentHull == null)
+            if (character.HasEquippedItem("clownmask") && 
+                character.HasEquippedItem("clowncostume"))
             {
-                GameMain.Server?.GiveAchievement(killer, "kill" + character.SpeciesName + "indoors");
+                UnlockAchievement(killer, "killclown");
             }
 
             if (GameMain.Server?.TraitorManager != null)
             {
                 foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
                 {
-                    if (traitor.Character == Character.Controlled && killer == Character.Controlled && traitor.TargetCharacter == character)
+                    if (traitor.TargetCharacter == character)
                     {
                         //killed the target as a traitor
-                        UnlockAchievement("traitorwin");
+                        UnlockAchievement(traitor.Character, "traitorwin");
                     }
-                    else if (traitor.Character == character && killer != null && killer == Character.Controlled)
+                    else if (traitor.Character == character)
                     {
-                        //killed a traitor
-                        UnlockAchievement("killtraitor");
-                    }
-
-                    foreach (Client client in GameMain.Server.ConnectedClients)
-                    {
-                        if (client.Character == traitor.Character && killer == client.Character && character == traitor.TargetCharacter)
-                        {
-                            GameMain.Server.GiveAchievement(client, "traitorwin");
-                        }
-                        else if (killer != null && client.Character == killer && character == traitor.Character)
-                        {
-                            GameMain.Server.GiveAchievement(client, "killtraitor");
-                        }
+                        //someone killed a traitor
+                        UnlockAchievement(killer, "killtraitor");
                     }
                 }
             }
@@ -176,6 +151,19 @@ namespace Barotrauma
             if (gameSession.Submarine.AtEndPosition && roundData.ReactorMeltdown)
             {
                 UnlockAchievement("survivereactormeltdown");
+            }
+        }
+
+        private static void UnlockAchievement(Character recipient, string identifier)
+        {
+            if (recipient == null) return;
+            if (recipient == Character.Controlled)
+            {
+                UnlockAchievement(identifier);
+            }
+            else
+            {
+                GameMain.Server?.GiveAchievement(recipient, identifier);
             }
         }
         
