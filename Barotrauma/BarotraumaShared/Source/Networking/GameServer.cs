@@ -159,7 +159,7 @@ namespace Barotrauma.Networking
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 server = new NetServer(config);
-                netPeer = server;
+                NetPeer = server;
 
                 fileSender = new FileSender(this);
                 fileSender.OnEnded += FileTransferChanged;
@@ -935,7 +935,7 @@ namespace Barotrauma.Networking
         private const int COMPRESSION_THRESHOLD = 500;
         public void CompressOutgoingMessage(NetOutgoingMessage outmsg)
         {
-            if (outmsg.LengthBytes>COMPRESSION_THRESHOLD)
+            if (outmsg.LengthBytes > COMPRESSION_THRESHOLD)
             {
                 byte[] data = outmsg.Data;
                 using (MemoryStream stream = new MemoryStream())
@@ -2166,6 +2166,32 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+        }
+
+        public void GiveAchievement(Character character, string achievementIdentifier)
+        {
+            foreach (Client client in connectedClients)
+            {
+                if (client.Character == character)
+                {
+                    GiveAchievement(client, achievementIdentifier);
+                    return;
+                }
+            }
+        }
+
+        public void GiveAchievement(Client client, string achievementIdentifier)
+        {
+            if (client.GivenAchievements.Contains(achievementIdentifier)) return;
+            client.GivenAchievements.Add(achievementIdentifier);
+
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.ACHIEVEMENT);
+            msg.Write(achievementIdentifier);
+
+            CompressOutgoingMessage(msg);
+
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
         }
         
         public void SetClientCharacter(Client client, Character newCharacter)

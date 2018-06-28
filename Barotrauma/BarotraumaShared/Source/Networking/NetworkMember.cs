@@ -38,6 +38,7 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
+        ACHIEVEMENT,        //give the client a steam achievement
 
         FILE_TRANSFER,
 
@@ -53,7 +54,8 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
+
     }
 
     enum VoteType
@@ -71,7 +73,7 @@ namespace Barotrauma.Networking
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
 
-        public NetPeer netPeer
+        public NetPeer NetPeer
         {
             get;
             protected set;

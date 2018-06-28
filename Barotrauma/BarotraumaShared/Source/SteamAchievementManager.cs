@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -78,15 +79,40 @@ namespace Barotrauma
 
         public static void OnItemRepaired(Item item, Character fixer)
         {
-            if (fixer != null && fixer == Character.Controlled)
+            if (GameMain.Client != null || fixer == null) return;
+
+            if (fixer == Character.Controlled)
             {
                 UnlockAchievement("repairdevice");
                 UnlockAchievement("repair" + item.Prefab.Identifier);
+            }
+            else
+            {
+                GameMain.Server?.GiveAchievement(fixer, "repairdevice");
+                GameMain.Server?.GiveAchievement(fixer, "repair" + item.Prefab.Identifier);
+            }
+        }
+
+        public static void OnAfflictionRemoved(Affliction affliction, Character character)
+        {
+            if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
+
+            if (GameMain.Client != null) return;
+            
+            if (character == Character.Controlled)
+            {
+                UnlockAchievement(affliction.Prefab.AchievementOnRemoved);
+            }
+            else
+            {
+                GameMain.Server.GiveAchievement(character, affliction.Prefab.AchievementOnRemoved);
             }
         }
 
         public static void OnCharacterKilled(Character character, Character killer)
         {
+            if (GameMain.Client != null) return;
+
             if (killer != null && killer == Character.Controlled)
             {
                 UnlockAchievement("kill" + character.SpeciesName);
@@ -96,9 +122,14 @@ namespace Barotrauma
                 }
             }
 
+            GameMain.Server?.GiveAchievement(killer, "kill" + character.SpeciesName);
+            if (character.CurrentHull == null)
+            {
+                GameMain.Server?.GiveAchievement(killer, "kill" + character.SpeciesName + "indoors");
+            }
+
             if (GameMain.Server?.TraitorManager != null)
             {
-                //TODO: give clients the appropriate achievement when they complete their traitor objective or kill a traitor
                 foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
                 {
                     if (traitor.Character == Character.Controlled && killer == Character.Controlled && traitor.TargetCharacter == character)
@@ -111,15 +142,34 @@ namespace Barotrauma
                         //killed a traitor
                         UnlockAchievement("killtraitor");
                     }
+
+                    foreach (Client client in GameMain.Server.ConnectedClients)
+                    {
+                        if (client.Character == traitor.Character && killer == client.Character && character == traitor.TargetCharacter)
+                        {
+                            GameMain.Server.GiveAchievement(client, "traitorwin");
+                        }
+                        else if (killer != null && client.Character == killer && character == traitor.Character)
+                        {
+                            GameMain.Server.GiveAchievement(client, "killtraitor");
+                        }
+                    }
                 }
             }
         }
 
         public static void OnRoundEnded(GameSession gameSession)
         {
-            if (gameSession.Mission != null && gameSession.Mission.Completed)
+            if (gameSession.Mission != null)
             {
-                UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier);
+                if (gameSession.Mission is CombatMission combatMission && combatMission.IsInWinningTeam(Character.Controlled))
+                {
+                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + Character.Controlled.TeamID);
+                }
+                else
+                {
+                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier);
+                }
             }
 
             //made it to the destination despite a reactor meltdown

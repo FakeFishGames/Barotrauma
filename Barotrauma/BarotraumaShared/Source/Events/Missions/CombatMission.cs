@@ -93,6 +93,11 @@ namespace Barotrauma
             return teamNames[teamID];
         }
 
+        public bool IsInWinningTeam(Character character)
+        {
+            return character != null && winner > -1 && character.TeamID - 1 == winner;
+        }
+
         public override bool AssignTeamIDs(List<Client> clients, out byte hostTeam)
         {
             List<Client> randList = new List<Client>(clients);

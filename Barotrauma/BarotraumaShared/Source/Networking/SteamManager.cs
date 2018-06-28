@@ -88,8 +88,8 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            instance.client.Achievements.Trigger(achievementName);
-            return true;
+            DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
+            return instance.client.Achievements.Trigger(achievementName);
         }
 
 #region Connecting to servers

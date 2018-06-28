@@ -118,7 +118,7 @@ namespace Barotrauma.Networking
 
         public FileSender(NetworkMember networkMember)
         {
-            peer = networkMember.netPeer;
+            peer = networkMember.NetPeer;
             chunkLen = peer.Configuration.MaximumTransmissionUnit - 100;
 
             activeTransfers = new List<FileTransferOut>();

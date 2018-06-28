@@ -160,7 +160,7 @@ namespace Barotrauma.Networking
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
 
             client = new NetClient(config);
-            netPeer = client;
+            NetPeer = client;
             client.Start();
 
             System.Net.IPEndPoint IPEndPoint = null;
@@ -640,6 +640,9 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
                                 break;
+                            case ServerPacketHeader.ACHIEVEMENT:
+                                ReadAchievement(inc);
+                                break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
                                 break;
@@ -674,6 +677,12 @@ namespace Barotrauma.Networking
                         break;
                 }
             }
+        }
+
+        private void ReadAchievement(NetIncomingMessage inc)
+        {
+            string achievementIdentifier = inc.ReadString();
+            SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
         private void ReadPermissions(NetIncomingMessage inc)
