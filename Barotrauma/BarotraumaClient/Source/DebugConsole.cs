@@ -16,7 +16,7 @@ namespace Barotrauma
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
-
+        
         public static bool IsOpen
         {
             get
@@ -319,7 +319,7 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
@@ -330,13 +330,13 @@ namespace Barotrauma
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
@@ -405,7 +405,7 @@ namespace Barotrauma
                         }
                     }
                 }
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("messagebox", "", (string[] args) =>
             {
@@ -416,7 +416,7 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
@@ -448,7 +448,7 @@ namespace Barotrauma
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
-            }));
+            }, isCheat: true));
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {

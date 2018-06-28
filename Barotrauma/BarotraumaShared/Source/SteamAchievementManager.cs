@@ -12,14 +12,23 @@ namespace Barotrauma
 {
     static class SteamAchievementManager
     {
+        private const float UpdateInterval = 1.0f;
+
         private static HashSet<string> unlockedAchievements = new HashSet<string>();
 
+        public static bool CheatsEnabled = false;
+
+        private static float updateTimer;
+
+        /// <summary>
+        /// Keeps track of things that have happened during the round
+        /// </summary>
         class RoundData
         {
             public List<Reactor> Reactors = new List<Reactor>();
 
-            public bool EnteredCrushDepth;
-            public bool ReactorMeltdown;
+            public HashSet<Character> EnteredCrushDepth = new HashSet<Character>();
+            public HashSet<Character> ReactorMeltdown = new HashSet<Character>();
         }
 
         private static RoundData roundData;
@@ -34,47 +43,66 @@ namespace Barotrauma
             }
         }
 
-        public static void Update()
+        public static void Update(float deltaTime)
         {
-            if (Character.Controlled == null || GameMain.GameSession == null) return;
+            if (GameMain.GameSession == null || GameMain.Client != null) return;
 
-            if (!Character.Controlled.IsDead)
+            updateTimer -= deltaTime;
+            if (updateTimer > 0.0f) return;
+            updateTimer = UpdateInterval;
+            
+            if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
             {
-                if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
+                UnlockAchievement("maxintensity", true, c => c != null && !c.IsDead && !c.IsUnconscious);
+            }
+
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.IsDead) continue;
+                //achievement for descending below crush depth and coming back
+                if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
                 {
-                    UnlockAchievement("maxintensity");
+                    roundData.EnteredCrushDepth.Add(c);
                 }
-
-                if (Character.Controlled.Submarine != null)
+                else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
                 {
-                    foreach (Reactor reactor in roundData.Reactors)
-                    {
-                        if (reactor.Item.Condition <= 0.0f) roundData.ReactorMeltdown = true;
-                    }
-
-                    Submarine sub = Character.Controlled.Submarine;
-                    //convert submarine velocity to km/h
-                    Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
-                    //achievement for going > 100 km/h
-                    if (Math.Abs(submarineVel.X) > 100.0f) UnlockAchievement("subhighvelocity");
-
-                    //achievement for descending below crush depth and coming back
-                    if (sub.Position.Y < SubmarineBody.DamageDepth)
-                    {
-                        roundData.EnteredCrushDepth = true;
-                    }
-                    else if (roundData.EnteredCrushDepth && sub.Position.Y > SubmarineBody.DamageDepth * 0.5f)
-                    {
-                        UnlockAchievement("survivecrushdepth");
-                    }
-
-                    float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
-                    if (realWorldDepth > 5000.0f)
-                    {
-                        UnlockAchievement("subdeep");
-                    }
+                    //all characters that have entered crush depth and are still alive get an achievement
+                    if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
                 }
             }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                foreach (Reactor reactor in roundData.Reactors)
+                {
+                    if (reactor.Item.Condition <= 0.0f && reactor.Item.Submarine == sub)
+                    {
+                        //characters that were inside the sub during a reactor meltdown 
+                        //get an achievement if they're still alive at the end of the round
+                        foreach (Character c in Character.CharacterList)
+                        {
+                            if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
+                        }
+                    }
+                }
+                
+                //convert submarine velocity to km/h
+                Vector2 submarineVel = Physics.DisplayToRealWorldRatio * ConvertUnits.ToDisplayUnits(sub.Velocity) * 3.6f;
+                //achievement for going > 100 km/h
+                if (Math.Abs(submarineVel.X) > 100.0f)
+                {
+                    //all conscious characters inside the sub get an achievement
+                    UnlockAchievement("subhighvelocity", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                }
+
+                //achievement for descending ridiculously deep
+                float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                if (realWorldDepth > 5000.0f)
+                {
+                    //all conscious characters inside the sub get an achievement
+                    UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                }
+            }            
         }
 
         public static void OnBiomeDiscovered(Biome biome)
@@ -140,27 +168,41 @@ namespace Barotrauma
 
         public static void OnRoundEnded(GameSession gameSession)
         {
+            if (GameMain.Client != null) return;
+
             if (gameSession.Mission != null)
             {
-                if (gameSession.Mission is CombatMission combatMission && combatMission.IsInWinningTeam(Character.Controlled))
+                if (gameSession.Mission is CombatMission combatMission)
                 {
-                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + Character.Controlled.TeamID);
+                    //all characters that are alive and in the winning team get an achievement
+                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + Character.Controlled.TeamID, true, 
+                        c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
                 }
                 else
                 {
-                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier);
+                    //all characters get an achievement
+                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier, true, c => c != null);
                 }
             }
 
             //made it to the destination despite a reactor meltdown
-            if (gameSession.Submarine.AtEndPosition && roundData.ReactorMeltdown)
+            if (gameSession.Submarine.AtEndPosition)
             {
-                UnlockAchievement("survivereactormeltdown");
+                if (GameMain.Server != null)
+                {
+                    //in MP all characters that were inside the sub during reactor meltdown and still alive at the end of the round get an achievement
+                    UnlockAchievement("survivereactormeltdown", true, c => c != null && !c.IsDead && roundData.ReactorMeltdown.Contains(c));
+                }
+                else if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
+                {
+                    UnlockAchievement("survivereactormeltdown");
+                }
             }
         }
 
         private static void UnlockAchievement(Character recipient, string identifier)
         {
+            if (CheatsEnabled) return;
             if (recipient == null) return;
             if (recipient == Character.Controlled)
             {
@@ -172,14 +214,27 @@ namespace Barotrauma
             }
         }
         
-        public static void UnlockAchievement(string identifier)
+        public static void UnlockAchievement(string identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
+            if (CheatsEnabled) return;
+
+            if (unlockClients && GameMain.Server != null)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (conditions != null && !conditions(c.Character)) continue;
+                    GameMain.Server.GiveAchievement(c, identifier);
+                }
+            }
+
             //already unlocked, no need to do anything
             if (unlockedAchievements.Contains(identifier)) return;
+            unlockedAchievements.Add(identifier);
+
+            if (conditions != null && !conditions(Character.Controlled)) return;
 
             SteamManager.UnlockAchievement(identifier);
 
-            unlockedAchievements.Add(identifier);
         }
     }
 }

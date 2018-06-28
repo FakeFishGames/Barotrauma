@@ -229,14 +229,11 @@ namespace Barotrauma
 
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();
-            if (GameMode is CampaignMode)
-            {
-                SteamAchievementManager.OnBiomeDiscovered(level.Biome);
-            }
 
             if (GameMode != null) GameMode.MsgBox();
 
 #if CLIENT
+            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);

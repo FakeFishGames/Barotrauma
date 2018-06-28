@@ -565,14 +565,14 @@ namespace Barotrauma.Steam
         
         #endregion
 
-        public static void Update()
+        public static void Update(float deltaTime)
         {
             if (instance == null || !instance.isInitialized) return;
             
             instance.client?.Update();
             instance.server?.Update();
 
-            SteamAchievementManager.Update();
+            SteamAchievementManager.Update(deltaTime);
         }
 
         public static void ShutDown()

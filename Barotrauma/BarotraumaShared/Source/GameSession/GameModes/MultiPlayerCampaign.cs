@@ -158,6 +158,20 @@ namespace Barotrauma
         public void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
+            CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
+                {
+                    SteamAchievementManager.CheatsEnabled = true;
+#if CLIENT
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive Steam Achievements until you restart the game.");       
+#else
+                    DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
+#endif
+                }
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -183,8 +197,9 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("MultiPlayerCampaign");
-            modeElement.Add(new XAttribute("money", Money));            
+            XElement modeElement = new XElement("MultiPlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
             Map.Save(modeElement);
             element.Add(modeElement);
 
