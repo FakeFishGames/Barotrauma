@@ -77,6 +77,11 @@ namespace Barotrauma
             }
         }
 
+        public static void OnBiomeDiscovered(Biome biome)
+        {
+            UnlockAchievement("discover" + biome.Name.ToLowerInvariant().Replace(" ", ""));
+        }
+
         public static void OnItemRepaired(Item item, Character fixer)
         {
             if (GameMain.Client != null || fixer == null) return;
