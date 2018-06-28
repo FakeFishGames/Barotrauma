@@ -668,6 +668,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
             guiFrame.AddToGUIUpdateList();
             orderTargetFrame?.AddToGUIUpdateList();
 
@@ -676,6 +677,7 @@ namespace Barotrauma
 
         partial void UpdateProjectSpecific(float deltaTime)
         {
+            if (GUI.DisableHUD) return;
             //guiFrame.UpdateManually(deltaTime);
             if (chatBox != null) chatBox.Update(deltaTime);
 
