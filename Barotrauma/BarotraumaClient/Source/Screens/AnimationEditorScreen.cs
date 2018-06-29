@@ -1040,12 +1040,13 @@ namespace Barotrauma
 
         private void DrawSpritesheetEditor(SpriteBatch spriteBatch)
         {
-            int y = 0;
-            int x = 0;
+            //TODO: allow to zoom the sprite sheet
+            //TODO: separate or combine the controls for the limbs that share a texture?
+            int y = 30;
+            int x = 30;
             for (int i = 0; i < Textures.Count; i++)
             {
                 spriteBatch.Draw(Textures[i], new Vector2(x, y), Color.White);
-
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
