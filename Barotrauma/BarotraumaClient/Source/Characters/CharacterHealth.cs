@@ -932,6 +932,7 @@ namespace Barotrauma
                 else
                 {
                     existingAffliction.Strength = newAffliction.Second;
+                    if (existingAffliction == stunAffliction) character.SetStun(existingAffliction.Strength, true, true);
                 }
             }
 
