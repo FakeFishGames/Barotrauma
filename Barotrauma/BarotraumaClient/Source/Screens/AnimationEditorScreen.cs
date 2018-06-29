@@ -669,7 +669,6 @@ namespace Barotrauma
                         {
                             transformedInput.Y = -transformedInput.Y;
                         }
-                        GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsHeight / 2, 20), "transformed input: " + transformedInput.ToString(), Color.White);
                         TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput * multiplier / Cam.Zoom);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
@@ -955,47 +954,59 @@ namespace Barotrauma
                 foreach (var joint in character.AnimController.LimbJoints)
                 {
                     Vector2 jointPos = Vector2.Zero;
-
+                    Vector2 otherPos = Vector2.Zero;
+                    Vector2 jointDir = Vector2.Zero;
+                    Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                    Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                    Vector2 up = -VectorExtensions.Forward(limb.Rotation);
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
-                        jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                        jointPos = anchorPosA;
+                        otherPos = anchorPosB;
                     }
                     else if (joint.BodyB == limb.body.FarseerBody)
                     {
-                        jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                        jointPos = anchorPosB;
+                        otherPos = anchorPosA;
                     }
                     else
                     {
                         continue;
                     }
+                    var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
+                    f.Y = -f.Y;
+                    Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
+                    ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.Black, size: 5);
+                    ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.White, size: 1);
+                    GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Black, width: 3);
+                    GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
 
-                    Vector2 tformedJointPos = jointPos + limbScreenPos;
                     if (editJointLimits)
                     {
-                        DrawJointLimitWidgets(spriteBatch, joint, SimToScreen(limb.SimPosition), character.AnimController.Collider.Rotation);
+                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, character.AnimController.Collider.Rotation);
                     }
                     if (editJointPositions)
                     {
+                        // TODO: add a toggle to switch between body a and body b, because when the positions are the same, which makes it impossible to edit joint ends separatedly
+                        Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
                         var widgetSize = new Vector2(5, 5);
-                        Vector2 up = -VectorExtensions.Forward(limb.Rotation);
-                        //corners = MathUtils.GetImaginaryRect(corners, up, tformedJointPos, hitBoxSize);
-                        //GUI.DrawRectangle(spriteBatch, corners, Color.Black);
                         var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
-                        GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, Color.Red, true);
+                        GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, color, true);
                         var inputRect = rect;
                         inputRect.Inflate(widgetSize.X, widgetSize.Y);
-                        GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red);
+                        //GUI.DrawLine(spriteBatch, tformedJointPos, limbScreenPos + otherPos, color, width: 1);
                         GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
                         if (inputRect.Contains(PlayerInput.MousePosition))
                         {
                             GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
-                            GUI.DrawLine(spriteBatch, limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorA), limbScreenPos + ConvertUnits.ToDisplayUnits(joint.LocalAnchorB), Color.Red, width: 3);
-                            GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
+                            GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                             GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                             if (PlayerInput.LeftButtonHeld())
                             {
                                 Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-                                //input.Y = -input.Y;
+                                input.Y = -input.Y;
+                                input = input.TransformVector(-up);
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
@@ -1032,7 +1043,7 @@ namespace Barotrauma
             texturePaths = new List<string>();
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                if (limb.sprite == null || texturePaths.Contains(limb.sprite.FilePath)) continue;
+                if (limb.sprite == null || texturePaths.Contains(limb.sprite.FilePath)) { continue; }
                 textures.Add(limb.sprite.Texture);
                 texturePaths.Add(limb.sprite.FilePath);
             }
@@ -1077,7 +1088,7 @@ namespace Barotrauma
                             var input = PlayerInput.MouseSpeed;
                             input.X *= character.AnimController.Dir;
                             limb.sprite.Origin += input;
-                            GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.ToString(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         }
                     }
                 }
@@ -1085,20 +1096,21 @@ namespace Barotrauma
             }
         }
 
-        private void DrawJointEditor(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
+        private void DrawJointEditor(SpriteBatch spriteBatch, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
         {
             foreach (var joint in character.AnimController.LimbJoints)
             {
                 Vector2 jointPos = Vector2.Zero;
-
+                Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
                 if (joint.BodyA == limb.body.FarseerBody)
                 {
-                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                    jointPos = anchorPosA;
 
                 }
                 else if (joint.BodyB == limb.body.FarseerBody)
                 {
-                    jointPos = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                    jointPos = anchorPosB;
                 }
                 else
                 {
@@ -1107,7 +1119,7 @@ namespace Barotrauma
                 Vector2 tformedJointPos = jointPos /= limb.Scale;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
-                tformedJointPos += limbBodyPos;
+                tformedJointPos += limbScreenPos;
                 if (editJointLimits)
                 {
                     //if (joint.BodyA == limb.body.FarseerBody)
@@ -1126,15 +1138,16 @@ namespace Barotrauma
                 }
                 if (editJointPositions)
                 {
+                    Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
                     Vector2 widgetSize = new Vector2(5.0f, 5.0f); ;
                     var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
                     var inputRect = rect;
                     inputRect.Inflate(widgetSize.X * 0.75f, widgetSize.Y * 0.75f);
-                    GUI.DrawRectangle(spriteBatch, rect, Color.Red, isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
                     if (inputRect.Contains(PlayerInput.MousePosition))
-                    {
-                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
-                        GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
+                    {          
+                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawRectangle(spriteBatch, inputRect, color);
                         if (PlayerInput.LeftButtonHeld())
                         {
                             Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
