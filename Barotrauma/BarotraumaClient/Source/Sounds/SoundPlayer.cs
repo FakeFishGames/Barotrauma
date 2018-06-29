@@ -683,7 +683,6 @@ namespace Barotrauma
             int selectedSound = Rand.Int(sounds.Count);
 
             sounds[selectedSound].sound.Play(1.0f, range, position);
-            Debug.WriteLine("playing: " + sounds[selectedSound].sound);
         }
         
     }

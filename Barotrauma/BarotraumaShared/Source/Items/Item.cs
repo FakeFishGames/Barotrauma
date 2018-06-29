@@ -1232,8 +1232,6 @@ namespace Barotrauma
 
             if (!picked) return false;
 
-            System.Diagnostics.Debug.WriteLine("Item.Pick(" + picker + ", " + forceSelectKey + ")");
-
             if (picker.SelectedConstruction == this)
             {
                 if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
