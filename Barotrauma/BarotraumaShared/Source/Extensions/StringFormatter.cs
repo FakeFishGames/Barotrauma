@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -27,6 +28,30 @@ namespace Barotrauma
         {
             int v = (int)value;
             return v.ToString();
+        }
+
+        /// <summary>
+        /// Formats the value with one decimal.
+        /// </summary>
+        public static string FormatAsSingleDecimal(this Vector2 value)
+        {
+            return $"({value.X.FormatAsSingleDecimal()}, {value.Y.FormatAsSingleDecimal()})";
+        }
+
+        /// <summary>
+        /// Formats the value with two decimals.
+        /// </summary>
+        public static string FormatAsDoubleDecimal(this Vector2 value)
+        {
+            return $"({value.X.FormatAsDoubleDecimal()}, {value.Y.FormatAsDoubleDecimal()})";
+        }
+
+        /// <summary>
+        /// Formats the value with no decimals.
+        /// </summary>
+        public static string FormatAsZeroDecimal(this Vector2 value)
+        {
+            return $"({value.X.FormatAsInt()}, {value.Y.FormatAsInt()})";
         }
     }
 }
