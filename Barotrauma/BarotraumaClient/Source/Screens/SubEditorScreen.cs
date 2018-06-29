@@ -24,7 +24,6 @@ namespace Barotrauma
 
 
         private Camera cam;
-        private BlurEffect lightBlur;
 
         private bool lightingEnabled;
 
@@ -133,12 +132,6 @@ namespace Barotrauma
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-#if LINUX || OSX
-            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
-#else
-            var blurEffect = content.Load<Effect>("Effects/blurshader");
-#endif
-            lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
             
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
@@ -1685,7 +1678,7 @@ namespace Barotrauma
             cam.UpdateTransform();
             if (lightingEnabled)
             {
-                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
+                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,

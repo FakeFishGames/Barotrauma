@@ -157,7 +157,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Effect blur)
+        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
             if (!LightingEnabled) return;
             
