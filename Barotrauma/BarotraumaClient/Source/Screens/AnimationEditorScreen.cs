@@ -31,6 +31,7 @@ namespace Barotrauma
         private bool editJointLimits;
         private bool showParamsEditor;
         private bool showSpritesheet;
+        private bool freeze;
 
         public override void Select()
         {
@@ -244,6 +245,7 @@ namespace Barotrauma
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
+            var physicsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
             controlsToggle.OnSelected = box =>
             {
                 showControls = box.Selected;
@@ -307,6 +309,11 @@ namespace Barotrauma
                     controlsToggle.Selected = false;
                     paramsToggle.Selected = false;
                 }
+                return true;
+            };
+            physicsToggle.OnSelected = box =>
+            {
+                freeze = box.Selected;
                 return true;
             };
 
@@ -388,31 +395,28 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-
-            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-            Submarine.MainSub.Update((float)deltaTime);
-
-            PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
-
-            character.ControlLocalPlayer((float)deltaTime, Cam, false);
-            character.Control((float)deltaTime, Cam);
-            character.AnimController.UpdateAnim((float)deltaTime);
-            character.AnimController.Update((float)deltaTime, Cam);
-
-            if (character.Position.X < min)
+            if (!freeze)
             {
-                CloneWalls(false);
+                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+                Submarine.MainSub.Update((float)deltaTime);
+                PhysicsBody.List.ForEach(pb => pb.SetPrevTransform(pb.SimPosition, pb.Rotation));
+                character.ControlLocalPlayer((float)deltaTime, Cam, false);
+                character.Control((float)deltaTime, Cam);
+                character.AnimController.UpdateAnim((float)deltaTime);
+                character.AnimController.Update((float)deltaTime, Cam);
+                if (character.Position.X < min)
+                {
+                    CloneWalls(false);
+                }
+                else if (character.Position.X > max)
+                {
+                    CloneWalls(true);
+                }
+                GameMain.World.Step((float)deltaTime);
             }
-            else if (character.Position.X > max)
-            {
-                CloneWalls(true);
-            }
-
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
-
-            GameMain.World.Step((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
