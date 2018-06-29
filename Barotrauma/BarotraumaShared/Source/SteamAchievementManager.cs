@@ -152,6 +152,22 @@ namespace Barotrauma
                 UnlockAchievement(causeOfDeath.Killer, "killclown");
             }
 
+            if (causeOfDeath.DamageSource is Item item)
+            {
+                if (item.Prefab.NameMatches("weldingtool") || item.Prefab.NameMatches("plasmacutter") || item.Prefab.NameMatches("wrench"))
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "killtool");
+                }
+                else if (item.Prefab.NameMatches("morbusine"))
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "killpoison");
+                }
+                else if (item.Prefab.NameMatches("nuclearshell") || item.Prefab.NameMatches("nucleardepthcharge"))
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "killnuke");
+                }
+            }
+
             if (GameMain.Server?.TraitorManager != null)
             {
                 foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
