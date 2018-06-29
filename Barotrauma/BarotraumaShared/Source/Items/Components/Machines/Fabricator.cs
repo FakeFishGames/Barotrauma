@@ -294,7 +294,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //TODO: apply OutCondition
             if (containers[1].Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
