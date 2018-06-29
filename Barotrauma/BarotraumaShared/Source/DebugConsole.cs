@@ -1545,7 +1545,7 @@ namespace Barotrauma
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                 if (args.Length > 4) float.TryParse(args[4], out empStrength);
-                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
+                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos, null);
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
@@ -1557,7 +1557,7 @@ namespace Barotrauma
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                 if (args.Length > 4) float.TryParse(args[4], out empStrength);
-                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
+                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos, null);
             }, isCheat: true));
 
 #if DEBUG

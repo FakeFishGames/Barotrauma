@@ -479,7 +479,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null) explosion.Explode(entity.WorldPosition);
+            if (explosion != null) explosion.Explode(entity.WorldPosition, entity);
 
             foreach (ISerializableEntity target in targets)
             {
@@ -488,9 +488,10 @@ namespace Barotrauma
                     Affliction multipliedAffliction = affliction;
                     if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
 
-                    if (target is Character)
+                    if (target is Character character)
                     {
-                        ((Character)target).CharacterHealth.ApplyAffliction(null, multipliedAffliction);
+                        character.LastDamageSource = entity;
+                        character.CharacterHealth.ApplyAffliction(null, multipliedAffliction);
                     }
                     else if (target is Limb limb)
                     {

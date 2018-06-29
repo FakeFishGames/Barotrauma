@@ -24,6 +24,11 @@ namespace Barotrauma.Items.Components
 
         private float reloadTimer;
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         [Serialize(0.0f, false)]
         public float Range
         {
