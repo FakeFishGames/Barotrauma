@@ -344,18 +344,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine, spawnCondition)
+            itemPrefab, submarine)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -370,7 +370,7 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = (float)(spawnCondition ?? prefab.Health);
+            condition = prefab.Health;
             lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
@@ -425,11 +425,8 @@ namespace Barotrauma
                 //and add them to the corresponding statuseffect list
                 foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
                 {
-
                     ActionType actionType = componentEffectList.First().type;
-
-                    List<StatusEffect> statusEffectList;
-                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffectList))
                     {
                         statusEffectList = new List<StatusEffect>();
                         statusEffectLists.Add(actionType, statusEffectList);
