@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        private BlurEffect lightBlur;
-        
         private RenderTarget2D renderTargetBackground;
         private RenderTarget2D renderTarget;
         private RenderTarget2D renderTargetWater;
@@ -47,8 +45,6 @@ namespace Barotrauma
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
             
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
-
-            lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -119,7 +115,7 @@ namespace Barotrauma
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
+            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
