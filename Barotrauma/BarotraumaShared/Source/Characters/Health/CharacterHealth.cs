@@ -378,7 +378,7 @@ namespace Barotrauma
             }
 
             CalculateVitality();
-            if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
+            if (vitality <= MinVitality) Kill();
         }
 
         public void RemoveAllAfflictions()
@@ -412,7 +412,7 @@ namespace Barotrauma
                 {
                     affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
                     CalculateVitality();
-                    if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
+                    if (vitality <= MinVitality) Kill();
                     return;
                 }
             }
@@ -422,7 +422,7 @@ namespace Barotrauma
             limbHealth.Afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
 
             CalculateVitality();
-            if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
+            if (vitality <= MinVitality) Kill();
         }
 
 
@@ -437,7 +437,7 @@ namespace Barotrauma
                     affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + newAffliction.Strength * (100.0f / MaxVitality));
                     if (affliction == stunAffliction) character.SetStun(affliction.Strength, true, true);
                     CalculateVitality();
-                    if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
+                    if (vitality <= MinVitality) Kill();
                     return;
                 }
             }
@@ -447,7 +447,7 @@ namespace Barotrauma
             afflictions.Add(newAffliction.Prefab.Instantiate(Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality))));
 
             CalculateVitality();
-            if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());
+            if (vitality <= MinVitality) Kill();
         }
         
         public void Update(float deltaTime)
@@ -501,12 +501,12 @@ namespace Barotrauma
                     limb.DamageOverlayStrength +=  a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha;
                 }
                 limb.BurnOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
-                limb.DamageOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;                
+                limb.DamageOverlayStrength /= limbHealths[limb.HealthIndex].Afflictions.Count;
             }
 #endif
 
-            CalculateVitality();            
-            if (vitality <= MinVitality) character.Kill(GetCauseOfDeath());            
+            CalculateVitality();
+            if (vitality <= MinVitality) Kill();
         }
 
         private void UpdateOxygen(float deltaTime)
@@ -555,6 +555,12 @@ namespace Barotrauma
             {
                 vitality -= affliction.GetVitalityDecrease(this);
             }            
+        }
+
+        private void Kill()
+        {
+            var causeOfDeath = GetCauseOfDeath();
+            character.Kill(causeOfDeath.First, causeOfDeath.Second);
         }
 
         public Pair<CauseOfDeathType, AfflictionPrefab> GetCauseOfDeath()

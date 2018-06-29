@@ -13,10 +13,14 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
+        public static bool DisableControls;
+
         protected float soundTimer;
         protected float soundInterval;
         protected float hudInfoTimer;
         protected bool hudInfoVisible;
+
+        protected float lastRecvPositionUpdateTime;
 
         float hudInfoHeight;
 
@@ -139,8 +143,8 @@ namespace Barotrauma
             {
                 cam.OffsetAmount = 0.0f;
             }
-            else if (selectedConstruction != null &&
-                selectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
+            else if (SelectedConstruction != null &&
+                SelectedConstruction.components.Any(ic => ic.GuiFrame != null && (GUI.MouseOn == ic.GuiFrame || ic.GuiFrame.IsParentOf(GUI.MouseOn))))
             {
                 cam.OffsetAmount = 0.0f;
             }
@@ -193,9 +197,9 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = causeOfDeath.First == CauseOfDeathType.Affliction ?
-                    causeOfDeath.Second.SelfCauseOfDeathDescription :
-                    TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.First.ToString());
+                string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                    CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
+                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString());
 
                 if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
@@ -251,7 +255,7 @@ namespace Barotrauma
 
             if (controlled == this)
             {
-                health.UpdateHUD(deltaTime);
+                CharacterHealth.UpdateHUD(deltaTime);
             }
         }
 
@@ -268,7 +272,7 @@ namespace Barotrauma
             if (controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
-                health.AddToGUIUpdateList();
+                CharacterHealth.AddToGUIUpdateList();
             }
         }
         
@@ -282,7 +286,7 @@ namespace Barotrauma
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
-            if (drawHealth) health.DrawHUD(spriteBatch);
+            if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
         }
 
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -358,7 +362,7 @@ namespace Barotrauma
                 }
             }
 
-            if (isDead) return;
+            if (IsDead) return;
             
             if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
             {

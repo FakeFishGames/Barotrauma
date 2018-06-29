@@ -117,6 +117,7 @@ namespace Barotrauma
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                character.LastDamageSource = null;
                 character.DamageLimb(
                     limb.WorldPosition, limb,
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) },
@@ -189,7 +190,7 @@ namespace Barotrauma
             subscribedToDeathEvent = false;
         }
 
-        private void CharacterDead(Character character, CauseOfDeathType causeOfDeath)
+        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
 

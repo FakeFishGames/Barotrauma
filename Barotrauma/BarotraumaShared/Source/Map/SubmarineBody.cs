@@ -523,6 +523,7 @@ namespace Barotrauma
                 Vector2 n;
                 FixedArray2<Vector2> contactPos;
                 contact.GetWorldManifold(out n, out contactPos);
+                limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 

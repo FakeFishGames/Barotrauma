@@ -120,9 +120,9 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = characterInfo.CauseOfDeath.First == CauseOfDeathType.Affliction ?
-                        characterInfo.CauseOfDeath.Second.CauseOfDeathDescription :
-                        TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.First.ToString());
+                    statusText = characterInfo.CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                        characterInfo.CauseOfDeath.Affliction.CauseOfDeathDescription :
+                        TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.Type.ToString());
                     
                     statusColor = Color.DarkRed;
                 }

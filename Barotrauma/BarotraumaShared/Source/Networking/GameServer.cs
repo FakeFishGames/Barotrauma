@@ -447,7 +447,7 @@ namespace Barotrauma.Networking
 
                 if (gameStarted && disconnectedClients[i].Character!=null)
                 {
-                    disconnectedClients[i].Character.Kill(CauseOfDeathType.Disconnected, null, true);
+                    disconnectedClients[i].Character.Kill(CauseOfDeathType.Disconnected, null);
                     disconnectedClients[i].Character = null;
                 }
 
@@ -1744,7 +1744,7 @@ namespace Barotrauma.Networking
             if (gameStarted && client.Character != null)
             {
                 client.Character.ClearInputs();
-                client.Character.Kill(CauseOfDeathType.Disconnected, null, true);
+                client.Character.Kill(CauseOfDeathType.Disconnected, null);
             }
 
             client.Character = null;
