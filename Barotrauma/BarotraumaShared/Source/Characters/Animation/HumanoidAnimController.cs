@@ -1006,6 +1006,7 @@ namespace Barotrauma
                     if (skill < 50.0f)
                     {
                         //10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        target.LastDamageSource = null;
                         target.DamageLimb(
                             targetTorso.WorldPosition, targetTorso, 
                             new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
@@ -1043,6 +1044,9 @@ namespace Barotrauma
                 character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
                 SteamAchievementManager.OnCharacterRevived(target, character);
                 lastReviveTime = (float)Timing.TotalTime;
+                //reset attacker, we don't want the character to start attacking us
+                //because we caused a bit of damage to them during CPR
+                if (target.LastAttacker == character) target.LastAttacker = null;
             }
         }
         public override void DragCharacter(Character target)

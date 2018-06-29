@@ -134,22 +134,22 @@ namespace Barotrauma
             UnlockAchievement(reviver, "healcrit");
         }
 
-        public static void OnCharacterKilled(Character character, Character killer)
+        public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
 
             roundData.Casualties.Add(character);
 
-            UnlockAchievement(killer, "kill" + character.SpeciesName);
+            UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName);
             if (character.CurrentHull != null)
             {
-                UnlockAchievement(killer, "kill" + character.SpeciesName + "indoors");
+                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName + "indoors");
             }
 
             if (character.HasEquippedItem("clownmask") && 
                 character.HasEquippedItem("clowncostume"))
             {
-                UnlockAchievement(killer, "killclown");
+                UnlockAchievement(causeOfDeath.Killer, "killclown");
             }
 
             if (GameMain.Server?.TraitorManager != null)
@@ -164,7 +164,7 @@ namespace Barotrauma
                     else if (traitor.Character == character)
                     {
                         //someone killed a traitor
-                        UnlockAchievement(killer, "killtraitor");
+                        UnlockAchievement(causeOfDeath.Killer, "killtraitor");
                     }
                 }
             }

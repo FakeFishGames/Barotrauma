@@ -196,6 +196,7 @@ namespace Barotrauma
                 float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    c.LastDamageSource = null;
                     c.DamageLimb(WorldPosition, limb, new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(dmg) }, 0.0f, false, 0.0f);
                 }
                 c.ApplyStatusEffects(ActionType.OnFire, deltaTime);

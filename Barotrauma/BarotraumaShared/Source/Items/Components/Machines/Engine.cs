@@ -126,6 +126,7 @@ namespace Barotrauma.Items.Components
                 float dist = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
                 if (dist > propellerDamage.DamageRange * propellerDamage.DamageRange) continue;
 
+                character.LastDamageSource = item;
                 propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
             }
         }

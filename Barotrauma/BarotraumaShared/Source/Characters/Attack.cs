@@ -6,12 +6,7 @@ using System.Xml.Linq;
 
 
 namespace Barotrauma
-{
-    enum CauseOfDeathType
-    {
-        Unknown, Pressure, Suffocation, Drowning, Affliction, Disconnected
-    }
-    
+{    
     public enum HitDetection
     {
         Distance,
@@ -198,8 +193,7 @@ namespace Barotrauma
         {
             if (OnlyHumans)
             {
-                Character character = target as Character;
-                if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (target is Character character && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
             DamageParticles(deltaTime, worldPosition);

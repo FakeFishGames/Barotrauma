@@ -249,10 +249,12 @@ namespace Barotrauma.Items.Components
             {
                 if (targetLimb != null)
                 {
+                    targetLimb.character.LastDamageSource = item;
                     attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                 }
                 else if (targetCharacter != null)
                 {
+                    targetLimb.character.LastDamageSource = item;
                     attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                 }
                 else if (targetStructure != null)

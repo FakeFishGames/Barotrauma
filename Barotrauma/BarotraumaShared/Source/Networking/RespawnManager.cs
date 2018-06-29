@@ -462,7 +462,7 @@ namespace Barotrauma.Networking
                 if (c.Submarine != respawnShuttle) continue;
                 
                 if (Character.Controlled == c) Character.Controlled = null;
-                c.Kill(new Pair<CauseOfDeathType, AfflictionPrefab>(CauseOfDeathType.Unknown, null), true);
+                c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
                     
                 Spawner.AddToRemoveQueue(c);

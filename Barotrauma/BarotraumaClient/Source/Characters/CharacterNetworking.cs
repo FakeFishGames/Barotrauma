@@ -18,7 +18,7 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 3, 0);
-                        inventory.ClientWrite(msg, extraData);
+                        Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Repair:
                         msg.WriteRangedInteger(0, 3, 1);
@@ -171,7 +171,7 @@ namespace Barotrauma
                     switch (eventType)
                     {
                         case 0:
-                            inventory.ClientRead(type, msg, sendingTime);
+                            Inventory.ClientRead(type, msg, sendingTime);
                             break;
                         case 1:
                             byte ownerID = msg.ReadByte();
@@ -320,8 +320,6 @@ namespace Barotrauma
                     causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
                 }
 
-                causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
-
                 byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
@@ -331,7 +329,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Kill(causeOfDeath, true);
+                        Kill(causeOfDeathType, causeOfDeathAffliction, true);
                     }
                 }
 
@@ -343,7 +341,7 @@ namespace Barotrauma
             }
             else
             {
-                this.isDead = false;
+                this.IsDead = false;
 
                 CharacterHealth.ClientRead(msg);
                 
