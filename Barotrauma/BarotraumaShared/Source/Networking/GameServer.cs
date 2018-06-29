@@ -1903,8 +1903,8 @@ namespace Barotrauma.Networking
                     senderCharacter = senderClient.Character;
                     senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
 
-                    //sender doesn't have an alive character -> only ChatMessageType.Dead allowed
-                    if (senderCharacter == null || senderCharacter.IsDead)
+                    //sender doesn't have a character or the character can't speak -> only ChatMessageType.Dead allowed
+                    if (senderCharacter == null || senderCharacter.IsDead || !senderCharacter.CanSpeak)
                     {
                         type = ChatMessageType.Dead;
                     }
@@ -1954,8 +1954,8 @@ namespace Barotrauma.Networking
                     if (!senderRadio.CanTransmit()) return;                    
                     break;
                 case ChatMessageType.Dead:
-                    //character still alive -> not allowed
-                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead)
+                    //character still alive and capable of speaking -> dead chat not allowed
+                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead && senderCharacter.CanSpeak)
                     {
                         return;
                     }
@@ -1989,7 +1989,7 @@ namespace Barotrauma.Networking
                         break;
                     case ChatMessageType.Dead:
                         //character still alive -> don't send
-                        if (client.Character != null && !client.Character.IsDead) continue;
+                        if (client != senderClient && client.Character != null && !client.Character.IsDead) continue;
                         break;
                     case ChatMessageType.Private:
                         //private msg sent to someone else than this client -> don't send
@@ -2006,17 +2006,20 @@ namespace Barotrauma.Networking
                 SendDirectChatMessage(chatMsg, client);
             }
 
-            string myReceivedMessage = message;
-            if (gameStarted && myCharacter != null && senderCharacter != null)
+            if (type.Value != ChatMessageType.MessageBox)
             {
-                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, myCharacter);
-            }
+                string myReceivedMessage = message;
+                if (gameStarted && myCharacter != null && senderCharacter != null)
+                {
+                    myReceivedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, myCharacter);
+                }
 
-            if (!string.IsNullOrWhiteSpace(myReceivedMessage) && 
-                (targetClient == null || senderClient == null))
-            {
-                AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
-            }       
+                if (!string.IsNullOrWhiteSpace(myReceivedMessage) && 
+                    (targetClient == null || senderClient == null))
+                {
+                    AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
+                }
+            }   
         }
         
         public void SendOrderChatMessage(OrderChatMessage message)

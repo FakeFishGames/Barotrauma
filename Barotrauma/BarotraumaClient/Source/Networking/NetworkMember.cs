@@ -44,16 +44,22 @@ namespace Barotrauma.Networking
 
         protected void SetRadioButtonColor()
         {
-            var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            chatBox.RadioButton.GetChild<GUIImage>().Color =
-                (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
-                Color.White : new Color(60, 60, 60, 255);
+            if (Character.Controlled == null || !Character.Controlled.CanSpeak)
+            {
+                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
+            }
+            else
+            {
+                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                chatBox.RadioButton.GetChild<GUIImage>().Color =
+                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                    Color.White : new Color(60, 60, 60, 255);
+            }
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
-            string tempStr;
-            string command = ChatMessage.GetChatMessageCommand(text, out tempStr);
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
             switch (command)
             {
                 case "r":
@@ -65,10 +71,18 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    if (command != "") //PMing
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || !Character.Controlled.CanSpeak))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    }
                     else
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    }
                     break;
             }
 

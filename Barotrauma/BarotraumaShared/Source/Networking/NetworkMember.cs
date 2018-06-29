@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
             GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
+                //msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
                 if (!GUI.DisableHUD)
                 {
