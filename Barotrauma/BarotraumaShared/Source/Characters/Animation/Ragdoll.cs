@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Ragdoll
+    abstract partial class Ragdoll
     {
         private static List<Ragdoll> list = new List<Ragdoll>();
 
@@ -53,9 +53,6 @@ namespace Barotrauma
         private Character character;
 
         protected float strongestImpact;
-
-        public float? headPosition, headAngle;
-        public float? torsoPosition, torsoAngle;
 
         protected double onFloorTimer;
 
@@ -213,25 +210,10 @@ namespace Barotrauma
             }
         }
 
-        protected virtual float? HeadPosition
-        { 
-            get { return headPosition; } 
-        }
-
-        protected virtual float? HeadAngle
-        { 
-            get { return headAngle; } 
-        }
-
-        protected virtual float? TorsoPosition
-        { 
-            get { return torsoPosition; } 
-        }
-
-        protected virtual float? TorsoAngle
-        { 
-            get { return torsoAngle; } 
-        }
+        protected abstract float? HeadPosition { get; }
+        protected abstract float? HeadAngle { get; }
+        protected abstract float? TorsoPosition { get; }
+        protected abstract float? TorsoAngle { get; }
 
         public bool Draggable
         {
@@ -310,23 +292,6 @@ namespace Barotrauma
             limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
-
-            if (element.Attribute("headposition") != null)
-            {
-                headPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("headposition", 50.0f));
-            }
-            if (element.Attribute("headangle") != null)
-            {
-                headAngle = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
-            }
-            if (element.Attribute("torsoposition") != null)
-            {
-                torsoPosition = ConvertUnits.ToSimUnits(element.GetAttributeFloat("torsoposition", 50.0f));
-            }
-            if (element.Attribute("torsoangle") != null)
-            {
-                torsoAngle = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
-            }
 
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
 
