@@ -103,10 +103,10 @@
 
   <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true" minkarma="0.0">
     <Skills>
-      <Skill name="Weapons" level="20,30"/>
-      <Skill name="Construction" level="20,30"/>
-      <Skill name="Electrical Engineering" level="20,30"/>
-      <Skill name="Medical" level="10,20"/>
+      <Skill name="Weapons" level="20,32"/>
+      <Skill name="Construction" level="20,32"/>
+      <Skill name="Electrical Engineering" level="20,32"/>
+      <Skill name="Medical" level="10,22"/>
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>
