@@ -8,7 +8,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class Ragdoll
+    abstract partial class Ragdoll
     {
         partial void ImpactProjSpecific(float impact, Body body)
         {

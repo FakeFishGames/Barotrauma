@@ -3,11 +3,13 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -645,19 +647,33 @@ namespace Barotrauma
             canSpeak = doc.Root.GetAttributeBool("canspeak", false);
             needsAir = doc.Root.GetAttributeBool("needsair", false);
 
-            List<XElement> ragdollElements = new List<XElement>();
-            List<float> ragdollCommonness = new List<float>();
-            foreach (XElement element in doc.Root.Elements())
+            //List<XElement> ragdollElements = new List<XElement>();
+            //List<float> ragdollCommonness = new List<float>();
+            //foreach (XElement element in doc.Root.Elements())
+            //{
+            //    if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
+            //    ragdollElements.Add(element);
+            //    ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
+            //}
+
+            ////choose a random ragdoll element
+            //MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
+            //XElement ragdollElement = ragdollElements.Count == 1 ?
+            //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
+
+            string defaultPath = $"Content/Characters/{SpeciesName}/Ragdolls/";
+            string path = doc.Root.Element("ragdoll").GetAttributeString("path", defaultPath);
+            if (!Directory.Exists(path))
             {
-                if (element.Name.ToString().ToLowerInvariant() != "ragdoll") continue;                
-                ragdollElements.Add(element);
-                ragdollCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));                
+                throw new Exception("The ragdoll directory does not exist at: " + path);
             }
-            
-            //choose a random ragdoll element
-            MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
-            XElement ragdollElement = ragdollElements.Count == 1 ?
-                ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
+            var ragdollPaths = Directory.GetFiles(path);
+            if (ragdollPaths.None())
+            {
+                throw new Exception("Could not find any ragdoll files for the character from the path: " + path);
+            }
+            XDocument ragdollFile = XMLExtensions.TryLoadXml(ragdollPaths.GetRandom());
+            var ragdollElement = ragdollFile.Root;
 
             if (IsHumanoid)
             {
