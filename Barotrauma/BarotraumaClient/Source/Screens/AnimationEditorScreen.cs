@@ -29,9 +29,11 @@ namespace Barotrauma
         private bool editOffsets;
         private bool editJointPositions;
         private bool editJointLimits;
+        private bool EditRagdoll => editJointPositions || editJointLimits;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool freeze;
+        private bool autoFreeze = true;
 
         public override void Select()
         {
@@ -211,6 +213,8 @@ namespace Barotrauma
 
         #region GUI
         private GUIFrame panel;
+        private GUITickBox freezeToggle;
+
         private void CreateButtons()
         {
             if (panel != null)
@@ -245,7 +249,8 @@ namespace Barotrauma
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
-            var physicsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
+            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
+            var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
             controlsToggle.OnSelected = box =>
             {
                 showControls = box.Selected;
@@ -311,28 +316,17 @@ namespace Barotrauma
                 }
                 return true;
             };
-            physicsToggle.OnSelected = box =>
+            freezeToggle.OnSelected = box =>
             {
                 freeze = box.Selected;
                 return true;
             };
-
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
+            autoFreezeToggle.OnSelected = box =>
             {
-                Enabled = character.AnimController.CanWalk,
-                Selected = character.AnimController is FishAnimController,
-                OnSelected = (GUITickBox box) =>
-                {
-                    character.AnimController.forceStanding = !box.Selected;
-                    SetWallCollisions(character.AnimController.forceStanding);
-                    if (character.AnimController.forceStanding)
-                    {
-                        // Teleport
-                        character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
-                    }
-                    return true;
-                }
+                autoFreeze = box.Selected;
+                return true;
             };
+
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
             {
                 OnSelected = (GUITickBox box) =>
@@ -354,6 +348,22 @@ namespace Barotrauma
                 OnSelected = (GUITickBox box) =>
                 {
                     character.dontFollowCursor = !box.Selected;
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
+            {
+                Enabled = character.AnimController.CanWalk,
+                Selected = character.AnimController is FishAnimController,
+                OnSelected = (GUITickBox box) =>
+                {
+                    character.AnimController.forceStanding = !box.Selected;
+                    SetWallCollisions(character.AnimController.forceStanding);
+                    if (character.AnimController.forceStanding)
+                    {
+                        // Teleport
+                        character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
+                    }
                     return true;
                 }
             };
@@ -449,9 +459,9 @@ namespace Barotrauma
             {
                 DrawOffsetEditor(spriteBatch);
             }
-            if (editJointPositions || editJointLimits)
+            if (EditRagdoll)
             {
-                DrawJointEditor(spriteBatch);
+                DrawRagdollEditor(spriteBatch);
             }
             if (showSpritesheet)
             {
@@ -795,7 +805,7 @@ namespace Barotrauma
         }
 
         private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true)
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool autoFreeze = false)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -857,12 +867,12 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
                 }
                 onClick(angle);
-            });
+            }, autoFreeze);
         }
 
         public enum WidgetType { Rectangle, Circle }
         private string selectedWidget;
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed)
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool autoFreeze = false)
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
@@ -891,7 +901,15 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, Color.White, Color.Black * 0.5f);
                 if (PlayerInput.LeftButtonHeld())
                 {
+                    if (autoFreeze)
+                    {
+                        freeze = true;
+                    }
                     onPressed();
+                }
+                else
+                {
+                    freeze = freezeToggle.Selected;
                 }
             }
         }
@@ -946,8 +964,13 @@ namespace Barotrauma
             }
         }
 
-        private void DrawJointEditor(SpriteBatch spriteBatch)
+        private void DrawRagdollEditor(SpriteBatch spriteBatch)
         {
+            bool ctrlDown = PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
+            if (!ctrlDown && editJointPositions)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 150, 20), "PRESS Left Alt TO MANIPULATE THE JOINT ENDS", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+            }
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
@@ -983,27 +1006,34 @@ namespace Barotrauma
 
                     if (editJointLimits)
                     {
-                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, character.AnimController.Collider.Rotation);
+                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: true, rotationOffset: character.AnimController.Collider.Rotation);
                     }
                     if (editJointPositions)
                     {
-                        // TODO: add a toggle to switch between body a and body b, because when the positions are the same, which makes it impossible to edit joint ends separatedly
+                        if (ctrlDown && joint.BodyA == limb.body.FarseerBody)
+                        {
+                            continue;
+                        }
+                        if (!ctrlDown && joint.BodyB == limb.body.FarseerBody)
+                        {
+                            continue;
+                        }
                         Color color = joint.BodyA == limb.body.FarseerBody ? Color.Red : Color.Blue;
                         var widgetSize = new Vector2(5, 5);
                         var rect = new Rectangle((tformedJointPos - widgetSize / 2).ToPoint(), widgetSize.ToPoint());
                         GUI.DrawRectangle(spriteBatch, tformedJointPos - widgetSize / 2, widgetSize, color, true);
                         var inputRect = rect;
                         inputRect.Inflate(widgetSize.X, widgetSize.Y);
-                        //GUI.DrawLine(spriteBatch, tformedJointPos, limbScreenPos + otherPos, color, width: 1);
-                        GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
+                        //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White);
                         if (inputRect.Contains(PlayerInput.MousePosition))
                         {
-                            GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
+                            //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
-                            GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                             GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
+                            GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                             if (PlayerInput.LeftButtonHeld())
                             {
+                                freeze = autoFreeze;
                                 Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
                                 input = input.TransformVector(-up);
@@ -1015,6 +1045,10 @@ namespace Barotrauma
                                 {
                                     joint.LocalAnchorB += input;
                                 }
+                            }
+                            else
+                            {
+                                freeze = freezeToggle.Selected;
                             }
                         }
                     }
@@ -1072,9 +1106,9 @@ namespace Barotrauma
                     {
                         limbBodyPos.X = rect.X + rect.Width - origin.X;
                     }
-                    if (editJointLimits || editJointPositions)
+                    if (EditRagdoll)
                     {
-                        DrawJointEditor(spriteBatch, limb, limbBodyPos);
+                        DrawSpritesheetRagdollEditor(spriteBatch, limb, limbBodyPos);
                     }
                     if (editOffsets)
                     {
@@ -1096,7 +1130,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawJointEditor(SpriteBatch spriteBatch, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
+        private void DrawSpritesheetRagdollEditor(SpriteBatch spriteBatch, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
         {
             foreach (var joint in character.AnimController.LimbJoints)
             {
@@ -1133,7 +1167,7 @@ namespace Barotrauma
                     //}
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
-                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos);
+                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: false);
                     }
                 }
                 if (editJointPositions)
@@ -1167,7 +1201,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, LimbJoint joint, Vector2 drawPos, float rotationOffset = 0)
+        private void DrawJointLimitWidgets(SpriteBatch spriteBatch, LimbJoint joint, Vector2 drawPos, bool autoFreeze, float rotationOffset = 0)
         {
             // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
             if (character.AnimController.Dir < 0)
@@ -1175,22 +1209,22 @@ namespace Barotrauma
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Upper Limit", Color.Yellow, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(-angle);
-                }, rotationOffset: rotationOffset);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Lower Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
-                }, rotationOffset: rotationOffset);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
             else
             {
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
-                }, rotationOffset: rotationOffset);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
-                }, rotationOffset: rotationOffset);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
         }
         #endregion
