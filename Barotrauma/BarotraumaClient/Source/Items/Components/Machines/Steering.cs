@@ -165,7 +165,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
             }
-            else if (posToMaintain.HasValue)
+            else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
             {
                 Radar radar = item.GetComponent<Radar>();
                 if (radar != null)
@@ -201,7 +201,7 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    if (AutoPilot)
+                    if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
                         Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                         inputPos.Y = -inputPos.Y;
