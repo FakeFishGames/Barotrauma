@@ -541,13 +541,12 @@ namespace Barotrauma
             if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
         }
 
-        public List<Hull> GetConnectedHulls(int? searchDepth)
+        public IEnumerable<Hull> GetConnectedHulls(int? searchDepth)
         {
-            return GetAdjacentHulls(new List<Hull>(), 0, searchDepth);
-
+            return GetAdjacentHulls(new HashSet<Hull>(), 0, searchDepth);
         }
 
-        private List<Hull> GetAdjacentHulls(List<Hull> connectedHulls, int steps, int? searchDepth)
+        private HashSet<Hull> GetAdjacentHulls(HashSet<Hull> connectedHulls, int steps, int? searchDepth)
         {
             connectedHulls.Add(this);
 
@@ -557,15 +556,46 @@ namespace Barotrauma
             {
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
-                    Hull hull = g.linkedTo[i] as Hull;
-                    if (hull != null && !connectedHulls.Contains(hull))
+                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
                         hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
-                    }                    
+                    }
                 }
             }
 
             return connectedHulls;
+        }
+
+        /// <summary>
+        /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
+        /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
+        /// </summary>
+        public float GetApproximateDistance(Hull target, float maxDistance)
+        {
+            return GetApproximateHullDistance(new HashSet<Hull>(), target, 0.0f, maxDistance);
+        }
+
+        private float GetApproximateHullDistance(HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        {
+            if (distance >= maxDistance) return float.MaxValue;
+            if (this == target) return distance;
+
+            connectedHulls.Add(this);
+
+            foreach (Gap g in ConnectedGaps)
+            {
+                if (g.Open <= 0.0f && (g.ConnectedDoor == null || !g.ConnectedDoor.IsOpen)) continue;
+                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                {
+                    if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
+                    {
+                        float dist = hull.GetApproximateHullDistance(connectedHulls, target, distance + Vector2.Distance(g.Position, this.Position), maxDistance);
+                        if (dist < float.MaxValue) return dist;
+                    }
+                }
+            }
+
+            return float.MaxValue;
         }
 
         //returns the hull which contains the point (or null if it isn't inside any)

@@ -22,13 +22,13 @@ namespace Barotrauma
                     limb.LastImpactSoundTime = (float)Timing.TotalTime;
                     if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
-                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);
+                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
                     }
                     foreach (WearableSprite wearable in limb.WearingItems)
                     {
                         if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
                         {
-                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
                         }
                     }
                 }

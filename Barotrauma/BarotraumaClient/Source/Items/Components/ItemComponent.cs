@@ -131,9 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume == 0.0f) return;
-                SoundChannel tempChannel = itemSound.Sound.Play(new Vector3(position.X,position.Y,0.0f), volume);
-                tempChannel.Near = itemSound.Range * 0.4f;
-                tempChannel.Far = itemSound.Range;
+                SoundPlayer.PlaySound(itemSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
             }
         }
 
