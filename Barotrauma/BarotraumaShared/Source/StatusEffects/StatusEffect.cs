@@ -415,13 +415,22 @@ namespace Barotrauma
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
+            Hull hull = null;
+            if (entity is Character)
+            {
+                hull = ((Character)entity).AnimController.CurrentHull;
+            }
+            else if (entity is Item)
+            {
+                hull = ((Item)entity).CurrentHull;
+            }
 #if CLIENT
             if (sound != null)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    soundChannel = sound.Play(entity.WorldPosition);
-                    soundChannel.Looping = loopSound;
+                    soundChannel = SoundPlayer.PlaySound(sound, 1.0f, sound.BaseFar, entity.WorldPosition, hull);
+                    if (soundChannel != null) soundChannel.Looping = loopSound;
                 }
             }
 #endif            
@@ -511,16 +520,6 @@ namespace Barotrauma
                         limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAmount);
                     }
                 }
-            }
-
-            Hull hull = null;
-            if (entity is Character) 
-            {
-                hull = ((Character)entity).AnimController.CurrentHull;
-            }
-            else if (entity is Item)
-            {
-                hull = ((Item)entity).CurrentHull;
             }
 
             if (FireSize > 0.0f)

@@ -404,7 +404,7 @@ namespace Barotrauma
             if (matchingSounds.Count == 0) return;
 
             var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
-            selectedSound.Sound.Play(1.0f, selectedSound.Range, AnimController.WorldPosition);
+            SoundPlayer.PlaySound(selectedSound.Sound, 1.0f, selectedSound.Range, AnimController.WorldPosition, CurrentHull);
         }
 
         partial void ImplodeFX()

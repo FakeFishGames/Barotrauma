@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition.X, item.WorldPosition.Y, 0.0f)) < powerOnSound.BaseFar * powerOnSound.BaseFar)
                     {
-                        powerOnSound.Play(1.0f, powerOnSound.BaseFar, item.WorldPosition);
+                        SoundPlayer.PlaySound(powerOnSound, 1.0f, powerOnSound.BaseFar, item.WorldPosition, item.CurrentHull);
                     }
                     powerOnSoundPlayed = true;
                 }

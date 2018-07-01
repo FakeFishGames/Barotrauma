@@ -168,7 +168,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     if (sparkSounds.Count > 0)
                     {
-                        sparkSounds[Rand.Int(sparkSounds.Count)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                        SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 600.0f, pt.item.WorldPosition, pt.item.CurrentHull);
                     }
 
                     Vector2 baseVel = Rand.Vector(300.0f);

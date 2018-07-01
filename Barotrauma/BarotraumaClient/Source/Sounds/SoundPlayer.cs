@@ -450,16 +450,23 @@ namespace Barotrauma
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
 
-        public static void PlaySound(string soundTag, float volume = 1.0f)
+        public static SoundChannel PlaySound(string soundTag, float volume = 1.0f)
         {
             var sound = GetSound(soundTag);            
-            if (sound != null) sound.Play(volume);
+            return sound?.Play(volume);
         }
 
-        public static void PlaySound(string soundTag, float volume, float range, Vector2 position)
+        public static SoundChannel PlaySound(string soundTag, float volume, float range, Vector2 position, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
-            if (sound != null) sound.Play(volume, range, position);
+            if (sound == null) return null;
+            return PlaySound(sound, volume, range, position, hullGuess);
+        }
+
+        public static SoundChannel PlaySound(Sound sound, float volume, float range, Vector2 position, Hull hullGuess = null)
+        {
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > range * range) return null;
+            return sound.Play(volume, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, hullGuess));            
         }
 
         private static void UpdateMusic(float deltaTime)
@@ -535,11 +542,7 @@ namespace Barotrauma
                     {
                         //mute the channel
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f)
-                        {
-                            musicChannel[i].Dispose(); musicChannel[i] = null;
-                            currentMusic[i].Dispose(); currentMusic[i] = null;
-                        }
+                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
                     }
                 }
                 //something should be playing, but the channel is playing nothing or an incorrect clip
@@ -549,17 +552,13 @@ namespace Barotrauma
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f)
-                        {
-                            musicChannel[i].Dispose(); musicChannel[i] = null;
-                            currentMusic[i].Dispose(); currentMusic[i] = null;
-                        }
+                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
                     }
                     //channel free now, start playing the correct clip
                     if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
                     {
+                        DisposeMusicChannel(i);
                         currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
-                        if (musicChannel[i] != null) musicChannel[i].Dispose();
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                     }
                 }
@@ -568,12 +567,18 @@ namespace Barotrauma
                     //playing something, lerp volume up
                     if (musicChannel[i] == null || !musicChannel[i].IsPlaying)
                     {
-                        musicChannel[i].Dispose();
+                        musicChannel[i]?.Dispose();
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                     }
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, MusicVolume, MusicLerpSpeed * deltaTime);
                 }
             } 
+        }
+
+        private static void DisposeMusicChannel(int index)
+        {
+            musicChannel[index]?.Dispose(); musicChannel[index] = null;
+            currentMusic[index]?.Dispose(); currentMusic[index] = null;
         }
         
         private static IEnumerable<BackgroundMusic> GetSuitableMusicClips(string musicType, float currentIntensity)
@@ -627,6 +632,7 @@ namespace Barotrauma
 
             foreach (Character character in Character.CharacterList)
             {
+                if (character.IsDead || !character.Enabled) continue;
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
 
@@ -654,17 +660,28 @@ namespace Barotrauma
             return "default";
         }
 
+        public static bool ShouldMuffleSound(Character listener, Vector2 soundWorldPos, float range, Hull hullGuess)
+        {
+            if (listener == null) return false;
+            Hull targetHull = Hull.FindHull(soundWorldPos, hullGuess, true);
+            if (listener.CurrentHull == null || targetHull == null)
+            {
+                return listener.CurrentHull != targetHull;
+            }
+            return listener.CurrentHull.GetApproximateDistance(targetHull, range) > range;
+        }
+
         public static void PlaySplashSound(Vector2 worldPosition, float strength)
         {
             int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2, 2)), 0, SplashSounds.Count - 1);
 
-            SplashSounds[splashIndex].Play(1.0f, 800.0f, worldPosition);
+            float range = 800.0f;
+            var channel = SplashSounds[splashIndex].Play(1.0f, range, worldPosition, muffle: ShouldMuffleSound(Character.Controlled, worldPosition, range, null));
         }
 
         public static void PlayDamageSound(string damageType, float damage, PhysicsBody body)
         {
             Vector2 bodyPosition = body.DrawPosition;
-
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
@@ -681,8 +698,7 @@ namespace Barotrauma
             if (!sounds.Any()) return;
 
             int selectedSound = Rand.Int(sounds.Count);
-
-            sounds[selectedSound].sound.Play(1.0f, range, position);
+            sounds[selectedSound].sound.Play(1.0f, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, null));
         }
         
     }

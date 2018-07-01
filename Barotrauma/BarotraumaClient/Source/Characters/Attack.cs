@@ -47,7 +47,7 @@ namespace Barotrauma
 
             if (sound != null)
             {
-                sound.Play(1.0f, 500.0f, worldPosition);
+                SoundPlayer.PlaySound(sound, 1.0f, 500.0f, worldPosition);
             }
         }
     }
