@@ -1750,7 +1750,8 @@ namespace Barotrauma
             if (orderGiver != null)
             {
                 //set the character order only if the character is close enough to hear the message
-                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) ? ChatMessageType.Radio : ChatMessageType.Default;
+                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) && ChatMessage.CanUseRadio(this) ? 
+                    ChatMessageType.Radio : ChatMessageType.Default;
                 if (string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, orderGiver, this))) return;
             }
 
