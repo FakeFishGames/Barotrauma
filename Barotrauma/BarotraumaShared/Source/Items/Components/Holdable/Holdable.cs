@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         protected Vector2 aimPos;
 
-        //protected bool aimable;
+        private float swingState;
 
         private bool attachable, attached, attachedByDefault;
         private PhysicsBody body;
@@ -39,6 +39,13 @@ namespace Barotrauma.Items.Components
         {
             get { return attached && item.ParentInventory == null; }
             set { attached = value; }
+        }
+
+        [Serialize(true, true)]
+        public bool Aimable
+        {
+            get;
+            set;
         }
 
         [Serialize(false, false)]
@@ -76,12 +83,32 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
+
         [Serialize(0.0f, false)]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
             set { holdAngle = MathHelper.ToRadians(value); }
         }
+
+        private Vector2 swingAmount;
+        [Serialize("0.0,0.0", false), Editable]
+        public Vector2 SwingAmount
+        {
+            get { return ConvertUnits.ToDisplayUnits(swingAmount); }
+            set { swingAmount = ConvertUnits.ToSimUnits(value); }
+        }
+        
+        [Serialize(0.0f, false), Editable]
+        public float SwingSpeed { get; set; }
+
+        [Serialize(false, false), Editable]
+        public bool SwingWhenHolding { get; set; }
+        [Serialize(false, false), Editable]
+        public bool SwingWhenAiming { get; set; }
+        [Serialize(false, false), Editable]
+        public bool SwingWhenUsing { get; set; }
+
 
         public Holdable(Item item, XElement element)
             : base(item, element)
@@ -308,7 +335,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body == null) return true;
+            if (!attachable || item.body == null) return (character == null || character.IsKeyDown(InputType.Aim));
             if (character != null)
             {
                 if (!character.IsKeyDown(InputType.Aim)) return false;
@@ -341,6 +368,21 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            Vector2 swing = Vector2.Zero;
+            if (swingAmount != Vector2.Zero)
+            {
+                swingState += deltaTime;
+                if (SwingWhenHolding ||
+                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
+                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Use)))
+                {
+                    swing = swingAmount * new Vector2(
+                    (float)PerlinNoise.Perlin((swingState * SwingSpeed) % 255, (swingState * SwingSpeed) % 255, 0) - 0.5f,
+                    (float)PerlinNoise.Perlin((swingState * SwingSpeed) % 255, (swingState * SwingSpeed) % 255, 0.5) - 0.5f);
+                }
+            }
+
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
             if (item.body.Dir != picker.AnimController.Dir) Flip(item);
@@ -349,7 +391,7 @@ namespace Barotrauma.Items.Components
 
             if (picker.HasSelectedItem(item))
             {
-                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
+                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos + swing, aimPos + swing, picker.IsKeyDown(InputType.Aim), holdAngle);
             }
             else
             {

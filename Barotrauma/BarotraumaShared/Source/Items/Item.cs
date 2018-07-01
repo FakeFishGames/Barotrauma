@@ -1270,7 +1270,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnUse, WorldPosition);
+                    ic.PlaySound(ActionType.OnUse, WorldPosition, character);
 #endif
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
@@ -1299,7 +1299,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition);
+                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition, character);
 #endif
 
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);

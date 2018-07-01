@@ -17,9 +17,8 @@ namespace Barotrauma.Items.Components
         public readonly ActionType Type;
 
         public string VolumeProperty;
-
         public float VolumeMultiplier;
-
+        
         public readonly float Range;
 
         public readonly bool Loop;
@@ -37,8 +36,16 @@ namespace Barotrauma.Items.Components
     partial class ItemComponent : ISerializableEntity
     {
         private Dictionary<ActionType, List<ItemSound>> sounds;
+        private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
 
         protected GUIFrame guiFrame;
+
+        enum SoundSelectionMode
+        {
+            Random, 
+            CharacterSpecific,
+            ItemSpecific
+        }
 
         public GUIFrame GuiFrame
         {
@@ -62,7 +69,7 @@ namespace Barotrauma.Items.Components
         
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
-        public void PlaySound(ActionType type, Vector2 position)
+        public void PlaySound(ActionType type, Vector2 position, Character user = null)
         {
             if (loopingSound != null)
             {
@@ -100,7 +107,21 @@ namespace Barotrauma.Items.Components
             ItemSound itemSound = null;
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
-                int index = Rand.Int(matchingSounds.Count);
+                SoundSelectionMode soundSelectionMode = soundSelectionModes[type];
+                int index;
+                if (soundSelectionMode == SoundSelectionMode.CharacterSpecific && user != null)
+                {
+                    index = user.ID % matchingSounds.Count;
+                }
+                else if (soundSelectionMode == SoundSelectionMode.ItemSpecific)
+                {
+                    index = item.ID % matchingSounds.Count;
+                }
+                else
+                {
+                    index = Rand.Int(matchingSounds.Count);
+                }
+                    
                 itemSound = matchingSounds[index];
             }
 
@@ -238,7 +259,6 @@ namespace Barotrauma.Items.Components
                     }
 
                     ActionType type;
-
                     try
                     {
                         type = (ActionType)Enum.Parse(typeof(ActionType), subElement.GetAttributeString("type", ""), true);
@@ -248,14 +268,21 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Invalid sound type in " + subElement + "!", e);
                         break;
                     }
-
+                    
                     Sound sound = Submarine.LoadRoundSound(filePath);
-
                     float range = subElement.GetAttributeFloat("range", 800.0f);
                     bool loop = subElement.GetAttributeBool("loop", false);
                     ItemSound itemSound = new ItemSound(sound, type, range, loop);
                     itemSound.VolumeProperty = subElement.GetAttributeString("volume", "");
                     itemSound.VolumeMultiplier = subElement.GetAttributeFloat("volumemultiplier", 1.0f);
+
+                    if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
+                    {
+                        SoundSelectionMode selectionMode = SoundSelectionMode.Random;
+                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out selectionMode);
+                        soundSelectionModes[type] = selectionMode;
+                    }
 
                     List<ItemSound> soundList = null;
                     if (!sounds.TryGetValue(itemSound.Type, out soundList))

@@ -1201,7 +1201,7 @@ namespace Barotrauma
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
-                Vector2 diff = (mousePos - AimSourceSimPos) * Dir;
+                Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
 
