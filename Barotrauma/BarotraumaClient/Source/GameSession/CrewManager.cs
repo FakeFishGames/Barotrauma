@@ -418,12 +418,9 @@ namespace Barotrauma
         {
             if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
             {
-                characterBlock.Color = Color.Transparent;
+                characterBlock.Parent.RemoveChild(characterBlock);
             }
-            else
-            {
-                AddCharacter(revivedCharacter);
-            }
+            if (characterInfos.Contains(revivedCharacter.Info)) AddCharacter(revivedCharacter);            
         }
 
         public void KillCharacter(Character killedCharacter)
