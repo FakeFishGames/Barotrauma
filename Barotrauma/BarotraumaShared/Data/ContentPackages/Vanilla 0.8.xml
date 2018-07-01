@@ -22,6 +22,7 @@
   <Item file="Content/Items/Fabricators/materials.xml" />
   <Item file="Content/Items/Ladder/ladder.xml" />
   <Item file="Content/Items/Medical/medical.xml" />
+  <Item file="Content/Items/Misc/misc.xml" />
   <Item file="Content/Items/OxygenGenerator/oxygengenerator.xml" />
   <Item file="Content/Items/Pump/pump.xml" />
   <Item file="Content/Items/SearchLight/searchlight.xml" />

@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
 
             SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
 #if CLIENT
-            PlaySound(ActionType.OnPicked, item.WorldPosition);
+            PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
 #endif
             return false;
         }
