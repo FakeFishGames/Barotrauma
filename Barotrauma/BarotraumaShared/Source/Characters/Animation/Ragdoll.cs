@@ -92,7 +92,9 @@ namespace Barotrauma
 
         protected List<PhysicsBody> collider;
         protected int colliderIndex = 0;
-        
+
+        private Category prevCollisionCategory = Category.None;
+
         public PhysicsBody Collider
         {
             get
@@ -274,11 +276,7 @@ namespace Barotrauma
             get { return ignorePlatforms; }
             set 
             {
-                if (ignorePlatforms == value) return;
                 ignorePlatforms = value;
-
-                UpdateCollisionCategories();
-
             }
         }
 
@@ -812,10 +810,7 @@ namespace Barotrauma
             }
             
             CurrentHull = newHull;
-
-            character.Submarine = currentHull == null ? null : currentHull.Submarine;
-
-            UpdateCollisionCategories();
+            character.Submarine = currentHull?.Submarine;
         }
         
         public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
@@ -855,7 +850,10 @@ namespace Barotrauma
             Category collisionCategory = (ignorePlatforms) ?
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
                 : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
-
+            
+            if (collisionCategory == prevCollisionCategory) return;
+            prevCollisionCategory = collisionCategory;
+            
             Collider.CollidesWith = collisionCategory;
 
             foreach (Limb limb in Limbs)
@@ -881,6 +879,7 @@ namespace Barotrauma
 
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
+            UpdateCollisionCategories();
 
             Vector2 flowForce = Vector2.Zero;
 
@@ -1268,8 +1267,6 @@ namespace Barotrauma
             {
                 //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
                 SetPosition(Collider.SimPosition, true);
-
-                UpdateCollisionCategories();
                 collisionsDisabled = false;
             }
         }
