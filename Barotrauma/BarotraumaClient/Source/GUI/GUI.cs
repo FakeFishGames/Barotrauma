@@ -183,8 +183,41 @@ namespace Barotrauma
             if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
                 DrawString(spriteBatch, new Vector2(10, 10),
-                    "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
+                    "FPS: " + (int)GameMain.PerformanceCounter.AverageFramesPerSecond,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
+            }
+
+            if (GameMain.ShowPerf)
+            {
+                int y = 10;
+                DrawString(spriteBatch, new Vector2(300, y), "Draw - Max val: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue()+" ms", Color.Green, Color.Black * 0.8f, font: GUI.SmallFont);
+                y += 15;
+                GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.Green);
+                y += 50;
+                DrawString(spriteBatch, new Vector2(300, y), "Update - Max val: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue() + " ms", Color.LightBlue, Color.Black * 0.8f, font: GUI.SmallFont);
+                y += 15;
+                GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
+                GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, Color.Red);
+                y += 50;
+                foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
+                {
+                    float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
+                    DrawString(spriteBatch, new Vector2(300, y),
+                        key + ": " + elapsedMillisecs,
+                        Color.Lerp(Color.LightGreen, Color.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+                }
+
+                if (FarseerPhysics.Settings.EnableDiagnostics)
+                {
+                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContinuousPhysicsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ControllersUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.AddRemoveTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.NewContactsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContactsUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.SolveUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                }
             }
 
             if (GameMain.DebugDraw)
@@ -270,7 +303,7 @@ namespace Barotrauma
                         //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
                     }
 
-                    DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    DrawString(spriteBatch, new Vector2(500, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
 
@@ -290,10 +323,10 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                /*DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
                 DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
                 DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
-
+                */
                 GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch);
             }
             
