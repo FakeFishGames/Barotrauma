@@ -452,12 +452,14 @@ namespace Barotrauma.Sounds
                         {
                             throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
                         }
+                        System.Diagnostics.Debug.WriteLine("!startedplaying, "+buffersToUnqueue+", "+unqueuedBuffers.Length);
                     }
                     else
                     {
                         startedPlaying = false;
                         buffersToUnqueue = 4;
                         unqueuedBuffers = (int[])streamBuffers.Clone();
+                        System.Diagnostics.Debug.WriteLine("startedplaying, " + buffersToUnqueue + ", " + unqueuedBuffers.Length);
                     }
 
                     for (int i = 0; i < buffersToUnqueue; i++)

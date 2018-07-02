@@ -423,6 +423,11 @@ namespace Barotrauma
                 GameMain.ShowFPS = !GameMain.ShowFPS;
                 NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
             }));
+            commands.Add(new Command("showperf", "showperf: Toggle performance statistics on/off.", (string[] args) =>
+            {
+                GameMain.ShowPerf = !GameMain.ShowPerf;
+                NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
+            }, isCheat: true));
 
             commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {

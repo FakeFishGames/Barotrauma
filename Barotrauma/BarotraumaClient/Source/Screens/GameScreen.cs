@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using FarseerPhysics;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -76,7 +77,14 @@ namespace Barotrauma
             cam.UpdateTransform(true);
             Submarine.CullEntities(cam);
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             DrawMap(graphics, spriteBatch, deltaTime);
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("DrawMap", sw.ElapsedTicks);
+            sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
             
@@ -102,6 +110,10 @@ namespace Barotrauma
             GUI.Draw(cam, spriteBatch);
 
             spriteBatch.End();
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("DrawHUD", sw.ElapsedTicks);
+            sw.Restart();
         }
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch, double deltaTime)
