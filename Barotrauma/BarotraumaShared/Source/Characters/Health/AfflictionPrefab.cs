@@ -246,7 +246,20 @@ namespace Barotrauma
             {
                 if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
             }
-            return null;
+
+            //if above the strength range of all effects, use the highest strength effect
+            Effect strongestEffect = null;
+            float largestStrength = currentStrength;
+            foreach (Effect effect in effects)
+            {
+                if (currentStrength > effect.MaxStrength && 
+                    (strongestEffect == null || effect.MaxStrength > largestStrength))
+                {
+                    strongestEffect = effect;
+                    largestStrength = effect.MaxStrength;
+                }
+            }
+            return strongestEffect;
         }
 
         public float GetTreatmentSuitability(Item item)
