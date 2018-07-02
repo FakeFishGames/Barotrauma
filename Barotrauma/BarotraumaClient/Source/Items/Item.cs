@@ -129,11 +129,11 @@ namespace Barotrauma
                 selectedSprite.effects = oldEffects;
             }
 
-
-            List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
-            for (int i = 0; i < staticDrawableComponents.Count; i++)
+            //use a backwards for loop because the drawable components may disable drawing, 
+            //causing them to be removed from the list
+            for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                staticDrawableComponents[i].Draw(spriteBatch, editing);
+                drawableComponents[i].Draw(spriteBatch, editing);
             }
 
             if (GameMain.DebugDraw)
