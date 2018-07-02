@@ -326,11 +326,6 @@ namespace Barotrauma
                 }
             }
             
-            if (doubleClickedItem != null)
-            {
-                QuickUseItem(doubleClickedItem, true, true);
-            }
-
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
@@ -361,6 +356,11 @@ namespace Barotrauma
                 {
                     highlightedSubInventorySlot.Inventory.HideTimer = 1.0f;
                 }
+            }
+
+            if (doubleClickedItem != null)
+            {
+                QuickUseItem(doubleClickedItem, true, true);
             }
 
             //make subinventories with one slot always visible
