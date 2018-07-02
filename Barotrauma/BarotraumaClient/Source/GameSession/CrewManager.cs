@@ -706,7 +706,7 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
-                child.Visible = Character.Controlled != null && Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
+                child.Visible = Character.Controlled == null || Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
             }
 
             crewAreaOffset.X = MathHelper.Lerp(
