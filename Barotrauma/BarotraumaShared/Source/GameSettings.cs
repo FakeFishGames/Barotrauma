@@ -62,6 +62,7 @@ namespace Barotrauma
             set { useSteamMatchmaking = value; }
         }
 #else
+        public bool UseSteam;
         public bool RequireSteamAuthentication
         {
             get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
@@ -196,6 +197,8 @@ namespace Barotrauma
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#else
+            UseSteam = true;
 #endif
 
             if (doc == null)
