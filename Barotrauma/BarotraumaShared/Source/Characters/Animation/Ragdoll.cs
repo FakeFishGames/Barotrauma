@@ -50,7 +50,7 @@ namespace Barotrauma
 
         private bool simplePhysicsEnabled;
 
-        private Character character;
+        protected Character character;
 
         protected float strongestImpact;
 
