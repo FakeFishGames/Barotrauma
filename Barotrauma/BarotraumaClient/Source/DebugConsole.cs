@@ -427,7 +427,7 @@ namespace Barotrauma
             {
                 GameMain.ShowPerf = !GameMain.ShowPerf;
                 NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
-            }, isCheat: true));
+            }));
 
             commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
