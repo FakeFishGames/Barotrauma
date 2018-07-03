@@ -52,6 +52,8 @@ namespace Barotrauma.Items.Components
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
 
+        private bool shutDown;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -236,7 +238,12 @@ namespace Barotrauma.Items.Components
             }
             currPowerConsumption += autoAdjustAmount;
 
-            if (autoTemp)
+            if (shutDown)
+            {
+                targetFissionRate = 0.0f;
+                targetTurbineOutput = 0.0f;
+            }
+            else if (autoTemp)
             {
                 UpdateAutoTemp(2.0f, deltaTime);
             }
@@ -440,6 +447,7 @@ namespace Barotrauma.Items.Components
             switch (objective.Option.ToLowerInvariant())
             {
                 case "power up":
+                    shutDown = false;
                     //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                     if (degreeOfSuccess < 0.5f)
                     {
@@ -454,11 +462,8 @@ namespace Barotrauma.Items.Components
                     }                    
                     break;
                 case "shutdown":
-                    if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f || autoTemp)
-                    {
-                        unsentChanges = true;
-                    }
                     AutoTemp = false;
+                    shutDown = true;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;
@@ -474,6 +479,7 @@ namespace Barotrauma.Items.Components
                 case "shutdown":
                     if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
                     {
+                        shutDown = true;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
                         unsentChanges = true;
@@ -485,6 +491,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             bool autoTemp       = msg.ReadBoolean();
+            bool shutDown       = msg.ReadBoolean();
             float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float turbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
@@ -493,8 +500,10 @@ namespace Barotrauma.Items.Components
             if (!autoTemp && AutoTemp) BlameOnBroken = c;
             if (turbineOutput < targetTurbineOutput) BlameOnBroken = c;
             if (fissionRate > targetFissionRate) BlameOnBroken = c;
+            if (!this.shutDown && shutDown) BlameOnBroken = c;
             
             AutoTemp = autoTemp;
+            this.shutDown = shutDown;
             targetFissionRate = fissionRate;
             targetTurbineOutput = turbineOutput;
 
@@ -507,6 +516,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             fissionRateScrollBar.BarScroll = 1.0f - targetFissionRate / 100.0f;
             turbineOutputScrollBar.BarScroll = 1.0f - targetTurbineOutput / 100.0f;
+            onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
 #endif
 
             //need to create a server event to notify all clients of the changed state
@@ -516,6 +526,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(autoTemp);
+            msg.Write(shutDown);
             msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
