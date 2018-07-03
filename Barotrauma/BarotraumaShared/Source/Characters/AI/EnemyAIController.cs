@@ -764,6 +764,7 @@ namespace Barotrauma
 
             foreach (AITarget target in AITarget.List)
             {
+                if (!target.Enabled) continue;
                 if (Level.Loaded != null && target.WorldPosition.Y > Level.Loaded.Size.Y)
                 {
                     continue;
