@@ -102,6 +102,7 @@
     <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Events\EventManager.cs" />
     <Compile Include="Source\GUI\ChatBox.cs" />
+    <Compile Include="Source\GUI\ParamsEditor.cs" />
     <Compile Include="Source\GUI\ShapeExtensions.cs" />
     <Compile Include="Source\GUI\Graph.cs" />
     <Compile Include="Source\Characters\CharacterHealth.cs" />

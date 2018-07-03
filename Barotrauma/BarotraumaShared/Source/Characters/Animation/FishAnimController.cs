@@ -8,6 +8,25 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
+        public override RagdollParams RagdollParams => FishRagdollParams;
+
+        private FishRagdollParams _ragdollParams;
+        public FishRagdollParams FishRagdollParams
+        {
+            get
+            {
+                if (_ragdollParams == null)
+                {
+                    _ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(character);
+                }
+                return _ragdollParams;
+            }
+            set
+            {
+                _ragdollParams = value;
+            }
+        }
+
         private FishWalkParams _fishWalkParams;
         public FishWalkParams FishWalkParams
         {
