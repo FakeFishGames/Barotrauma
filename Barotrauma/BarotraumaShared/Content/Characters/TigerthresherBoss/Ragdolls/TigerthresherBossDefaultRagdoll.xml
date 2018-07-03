@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ragdoll type="tigerthresherboss" canentersubmarine="false" scale="1.5">
+<Ragdoll type="tigerthresherboss" canentersubmarine="false" scale="1.5">
 
   <collider radius="50" height="185"/>
     
@@ -84,4 +84,4 @@
   <!-- body to long -->
   <joint limb1="3" limb1anchor="-3,-45" limb2="8" limb2anchor="-8,132" lowerlimit="-30" upperlimit="0"/>      
     
-</ragdoll>
+</Ragdoll>
