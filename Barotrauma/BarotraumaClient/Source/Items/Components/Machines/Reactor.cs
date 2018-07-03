@@ -350,11 +350,10 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && onOffSwitch.BarScroll > 0.5f;
             
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
-            
-            if (onOffSwitch.BarScroll > 0.5f)
+            shutDown = onOffSwitch.BarScroll > 0.5f;
+
+            if (shutDown)
             {
-                targetFissionRate = 0.0f;
-                targetTurbineOutput = 0.0f;
                 fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
                 turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
             }            
@@ -490,6 +489,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
+            msg.Write(shutDown);
             msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
 
@@ -500,11 +500,12 @@ namespace Barotrauma.Items.Components
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(1 + 8 + 8 + 8 + 8), sendingTime);
+                StartDelayedCorrection(type, msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 
             AutoTemp = msg.ReadBoolean();
+            shutDown = msg.ReadBoolean();
             Temperature = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             targetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
@@ -512,6 +513,7 @@ namespace Barotrauma.Items.Components
 
             fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+            onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
         }
     }
 }
