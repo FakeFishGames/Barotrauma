@@ -191,22 +191,32 @@ namespace Barotrauma.Lights
             spriteBatch.End();
 
             //draw an ambient light -colored rectangle on hulls to hide background lights behind subs
-            //TODO: check if this can be optimized by only drawing rects that are in view
-            //TODO: cache the drawrects of the hulls so we don't need to recalculate them when drawing hull ambient lights
+            Dictionary<Hull, Rectangle> visibleHulls = new Dictionary<Hull, Rectangle>();
+            foreach (Hull hull in Hull.hullList)
+            {
+                var drawRect =
+                    hull.Submarine == null ?
+                    hull.Rect :
+                    new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
+
+                if (drawRect.Right < cam.WorldView.X || drawRect.X > cam.WorldView.Right ||
+                    drawRect.Y - drawRect.Height > cam.WorldView.Y || drawRect.Y < cam.WorldView.Y - cam.WorldView.Height)
+                {
+                    continue;
+                }
+                visibleHulls.Add(hull, drawRect);
+            }
+
             if (backgroundSpritesDrawn)
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);            
-                foreach (Hull hull in Hull.hullList)
+                foreach (Rectangle drawRect in visibleHulls.Values)
                 {
-                    var drawRect =
-                        hull.Submarine == null ?
-                        hull.Rect :
-                        new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
                     //TODO: draw some sort of smoothed rectangle
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawRect.X, -drawRect.Y),
-                        new Vector2(hull.Rect.Width, hull.Rect.Height),
-                        AmbientLight, true);
+                        new Vector2(drawRect.Width, drawRect.Height),
+                        Color.White, true);
                 }
                 spriteBatch.End();
                 graphics.BlendState = BlendState.Additive;
@@ -230,11 +240,7 @@ namespace Barotrauma.Lights
             foreach (Hull hull in smoothedHullAmbientLights.Keys)
             {
                 if (smoothedHullAmbientLights[hull].A < 0.01f) continue;
-
-                var drawRect =
-                    hull.Submarine == null ?
-                    hull.Rect :
-                    new Rectangle((int)(hull.Submarine.DrawPosition.X + hull.Rect.X), (int)(hull.Submarine.DrawPosition.Y + hull.Rect.Y), hull.Rect.Width, hull.Rect.Height);
+                if (!visibleHulls.TryGetValue(hull, out Rectangle drawRect)) continue;
 
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
