@@ -1,11 +1,8 @@
 ﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -560,6 +557,7 @@ namespace Barotrauma
                         DisposeMusicChannel(i);
                         currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i].Looping = true;
                     }
                 }
                 else
@@ -569,6 +567,7 @@ namespace Barotrauma
                     {
                         musicChannel[i]?.Dispose();
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i].Looping = true;
                     }
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, MusicVolume, MusicLerpSpeed * deltaTime);
                 }
