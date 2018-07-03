@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -343,12 +344,17 @@ namespace Barotrauma
 
             CreateJoints();
 
+            // Check the joints, todo: remove
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 var joint = LimbJoints[i];
                 if (joint == null)
                 {
-                    DebugConsole.NewMessage($"Joint {i} null.", Color.Red);
+                    DebugConsole.ThrowError($"Joint {i} null.");
+                }
+                else
+                {
+                    //DebugConsole.NewMessage($"Joint {i} ok.", Color.Green);
                 }
             }
 
@@ -368,11 +374,7 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
-                if (joint == null)
-                {
-                    DebugConsole.ThrowError($"Joint count {LimbJoints.Length}.");
-                    break;
-                }
+                if (joint == null) { continue; }
                 joint.BodyB.SetTransform(
                     joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
@@ -407,12 +409,46 @@ namespace Barotrauma
         /// </summary>
         public void CreateJoints()
         {
-            RagdollParams.Joints.ForEach(j => AddJoint(j, RagdollParams.Scale));
+            DebugConsole.NewMessage($"Creating joints from {RagdollParams.Name}.", Color.White);
+            RagdollParams.Joints.ForEach(j => AddJoint(j));
         }
 
-        public void AddJoint(JointParams jointParams, float scale = 1.0f)
+        /// <summary>
+        /// Saves all serializable data in the currently selected ragdoll params.
+        /// </summary>
+        public void SaveRagdoll()
         {
-            DebugConsole.NewMessage($"Creating joint {jointParams.Name}.", Color.Pink);
+            SaveJoints();
+            RagdollParams.Save();
+        }
+
+        /// <summary>
+        /// Resets the serializable data to the currently selected ragdoll params.
+        /// </summary>
+        public void ResetRagdoll()
+        {
+            ResetJoints();
+            RagdollParams.Reset();
+        }
+
+        /// <summary>
+        /// Saves the current joint values to the serializable joint params.
+        /// </summary>
+        public void SaveJoints()
+        {
+            LimbJoints.ForEach(j => j.SaveParams());
+        }
+
+        /// <summary>
+        /// Resets the current joint values to the serialized joint params.
+        /// </summary>
+        public void ResetJoints()
+        {
+            LimbJoints.ForEach(j => j.LoadParams());
+        }
+
+        public void AddJoint(JointParams jointParams)
+        {
             byte limb1ID = Convert.ToByte(jointParams.Limb1);
             byte limb2ID = Convert.ToByte(jointParams.Limb2);
 
@@ -422,8 +458,8 @@ namespace Barotrauma
             Vector2 limb2Pos = jointParams.Limb2Anchor * RagdollParams.Scale;
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
-            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            joint.CanBeSevered = jointParams.CanBeSevered;
+            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos, jointParams);
+            //joint.CanBeSevered = jointParams.CanBeSevered;
 
             if (!float.IsNaN(jointParams.LowerLimit))
             {
@@ -458,7 +494,7 @@ namespace Barotrauma
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
             LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
+            //joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
 
             if (subElement.Attribute("lowerlimit") != null)
             {
@@ -706,8 +742,11 @@ namespace Barotrauma
         
         partial void ImpactProjSpecific(float impact, Body body);
 
+        public bool IsFlipped { get; private set; }
+
         public virtual void Flip()
         {
+            IsFlipped = !IsFlipped;
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
             
             for (int i = 0; i < LimbJoints.Length; i++)

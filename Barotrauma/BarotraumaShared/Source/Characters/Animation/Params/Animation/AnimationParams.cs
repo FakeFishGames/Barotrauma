@@ -94,12 +94,13 @@ namespace Barotrauma
             }
             if (!anims.TryGetValue(type, out AnimationParams anim))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(character.ConfigPath);
+                XDocument characterConfigFile = XMLExtensions.TryLoadXml(character.ConfigPath);
                 string firstLetter = speciesName.First().ToString().ToUpperInvariant();
                 speciesName = firstLetter + speciesName.ToLowerInvariant().Substring(1);
+                DebugConsole.NewMessage($"Loading animations of type {type} from {character.ConfigPath} using the species name {speciesName}.", Color.Orange);
                 string animType = type.ToString();
                 string defaultPath = $"Content/Characters/{speciesName}/Animations/{speciesName}{animType}.xml";
-                string animPath = doc.Root.Element("animation").GetAttributeString("path", defaultPath);
+                string animPath = characterConfigFile.Root.Element("animation").GetAttributeString("path", defaultPath);
                 animPath = animPath.Replace("[ANIMTYPE]", animType);
                 T a = new T();
                 if (a.Load(animPath, type))

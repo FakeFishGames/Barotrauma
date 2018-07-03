@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private Character character;
         private Vector2 spawnPosition;
-        private bool showControls = true;
+        private bool showControls;
         private bool editOffsets;
         private bool editJointPositions;
         private bool editJointLimits;
@@ -383,11 +383,13 @@ namespace Barotrauma
             var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
             saveRagdollButton.OnClicked += (b, obj) =>
             {
+                character.AnimController.SaveRagdoll();
                 return true;
             };
             var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
             resetRagdollButton.OnClicked += (b, obj) =>
             {
+                character.AnimController.ResetRagdoll();
                 return true;
             };
         }
@@ -395,13 +397,14 @@ namespace Barotrauma
 
         #region AnimParams
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
+        private RagdollParams RagdollParams => character.AnimController.RagdollParams;
 
         private void ResetEditor()
         {
             ParamsEditor.Instance.Clear();
-            //AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             // TODO: remove, only for debugging
-            character.AnimController.RagdollParams.AddToEditor(ParamsEditor.Instance);
+            //RagdollParams.AddToEditor(ParamsEditor.Instance);
         }
         #endregion
 

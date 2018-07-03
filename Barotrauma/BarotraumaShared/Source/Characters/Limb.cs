@@ -22,9 +22,17 @@ namespace Barotrauma
     class LimbJoint : RevoluteJoint
     {
         public bool IsSevered;
-        public bool CanBeSevered;
+        public bool CanBeSevered => Params.CanBeSevered;
+        public JointParams Params { get; private set; }
+        public Ragdoll Ragdoll => LimbA.character.AnimController;
 
         public readonly Limb LimbA, LimbB;
+
+        public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2, JointParams jointParams) 
+            : this(limbA, limbB, anchor1, anchor2)
+        {
+            Params = jointParams;
+        }
 
         public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2)
             : base(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2)
@@ -35,6 +43,24 @@ namespace Barotrauma
 
             LimbA = limbA;
             LimbB = limbB;
+        }
+
+        public void SaveParams()
+        {
+            if (Ragdoll.IsFlipped) { Ragdoll.Flip(); }
+            Params.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA);
+            Params.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB);
+            Params.UpperLimit = MathHelper.ToDegrees(UpperLimit);
+            Params.LowerLimit = MathHelper.ToDegrees(LowerLimit);
+        }
+
+        public void LoadParams()
+        {
+            if (Ragdoll.IsFlipped) { Ragdoll.Flip(); }
+            LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Ragdoll.RagdollParams.Scale);
+            LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Ragdoll.RagdollParams.Scale);
+            UpperLimit = MathHelper.ToRadians(Params.UpperLimit);
+            LowerLimit = MathHelper.ToRadians(Params.LowerLimit);
         }
     }
     
