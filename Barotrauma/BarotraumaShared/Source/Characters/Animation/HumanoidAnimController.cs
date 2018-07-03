@@ -10,6 +10,25 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
+        public override RagdollParams RagdollParams => HumanRagdollParams;
+
+        private HumanRagdollParams _ragdollParams;
+        public HumanRagdollParams HumanRagdollParams
+        {
+            get
+            {
+                if (_ragdollParams == null)
+                {
+                    _ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(character);
+                }
+                return _ragdollParams;
+            }
+            set
+            {
+                _ragdollParams = value;
+            }
+        }
+
         private HumanWalkParams _humanWalkParams;
         public HumanWalkParams HumanWalkParams
         {
@@ -122,7 +141,6 @@ namespace Barotrauma
 
         public HumanoidAnimController(Character character, XElement element, string seed) : base(character, element, seed)
         {
-
             movementLerp = element.GetAttributeFloat("movementlerp", 0.4f);
         }
 

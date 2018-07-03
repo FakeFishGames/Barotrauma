@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     abstract partial class Ragdoll
     {
+        public abstract RagdollParams RagdollParams { get; }
+
         private static List<Ragdoll> list = new List<Ragdoll>();
 
         protected Hull currentHull;
@@ -281,6 +283,7 @@ namespace Barotrauma
             dir = Direction.Right;
 
             Random random = new MTRandom(ToolBox.StringToInt(seed));
+            // TODO: maybe the scale should override min and max and not vice versa?
             float scale = element.GetAttributeFloat("scale", 1.0f);
             if (element.Attribute("minscale") != null)
             {
@@ -320,8 +323,7 @@ namespace Barotrauma
                         if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
                         break;
                     case "joint":
-                        AddJoint(subElement, scale);
-
+                        //AddJoint(subElement, scale);
                         break;
                     case "collider":
                         collider.Add(new PhysicsBody(subElement, scale));
@@ -336,6 +338,17 @@ namespace Barotrauma
                         collider[collider.Count - 1].FarseerBody.OnCollision += OnLimbCollision;
                         if (collider.Count > 1) collider[collider.Count - 1].PhysEnabled = false;
                         break;
+                }
+            }
+
+            CreateJoints();
+
+            for (int i = 0; i < LimbJoints.Length; i++)
+            {
+                var joint = LimbJoints[i];
+                if (joint == null)
+                {
+                    DebugConsole.NewMessage($"Joint {i} null.", Color.Red);
                 }
             }
 
@@ -355,6 +368,11 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
+                if (joint == null)
+                {
+                    DebugConsole.ThrowError($"Joint count {LimbJoints.Length}.");
+                    break;
+                }
                 joint.BodyB.SetTransform(
                     joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
@@ -382,6 +400,50 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
 
             MainLimb = torso ?? head;
+        }
+
+        /// <summary>
+        /// Creates the joints using the current RagdollParams.
+        /// </summary>
+        public void CreateJoints()
+        {
+            RagdollParams.Joints.ForEach(j => AddJoint(j, RagdollParams.Scale));
+        }
+
+        public void AddJoint(JointParams jointParams, float scale = 1.0f)
+        {
+            DebugConsole.NewMessage($"Creating joint {jointParams.Name}.", Color.Pink);
+            byte limb1ID = Convert.ToByte(jointParams.Limb1);
+            byte limb2ID = Convert.ToByte(jointParams.Limb2);
+
+            Vector2 limb1Pos = jointParams.Limb1Anchor * RagdollParams.Scale;
+            limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
+
+            Vector2 limb2Pos = jointParams.Limb2Anchor * RagdollParams.Scale;
+            limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
+
+            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
+            joint.CanBeSevered = jointParams.CanBeSevered;
+
+            if (!float.IsNaN(jointParams.LowerLimit))
+            {
+                joint.LimitEnabled = true;
+                joint.LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
+                joint.UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
+            }
+
+            GameMain.World.AddJoint(joint);
+
+            for (int i = 0; i < LimbJoints.Length; i++)
+            {
+                if (LimbJoints[i] != null) continue;
+
+                LimbJoints[i] = joint;
+                return;
+            }
+
+            Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
+            LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)

@@ -44,7 +44,7 @@ namespace Barotrauma
             Submarine.MainSub.GodMode = true;
             CalculateMovementLimits();
             character = SpawnCharacter(Character.HumanConfigFile);
-            AnimParams.ForEach(p => p.AddToEditor());
+            ResetEditor();
             CreateButtons();
         }
 
@@ -367,17 +367,27 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var saveButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save");
-            saveButton.OnClicked += (b, obj) =>
+            var saveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Animation");
+            saveAnimButton.OnClicked += (b, obj) =>
             {
                 AnimParams.ForEach(p => p.Save());
                 return true;
             };
-            var resetButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset");
-            resetButton.OnClicked += (b, obj) =>
+            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animation");
+            resetAnimButton.OnClicked += (b, obj) =>
             {
                 AnimParams.ForEach(p => p.Reset());
                 ResetEditor();
+                return true;
+            };
+            var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
+            saveRagdollButton.OnClicked += (b, obj) =>
+            {
+                return true;
+            };
+            var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
+            resetRagdollButton.OnClicked += (b, obj) =>
+            {
                 return true;
             };
         }
@@ -388,8 +398,10 @@ namespace Barotrauma
 
         private void ResetEditor()
         {
-            AnimationParams.CreateEditor();
-            AnimParams.ForEach(p => p.AddToEditor());
+            ParamsEditor.Instance.Clear();
+            //AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            // TODO: remove, only for debugging
+            character.AnimController.RagdollParams.AddToEditor(ParamsEditor.Instance);
         }
         #endregion
 
@@ -398,7 +410,7 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             if (showParamsEditor)
             {
-                AnimationParams.Editor.AddToGUIUpdateList();
+                ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
             }
         }
 
