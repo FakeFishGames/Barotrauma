@@ -84,13 +84,9 @@ namespace Barotrauma
         protected override float? HeadAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.HeadAngleInRadians);
         protected override float? TorsoAngle => GetValidOrNull(CurrentAnimationParams, CurrentAnimationParams?.TorsoAngleInRadians);
 
-        protected Character character;
         protected float walkPos;
 
-        public AnimController(Character character, XElement element, string seed) : base(character, element, seed)
-        {
-            this.character = character;
-        }
+        public AnimController(Character character, XElement element, string seed) : base(character, element, seed) { }
 
         public virtual void UpdateAnim(float deltaTime) { }
 
