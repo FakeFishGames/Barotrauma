@@ -39,6 +39,7 @@ namespace Barotrauma
                 XDocument characterConfigFile = XMLExtensions.TryLoadXml(character.ConfigPath);
                 string firstLetter = speciesName.First().ToString().ToUpperInvariant();
                 speciesName = firstLetter + speciesName.ToLowerInvariant().Substring(1);
+                DebugConsole.NewMessage($"Loading ragdoll params from {character.ConfigPath} using the species name {speciesName}.", Color.Orange);
                 string folderPath = characterConfigFile.Root.Element("ragdoll").GetAttributeString("path", defaultPath);
                 var ragdollPaths = Directory.GetFiles(folderPath);
                 if (ragdollPaths.None())
@@ -73,18 +74,18 @@ namespace Barotrauma
             return (T)ragdoll;
         }
 
-        protected override bool Deserialize(XDocument doc)
+        protected override bool Deserialize(XElement element)
         {
-            DebugConsole.NewMessage($"setting up the base element {doc.Root.Name}", Color.Green);
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
+            base.Deserialize(element);
             Joints.Clear();
-            foreach (var jointElement in doc.Root.Elements("joint"))
+            foreach (var jointElement in element.Elements("joint"))
             {
                 var joint = new JointParams();
                 joint.Name = $"Joint {jointElement.Attribute("limb1").Value} - {jointElement.Attribute("limb2").Value}";
                 joint.SerializableProperties = SerializableProperty.DeserializeProperties(joint, jointElement);
+                joint.Element = jointElement;
                 Joints.Add(joint);
-                DebugConsole.NewMessage($"Joint element {joint.Name} ready.", Color.Pink);
+                //DebugConsole.NewMessage($"Joint element {joint.Name} ready.", Color.Pink);
             }
 
             // TODO: deserialize all ragdoll sub elements here
@@ -92,17 +93,27 @@ namespace Barotrauma
             return SerializableProperties != null;
         }
 
+        protected override bool Serialize(XElement element)
+        {
+            base.Serialize(element);
+            Joints.ForEach(j => SerializableProperty.SerializeProperties(j, j.Element, true));
+            return true;
+        }
+
+#if CLIENT
         public override void AddToEditor(ParamsEditor editor)
         {
             base.AddToEditor(editor);
             Joints.ForEach(j => new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, j, false, true));
         }
+#endif
     }
 
     class JointParams : ISerializableEntity
     {
         public string Name { get; set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+        public XElement Element { get; set; }
 
         [Serialize(true, true), Editable]
         public bool CanBeSevered { get; set; }

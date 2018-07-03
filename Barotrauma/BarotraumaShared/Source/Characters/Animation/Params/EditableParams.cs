@@ -12,7 +12,6 @@ namespace Barotrauma
         public string Name { get; private set; }
         protected string FilePath { get; private set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
-        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
 
         protected XDocument doc;
         protected XDocument Doc
@@ -27,15 +26,15 @@ namespace Barotrauma
             }
         }
 
-        protected virtual bool Deserialize(XDocument doc)
+        protected virtual bool Deserialize(XElement element)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             return SerializableProperties != null;
         }
 
-        protected virtual bool Serialize(XDocument doc)
+        protected virtual bool Serialize(XElement element)
         {
-            SerializableProperty.SerializeProperties(this, doc.Root, true);
+            SerializableProperty.SerializeProperties(this, element, true);
             return true;
         }
 
@@ -43,7 +42,7 @@ namespace Barotrauma
         {
             FilePath = file;
             Name = Path.GetFileNameWithoutExtension(file);     
-            IsLoaded = Deserialize(Doc);
+            IsLoaded = Deserialize(Doc.Root);
             return IsLoaded;
         }
 
@@ -54,7 +53,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[Params] Not loaded!");
                 return false;
             }
-            Serialize(Doc);
+            Serialize(Doc.Root);
+            // TODO: would Doc.Save() be enough?
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,
@@ -76,9 +76,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[Params] Not loaded!");
                 return false;
             }
-            return Deserialize(Doc);
+            return Deserialize(Doc.Root);
         }
 
+#if CLIENT
+        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
         public virtual void AddToEditor(ParamsEditor editor)
         {
             if (!IsLoaded)
@@ -88,5 +90,6 @@ namespace Barotrauma
             }
             SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
         }
+#endif
     }
 }
