@@ -102,19 +102,21 @@ namespace Barotrauma
             };
             columnHeaderContainer.RectTransform.NonScaledSize = new Point(serverList.Content.Rect.Width, columnHeaderContainer.Rect.Height);
 
-            columnRelativeWidth = new float[] { 0.05f, 0.05f, 0.7f, 0.15f, 0.05f };
+            columnRelativeWidth = new float[] { 0.04f, 0.04f, 0.62f, 0.11f, 0.04f, 0.15f };
             string[] columnHeaders = new string[]
             {
                 TextManager.Get("ServerListCompatible"),
                 TextManager.Get("Password"),
                 TextManager.Get("ServerListName"),
                 TextManager.Get("ServerListPlayers"),
-                TextManager.Get("ServerListRoundStarted")
+                TextManager.Get("ServerListRoundStarted"),
+                ""
             };
             Sprite[] columnIcons = new Sprite[]
             {
                 GUI.CheckmarkIcon,
                 GUI.LockIcon,
+                null,
                 null,
                 null,
                 null
@@ -135,9 +137,9 @@ namespace Barotrauma
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[i], 1.0f), columnHeaderContainer.RectTransform),
-                    columnHeaders[i], font: GUI.SmallFont)
+                    columnHeaders[i], font: GUI.SmallFont, wrap: true)
                 {
-                    Padding = Vector4.Zero
+                    //Padding = Vector4.Zero
                 };
             }
             var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), rightColumn.RectTransform), style: null);
@@ -371,10 +373,9 @@ namespace Barotrauma
             var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[3], 1.0f), serverContent.RectTransform),
                 serverInfo.PlayerCount + "/" + serverInfo.MaxPlayers);
 
-            var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.8f), serverContent.RectTransform, Anchor.CenterRight),
+            var gameStartedBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[4], 0.8f), serverContent.RectTransform),
                 label: "")
             {
-                IgnoreLayoutGroups = true,
                 Selected = serverInfo.GameStarted,
                 Enabled = false
             };
@@ -410,6 +411,21 @@ namespace Barotrauma
                 serverName.TextColor *= 0.5f;
                 serverPlayers.TextColor *= 0.5f;
             }
+
+            new GUIButton(new RectTransform(new Vector2(columnRelativeWidth[5] * 0.8f, 0.8f), serverContent.RectTransform, Anchor.CenterRight), TextManager.Get("ServerListInfo"))
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (btn, obj) =>
+                {
+                    SelectServer(null, serverInfo);
+                    var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerListJoin") }, 550, 400);
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked += JoinServer;
+                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    serverInfo.CreatePreviewWindow(msgBox);
+                    return true;
+                }
+            };
 
             FilterServers();
         }

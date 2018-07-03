@@ -83,6 +83,11 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public WhiteList WhiteList
+        {
+            get { return whitelist; }
+        }
+
         public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");

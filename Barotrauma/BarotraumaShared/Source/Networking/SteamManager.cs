@@ -1,4 +1,5 @@
-﻿using Facepunch.Steamworks;
+﻿using Barotrauma.Networking;
+using Facepunch.Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +22,7 @@ namespace Barotrauma.Steam
 
         const uint AppID = 602960;
         
-        private Client client;
+        private Facepunch.Steamworks.Client client;
         private Server server;
 
         private static SteamManager instance;
@@ -53,7 +54,7 @@ namespace Barotrauma.Steam
         {
             try
             {
-                client = new Client(AppID);
+                client = new Facepunch.Steamworks.Client(AppID);
                 isInitialized = client.IsSubscribed && client.IsValid;
 
                 if (isInitialized)
@@ -139,6 +140,23 @@ namespace Barotrauma.Steam
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
                     if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"]=="True";
+                    if (s.Rules.ContainsKey("modeselectionmode"))
+                    {
+                        if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+                    }
+                    if (s.Rules.ContainsKey("subselectionmode"))
+                    {
+                        if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+                    }
+                    if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
+                    if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
+                    if (s.Rules.ContainsKey("traitors"))
+                    {
+                        if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+                    }
+
+
 
                     if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
                     {
@@ -225,6 +243,15 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
+            Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
+            Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
+            Instance.server.SetKey("allowspectating", server.AllowSpectating.ToString());
+            Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
+            Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
+            Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
+            Instance.server.SetKey("gamemode", server.GameMode);
+
 #if SERVER
             instance.server.DedicatedServer = true;
 #endif

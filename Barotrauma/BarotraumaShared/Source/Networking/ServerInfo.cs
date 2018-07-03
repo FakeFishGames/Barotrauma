@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    public class ServerInfo
+    partial class ServerInfo
     {
         public string IP;
         public string Port;
@@ -12,6 +12,16 @@ namespace Barotrauma.Networking
         public int PlayerCount;
         public int MaxPlayers;
         public bool HasPassword;
+
+        //null value means that the value isn't known (the server may be using 
+        //an old version of the game that didn't report these values or the FetchRules query to Steam may not have finished yet)
+        public bool? UsingWhiteList;
+        public SelectionMode? ModeSelectionMode;
+        public SelectionMode? SubSelectionMode;
+        public bool? AllowSpectating;
+        public bool? AllowRespawn;
+        public YesNoMaybe? TraitorsEnabled;
+        public string GameMode;
 
         public string GameVersion;
         public List<string> ContentPackageNames
