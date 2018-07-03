@@ -314,6 +314,42 @@
   </Item>
 
   <Item
+    name="Sonar Beacon"
+    identifier="sonarbeacon"
+    category="Equipment"
+    Tags="smallitem,sonar"
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <Deconstruct time="15">
+      <Item name="Copper Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
+    <!-- TODO: sonar beacon sprite -->
+    <Sprite texture="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
+
+    <Body width="31" height="6" density="10"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0"/>
+
+    <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="true">
+      <AiTarget soundrange="20000" sonarlabel="Sonar Beacon"/>
+      <StatusEffect type="OnActive" target="Contained" Condition="-0.5"/>
+    </LightComponent>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell, Fulgurium Battery Cell">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  
+  <Item
     name="Flashlight"
     identifier="flashlight"
     category="Equipment"

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -28,6 +29,10 @@ namespace Barotrauma
             get { return sightRange; }
             set { sightRange = Math.Max(value, MinSightRange); }
         }
+
+        public string SonarLabel;
+
+        public bool Enabled = true;
 
         public float MinSoundRange, MinSightRange;
 
@@ -61,6 +66,13 @@ namespace Barotrauma
 
                 return Entity.SimPosition;
             }
+        }
+
+        public AITarget(Entity e, XElement element) : this(e)
+        {
+            SightRange = MinSightRange = element.GetAttributeFloat("sightrange", 0.0f);
+            SoundRange = MinSoundRange = element.GetAttributeFloat("soundrange", 0.0f);
+            SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 
         public AITarget(Entity e)

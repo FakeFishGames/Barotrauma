@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
                     StopSounds(ActionType.OnActive);                    
                 }
 #endif
-
+                if (AITarget != null) AITarget.Enabled = value;
                 isActive = value; 
             }
         }
@@ -188,6 +188,12 @@ namespace Barotrauma.Items.Components
             get { return msg; }
             set { msg = value; }
         }
+
+        public AITarget AITarget
+        {
+            get;
+            private set;
+        }
         
         public ItemComponent(Item item, XElement element) 
         {
@@ -267,6 +273,9 @@ namespace Barotrauma.Items.Components
 
                         effectList.Add(statusEffect);
 
+                        break;
+                    case "aitarget":
+                        AITarget = new AITarget(item, subElement);
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -411,8 +420,13 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            RemoveComponentSpecific();
+            if (AITarget != null)
+            {
+                AITarget.Remove();
+                AITarget = null;
+            }
 
+            RemoveComponentSpecific();
         }
 
         /// <summary>
@@ -428,6 +442,11 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
+            if (AITarget != null)
+            {
+                AITarget.Remove();
+                AITarget = null;
+            }
 
             ShallowRemoveComponentSpecific();
         }

@@ -390,9 +390,7 @@ namespace Barotrauma
                     case "price":
                         break;
                     case "aitarget":
-                        aiTarget = new AITarget(this);
-                        aiTarget.MinSightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
-                        aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
+                        aiTarget = new AITarget(this, subElement);
                         break;
                     case "fixrequirement":
                         FixRequirements.Add(new FixRequirement(subElement, this));

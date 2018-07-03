@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f) continue;
+                    if (t.SoundRange <= 0.0f || !t.Enabled) continue;
 
                     if (Vector2.DistanceSquared(t.WorldPosition, item.WorldPosition) < t.SoundRange * t.SoundRange)
                     {
@@ -235,6 +235,19 @@ namespace Barotrauma.Items.Components
                 GameMain.GameSession.EndLocation.Name,
                 (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
+            foreach (AITarget aiTarget in AITarget.List)
+            {
+                if (!aiTarget.Enabled) continue;
+                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) continue;
+
+                if (Vector2.DistanceSquared(aiTarget.WorldPosition, item.WorldPosition) < aiTarget.SoundRange * aiTarget.SoundRange)
+                {
+                    DrawMarker(spriteBatch,
+                        aiTarget.SonarLabel,
+                        aiTarget.WorldPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.47f));
+                }
+            }
+            
             if (GameMain.GameSession.Mission != null)
             {
                 var mission = GameMain.GameSession.Mission;
@@ -243,7 +256,7 @@ namespace Barotrauma.Items.Components
                 {
                     DrawMarker(spriteBatch,
                         mission.RadarLabel,
-                        mission.RadarPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.55f));
+                        mission.RadarPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.47f));
                 }
             }
 
