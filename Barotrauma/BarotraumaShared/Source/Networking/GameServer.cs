@@ -176,11 +176,11 @@ namespace Barotrauma.Networking
 #if CLIENT
                 if (socketException != null && socketException.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse)
                 {
-                    new GUIMessageBox("Starting the server failed", e.Message + ". Are you trying to run multiple servers on the same port?");
+                    new GUIMessageBox(TextManager.Get("ServerInitFailed"), TextManager.Get("ServerInitFailedAddressAlreadyInUse").Replace("[errormsg]", e.Message));
                 }
                 else
                 {
-                    new GUIMessageBox("Starting the server failed", e.Message);
+                    new GUIMessageBox(TextManager.Get("ServerInitFailed"), e.Message);
                 }
 #endif
 
@@ -543,7 +543,7 @@ namespace Barotrauma.Networking
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to write a network message for the client \""+c.Name+"\"!", e);
+                            DebugConsole.ThrowError("Failed to write a network message for the client \"" + c.Name + "\"!", e);
                         }
                     }
 
@@ -1257,7 +1257,7 @@ namespace Barotrauma.Networking
                 if (fileSender.ActiveTransfers.Count > 0)
                 {
 #if CLIENT
-                    var msgBox = new GUIMessageBox("", "Waiting for file transfers to finish before starting the round...", new string[] { "Start now" });
+                    var msgBox = new GUIMessageBox("", TextManager.Get("WaitForFileTransfers"), new string[] { TextManager.Get("StartNow") });
                     msgBox.Buttons[0].OnClicked += msgBox.Close;
 #endif
 

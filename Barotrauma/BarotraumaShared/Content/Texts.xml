@@ -28,6 +28,10 @@
   <AttemptUPnP>Attempt UPnP port forwarding</AttemptUPnP>
   <AttemptUPnPToolTip>UPnP can be used for forwarding ports on your router to allow players join the server. However, UPnP isn't supported by all routers, so you may need to setup port forwards manually if players are unable to join the server (see the readme for instructions).</AttemptUPnPToolTip>
   <StartServerButton>Start</StartServerButton>
+  <PleaseWaitUPnP>Please wait...</PleaseWaitUPnP>
+  <AttemptingUPnP>Attempting UPnP port forwarding.</AttemptingUPnP>
+  <UPnPUnavailable>UPnP not available.</UPnPUnavailable>
+  <UPnPTimedOut>UPnP discovery timed out.</UPnPTimedOut>
 
   <!-- Steam Workshop menu -->
   <DownloadButton>Download</DownloadButton>  
@@ -167,6 +171,7 @@
   <Back>Back</Back>
   <Days>Days</Days>
   <Hours>Hours</Hours>
+  <Retry>Retry</Retry>
   <ManagePlayers>Manage players</ManagePlayers>
   <Destination>Destination</Destination>
 
@@ -256,6 +261,13 @@
   <MasterServerError404>Error while connecting to master server (404 - [masterserverurl] not found)</MasterServerError404>
   <MasterServerErrorUnavailable>Error while connecting to master server (505 - Service Unavailable). The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.</MasterServerErrorUnavailable>
   <MasterServerErrorDefault>Error while connecting to master server ([statuscode]: [statusdescription])</MasterServerErrorDefault>
+  <CouldNotConnectToServer>Could not connect to the server.</CouldNotConnectToServer>
+  <InvalidIPAddress>Failed to resolve address "[serverip]:[port]". Please make sure you have entered a valid IP address.</InvalidIPAddress>
+  <Connecting>CONNECTING</Connecting>
+  <ConnectionLost>Connection lost</ConnectionLost>
+  <ConnectionLostReconnecting>You have been disconnected from the server. Reconnecting...</ConnectionLostReconnecting>
+  <ConnectionFailed>Connecting failed</ConnectionFailed>
+  <ConnectingTo>Connecting to [serverip]</ConnectingTo>
 
   <!-- Server lobby -->
   <RestartingIn>Restarting in</RestartingIn>
@@ -296,7 +308,21 @@
   <SubDoesntMatchError>Your version of the submarine file [subname] does not match the server's version!\nYour MD5 hash: [myhash]\nServer's MD5 hash: [serverhash]\n</SubDoesntMatchError>
   <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
   <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
-
+  <WaitForFileTransfers>Waiting for file transfers to finish before starting the round...</WaitForFileTransfers>
+  <StartNow>Start now</StartNow>
+  <ServerInitFailed>Starting the server failed.</ServerInitFailed>
+  <ServerInitFailedAddressAlreadyInUse>[errormsg]. Are you trying to run multiple servers on the same port?</ServerInitFailedAddressAlreadyInUse>
+  <PermissionsRemoved>The host has removed all your special permissions.</PermissionsRemoved>
+  <CurrentPermissions>Current permissions:</CurrentPermissions>
+  <PermissionsChanged>Permissions changed</PermissionsChanged>
+  <PermittedConsoleCommands>Permitted console commands:</PermittedConsoleCommands>
+  <PleaseWaitRoundRunning>Please wait</PleaseWaitRoundRunning>
+  <RoundRunningSpectateDisabled>A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.</RoundRunningSpectateDisabled>
+  <RoundRunningSpectateEnabled>A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round.</RoundRunningSpectateEnabled>
+  <ServerDownloadFinished>Download finished</ServerDownloadFinished>
+  <DownloadingFile>Downloading [filename]</DownloadingFile>
+  <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
+  
   <!-- Ingame UI -->
   <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>

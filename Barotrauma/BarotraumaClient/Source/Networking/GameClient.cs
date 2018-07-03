@@ -1,5 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using Barotrauma.Steam;
+﻿using Barotrauma.Steam;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -170,7 +169,8 @@ namespace Barotrauma.Networking
             }
             catch
             {
-                new GUIMessageBox("Could not connect to server", "Failed to resolve address \"" + serverIP + ":" + Port + "\". Please make sure you have entered a valid IP address.");
+                new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"),
+                    TextManager.Get("InvalidIPAddress").Replace("[serverip]", serverIP).Replace("[port]", Port.ToString()));
                 return;
             }
 
@@ -237,24 +237,23 @@ namespace Barotrauma.Networking
             DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
+            string connectingText = TextManager.Get("ConnectingTo").Replace("[serverip]", serverIP);
             while (!CanStart && !connectCancelled)
             {
                 if (reconnectBox == null)
                 {
-                    reconnectBox = new GUIMessageBox("CONNECTING", "Connecting to " + serverIP, new string[] { "Cancel" });
+                    reconnectBox = new GUIMessageBox(TextManager.Get("Connecting"), connectingText, new string[] { TextManager.Get("Cancel") });
 
                     reconnectBox.Buttons[0].OnClicked += CancelConnect;
                     reconnectBox.Buttons[0].OnClicked += reconnectBox.Close;
                 }
 
                 int seconds = DateTime.Now.Second;
-
-                string connectingText = "Connecting to " + serverIP;
+                reconnectBox.Text.Text = connectingText;
                 for (int i = 0; i < 1 + (seconds % 3); i++)
                 {
-                    connectingText += ".";
+                    reconnectBox.Text.Text += ".";
                 }
-                reconnectBox.Text.Text = connectingText;
 
                 if (DateTime.Now > reqAuthTime)
                 {
@@ -344,7 +343,7 @@ namespace Barotrauma.Networking
                             {
                                 string denyMessage = inc.ReadString();
 
-                                var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
+                                var cantConnectMsg = new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"), denyMessage);
                                 cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
 
                                 connectCancelled = true;
@@ -367,7 +366,7 @@ namespace Barotrauma.Networking
                         reconnectBox = null;
                     }
 
-                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
+                    var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform));
                     passwordBox.UserData = "password";
 
@@ -386,7 +385,7 @@ namespace Barotrauma.Networking
                                     {
                                         string denyMessage = inc.ReadString();
 
-                                        var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
+                                        var cantConnectMsg = new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"), denyMessage);
                                         cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
 
                                         msgBox.Close(null, null);
@@ -442,7 +441,7 @@ namespace Barotrauma.Networking
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
-                var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to the server.", new string[] { "Retry", "Cancel" });
+                var reconnect = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get("CouldNotConnectToServer"), new string[] { TextManager.Get("Retry"), TextManager.Get("Cancel") });
 
                 DebugConsole.NewMessage("Failed to connect to the server - connection status: " + client.ConnectionStatus.ToString(), Color.Orange);
 
@@ -661,14 +660,14 @@ namespace Barotrauma.Networking
                                 disconnectMsg.Contains("You have been kicked") ||
                                 disconnectMsg == "The server has been shut down")
                             {
-                                var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
+                                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), disconnectMsg);
                                 msgBox.Buttons[0].OnClicked += ReturnToServerList;
                             }
                             else
                             {
                                 reconnectBox = new GUIMessageBox(
-                                    "CONNECTION LOST", 
-                                    "You have been disconnected from the server. Reconnecting...", new string[0]);
+                                    TextManager.Get("ConnectionLost"), 
+                                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
                                     
                                 connected = false;
                                 ConnectToServer(serverIP);
@@ -714,11 +713,11 @@ namespace Barotrauma.Networking
             string msg = "";
             if (newPermissions == ClientPermissions.None)
             {
-                msg = "The host has removed all your special permissions.";
+                msg = TextManager.Get("PermissionsRemoved");
             }
             else
             {
-                msg = "Your current permissions:\n";
+                msg = TextManager.Get("CurrentPermissions") + '\n';
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
@@ -730,7 +729,7 @@ namespace Barotrauma.Networking
 
             permissions = newPermissions;
             this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
-            GUIMessageBox msgBox = new GUIMessageBox("Permissions changed", msg, GUIMessageBox.DefaultWidth, 0)
+            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg, GUIMessageBox.DefaultWidth, 0)
             {
                 UserData = "permissions"
             };
@@ -739,7 +738,7 @@ namespace Barotrauma.Networking
             {
                 int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
                 new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.1f) },
-                     "Permitted console commands:", wrap: true, font: GUI.SmallFont);
+                     TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
                 var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.6f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.2f) });
                 foreach (string permittedCommand in permittedConsoleCommands)
                 {
@@ -934,11 +933,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                new GUIMessageBox("Please wait",
-                    (allowSpectating) ?
-                    "A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round." :
-                    "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
-
+                new GUIMessageBox("Please wait", TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
             }
         }
@@ -1111,7 +1106,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ClientRead(inc);
                         break;
                     default:
-                        DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
+                        DebugConsole.ThrowError("Error while reading update from server (unknown object header \"" + objHeader + "\"!)");
                         if (prevObjHeader != null)
                         {
                             DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
@@ -1282,7 +1277,7 @@ namespace Barotrauma.Networking
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
+                    new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.Get("FileDownloadedNotification").Replace("[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
                     Submarine.SavedSubmarines.RemoveAll(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash);
                     Submarine.SavedSubmarines.Add(newSub);
@@ -1399,14 +1394,14 @@ namespace Barotrauma.Networking
                     
                     GUI.DrawString(spriteBatch,
                         pos,
-                        ToolBox.LimitString("Downloading " + transfer.FileName, GUI.SmallFont, 200),
+                        ToolBox.LimitString(TextManager.Get("DownloadingFile").Replace("[filename]", transfer.FileName), GUI.SmallFont, 200),
                         Color.White, null, 0, GUI.SmallFont);
                     GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
                     GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
                         MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
                         Color.White, null, 0, GUI.SmallFont);
 
-                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
                     {
                         CancelFileTransfer(transfer);
                         fileReceiver.StopTransfer(transfer);
@@ -1475,11 +1470,6 @@ namespace Barotrauma.Networking
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) return false;
-
-
-
-
-                
 
                 if (HasPermission(ClientPermissions.Ban))
                 {
