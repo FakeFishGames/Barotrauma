@@ -238,8 +238,16 @@
   <ServerIP>Server IP</ServerIP>
   <ServerListName>Name</ServerListName>
   <ServerListPlayers>Players</ServerListPlayers>
+  <ServerListVersion>Game version</ServerListVersion>
+  <ServerListHasPassword>Password-protected</ServerListHasPassword>
+  <ServerListUsingWhitelist>Using whitelist</ServerListUsingWhitelist>
+  <ServerListContentPackages>Content packages</ServerListContentPackages>
+  <ServerListSubSelection>Submarine selection</ServerListSubSelection>
+  <ServerListModeSelection>Game mode selection</ServerListModeSelection>
+  <ServerListAllowSpectating>Allow spectating</ServerListAllowSpectating>
   <ServerListCompatible>Compatible</ServerListCompatible>
   <ServerListRoundStarted>Round started</ServerListRoundStarted>
+  <ServerListInfo>Info</ServerListInfo>
   <ServerListRefresh>Refresh</ServerListRefresh>
   <ServerListJoin>Join</ServerListJoin>
   <ServerListUnknownVersion>Could not determine compatibility (unknown game version)</ServerListUnknownVersion>
