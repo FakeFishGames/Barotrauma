@@ -43,9 +43,8 @@ namespace Barotrauma
             Submarine.MainSub.Load(true);
             Submarine.MainSub.GodMode = true;
             CalculateMovementLimits();
-            character = SpawnCharacter(Character.HumanConfigFile);
+            SpawnCharacter(Character.HumanConfigFile);
             ResetEditor();
-            CreateButtons();
         }
 
         #region Inifinite runner
@@ -206,41 +205,93 @@ namespace Barotrauma
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
             }
             SetWallCollisions(character.AnimController.forceStanding);
-            CreateTextures(character);
+            this.character = character;
+            CreateTextures();
+            CreateGUI();
             return character;
         }
         #endregion
 
         #region GUI
-        private GUIFrame panel;
+        private GUIFrame rightPanel;
+        private GUIFrame centerPanel;
         private GUITickBox freezeToggle;
+        private GUIScrollBar jointScaleBar;
+        private GUIScrollBar limbScaleBar;
 
-        private void CreateButtons()
+        private void CreateGUI()
         {
-            if (panel != null)
+            CreateRightPanel();
+            CreateCenterPanel();
+        }
+
+        private void CreateCenterPanel()
+        {
+            // Release the old panel
+            if (centerPanel != null)
             {
-                panel.RectTransform.Parent = null;
+                centerPanel.RectTransform.Parent = null;
+            }
+            Point sliderSize = new Point(120, 20);
+            int textAreaHeight = 20;
+            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null);
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, centerPanel.RectTransform));
+            // Ragdoll
+            var element1 = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroup.RectTransform), style: null);
+            var jointScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), element1.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
+            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, element1.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            {
+                BarScroll = RagdollParams.JointScale / 2,
+                OnMoved = (scrollBar, value) => 
+                {
+                    RagdollParams.JointScale = MathHelper.Clamp(value * 2, 0.5f, 2f);
+                    jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";                    
+                    character.AnimController.ResetJoints();
+                    return true;
+                },
+                Step = 0.01f
+            };
+            var element2 = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroup.RectTransform), style: null);
+            var limbScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), element2.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
+            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, element2.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            {
+                BarScroll = RagdollParams.LimbScale / 2,
+                OnMoved = (scrollBar, value) =>
+                {
+                    RagdollParams.LimbScale = MathHelper.Clamp(value * 2, 0.5f, 2f);
+                    limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
+                    // TODO: reset limbs?
+                    return true;
+                },
+                Step = 0.01f
+            };
+        }
+
+        private void CreateRightPanel()
+        {
+            // Release the old panel
+            if (rightPanel != null)
+            {
+                rightPanel.RectTransform.Parent = null;
             }
             Vector2 buttonSize = new Vector2(1, 0.05f);
             Vector2 toggleSize = new Vector2(0.03f, 0.03f);
             Point margin = new Point(40, 60);
-            panel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(panel.Rect.Width - margin.X, panel.Rect.Height - margin.Y), panel.RectTransform, Anchor.Center));
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight) { RelativeOffset = new Vector2(0.01f, 0) });
+            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(rightPanel.Rect.Width - margin.X, rightPanel.Rect.Height - margin.Y), rightPanel.RectTransform, Anchor.Center));
             var charButtons = new GUIFrame(new RectTransform(buttonSize, parent: layoutGroup.RectTransform), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopLeft), "Previous \nCharacter");
             prevCharacterButton.OnClicked += (b, obj) =>
             {
-                character = SpawnCharacter(GetPreviousConfigFile());
+                SpawnCharacter(GetPreviousConfigFile());
                 ResetEditor();
-                CreateButtons();
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopRight), "Next \nCharacter");
             nextCharacterButton.OnClicked += (b, obj) =>
             {
-                character = SpawnCharacter(GetNextConfigFile());
+                SpawnCharacter(GetNextConfigFile());
                 ResetEditor();
-                CreateButtons();
                 return true;
             };
             var controlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Controls") { Selected = showControls };
@@ -326,7 +377,6 @@ namespace Barotrauma
                 autoFreeze = box.Selected;
                 return true;
             };
-
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
             {
                 OnSelected = (GUITickBox box) =>
@@ -390,6 +440,7 @@ namespace Barotrauma
             resetRagdollButton.OnClicked += (b, obj) =>
             {
                 character.AnimController.ResetRagdoll();
+                CreateCenterPanel();
                 return true;
             };
         }
@@ -402,9 +453,9 @@ namespace Barotrauma
         private void ResetEditor()
         {
             ParamsEditor.Instance.Clear();
-            AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            //AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             // TODO: remove, only for debugging
-            //RagdollParams.AddToEditor(ParamsEditor.Instance);
+            RagdollParams.AddToEditor(ParamsEditor.Instance);
         }
         #endregion
 
@@ -981,6 +1032,8 @@ namespace Barotrauma
 
         private void DrawRagdollEditor(SpriteBatch spriteBatch)
         {
+
+
             bool ctrlDown = PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
             if (!ctrlDown && editJointPositions)
             {
@@ -1080,13 +1133,13 @@ namespace Barotrauma
             {
                 if (textures == null)
                 {
-                    CreateTextures(character);
+                    CreateTextures();
                 }
                 return textures;
             }
         }
         private List<string> texturePaths;
-        private void CreateTextures(Character character)
+        private void CreateTextures()
         {
             textures = new List<Texture2D>();
             texturePaths = new List<string>();

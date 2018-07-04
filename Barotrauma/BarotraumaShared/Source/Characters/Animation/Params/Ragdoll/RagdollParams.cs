@@ -13,8 +13,11 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams
     {
-        [Serialize(1.0f, true), Editable(0.1f, 10f)]
-        public float Scale { get; set; }
+        [Serialize(1.0f, true), Editable(0.5f, 2f)]
+        public float LimbScale { get; set; }
+
+        [Serialize(1.0f, true), Editable(0.5f, 2f)]
+        public float JointScale { get; set; }
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
