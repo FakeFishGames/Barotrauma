@@ -6,18 +6,23 @@ namespace Barotrauma.Networking
     {
         public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
-            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), messageBox.Content.RectTransform), ServerName, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), messageBox.Content.RectTransform), ServerName, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
-            var columnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f - title.RectTransform.RelativeSize.Y - 0.1f), messageBox.Content.RectTransform) { RelativeOffset = new Vector2(0.0f, title.RectTransform.RelativeSize.Y + 0.1f) })
+            var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), messageBox.Content.RectTransform));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, wrap: true);
+
+            var columnContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), messageBox.Content.RectTransform), isHorizontal: true)
             {
-                IgnoreLayoutGroups = true,
-                //Stretch = true,
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
+
+            var columnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), columnContainer.RectTransform))
+            {
                 RelativeSpacing = 0.02f
             };
-            var columnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f - title.RectTransform.RelativeSize.Y - 0.1f), messageBox.Content.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, title.RectTransform.RelativeSize.Y + 0.1f) })
+            var columnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), columnContainer.RectTransform))
             {
-                IgnoreLayoutGroups = true,
-                //Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
@@ -25,7 +30,7 @@ namespace Barotrauma.Networking
 
             // left column -----------------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), IP + ":" + Port);
+            //new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), IP + ":" + Port);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform),
                 TextManager.Get("ServerListVersion") + ": " + (string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnLeft.RectTransform),
