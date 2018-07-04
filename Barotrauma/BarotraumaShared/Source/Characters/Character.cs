@@ -744,18 +744,35 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(humanConfigFile))
                 {
-                    var characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
-
-                    humanConfigFile = characterFiles.FirstOrDefault(c => c.EndsWith("human.xml"));
-                    if (humanConfigFile == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content packages!");
-                        DebugConsole.ThrowError("(The config file must end with \"human.xml\")");
-                        return "";
-                    }
+                    humanConfigFile = GetConfigFile("human");
                 }
                 return humanConfigFile; 
             }
+        }
+
+        private static IEnumerable<string> characterConfigFiles;
+        private static IEnumerable<string> CharacterConfigFiles
+        {
+            get
+            {
+                if (characterConfigFiles == null)
+                {
+                    characterConfigFiles = GameMain.Instance.GetFilesOfType(ContentType.Character);
+                }
+                return characterConfigFiles;
+            }
+        }
+
+        public static string GetConfigFile(string speciesName)
+        {
+            string configFile = CharacterConfigFiles.FirstOrDefault(c => c.EndsWith($"{speciesName}.xml"));
+            if (configFile == null)
+            {
+                DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the selected content packages!");
+                DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
+                return string.Empty;
+            }
+            return configFile;
         }
 
         public bool IsKeyHit(InputType inputType)

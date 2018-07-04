@@ -24,53 +24,69 @@ namespace Barotrauma
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
 
         /// <summary>
+        /// Returns the path to the default folder without the filename.
+        /// </summary>
+        public static string GetDefaultPath(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
+        public static string GetDefaultFileName(string speciesName) => $"default{speciesName.CapitaliseFirstInvariant()}ragdoll.xml";      
+
+        /// <summary>
+        /// Returns the path that is defined in the character config file. Does not include the file name.
+        /// </summary>
+        public static string GetPath(string speciesName) 
+            => XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName)).Root.Element("ragdoll").GetAttributeString("folder", GetDefaultPath(speciesName));
+
+        /// <summary>
         /// The file name can be partial. If left null, will select randomly. If fails, will select the default file.
         /// </summary>
-        public static T GetRagdollParams<T>(Character character, string fileName = null) where T : RagdollParams, new()
+        public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
         {
-            string speciesName = character.SpeciesName;
             if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
             {
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            string defaultPath = $"Content/Characters/{speciesName}/Ragdolls/";
-            string defaultFileName = $"Default{speciesName}Ragdoll.xml";
+            string defaultFileName = GetDefaultFileName(speciesName);
             fileName = fileName ?? defaultFileName;
             if (!ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
-                XDocument characterConfigFile = XMLExtensions.TryLoadXml(character.ConfigPath);
-                string firstLetter = speciesName.First().ToString().ToUpperInvariant();
-                speciesName = firstLetter + speciesName.ToLowerInvariant().Substring(1);
-                DebugConsole.NewMessage($"Loading ragdoll params from {character.ConfigPath} using the species name {speciesName}.", Color.Orange);
-                string folderPath = characterConfigFile.Root.Element("ragdoll").GetAttributeString("path", defaultPath);
-                var ragdollPaths = Directory.GetFiles(folderPath);
-                if (ragdollPaths.None())
+                string folder = GetPath(speciesName);
+                string defaultFile = folder + defaultFileName;
+                var ragdollFiles = Directory.GetFiles(folder);
+                if (ragdollFiles.None())
                 {
-                    throw new Exception("[RagdollParams] Could not find any ragdoll param files for the character from the path: " + folderPath);
+                    throw new Exception("[RagdollParams] Could not find any ragdoll param files for the character from the path: " + folder);
                 }
-                string selectedPath = null;
+                string selectedFile = null;
                 if (fileName != defaultFileName)
                 {
-                    selectedPath = ragdollPaths.FirstOrDefault(p => p.Contains(fileName));
-                    if (selectedPath == null)
+                    selectedFile = ragdollFiles.FirstOrDefault(p => p.ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
+                    if (selectedFile == null)
                     {
                         DebugConsole.NewMessage($"[RagdollParams] Could not find a ragdoll param file that matches the name {fileName}. Using the default ragdoll.", Color.Red);
-                        selectedPath = $"{folderPath}/{defaultFileName}";
+                        selectedFile = defaultFile;
                     }
                 }
-                if (selectedPath == null)
+                if (selectedFile == null)
                 {
-                    selectedPath = ragdollPaths.GetRandom();
+                    selectedFile = ragdollFiles.GetRandom();
                 }
+                if (selectedFile == null)
+                {
+                    selectedFile = defaultFile;
+                }
+                if (selectedFile == null)
+                {
+                    throw new Exception("[RagdollParams] Selected file null!");
+                }
+                DebugConsole.NewMessage($"[RagdollParams] Loading ragdoll params from {selectedFile}.", Color.Orange);
                 T r = new T();
-                if (r.Load(selectedPath))
+                if (r.Load(selectedFile))
                 {
                     ragdolls.Add(fileName, r);
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll params {r} for character {speciesName} at {selectedPath}");
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll params {r} at {selectedFile} for the character {speciesName}");
                 }
                 ragdoll = r;
             }

@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         public bool IsLoaded { get; private set; }
         public string Name { get; private set; }
-        protected string FilePath { get; private set; }
+        public string FilePath { get; private set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         protected XDocument doc;

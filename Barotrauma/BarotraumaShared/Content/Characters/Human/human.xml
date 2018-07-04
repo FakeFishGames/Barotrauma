@@ -3,8 +3,8 @@
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
   
-  <animation path ="Content/Characters/Human/Animations/Human[ANIMTYPE].xml"/>
-  <ragdoll path ="Content/Characters/Human/Ragdolls/"/>
+  <animation folder ="Content/Characters/Human/Animations/"/>
+  <ragdoll folder ="Content/Characters/Human/Ragdolls/"/>
 
   <health
     usehealthwindow="true"

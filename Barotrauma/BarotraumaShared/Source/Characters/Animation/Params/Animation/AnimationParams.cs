@@ -1,7 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.IO;
+using System;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -84,32 +87,57 @@ namespace Barotrauma
         }
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
 
-        public static T GetAnimParams<T>(Character character, AnimationType type) where T : AnimationParams, new()
+        public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}.xml";
+        public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
+
+        /// <summary>
+        /// The file name can be partial. If left null of fails, will select the default.
+        /// </summary>
+        public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
         {
-            string speciesName = character.SpeciesName;
             if (!animations.TryGetValue(speciesName, out Dictionary<AnimationType, AnimationParams> anims))
             {
                 anims = new Dictionary<AnimationType, AnimationParams>();
                 animations.Add(speciesName, anims);
             }
-            if (!anims.TryGetValue(type, out AnimationParams anim))
+            string defaultFileName = GetDefaultFileName(speciesName, animType);
+            fileName = fileName ?? defaultFileName;
+            if (!anims.TryGetValue(animType, out AnimationParams anim))
             {
-                XDocument characterConfigFile = XMLExtensions.TryLoadXml(character.ConfigPath);
-                string firstLetter = speciesName.First().ToString().ToUpperInvariant();
-                speciesName = firstLetter + speciesName.ToLowerInvariant().Substring(1);
-                DebugConsole.NewMessage($"Loading animations of type {type} from {character.ConfigPath} using the species name {speciesName}.", Color.Orange);
-                string animType = type.ToString();
-                string defaultPath = $"Content/Characters/{speciesName}/Animations/{speciesName}{animType}.xml";
-                string animPath = characterConfigFile.Root.Element("animation").GetAttributeString("path", defaultPath);
-                animPath = animPath.Replace("[ANIMTYPE]", animType);
-                T a = new T();
-                if (a.Load(animPath, type))
+                string folder = GetDefaultFolder(speciesName);
+                string defaultFile = folder + defaultFileName;
+                var animFiles = Directory.GetFiles(folder);
+                if (animFiles.None())
                 {
-                    anims.Add(type, a);
+                    throw new Exception("[AnimationParams] Could not find any animation files for the character from the path: " + folder);
+                }
+                string selectedFile = defaultFile;
+                if (fileName != defaultFileName)
+                {
+                    selectedFile = animFiles.FirstOrDefault(p =>
+                    {
+                        string _p = p.ToLowerInvariant();
+                        return _p.Contains(fileName.ToLowerInvariant()) && _p.Contains(animType.ToString().ToLowerInvariant());
+                    });
+                    if (selectedFile == null)
+                    {
+                        DebugConsole.NewMessage($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.", Color.Red);
+                        selectedFile = defaultFile;
+                    }
+                }
+                if (selectedFile == null)
+                {
+                    throw new Exception("[AnimationParams] Selected file null!");
+                }
+                DebugConsole.NewMessage($"[AnimationParams] Loading the animation params from {selectedFile}.", Color.Yellow);
+                T a = new T();
+                if (a.Load(selectedFile, animType))
+                {
+                    anims.Add(animType, a);
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} of type {type} at {animPath}");
+                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} at {selectedFile} of type {animType} for the character {speciesName}");
                 }
                 anim = a;
         }

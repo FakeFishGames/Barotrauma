@@ -49,6 +49,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Note: Can be null.
+        /// </summary>
         public Character Character;
 
         public readonly string File;
@@ -144,7 +147,7 @@ namespace Barotrauma
             }
         }
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null)
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, RagdollParams ragdoll = null)
         {
             ID = idCounter;
             idCounter++;
@@ -226,7 +229,10 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
+            this.ragdoll = ragdoll ?? RagdollParams.GetRagdollParams<HumanRagdollParams>("human");
         }
+
+        public readonly RagdollParams ragdoll;
 
 
         public CharacterInfo(XElement element)
@@ -272,15 +278,12 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
+            // TODO: add and parse an xml element for the selected ragdoll?
         }
 
         private void LoadHeadSprite()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(File);
-            if (doc == null) return;
-
-            XElement ragdollElement = doc.Root.Element("ragdoll");
-            foreach (XElement limbElement in ragdollElement.Elements())
+            foreach (XElement limbElement in XMLExtensions.TryLoadXml(ragdoll.FilePath).Root.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 
@@ -289,6 +292,7 @@ namespace Barotrauma
                 string spritePath = spriteElement.Attribute("texture").Value;
 
                 spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
+                //DebugConsole.NewMessage("Replacing [HEADID] with " + HeadSpriteId.ToString(), Color.White);
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
                 
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
@@ -298,8 +302,9 @@ namespace Barotrauma
                 foreach (string file in files)
                 {
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                    //DebugConsole.NewMessage("parsing file: " + file, Color.White);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-
+                    //DebugConsole.NewMessage("parsed file name: " + fileWithoutTags, Color.White);
                     if (fileWithoutTags != fileName) continue;
                     
                     headSprite = new Sprite(spriteElement, "", file);
