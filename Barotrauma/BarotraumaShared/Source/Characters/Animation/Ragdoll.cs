@@ -285,13 +285,13 @@ namespace Barotrauma
 
             Random random = new MTRandom(ToolBox.StringToInt(seed));
             // TODO: maybe the scale should override min and max and not vice versa?
-            float scale = element.GetAttributeFloat("scale", 1.0f);
-            if (element.Attribute("minscale") != null)
-            {
-                float minScale = element.GetAttributeFloat("minscale", 1.0f);
-                float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
-                scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
-            }
+            //float scale = element.GetAttributeFloat("scale", 1.0f);
+            //if (element.Attribute("minscale") != null)
+            //{
+            //    float minScale = element.GetAttributeFloat("minscale", 1.0f);
+            //    float maxScale = Math.Max(minScale, element.GetAttributeFloat("maxscale", 1.0f));
+            //    scale = MathHelper.Lerp(minScale, maxScale, (float)random.NextDouble());
+            //}
 
             limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
@@ -315,7 +315,7 @@ namespace Barotrauma
                     case "limb":
                         byte ID = Convert.ToByte(subElement.Attribute("id").Value);
 
-                        Limb limb = new Limb(character, subElement, scale);
+                        Limb limb = new Limb(character, subElement, RagdollParams.LimbScale);
                         
                         limb.body.FarseerBody.OnCollision += OnLimbCollision;
                         
@@ -327,7 +327,7 @@ namespace Barotrauma
                         //AddJoint(subElement, scale);
                         break;
                     case "collider":
-                        collider.Add(new PhysicsBody(subElement, scale));
+                        collider.Add(new PhysicsBody(subElement, RagdollParams.LimbScale));
 
                         collider[collider.Count - 1].UserData = character;
                         collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
@@ -427,8 +427,8 @@ namespace Barotrauma
         /// </summary>
         public void ResetRagdoll()
         {
-            ResetJoints();
             RagdollParams.Reset();
+            ResetJoints();
         }
 
         /// <summary>
@@ -451,33 +451,14 @@ namespace Barotrauma
         {
             byte limb1ID = Convert.ToByte(jointParams.Limb1);
             byte limb2ID = Convert.ToByte(jointParams.Limb2);
-
-            Vector2 limb1Pos = jointParams.Limb1Anchor * RagdollParams.Scale;
-            limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
-
-            Vector2 limb2Pos = jointParams.Limb2Anchor * RagdollParams.Scale;
-            limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
-
-            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos, jointParams);
-            //joint.CanBeSevered = jointParams.CanBeSevered;
-
-            if (!float.IsNaN(jointParams.LowerLimit))
-            {
-                joint.LimitEnabled = true;
-                joint.LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
-                joint.UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
-            }
-
+            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], jointParams, this);
             GameMain.World.AddJoint(joint);
-
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 if (LimbJoints[i] != null) continue;
-
                 LimbJoints[i] = joint;
                 return;
             }
-
             Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
             LimbJoints[LimbJoints.Length - 1] = joint;
         }
