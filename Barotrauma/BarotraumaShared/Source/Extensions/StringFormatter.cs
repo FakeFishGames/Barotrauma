@@ -53,5 +53,10 @@ namespace Barotrauma
         {
             return $"({value.X.FormatAsInt()}, {value.Y.FormatAsInt()})";
         }
+
+        /// <summary>
+        /// Capitalises the first letter (invariant) and forces the rest to lower case (invariant).
+        /// </summary>
+        public static string CapitaliseFirstInvariant(this string s) => s.Substring(0, 1).ToUpperInvariant() + s.Substring(1, s.Length - 1).ToLowerInvariant();
     }
 }

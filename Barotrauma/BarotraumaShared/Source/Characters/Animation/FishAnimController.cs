@@ -17,7 +17,7 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(character);
+                    _ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName);
                 }
                 return _ragdollParams;
             }

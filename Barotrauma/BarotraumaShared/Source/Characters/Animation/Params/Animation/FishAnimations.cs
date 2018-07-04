@@ -11,7 +11,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"{character.SpeciesName} cannot use walk animations!");
                 return Empty;
             }
-            return GetAnimParams<FishWalkParams>(character, AnimationType.Walk);
+            return GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk);
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
@@ -26,7 +26,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
                 return Empty;
             }
-            return GetAnimParams<FishRunParams>(character, AnimationType.Run);
+            return GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run);
         }
 
         protected static FishRunParams Empty = new FishRunParams();
@@ -36,7 +36,7 @@ namespace Barotrauma
     {
         public static FishSwimFastParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast);
+            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
         }
     }
 
@@ -44,7 +44,7 @@ namespace Barotrauma
     {
         public static FishSwimSlowParams GetAnimParams(Character character)
         {
-            return GetAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow);
+            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
         }
     }
 

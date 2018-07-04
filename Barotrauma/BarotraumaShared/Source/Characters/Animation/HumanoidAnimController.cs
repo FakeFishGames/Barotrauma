@@ -19,7 +19,7 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(character);
+                    _ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesName);
                 }
                 return _ragdollParams;
             }
@@ -36,7 +36,7 @@ namespace Barotrauma
             {
                 if (_humanWalkParams == null)
                 {
-                    _humanWalkParams = HumanWalkParams.GetAnimParams(character);
+                    _humanWalkParams = HumanWalkParams.GetAnimParams();
                 }
                 return _humanWalkParams;
             }
@@ -49,7 +49,7 @@ namespace Barotrauma
             {
                 if (_humanRunParams == null)
                 {
-                    _humanRunParams = HumanRunParams.GetAnimParams(character);
+                    _humanRunParams = HumanRunParams.GetAnimParams();
                 }
                 return _humanRunParams;
             }
@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 if (_humanSwimSlowParams == null)
                 {
-                    _humanSwimSlowParams = HumanSwimSlowParams.GetAnimParams(character);
+                    _humanSwimSlowParams = HumanSwimSlowParams.GetAnimParams();
                 }
                 return _humanSwimSlowParams;
             }
@@ -75,7 +75,7 @@ namespace Barotrauma
             {
                 if (_humanSwimFastParams == null)
                 {
-                    _humanSwimFastParams = HumanSwimFastParams.GetAnimParams(character);
+                    _humanSwimFastParams = HumanSwimFastParams.GetAnimParams();
                 }
                 return _humanSwimFastParams;
             }

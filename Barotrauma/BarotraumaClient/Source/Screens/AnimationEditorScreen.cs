@@ -453,9 +453,9 @@ namespace Barotrauma
         private void ResetEditor()
         {
             ParamsEditor.Instance.Clear();
-            //AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
             // TODO: remove, only for debugging
-            RagdollParams.AddToEditor(ParamsEditor.Instance);
+            //RagdollParams.AddToEditor(ParamsEditor.Instance);
         }
         #endregion
 
