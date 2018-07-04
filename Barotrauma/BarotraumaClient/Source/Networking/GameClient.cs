@@ -367,8 +367,11 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform));
-                    passwordBox.UserData = "password";
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.Center))
+                    {
+                        IgnoreLayoutGroups = true,
+                        UserData = "password"
+                    };
 
                     var okButton = msgBox.Buttons[0];
                     var cancelButton = msgBox.Buttons[1];

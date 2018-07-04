@@ -8,6 +8,7 @@ namespace Barotrauma.Networking
         public string IP;
         public string Port;
         public string ServerName;
+        public string ServerMessage;
         public bool GameStarted;
         public int PlayerCount;
         public int MaxPlayers;

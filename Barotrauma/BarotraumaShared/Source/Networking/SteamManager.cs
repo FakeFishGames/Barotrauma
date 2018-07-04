@@ -137,6 +137,7 @@ namespace Barotrauma.Steam
                 s.FetchRules();
                 s.OnReceivedRules += (_) =>
                 {
+                    if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
                     if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
                     if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
                     if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
@@ -240,6 +241,7 @@ namespace Barotrauma.Steam
             instance.server.ServerName = server.Name;
             instance.server.MaxPlayers = server.MaxPlayers;
             instance.server.Passworded = server.HasPassword;
+            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
