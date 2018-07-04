@@ -234,8 +234,8 @@ namespace Barotrauma
             }
             Point sliderSize = new Point(120, 20);
             int textAreaHeight = 20;
-            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, centerPanel.RectTransform));
+            centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
+            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, centerPanel.RectTransform)) { CanBeFocused = false };
             // Ragdoll
             var element1 = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroup.RectTransform), style: null);
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), element1.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
