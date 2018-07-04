@@ -281,7 +281,7 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                targetCharacter.LastDamageSource = item;
+                targetLimb.character.LastDamageSource = item;
                 targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
                     new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 
