@@ -341,11 +341,7 @@ namespace Barotrauma.Networking
                             NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
-                                string denyMessage = inc.ReadString();
-
-                                var cantConnectMsg = new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"), denyMessage);
-                                cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
-
+                                ReadDisconnectMessage(inc, false);
                                 connectCancelled = true;
                             }
                             break;
@@ -386,11 +382,7 @@ namespace Barotrauma.Networking
                                     NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
                                     if (connectionStatus == NetConnectionStatus.Disconnected)
                                     {
-                                        string denyMessage = inc.ReadString();
-
-                                        var cantConnectMsg = new GUIMessageBox(TextManager.Get("CouldNotConnectToServer"), denyMessage);
-                                        cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
-
+                                        ReadDisconnectMessage(inc, false);
                                         msgBox.Close(null, null);
                                         connectCancelled = true;
                                     }
@@ -656,28 +648,45 @@ namespace Barotrauma.Networking
 
                         if (connectionStatus == NetConnectionStatus.Disconnected)
                         {
-                            string disconnectMsg = inc.ReadString();
-
-                            if (disconnectMsg.Contains("You have been disconnected") ||
-                                disconnectMsg.Contains("You have been banned") ||
-                                disconnectMsg.Contains("You have been kicked") ||
-                                disconnectMsg == "The server has been shut down")
-                            {
-                                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), disconnectMsg);
-                                msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                            }
-                            else
-                            {
-                                reconnectBox = new GUIMessageBox(
-                                    TextManager.Get("ConnectionLost"), 
-                                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
-                                    
-                                connected = false;
-                                ConnectToServer(serverIP);
-                            }
+                            ReadDisconnectMessage(inc, true);
                         }
                         break;
                 }
+            }
+        }
+
+        private void ReadDisconnectMessage(NetIncomingMessage inc, bool allowReconnect)
+        {
+            string disconnectMsg = inc.ReadString();
+            string[] splitMsg = disconnectMsg.Split(';');
+            DisconnectReason disconnectReason = DisconnectReason.Unknown;
+            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+            
+            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            {
+                reconnectBox = new GUIMessageBox(
+                    TextManager.Get("ConnectionLost"),
+                    TextManager.Get("ConnectionLostReconnecting"), new string[0]);
+                connected = false;
+                ConnectToServer(serverIP);
+            }
+            else
+            {
+                string msg = "";
+                if (disconnectReason == DisconnectReason.Unknown)
+                {
+                    msg = disconnectMsg;
+                }
+                else
+                {
+                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
+                    for (int i = 1; i < splitMsg.Length; i++)
+                    {
+                        msg += splitMsg[i];
+                    }
+                }
+                var msgBox = new GUIMessageBox(TextManager.Get(allowReconnect ? "ConnectionLost" : "CouldNotConnectToServer"), msg);
+                msgBox.Buttons[0].OnClicked += ReturnToServerList;
             }
         }
 

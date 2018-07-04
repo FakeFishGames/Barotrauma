@@ -55,7 +55,6 @@ namespace Barotrauma.Networking
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
-
     }
 
     enum VoteType
@@ -65,6 +64,27 @@ namespace Barotrauma.Networking
         Mode,
         EndRound,
         Kick
+    }
+
+    enum DisconnectReason
+    {
+        Unknown,
+        Banned,
+        Kicked,
+        ServerShutdown,
+        ServerFull,
+        AuthenticationRequired,
+        SteamAuthenticationRequired,
+        SteamAuthenticationFailed,
+        SessionTaken,
+        TooManyFailedLogins,
+        NoName,
+        InvalidName,
+        NameTaken,
+        InvalidVersion,
+        MissingContentPackage,
+        IncompatibleContentPackage,
+        NotOnWhitelist,
     }
 
     abstract partial class NetworkMember

@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
             
             if (!Steam.SteamManager.StartAuthSession(authTicketData, clientSteamID))
             {
-                unauthClient.Connection.Disconnect("Steam authentication failed.");
+                unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString());
                 unauthenticatedClients.Remove(unauthClient);
             }
 
@@ -106,7 +106,7 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         unauthenticatedClients.Remove(unauthClient);
-                        unauthClient.Connection.Disconnect("Steam authentication failed (" + status.ToString() + ")");
+                        unauthClient.Connection.Disconnect(DisconnectReason.SteamAuthenticationFailed.ToString()+"; (" + status.ToString() + ")");
                         break;
                 }
                 return;
@@ -127,7 +127,7 @@ namespace Barotrauma.Networking
         {
             if (GameMain.Config.RequireSteamAuthentication && steamID == 0)
             {
-                connection.Disconnect("Steam authentication required. Please make sure Steam is running and you are logged in to an account.");
+                connection.Disconnect(DisconnectReason.SteamAuthenticationRequired.ToString());
                 return;
             }
 
@@ -145,7 +145,7 @@ namespace Barotrauma.Networking
                 if (ConnectedClients.Count >= maxPlayers)
                 {
                     //server is full, can't allow new connection
-                    connection.Disconnect("Server full");
+                    connection.Disconnect(DisconnectReason.ServerFull.ToString());
                     return;
                 }
 
@@ -183,7 +183,7 @@ namespace Barotrauma.Networking
             if (unauthClient == null)
             {
                 //client did not ask for nonce first, can't authorize
-                inc.SenderConnection.Disconnect("Client did not properly request authentication.");
+                inc.SenderConnection.Disconnect(DisconnectReason.AuthenticationRequired.ToString());
                 return;
             }
 
@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
                     {
                         //disconnect and ban after too many failed attempts
                         banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), "Too many failed login attempts.", null);
-                        DisconnectUnauthClient(inc, unauthClient, "Too many failed login attempts. You have been automatically banned from the server.");
+                        DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", Color.Red);
@@ -212,7 +212,7 @@ namespace Barotrauma.Networking
                         //not disconnecting the player here, because they'll still use the same connection and nonce if they try logging in again
                         NetOutgoingMessage reject = server.CreateMessage();
                         reject.Write((byte)ServerPacketHeader.AUTH_FAILURE);
-                        reject.Write("Wrong password! You have "+Convert.ToString(4-unauthClient.FailedAttempts)+" more attempts before you're banned from the server.");
+                        reject.Write("Wrong password! You have " + Convert.ToString(4 - unauthClient.FailedAttempts) + " more attempts before you're banned from the server.");
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " failed to join the server (incorrect password)", Color.Red);
                         CompressOutgoingMessage(reject);
@@ -236,7 +236,7 @@ namespace Barotrauma.Networking
             string clName = Client.SanitizeName(inc.ReadString());
             if (string.IsNullOrWhiteSpace(clName))
             {
-                DisconnectUnauthClient(inc, unauthClient, "You need a name.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NoName, "");
 
                 Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " couldn't join the server (no name given)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " couldn't join the server (no name given)", Color.Red);
@@ -245,7 +245,7 @@ namespace Barotrauma.Networking
 
             if (clVersion != GameMain.Version.ToString())
             {
-                DisconnectUnauthClient(inc, unauthClient, "Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidVersion, "Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
                 
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", Color.Red);
@@ -271,7 +271,7 @@ namespace Barotrauma.Networking
             
             if (missingPackages.Count == 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, "You need the content package " + GetPackageStr(missingPackages[0]) + " to play on the server.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, "You need the content package " + GetPackageStr(missingPackages[0]) + " to play on the server.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -279,7 +279,7 @@ namespace Barotrauma.Networking
             {
                 List<string> packageStrs = new List<string>();
                 missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                DisconnectUnauthClient(inc, unauthClient, "You need the content packages " + string.Join(", ", packageStrs) + " to play on the server.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, "You need the content packages " + string.Join(", ", packageStrs) + " to play on the server.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -301,7 +301,7 @@ namespace Barotrauma.Networking
 
             if (incompatiblePackages.Count == 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, "The content package " + GetPackageStr2(incompatiblePackages[0]) + " is not compatible with the server. You must disable it before joining.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, "You must disable the content package " + GetPackageStr2(incompatiblePackages[0]) + " before joining.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content package " + GetPackageStr2(incompatiblePackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -309,7 +309,7 @@ namespace Barotrauma.Networking
             {
                 List<string> packageStrs = new List<string>();
                 incompatiblePackages.ForEach(cp => packageStrs.Add(GetPackageStr2(cp)));
-                DisconnectUnauthClient(inc, unauthClient, "The content packages " + string.Join(", ", packageStrs) + " are not compatible with the server. You must disable them before joining.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, "You must disable the content packages " + string.Join(", ", packageStrs) + " before joining.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -321,21 +321,21 @@ namespace Barotrauma.Networking
 
             if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
-                DisconnectUnauthClient(inc, unauthClient, "You're not in this server's whitelist.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NotOnWhitelist, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
                 return;
             }
             if (!Client.IsValidName(clName))
             {
-                DisconnectUnauthClient(inc, unauthClient, "Your name contains illegal symbols.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidName, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
             if (Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
             {
-                DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
@@ -346,7 +346,7 @@ namespace Barotrauma.Networking
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())
                 {
                     //both name and IP address match, replace this player's connection
-                    nameTaken.Connection.Disconnect("Your session was taken by a new connection on the same IP address.");
+                    nameTaken.Connection.Disconnect(DisconnectReason.SessionTaken.ToString());
                     nameTaken.Connection = unauthClient.Connection;
                     nameTaken.InitClientSync(); //reinitialize sync ids because this is a new connection
                     unauthenticatedClients.Remove(unauthClient);
@@ -356,7 +356,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     //can't authorize this client
-                    DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
+                    DisconnectUnauthClient(inc, unauthClient, DisconnectReason.NameTaken, "");
                     Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", ServerLog.MessageType.Error);
                     DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", Color.Red);
                     return;
@@ -392,9 +392,9 @@ namespace Barotrauma.Networking
             }
         }
                 
-        private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, string reason)
+        private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, DisconnectReason reason, string message)
         {
-            inc.SenderConnection.Disconnect(reason);
+            inc.SenderConnection.Disconnect(reason.ToString() + "; " + message);
 
             if (unauthClient != null)
             {
