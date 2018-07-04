@@ -316,7 +316,7 @@ namespace Barotrauma
 
                 int spacing = (int)(10 * UIScale);
 
-                int columns = slot.Rect.Width / subRect.Width;
+                int columns = Math.Max(slot.Rect.Width / subRect.Width, 1);
                 while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
                 {
                     columns++;

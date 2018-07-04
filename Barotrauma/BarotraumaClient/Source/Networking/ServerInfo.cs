@@ -6,36 +6,38 @@ namespace Barotrauma.Networking
     {
         public void CreatePreviewWindow(GUIMessageBox messageBox)
         {
-            var title = new GUITextBlock(new RectTransform(new Vector2(1, 0), messageBox.Content.RectTransform), ServerName, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
+            var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), messageBox.Content.RectTransform), ServerName, textAlignment: Alignment.Center, font: GUI.LargeFont, wrap: true);
 
             var columnLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f - title.RectTransform.RelativeSize.Y - 0.1f), messageBox.Content.RectTransform) { RelativeOffset = new Vector2(0.0f, title.RectTransform.RelativeSize.Y + 0.1f) })
             {
                 IgnoreLayoutGroups = true,
-                Stretch = true,
+                //Stretch = true,
                 RelativeSpacing = 0.02f
             };
             var columnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.85f - title.RectTransform.RelativeSize.Y - 0.1f), messageBox.Content.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.0f, title.RectTransform.RelativeSize.Y + 0.1f) })
             {
                 IgnoreLayoutGroups = true,
-                Stretch = true,
+                //Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
+            float elementHeight = 0.1f;
+
             // left column -----------------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnLeft.RectTransform), IP + ":" + Port);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnLeft.RectTransform),
-                TextManager.Get("ServerListVersion") + ": " + GameVersion);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnLeft.RectTransform),
-                TextManager.Get("ServerListContentPackages") + ": " + string.Join(", ", ContentPackageNames), wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), IP + ":" + Port);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform),
+                TextManager.Get("ServerListVersion") + ": " + (string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), columnLeft.RectTransform),
+                TextManager.Get("ServerListContentPackages") + ": " + (ContentPackageNames.Count == 0 ? TextManager.Get("Unknown") : string.Join(", ", ContentPackageNames)), wrap: true);
 
-            new GUITickBox(new RectTransform(new Vector2(1, 0.05f), columnLeft.RectTransform), TextManager.Get("ServerListHasPassword"))
+            new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), columnLeft.RectTransform), TextManager.Get("ServerListHasPassword"))
             {
                 Selected = HasPassword,
                 CanBeFocused = false
             };
 
-            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, 0.05f), columnLeft.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
+            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnLeft.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
             {
                 CanBeFocused = false
             };
@@ -47,21 +49,21 @@ namespace Barotrauma.Networking
 
             // right column -----------------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnRight.RectTransform), TextManager.Get("ServerListPlayers") + ": " + PlayerCount + "/" + MaxPlayers);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListPlayers") + ": " + PlayerCount + "/" + MaxPlayers);
 
-            new GUITickBox(new RectTransform(new Vector2(1, 0.05f), columnRight.RectTransform), "Round running")
+            new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Round running")
             {
                 Selected = GameStarted,
                 CanBeFocused = false
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnRight.RectTransform), TextManager.Get("GameMode") + ": " + (string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode));
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnRight.RectTransform), TextManager.Get("Traitors") + ": " + (!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("GameMode") + ": " + (string.IsNullOrEmpty(GameMode) ? "Unknown" : GameMode));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("Traitors") + ": " + (!TraitorsEnabled.HasValue ? "Unknown" : TraitorsEnabled.Value.ToString()));
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnRight.RectTransform), TextManager.Get("ServerListSubSelection") + ": " + (!SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString()));
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), columnRight.RectTransform), TextManager.Get("ServerListModeSelection") + ": " + (!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListSubSelection") + ": " + (!SubSelectionMode.HasValue ? "Unknown" : SubSelectionMode.Value.ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListModeSelection") + ": " + (!ModeSelectionMode.HasValue ? "Unknown" : ModeSelectionMode.Value.ToString()));
 
-            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, 0.05f), columnRight.RectTransform), TextManager.Get("ServerListAllowSpectating"))
+            var allowSpectating = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), TextManager.Get("ServerListAllowSpectating"))
             {
                 CanBeFocused = false
             };
@@ -70,7 +72,7 @@ namespace Barotrauma.Networking
             else
                 allowSpectating.Selected = AllowSpectating.Value;
 
-            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, 0.05f), columnRight.RectTransform), "Allow respawn")
+            var allowRespawn = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), columnRight.RectTransform), "Allow respawn")
             {
                 CanBeFocused = false
             };
@@ -78,6 +80,15 @@ namespace Barotrauma.Networking
                 new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), allowRespawn.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
             else
                 allowRespawn.Selected = AllowRespawn.Value;
+
+            foreach (GUIComponent c in columnLeft.Children)
+            {
+                if (c is GUITextBlock textBlock) textBlock.Padding = Vector4.Zero;
+            }
+            foreach (GUIComponent c in columnRight.Children)
+            {
+                if (c is GUITextBlock textBlock) textBlock.Padding = Vector4.Zero;
+            }
         }
     }
 }

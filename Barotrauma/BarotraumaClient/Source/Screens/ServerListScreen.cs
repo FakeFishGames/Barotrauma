@@ -311,10 +311,12 @@ namespace Barotrauma
                 };
                 foreach (string contentPackageName in contentPackageNames.Split(','))
                 {
+                    if (string.IsNullOrEmpty(contentPackageName)) continue;
                     serverInfo.ContentPackageNames.Add(contentPackageName);
                 }
                 foreach (string contentPackageHash in contentPackageHashes.Split(','))
                 {
+                    if (string.IsNullOrEmpty(contentPackageHash)) continue;
                     serverInfo.ContentPackageHashes.Add(contentPackageHash);
                 }
 
