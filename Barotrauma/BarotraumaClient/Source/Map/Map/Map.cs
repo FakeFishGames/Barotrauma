@@ -570,7 +570,7 @@ namespace Barotrauma
             
             if (generationParams.ShowOverlay)
             {
-                float prevRadius = 0.0f;
+                Vector2 mapCenter = rect.Center.ToVector2() + (new Vector2(size, size) / 2 + drawOffset + drawOffsetNoise) * zoom;
                 Vector2 centerDiff = CurrentLocation.MapPosition - new Vector2(size) / 2;
                 int currentZone = (int)Math.Floor((centerDiff.Length() / (size * 0.5f) * generationParams.DifficultyZones));
                 for (int i = 0; i < generationParams.DifficultyZones; i++)
@@ -578,11 +578,10 @@ namespace Barotrauma
                     float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
                     float textureSize = (radius / (generationParams.MapCircle.size.X / 2) * zoom);
                     
-                    generationParams.MapCircle.Draw(spriteBatch, 
-                        rect.Center.ToVector2() + (new Vector2(size / 2, size / 2) + drawOffset + drawOffsetNoise) * zoom, 
+                    generationParams.MapCircle.Draw(spriteBatch,
+                        mapCenter, 
                         i == currentZone || i == currentZone - 1  ? Color.White * 0.5f : Color.White * 0.2f, 
                         i * 0.4f + (float)Timing.TotalTime * 0.01f, textureSize);
-                    prevRadius = radius;
                 }
             }
 
@@ -603,7 +602,7 @@ namespace Barotrauma
                 "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), Color.White * hudOpenState, font: GUI.SmallFont);
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.X + rect.Width * 0.27f, rect.Y + rect.Height * 0.93f),
-                "LAT " + (-drawOffset.X / 100.0f) + "   LON " + (-drawOffset.Y / 100.0f), Color.White * hudOpenState, font: GUI.SmallFont);
+                "LAT " + (-drawOffset.Y / 100.0f) + "   LON " + (-drawOffset.X / 100.0f), Color.White * hudOpenState, font: GUI.SmallFont);
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder("GEST F ");
             for (int i = 0; i < 20; i++)
@@ -641,9 +640,11 @@ namespace Barotrauma
                 generationParams.ReticleMedium.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
 
             if (selectedLocation != null)
+            {
                 generationParams.ReticleSmall.Draw(spriteBatch, (int)(targetReticleAnimState * generationParams.ReticleSmall.FrameCount),
                     rect.Center.ToVector2() + (selectedLocation.MapPosition + drawOffset + drawOffsetNoise * 2) * zoom, Color.White,
                     generationParams.ReticleSmall.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
+            }
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);

@@ -36,7 +36,11 @@ namespace Barotrauma
 
         public override Rectangle MouseRect
         {
-            get { return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect; }
+            get
+            {
+                if (!CanBeFocused) return Rectangle.Empty;
+                return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect;
+            }
         }
 
         public override ScalableFont Font
