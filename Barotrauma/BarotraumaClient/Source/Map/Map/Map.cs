@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -11,8 +12,6 @@ namespace Barotrauma
     {
         //how much larger the ice background is compared to the size of the map
         private const float BackgroundScale = 1.5f;
-        
-        private static Texture2D circleTexture;
         
         class MapAnim
         {
@@ -48,6 +47,11 @@ namespace Barotrauma
         private Location highlightedLocation;
 
         private Vector2 drawOffset;
+        private Vector2 drawOffsetNoise;
+
+        private float subReticleAnimState;
+        private float targetReticleAnimState;
+        private Vector2 subReticlePosition;
 
         private float zoom = 3.0f;
 
@@ -126,23 +130,29 @@ namespace Barotrauma
 
             drawOffset = -currentLocation.MapPosition;
         }
-
-        private Texture2D noiseTexture;
+        
+        private static Texture2D rawNoiseTexture;
+        private static Sprite rawNoiseSprite;
+        private static Texture2D noiseTexture;
 
         partial void GenerateNoiseMapProjSpecific()
         {
             if (noiseTexture == null)
             {
                 noiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                rawNoiseTexture = new Texture2D(GameMain.Instance.GraphicsDevice, generationParams.NoiseResolution, generationParams.NoiseResolution);
+                rawNoiseSprite = new Sprite(rawNoiseTexture, null, null);
             }
 
             Color[] crackTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
             Color[] noiseTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
+            Color[] rawNoiseTextureData = new Color[generationParams.NoiseResolution * generationParams.NoiseResolution];
             for (int x = 0; x < generationParams.NoiseResolution; x++)
             {
                 for (int y = 0; y < generationParams.NoiseResolution; y++)
                 {
                     noiseTextureData[x + y * generationParams.NoiseResolution] = Color.Lerp(Color.Black, Color.Transparent, Noise[x, y]);
+                    rawNoiseTextureData[x + y * generationParams.NoiseResolution] = Color.Lerp(Color.Black, Color.White, Rand.Range(0.0f,1.0f));
                 }
             }
 
@@ -214,6 +224,7 @@ namespace Barotrauma
             }
 
             noiseTexture.SetData(noiseTextureData);
+            rawNoiseTexture.SetData(rawNoiseTextureData);
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)
@@ -222,13 +233,13 @@ namespace Barotrauma
             //focus on starting location
             mapAnimQueue.Enqueue(new MapAnim()
             {
-                EndZoom = 1.5f,
+                EndZoom = 2.0f,
                 EndLocation = prevLocation,
                 Duration = MathHelper.Clamp(Vector2.Distance(-drawOffset, prevLocation.MapPosition) / 1000.0f, 0.1f, 0.5f),
             });
             mapAnimQueue.Enqueue(new MapAnim()
             {
-                EndZoom = 2.0f,
+                EndZoom = 3.0f,
                 StartLocation = prevLocation,
                 EndLocation = newLocation,
                 Duration = 2.0f,
@@ -266,6 +277,13 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Rectangle rect)
         {
+            subReticlePosition = Vector2.Lerp(subReticlePosition, currentLocation.MapPosition, deltaTime);
+            subReticleAnimState = 0.8f - Vector2.Distance(subReticlePosition, currentLocation.MapPosition) / 50.0f;
+            subReticleAnimState = MathHelper.Clamp(subReticleAnimState + (float)Math.Sin(Timing.TotalTime * 3.5f) * 0.2f, 0.0f, 1.0f);
+
+            targetReticleAnimState = selectedLocation == null ? 
+                Math.Max(targetReticleAnimState - deltaTime, 0.0f) : 
+                Math.Min(targetReticleAnimState + deltaTime, 0.6f + (float)Math.Sin(Timing.TotalTime * 2.5f) * 0.4f);
 #if DEBUG
             if (GameMain.DebugDraw)
             {
@@ -276,6 +294,7 @@ namespace Barotrauma
 
             if (mapAnimQueue.Count > 0)
             {
+                hudOpenState = Math.Max(hudOpenState - deltaTime, 0.0f);
                 UpdateMapAnim(mapAnimQueue.Peek(), deltaTime);
                 if (mapAnimQueue.Peek().Finished)
                 {
@@ -283,6 +302,8 @@ namespace Barotrauma
                 }
                 return;
             }
+
+            hudOpenState = Math.Min(hudOpenState + deltaTime, 0.75f + (float)Math.Sin(Timing.TotalTime * 3.0f) * 0.25f);
             
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
 
@@ -314,7 +335,8 @@ namespace Barotrauma
                     {
                         selectedConnection = connection;
                         selectedLocation = highlightedLocation;
-                        
+                        targetReticleAnimState = 0.0f;
+
                         //clients aren't allowed to select the location without a permission
                         if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
                         {
@@ -326,13 +348,12 @@ namespace Barotrauma
             }
 
             zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            zoom = MathHelper.Clamp(zoom, 0.5f, 4.0f);
+            zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
             if (rect.Contains(PlayerInput.MousePosition) && PlayerInput.MidButtonHeld())
             {
                 drawOffset += PlayerInput.MouseSpeed / zoom;
             }
-
 #if DEBUG
             if (PlayerInput.DoubleClicked() && highlightedLocation != null)
             {
@@ -357,7 +378,13 @@ namespace Barotrauma
             float edgeBuffer = size * (BackgroundScale - 1.0f) / 2;
             drawOffset.X = MathHelper.Clamp(drawOffset.X, -size - edgeBuffer + viewSize.X / 2.0f, edgeBuffer -viewSize.X / 2.0f);
             drawOffset.Y = MathHelper.Clamp(drawOffset.Y, -size - edgeBuffer + viewSize.Y / 2.0f, edgeBuffer -viewSize.Y / 2.0f);
-                        
+
+            drawOffsetNoise = new Vector2(
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.1f % 255, Timing.TotalTime * 0.1f % 255, 0) - 0.5f, 
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.2f % 255, Timing.TotalTime * 0.2f % 255, 0.5f) - 0.5f) * 10.0f;
+
+            Vector2 viewOffset = drawOffset + drawOffsetNoise;
+
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
@@ -377,21 +404,21 @@ namespace Barotrauma
                     Vector2 scale = new Vector2(
                         generationParams.TileSpriteSize.X / mapTiles[x, y].Sprite.size.X, 
                         generationParams.TileSpriteSize.Y / mapTiles[x, y].Sprite.size.Y);
-                    mapTiles[x, y].Sprite.Draw(spriteBatch, rectCenter + (mapPos + drawOffset) * zoom, Color.White,
+                    mapTiles[x, y].Sprite.Draw(spriteBatch, rectCenter + (mapPos + viewOffset) * zoom, Color.White,
                         origin: new Vector2(256.0f, 256.0f), rotate: 0, scale: scale * zoom, spriteEffect: mapTiles[x, y].SpriteEffect);
                 }
             }
 #if DEBUG
             if (generationParams.ShowNoiseMap)
             {
-                GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + drawOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
+                GUI.DrawRectangle(spriteBatch, rectCenter + (borders.Location.ToVector2() + viewOffset) * zoom, borders.Size.ToVector2() * zoom, Color.White, true);
             }
 #endif
-            Vector2 topLeft = rectCenter + drawOffset * zoom;
+            Vector2 topLeft = rectCenter + viewOffset * zoom;
             topLeft.X = (int)topLeft.X;
             topLeft.Y = (int)topLeft.Y;
 
-            Vector2 bottomRight = rectCenter + (drawOffset + new Vector2(size,size)) * zoom;
+            Vector2 bottomRight = rectCenter + (viewOffset + new Vector2(size,size)) * zoom;
             bottomRight.X = (int)bottomRight.X;
             bottomRight.Y = (int)bottomRight.Y;
 
@@ -408,22 +435,18 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)bottomRight.X, rect.Y, (int)(rect.Right - bottomRight.X), rect.Height), Color.Black * 0.8f, true);
             if (bottomRight.Y < rect.Bottom)
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)topLeft.X, (int)bottomRight.Y, (int)(bottomRight.X - topLeft.X), (int)(rect.Bottom - bottomRight.Y)), Color.Black * 0.8f, true);
+            
+            var sourceRect = rect;
+            float rawNoiseScale = 1.0f + Noise[(int)(Timing.TotalTime * 100 % Noise.GetLength(0) - 1), (int)(Timing.TotalTime * 100 % Noise.GetLength(1) - 1)];
+            cameraNoiseStrength = Noise[(int)(Timing.TotalTime * 10 % Noise.GetLength(0) - 1), (int)(Timing.TotalTime * 10 % Noise.GetLength(1) - 1)];
 
+            rawNoiseSprite.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
+                startOffset: new Point(Rand.Range(0,rawNoiseSprite.SourceRect.Width), Rand.Range(0, rawNoiseSprite.SourceRect.Height)),
+                color : Color.White * cameraNoiseStrength * 0.5f,
+                textureScale: Vector2.One * rawNoiseScale);
+            
             if (generationParams.ShowLocations)
             {
-                for (int i = 0; i < locations.Count; i++)
-                {
-                    Location location = locations[i];
-
-                    if (location.Type.HaloColor.A > 0 && false)
-                    {
-                        Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
-
-                        spriteBatch.Draw(circleTexture, pos, null, location.Type.HaloColor * 0.1f, 0.0f,
-                            new Vector2(512, 512), zoom * 0.1f, SpriteEffects.None, 0);
-                    }
-                }
-
                 foreach (LocationConnection connection in connections)
                 {
                     Color crackColor = Color.White;
@@ -447,8 +470,8 @@ namespace Barotrauma
                     {
                         var segment = connection.CrackSegments[i];
 
-                        Vector2 start = rectCenter + (segment[0] + drawOffset) * zoom;
-                        Vector2 end = rectCenter + (segment[1] + drawOffset) * zoom;
+                        Vector2 start = rectCenter + (segment[0] + viewOffset) * zoom;
+                        Vector2 end = rectCenter + (segment[1] + viewOffset) * zoom;
 
                         if (!rect.Contains(start) && !rect.Contains(end))
                         {
@@ -484,7 +507,7 @@ namespace Barotrauma
 
                     if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
                     {
-                        Vector2 center = rectCenter + (connection.CenterPos + drawOffset) * zoom;
+                        Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                         if (rect.Contains(center))
                         {
                             GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
@@ -499,7 +522,7 @@ namespace Barotrauma
                 for (int i = 0; i < locations.Count; i++)
                 {
                     Location location = locations[i];
-                    Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
+                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
 
                     Rectangle drawRect = location.Type.Sprite.SourceRect;
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
@@ -514,34 +537,116 @@ namespace Barotrauma
                     spriteBatch.Draw(location.Type.Sprite.Texture, pos, null, color, 0.0f, location.Type.Sprite.size / 2, 0.2f * zoom, SpriteEffects.None, 0.0f);
                 }
 
-                for (int i = 0; i < 3; i++)
-                {
-                    Location location = (i == 0) ? highlightedLocation : selectedLocation;
-                    if (i == 2) location = currentLocation;
-
-                    if (location == null) continue;
-
-                    Vector2 pos = rectCenter + (location.MapPosition + drawOffset) * zoom;
-                    pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width * 0.6f);
-                    pos.Y = (int)(pos.Y - 10);
-                    GUI.DrawString(spriteBatch, pos, location.Name, Color.White, Color.Black * 0.8f, 3);
-                    GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25, location.Type.DisplayName, Color.White, Color.Black * 0.8f, 3);
-                }
             }
+            
+            DrawDecorativeHUD(spriteBatch, rect);
 
+            for (int i = 0; i < 3; i++)
+            {
+                Location location = (i == 0) ? highlightedLocation : selectedLocation;
+                if (i == 2) location = currentLocation;
+
+                if (location == null) continue;
+
+                Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+                //pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width * 0.6f);
+                pos.Y = (int)(pos.Y + 15 * zoom);
+                GUI.DrawString(spriteBatch, pos - GUI.Font.MeasureString(location.Name) * 0.5f, 
+                    location.Name, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 - GUI.Font.MeasureString(location.Type.DisplayName) * 0.5f, 
+                    location.Type.DisplayName, Color.White * hudOpenState, Color.Black * 0.8f * hudOpenState, 3);
+            }
+                        
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+        }
+
+        private float hudOpenState;
+        private float cameraNoiseStrength;
+
+        private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
+        {
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, GameMain.ScissorTestEnable);
+            
             if (generationParams.ShowOverlay)
             {
+                float prevRadius = 0.0f;
+                Vector2 centerDiff = CurrentLocation.MapPosition - new Vector2(size) / 2;
+                int currentZone = (int)Math.Floor((centerDiff.Length() / (size * 0.5f) * generationParams.DifficultyZones));
                 for (int i = 0; i < generationParams.DifficultyZones; i++)
                 {
                     float radius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
-                    float textureSize = (radius / (circleTexture.Width / 2) * zoom);
-
-                    spriteBatch.Draw(circleTexture, rectCenter + (drawOffset + new Vector2(size / 2, size / 2)) * zoom, null, Color.White, 0.0f,
-                        new Vector2(512, 512), textureSize, SpriteEffects.None, 0);
+                    float textureSize = (radius / (generationParams.MapCircle.size.X / 2) * zoom);
+                    
+                    generationParams.MapCircle.Draw(spriteBatch, 
+                        rect.Center.ToVector2() + (new Vector2(size / 2, size / 2) + drawOffset + drawOffsetNoise) * zoom, 
+                        i == currentZone || i == currentZone - 1  ? Color.White * 0.5f : Color.White * 0.2f, 
+                        i * 0.4f + (float)Timing.TotalTime * 0.01f, textureSize);
+                    prevRadius = radius;
                 }
             }
-            
-            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
+
+            float animPulsate = (float)Math.Sin(Timing.TotalTime * 2.0f) * 0.1f;
+
+            Vector2 frameSize = generationParams.DecorativeGraphSprite.FrameSize.ToVector2();
+            generationParams.DecorativeGraphSprite.Draw(spriteBatch, (int)((cameraNoiseStrength + animPulsate) * hudOpenState * generationParams.DecorativeGraphSprite.FrameCount),
+                new Vector2(rect.Right, rect.Bottom), Color.White, frameSize, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 10), frameSize));
+
+            frameSize = generationParams.DecorativeMapSprite.FrameSize.ToVector2();
+            generationParams.DecorativeMapSprite.Draw(spriteBatch, (int)((cameraNoiseStrength + animPulsate) * hudOpenState * generationParams.DecorativeMapSprite.FrameCount),
+                new Vector2(rect.X, rect.Y), Color.White, new Vector2(0, frameSize.Y * 0.2f), 0,
+                Vector2.Divide(new Vector2(rect.Width / 3, rect.Height / 5), frameSize), spriteEffect: SpriteEffects.FlipVertically);
+
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width / 15, rect.Y + rect.Height / 11),
+                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), Color.White * hudOpenState, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width * 0.27f, rect.Y + rect.Height * 0.93f),
+                "LAT " + (-drawOffset.X / 100.0f) + "   LON " + (-drawOffset.Y / 100.0f), Color.White * hudOpenState, font: GUI.SmallFont);
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("GEST F ");
+            for (int i = 0; i < 20; i++)
+            {
+                sb.Append(Rand.Range(0.0f, 1.0f) < cameraNoiseStrength ? ToolBox.RandomSeed(1) : "0");
+            }
+            GUI.DrawString(spriteBatch,
+                new Vector2(rect.X + rect.Width * 0.8f, rect.Y + rect.Height * 0.96f),
+                sb.ToString(), Color.White * hudOpenState, font: GUI.SmallFont);
+
+            frameSize = generationParams.DecorativeLineTop.FrameSize.ToVector2();
+            generationParams.DecorativeLineTop.Draw(spriteBatch, (int)(hudOpenState * generationParams.DecorativeLineTop.FrameCount),
+                new Vector2(rect.Right, rect.Y), Color.White, new Vector2(frameSize.X, frameSize.Y * 0.2f), 0,
+                Vector2.Divide(new Vector2(rect.Width * 0.72f, rect.Height / 9), frameSize));
+            frameSize = generationParams.DecorativeLineBottom.FrameSize.ToVector2();
+            generationParams.DecorativeLineBottom.Draw(spriteBatch, (int)(hudOpenState * generationParams.DecorativeLineBottom.FrameCount),
+                new Vector2(rect.X, rect.Bottom), Color.White, new Vector2(0, frameSize.Y * 0.6f), 0,
+                Vector2.Divide(new Vector2(rect.Width * 0.72f, rect.Height / 9), frameSize));
+
+            frameSize = generationParams.DecorativeLineCorner.FrameSize.ToVector2();
+            generationParams.DecorativeLineCorner.Draw(spriteBatch, (int)((hudOpenState + animPulsate) * generationParams.DecorativeLineCorner.FrameCount),
+                new Vector2(rect.Right - rect.Width / 8, rect.Bottom), Color.White, frameSize * 0.8f, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 4), frameSize), spriteEffect: SpriteEffects.FlipVertically);
+
+            generationParams.DecorativeLineCorner.Draw(spriteBatch, (int)((hudOpenState + animPulsate) * generationParams.DecorativeLineCorner.FrameCount),
+                new Vector2(rect.X + rect.Width / 8, rect.Y), Color.White, frameSize * 0.1f, 0,
+                Vector2.Divide(new Vector2(rect.Width / 4, rect.Height / 4), frameSize), spriteEffect: SpriteEffects.FlipHorizontally);
+
+            //reticles
+            generationParams.ReticleLarge.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleLarge.FrameCount),
+                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise * 2) * zoom, Color.White,
+                generationParams.ReticleLarge.Origin, 0, Vector2.One * (float)Math.Sqrt(zoom) * 0.4f);
+            generationParams.ReticleMedium.Draw(spriteBatch, (int)(subReticleAnimState * generationParams.ReticleMedium.FrameCount),
+                rect.Center.ToVector2() + (subReticlePosition + drawOffset - drawOffsetNoise) * zoom, Color.White,
+                generationParams.ReticleMedium.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
+
+            if (selectedLocation != null)
+                generationParams.ReticleSmall.Draw(spriteBatch, (int)(targetReticleAnimState * generationParams.ReticleSmall.FrameCount),
+                    rect.Center.ToVector2() + (selectedLocation.MapPosition + drawOffset + drawOffsetNoise * 2) * zoom, Color.White,
+                    generationParams.ReticleSmall.Origin, 0, new Vector2(1.0f, 0.7f) * (float)Math.Sqrt(zoom) * 0.4f);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
         }
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)
@@ -561,9 +666,15 @@ namespace Barotrauma
 
             anim.StartPos = (anim.StartLocation == null) ? -drawOffset : anim.StartLocation.MapPosition;
 
+
+
             anim.Timer = Math.Min(anim.Timer + deltaTime, anim.Duration);
             float t = anim.Duration <= 0.0f ? 1.0f : Math.Max(anim.Timer / anim.Duration, 0.0f);
             drawOffset = -Vector2.SmoothStep(anim.StartPos.Value, anim.EndLocation.MapPosition, t);
+            drawOffset += new Vector2(
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.3f % 255, Timing.TotalTime * 0.4f % 255, 0) - 0.5f,
+                (float)PerlinNoise.Perlin(Timing.TotalTime * 0.4f % 255, Timing.TotalTime * 0.3f % 255, 0.5f) - 0.5f) * 50.0f * (float)Math.Sin(t * MathHelper.Pi);
+
             zoom = MathHelper.SmoothStep(anim.StartZoom.Value, anim.EndZoom.Value, t);
 
             if (anim.Timer >= anim.Duration)

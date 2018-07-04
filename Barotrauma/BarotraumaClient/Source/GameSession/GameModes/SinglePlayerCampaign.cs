@@ -195,6 +195,10 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                else
+                {
+                    Map.SelectLocation(-1);
+                }
                 Map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);

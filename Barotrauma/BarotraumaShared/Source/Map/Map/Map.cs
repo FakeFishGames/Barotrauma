@@ -75,10 +75,7 @@ namespace Barotrauma
             locations = new List<Location>();
 
             connections = new List<LocationConnection>();
-            
-#if CLIENT
-            if (circleTexture == null) circleTexture = GUI.CreateCircle(512, false); 
-#endif
+
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
             Generate();

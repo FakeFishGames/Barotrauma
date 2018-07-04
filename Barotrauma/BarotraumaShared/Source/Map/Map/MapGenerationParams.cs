@@ -117,6 +117,20 @@ namespace Barotrauma
 
         public Sprite ConnectionSprite { get; private set; }
 
+#if CLIENT
+        public SpriteSheet DecorativeMapSprite { get; private set; }
+        public SpriteSheet DecorativeGraphSprite { get; private set; }
+        public SpriteSheet DecorativeLineTop { get; private set; }
+        public SpriteSheet DecorativeLineBottom { get; private set; }
+        public SpriteSheet DecorativeLineCorner { get; private set; }
+
+        public SpriteSheet ReticleLarge { get; private set; }
+        public SpriteSheet ReticleMedium { get; private set; }
+        public SpriteSheet ReticleSmall { get; private set; }
+
+        public Sprite MapCircle { get; private set; }
+#endif
+
         public List<Sprite> BackgroundTileSprites { get; private set; }
 
         public string Name
@@ -163,6 +177,35 @@ namespace Barotrauma
                     case "backgroundtile":
                         BackgroundTileSprites.Add(new Sprite(subElement));
                         break;
+#if CLIENT
+                    case "mapcircle":
+                        MapCircle = new Sprite(subElement);
+                        break;
+                    case "decorativemapsprite":
+                        DecorativeMapSprite = new SpriteSheet(subElement);
+                        break;
+                    case "decorativegraphsprite":
+                        DecorativeGraphSprite = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinetop":
+                        DecorativeLineTop = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinebottom":
+                        DecorativeLineBottom = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinecorner":
+                        DecorativeLineCorner = new SpriteSheet(subElement);
+                        break;
+                    case "reticlelarge":
+                        ReticleLarge = new SpriteSheet(subElement);
+                        break;
+                    case "reticlemedium":
+                        ReticleMedium = new SpriteSheet(subElement);
+                        break;
+                    case "reticlesmall":
+                        ReticleSmall = new SpriteSheet(subElement);
+                        break;
+#endif
                 }
             }
         }
