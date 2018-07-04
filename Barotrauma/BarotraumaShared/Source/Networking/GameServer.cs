@@ -495,11 +495,11 @@ namespace Barotrauma.Networking
                         case NetIncomingMessageType.ConnectionApproval:
                             if (banList.IsBanned(inc.SenderEndPoint.Address.ToString(), 0))
                             {
-                                inc.SenderConnection.Deny("You have been banned from the server");
+                                inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                             }
                             else if (ConnectedClients.Count >= maxPlayers)
                             {
-                                inc.SenderConnection.Deny("Server full");
+                                inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
                             }
                             else
                             {
@@ -514,7 +514,7 @@ namespace Barotrauma.Networking
                                     ReadClientSteamAuthRequest(inc, out ulong clientSteamID);
                                     if (banList.IsBanned("", clientSteamID))
                                     {
-                                        inc.SenderConnection.Deny("You have been banned from the server");
+                                        inc.SenderConnection.Deny(DisconnectReason.Banned.ToString());
                                     }
                                     else
                                     {
@@ -1675,8 +1675,8 @@ namespace Barotrauma.Networking
         {
             if (client == null) return;
             
-            string msg = "You have been kicked from the server.";
-            if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
+            string msg = DisconnectReason.Kicked.ToString();
+            if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
             DisconnectClient(client, client.Name + " has been kicked from the server.", msg);            
         }
 
@@ -1702,7 +1702,7 @@ namespace Barotrauma.Networking
             Client client = connectedClients.Find(c => c.Connection == conn);
             if (client == null)
             {
-                conn.Disconnect("You have been banned from the server");
+                conn.Disconnect(DisconnectReason.Banned.ToString());
                 if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString(), 0))
                 {
                     banList.BanPlayer("Unnamed", conn.RemoteEndPoint.Address.ToString(), reason, duration);
@@ -1718,8 +1718,8 @@ namespace Barotrauma.Networking
         {
             if (client == null) return;
             
-            string msg = "You have been banned from the server.";
-            if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
+            string msg = DisconnectReason.Banned.ToString();
+            if (!string.IsNullOrWhiteSpace(reason)) msg += ";\nReason: " + reason;
             DisconnectClient(client, client.Name + " has been banned from the server.", msg);
 
             if (client.SteamID == 0 || range)
