@@ -1103,7 +1103,7 @@ namespace Barotrauma
         }
 
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
+        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null)
         {
             if (connections == null) return;
 
@@ -1120,7 +1120,7 @@ namespace Barotrauma
             }
             else
             {
-                c.SendSignal(stepsTaken, signal, this, sender, power);
+                c.SendSignal(stepsTaken, signal, source ?? this, sender, power);
             }            
         }
 
