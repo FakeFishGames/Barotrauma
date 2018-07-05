@@ -276,6 +276,10 @@
   <ConnectionLostReconnecting>You have been disconnected from the server. Reconnecting...</ConnectionLostReconnecting>
   <ConnectionFailed>Connecting failed</ConnectionFailed>
   <ConnectingTo>Connecting to [serverip]</ConnectingTo>
+  <ServerFullQuestionPrompt>Do you want to wait join the server queue and wait for a slot to free up?</ServerFullQuestionPrompt>
+  <ServerQueue>Queue</ServerQueue>
+  <ServerQueuePleaseWait>Please wait...</ServerQueuePleaseWait>
+  <WaitingInServerQueue>Waiting for a slot to free up on the server.</WaitingInServerQueue>
 
   <!-- Disconnect reasons -->
   <DisconnectReason.Banned>You have been banned from the server.</DisconnectReason.Banned>
@@ -294,7 +298,14 @@
   <DisconnectReason.MissingContentPackage>Missing content package.</DisconnectReason.MissingContentPackage>
   <DisconnectReason.IncompatibleContentPackage>Incompatible content package.</DisconnectReason.IncompatibleContentPackage>
   <DisconnectReason.NotOnWhitelist>You are not on the server's whitelist.</DisconnectReason.NotOnWhitelist>
-
+  <DisconnectMessage.SteamAuthNoLongerValid>Steam authentication is no longer valid ([status]).</DisconnectMessage.SteamAuthNoLongerValid>
+  <DisconnectMessage.TooManyFailedLogins>Too many failed login attempts.</DisconnectMessage.TooManyFailedLogins>
+  <DisconnectMessage.InvalidVersion>Version "[version]" required to connect to the server (Your version: "[clientversion]")</DisconnectMessage.InvalidVersion>
+  <DisconnectMessage.MissingContentPackage>You need the content package [missingcontentpackage] to play on the server.</DisconnectMessage.MissingContentPackage>
+  <DisconnectMessage.MissingContentPackages>You need the content packages [missingcontentpackages] to play on the server.</DisconnectMessage.MissingContentPackages>
+  <DisconnectMessage.IncompatibleContentPackage>You must disable the content package [incompatiblecontentpackage] before joining.</DisconnectMessage.IncompatibleContentPackage>
+  <DisconnectMessage.IncompatibleContentPackages>You must disable the content packages [incompatiblecontentpackages] before joining.</DisconnectMessage.IncompatibleContentPackages>
+  
     <!-- Server lobby -->
     <RestartingIn>Restarting in</RestartingIn>
     <Votes>Votes</Votes>
