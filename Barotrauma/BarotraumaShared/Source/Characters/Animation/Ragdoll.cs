@@ -277,11 +277,14 @@ namespace Barotrauma
             private set;
         }
         
-        public Ragdoll(Character character, XElement element, string seed)
+        public Ragdoll(Character character, string seed)
         {
             list.Add(this);
             this.character = character;
             dir = Direction.Right;
+
+            XElement element = RagdollParams.MainElement;
+            if (element == null) { return; }
 
             Random random = new MTRandom(ToolBox.StringToInt(seed));
             // TODO: maybe the scale should override min and max and not vice versa?

@@ -2,7 +2,6 @@
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -93,7 +92,7 @@ namespace Barotrauma
         // TODO: should this be defined in the character config or is it practically constant?
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, XElement element, string seed) : base(character, element, seed) { }
+        public FishAnimController(Character character, string seed) : base(character, seed) { }
 
         public override void UpdateAnim(float deltaTime)
         {

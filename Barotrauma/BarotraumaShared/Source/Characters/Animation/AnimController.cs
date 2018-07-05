@@ -86,7 +86,7 @@ namespace Barotrauma
 
         protected float walkPos;
 
-        public AnimController(Character character, XElement element, string seed) : base(character, element, seed) { }
+        public AnimController(Character character, string seed) : base(character, seed) { }
 
         public virtual void UpdateAnim(float deltaTime) { }
 

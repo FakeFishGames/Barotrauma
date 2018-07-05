@@ -88,7 +88,26 @@ namespace Barotrauma
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
 
         public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}.xml";
-        public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
+
+        /// <summary>
+        /// Returns the hard coded default folder, in case the content folder definition is invalid or missing.
+        /// </summary>
+        protected static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
+
+        protected static string GetFolder(string speciesName)
+        {
+            // TODO: get the path from settings or parse from xml.
+            var folder = string.Empty;
+            // TODO: handle invalid folder
+            if (string.IsNullOrEmpty(folder))
+            {
+                return GetDefaultFolder(speciesName);
+            }
+            else
+            {
+                return folder.Replace("[SpeciesName]", speciesName.CapitaliseFirstInvariant());
+            }
+        }
 
         /// <summary>
         /// The file name can be partial. If left null of fails, will select the default.
@@ -104,7 +123,7 @@ namespace Barotrauma
             fileName = fileName ?? defaultFileName;
             if (!anims.TryGetValue(animType, out AnimationParams anim))
             {
-                string folder = GetDefaultFolder(speciesName);
+                string folder = GetFolder(speciesName);
                 string defaultFile = folder + defaultFileName;
                 var animFiles = Directory.GetFiles(folder);
                 if (animFiles.None())
@@ -129,7 +148,7 @@ namespace Barotrauma
                 {
                     throw new Exception("[AnimationParams] Selected file null!");
                 }
-                DebugConsole.NewMessage($"[AnimationParams] Loading the animation params from {selectedFile}.", Color.Yellow);
+                DebugConsole.NewMessage($"[AnimationParams] Loading animation params from {selectedFile}.", Color.Yellow);
                 T a = new T();
                 if (a.Load(selectedFile, animType))
                 {
