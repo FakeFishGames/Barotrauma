@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, item, sender, power);
+                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power);
                 }
 
                 bool broken = recipient.Item.Condition <= 0.0f;
