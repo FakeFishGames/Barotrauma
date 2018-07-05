@@ -109,9 +109,10 @@
         <Item name="Uranium Powder" count="3" mincondition="0.75"/>
       </fabricableitem>
 
-      <fabricableitem name="Oxygen Tank" requireditems="Steel Bar" outcondition="0.0"/>
+      <fabricableitem name="Oxygen Tank" displayname="Oxygen Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
       <fabricableitem name="Oxygenite Tank" requireditems="Steel Bar, Liquid Oxygenite, Liquid Oxygenite, Liquid Oxygenite" outcondition="100.0" requiredtime="5" />
-      <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar" outcondition="0.0"/>
+      <fabricableitem name="Welding Fuel Tank" requireditems="Steel Bar, Ethanol" requiredtime="10"/>
+      <fabricableitem name="Welding Fuel Tank" displayname="Welding Fuel Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
     </Fabricator>
 		
 		<ConnectionPanel selectkey="Action" canbeselected = "true">
