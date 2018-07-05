@@ -25,11 +25,11 @@ namespace Barotrauma
 
         private Character character;
         private Vector2 spawnPosition;
-        private bool showControls;
+        private bool showAnimControls;
         private bool editOffsets;
+        private bool editRagdoll;
         private bool editJointPositions;
         private bool editJointLimits;
-        private bool EditRagdoll => editJointPositions || editJointLimits;
         private bool showParamsEditor;
         private bool showSpritesheet;
         private bool freeze;
@@ -44,7 +44,7 @@ namespace Barotrauma
             Submarine.MainSub.GodMode = true;
             CalculateMovementLimits();
             SpawnCharacter(Character.HumanConfigFile);
-            ResetEditor();
+            ResetParamsEditor();
         }
 
         #region Inifinite runner
@@ -215,6 +215,8 @@ namespace Barotrauma
         #region GUI
         private GUIFrame rightPanel;
         private GUIFrame centerPanel;
+        private GUIFrame ragdollControls;
+        private GUIFrame animationControls;
         private GUITickBox freezeToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
@@ -235,25 +237,26 @@ namespace Barotrauma
             Point sliderSize = new Point(120, 20);
             int textAreaHeight = 20;
             centerPanel = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.Center), style: null) { CanBeFocused = false };
-            var layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, centerPanel.RectTransform)) { CanBeFocused = false };
             // Ragdoll
-            var element1 = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroup.RectTransform), style: null);
-            var jointScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), element1.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
-            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, element1.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            ragdollControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupRagdoll = new GUILayoutGroup(new RectTransform(Vector2.One, ragdollControls.RectTransform)) { CanBeFocused = false };
+            var jointScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var jointScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), jointScaleElement.RectTransform), $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
+            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.JointScale / 2,
-                OnMoved = (scrollBar, value) => 
+                OnMoved = (scrollBar, value) =>
                 {
                     RagdollParams.JointScale = MathHelper.Clamp(value * 2, 0.5f, 2f);
-                    jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";                    
+                    jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
                     character.AnimController.ResetJoints();
                     return true;
                 },
                 Step = 0.01f
             };
-            var element2 = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroup.RectTransform), style: null);
-            var limbScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), element2.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
-            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, element2.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
+            var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
+            var limbScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
+            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.LimbScale / 2,
                 OnMoved = (scrollBar, value) =>
@@ -265,6 +268,9 @@ namespace Barotrauma
                 },
                 Step = 0.01f
             };
+            // Animation
+            animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
+            var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform)) { CanBeFocused = false };
         }
 
         private void CreateRightPanel()
@@ -284,33 +290,34 @@ namespace Barotrauma
             prevCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetPreviousConfigFile());
-                ResetEditor();
+                ResetParamsEditor();
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopRight), "Next \nCharacter");
             nextCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetNextConfigFile());
-                ResetEditor();
+                ResetParamsEditor();
                 return true;
             };
-            var controlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Controls") { Selected = showControls };
+            var animControlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Animation Controls") { Selected = showAnimControls };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
-            var offsetsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Offsets") { Selected = editOffsets };
+            var offsetsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Offsets") { Selected = editOffsets };
+            var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
-            controlsToggle.OnSelected = box =>
+            animControlsToggle.OnSelected = box =>
             {
-                showControls = box.Selected;
-                if (showControls)
+                showAnimControls = box.Selected;
+                if (showAnimControls)
                 {
                     spritesheetToggle.Selected = false;
                     offsetsToggle.Selected = false;
-                    jointPositionsToggle.Selected = false;
-                    jointLimitsToggle.Selected = false;
+                    ragdollToggle.Selected = false;
+                    ResetParamsEditor();
                 }
                 return true;
             };
@@ -331,9 +338,24 @@ namespace Barotrauma
                 editOffsets = box.Selected;
                 if (editOffsets)
                 {
+                    ragdollToggle.Selected = false;
+                    spritesheetToggle.Selected = true;
+                }
+                return true;
+            };
+            ragdollToggle.OnSelected = box =>
+            {
+                editRagdoll = box.Selected;
+                if (editRagdoll)
+                {
+                    offsetsToggle.Selected = false;
+                    animControlsToggle.Selected = false;
+                    ResetParamsEditor();
+                }
+                else
+                {
                     jointPositionsToggle.Selected = false;
                     jointLimitsToggle.Selected = false;
-                    spritesheetToggle.Selected = true;
                 }
                 return true;
             };
@@ -342,7 +364,7 @@ namespace Barotrauma
                 editJointPositions = box.Selected;
                 if (editJointPositions)
                 {
-                    offsetsToggle.Selected = false;
+                    ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = true;
                 }
                 return true;
@@ -352,7 +374,7 @@ namespace Barotrauma
                 editJointLimits = box.Selected;
                 if (editJointLimits)
                 {
-                    offsetsToggle.Selected = false;
+                    ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = true;
                 }
                 return true;
@@ -362,7 +384,7 @@ namespace Barotrauma
                 showSpritesheet = box.Selected;
                 if (showSpritesheet)
                 {
-                    controlsToggle.Selected = false;
+                    animControlsToggle.Selected = false;
                     paramsToggle.Selected = false;
                 }
                 return true;
@@ -427,7 +449,7 @@ namespace Barotrauma
             resetAnimButton.OnClicked += (b, obj) =>
             {
                 AnimParams.ForEach(p => p.Reset());
-                ResetEditor();
+                ResetParamsEditor();
                 return true;
             };
             var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
@@ -450,18 +472,33 @@ namespace Barotrauma
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
 
-        private void ResetEditor()
+        private void ResetParamsEditor()
         {
             ParamsEditor.Instance.Clear();
-            AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
-            // TODO: remove, only for debugging
-            //RagdollParams.AddToEditor(ParamsEditor.Instance);
+            if (editRagdoll)
+            {
+                // TODO: not updated instantly -> remove?
+                RagdollParams.AddToEditor(ParamsEditor.Instance);
+            }
+            else
+            {
+                AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            }
         }
         #endregion
 
         public override void AddToGUIUpdateList()
         {
-            base.AddToGUIUpdateList();
+            //base.AddToGUIUpdateList();
+            rightPanel.AddToGUIUpdateList();
+            if (showAnimControls)
+            {
+                animationControls.AddToGUIUpdateList();
+            }
+            if (editRagdoll)
+            {
+                ragdollControls.AddToGUIUpdateList();
+            }
             if (showParamsEditor)
             {
                 ParamsEditor.Instance.EditorBox.AddToGUIUpdateList();
@@ -517,7 +554,7 @@ namespace Barotrauma
             Structure wall = clones.FirstOrDefault();
             Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
-            if (showControls)
+            if (showAnimControls)
             {
                 DrawAnimationControls(spriteBatch);
             }
@@ -525,7 +562,7 @@ namespace Barotrauma
             {
                 DrawOffsetEditor(spriteBatch);
             }
-            if (EditRagdoll)
+            if (editRagdoll)
             {
                 DrawRagdollEditor(spriteBatch);
             }
@@ -555,7 +592,6 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100), $"Character Pos: {character.Position}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 120), $"Character Sim Pos: {character.SimPosition}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 140), $"Character Draw Pos: {character.DrawPosition}", Color.White, font: GUI.SmallFont);
-
 
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 180), $"Submarine World Pos: {Submarine.MainSub.WorldPosition}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 200), $"Submarine Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
@@ -869,116 +905,6 @@ namespace Barotrauma
                 animParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
-
-        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool autoFreeze = false)
-        {
-            var angle = value;
-            if (!MathUtils.IsValid(angle))
-            {
-                angle = 0;
-            }
-            var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
-            var widgetDrawPos = drawPos + up;
-            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise);
-            GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
-            DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
-            {
-                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
-                var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
-                // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
-                var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
-                if (transformedRot > 360)
-                {
-                    transformedRot -= 360;
-                }
-                else if (transformedRot < -360)
-                {
-                    transformedRot += 360;
-                }
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
-                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
-                float x = PlayerInput.MouseSpeed.X * 1.5f;
-                float y = PlayerInput.MouseSpeed.Y * 1.5f;
-                if (clockWise)
-                {
-                    if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
-                    {
-                        x = -x;
-                    }
-                    if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
-                    {
-                        y = -y;
-                    }
-                }
-                else
-                {
-                    if (transformedRot < 90 && transformedRot > -90)
-                    {
-                        x = -x;
-                    }
-                    if (transformedRot < 0 && transformedRot > -180)
-                    {
-                        y = -y;
-                    }
-                }
-                angle += x + y;
-                if (angle > 360 || angle < -360)
-                {
-                    angle = 0;
-                }
-                if (displayAngle)
-                {
-                    GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
-                }
-                onClick(angle);
-            }, autoFreeze);
-        }
-
-        public enum WidgetType { Rectangle, Circle }
-        private string selectedWidget;
-        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool autoFreeze = false)
-        {
-            var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
-            var inputRect = drawRect;
-            inputRect.Inflate(size, size);
-            bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
-            // Unselect
-            if (!isMouseOn && selectedWidget == name)
-            {
-                selectedWidget = null;
-            }
-            bool isSelected = isMouseOn && (selectedWidget == null || selectedWidget == name);
-            switch (widgetType)
-            {
-                case WidgetType.Rectangle:
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: isSelected ? 3 : 1);
-                    break;
-                case WidgetType.Circle:
-                    ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, 40, color, thickness: isSelected ? 3 : 1);
-                    break;
-                default: throw new NotImplementedException(widgetType.ToString());
-            }
-            if (isSelected)
-            {
-                selectedWidget = name;
-                // Label/tooltip
-                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, Color.White, Color.Black * 0.5f);
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    if (autoFreeze)
-                    {
-                        freeze = true;
-                    }
-                    onPressed();
-                }
-                else
-                {
-                    freeze = freezeToggle.Selected;
-                }
-            }
-        }
         #endregion
 
         #region Ragdoll
@@ -1032,12 +958,10 @@ namespace Barotrauma
 
         private void DrawRagdollEditor(SpriteBatch spriteBatch)
         {
-
-
             bool ctrlDown = PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
             if (!ctrlDown && editJointPositions)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 150, 20), "PRESS Left Alt TO MANIPULATE THE JOINT ENDS", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 150, 20), "PRESS Left Alt TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
@@ -1101,7 +1025,10 @@ namespace Barotrauma
                             GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(widgetSize.X, -widgetSize.Y) * 2, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                             if (PlayerInput.LeftButtonHeld())
                             {
-                                freeze = autoFreeze;
+                                if (autoFreeze)
+                                {
+                                    freeze = true;
+                                }
                                 Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
                                 input = input.TransformVector(-up);
@@ -1174,7 +1101,7 @@ namespace Barotrauma
                     {
                         limbBodyPos.X = rect.X + rect.Width - origin.X;
                     }
-                    if (EditRagdoll)
+                    if (editRagdoll)
                     {
                         DrawSpritesheetRagdollEditor(spriteBatch, limb, limbBodyPos);
                     }
@@ -1293,6 +1220,118 @@ namespace Barotrauma
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
                 }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+            }
+        }
+        #endregion
+
+        #region Widgets
+        private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool autoFreeze = false)
+        {
+            var angle = value;
+            if (!MathUtils.IsValid(angle))
+            {
+                angle = 0;
+            }
+            var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
+            var widgetDrawPos = drawPos + up;
+            widgetDrawPos = MathUtils.RotatePointAroundTarget(widgetDrawPos, drawPos, angle, clockWise);
+            GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
+            DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, 10, color, toolTip, () =>
+            {
+                GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
+                ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
+                var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
+                // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
+                var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
+                if (transformedRot > 360)
+                {
+                    transformedRot -= 360;
+                }
+                else if (transformedRot < -360)
+                {
+                    transformedRot += 360;
+                }
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
+                //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
+                float x = PlayerInput.MouseSpeed.X * 1.5f;
+                float y = PlayerInput.MouseSpeed.Y * 1.5f;
+                if (clockWise)
+                {
+                    if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
+                    {
+                        x = -x;
+                    }
+                    if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
+                    {
+                        y = -y;
+                    }
+                }
+                else
+                {
+                    if (transformedRot < 90 && transformedRot > -90)
+                    {
+                        x = -x;
+                    }
+                    if (transformedRot < 0 && transformedRot > -180)
+                    {
+                        y = -y;
+                    }
+                }
+                angle += x + y;
+                if (angle > 360 || angle < -360)
+                {
+                    angle = 0;
+                }
+                if (displayAngle)
+                {
+                    GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
+                }
+                onClick(angle);
+            }, autoFreeze);
+        }
+
+        public enum WidgetType { Rectangle, Circle }
+        private string selectedWidget;
+        private void DrawWidget(SpriteBatch spriteBatch, Vector2 drawPos, WidgetType widgetType, int size, Color color, string name, Action onPressed, bool autoFreeze = false)
+        {
+            var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
+            var inputRect = drawRect;
+            inputRect.Inflate(size, size);
+            bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
+            // Unselect
+            if (!isMouseOn && selectedWidget == name)
+            {
+                selectedWidget = null;
+            }
+            bool isSelected = isMouseOn && (selectedWidget == null || selectedWidget == name);
+            switch (widgetType)
+            {
+                case WidgetType.Rectangle:
+                    GUI.DrawRectangle(spriteBatch, drawRect, color, false, thickness: isSelected ? 3 : 1);
+                    break;
+                case WidgetType.Circle:
+                    ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, 40, color, thickness: isSelected ? 3 : 1);
+                    break;
+                default: throw new NotImplementedException(widgetType.ToString());
+            }
+            if (isSelected)
+            {
+                selectedWidget = name;
+                // Label/tooltip
+                GUI.DrawString(spriteBatch, new Vector2(drawRect.Right + 5, drawRect.Y - drawRect.Height / 2), name, Color.White, Color.Black * 0.5f);
+                if (PlayerInput.LeftButtonHeld())
+                {
+                    if (autoFreeze)
+                    {
+                        freeze = true;
+                    }
+                    onPressed();
+                }
+                else
+                {
+                    freeze = freezeToggle.Selected;
+                }
             }
         }
         #endregion
