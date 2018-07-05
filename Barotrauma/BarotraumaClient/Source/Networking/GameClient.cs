@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
     {
         private NetClient client;
 
-        private GUIMessageBox reconnectBox;
+        private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
@@ -193,7 +193,7 @@ namespace Barotrauma.Networking
 
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            CoroutineManager.StartCoroutine(WaitForStartingInfo());
+            CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
         }
 
         private bool RetryConnection(GUIButton button, object obj)
@@ -661,7 +661,37 @@ namespace Barotrauma.Networking
             string[] splitMsg = disconnectMsg.Split(';');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
             if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
-            
+
+            if (disconnectReason == DisconnectReason.ServerFull)
+            {
+                //already waiting for a slot to free up, do nothing
+                if (CoroutineManager.IsCoroutineRunning("WaitInServerQueue")) return;
+
+                reconnectBox?.Close(); reconnectBox = null;
+
+                var queueBox = new GUIMessageBox(
+                    TextManager.Get("DisconnectReason.ServerFull"),
+                    TextManager.Get("ServerFullQuestionPrompt"), new string[] { TextManager.Get("Cancel"), TextManager.Get("ServerQueue") });
+
+                queueBox.Buttons[0].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += queueBox.Close;
+                queueBox.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    reconnectBox?.Close(); reconnectBox = null;
+                    CoroutineManager.StartCoroutine(WaitInServerQueue(), "WaitInServerQueue");
+                    return true;
+                };
+                return;
+            }
+            else
+            {
+                //disconnected/denied for some other reason than the server being full
+                // -> stop queuing and show a message box
+                waitInServerQueueBox?.Close();
+                waitInServerQueueBox = null;
+                CoroutineManager.StopCoroutines("WaitInServerQueue");
+            }
+
             if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
             {
                 reconnectBox = new GUIMessageBox(
@@ -689,6 +719,36 @@ namespace Barotrauma.Networking
                 msgBox.Buttons[0].OnClicked += ReturnToServerList;
             }
         }
+
+        private IEnumerable<object> WaitInServerQueue()
+        {
+            waitInServerQueueBox = new GUIMessageBox(
+                    TextManager.Get("ServerQueuePleaseWait"),
+                    TextManager.Get("WaitingInServerQueue"), new string[] { TextManager.Get("Cancel") });
+            waitInServerQueueBox.Buttons[0].OnClicked += (btn, userdata) =>
+            {
+                CoroutineManager.StopCoroutines("WaitInServerQueue");
+                waitInServerQueueBox?.Close();
+                waitInServerQueueBox = null;
+                return true;
+            };
+
+            while (!connected)
+            {
+                if (!CoroutineManager.IsCoroutineRunning("WaitForStartingInfo"))
+                {
+                    ConnectToServer(serverIP);
+                    yield return new WaitForSeconds(2.0f);
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            waitInServerQueueBox?.Close();
+            waitInServerQueueBox = null;
+
+            yield return CoroutineStatus.Success;
+        }
+
 
         private void ReadAchievement(NetIncomingMessage inc)
         {

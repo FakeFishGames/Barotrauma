@@ -118,7 +118,7 @@ namespace Barotrauma.Networking
                 var connectedClient = connectedClients.Find(c => c.SteamID == ownerID);
                 if (connectedClient != null)
                 {
-                    KickClient(connectedClient, "Steam authentication is no longer valid (" + status.ToString() + ")");
+                    KickClient(connectedClient, TextManager.Get("DisconnectMessage.SteamAuthNoLongerValid").Replace("[status]", status.ToString()));
                 }
             }
         }
@@ -200,7 +200,7 @@ namespace Barotrauma.Networking
                     if (unauthClient.FailedAttempts > 3)
                     {
                         //disconnect and ban after too many failed attempts
-                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), "Too many failed login attempts.", null);
+                        banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString(), TextManager.Get("DisconnectMessage.TooManyFailedLogins"), duration: null);
                         DisconnectUnauthClient(inc, unauthClient, DisconnectReason.TooManyFailedLogins, "");
 
                         Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " has been banned from the server (too many wrong passwords)", ServerLog.MessageType.Error);
@@ -245,8 +245,9 @@ namespace Barotrauma.Networking
 
             if (clVersion != GameMain.Version.ToString())
             {
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidVersion, "Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
-                
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.InvalidVersion,
+                    TextManager.Get("DisconnectMessage.InvalidVersion").Replace("[version]", GameMain.Version.ToString()).Replace("[clientversion]", clVersion));
+
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", ServerLog.MessageType.Error);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (wrong game version)", Color.Red);
                 return;
@@ -268,10 +269,10 @@ namespace Barotrauma.Networking
                 }
                 if (!packageFound) missingPackages.Add(contentPackage);
             }
-            
+
             if (missingPackages.Count == 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, "You need the content package " + GetPackageStr(missingPackages[0]) + " to play on the server.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, TextManager.Get("DisconnectMessage.MissingContentPackage").Replace("[missingcontentpackage]", GetPackageStr(missingPackages[0])));
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -279,11 +280,11 @@ namespace Barotrauma.Networking
             {
                 List<string> packageStrs = new List<string>();
                 missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, "You need the content packages " + string.Join(", ", packageStrs) + " to play on the server.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.MissingContentPackage, TextManager.Get("DisconnectMessage.MissingContentPackages").Replace("[missingcontentpackages]", string.Join(", ", packageStrs)));
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
-            
+
             string GetPackageStr(ContentPackage contentPackage)
             {
                 return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
@@ -301,7 +302,8 @@ namespace Barotrauma.Networking
 
             if (incompatiblePackages.Count == 1)
             {
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, "You must disable the content package " + GetPackageStr2(incompatiblePackages[0]) + " before joining.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, 
+                    TextManager.Get("DisconnectMessage.IncompatibleContentPackage").Replace("[incompatiblecontentpackage]", GetPackageStr2(incompatiblePackages[0])));
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content package " + GetPackageStr2(incompatiblePackages[0]) + ")", ServerLog.MessageType.Error);
                 return;
             }
@@ -309,7 +311,8 @@ namespace Barotrauma.Networking
             {
                 List<string> packageStrs = new List<string>();
                 incompatiblePackages.ForEach(cp => packageStrs.Add(GetPackageStr2(cp)));
-                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, "You must disable the content packages " + string.Join(", ", packageStrs) + " before joining.");
+                DisconnectUnauthClient(inc, unauthClient, DisconnectReason.IncompatibleContentPackage, 
+                    TextManager.Get("DisconnectMessage.IncompatibleContentPackages").Replace("[incompatiblecontentpackages]", string.Join(", ", packageStrs)));
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                 return;
             }
