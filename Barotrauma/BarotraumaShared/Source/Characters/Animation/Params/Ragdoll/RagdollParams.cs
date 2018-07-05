@@ -8,7 +8,11 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class HumanRagdollParams : RagdollParams { }
+    class HumanRagdollParams : RagdollParams
+    {
+        public static HumanRagdollParams GetRagdollParams() => GetRagdollParams<HumanRagdollParams>("human");
+    }
+
     class FishRagdollParams : RagdollParams { }
 
     class RagdollParams : EditableParams
@@ -23,17 +27,29 @@ namespace Barotrauma
 
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
 
-        /// <summary>
-        /// Returns the path to the default folder without the filename.
-        /// </summary>
-        public static string GetDefaultPath(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
-        public static string GetDefaultFileName(string speciesName) => $"default{speciesName.CapitaliseFirstInvariant()}ragdoll.xml";      
+        public XElement MainElement => Doc.Root;
+
+        public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll.xml";
 
         /// <summary>
-        /// Returns the path that is defined in the character config file. Does not include the file name.
+        /// Returns the hard coded default folder, in case the content folder definition is invalid or missing.
         /// </summary>
-        public static string GetPath(string speciesName) 
-            => XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName)).Root.Element("ragdoll").GetAttributeString("folder", GetDefaultPath(speciesName));
+        protected static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
+
+        protected static string GetFolder(string speciesName)
+        {
+            // TODO: get the path from settings or parse from xml.
+            var folder = string.Empty;
+            // TODO: handle invalid folder
+            if (string.IsNullOrEmpty(folder))
+            {
+                return GetDefaultFolder(speciesName);
+            }
+            else
+            {
+                return folder.Replace("[SpeciesName]", speciesName.CapitaliseFirstInvariant());
+            }
+        }
 
         /// <summary>
         /// The file name can be partial. If left null, will select randomly. If fails, will select the default file.
@@ -49,7 +65,7 @@ namespace Barotrauma
             fileName = fileName ?? defaultFileName;
             if (!ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
-                string folder = GetPath(speciesName);
+                string folder = GetFolder(speciesName);
                 string defaultFile = folder + defaultFileName;
                 var ragdollFiles = Directory.GetFiles(folder);
                 if (ragdollFiles.None())

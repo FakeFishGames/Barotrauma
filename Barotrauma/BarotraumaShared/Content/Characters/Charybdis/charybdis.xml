@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="charybdis" humanoid="false">
 
-  <animation path="Content/Characters/Charybdis/Animations/Charybdis[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Charybdis/Ragdolls/"/>
-
   <health
     vitality="1000"
     doesbleed="true"/>

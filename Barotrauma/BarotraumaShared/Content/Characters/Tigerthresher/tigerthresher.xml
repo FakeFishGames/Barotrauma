@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="tigerthresher" humanoid="false">
 
-  <animation path="Content/Characters/Tigerthresher/Animations/Tigerthresher[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Tigerthresher/Ragdolls/"/>
-
   <health
     vitality="300"
     doesbleed="true"/>

@@ -18,10 +18,10 @@
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Human\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Animations\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\Animations\" />
-    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Animations\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\Animations\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Effects\" />
@@ -73,7 +73,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\Ragdolls\MantisDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Ragdolls\MolochBossDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Ragdolls\MolochbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Ragdolls\MolochDefaultRagdoll.xml">
@@ -82,7 +82,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Seamantis\Ragdolls\SeamantisDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Ragdolls\TigerthresherBossDefaultRagdoll.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Ragdolls\TigerthresherbossDefaultRagdoll.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\tigerthresher.xml">
@@ -367,13 +367,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Mantis\mantis.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\molochboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\molochboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Animations\MolochBossSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Animations\MolochbossSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\MolochBoss\Animations\MolochBossSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Molochboss\Animations\MolochbossSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\Animations\MolochSwimFast.xml">
@@ -388,13 +388,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\moloch.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\tigerthresherboss.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\tigerthresherboss.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Animations\TigerthresherBossSwimFast.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Animations\TigerthresherbossSwimFast.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\TigerthresherBoss\Animations\TigerthresherBossSwimSlow.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresherboss\Animations\TigerthresherbossSwimSlow.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\damagedtigerthresher.png">

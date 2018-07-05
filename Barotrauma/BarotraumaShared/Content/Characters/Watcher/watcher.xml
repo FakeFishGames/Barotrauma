@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="watcher" humanoid="false">
 
-  <animation path="Content/Characters/Watcher/Animations/Watcher[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Watcher/Ragdolls"/>
-
   <health
     vitality="1000"
     doesbleed="true"/>

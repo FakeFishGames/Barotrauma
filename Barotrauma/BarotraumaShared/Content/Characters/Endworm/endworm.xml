@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="endworm" humanoid="false">
 
-  <animation path="Content/Characters/Endworm/Animations/Endworm[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Endworm/Ragdolls/"/>
-
   <health
     vitality="10000.0"
     doesbleed="false"/>

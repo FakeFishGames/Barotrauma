@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Ragdoll type="charybdis"
-  scale="1.5"
+  limbscale="1.5"
+  jointscale="1.5"
   canentersubmarine="false">
 
   <collider radius="80" height="440"/>

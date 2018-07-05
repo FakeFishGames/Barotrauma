@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="tigerthresherboss" canentersubmarine="false" scale="1.5">
+<Ragdoll 
+  type="tigerthresherboss" 
+  canentersubmarine="false" 
+  limbscale="1.5"
+  jointscale="1.5">
 
   <collider radius="50" height="185"/>
     

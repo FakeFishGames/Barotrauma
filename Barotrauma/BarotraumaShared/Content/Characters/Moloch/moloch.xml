@@ -1,8 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="moloch" humanoid="false">
-
-  <animation path="Content/Characters/Moloch/Animations/Moloch[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Moloch/Ragdolls/"/>
   
   <health
     vitality="1000"

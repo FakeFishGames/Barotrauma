@@ -661,29 +661,15 @@ namespace Barotrauma
             //XElement ragdollElement = ragdollElements.Count == 1 ?
             //    ragdollElements[0] : ToolBox.SelectWeightedRandom(ragdollElements, ragdollCommonness, random);
 
-            string defaultPath = $"Content/Characters/{SpeciesName}/Ragdolls/";
-            string path = doc.Root.Element("ragdoll").GetAttributeString("path", defaultPath);
-            if (!Directory.Exists(path))
-            {
-                throw new Exception("The ragdoll directory does not exist at: " + path);
-            }
-            var ragdollPaths = Directory.GetFiles(path);
-            if (ragdollPaths.None())
-            {
-                throw new Exception("Could not find any ragdoll files for the character from the path: " + path);
-            }
-            XDocument ragdollFile = XMLExtensions.TryLoadXml(ragdollPaths.GetRandom());
-            var ragdollElement = ragdollFile.Root;
-
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, ragdollElement, seed);
+                AnimController = new HumanoidAnimController(this, seed);
                 AnimController.TargetDir = Direction.Right;
                 
             }
             else
             {
-                AnimController = new FishAnimController(this, ragdollElement, seed);
+                AnimController = new FishAnimController(this, seed);
                 PressureProtection = 100.0f;
             }
 

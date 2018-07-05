@@ -147,7 +147,20 @@ namespace Barotrauma
             }
         }
 
-        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, RagdollParams ragdoll = null)
+        private HumanRagdollParams ragdoll;
+        public HumanRagdollParams Ragdoll
+        {
+            get
+            {
+                if (ragdoll == null)
+                {
+                    ragdoll = HumanRagdollParams.GetRagdollParams();
+                }
+                return ragdoll;
+            }
+        }
+
+        public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, HumanRagdollParams ragdoll = null)
         {
             ID = idCounter;
             idCounter++;
@@ -229,11 +242,11 @@ namespace Barotrauma
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);
             
             Salary = CalculateSalary();
-            this.ragdoll = ragdoll ?? RagdollParams.GetRagdollParams<HumanRagdollParams>("human");
+            if (ragdoll != null)
+            {
+                this.ragdoll = ragdoll;
+            }
         }
-
-        public readonly RagdollParams ragdoll;
-
 
         public CharacterInfo(XElement element)
         {
@@ -278,12 +291,11 @@ namespace Barotrauma
                 Job = new Job(subElement);
                 break;
             }
-            // TODO: add and parse an xml element for the selected ragdoll?
         }
 
         private void LoadHeadSprite()
         {
-            foreach (XElement limbElement in XMLExtensions.TryLoadXml(ragdoll.FilePath).Root.Elements())
+            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FilePath).Root.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 

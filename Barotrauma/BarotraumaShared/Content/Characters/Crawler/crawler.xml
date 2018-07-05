@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Character name="crawler" humanoid="false">
 
-  <animation path="Content/Characters/Crawler/Animations/Crawler[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Crawler/Ragdolls/"/>
-
   <health
     vitality="70"
     doesbleed="true"/>

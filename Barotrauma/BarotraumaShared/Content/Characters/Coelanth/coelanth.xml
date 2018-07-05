@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="coelanth" humanoid="false">
 
-  <animation path="Content/Characters/Coelanth/Animations/Coelanth[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Coelanth/Ragdolls/"/>
-
   <health
     vitality="100"
     doesbleed="true"/>

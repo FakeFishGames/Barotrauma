@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="fractalguardian" humanoid="false">
 
-  <animation path="Content/Characters/Fractalguardian/Animations/Fractalguardian[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Fractalguardian/Ragdolls/"/>
-
   <health
     vitality="500"
     doesbleed="false" 

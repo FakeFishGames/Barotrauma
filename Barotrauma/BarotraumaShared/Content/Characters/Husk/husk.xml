@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="husk" humanoid="true" needsair="false">
 
-  <ragdoll path ="Content/Characters/Husk/Ragdolls/"/>
-
   <health
     vitality="100"
     doesbleed="false"/>

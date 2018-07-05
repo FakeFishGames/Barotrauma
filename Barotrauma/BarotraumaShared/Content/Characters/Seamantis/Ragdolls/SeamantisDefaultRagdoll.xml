@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Ragdoll
   type="seamantis"
-  minscale="0.4" maxscale="0.4"
+  limbscale="0.4"
+  jointscale="0.4"
   impacttolerance="10"
   draggable="true">
 

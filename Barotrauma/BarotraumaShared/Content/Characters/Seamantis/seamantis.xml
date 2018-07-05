@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Character name="seamantis" humanoid="false">
 
-  <animation path="Content/Characters/Seamantis/Animations/Seamantis[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Seamantis/Ragdolls"/>
-
   <health
     vitality="200"
     doesbleed="false"/>

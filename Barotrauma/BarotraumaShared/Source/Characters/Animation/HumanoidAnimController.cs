@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,22 +11,7 @@ namespace Barotrauma
     {
         public override RagdollParams RagdollParams => HumanRagdollParams;
 
-        private HumanRagdollParams _ragdollParams;
-        public HumanRagdollParams HumanRagdollParams
-        {
-            get
-            {
-                if (_ragdollParams == null)
-                {
-                    _ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesName);
-                }
-                return _ragdollParams;
-            }
-            set
-            {
-                _ragdollParams = value;
-            }
-        }
+        public HumanRagdollParams HumanRagdollParams => character.Info.Ragdoll;
 
         private HumanWalkParams _humanWalkParams;
         public HumanWalkParams HumanWalkParams
@@ -139,9 +123,10 @@ namespace Barotrauma
             }
         }
 
-        public HumanoidAnimController(Character character, XElement element, string seed) : base(character, element, seed)
+        public HumanoidAnimController(Character character, string seed) : base(character, seed)
         {
-            movementLerp = element.GetAttributeFloat("movementlerp", 0.4f);
+            // TODO: load from the character info file?
+            movementLerp = RagdollParams.MainElement.GetAttributeFloat("movementlerp", 0.4f);
         }
 
         public override void UpdateAnim(float deltaTime)

@@ -1,8 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="carrier" humanoid="false">
-
-  <animation path="Content/Characters/Carrier/Animations/Carrier[ANIMTYPE].xml"/>
-  <ragdoll path="Content/Characters/Carrier/Ragdolls/"/>
   
   <health
     vitality="1000"

@@ -3,6 +3,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -14,13 +16,14 @@ namespace Barotrauma
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         protected XDocument doc;
-        protected XDocument Doc
+        public XDocument Doc
         {
             get
             {
-                if (doc == null)
+                if (!IsLoaded)
                 {
-                    doc = XMLExtensions.TryLoadXml(FilePath);
+                    DebugConsole.ThrowError("[Params] Not loaded!");
+                    return new XDocument();
                 }
                 return doc;
             }
@@ -41,18 +44,14 @@ namespace Barotrauma
         protected bool Load(string file)
         {
             FilePath = file;
-            Name = Path.GetFileNameWithoutExtension(file);     
-            IsLoaded = Deserialize(Doc.Root);
+            Name = Path.GetFileNameWithoutExtension(FilePath);
+            doc = XMLExtensions.TryLoadXml(FilePath);
+            IsLoaded = Deserialize(doc.Root);
             return IsLoaded;
         }
 
         public bool Save()
         {
-            if (!IsLoaded)
-            {
-                DebugConsole.ThrowError("[Params] Not loaded!");
-                return false;
-            }
             Serialize(Doc.Root);
             // TODO: would Doc.Save() be enough?
             XmlWriterSettings settings = new XmlWriterSettings
@@ -63,7 +62,7 @@ namespace Barotrauma
             };
             using (var writer = XmlWriter.Create(FilePath, settings))
             {
-                doc.WriteTo(writer);
+                Doc.WriteTo(writer);
                 writer.Flush();
             }
             return true;
@@ -71,11 +70,6 @@ namespace Barotrauma
 
         public bool Reset()
         {
-            if (!IsLoaded)
-            {
-                DebugConsole.ThrowError("[Params] Not loaded!");
-                return false;
-            }
             return Deserialize(Doc.Root);
         }
 
