@@ -304,7 +304,6 @@ namespace Barotrauma
                 string spritePath = spriteElement.Attribute("texture").Value;
 
                 spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
-                //DebugConsole.NewMessage("Replacing [HEADID] with " + HeadSpriteId.ToString(), Color.White);
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
                 
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
@@ -314,9 +313,7 @@ namespace Barotrauma
                 foreach (string file in files)
                 {
                     string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
-                    //DebugConsole.NewMessage("parsing file: " + file, Color.White);
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
-                    //DebugConsole.NewMessage("parsed file name: " + fileWithoutTags, Color.White);
                     if (fileWithoutTags != fileName) continue;
                     
                     headSprite = new Sprite(spriteElement, "", file);
