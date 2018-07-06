@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System;
-using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -19,7 +18,7 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
-        [Serialize("1.0,1.0", true), Editable]
+        [Serialize("1.0, 1.0", true), Editable]
         public Vector2 StepSize
         {
             get;

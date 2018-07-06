@@ -42,6 +42,8 @@ namespace Barotrauma
             set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        // TODO: use the limb sprite params directly?
+
         public Vector2 Origin
         {
             get { return origin; }

@@ -263,7 +263,6 @@ namespace Barotrauma
                 {
                     TryUpdateRagdollParam("limbscale", MathHelper.Clamp(value * 2, 0.5f, 2f));
                     limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
-                    // TODO: reset limbs?
                     return true;
                 },
                 Step = 0.01f
@@ -473,7 +472,7 @@ namespace Barotrauma
         private void ResetParamsEditor()
         {
             ParamsEditor.Instance.Clear();
-            if (editRagdoll)
+            if (editRagdoll || editSpriteOrigins)
             {
                 RagdollParams.AddToEditor(ParamsEditor.Instance);
             }
@@ -505,6 +504,15 @@ namespace Barotrauma
             if (joint.jointParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
                 joint.jointParams.SerializableEntityEditor.UpdateValue(p, value);
+            }
+        }
+
+        private void TryUpdateLimbParam(Limb limb, string name, object value)
+        {
+            // TODO: handle updating the sub params
+            if (limb.limbParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            {
+                limb.limbParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
         #endregion
@@ -966,7 +974,8 @@ namespace Barotrauma
                 selectedLimb.sprite.Origin += input.TransformVector(up);
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
-                // TODO: update the ragdoll param: limb sprite origin
+                // TODO: handle updating limb sub params
+                //TryUpdateLimbParam(selectedLimb, "sprite", ConvertUnits.ToDisplayUnits(selectedLimb.sprite.Origin));
             }
         }
 
@@ -1133,7 +1142,8 @@ namespace Barotrauma
                             var input = PlayerInput.MouseSpeed;
                             input.X *= character.AnimController.Dir;
                             limb.sprite.Origin += input;
-                            // TODO: update the ragdoll param limb sprite origin
+                            // TODO: handle updating limb sub params
+                            //TryUpdateLimbParam(limb, "sprite", ConvertUnits.ToDisplayUnits(limb.sprite.Origin));
                             GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         }
                     }
