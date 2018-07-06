@@ -22,6 +22,11 @@ namespace Barotrauma.Items.Components
         //the float value is a timer used for disconnecting the transducer if no signal is received from it for 1 second
         private Dictionary<SonarTransducer, float> connectedTransducers;
 
+        public IEnumerable<SonarTransducer> ConnectedTransducers
+        {
+            get { return connectedTransducers.Keys; }
+        }
+
         [Serialize(10000.0f, false)]
         public float Range
         {

@@ -282,7 +282,9 @@ namespace Barotrauma.Items.Components
             foreach (Submarine sub in Submarine.Loaded)
             {
                 if (!sub.OnRadar) continue;
-                if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
+                if (UseTransducers ?
+                    connectedTransducers.Any(t => sub == t.Key.Item.Submarine || sub.DockedTo.Contains(t.Key.Item.Submarine)) :
+                    sub == item.Submarine && sub.DockedTo.Contains(item.Submarine)) continue;
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
 
                 DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
