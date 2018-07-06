@@ -123,19 +123,30 @@ namespace Barotrauma
                     var files = Directory.GetFiles(folder);
                     if (files.None())
                     {
-                        DebugConsole.NewMessage($"[Animationparams] Could not find any animation files from the folder: {folder}. Using the default animation.", Color.Red);
+                        DebugConsole.ThrowError($"[AnimationParams] Could not find any animation files from the folder: {folder}. Using the default animation.");
                         selectedFile = GetDefaultFile(speciesName, animType);
                     }
                     else if (fileName != defaultFileName)
                     {
-                        selectedFile = files.FirstOrDefault(p =>
-                        {
-                            string _p = p.ToLowerInvariant();
-                            return _p.Contains(fileName.ToLowerInvariant()) && _p.Contains(animType.ToString().ToLowerInvariant());
-                        });
+                        // First check if a file matches the name exactly
+                        selectedFile = files.FirstOrDefault(f => f == fileName);
                         if (selectedFile == null)
                         {
-                            DebugConsole.NewMessage($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.", Color.Red);
+                            // Then check if a file matches the name ignoring the case
+                            selectedFile = files.FirstOrDefault(f => f.ToLowerInvariant() == fileName.ToLowerInvariant());
+                        }
+                        if (selectedFile == null)
+                        {
+                            // Last, check if a file matches the name partially and the type ignoring the case.
+                            selectedFile = files.FirstOrDefault(f =>
+                            {
+                                string fp = f.ToLowerInvariant();
+                                return fp.Contains(fileName.ToLowerInvariant()) && fp.Contains(animType.ToString().ToLowerInvariant());
+                            });
+                        }
+                        if (selectedFile == null)
+                        {
+                            DebugConsole.ThrowError($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");
                             selectedFile = GetDefaultFile(speciesName, animType);
                         }
                     }
@@ -147,7 +158,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.NewMessage($"[Animationparams] Invalid directory: {folder}. Using the default animation.", Color.Red);
+                    DebugConsole.ThrowError($"[Animationparams] Invalid directory: {folder}. Using the default animation.");
                     selectedFile = GetDefaultFile(speciesName, animType);
                 }
                 if (selectedFile == null)
