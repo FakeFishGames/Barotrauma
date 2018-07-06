@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
             {
                 TextGetter = () =>
                 {
-                    float realWorldDepth = Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };

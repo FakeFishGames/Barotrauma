@@ -102,7 +102,8 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            if (voltage >= minVoltage || powerConsumption <= 0.0f)
+            if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
+                (!UseTransducers || connectedTransducers.Count > 0))
             {
                 pingState = pingState + deltaTime * 0.5f;
                 if (pingState > 1.0f)

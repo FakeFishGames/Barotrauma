@@ -42,6 +42,7 @@
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
+      <input name="transducer_in"/>
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
       <output name="velocity_y_out"/>
