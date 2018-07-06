@@ -882,12 +882,31 @@ namespace Barotrauma
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
-
+            
             //turn off lights that are inside an inventory (cabinet for example)
             foreach (Item item in Item.ItemList)
             {
                 var lightComponent = item.GetComponent<LightComponent>();
                 if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
+            }
+
+            if (selectedSub.GameVersion < new Version("0.8.1.2"))
+            {
+                var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                adjustLightsPrompt.Buttons[0].OnClicked += adjustLightsPrompt.Close;
+                adjustLightsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.ParentInventory != null || item.body != null) continue;
+                        var lightComponent = item.GetComponent<LightComponent>();
+                        if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
+                    }
+                    new GUIMessageBox("", TextManager.Get("AdjustedLightsNotification"));
+                    return true;
+                };
+                adjustLightsPrompt.Buttons[1].OnClicked += adjustLightsPrompt.Close;
             }
 
             return true;
