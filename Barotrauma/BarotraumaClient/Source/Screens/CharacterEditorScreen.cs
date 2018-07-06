@@ -26,7 +26,7 @@ namespace Barotrauma
         private Character character;
         private Vector2 spawnPosition;
         private bool showAnimControls;
-        private bool editOffsets;
+        private bool editSpriteOrigins;
         private bool editRagdoll;
         private bool editJointPositions;
         private bool editJointLimits;
@@ -247,7 +247,7 @@ namespace Barotrauma
                 BarScroll = RagdollParams.JointScale / 2,
                 OnMoved = (scrollBar, value) =>
                 {
-                    RagdollParams.JointScale = MathHelper.Clamp(value * 2, 0.5f, 2f);
+                    TryUpdateRagdollParam("jointscale", MathHelper.Clamp(value * 2, 0.5f, 2f));
                     jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
                     character.AnimController.ResetJoints();
                     return true;
@@ -261,7 +261,7 @@ namespace Barotrauma
                 BarScroll = RagdollParams.LimbScale / 2,
                 OnMoved = (scrollBar, value) =>
                 {
-                    RagdollParams.LimbScale = MathHelper.Clamp(value * 2, 0.5f, 2f);
+                    TryUpdateRagdollParam("limbscale", MathHelper.Clamp(value * 2, 0.5f, 2f));
                     limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
                     // TODO: reset limbs?
                     return true;
@@ -302,7 +302,7 @@ namespace Barotrauma
             };
             var animControlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Animation Controls") { Selected = showAnimControls };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
-            var offsetsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Offsets") { Selected = editOffsets };
+            var originsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Origins") { Selected = editSpriteOrigins };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
@@ -315,7 +315,7 @@ namespace Barotrauma
                 if (showAnimControls)
                 {
                     spritesheetToggle.Selected = false;
-                    offsetsToggle.Selected = false;
+                    originsToggle.Selected = false;
                     ragdollToggle.Selected = false;
                     ResetParamsEditor();
                 }
@@ -327,19 +327,16 @@ namespace Barotrauma
                 if (showParamsEditor)
                 {
                     spritesheetToggle.Selected = false;
-                    offsetsToggle.Selected = false;
-                    jointPositionsToggle.Selected = false;
-                    jointLimitsToggle.Selected = false;
                 }
                 return true;
             };
-            offsetsToggle.OnSelected = box =>
+            originsToggle.OnSelected = box =>
             {
-                editOffsets = box.Selected;
-                if (editOffsets)
+                editSpriteOrigins = box.Selected;
+                if (editSpriteOrigins)
                 {
                     ragdollToggle.Selected = false;
-                    spritesheetToggle.Selected = true;
+                    animControlsToggle.Selected = false;
                 }
                 return true;
             };
@@ -348,7 +345,7 @@ namespace Barotrauma
                 editRagdoll = box.Selected;
                 if (editRagdoll)
                 {
-                    offsetsToggle.Selected = false;
+                    originsToggle.Selected = false;
                     animControlsToggle.Selected = false;
                     ResetParamsEditor();
                 }
@@ -365,7 +362,7 @@ namespace Barotrauma
                 if (editJointPositions)
                 {
                     ragdollToggle.Selected = true;
-                    spritesheetToggle.Selected = true;
+                    spritesheetToggle.Selected = !paramsToggle.Selected;
                 }
                 return true;
             };
@@ -375,7 +372,7 @@ namespace Barotrauma
                 if (editJointLimits)
                 {
                     ragdollToggle.Selected = true;
-                    spritesheetToggle.Selected = true;
+                    spritesheetToggle.Selected = !paramsToggle.Selected;
                 }
                 return true;
             };
@@ -463,12 +460,13 @@ namespace Barotrauma
             {
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
+                ResetParamsEditor();
                 return true;
             };
         }
         #endregion
 
-        #region AnimParams
+        #region Params
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
 
@@ -477,12 +475,36 @@ namespace Barotrauma
             ParamsEditor.Instance.Clear();
             if (editRagdoll)
             {
-                // TODO: not updated instantly -> remove?
                 RagdollParams.AddToEditor(ParamsEditor.Instance);
             }
             else
             {
                 AnimParams.ForEach(p => p.AddToEditor(ParamsEditor.Instance));
+            }
+        }
+
+        private void TryUpdateAnimParam(string name, object value)
+        {
+            var animParams = character.AnimController.CurrentAnimationParams;
+            if (animParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            {
+                animParams.SerializableEntityEditor.UpdateValue(p, value);
+            }
+        }
+
+        private void TryUpdateRagdollParam(string name, object value)
+        {
+            if (RagdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            {
+                RagdollParams.SerializableEntityEditor.UpdateValue(p, value);
+            }
+        }
+
+        private void TryUpdateJointParam(LimbJoint joint, string name, object value)
+        {
+            if (joint.jointParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            {
+                joint.jointParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
         #endregion
@@ -558,9 +580,9 @@ namespace Barotrauma
             {
                 DrawAnimationControls(spriteBatch);
             }
-            if (editOffsets)
+            if (editSpriteOrigins)
             {
-                DrawOffsetEditor(spriteBatch);
+                DrawSpriteOriginEditor(spriteBatch);
             }
             if (editRagdoll)
             {
@@ -679,7 +701,7 @@ namespace Barotrauma
             DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
             {
                 float speed = animParams.Speed + Vector2.Multiply(PlayerInput.MouseSpeed, forward).Combine() * multiplier / Cam.Zoom;
-                TryUpdateValue("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
+                TryUpdateAnimParam("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                 GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
             });
             GUI.DrawLine(spriteBatch, drawPos + forward * 10, drawPos + forward * 15, Color.Turquoise);
@@ -687,7 +709,7 @@ namespace Barotrauma
             {
                 // Head angle
                 DrawCircularWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, "Head Angle", Color.White,
-                    angle => TryUpdateValue("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 // Head position and leaning
                 if (animParams.IsGroundedAnimation)
                 {
@@ -697,9 +719,9 @@ namespace Barotrauma
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
                             float input = 0.006f * PlayerInput.MouseSpeed.X / Cam.Zoom * dir;
-                            TryUpdateValue("headleanamount", humanGroundedParams.HeadLeanAmount + input);
+                            TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + input);
                             input = 0.015f * PlayerInput.MouseSpeed.Y / Cam.Zoom;
-                            TryUpdateValue("headposition", humanGroundedParams.HeadPosition - input);
+                            TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - input);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(head.SimPosition), Color.Red);
                         });
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
@@ -711,7 +733,7 @@ namespace Barotrauma
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position", () =>
                         {
                             float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed.Y / Cam.Zoom);
-                            TryUpdateValue("headposition", v);
+                            TryUpdateAnimParam("headposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
                         });
                     }
@@ -726,7 +748,7 @@ namespace Barotrauma
                 }
                 // Torso angle
                 DrawCircularWidget(spriteBatch, SimToScreen(referencePoint), animParams.TorsoAngle, "Torso Angle", Color.White,
-                    angle => TryUpdateValue("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
+                    angle => TryUpdateAnimParam("torsoangle", angle), rotationOffset: collider.Rotation, clockWise: dir < 0);
 
                 if (animParams.IsGroundedAnimation)
                 {
@@ -737,9 +759,9 @@ namespace Barotrauma
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso", () =>
                         {
                             float input = 0.005f * PlayerInput.MouseSpeed.X / Cam.Zoom * dir;
-                            TryUpdateValue("torsoleanamount", humanGroundedParams.TorsoLeanAmount + input);
+                            TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + input);
                             input = 0.02f * PlayerInput.MouseSpeed.Y / Cam.Zoom;
-                            TryUpdateValue("torsoposition", humanGroundedParams.TorsoPosition - input);
+                            TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - input);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(torso.SimPosition), Color.Red);
                         });
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
@@ -751,7 +773,7 @@ namespace Barotrauma
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso Position", () =>
                         {
                             float v = groundedParams.TorsoPosition - ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed.Y / Cam.Zoom);
-                            TryUpdateValue("torsoposition", v);
+                            TryUpdateAnimParam("torsoposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
                         });
                     }
@@ -763,7 +785,7 @@ namespace Barotrauma
                 if (fishGroundedParams != null)
                 {
                     DrawCircularWidget(spriteBatch, SimToScreen(colliderBottom), fishGroundedParams.FootRotation, "Foot Rotation", Color.White,
-                        angle => TryUpdateValue("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
+                        angle => TryUpdateAnimParam("footrotation", angle), circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0);
                 }
                 // Both
                 if (groundedParams != null)
@@ -781,7 +803,7 @@ namespace Barotrauma
                         {
                             transformedInput.Y = -transformedInput.Y;
                         }
-                        TryUpdateValue("stepsize", groundedParams.StepSize + transformedInput * multiplier / Cam.Zoom);
+                        TryUpdateAnimParam("stepsize", groundedParams.StepSize + transformedInput * multiplier / Cam.Zoom);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
                     GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
@@ -796,7 +818,7 @@ namespace Barotrauma
                     drawPos = SimToScreen(colliderBottom + simSpaceForward * 0.3f);
                     DrawCircularWidget(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque * multiplier, "Leg Angle", Color.Chartreuse, angle =>
                     {
-                        TryUpdateValue("legcorrectiontorque", angle / multiplier);
+                        TryUpdateAnimParam("legcorrectiontorque", angle / multiplier);
                         GUI.DrawString(spriteBatch, drawPos, humanGroundedParams.LegCorrectionTorque.FormatAsSingleDecimal(), Color.Black, Color.Chartreuse, font: GUI.SmallFont);
                     }, circleRadius: 25, rotationOffset: collider.Rotation, clockWise: dir < 0, displayAngle: false);
                 }
@@ -810,7 +832,7 @@ namespace Barotrauma
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                     {
                         var transformedInput = new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y) * multiplier / Cam.Zoom;
-                        TryUpdateValue("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
+                        TryUpdateAnimParam("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
                     GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
@@ -832,7 +854,7 @@ namespace Barotrauma
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Wave Length", () =>
                 {
                     var input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() / lengthMultiplier;
-                    TryUpdateValue("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
+                    TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
                     //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
@@ -842,7 +864,7 @@ namespace Barotrauma
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Wave Amplitude", () =>
                 {
                     var input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() / amplitudeMultiplier * dir;
-                    TryUpdateValue("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
+                    TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
                     //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
@@ -866,7 +888,7 @@ namespace Barotrauma
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Leg Movement Speed", () =>
                 {
                     float input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceForward).Combine() / lengthMultiplier;
-                    TryUpdateValue("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
+                    TryUpdateAnimParam("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
                     //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
@@ -875,7 +897,7 @@ namespace Barotrauma
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Leg Movement Amount", () =>
                 {
                     float input = Vector2.Multiply(PlayerInput.MouseSpeed, screenSpaceLeft).Combine() / amplitudeMultiplier * dir;
-                    TryUpdateValue("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
+                    TryUpdateAnimParam("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
                     //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
                     GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
@@ -889,27 +911,18 @@ namespace Barotrauma
                 {
                     var transformedInput = ConvertUnits.ToSimUnits(new Vector2(PlayerInput.MouseSpeed.X * dir, PlayerInput.MouseSpeed.Y)) / Cam.Zoom;
                     var handMovement = humanSwimParams.HandMoveAmount + transformedInput;
-                    TryUpdateValue("handmoveamount", handMovement);
-                    TryUpdateValue("handcyclespeed", handMovement.X * 4);
+                    TryUpdateAnimParam("handmoveamount", handMovement);
+                    TryUpdateAnimParam("handcyclespeed", handMovement.X * 4);
                     GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                 });
                 GUI.DrawLine(spriteBatch, origin, origin + Vector2.UnitX * 5 * dir, Color.Blue);
-            }
-        }
-
-        private void TryUpdateValue(string name, object value)
-        {
-            var animParams = character.AnimController.CurrentAnimationParams;
-            if (animParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
-            {
-                animParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
         #endregion
 
         #region Ragdoll
         private Vector2[] corners = new Vector2[4];
-        private void DrawOffsetEditor(SpriteBatch spriteBatch)
+        private void DrawSpriteOriginEditor(SpriteBatch spriteBatch)
         {
             float inputMultiplier = 0.5f;
             Limb selectedLimb = null;
@@ -953,6 +966,7 @@ namespace Barotrauma
                 selectedLimb.sprite.Origin += input.TransformVector(up);
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
+                // TODO: update the ragdoll param: limb sprite origin
             }
         }
 
@@ -1035,10 +1049,12 @@ namespace Barotrauma
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
+                                    TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                                 }
                                 else
                                 {
                                     joint.LocalAnchorB += input;
+                                    TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                                 }
                             }
                             else
@@ -1105,7 +1121,7 @@ namespace Barotrauma
                     {
                         DrawSpritesheetRagdollEditor(spriteBatch, limb, limbBodyPos);
                     }
-                    if (editOffsets)
+                    if (editSpriteOrigins)
                     {
                         // Sprite origin
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
@@ -1117,6 +1133,7 @@ namespace Barotrauma
                             var input = PlayerInput.MouseSpeed;
                             input.X *= character.AnimController.Dir;
                             limb.sprite.Origin += input;
+                            // TODO: update the ragdoll param limb sprite origin
                             GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         }
                     }
@@ -1175,20 +1192,23 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, rect, color, isFilled: true);
                     if (inputRect.Contains(PlayerInput.MousePosition))
                     {          
-                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, jointPos.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One * 10.0f, $"{jointPos.FormatAsZeroDecimal()}", Color.White, Color.Black * 0.5f);
                         GUI.DrawRectangle(spriteBatch, inputRect, color);
                         if (PlayerInput.LeftButtonHeld())
                         {
                             Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
                             input.Y = -input.Y;
                             input.X *= character.AnimController.Dir;
+                            input *= limb.Scale;
                             if (joint.BodyA == limb.body.FarseerBody)
                             {
-                                joint.LocalAnchorA += input * limb.Scale;
+                                joint.LocalAnchorA += input;
+                                TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
                             }
                             else
                             {
-                                joint.LocalAnchorB += input * limb.Scale;
+                                joint.LocalAnchorB += input;
+                                TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
                             }
                         }
                     }
@@ -1199,15 +1219,17 @@ namespace Barotrauma
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, LimbJoint joint, Vector2 drawPos, bool autoFreeze, float rotationOffset = 0)
         {
             // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
-            if (character.AnimController.Dir < 0)
+            if (character.AnimController.IsFlipped)
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Upper Limit", Color.Yellow, angle =>
-                {
-                    joint.LowerLimit = MathHelper.ToRadians(-angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Lower Limit", Color.Cyan, angle =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(-angle);
+                    TryUpdateJointParam(joint, "upperlimit", -angle);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
+                {
+                    joint.LowerLimit = MathHelper.ToRadians(-angle);
+                    TryUpdateJointParam(joint, "lowerlimit", -angle);
                 }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
             else
@@ -1215,10 +1237,12 @@ namespace Barotrauma
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
                 {
                     joint.UpperLimit = MathHelper.ToRadians(angle);
+                    TryUpdateJointParam(joint, "upperlimit", angle);
                 }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
                 DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
                 {
                     joint.LowerLimit = MathHelper.ToRadians(angle);
+                    TryUpdateJointParam(joint, "lowerlimit", angle);
                 }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
         }
