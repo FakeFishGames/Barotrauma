@@ -2065,9 +2065,17 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender);
-            sender.CharacterInfo.HeadSpriteId = headSpriteId;
-            sender.JobPreferences = jobPreferences;
+            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
+            {
+                HeadSpriteId = headSpriteId
+            };
+
+            //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
+            Debug.Assert(sender.JobPreferences.Count > 0);
+            if (jobPreferences.Count > 0)
+            {
+                sender.JobPreferences = jobPreferences;
+            }
         }
         
         public void AssignJobs(List<Client> unassigned, bool assignHost)
@@ -2112,6 +2120,7 @@ namespace Barotrauma.Networking
             //if any of the players has chosen a job that is Always Allowed, give them that job
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
+                if (unassigned[i].JobPreferences.Count == 0) continue;
                 if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
@@ -2140,7 +2149,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            //find a suitable job for the rest of the players
+            //attempt to give the clients a job they have in their job preferences
             foreach (Client c in unassigned)
             {
                 foreach (JobPrefab preferredJob in c.JobPreferences)
@@ -2153,34 +2162,35 @@ namespace Barotrauma.Networking
                         assignedClientCount[preferredJob]++;
                         break;
                     }
-                    //none of the jobs the client prefers are available anymore
-                    else if (preferredJob == c.JobPreferences.Last())
-                    {
-                        //find all jobs that are still available
-                        var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[preferredJob] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+                }
+            }
 
-                        //all jobs taken, give a random job
-                        if (remainingJobs.Count == 0)
-                        {
-                            DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                            int jobIndex = Rand.Range(0,JobPrefab.List.Count);
-                            int skips = 0;
-                            while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
-                            {
-                                jobIndex++;
-                                skips++;
-                                if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
-                                if (skips >= JobPrefab.List.Count) break;
-                            }
-                            c.AssignedJob = JobPrefab.List[jobIndex];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
-                        else //some jobs still left, choose one of them by random
-                        {
-                            c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
+            //give random jobs to rest of the clients
+            foreach (Client c in unassigned)
+            {
+                //find all jobs that are still available
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+
+                //all jobs taken, give a random job
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int skips = 0;
+                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                    {
+                        jobIndex++;
+                        skips++;
+                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
+                        if (skips >= JobPrefab.List.Count) break;
                     }
+                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    assignedClientCount[c.AssignedJob]++;
+                }
+                else //some jobs still left, choose one of them by random
+                {
+                    c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
+                    assignedClientCount[c.AssignedJob]++;
                 }
             }
         }
