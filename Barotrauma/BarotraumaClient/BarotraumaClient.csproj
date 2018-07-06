@@ -240,11 +240,11 @@
     <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
-    <Compile Include="Source\Screens\AnimationEditorScreen.cs" />
+    <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
-    <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="Source\Screens\OldCharacterEditorScreen.cs" />
     <Compile Include="Source\Screens\SteamWorkshopScreen.cs" />
     <Compile Include="Source\Screens\SubEditorScreen.cs" />
     <Compile Include="Source\Screens\GameScreen.cs" />
