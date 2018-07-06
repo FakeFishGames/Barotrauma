@@ -25,7 +25,9 @@ namespace Barotrauma
 
         private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
+        public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
         public List<JointParams> Joints { get; private set; } = new List<JointParams>();
+        protected IEnumerable<RagdollSubParams> GetAllSubParams() => Limbs.Select(j => j as RagdollSubParams).Concat(Joints.Select(j => j as RagdollSubParams));
 
         public XElement MainElement => Doc.Root;
 
@@ -121,83 +123,66 @@ namespace Barotrauma
         {
             if (base.Load(file))
             {
+                CreateLimbs();
                 CreateJoints();
                 return true;
             }
-            else
+            return false;
+        }
+
+        protected void CreateLimbs()
+        {
+            Limbs.Clear();
+            foreach (var element in MainElement.Elements("limb"))
             {
-                return false;
+                Limbs.Add(new LimbParams(element));
             }
         }
 
         protected void CreateJoints()
         {
             Joints.Clear();
-            foreach (var jointElement in MainElement.Elements("joint"))
+            foreach (var element in MainElement.Elements("joint"))
             {
-                Joints.Add(new JointParams(jointElement, this));
-                //DebugConsole.NewMessage($"Joint element {joint.Name} ready.", Color.Pink);
+                Joints.Add(new JointParams(element));
             }
         }
 
         protected override bool Deserialize(XElement element)
         {
-            base.Deserialize(element);
-            // TODO: deserialize all ragdoll sub elements here
-            Joints.ForEach(j => j.Deserialize());
-            return SerializableProperties != null;
+            if (base.Deserialize(element))
+            {
+                GetAllSubParams().ForEach(p => p.Deserialize());
+                return true;
+            }
+            return false;
         }
 
         protected override bool Serialize(XElement element)
         {
-            base.Serialize(element);
-            Joints.ForEach(j => j.Serialize());
-            return true;
+            if (base.Serialize(element))
+            {
+                GetAllSubParams().ForEach(p => p.Serialize());
+                return true;
+            }
+            return false;
         }
 
 #if CLIENT
         public override void AddToEditor(ParamsEditor editor)
         {
             base.AddToEditor(editor);
-            Joints.ForEach(j => j.AddToEditor(editor));
+            GetAllSubParams().ForEach(p => p.AddToEditor(editor));
         }
 #endif
     }
 
-    class JointParams : ISerializableEntity
+    class JointParams : RagdollSubParams
     {
-        public string Name { get; private set; }
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
-        public XElement Element { get; private set; }
-        public RagdollParams Ragdoll { get; private set; }
-
-        public JointParams(XElement element, RagdollParams ragdoll)
+        public JointParams(XElement element) : base(element)
         {
-            Element = element;
-            Ragdoll = ragdoll;
-            Name = $"Joint {Element.Attribute("limb1").Value} - {Element.Attribute("limb2").Value}";
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
         }
-
-        public bool Deserialize()
-        {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
-            return SerializableProperties != null;
-        }
-
-        public bool Serialize()
-        {
-            SerializableProperty.SerializeProperties(this, Element, true);
-            return true;
-        }
-
-#if CLIENT
-        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
-        public void AddToEditor(ParamsEditor editor)
-        {
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
-        }
-#endif
 
         [Serialize(true, true), Editable]
         public bool CanBeSevered { get; set; }
@@ -231,5 +216,98 @@ namespace Barotrauma
         /// </summary>
         [Serialize(float.NaN, true), Editable(-360f, 360f)]
         public float LowerLimit { get; set; }
+    }
+
+    class LimbParams : RagdollSubParams
+    {
+        public LimbParams(XElement element) : base(element)
+        {
+            Name = $"Limb {element.Attribute("id").Value}";
+            var spriteElement = element.Element("sprite");
+            if (spriteElement != null)
+            {
+                SubParams.Add(new SpriteParams(spriteElement));
+            }
+            var damagedElement = element.Element("damagedsprite");
+            if (damagedElement != null)
+            {
+                SubParams.Add(new SpriteParams(damagedElement));
+            }
+        }
+
+        [Serialize(-1, true), Editable]
+        public int ID { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Radius { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Height { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Mass { get; set; }
+
+        [Serialize(LimbType.None, true), Editable]
+        public LimbType Type { get; set; }
+
+        [Serialize(-1, true), Editable]
+        public int HealthIndex { get; set; }
+    }
+
+    class SpriteParams : RagdollSubParams
+    {
+        public SpriteParams(XElement element) : base(element)
+        {
+            Name = element.Name.ToString();
+        }
+
+        [Serialize("", true), Editable]
+        public string Texture { get; set; }
+
+        [Serialize("0, 0, 0, 0", true), Editable]
+        public Vector4 Mass { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Depth { get; set; }
+
+        [Serialize("0.5, 0.5", true), Editable(0f, 1f)]
+        public Vector2 Origin { get; set; }
+    }
+
+    abstract class RagdollSubParams : ISerializableEntity
+    {
+        public string Name { get; protected set; }
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public XElement Element { get; private set; }
+        public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
+
+        public RagdollSubParams(XElement element)
+        {
+            Element = element;
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+
+        public virtual bool Deserialize()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
+            SubParams.ForEach(sp => sp.Deserialize());
+            return SerializableProperties != null;
+        }
+
+        public virtual bool Serialize()
+        {
+            SerializableProperty.SerializeProperties(this, Element, true);
+            SubParams.ForEach(sp => sp.Serialize());
+            return true;
+        }
+
+     #if CLIENT
+        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+        public virtual void AddToEditor(ParamsEditor editor)
+        {
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
+            SubParams.ForEach(sp => sp.AddToEditor(editor));
+        }
+     #endif
     }
 }
