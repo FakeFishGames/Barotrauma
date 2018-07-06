@@ -46,27 +46,53 @@ namespace Barotrauma
 
         public void SaveParams()
         {
-            if (ragdoll.IsFlipped) { ragdoll.Flip(); }
-            jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / ragdoll.RagdollParams.JointScale;
-            jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / ragdoll.RagdollParams.JointScale;
-            jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-            jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
+            if (ragdoll.IsFlipped)
+            {
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / ragdoll.RagdollParams.JointScale;
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / ragdoll.RagdollParams.JointScale;
+                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
+            }
+            else
+            {
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / ragdoll.RagdollParams.JointScale;
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / ragdoll.RagdollParams.JointScale;
+                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
+                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
+            }
         }
 
         public void LoadParams()
         {
-            if (ragdoll.IsFlipped) { ragdoll.Flip(); }
-            LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * ragdoll.RagdollParams.JointScale);
-            LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * ragdoll.RagdollParams.JointScale);
-            if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
+            if (ragdoll.IsFlipped)
             {
-                LimitEnabled = true;
-                UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
-                LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
+                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * ragdoll.RagdollParams.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * ragdoll.RagdollParams.JointScale);
+                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
+                {
+                    LimitEnabled = true;
+                    UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
+                    LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
+                }
+                else
+                {
+                    LimitEnabled = false;
+                }
             }
             else
             {
-                LimitEnabled = false;
+                LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * ragdoll.RagdollParams.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * ragdoll.RagdollParams.JointScale);
+                if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
+                {
+                    LimitEnabled = true;
+                    UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
+                    LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
+                }
+                else
+                {
+                    LimitEnabled = false;
+                }
             }
         }
     }
