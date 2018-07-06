@@ -174,7 +174,7 @@
     <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
     <Compile Include="Source\Items\Components\Machines\MiniMap.cs" />
     <Compile Include="Source\Items\Components\Machines\Pump.cs" />
-    <Compile Include="Source\Items\Components\Machines\Radar.cs" />
+    <Compile Include="Source\Items\Components\Machines\Sonar.cs" />
     <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />

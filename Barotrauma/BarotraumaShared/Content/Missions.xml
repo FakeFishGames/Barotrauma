@@ -6,7 +6,7 @@
     commonness="10"
     reward="1000"
     achievementidentifier="artifactmission"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -34,7 +34,7 @@
     commonness="10"
     reward="2000"
     achievementidentifier="artifactmission"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -62,7 +62,7 @@
     commonness="5"
     reward="1500"
     achievementidentifier="artifactmission"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
@@ -90,7 +90,7 @@
     commonness="10"
     reward="2000"
     achievementidentifier="artifactmission"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -118,7 +118,7 @@
     commonness="5"
     reward="1500"
     achievementidentifier="artifactmission"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
@@ -145,7 +145,7 @@
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
     reward="1000"
-    radarlabel="Moloch"
+    sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/MolochBoss/molochboss.xml">
 
@@ -170,7 +170,7 @@
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
     reward="800"
-    radarlabel="Tiger Thresher"
+    sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -195,7 +195,7 @@
     description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
     commonness="2"
     reward="10000"
-    radarlabel="Target"
+    sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
     monsterfile="Content/Characters/Endworm/endworm.xml">
     <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -212,7 +212,7 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
     
@@ -236,7 +236,7 @@
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
     commonness="10"
     reward="1000"
-    radarlabel="Emergency Signal"
+    sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/carrier.xml">
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>

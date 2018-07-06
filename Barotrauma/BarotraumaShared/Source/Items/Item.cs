@@ -1857,16 +1857,16 @@ namespace Barotrauma
                 rect.Height = (int)prefab.Size.Y;
             }
 
-            Item item = new Item(rect, prefab, submarine);
-            item.Submarine = submarine;
-            item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-
-            item.linkedToID = new List<ushort>();
+            Item item = new Item(rect, prefab, submarine)
+            {
+                Submarine = submarine,
+                ID = (ushort)int.Parse(element.Attribute("ID").Value),
+                linkedToID = new List<ushort>()
+            };
 
             foreach (XAttribute attribute in element.Attributes())
             {
-                SerializableProperty property = null;
-                if (!item.properties.TryGetValue(attribute.Name.ToString(), out property)) continue;
+                if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
 
                 bool shouldBeLoaded = false;
 

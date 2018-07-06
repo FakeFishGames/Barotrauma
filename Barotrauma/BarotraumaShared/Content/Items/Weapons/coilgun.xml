@@ -84,7 +84,7 @@
     name="Coilgun Bolt"
     identifier="coilgunbolt"
     category="Misc"
-    radarsize="2">
+    sonarsize="2">
 
     <Price locationtype="Outpost" buyprice="300"/>
     <Price locationtype="Military" buyprice="200"/>

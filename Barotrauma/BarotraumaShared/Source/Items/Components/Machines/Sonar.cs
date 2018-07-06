@@ -2,12 +2,11 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Radar : Powered, IServerSerializable, IClientSerializable
+    partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
         private float range;
 
@@ -15,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private readonly Sprite pingCircle, screenOverlay;
 
-        private readonly Sprite radarBlip;
+        private readonly Sprite sonarBlip;
 
         private bool aiPingCheckPending;
 
@@ -64,7 +63,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Radar(Item item, XElement element)
+        public Sonar(Item item, XElement element)
             : base(item, element)
         {
             connectedTransducers = new Dictionary<SonarTransducer, float>();
@@ -80,7 +79,7 @@ namespace Barotrauma.Items.Components
                         screenOverlay = new Sprite(subElement);
                         break;
                     case "blip":
-                        radarBlip = new Sprite(subElement);
+                        sonarBlip = new Sprite(subElement);
                         break;
                 }
             }

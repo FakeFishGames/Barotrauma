@@ -5,7 +5,7 @@
     identifier="skyholderartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
@@ -28,7 +28,7 @@
     identifier="thermalartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
@@ -53,7 +53,7 @@
     identifier="faradayartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
@@ -76,7 +76,7 @@
     Tags="alien,nasonov"
     pickdistance="150"
     indestructible="true"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
 

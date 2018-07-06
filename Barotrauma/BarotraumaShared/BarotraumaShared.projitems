@@ -295,10 +295,10 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\pingCircle.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\radarBlip.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\sonarBlip.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\radarOverlay.png">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\sonarOverlay.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Command\statusMonitor.png">
@@ -1243,7 +1243,7 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Button\switch.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Items\Command\radarPing.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Command\sonarPing.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Diving\divingSuit.ogg">
@@ -1933,7 +1933,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\MiniMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\OxygenGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Pump.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Radar.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Sonar.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Vent.cs" />

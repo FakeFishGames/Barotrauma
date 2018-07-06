@@ -10,11 +10,11 @@ namespace Barotrauma
 
         private Character monster;
 
-        private Vector2 radarPosition;
+        private Vector2 sonarPosition;
 
-        public override Vector2 RadarPosition
+        public override Vector2 SonarPosition
         {
-            get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
+            get { return monster != null && !monster.IsDead ? sonarPosition : Vector2.Zero; }
         }
 
         public MonsterMission(MissionPrefab prefab, Location[] locations)
@@ -30,7 +30,7 @@ namespace Barotrauma
 
             monster = Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, GameMain.Client != null, true, false);
             monster.Enabled = false;
-            radarPosition = spawnPos;
+            sonarPosition = spawnPos;
         }
 
         public override void Update(float deltaTime)
@@ -40,7 +40,7 @@ namespace Barotrauma
                 case 0:
                     if (monster.Enabled)
                     {
-                        radarPosition = monster.Position;
+                        sonarPosition = monster.Position;
                     }
 
                     if (!monster.IsDead) return;

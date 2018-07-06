@@ -734,7 +734,7 @@ namespace Barotrauma
                 if (item.GetComponent<Items.Components.Reactor>() != null) roomItems.Add("reactor");
                 if (item.GetComponent<Items.Components.Engine>() != null) roomItems.Add("engine");
                 if (item.GetComponent<Items.Components.Steering>() != null) roomItems.Add("steering");
-                if (item.GetComponent<Items.Components.Radar>() != null) roomItems.Add("sonar");
+                if (item.GetComponent<Items.Components.Sonar>() != null) roomItems.Add("sonar");
             }
 
             if (roomItems.Contains("reactor"))

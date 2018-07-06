@@ -19,7 +19,7 @@ namespace Barotrauma
         public readonly string Description;
         public readonly string SuccessMessage;
         public readonly string FailureMessage;
-        public readonly string RadarLabel;
+        public readonly string SonarLabel;
 
         public readonly string AchievementIdentifier;
 
@@ -69,7 +69,7 @@ namespace Barotrauma
             MultiplayerOnly = element.GetAttributeBool("multiplayeronly", false);
             SingleplayerOnly = element.GetAttributeBool("singleplayeronly", false);
 
-            RadarLabel = element.GetAttributeString("radarlabel", "");
+            SonarLabel = element.GetAttributeString("sonarlabel", "");
 
             AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
 
