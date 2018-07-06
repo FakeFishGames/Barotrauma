@@ -293,7 +293,11 @@ namespace Barotrauma
 
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
-                OnSelected = (GUITickBox obj) => { lightingEnabled = !lightingEnabled; return true; }
+                OnSelected = (GUITickBox obj) => 
+                {
+                    lightingEnabled = !lightingEnabled;
+                    return true;
+                }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
@@ -878,6 +882,13 @@ namespace Barotrauma
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
+
+            //turn off lights that are inside an inventory (cabinet for example)
+            foreach (Item item in Item.ItemList)
+            {
+                var lightComponent = item.GetComponent<LightComponent>();
+                if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
+            }
 
             return true;
         }

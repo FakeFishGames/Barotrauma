@@ -465,27 +465,14 @@ namespace Barotrauma.Lights
     {
         static CustomBlendStates()
         {
-            Multiplicative = new BlendState();
-            Multiplicative.ColorSourceBlend = Multiplicative.AlphaSourceBlend = Blend.Zero;
-            Multiplicative.ColorDestinationBlend = Multiplicative.AlphaDestinationBlend = Blend.SourceColor;
-            Multiplicative.ColorBlendFunction = Multiplicative.AlphaBlendFunction = BlendFunction.Add;
-
-            WriteToAlpha = new BlendState();
-            WriteToAlpha.ColorWriteChannels = ColorWriteChannels.Alpha;
-
-            MultiplyWithAlpha = new BlendState();
-            MultiplyWithAlpha.ColorDestinationBlend = MultiplyWithAlpha.AlphaDestinationBlend = Blend.One;
-            MultiplyWithAlpha.ColorSourceBlend = MultiplyWithAlpha.AlphaSourceBlend = Blend.DestinationAlpha;
-
-            LOS = new BlendState();
-            LOS.ColorSourceBlend = LOS.AlphaSourceBlend = Blend.Zero;
-            LOS.ColorDestinationBlend = LOS.AlphaDestinationBlend = Blend.InverseSourceColor;
-            LOS.ColorBlendFunction = LOS.AlphaBlendFunction = BlendFunction.Add;
+            Multiplicative = new BlendState
+            {
+                ColorSourceBlend = Blend.DestinationColor,
+                ColorDestinationBlend = Blend.SourceColor,
+                ColorBlendFunction = BlendFunction.Add
+            };
         }
         public static BlendState Multiplicative { get; private set; }
-        public static BlendState WriteToAlpha { get; private set; }
-        public static BlendState MultiplyWithAlpha { get; private set; }
-        public static BlendState LOS { get; private set; }
     }
 
 }
