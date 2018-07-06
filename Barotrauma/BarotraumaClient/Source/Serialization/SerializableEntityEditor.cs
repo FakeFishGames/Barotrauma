@@ -39,6 +39,7 @@ namespace Barotrauma
         {
             if (!Fields.TryGetValue(property, out GUIComponent[] fields))
             {
+                DebugConsole.ThrowError($"No field for {property.Name} found!");
                 return;
             }
             if (newValue is float f)
