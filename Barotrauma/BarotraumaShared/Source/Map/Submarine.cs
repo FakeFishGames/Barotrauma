@@ -105,6 +105,12 @@ namespace Barotrauma
             get; 
             set; 
         }
+
+        public Version GameVersion
+        {
+            get;
+            private set;
+        }
         
         public static Vector2 LastPickedPosition
         {
@@ -281,6 +287,7 @@ namespace Barotrauma
                 if (doc != null && doc.Root != null)
                 {
                     Description = doc.Root.GetAttributeString("description", "");
+                    GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
                     Enum.TryParse(doc.Root.GetAttributeString("tags", ""), out tags);
                     Dimensions = doc.Root.GetAttributeVector2("dimensions", Vector2.Zero);
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
@@ -1183,6 +1190,7 @@ namespace Barotrauma
             element.Add(new XAttribute("name", name));
             element.Add(new XAttribute("description", Description ?? ""));
             element.Add(new XAttribute("tags", tags.ToString()));
+            element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
             Rectangle dimensions = CalculateDimensions();
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
