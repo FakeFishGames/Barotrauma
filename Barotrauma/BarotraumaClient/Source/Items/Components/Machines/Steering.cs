@@ -89,15 +89,17 @@ namespace Barotrauma.Items.Components
             {
                 TextGetter = () =>
                 {
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
+                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
                     return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
                 }
             };
             new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
             {
-                TextGetter = () => 
+                TextGetter = () =>
                 {
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f;
+                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
                     return steeringVelX.Replace("[kph]", ((int)realWorldVel).ToString());
                 }
             };
@@ -105,7 +107,8 @@ namespace Barotrauma.Items.Components
             {
                 TextGetter = () =>
                 {
-                    float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
+                    float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };
@@ -121,13 +124,13 @@ namespace Barotrauma.Items.Components
             levelStartTickBox.Selected = false;
             levelEndTickBox.Selected = false;
 
-            if (item.Submarine == null)
+            if (controlledSub == null)
             {
                 posToMaintain = null;
             }
             else
             {
-                posToMaintain = item.Submarine.WorldPosition;
+                posToMaintain = controlledSub.WorldPosition;
             }
 
             tickBox.Selected = true;
@@ -168,9 +171,9 @@ namespace Barotrauma.Items.Components
             else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
             {
                 Radar radar = item.GetComponent<Radar>();
-                if (radar != null)
+                if (radar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = (posToMaintain.Value - item.WorldPosition) / radar.Range * radar.DisplayRadius;
+                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / radar.Range * radar.DisplayRadius;
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width * 0.45f);
 
@@ -205,7 +208,8 @@ namespace Barotrauma.Items.Components
                     {
                         Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                         inputPos.Y = -inputPos.Y;
-                        posToMaintain = item.WorldPosition + inputPos / radar.DisplayRadius * radar.Range;                        
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition
+                            + inputPos / radar.DisplayRadius * radar.Range;                        
                     }
                     else
                     {
