@@ -316,15 +316,12 @@ namespace Barotrauma
                 switch (subElement.Name.ToString())
                 {
                     case "limb":
-                        byte ID = Convert.ToByte(subElement.Attribute("id").Value);
-
-                        Limb limb = new Limb(character, subElement, RagdollParams.LimbScale);
-                        
-                        limb.body.FarseerBody.OnCollision += OnLimbCollision;
-                        
-                        Limbs[ID] = limb;
-                        Mass += limb.Mass;
-                        if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+                        //byte ID = Convert.ToByte(subElement.Attribute("id").Value);
+                        //Limb limb = new Limb(character, subElement);        
+                        //limb.body.FarseerBody.OnCollision += OnLimbCollision;                       
+                        //Limbs[ID] = limb;
+                        //Mass += limb.Mass;
+                        //if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
                         break;
                     case "joint":
                         //AddJoint(subElement, scale);
@@ -345,6 +342,7 @@ namespace Barotrauma
                 }
             }
 
+            CreateLimbs();
             CreateJoints();
 
             // Check the joints, todo: remove
@@ -414,6 +412,12 @@ namespace Barotrauma
         {
             DebugConsole.NewMessage($"Creating joints from {RagdollParams.Name}.", Color.White);
             RagdollParams.Joints.ForEach(j => AddJoint(j));
+        }
+
+        public void CreateLimbs()
+        {
+            DebugConsole.NewMessage($"Creating limbs from {RagdollParams.Name}.", Color.White);
+            RagdollParams.Limbs.ForEach(l => AddLimb(l));
         }
 
         /// <summary>
@@ -501,16 +505,22 @@ namespace Barotrauma
             LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
+        public void AddLimb(LimbParams limbParams)
+        {
+            byte ID = Convert.ToByte(limbParams.ID);
+            Limb limb = new Limb(character, limbParams);
+            limb.body.FarseerBody.OnCollision += OnLimbCollision;
+            Limbs[ID] = limb;
+            Mass += limb.Mass;
+            if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+        }
+
         public void AddLimb(Limb limb)
         {
             if (Limbs.Contains(limb)) return;
-
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
-
             Array.Resize(ref limbs, Limbs.Length + 1);
-
             Limbs[Limbs.Length - 1] = limb;
-
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
         }

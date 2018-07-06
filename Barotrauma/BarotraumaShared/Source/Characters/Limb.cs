@@ -48,15 +48,15 @@ namespace Barotrauma
         {
             if (ragdoll.IsFlipped)
             {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / ragdoll.RagdollParams.JointScale;
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / ragdoll.RagdollParams.JointScale;
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / jointParams.Ragdoll.JointScale;
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / jointParams.Ragdoll.JointScale;
                 jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
                 jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
             }
             else
             {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / ragdoll.RagdollParams.JointScale;
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / ragdoll.RagdollParams.JointScale;
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / jointParams.Ragdoll.JointScale;
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / jointParams.Ragdoll.JointScale;
                 jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
                 jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
             }
@@ -66,8 +66,8 @@ namespace Barotrauma
         {
             if (ragdoll.IsFlipped)
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * ragdoll.RagdollParams.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * ragdoll.RagdollParams.JointScale);
+                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
                 {
                     LimitEnabled = true;
@@ -81,8 +81,8 @@ namespace Barotrauma
             }
             else
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * ragdoll.RagdollParams.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * ragdoll.RagdollParams.JointScale);
+                LocalAnchorA = ConvertUnits.ToSimUnits(jointParams.Limb1Anchor * jointParams.Ragdoll.JointScale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
                 {
                     LimitEnabled = true;
@@ -106,7 +106,9 @@ namespace Barotrauma
         private const float SeveredFadeOutTime = 10.0f;
 
         public readonly Character character;
-        
+
+        public readonly LimbParams limbParams;
+
         //the physics body of the limb
         public PhysicsBody body;
                         
@@ -134,9 +136,9 @@ namespace Barotrauma
         
         public float AttackTimer;
 
-        public readonly int HealthIndex;
-        
-        public readonly float AttackPriority;
+        public int HealthIndex => limbParams.HealthIndex;
+        public float Scale => limbParams.Ragdoll.LimbScale;
+        public float AttackPriority => limbParams.AttackPriority;
 
         public bool IsSevered
         {
@@ -171,8 +173,6 @@ namespace Barotrauma
         {
             get { return body.Rotation; }
         }
-
-        public float Scale { get; private set; }
 
         //where an animcontroller is trying to pull the limb, only used for debug visualization
         public Vector2 AnimTargetPos { get; private set; }
@@ -222,24 +222,19 @@ namespace Barotrauma
             private set;
         }
 
-        public Limb(Character character, XElement element, float scale = 1.0f)
+        public Limb(Character character, LimbParams limbParams)
         {
             this.character = character;
+            this.limbParams = limbParams;
             wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
-            Scale = scale;
-
-            HealthIndex = element.GetAttributeInt("healthindex", 0);
-            AttackPriority = element.GetAttributeFloat("attackpriority", 0);
-
-            DoesFlip = element.GetAttributeBool("flip", false);
-
-            body = new PhysicsBody(element, scale);
+            var element = limbParams.Element;
+            // TODO: reduce (or get rid of) parsing here and use the LimbParams directly
+            body = new PhysicsBody(element, Scale);
             if (element.GetAttributeBool("ignorecollisions", false))
             {
                 body.CollisionCategories = Category.None;
                 body.CollidesWith = Category.None;
-
                 ignoreCollisions = true;
             }
             else
@@ -267,10 +262,10 @@ namespace Barotrauma
                 }
 
 
-                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * scale;
+                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * Scale;
                 pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
 
-                stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * scale;
+                stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * Scale;
                 stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
                 RefJointIndex = element.GetAttributeInt("refjoint", -1);

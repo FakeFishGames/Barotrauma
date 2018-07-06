@@ -135,7 +135,7 @@ namespace Barotrauma
             Limbs.Clear();
             foreach (var element in MainElement.Elements("limb"))
             {
-                Limbs.Add(new LimbParams(element));
+                Limbs.Add(new LimbParams(element, this));
             }
         }
 
@@ -144,7 +144,7 @@ namespace Barotrauma
             Joints.Clear();
             foreach (var element in MainElement.Elements("joint"))
             {
-                Joints.Add(new JointParams(element));
+                Joints.Add(new JointParams(element, this));
             }
         }
 
@@ -179,7 +179,7 @@ namespace Barotrauma
 
     class JointParams : RagdollSubParams
     {
-        public JointParams(XElement element) : base(element)
+        public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
             Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
         }
@@ -220,57 +220,70 @@ namespace Barotrauma
 
     class LimbParams : RagdollSubParams
     {
-        public LimbParams(XElement element) : base(element)
+        public LimbParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
             Name = $"Limb {element.Attribute("id").Value}";
             var spriteElement = element.Element("sprite");
             if (spriteElement != null)
             {
-                SubParams.Add(new SpriteParams(spriteElement));
+                SubParams.Add(new SpriteParams(spriteElement, ragdoll));
             }
             var damagedElement = element.Element("damagedsprite");
             if (damagedElement != null)
             {
-                SubParams.Add(new SpriteParams(damagedElement));
+                SubParams.Add(new SpriteParams(damagedElement, ragdoll));
             }
         }
 
-        [Serialize(-1, true), Editable]
+        // TODO: decide which properties should be editable in the editor and which only via xml
+
+        [Serialize(-1, true)]
         public int ID { get; set; }
 
-        [Serialize(0f, true), Editable]
-        public float Radius { get; set; }
-
-        [Serialize(0f, true), Editable]
-        public float Height { get; set; }
-
-        [Serialize(0f, true), Editable]
-        public float Mass { get; set; }
-
-        [Serialize(LimbType.None, true), Editable]
+        [Serialize(LimbType.None, true)]
         public LimbType Type { get; set; }
 
-        [Serialize(-1, true), Editable]
+        [Serialize(0f, true)]
+        public float Radius { get; set; }
+
+        [Serialize(0f, true)]
+        public float Height { get; set; }
+
+        [Serialize(0f, true)]
+        public float Mass { get; set; }
+
+        [Serialize(0, true)]
         public int HealthIndex { get; set; }
+
+        [Serialize(0f, true)]
+        public float AttackPriority { get; set; }
+
+        [Serialize(false, true)]
+        public bool Flip { get; set; }
+
+        //[Serialize(false, true)]
+        //public bool IgnoreCollisions { get; set; }
     }
 
     class SpriteParams : RagdollSubParams
     {
-        public SpriteParams(XElement element) : base(element)
+        public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll)
         {
             Name = element.Name.ToString();
         }
 
-        [Serialize("", true), Editable]
+        // TODO: decide which properties should be editable in the editor and which only via xml
+
+        [Serialize("", true)]
         public string Texture { get; set; }
 
-        [Serialize("0, 0, 0, 0", true), Editable]
+        [Serialize("0, 0, 0, 0", true)]
         public Vector4 Mass { get; set; }
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, true)]
         public float Depth { get; set; }
 
-        [Serialize("0.5, 0.5", true), Editable(0f, 1f)]
+        [Serialize("0.5, 0.5", true)]
         public Vector2 Origin { get; set; }
     }
 
@@ -280,10 +293,12 @@ namespace Barotrauma
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
         public XElement Element { get; private set; }
         public List<RagdollSubParams> SubParams { get; set; } = new List<RagdollSubParams>();
+        public RagdollParams Ragdoll { get; private set; }
 
-        public RagdollSubParams(XElement element)
+        public RagdollSubParams(XElement element, RagdollParams ragdoll)
         {
             Element = element;
+            Ragdoll = ragdoll;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
