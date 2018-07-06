@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="husk" humanoid="true" genders="true" maleheadid="1,8" femaleheadid="1,7" needsair="false">
 
-  <animation path ="Content/Characters/Human/Animations/Human[ANIMTYPE].xml"/>
-  <ragdoll path ="Content/Characters/Human/Ragdolls/"/>
+  <ragdolls path="default"/>
+  <animations path="default"/>
 
   <health
     vitality="100"

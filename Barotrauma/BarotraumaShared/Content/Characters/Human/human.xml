@@ -2,6 +2,8 @@
 <Character name ="human" humanoid="true" needsair="true" genders="true" maleheadid="1,8" femaleheadid="1,8" canspeak="true">
 
   <name firstname="Content/Characters/Human/[GENDER]firstnames.txt" lastname="Content/Characters/Human/lastnames.txt" />
+  <ragdolls path="default"/>
+  <animations path="default"/>
 
   <health
     usehealthwindow="true"
@@ -34,6 +36,6 @@
   </health>
 
   <inventory arrowslot="9" slots="InnerClothes, OuterClothes, RightHand, LeftHand, Head, Card, Headset, Any, Any, Any, Any, Any, Pack"/>
- 
+
 </Character>
 

@@ -8,6 +8,7 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    // Note, the types are used in file parsing -> cannot have e.g. Swim, because there are SwimSlow and SwimFast.
     public enum AnimationType
     {
         Walk,
@@ -87,26 +88,18 @@ namespace Barotrauma
         }
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
 
-        public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}.xml";
-
-        /// <summary>
-        /// Returns the hard coded default folder, in case the content folder definition is invalid or missing.
-        /// </summary>
+        protected static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}.xml";
         protected static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
+        protected static string GetDefaultFile(string speciesName, AnimationType animType) => GetDefaultFolder(speciesName) + GetDefaultFileName(speciesName, animType);
 
         protected static string GetFolder(string speciesName)
         {
-            // TODO: get the path from settings or parse from xml.
-            var folder = string.Empty;
-            // TODO: handle invalid folder
-            if (string.IsNullOrEmpty(folder))
+            var folder = XMLExtensions.TryLoadXml(Character.GetConfigFile(speciesName)).Root?.Element("animations")?.GetAttributeString("path", string.Empty);
+            if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                return GetDefaultFolder(speciesName);
+                folder = GetDefaultFolder(speciesName);
             }
-            else
-            {
-                return folder.Replace("[SpeciesName]", speciesName.CapitaliseFirstInvariant());
-            }
+            return folder;
         }
 
         /// <summary>
@@ -123,32 +116,45 @@ namespace Barotrauma
             fileName = fileName ?? defaultFileName;
             if (!anims.TryGetValue(animType, out AnimationParams anim))
             {
+                string selectedFile = null;
                 string folder = GetFolder(speciesName);
-                string defaultFile = folder + defaultFileName;
-                var animFiles = Directory.GetFiles(folder);
-                if (animFiles.None())
+                if (Directory.Exists(folder))
                 {
-                    throw new Exception("[AnimationParams] Could not find any animation files for the character from the path: " + folder);
-                }
-                string selectedFile = defaultFile;
-                if (fileName != defaultFileName)
-                {
-                    selectedFile = animFiles.FirstOrDefault(p =>
+                    var files = Directory.GetFiles(folder);
+                    if (files.None())
                     {
-                        string _p = p.ToLowerInvariant();
-                        return _p.Contains(fileName.ToLowerInvariant()) && _p.Contains(animType.ToString().ToLowerInvariant());
-                    });
-                    if (selectedFile == null)
-                    {
-                        DebugConsole.NewMessage($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.", Color.Red);
-                        selectedFile = defaultFile;
+                        DebugConsole.NewMessage($"[Animationparams] Could not find any animation files from the folder: {folder}. Using the default animation.", Color.Red);
+                        selectedFile = GetDefaultFile(speciesName, animType);
                     }
+                    else if (fileName != defaultFileName)
+                    {
+                        selectedFile = files.FirstOrDefault(p =>
+                        {
+                            string _p = p.ToLowerInvariant();
+                            return _p.Contains(fileName.ToLowerInvariant()) && _p.Contains(animType.ToString().ToLowerInvariant());
+                        });
+                        if (selectedFile == null)
+                        {
+                            DebugConsole.NewMessage($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.", Color.Red);
+                            selectedFile = GetDefaultFile(speciesName, animType);
+                        }
+                    }
+                    else
+                    {
+                        // Files found, but none specifided
+                        selectedFile = files.GetRandom(f => f.ToLowerInvariant().Contains(animType.ToString().ToLowerInvariant()));
+                    }
+                }
+                else
+                {
+                    DebugConsole.NewMessage($"[Animationparams] Invalid directory: {folder}. Using the default animation.", Color.Red);
+                    selectedFile = GetDefaultFile(speciesName, animType);
                 }
                 if (selectedFile == null)
                 {
                     throw new Exception("[AnimationParams] Selected file null!");
                 }
-                DebugConsole.NewMessage($"[AnimationParams] Loading animation params from {selectedFile}.", Color.Yellow);
+                DebugConsole.NewMessage($"[AnimationParams] Loading animations from {selectedFile}.", Color.Yellow);
                 T a = new T();
                 if (a.Load(selectedFile, animType))
                 {

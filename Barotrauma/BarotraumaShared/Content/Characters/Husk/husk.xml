@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name="husk" humanoid="true" needsair="false">
+  <ragdolls path="default"/>
+  <animations path="default"/>
 
   <health
     vitality="100"
