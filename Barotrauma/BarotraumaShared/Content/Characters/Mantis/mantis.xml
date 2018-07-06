@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Character name="mantis" humanoid="false">
   
-  <ragdolls path="default"/>
-  <animations path="default"/>
+  <ragdolls folder="default"/>
+  <animations folder="default"/>
   
   <health
     vitality="200"
