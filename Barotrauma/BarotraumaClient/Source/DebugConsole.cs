@@ -338,6 +338,24 @@ namespace Barotrauma
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             }, isCheat: true));
 
+            commands.Add(new Command("multiplylights", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
+
+                Color color = XMLExtensions.ParseColor(args[0]);
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.ParentInventory != null || item.body != null) continue;
+                    var lightComponent = item.GetComponent<LightComponent>();
+                    if (lightComponent != null) lightComponent.LightColor = 
+                        new Color(
+                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
+                            (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
+                            (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
+                            (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
+                }
+            }, isCheat: false));
+
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
                 TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
