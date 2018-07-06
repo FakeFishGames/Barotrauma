@@ -198,18 +198,9 @@ namespace Barotrauma.Items.Components
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
-
             name = element.Name.ToString();
-
-            properties = SerializableProperty.GetProperties(this);
-
-            //canBePicked = ToolBox.GetAttributeBool(element, "canbepicked", false);
-            //canBeSelected = ToolBox.GetAttributeBool(element, "canbeselected", false);
-            
-            //msg = ToolBox.GetAttributeString(element, "msg", "");
-            
+            properties = SerializableProperty.GetProperties(this);            
             requiredItems = new List<RelatedItem>();
-
             requiredSkills = new List<Skill>();
 
 #if CLIENT
@@ -630,7 +621,7 @@ namespace Barotrauma.Items.Components
                 // Get the type of a specified class.                
                 t = Type.GetType("Barotrauma.Items.Components." + type + "", false, true);
                 if (t == null)
-                {
+                {                    
                     if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + file + ")");
                     return null;
                 }

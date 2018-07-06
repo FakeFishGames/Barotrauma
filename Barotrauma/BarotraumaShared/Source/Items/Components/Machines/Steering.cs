@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
 
         private Character user;
 
-        private Radar radar;
+        private Sonar sonar;
 
         private Submarine controlledSub;
                 
@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            radar = item.GetComponent<Radar>();
+            sonar = item.GetComponent<Sonar>();
         }
 
         public override bool Select(Character character)
@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
             }
 
             controlledSub = item.Submarine;
-            var sonar = item.GetComponent<Radar>();
+            var sonar = item.GetComponent<Sonar>();
             if (sonar != null && sonar.UseTransducers)
             {
                 controlledSub = sonar.ConnectedTransducers.Any() ? sonar.ConnectedTransducers.First().Item.Submarine : null;
@@ -437,7 +437,7 @@ namespace Barotrauma.Items.Components
                     break;
             }
 
-            radar?.AIOperate(deltaTime, character, objective);
+            sonar?.AIOperate(deltaTime, character, objective);
 
             return false;
         }

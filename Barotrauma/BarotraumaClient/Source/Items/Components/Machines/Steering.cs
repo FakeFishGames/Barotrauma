@@ -170,10 +170,10 @@ namespace Barotrauma.Items.Components
             }
             else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
             {
-                Radar radar = item.GetComponent<Radar>();
-                if (radar != null && controlledSub != null)
+                Sonar sonar = item.GetComponent<Sonar>();
+                if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / radar.Range * radar.DisplayRadius;
+                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / sonar.Range * sonar.DisplayRadius;
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width * 0.45f);
 
@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
                         Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                         inputPos.Y = -inputPos.Y;
                         posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition
-                            + inputPos / radar.DisplayRadius * radar.Range;                        
+                            + inputPos / sonar.DisplayRadius * sonar.Range;                        
                     }
                     else
                     {

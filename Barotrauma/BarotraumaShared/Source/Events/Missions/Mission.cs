@@ -55,14 +55,14 @@ namespace Barotrauma
             get { return true; }
         }
 
-        public virtual Vector2 RadarPosition
+        public virtual Vector2 SonarPosition
         {
             get { return Vector2.Zero; }
         }
         
-        public string RadarLabel
+        public string SonarLabel
         {
-            get { return Prefab.RadarLabel; }
+            get { return Prefab.SonarLabel; }
         }
            
         public Mission(MissionPrefab prefab, Location[] locations)

@@ -154,8 +154,8 @@ namespace Barotrauma
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                //hide all subs from radar to make sneak attacks possible
-                submarine.OnRadar = false;
+                //hide all subs from sonar to make sneak attacks possible
+                submarine.OnSonar = false;
             }
         }
 

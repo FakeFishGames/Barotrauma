@@ -98,7 +98,7 @@ namespace Barotrauma
             set { name = value; }
         }
 
-        public bool OnRadar = true;
+        public bool OnSonar = true;
 
         public string Description
         {

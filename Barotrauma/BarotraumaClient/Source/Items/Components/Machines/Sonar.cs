@@ -9,13 +9,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Radar : Powered, IServerSerializable, IClientSerializable
+    partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
         private GUITickBox isActiveTickBox;
 
         private float displayBorderSize;
 
-        private List<RadarBlip> radarBlips;
+        private List<SonarBlip> sonarBlips;
 
         private float prevPingRadius;
 
@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
         {
             displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
 
-            radarBlips = new List<RadarBlip>();
+            sonarBlips = new List<SonarBlip>();
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
             {
                 CanBeFocused = false
@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
-                (spriteBatch, guiCustomComponent) => { DrawRadar(spriteBatch, guiCustomComponent.Rect); }, null);
+                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
             GuiFrame.CanBeFocused = false;
         }
@@ -85,12 +85,12 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            for (int i = radarBlips.Count - 1; i >= 0; i--)
+            for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
-                radarBlips[i].FadeTimer -= deltaTime * 0.5f;
-                radarBlips[i].Position += radarBlips[i].Velocity * deltaTime;
+                sonarBlips[i].FadeTimer -= deltaTime * 0.5f;
+                sonarBlips[i].Position += sonarBlips[i].Velocity * deltaTime;
 
-                if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
+                if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
             }
             
             if (UseTransducers && connectedTransducers.Count == 0)
@@ -138,13 +138,13 @@ namespace Barotrauma.Items.Components
                                 blipVel += trigger2flow;
                             }
                         }
-                        var flowBlip = new RadarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
+                        var flowBlip = new SonarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
                         {
                             Velocity = blipVel * Rand.Range(1.0f, 5.0f),
                             Size = new Vector2(MathHelper.Lerp(0.4f, 5f, flowMagnitude / 500.0f), 0.2f),
                             Rotation = (float)Math.Atan2(-blipVel.Y, blipVel.X)
                         };
-                        radarBlips.Add(flowBlip);
+                        sonarBlips.Add(flowBlip);
                     }
                 }
             }            
@@ -171,14 +171,14 @@ namespace Barotrauma.Items.Components
                     {
                         Ping(t.WorldPosition, transducerCenter, 
                             t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
-                        radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
+                        sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
                 }
             }
             prevPassivePingRadius = passivePingRadius;
         }
         
-        private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
+        private void DrawSonar(SpriteBatch spriteBatch, Rectangle rect)
         {
             displayBorderSize = 0.2f;
                center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
@@ -220,14 +220,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (radarBlips.Count > 0)
+            if (sonarBlips.Count > 0)
             {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
-                foreach (RadarBlip radarBlip in radarBlips)
+                foreach (SonarBlip sonarBlip in sonarBlips)
                 {
-                    DrawBlip(spriteBatch, radarBlip, transducerCenter, center, radarBlip.FadeTimer / 2.0f);
+                    DrawBlip(spriteBatch, sonarBlip, transducerCenter, center, sonarBlip.FadeTimer / 2.0f);
                 }
 
                 spriteBatch.End();
@@ -236,7 +236,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.DebugDraw)
             {
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), radarBlips.Count.ToString(), Color.White);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), sonarBlips.Count.ToString(), Color.White);
             }
 
             if (screenOverlay != null)
@@ -271,17 +271,17 @@ namespace Barotrauma.Items.Components
             {
                 var mission = GameMain.GameSession.Mission;
 
-                if (!string.IsNullOrWhiteSpace(mission.RadarLabel) && mission.RadarPosition != Vector2.Zero)
+                if (!string.IsNullOrWhiteSpace(mission.SonarLabel) && mission.SonarPosition != Vector2.Zero)
                 {
                     DrawMarker(spriteBatch,
-                        mission.RadarLabel,
-                        mission.RadarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                        mission.SonarLabel,
+                        mission.SonarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
                 }
             }
 
             foreach (Submarine sub in Submarine.Loaded)
             {
-                if (!sub.OnRadar) continue;
+                if (!sub.OnSonar) continue;
                 if (UseTransducers ?
                     connectedTransducers.Any(t => sub == t.Key.Item.Submarine || sub.DockedTo.Contains(t.Key.Item.Submarine)) :
                     sub == item.Submarine && sub.DockedTo.Contains(item.Submarine)) continue;
@@ -342,8 +342,8 @@ namespace Barotrauma.Items.Components
                         {
                             for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
                             {
-                                var blip = new RadarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
-                                radarBlips.Add(blip);
+                                var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                                sonarBlips.Add(blip);
                             }
                         }
                     }
@@ -471,17 +471,17 @@ namespace Barotrauma.Items.Components
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.CurrentHull == null && item.Prefab.RadarSize > 0.0f)
+                if (item.CurrentHull == null && item.Prefab.SonarSize > 0.0f)
                 {
                     float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
-                        var blip = new RadarBlip(
-                            item.WorldPosition + Rand.Vector(item.Prefab.RadarSize),
-                            MathHelper.Clamp(item.Prefab.RadarSize, 0.1f, pingStrength),
-                            MathHelper.Clamp(item.Prefab.RadarSize * 0.1f, 0.1f, 10.0f));
-                        radarBlips.Add(blip);
+                        var blip = new SonarBlip(
+                            item.WorldPosition + Rand.Vector(item.Prefab.SonarSize),
+                            MathHelper.Clamp(item.Prefab.SonarSize, 0.1f, pingStrength),
+                            MathHelper.Clamp(item.Prefab.SonarSize * 0.1f, 0.1f, 10.0f));
+                        sonarBlips.Add(blip);
                     }
                 }
             }
@@ -499,11 +499,11 @@ namespace Barotrauma.Items.Components
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
-                        var blip = new RadarBlip(
+                        var blip = new SonarBlip(
                             limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 
                             MathHelper.Clamp(limb.Mass, 0.1f, pingStrength), 
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
-                        radarBlips.Add(blip);
+                        sonarBlips.Add(blip);
                     }
                 }
             }
@@ -546,11 +546,11 @@ namespace Barotrauma.Items.Components
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
                     int minDist = 200;
-                    radarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
+                    sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new RadarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
+                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
 
-                    radarBlips.Add(blip);
+                    sonarBlips.Add(blip);
                     zStep += 0.5f;
 
                     if (z == 0)
@@ -567,7 +567,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
+        private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
             
@@ -584,7 +584,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (radarBlip == null)
+            if (sonarBlip == null)
             {
                 GUI.DrawRectangle(spriteBatch, center + pos, Vector2.One * 4, Color.Magenta, true);
                 return;
@@ -595,12 +595,12 @@ namespace Barotrauma.Items.Components
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale;
 
-            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
+            sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.04f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
-            radarBlip.Draw(spriteBatch, center + pos, color * 0.5f, radarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
+            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)
@@ -661,7 +661,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    class RadarBlip
+    class SonarBlip
     {
         public float FadeTimer;
         public Vector2 Position;
@@ -670,7 +670,7 @@ namespace Barotrauma.Items.Components
         public float? Rotation;
         public Vector2 Size;
 
-        public RadarBlip(Vector2 pos, float fadeTimer, float scale)
+        public SonarBlip(Vector2 pos, float fadeTimer, float scale)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);
