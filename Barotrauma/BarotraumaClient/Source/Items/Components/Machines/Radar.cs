@@ -198,7 +198,9 @@ namespace Barotrauma.Items.Components
 
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    if (submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
+                    if (UseTransducers ?
+                        !connectedTransducers.Any(t => submarine == t.Key.Item.Submarine || submarine.DockedTo.Contains(t.Key.Item.Submarine)) :
+                        submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
                     if (submarine.HullVertices == null) continue;
 
                     Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
@@ -209,6 +211,9 @@ namespace Barotrauma.Items.Components
                         start.Y = -start.Y;
                         Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                         end.Y = -end.Y;
+
+                        if (start.LengthSquared() > displayRadius * displayRadius ||
+                            end.LengthSquared() > displayRadius * displayRadius) continue;
 
                         GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue);
                     }
@@ -557,7 +562,6 @@ namespace Barotrauma.Items.Components
 
                     if (alpha < 0) break;
                 }
-
             }
         }
 
