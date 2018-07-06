@@ -64,15 +64,26 @@ namespace Barotrauma
                     var files = Directory.GetFiles(folder);
                     if (files.None())
                     {
-                        DebugConsole.NewMessage($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.", Color.Red);
+                        DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.");
                         selectedFile = GetDefaultFile(speciesName);
                     }
                     else if (fileName != defaultFileName)
                     {
-                        selectedFile = files.FirstOrDefault(p => p.ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
+                        // First check if a file matches the name exactly
+                        selectedFile = files.FirstOrDefault(f => f == fileName);
                         if (selectedFile == null)
                         {
-                            DebugConsole.NewMessage($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.", Color.Red);
+                            // Then check if a file matches the name ignoring the case
+                            selectedFile = files.FirstOrDefault(f => f.ToLowerInvariant() == fileName.ToLowerInvariant());
+                        }
+                        if (selectedFile == null)
+                        {
+                            // Last, check if a file matches the name partially
+                            selectedFile = files.FirstOrDefault(f => f.ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
+                        }
+                        if (selectedFile == null)
+                        {
+                            DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");
                             selectedFile = GetDefaultFile(speciesName);
                         }
                     }
@@ -84,7 +95,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.NewMessage($"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.", Color.Red);
+                    DebugConsole.ThrowError($"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.");
                     selectedFile = GetDefaultFile(speciesName);
                 }
                 if (selectedFile == null)
@@ -106,29 +117,41 @@ namespace Barotrauma
             return (T)ragdoll;
         }
 
+        protected override bool Load(string file)
+        {
+            if (base.Load(file))
+            {
+                CreateJoints();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        protected void CreateJoints()
+        {
+            Joints.Clear();
+            foreach (var jointElement in MainElement.Elements("joint"))
+            {
+                Joints.Add(new JointParams(jointElement, this));
+                //DebugConsole.NewMessage($"Joint element {joint.Name} ready.", Color.Pink);
+            }
+        }
+
         protected override bool Deserialize(XElement element)
         {
             base.Deserialize(element);
-            Joints.Clear();
-            foreach (var jointElement in element.Elements("joint"))
-            {
-                var joint = new JointParams();
-                joint.Name = $"Joint {jointElement.Attribute("limb1").Value} - {jointElement.Attribute("limb2").Value}";
-                joint.SerializableProperties = SerializableProperty.DeserializeProperties(joint, jointElement);
-                joint.Element = jointElement;
-                Joints.Add(joint);
-                //DebugConsole.NewMessage($"Joint element {joint.Name} ready.", Color.Pink);
-            }
-
             // TODO: deserialize all ragdoll sub elements here
-
+            Joints.ForEach(j => j.Deserialize());
             return SerializableProperties != null;
         }
 
         protected override bool Serialize(XElement element)
         {
             base.Serialize(element);
-            Joints.ForEach(j => SerializableProperty.SerializeProperties(j, j.Element, true));
+            Joints.ForEach(j => j.Serialize());
             return true;
         }
 
@@ -136,16 +159,45 @@ namespace Barotrauma
         public override void AddToEditor(ParamsEditor editor)
         {
             base.AddToEditor(editor);
-            Joints.ForEach(j => new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, j, false, true));
+            Joints.ForEach(j => j.AddToEditor(editor));
         }
 #endif
     }
 
     class JointParams : ISerializableEntity
     {
-        public string Name { get; set; }
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
-        public XElement Element { get; set; }
+        public string Name { get; private set; }
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public XElement Element { get; private set; }
+        public RagdollParams Ragdoll { get; private set; }
+
+        public JointParams(XElement element, RagdollParams ragdoll)
+        {
+            Element = element;
+            Ragdoll = ragdoll;
+            Name = $"Joint {Element.Attribute("limb1").Value} - {Element.Attribute("limb2").Value}";
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+
+        public bool Deserialize()
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, Element);
+            return SerializableProperties != null;
+        }
+
+        public bool Serialize()
+        {
+            SerializableProperty.SerializeProperties(this, Element, true);
+            return true;
+        }
+
+#if CLIENT
+        public SerializableEntityEditor SerializableEntityEditor { get; protected set; }
+        public void AddToEditor(ParamsEditor editor)
+        {
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true);
+        }
+#endif
 
         [Serialize(true, true), Editable]
         public bool CanBeSevered { get; set; }

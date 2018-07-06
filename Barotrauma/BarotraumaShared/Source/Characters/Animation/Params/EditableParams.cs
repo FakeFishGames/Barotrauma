@@ -41,7 +41,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected bool Load(string file)
+        protected virtual bool Load(string file)
         {
             FilePath = file;
             Name = Path.GetFileNameWithoutExtension(FilePath);
@@ -50,7 +50,7 @@ namespace Barotrauma
             return IsLoaded;
         }
 
-        public bool Save()
+        public virtual bool Save()
         {
             Serialize(Doc.Root);
             // TODO: would Doc.Save() be enough?
@@ -68,7 +68,7 @@ namespace Barotrauma
             return true;
         }
 
-        public bool Reset()
+        public virtual bool Reset()
         {
             return Deserialize(Doc.Root);
         }
