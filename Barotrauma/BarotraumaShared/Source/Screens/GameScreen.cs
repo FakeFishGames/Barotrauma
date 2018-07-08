@@ -278,6 +278,31 @@ namespace Barotrauma
                         }
                         break;
 
+                    case "control":
+                        //ARG0 = client ARG1 = Character
+                        if((Barotrauma.Networking.Client)Arguments[0] != null)
+                        {
+                            GameMain.Server.SetClientCharacter((Barotrauma.Networking.Client)Arguments[0], null);
+                        }
+
+                        character = (Character)Arguments[1];
+
+                        if (character != null) Character.Controlled = character;
+                        break;
+
+                    case "shield":
+                        //ARG0 = Character, ARG1 = shield state
+                        character = (Character)Arguments[0];
+                        character.Shielded = (Boolean)Arguments[1];
+
+                        if (GameMain.Server != null)
+                        {
+                            GameMain.NetworkMember.AddChatMessage(
+                                ((Boolean)Arguments[1] ? character.LogName + " is now shielded from health/oxygen/pressure." : character.LogName + " is no longer shielded.")
+                                , Barotrauma.Networking.ChatMessageType.Private);
+                        }
+                        break;
+
                     case "heal":
                         //ARG0 = Character
                         character = (Character)Arguments[0];

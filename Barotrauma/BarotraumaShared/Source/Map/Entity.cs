@@ -42,10 +42,13 @@ namespace Barotrauma
                 Entity existingEntity;
                 if (dictionary.TryGetValue(value, out existingEntity))
                 {
-                    System.Diagnostics.Debug.WriteLine(existingEntity+" had the same ID as "+this);
+                    System.Diagnostics.Debug.WriteLine(existingEntity + " had the same ID as " + this + " (" + value + ")");
+                    DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     dictionary.Remove(value);
                     dictionary.Add(id, existingEntity);
                     existingEntity.id = id;
+                    DebugConsole.Log("The id of " + existingEntity + " is now " + id);
+                    DebugConsole.Log("The id of " + this + " is now " + value);
                 }
 
                 id = value;                             
@@ -133,11 +136,71 @@ namespace Barotrauma
                     DebugConsole.ThrowError(" - " + e.ToString() + "(ID " + e.id + ")");
                 }
             }
+            if (Item.ItemList.Count > 0)
+            {
+                DebugConsole.ThrowError("Some items were not removed in Entity.RemoveAll:");
+                foreach (Item item in Item.ItemList)
+                {
+                    DebugConsole.ThrowError(" - " + item.Name + "(ID " + item.id + ")");
+                }
+
+                var items = new List<Item>(Item.ItemList);
+                foreach (Item item in items)
+                {
+                    try
+                    {
+                        item.Remove();
+                    }
+                    catch (Exception exception)
+                    {
+                        DebugConsole.ThrowError("Error while removing entity \"" + item.ToString() + "\"", exception);
+                    }
+                }
+                Item.ItemList.Clear();
+            }
+            if (Character.CharacterList.Count > 0)
+            {
+                DebugConsole.ThrowError("Some characters were not removed in Entity.RemoveAll:");
+                foreach (Character character in Character.CharacterList)
+                {
+                    DebugConsole.ThrowError(" - " + character.Name + "(ID " + character.id + ")");
+                }
+
+                var characters = new List<Character>(Character.CharacterList);
+                foreach (Character character in characters)
+                {
+                    try
+                    {
+                        character.Remove();
+                    }
+                    catch (Exception exception)
+                    {
+                        DebugConsole.ThrowError("Error while removing entity \"" + character.ToString() + "\"", exception);
+                    }
+                }
+                Character.CharacterList.Clear();
+            }
+
             dictionary.Clear();
         }
 
         public virtual void Remove()
         {
+            DebugConsole.Log("Removing entity " + this.ToString() + " (" + ID + ") from entity dictionary.");
+            Entity existingEntity;
+            if (!dictionary.TryGetValue(ID, out existingEntity))
+            {
+                DebugConsole.Log("Entity " + this.ToString() + " (" + ID + ") not present in entity dictionary.");
+            }
+            else if (existingEntity != this)
+            {
+                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID);
+                foreach (var keyValuePair in dictionary.Where(kvp => kvp.Value == this).ToList())
+                {
+                    dictionary.Remove(keyValuePair.Key);
+                }
+            }
+
             dictionary.Remove(ID);
             Removed = true;
         }

@@ -80,6 +80,14 @@ namespace Barotrauma
             ColliderIndex = Crouching ? 1 : 0;
             if (!Crouching && ColliderIndex == 1) Crouching = true;
 
+            //stun (= disable the animations) if the ragdoll receives a large enough impact
+            if (strongestImpact > 0.0f)
+            {
+                character.SetStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
+                strongestImpact = 0.0f;
+                return;
+            }
+
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
@@ -92,14 +100,6 @@ namespace Barotrauma
                 Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
                 Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;           
                 
-                return;
-            }
-
-            //stun (= disable the animations) if the ragdoll receives a large enough impact
-            if (strongestImpact > 0.0f)
-            {
-                character.SetStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
-                strongestImpact = 0.0f;
                 return;
             }
 

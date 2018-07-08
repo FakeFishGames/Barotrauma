@@ -65,6 +65,26 @@ namespace Barotrauma
             get { return traitorList; }
         }
 
+        public bool IsTraitor(Character character)
+        {
+            for (int i = 0; i < TraitorList.Count; i++)
+            {
+                if (TraitorList[i].Character == character) return true;
+            }
+
+            return false;
+        }
+
+        public bool IsTarget(Character character)
+        {
+            for (int i = 0; i < TraitorList.Count; i++)
+            {
+                if (TraitorList[i].TargetCharacter == character) return true;
+            }
+
+            return false;
+        }
+
         private List<Traitor> traitorList = new List<Traitor>();
 
         public string codeWords, codeResponse;

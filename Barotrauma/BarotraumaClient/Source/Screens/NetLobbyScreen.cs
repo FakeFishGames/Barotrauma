@@ -735,9 +735,9 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
+            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
+            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
         }
 
@@ -748,8 +748,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeBlock.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = Mission.MissionTypes.Count - 1;
-            if (missionTypeIndex >= Mission.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
+            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 
@@ -1924,28 +1924,28 @@ namespace Barotrauma
                 switch (GameMain.NilMod.DefaultMissionType.ToLowerInvariant())
                 {
                     case "random":
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[0];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[0];
                         missionTypeBlock.UserData = 0;
                         break;
                     case "salvage":
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[1];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[1];
                         missionTypeBlock.UserData = 1;
                         break;
                     case "monster":
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[2];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[2];
                         missionTypeBlock.UserData = 2;
                         break;
                     case "cargo":
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[3];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[3];
                         missionTypeBlock.UserData = 3;
                         break;
                     case "combat":
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[4];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[4];
                         missionTypeBlock.UserData = 4;
                         break;
                     //Random if no valid mission type
                     default:
-                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[0];
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[0];
                         missionTypeBlock.UserData = 0;
                         break;
                 }

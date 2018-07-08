@@ -73,12 +73,9 @@ namespace Barotrauma.Items.Components
             projectileAnchor.X = element.GetAttributeFloat("projectileanchorx", 0.0f);
             projectileAnchor.Y = element.GetAttributeFloat("projectileanchory", 0.0f);
             projectileAnchor = ConvertUnits.ToSimUnits(projectileAnchor);
-
-            characterUsable = element.GetAttributeBool("characterusable", false);
                             
             sprite = new Sprite(spritePath, new Vector2(0.5f,0.5f));
             sectionLength = ConvertUnits.ToSimUnits(sprite.size.X);
-
 
             Path ropePath = new Path();
             ropePath.Add(item.body.SimPosition);

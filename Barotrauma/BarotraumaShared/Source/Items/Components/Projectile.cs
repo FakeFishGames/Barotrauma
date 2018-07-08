@@ -39,13 +39,6 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(false, false)]
-        public bool CharacterUsable
-        {
-            get { return characterUsable; }
-            set { characterUsable = value; }
-        }
-
-        [Serialize(false, false)]
         //backwards compatibility, can stick to anything
         public bool DoesStick
         {

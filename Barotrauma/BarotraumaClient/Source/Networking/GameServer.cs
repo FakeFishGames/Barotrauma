@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
     {
         private NetStats netStats;
 
-        
+
 
         //private GUITextBlock CurrentAction;
 
@@ -33,51 +33,58 @@ namespace Barotrauma.Networking
         #region Button Definitions
 
         //Page 1
-        public GUIButton endRoundButton;
+        public GUIButton NilModReload;
         public GUIButton settingsButton;
         public GUIButton ShowLagDiagnosticsButton;
         public GUIButton ShowNetStatsButton;
-        public GUIButton NilModReload;
+        public GUIButton endRoundButton;
 
         //Page 2
-        public GUIButton ToggleDebugDrawButton;
+        public GUIButton ToggleRenderStructureButton;
+        public GUIButton ToggleRenderOtherButton;
+        public GUIButton ToggleRenderLevelButton;
+        public GUIButton ToggleRenderCharacterButton;
         public GUIButton ToggleAITargetsButton;
-        public GUIButton ToggleVisibilityButton;
+        public GUIButton ToggleDebugDrawButton;
+        public GUIButton ToggleLightsButton;
+        public GUIButton ToggleLosButton;
         public GUIButton ToggleFollowSubButton;
-        public GUIButton ToggleHudButton;
-        public GUIButton DetachFromBodyButton;
-        public GUIButton ReturnToBodyButton;
+        public GUIButton ToggleDeathChat;
 
         //Page 3
         public GUIButton ForceShuttleButton;
         public GUIButton RecallShuttleButton;
-        public GUIButton ToggleCrewAIButton;
-        public GUIButton KillMonstersButtons;
-        public GUIButton LockSubXButton;
-        public GUIButton LockSubYButton;
-        public GUIButton ToggleCrushButton;
-        public GUIButton ToggleGodmodeButton;
-        public GUIButton SpawnCreatureButton;
-        public GUIButton KillCreatureButton;
-        public GUIButton RemoveCorpseButton;
         public GUIButton FreezeButton;
-
-        //Page 4
-        public GUIButton FixWallsButton;
-        public GUIButton FixItemsButton;
-        public GUIButton OxygenButton;
-        public GUIButton FiresButton;
-        public GUIButton WaterButton;
+        public GUIButton RelocateButton;
+        public GUIButton DetachFromBodyButton;
+        public GUIButton ReturnToBodyButton;
+        public GUIButton ControlButton;
+        public GUIButton ShieldButton;
+        public GUIButton KillMonstersButtons;
+        public GUIButton KillCreatureButton;
+        public GUIButton SpawnCreatureButton;
+        public GUIButton ToggleCrewAIButton;
+        public GUIButton RemoveCorpseButton;
+        public GUIButton ClearCorpseButton;
         public GUIButton ReviveButton;
         public GUIButton HealButton;
-        public GUIButton SetClientControlButton;
+
+        //Page 4
+        public GUIButton ToggleCrushButton;
+        public GUIButton ToggleGodmodeButton;
+        public GUIButton LockSubXButton;
+        public GUIButton LockSubYButton;
         public GUIButton TeleportTeam1SubButton;
         public GUIButton TeleportTeam2SubButton;
         public GUIButton RechargePowerTeam1Button;
         public GUIButton RechargePowerTeam2Button;
-        public GUIButton RelocateButton;
+        public GUIButton FixWallsButton;
+        public GUIButton FixItemsButton;
+        public GUIButton FiresButton;
+        public GUIButton WaterButton;
+        public GUIButton OxygenButton;
 
-#endregion
+        #endregion
 
         private GUIScrollBar clientListScrollBar;
 
@@ -85,25 +92,29 @@ namespace Barotrauma.Networking
 
         void InitProjSpecific()
         {
-            
             //----------------------------------------
             buttonpage = 1;
             MaxButtonPages = 4;
-            List<GUIButton> tempbuttonpagelist;
             PageButtons = new List<List<GUIButton>>();
-            int ButtonCoordX = 0;
-            int ButtonCoordY = 0;
-            
 
             ClickCommandFrame = new GUIFrame(
                 new Rectangle((int)((GameMain.GraphicsWidth) * 0.3f), (int)(GameMain.GraphicsHeight * 0.00f),
                     (int)(GameMain.GraphicsWidth * 0.40f), (int)(150)),
                 "", inGameHUD);
 
-            ClickCommandDescription = new GUITextBlock(new Rectangle(0, -20, (int)(GameMain.GraphicsWidth * 0.35f), 120), "ACTIONAME - STATS OF ACTION - DESCRIPTION OF THE ACTION GOES HERE WHICH LASTS FOR BLOODY AGES ETC ETC ETC ETC ETC XD", "", ClickCommandFrame,true);
-
+            ClickCommandDescription = new GUITextBlock(new Rectangle(0, -20, (int)(GameMain.GraphicsWidth * 0.35f), 120), "ACTIONAME - STATS OF ACTION - DESCRIPTION OF THE ACTION GOES HERE WHICH LASTS FOR BLOODY AGES ETC ETC ETC ETC ETC XD", "", ClickCommandFrame, true);
 
             ClickCommandFrame.Visible = false;
+
+            SetupButtons();
+
+            //----------------------------------------
+        }
+
+        public void SetupButtons()
+        {
+            List<GUIButton> tempbuttonpagelist;
+            Vector2 ButtonCoord;
 
             #region MainButtons
 
@@ -143,7 +154,7 @@ namespace Barotrauma.Networking
             HidePageButton.Enabled = true;
             HidePageButton.OnClicked = (GUIButton button, object userData) =>
             {
-                if(IsButtonPageHidden)
+                if (IsButtonPageHidden)
                 {
                     HidePageButton.ToolTip = "Hides the buttons.";
                     HidePageButton.Text = "Hide Page";
@@ -155,7 +166,7 @@ namespace Barotrauma.Networking
                     HidePageButton.Text = "Show Page";
                     IsButtonPageHidden = true;
                 }
-                
+
                 UpdateButtonPage();
                 return true;
             };
@@ -173,7 +184,6 @@ namespace Barotrauma.Networking
 
             #endregion
 
-
             #region Button Page 1
 
             //Y Start      70
@@ -185,11 +195,10 @@ namespace Barotrauma.Networking
 
             tempbuttonpagelist = new List<GUIButton>();
 
-            ButtonCoordX = GameMain.GraphicsWidth - 140;
-            ButtonCoordY = 70;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
             //EndRoundButton
-            endRoundButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "End round", Alignment.TopLeft, "", inGameHUD);
+            endRoundButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.ToolTip = "Immediately ends the game round.";
             endRoundButton.Visible = false;
             endRoundButton.Enabled = true;
@@ -199,10 +208,10 @@ namespace Barotrauma.Networking
             };
             tempbuttonpagelist.Add(endRoundButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
             //Settingsbutton
-            settingsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
+            settingsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
             settingsButton.ToolTip = "Shows the server settings screen.";
             settingsButton.Visible = false;
             settingsButton.Enabled = true;
@@ -210,49 +219,46 @@ namespace Barotrauma.Networking
             settingsButton.UserData = "settingsButton";
             tempbuttonpagelist.Add(settingsButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
             //LagDiagnosticsButton
-            ShowLagDiagnosticsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Lag Profiler On", Alignment.TopLeft, "", inGameHUD);
+            ShowLagDiagnosticsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "LagProfiler: On", Alignment.TopLeft, "", inGameHUD);
             ShowLagDiagnosticsButton.ToolTip = "Turns on the lag profiling information.";
             ShowLagDiagnosticsButton.Visible = false;
             ShowLagDiagnosticsButton.Enabled = true;
             ShowLagDiagnosticsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("lagprofiler");
+                DebugConsole.ExecuteCommand("lagprofiler", true);
                 return true;
             };
             tempbuttonpagelist.Add(ShowLagDiagnosticsButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
             //NetStatsButton
-            ShowNetStatsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "NetStats On", Alignment.TopLeft, "", inGameHUD);
+            ShowNetStatsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "NetStats: On", Alignment.TopLeft, "", inGameHUD);
             ShowNetStatsButton.ToolTip = "Turns on the netstats screen which shows the latencies and IP Addresses of connections.";
             ShowNetStatsButton.Visible = false;
             ShowNetStatsButton.Enabled = true;
             ShowNetStatsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("netstats");
+                DebugConsole.ExecuteCommand("netstats", true);
                 return true;
             };
             tempbuttonpagelist.Add(ShowNetStatsButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            NilModReload = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Reload Nilmod Config", Alignment.TopLeft, "", inGameHUD);
+            NilModReload = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Reload Nilmod Config", Alignment.TopLeft, "", inGameHUD);
             NilModReload.ToolTip = "Reloads all NilMod XMLs during round runtime and retroactively applies them.";
             NilModReload.Visible = false;
             NilModReload.Enabled = true;
             NilModReload.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("nilmodreload");
+                DebugConsole.ExecuteCommand("nilmodreload", true);
                 return true;
             };
             tempbuttonpagelist.Add(NilModReload);
-
 
             PageButtons.Add(tempbuttonpagelist);
 
@@ -269,102 +275,135 @@ namespace Barotrauma.Networking
 
             tempbuttonpagelist = new List<GUIButton>();
 
-            ButtonCoordX = GameMain.GraphicsWidth - 140;
-            ButtonCoordY = 70;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleDebugDrawButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "DebugDraw On", Alignment.TopLeft, "", inGameHUD);
-            ToggleDebugDrawButton.ToolTip = "Turns on debugdraw view information.";
-            ToggleDebugDrawButton.Visible = false;
-            ToggleDebugDrawButton.Enabled = true;
-            ToggleDebugDrawButton.OnClicked = (GUIButton button, object userData) =>
+            ToggleRenderStructureButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "RenderStruct: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleRenderStructureButton.ToolTip = "Turns off rendering of submarine items and background walls, level will still show outer walls, doors, ladders and perhaps stairs.";
+            ToggleRenderStructureButton.Visible = false;
+            ToggleRenderStructureButton.Enabled = true;
+            ToggleRenderStructureButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("debugdraw");
+                DebugConsole.ExecuteCommand("renderstructure", true);
                 return true;
             };
-            tempbuttonpagelist.Add(ToggleDebugDrawButton);
+            tempbuttonpagelist.Add(ToggleRenderStructureButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleAITargetsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "AITargets On", Alignment.TopLeft, "", inGameHUD);
+            ToggleRenderOtherButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "RenderOther: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleRenderOtherButton.ToolTip = "Turns off particle, lighting, los and other miscellanous rendering.";
+            ToggleRenderOtherButton.Visible = false;
+            ToggleRenderOtherButton.Enabled = true;
+            ToggleRenderOtherButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("renderother", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleRenderOtherButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ToggleRenderLevelButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "RenderLevel: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleRenderLevelButton.ToolTip = "Turns off level rendering, structure rendering will still render the submarine walls unless both are off.";
+            ToggleRenderLevelButton.Visible = false;
+            ToggleRenderLevelButton.Enabled = true;
+            ToggleRenderLevelButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("renderlevel", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleRenderLevelButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ToggleRenderCharacterButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "RenderChar: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleRenderCharacterButton.ToolTip = "Turns off character rendering.";
+            ToggleRenderCharacterButton.Visible = false;
+            ToggleRenderCharacterButton.Enabled = true;
+            ToggleRenderCharacterButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("rendercharacter", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleRenderCharacterButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ToggleAITargetsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "AITargets: On", Alignment.TopLeft, "", inGameHUD);
             ToggleAITargetsButton.ToolTip = "Turns on AI Targetting range information for Debugdraw mode.";
             ToggleAITargetsButton.Visible = false;
             ToggleAITargetsButton.Enabled = true;
             ToggleAITargetsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("aitargets");
+                DebugConsole.ExecuteCommand("aitargets", true);
                 return true;
             };
             tempbuttonpagelist.Add(ToggleAITargetsButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleVisibilityButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Toggle Visibility", Alignment.TopLeft, "", inGameHUD);
-            ToggleVisibilityButton.ToolTip = "Toggles line of sight and lights.";
-            ToggleVisibilityButton.Visible = false;
-            ToggleVisibilityButton.Enabled = true;
-            ToggleVisibilityButton.OnClicked = (GUIButton button, object userData) =>
+            ToggleDebugDrawButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "DebugDraw: On", Alignment.TopLeft, "", inGameHUD);
+            ToggleDebugDrawButton.ToolTip = "Turns on debugdraw view information.";
+            ToggleDebugDrawButton.Visible = false;
+            ToggleDebugDrawButton.Enabled = true;
+            ToggleDebugDrawButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("los");
-                DebugConsole.ExecuteCommand("lights");
+                DebugConsole.ExecuteCommand("debugdraw", true);
                 return true;
             };
-            tempbuttonpagelist.Add(ToggleVisibilityButton);
+            tempbuttonpagelist.Add(ToggleDebugDrawButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleFollowSubButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Follow Sub Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleLightsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Toggle Lights", Alignment.TopLeft, "", inGameHUD);
+            ToggleLightsButton.ToolTip = "Toggles game lighting.";
+            ToggleLightsButton.Visible = false;
+            ToggleLightsButton.Enabled = true;
+            ToggleLightsButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("lights", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleLightsButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ToggleLosButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Toggle Los", Alignment.TopLeft, "", inGameHUD);
+            ToggleLosButton.ToolTip = "Toggles line of sight.";
+            ToggleLosButton.Visible = false;
+            ToggleLosButton.Enabled = true;
+            ToggleLosButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("los", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleLosButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ToggleFollowSubButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "FollowSub: Off", Alignment.TopLeft, "", inGameHUD);
             ToggleFollowSubButton.ToolTip = "Stops the camera automatically following submarines.";
             ToggleFollowSubButton.Visible = false;
             ToggleFollowSubButton.Enabled = true;
             ToggleFollowSubButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("followsub");
+                DebugConsole.ExecuteCommand("followsub", true);
                 return true;
             };
             tempbuttonpagelist.Add(ToggleFollowSubButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleHudButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "CharHud Off", Alignment.TopLeft, "", inGameHUD);
-            ToggleHudButton.ToolTip = "Turns off the character HUD.";
-            ToggleHudButton.Visible = false;
-            ToggleHudButton.Enabled = true;
-            ToggleHudButton.OnClicked = (GUIButton button, object userData) =>
+            ToggleDeathChat = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "DeathChat: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleDeathChat.ToolTip = "Toggles visibility of the deathchat if you have a living character.";
+            ToggleDeathChat.Visible = false;
+            ToggleDeathChat.Enabled = true;
+            ToggleDeathChat.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("togglehud");
+                DebugConsole.ExecuteCommand("deathchat", true);
                 return true;
             };
-            tempbuttonpagelist.Add(ToggleHudButton);
-
-            ButtonCoordX -= 140;
-
-            DetachFromBodyButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Detach Body", Alignment.TopLeft, "", inGameHUD);
-            DetachFromBodyButton.ToolTip = "Freecams you away from your character and drops control.";
-            DetachFromBodyButton.Visible = false;
-            DetachFromBodyButton.Enabled = true;
-            DetachFromBodyButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("freecam");
-                return true;
-            };
-            tempbuttonpagelist.Add(DetachFromBodyButton);
-
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
-
-            ReturnToBodyButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Return to body.", Alignment.TopLeft, "", inGameHUD);
-            ReturnToBodyButton.ToolTip = "Sets control back to the last character you controlled.";
-            ReturnToBodyButton.Visible = false;
-            ReturnToBodyButton.Enabled = false;
-            ReturnToBodyButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                //DebugConsole.ExecuteCommand("nilmodreload", GameMain.Instance);
-                return true;
-            };
-            tempbuttonpagelist.Add(ReturnToBodyButton);
-
+            tempbuttonpagelist.Add(ToggleDeathChat);
 
             PageButtons.Add(tempbuttonpagelist);
 
@@ -381,138 +420,142 @@ namespace Barotrauma.Networking
 
             tempbuttonpagelist = new List<GUIButton>();
 
-            ButtonCoordX = GameMain.GraphicsWidth - 140;
-            ButtonCoordY = 70;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ForceShuttleButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Force Shuttle", Alignment.TopLeft, "", inGameHUD);
-            ForceShuttleButton.ToolTip = "Immediately recalls and forces out the shuttle, respawning anyone spectating.";
-            ForceShuttleButton.Visible = false;
-            ForceShuttleButton.Enabled = true;
-            ForceShuttleButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("forceshuttle");
-                return true;
-            };
-            tempbuttonpagelist.Add(ForceShuttleButton);
-
-            ButtonCoordX -= 140;
-
-            RecallShuttleButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Recall Shuttle", Alignment.TopLeft, "", inGameHUD);
+            RecallShuttleButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Recall Shuttle", Alignment.TopLeft, "", inGameHUD);
             RecallShuttleButton.ToolTip = "Immediately recalls the shuttle, killing anything on board and resetting the timers.";
             RecallShuttleButton.Visible = false;
             RecallShuttleButton.Enabled = true;
             RecallShuttleButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("recallshuttle");
+                DebugConsole.ExecuteCommand("recallshuttle", true);
                 return true;
             };
             tempbuttonpagelist.Add(RecallShuttleButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            ToggleCrewAIButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Crew AI Off", Alignment.TopLeft, "", inGameHUD);
-            ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI Off.";
-            ToggleCrewAIButton.Visible = false;
-            ToggleCrewAIButton.Enabled = true;
-            ToggleCrewAIButton.OnClicked = (GUIButton button, object userData) =>
+            ForceShuttleButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Force Shuttle", Alignment.TopLeft, "", inGameHUD);
+            ForceShuttleButton.ToolTip = "Immediately recalls and forces out the shuttle, respawning anyone spectating.";
+            ForceShuttleButton.Visible = false;
+            ForceShuttleButton.Enabled = true;
+            ForceShuttleButton.OnClicked = (GUIButton button, object userData) =>
             {
-                if(HumanAIController.DisableCrewAI)
-                {
-                    DebugConsole.ExecuteCommand("enablecrewai");
-                }
-                else
-                {
-                    DebugConsole.ExecuteCommand("disablecrewai");
-                }
+                DebugConsole.ExecuteCommand("forceshuttle", true);
                 return true;
             };
-            tempbuttonpagelist.Add(ToggleCrewAIButton);
+            tempbuttonpagelist.Add(ForceShuttleButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            KillMonstersButtons = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Kill Monsters", Alignment.TopLeft, "", inGameHUD);
+            FreezeButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Freeze Characters", Alignment.TopLeft, "", inGameHUD);
+            FreezeButton.ToolTip = "Left click a player to freeze their movements - Left click again to unfreeze - hold only shift to repeat - hold ctrl shift and left click to freeze all - hold ctrl and left click to unfreeze everyone - Right click to cancel - Players may still talk if concious.";
+            FreezeButton.Visible = false;
+            FreezeButton.Enabled = true;
+            FreezeButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                GameMain.NilMod.ActiveClickCommand = true;
+                GameMain.NilMod.ClickCommandType = "freeze";
+                GameMain.NilMod.ClickCooldown = 0.5f;
+                ClickCommandFrame.Visible = true;
+                ClickCommandDescription.Text = "FREEZE - Left click a player to freeze their movements - Left click again to unfreeze - hold only shift to repeat - hold ctrl shift and left click to freeze all - hold ctrl and left click to unfreeze everyone - Right click to cancel - Players may still talk if concious.";
+                return true;
+            };
+            tempbuttonpagelist.Add(FreezeButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            RelocateButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Relocate Creature", Alignment.TopLeft, "", inGameHUD);
+            RelocateButton.ToolTip = "Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
+            RelocateButton.Visible = false;
+            RelocateButton.Enabled = true;
+            RelocateButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                GameMain.NilMod.ActiveClickCommand = true;
+                GameMain.NilMod.ClickCommandType = "relocate";
+                GameMain.NilMod.ClickCooldown = 0.5f;
+                ClickCommandFrame.Visible = true;
+                ClickCommandDescription.Text = "RELOCATE - None Selected - Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
+                return true;
+            };
+            tempbuttonpagelist.Add(RelocateButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            DetachFromBodyButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Detach Body", Alignment.TopLeft, "", inGameHUD);
+            DetachFromBodyButton.ToolTip = "Freecams you away from your character and drops control.";
+            DetachFromBodyButton.Visible = false;
+            DetachFromBodyButton.Enabled = true;
+            DetachFromBodyButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("freecam", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(DetachFromBodyButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ReturnToBodyButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Return to body.", Alignment.TopLeft, "", inGameHUD);
+            ReturnToBodyButton.ToolTip = "Sets control back to the last character you controlled.";
+            ReturnToBodyButton.Visible = false;
+            ReturnToBodyButton.Enabled = true;
+            ReturnToBodyButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                if (Character.LastControlled != null) Character.Controlled = Character.LastControlled;
+                return true;
+            };
+            tempbuttonpagelist.Add(ReturnToBodyButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ShieldButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Shield", Alignment.TopLeft, "", inGameHUD);
+            ShieldButton.ToolTip = "Grants immunity to pressure, health loss and oxygen loss, it will not revive or heal them - but they may still increase in health/oxygen and huskify.";
+            ShieldButton.Visible = false;
+            ShieldButton.Enabled = true;
+            ShieldButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                GameMain.NilMod.ActiveClickCommand = true;
+                GameMain.NilMod.ClickCommandType = "shield";
+                GameMain.NilMod.ClickCooldown = 0.5f;
+                ClickCommandFrame.Visible = true;
+                ClickCommandDescription.Text = "SHIELD - Left Click close to a creatures center to grant immunity, Hold control to revoke immunity, Hold shift while clicking to repeat, right click to cancel.";
+                return true;
+            };
+            tempbuttonpagelist.Add(ShieldButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ControlButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Control", Alignment.TopLeft, "", inGameHUD);
+            ControlButton.ToolTip = "Turns off rendering of submarine items and background walls, level will still show outer walls, doors, ladders and perhaps stairs.";
+            ControlButton.Visible = false;
+            ControlButton.Enabled = true;
+            ControlButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                GameMain.NilMod.ActiveClickCommand = true;
+                GameMain.NilMod.ClickCommandType = "control";
+                GameMain.NilMod.ClickCooldown = 0.5f;
+                ClickCommandFrame.Visible = true;
+                ClickCommandDescription.Text = "CONTROL - Left Click close to a creatures center to instantaniously kill it, Hold shift while clicking to repeat, right click to cancel.";
+                return true;
+            };
+            tempbuttonpagelist.Add(ControlButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            KillMonstersButtons = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Kill Monsters", Alignment.TopLeft, "", inGameHUD);
             KillMonstersButtons.ToolTip = "Instantly kills every enemy creature on the map.";
             KillMonstersButtons.Visible = false;
             KillMonstersButtons.Enabled = true;
             KillMonstersButtons.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("killmonsters");
+                DebugConsole.ExecuteCommand("killmonsters", true);
                 return true;
             };
             tempbuttonpagelist.Add(KillMonstersButtons);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            LockSubXButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Lock Sub X", Alignment.TopLeft, "", inGameHUD);
-            LockSubXButton.ToolTip = "Prevents any submarine/shuttle from moving Left/Right.";
-            LockSubXButton.Visible = false;
-            LockSubXButton.Enabled = true;
-            LockSubXButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("lockx");
-                return true;
-            };
-            tempbuttonpagelist.Add(LockSubXButton);
-
-            ButtonCoordX -= 140;
-
-            LockSubYButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Lock Sub Y", Alignment.TopLeft, "", inGameHUD);
-            LockSubYButton.ToolTip = "Prevents any submarine/shuttle from moving Up/Down.";
-            LockSubYButton.Visible = false;
-            LockSubYButton.Enabled = true;
-            LockSubYButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("locky");
-                return true;
-            };
-            tempbuttonpagelist.Add(LockSubYButton);
-
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
-
-            ToggleCrushButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Depth Crush Off", Alignment.TopLeft, "", inGameHUD);
-            ToggleCrushButton.ToolTip = "Turns off Abyss Crushing damage to submarines.";
-            ToggleCrushButton.Visible = false;
-            ToggleCrushButton.Enabled = true;
-            ToggleCrushButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("togglecrush");
-                return true;
-            };
-            tempbuttonpagelist.Add(ToggleCrushButton);
-
-            ButtonCoordX -= 140;
-
-            ToggleGodmodeButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "GodMode On", Alignment.TopLeft, "", inGameHUD);
-            ToggleGodmodeButton.ToolTip = "Turns on godmode which stops submarine damage.";
-            ToggleGodmodeButton.Visible = false;
-            ToggleGodmodeButton.Enabled = true;
-            ToggleGodmodeButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("godmode");
-                return true;
-            };
-            tempbuttonpagelist.Add(ToggleGodmodeButton);
-
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
-
-            SpawnCreatureButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Spawn Creature", Alignment.TopLeft, "", inGameHUD);
-            SpawnCreatureButton.ToolTip = "Opens the menu to spawn creatures.";
-            SpawnCreatureButton.Visible = false;
-            SpawnCreatureButton.Enabled = true;
-            SpawnCreatureButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                SpawnCreaturePrompt();
-                return true;
-            };
-            tempbuttonpagelist.Add(SpawnCreatureButton);
-
-            ButtonCoordX -= 140;
-
-            KillCreatureButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Kill Creature", Alignment.TopLeft, "", inGameHUD);
+            KillCreatureButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Kill Creature", Alignment.TopLeft, "", inGameHUD);
             KillCreatureButton.ToolTip = "Left Click close to a creatures center to instantaniously kill it, Hold shift while clicking to repeat, right click to cancel.";
             KillCreatureButton.Visible = false;
             KillCreatureButton.Enabled = true;
@@ -527,10 +570,62 @@ namespace Barotrauma.Networking
             };
             tempbuttonpagelist.Add(KillCreatureButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            RemoveCorpseButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Remove Corpse", Alignment.TopLeft, "", inGameHUD);
+            ToggleCrewAIButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "CrewAI: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI Off.";
+            ToggleCrewAIButton.Visible = false;
+            ToggleCrewAIButton.Enabled = true;
+            ToggleCrewAIButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                if (HumanAIController.DisableCrewAI)
+                {
+                    DebugConsole.ExecuteCommand("enablecrewai", true);
+                }
+                else
+                {
+                    DebugConsole.ExecuteCommand("disablecrewai", true);
+                }
+                return true;
+            };
+            tempbuttonpagelist.Add(ToggleCrewAIButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            SpawnCreatureButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Spawn Creature", Alignment.TopLeft, "", inGameHUD);
+            SpawnCreatureButton.ToolTip = "Opens the menu to spawn creatures.";
+            SpawnCreatureButton.Visible = false;
+            SpawnCreatureButton.Enabled = true;
+            SpawnCreatureButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                SpawnCreaturePrompt();
+                return true;
+            };
+            tempbuttonpagelist.Add(SpawnCreatureButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            ClearCorpseButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Clear Corpses", Alignment.TopLeft, "", inGameHUD);
+            ClearCorpseButton.ToolTip = "Removes every single none-netplayer corpse from the map instantly, hold shift to remove netplayer corpses as well.";
+            ClearCorpseButton.Visible = false;
+            ClearCorpseButton.Enabled = true;
+            ClearCorpseButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+                {
+                    GameMain.Server.RemoveCorpses(true);
+                }
+                else
+                {
+                    GameMain.Server.RemoveCorpses(false);
+                }
+                return true;
+            };
+            tempbuttonpagelist.Add(ClearCorpseButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            RemoveCorpseButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Remove Corpse", Alignment.TopLeft, "", inGameHUD);
             RemoveCorpseButton.ToolTip = "Left Click close to a creatures corpse to delete it, Hold shift while clicking to repeat, right click to cancel.";
             RemoveCorpseButton.Visible = false;
             RemoveCorpseButton.Enabled = true;
@@ -545,44 +640,53 @@ namespace Barotrauma.Networking
             };
             tempbuttonpagelist.Add(RemoveCorpseButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            RemoveCorpseButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Clear Corpses", Alignment.TopLeft, "", inGameHUD);
-            RemoveCorpseButton.ToolTip = "Removes every single none-netplayer corpse from the map instantly, hold shift to remove netplayer corpses as well.";
-            RemoveCorpseButton.Visible = false;
-            RemoveCorpseButton.Enabled = true;
-            RemoveCorpseButton.OnClicked = (GUIButton button, object userData) =>
+            ReviveButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Revive Character", Alignment.TopLeft, "", inGameHUD);
+            ReviveButton.ToolTip = "Left Click close to a creatures center to revive it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to revive self, if detached from body ctrl click corpse to revive+control, right click to cancel.";
+            ReviveButton.Visible = false;
+            ReviveButton.Enabled = true;
+            ReviveButton.OnClicked = (GUIButton button, object userData) =>
             {
-                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
                 {
-                    GameMain.Server.RemoveCorpses(true);
+                    DebugConsole.ExecuteCommand("revive", true);
                 }
                 else
                 {
-                    GameMain.Server.RemoveCorpses(false);
+                    GameMain.NilMod.ActiveClickCommand = true;
+                    GameMain.NilMod.ClickCommandType = "revive";
+                    GameMain.NilMod.ClickCooldown = 0.5f;
+                    ClickCommandFrame.Visible = true;
+                    ClickCommandDescription.Text = "REVIVE - Left Click close to a creatures center to revive it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to revive self, if detached from body ctrl click corpse to revive+control, right click to cancel. - As a note for now IF REVIVING A PLAYER you will wish to open the console (F3) and type setclientcharacter CapitalizedClientName ; clientcharacter to give them the body back.";
                 }
                 return true;
             };
-            tempbuttonpagelist.Add(RemoveCorpseButton);
+            tempbuttonpagelist.Add(ReviveButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            FreezeButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Freeze Characters", Alignment.TopLeft, "", inGameHUD);
-            FreezeButton.ToolTip = "Left click a player to freeze their movements - Left click again to unfreeze - hold only shift to repeat - hold ctrl shift and left click to freeze all - hold ctrl and left click to unfreeze everyone - Right click to cancel - Players may still talk if concious.";
-            FreezeButton.Visible = false;
-            FreezeButton.Enabled = true;
-            FreezeButton.OnClicked = (GUIButton button, object userData) =>
+            HealButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Heal Character", Alignment.TopLeft, "", inGameHUD);
+            HealButton.ToolTip = "Left Click close to a creatures center to heal it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to heal self, right click to cancel.";
+            HealButton.Visible = false;
+            HealButton.Enabled = true;
+            HealButton.OnClicked = (GUIButton button, object userData) =>
             {
-                GameMain.NilMod.ActiveClickCommand = true;
-                GameMain.NilMod.ClickCommandType = "freeze";
-                GameMain.NilMod.ClickCooldown = 0.5f;
-                ClickCommandFrame.Visible = true;
-                ClickCommandDescription.Text = "FREEZE - Left click a player to freeze their movements - Left click again to unfreeze - hold only shift to repeat - hold ctrl shift and left click to freeze all - hold ctrl and left click to unfreeze everyone - Right click to cancel - Players may still talk if concious.";
+                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
+                {
+                    DebugConsole.ExecuteCommand("heal", true);
+                }
+                else
+                {
+                    GameMain.NilMod.ActiveClickCommand = true;
+                    GameMain.NilMod.ClickCommandType = "heal";
+                    GameMain.NilMod.ClickCooldown = 0.5f;
+                    ClickCommandFrame.Visible = true;
+                    ClickCommandDescription.Text = "HEAL - Left Click close to a creatures center to heal it, Hold shift while clicking to repeat, Hold ctrl when clicking to heal self, right click to cancel.";
+                }
                 return true;
             };
-            tempbuttonpagelist.Add(FreezeButton);
-            
+            tempbuttonpagelist.Add(HealButton);
 
             PageButtons.Add(tempbuttonpagelist);
 
@@ -599,158 +703,61 @@ namespace Barotrauma.Networking
 
             tempbuttonpagelist = new List<GUIButton>();
 
-            ButtonCoordX = GameMain.GraphicsWidth - 140;
-            ButtonCoordY = 70;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            FixWallsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Fix All Walls", Alignment.TopLeft, "", inGameHUD);
-            FixWallsButton.ToolTip = "Immediately fixes all walls and floors in all submarines, this includes ruin walls.";
-            FixWallsButton.Visible = false;
-            FixWallsButton.Enabled = true;
-            FixWallsButton.OnClicked = (GUIButton button, object userData) =>
+            ToggleCrushButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "DepthCrush: Off", Alignment.TopLeft, "", inGameHUD);
+            ToggleCrushButton.ToolTip = "Turns off Abyss Crushing damage to submarines.";
+            ToggleCrushButton.Visible = false;
+            ToggleCrushButton.Enabled = true;
+            ToggleCrushButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fixwalls");
+                DebugConsole.ExecuteCommand("togglecrush", true);
                 return true;
             };
-            tempbuttonpagelist.Add(FixWallsButton);
+            tempbuttonpagelist.Add(ToggleCrushButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            FixItemsButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Fix All Items", Alignment.TopLeft, "", inGameHUD);
-            FixItemsButton.ToolTip = "Immediately fixes all broken junctions, engines, doors, oxygen tanks, medicals and other items with a condition system.";
-            FixItemsButton.Visible = false;
-            FixItemsButton.Enabled = true;
-            FixItemsButton.OnClicked = (GUIButton button, object userData) =>
+            ToggleGodmodeButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "GodMode: On", Alignment.TopLeft, "", inGameHUD);
+            ToggleGodmodeButton.ToolTip = "Turns on godmode which stops submarine damage.";
+            ToggleGodmodeButton.Visible = false;
+            ToggleGodmodeButton.Enabled = true;
+            ToggleGodmodeButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fixitems");
+                DebugConsole.ExecuteCommand("godmode", true);
                 return true;
             };
-            tempbuttonpagelist.Add(FixItemsButton);
+            tempbuttonpagelist.Add(ToggleGodmodeButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            OxygenButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Oxygen", Alignment.TopLeft, "", inGameHUD);
-            OxygenButton.ToolTip = "Immediately restores all submarines/shuttles oxygen to 100%.";
-            OxygenButton.Visible = false;
-            OxygenButton.Enabled = true;
-            OxygenButton.OnClicked = (GUIButton button, object userData) =>
+            LockSubXButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Lock Sub X", Alignment.TopLeft, "", inGameHUD);
+            LockSubXButton.ToolTip = "Prevents any submarine/shuttle from moving Left/Right.";
+            LockSubXButton.Visible = false;
+            LockSubXButton.Enabled = true;
+            LockSubXButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("oxygen");
+                DebugConsole.ExecuteCommand("lockx", true);
                 return true;
             };
-            tempbuttonpagelist.Add(OxygenButton);
+            tempbuttonpagelist.Add(LockSubXButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            FiresButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Fire On", Alignment.TopLeft, "", inGameHUD);
-            FiresButton.ToolTip = "Turns on fire control, Left click to add fires.";
-            FiresButton.Visible = false;
-            FiresButton.Enabled = true;
-            FiresButton.OnClicked = (GUIButton button, object userData) =>
+            LockSubYButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Lock Sub Y", Alignment.TopLeft, "", inGameHUD);
+            LockSubYButton.ToolTip = "Prevents any submarine/shuttle from moving Up/Down.";
+            LockSubYButton.Visible = false;
+            LockSubYButton.Enabled = true;
+            LockSubYButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fire");
+                DebugConsole.ExecuteCommand("locky", true);
                 return true;
             };
-            tempbuttonpagelist.Add(FiresButton);
+            tempbuttonpagelist.Add(LockSubYButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            WaterButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Water On", Alignment.TopLeft, "", inGameHUD);
-            WaterButton.ToolTip = "Turns on water control, Left click to add water, Right click to remove.";
-            WaterButton.Visible = false;
-            WaterButton.Enabled = true;
-            WaterButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("water");
-                return true;
-            };
-            tempbuttonpagelist.Add(WaterButton);
-
-            ButtonCoordX -= 140;
-
-            HealButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Heal Character", Alignment.TopLeft, "", inGameHUD);
-            HealButton.ToolTip = "Left Click close to a creatures center to heal it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to heal self, right click to cancel.";
-            HealButton.Visible = false;
-            HealButton.Enabled = true;
-            HealButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
-                {
-                    DebugConsole.ExecuteCommand("heal");
-                }
-                else
-                {
-                    GameMain.NilMod.ActiveClickCommand = true;
-                    GameMain.NilMod.ClickCommandType = "heal";
-                    GameMain.NilMod.ClickCooldown = 0.5f;
-                    ClickCommandFrame.Visible = true;
-                    ClickCommandDescription.Text = "HEAL - Left Click close to a creatures center to heal it, Hold shift while clicking to repeat, Hold ctrl when clicking to heal self, right click to cancel.";
-                }
-                return true;
-            };
-            tempbuttonpagelist.Add(HealButton);
-
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
-
-            ReviveButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Revive Character", Alignment.TopLeft, "", inGameHUD);
-            ReviveButton.ToolTip = "Left Click close to a creatures center to revive it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to revive self, if detached from body ctrl click corpse to revive+control, right click to cancel.";
-            ReviveButton.Visible = false;
-            ReviveButton.Enabled = true;
-            ReviveButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
-                {
-                    DebugConsole.ExecuteCommand("revive");
-                }
-                else
-                {
-                    GameMain.NilMod.ActiveClickCommand = true;
-                    GameMain.NilMod.ClickCommandType = "revive";
-                    GameMain.NilMod.ClickCooldown = 0.5f;
-                    ClickCommandFrame.Visible = true;
-                    ClickCommandDescription.Text = "REVIVE - Left Click close to a creatures center to revive it, Hold shift while clicking to repeat, Hold ctrl when clicking the button to revive self, if detached from body ctrl click corpse to revive+control, right click to cancel. - As a note for now IF REVIVING A PLAYER you will wish to open the console (F3) and type setclientcharacter CapitalizedClientName ; clientcharacter to give them the body back.";
-                }
-                return true;
-            };
-            tempbuttonpagelist.Add(ReviveButton);
-
-            ButtonCoordX -= 140;
-
-            SetClientControlButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Set Character", Alignment.TopLeft, "", inGameHUD);
-            SetClientControlButton.ToolTip = "Sets a remote client to control another character, Configure in popup menu.";
-            SetClientControlButton.Visible = false;
-            SetClientControlButton.Enabled = false;
-            SetClientControlButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                DebugConsole.ExecuteCommand("godmode");
-                return true;
-            };
-            tempbuttonpagelist.Add(SetClientControlButton);
-
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
-
-            TeleportTeam1SubButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Warp Team 1 sub", Alignment.TopLeft, "", inGameHUD);
-            TeleportTeam1SubButton.ToolTip = "Teleports the first teams submarine, click then click in-world to teleport. Right click to cancel action.";
-            TeleportTeam1SubButton.Visible = false;
-            TeleportTeam1SubButton.Enabled = true;
-            TeleportTeam1SubButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                GameMain.NilMod.ActiveClickCommand = true;
-                GameMain.NilMod.ClickCommandType = "teleportsub";
-                GameMain.NilMod.ClickArgs = new string[] {"0" };
-                GameMain.NilMod.ClickCooldown = 0.5f;
-                ClickCommandFrame.Visible = true;
-                ClickCommandDescription.Text = "TELEPORTSUB - Team 0's submarine - Teleports the chosen teams submarine, left click to teleport. Right click to cancel.";
-                return true;
-            };
-            tempbuttonpagelist.Add(TeleportTeam1SubButton);
-
-            ButtonCoordX -= 140;
-
-            TeleportTeam2SubButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Warp team 2 sub", Alignment.TopLeft, "", inGameHUD);
+            TeleportTeam2SubButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Warp team 2 sub", Alignment.TopLeft, "", inGameHUD);
             TeleportTeam2SubButton.ToolTip = "Teleports the second teams submarine, click then click in-world to teleport. Right click to cancel action.";
             TeleportTeam2SubButton.Visible = false;
             TeleportTeam2SubButton.Enabled = true;
@@ -766,57 +773,142 @@ namespace Barotrauma.Networking
             };
             tempbuttonpagelist.Add(TeleportTeam2SubButton);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            RechargePowerTeam1Button = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Charge team 1 sub", Alignment.TopLeft, "", inGameHUD);
-            RechargePowerTeam1Button.ToolTip = "Recharges all power devices for the first teams submarine.";
-            RechargePowerTeam1Button.Visible = false;
-            RechargePowerTeam1Button.Enabled = true;
-            RechargePowerTeam1Button.OnClicked = (GUIButton button, object userData) =>
+            TeleportTeam1SubButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Warp Team 1 sub", Alignment.TopLeft, "", inGameHUD);
+            TeleportTeam1SubButton.ToolTip = "Teleports the first teams submarine, click then click in-world to teleport. Right click to cancel action.";
+            TeleportTeam1SubButton.Visible = false;
+            TeleportTeam1SubButton.Enabled = true;
+            TeleportTeam1SubButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("rechargepower 0");
+                GameMain.NilMod.ActiveClickCommand = true;
+                GameMain.NilMod.ClickCommandType = "teleportsub";
+                GameMain.NilMod.ClickArgs = new string[] { "0" };
+                GameMain.NilMod.ClickCooldown = 0.5f;
+                ClickCommandFrame.Visible = true;
+                ClickCommandDescription.Text = "TELEPORTSUB - Team 0's submarine - Teleports the chosen teams submarine, left click to teleport. Right click to cancel.";
                 return true;
             };
-            tempbuttonpagelist.Add(RechargePowerTeam1Button);
+            tempbuttonpagelist.Add(TeleportTeam1SubButton);
 
-            ButtonCoordX -= 140;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            RechargePowerTeam2Button = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Charge team 2 sub", Alignment.TopLeft, "", inGameHUD);
+            RechargePowerTeam2Button = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Charge team 2 sub", Alignment.TopLeft, "", inGameHUD);
             RechargePowerTeam2Button.ToolTip = "Recharges all power devices for the second teams submarine.";
             RechargePowerTeam2Button.Visible = false;
             RechargePowerTeam2Button.Enabled = true;
             RechargePowerTeam2Button.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("rechargepower 1");
+                DebugConsole.ExecuteCommand("rechargepower 1", true);
                 return true;
             };
             tempbuttonpagelist.Add(RechargePowerTeam2Button);
 
-            ButtonCoordX += 140;
-            ButtonCoordY += 30;
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
 
-            RelocateButton = new GUIButton(new Rectangle(ButtonCoordX, ButtonCoordY, 130, 20), "Relocate Creature", Alignment.TopLeft, "", inGameHUD);
-            RelocateButton.ToolTip = "Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
-            RelocateButton.Visible = false;
-            RelocateButton.Enabled = true;
-            RelocateButton.OnClicked = (GUIButton button, object userData) =>
+            RechargePowerTeam1Button = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Charge team 1 sub", Alignment.TopLeft, "", inGameHUD);
+            RechargePowerTeam1Button.ToolTip = "Recharges all power devices for the first teams submarine.";
+            RechargePowerTeam1Button.Visible = false;
+            RechargePowerTeam1Button.Enabled = true;
+            RechargePowerTeam1Button.OnClicked = (GUIButton button, object userData) =>
             {
-                GameMain.NilMod.ActiveClickCommand = true;
-                GameMain.NilMod.ClickCommandType = "relocate";
-                GameMain.NilMod.ClickCooldown = 0.5f;
-                ClickCommandFrame.Visible = true;
-                ClickCommandDescription.Text = "RELOCATE - None Selected - Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
+                DebugConsole.ExecuteCommand("rechargepower 0", true);
                 return true;
             };
-            tempbuttonpagelist.Add(RelocateButton);
+            tempbuttonpagelist.Add(RechargePowerTeam1Button);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            FixWallsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Fix All Walls", Alignment.TopLeft, "", inGameHUD);
+            FixWallsButton.ToolTip = "Immediately fixes all walls and floors in all submarines, this includes ruin walls.";
+            FixWallsButton.Visible = false;
+            FixWallsButton.Enabled = true;
+            FixWallsButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("fixwalls", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(FixWallsButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            FixItemsButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Fix All Items", Alignment.TopLeft, "", inGameHUD);
+            FixItemsButton.ToolTip = "Immediately fixes all broken junctions, engines, doors, oxygen tanks, medicals and other items with a condition system.";
+            FixItemsButton.Visible = false;
+            FixItemsButton.Enabled = true;
+            FixItemsButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("fixitems", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(FixItemsButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            FiresButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Fire: On", Alignment.TopLeft, "", inGameHUD);
+            FiresButton.ToolTip = "Turns on fire control, Left click to add fires.";
+            FiresButton.Visible = false;
+            FiresButton.Enabled = true;
+            FiresButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("fire", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(FiresButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            WaterButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Water: On", Alignment.TopLeft, "", inGameHUD);
+            WaterButton.ToolTip = "Turns on water control, Left click to add water, Right click to remove.";
+            WaterButton.Visible = false;
+            WaterButton.Enabled = true;
+            WaterButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("water", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(WaterButton);
+
+            ButtonCoord = CalculatePageButtonPosition(tempbuttonpagelist.Count());
+
+            OxygenButton = new GUIButton(new Rectangle((int)ButtonCoord.X, (int)ButtonCoord.Y, 130, 20), "Oxygen", Alignment.TopLeft, "", inGameHUD);
+            OxygenButton.ToolTip = "Immediately restores all submarines/shuttles oxygen to 100%.";
+            OxygenButton.Visible = false;
+            OxygenButton.Enabled = true;
+            OxygenButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                DebugConsole.ExecuteCommand("oxygen", true);
+                return true;
+            };
+            tempbuttonpagelist.Add(OxygenButton);
 
             PageButtons.Add(tempbuttonpagelist);
 
             #endregion
 
             UpdateButtonPage();
-            //----------------------------------------
+        }
+
+        Vector2 CalculatePageButtonPosition(int Button)
+        {
+            int ButtonCoordX = GameMain.GraphicsWidth - 140;
+            int ButtonCoordY = 70;
+
+            while(Button > 0)
+            {
+                if(Button % 2 == 0)
+                {
+                    ButtonCoordX += 140;
+                    ButtonCoordY += 30;
+                }
+                else
+                {
+                    ButtonCoordX -= 140;
+                }
+                Button -= 1;
+            }
+
+            return new Vector2(ButtonCoordX, ButtonCoordY);
         }
 
         public void UpdateButtonPage()

@@ -186,7 +186,7 @@ namespace Barotrauma
                 item.ParentInventory = null;                
             }
         }
-            
+
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);

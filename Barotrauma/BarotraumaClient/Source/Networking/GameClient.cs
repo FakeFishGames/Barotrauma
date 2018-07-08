@@ -21,8 +21,8 @@ namespace Barotrauma.Networking
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
-        private ClientPermissions permissions = ClientPermissions.None;
-        private List<string> permittedConsoleCommands = new List<string>();
+        public ClientPermissions permissions = ClientPermissions.None;
+        public List<string> permittedConsoleCommands = new List<string>();
 
         private bool connected;
 
@@ -484,6 +484,12 @@ namespace Barotrauma.Networking
                 PerformNilModReconnect = false;
                 NilModRejected = true;
                 if (client != null) client.Shutdown("Disconnecting");
+                float reconnecttimer = 0f;
+                while (reconnecttimer < 1f)
+                {
+                    reconnecttimer -= CoroutineManager.UnscaledDeltaTime;
+                    yield return CoroutineStatus.Running;
+                }
                 ConnectToServer(serverIP);
                 yield return CoroutineStatus.Success;
             }
@@ -692,9 +698,15 @@ namespace Barotrauma.Networking
             }
 
             SetPermissions(newPermissions, permittedConsoleCommands);
+
+            if(GameMain.Client.HasPermission(ClientPermissions.Kick)
+                || GameMain.Client.HasPermission(ClientPermissions.Ban))
+            {
+                GameMain.NilMod.ActivateAdminMode();
+            }
         }
 
-        private void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
         {
             if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
                 permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
@@ -771,6 +783,7 @@ namespace Barotrauma.Networking
             string shuttleHash      = inc.ReadString();
 
             string modeName         = inc.ReadString();
+            int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
@@ -779,7 +792,7 @@ namespace Barotrauma.Networking
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
             LoadingScreen.GameMode = modeName;
-            LoadingScreen.MissionType = Mission.MissionTypes[missionTypeIndex];
+            LoadingScreen.MissionType = MissionPrefab.MissionTypes[missionTypeIndex];
             LoadingScreen.Submarine = subName;
             LoadingScreen.IsTraitor = isTraitor;
 
@@ -836,7 +849,7 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
             }
             else
@@ -844,7 +857,7 @@ namespace Barotrauma.Networking
                 if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
             }
-            
+
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
                         
             
@@ -972,7 +985,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1358,6 +1371,7 @@ namespace Barotrauma.Networking
             if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) return false;
 
             command = command.ToLowerInvariant();
+
             return permittedConsoleCommands.Any(c => c.ToLowerInvariant() == command);
         }
 

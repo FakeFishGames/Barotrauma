@@ -39,6 +39,7 @@ namespace Barotrauma
             if (!singleplayer)
             {
                 SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
+                SoundPlayer.OverrideMusicDuration = 18.0f;
             }
 
             string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :

@@ -191,6 +191,21 @@ namespace Barotrauma.Items.Components
             if (user != null)
             {
                 GameServer.Log(user.LogName + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+
+                if (GameMain.Server != null && GameMain.NilMod.EnableGriefWatcher)
+                {
+                    //Grief Watcher fabrication checks
+                    for (int y = 0; y < NilMod.NilModGriefWatcher.GWListFabricated.Count; y++)
+                    {
+                        if (NilMod.NilModGriefWatcher.GWListFabricated[y] == selectedItem.TargetItem.Name)
+                        {
+                            Barotrauma.Networking.Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == user);
+
+                            NilMod.NilModGriefWatcher.SendWarning(user.LogName
+                                + " started fabricating " + selectedItem.TargetItem.Name, warnedclient);
+                        }
+                    }
+                }
             }
 
 #if CLIENT
@@ -241,6 +256,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (fabricatedItem == null)
+            {
+                CancelFabricating();
+                return;
+            }
+
 #if CLIENT
             if (progressBar != null)
             {

@@ -290,7 +290,7 @@ namespace Barotrauma
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
             TitleScreen.LoadState = 10.0f;
@@ -397,11 +397,184 @@ namespace Barotrauma
 
             bool paused = true;
 
+            if (GameMain.NilMod.UseExperimentalFPSLagPrevention && !loadingScreenOpen)
+            {
+                if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 2)
+                {
+                    Timing.Step = 1.0 / 8.0;
+                    FarseerPhysics.Settings.VelocityIterations = 10;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 25;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 4)
+                {
+                    Timing.Step = 1.0 / 10.0;
+                    FarseerPhysics.Settings.VelocityIterations = 10;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 25;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 6)
+                {
+                    Timing.Step = 1.0 / 12.0;
+                    FarseerPhysics.Settings.VelocityIterations = 10;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 25;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 8)
+                {
+                    Timing.Step = 1.0 / 15.0;
+                    FarseerPhysics.Settings.VelocityIterations = 9;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 22;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 10)
+                {
+                    Timing.Step = 1.0 / 20.0;
+                    FarseerPhysics.Settings.VelocityIterations = 9;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 22;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 12)
+                {
+                    Timing.Step = 1.0 / 25.0;
+                    FarseerPhysics.Settings.VelocityIterations = 9;
+                    FarseerPhysics.Settings.PositionIterations = 4;
+                    FarseerPhysics.Settings.TOIPositionIterations = 22;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 14)
+                {
+                    Timing.Step = 1.0 / 30.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 16)
+                {
+                    Timing.Step = 1.0 / 35.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 18)
+                {
+                    Timing.Step = 1.0 / 40.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 20)
+                {
+                    Timing.Step = 1.0 / 45.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 22)
+                {
+                    Timing.Step = 1.0 / 50.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 25)
+                {
+                    Timing.Step = 1.0 / 55.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+                else
+                {
+                    Timing.Step = 1.0 / 60.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+            }
+            else
+            {
+                Timing.Step = 1.0 / 60.0;
+                FarseerPhysics.Settings.VelocityIterations = 8;
+                FarseerPhysics.Settings.PositionIterations = 3;
+                FarseerPhysics.Settings.TOIPositionIterations = 20;
+                FarseerPhysics.Settings.TOIVelocityIterations = 8;
+            }
+
             while (Timing.Accumulator >= Timing.Step)
             {
                 NilModProfiler.SWMainUpdateLoop.Start();
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
+
+                if (GameMain.NilMod.UseExperimentalFPSLagPrevention)
+                {
+                    if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 2)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 125);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 4)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 100);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 6)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 83);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 8)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 66);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 10)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 50);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 12)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 40);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 14)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 33);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 16)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 28);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 18)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 25);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 20)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 22);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 22)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 20);
+                    }
+                    else if ((int)GameMain.FrameCounter.CurrentFramesPerSecond <= 25)
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 18);
+                    }
+                    else
+                    {
+                        addTime = new TimeSpan(0, 0, 0, 0, 16);
+                    }
+                }
+
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
@@ -418,7 +591,16 @@ namespace Barotrauma
                     //reset accumulator if loading
                     // -> less choppy loading screens because the screen is rendered after each update
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
-                    Timing.Accumulator = 0.0f;
+                    if (TitleScreen.LoadState >= 100f)
+                    {
+                        Timing.Accumulator = 0.0f;
+                        this.TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 12);
+                    }
+                    else
+                    {
+                        Timing.Accumulator = Timing.Step * 1.99;
+                        this.TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 1);
+                    }
 
                     if (TitleScreen.LoadState >= 100.0f && 
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))

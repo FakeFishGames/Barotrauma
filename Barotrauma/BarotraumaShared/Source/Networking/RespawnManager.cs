@@ -27,7 +27,11 @@ namespace Barotrauma.Networking
         public Submarine respawnShuttle;
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
-        
+
+        //items created during respawn 
+        //any respawn items left in the shuttle are removed when the shuttle despawns 
+        private List<Item> respawnItems;
+
         public bool UsingShuttle
         {
             get { return respawnShuttle != null; }
@@ -78,8 +82,7 @@ namespace Barotrauma.Networking
             {
                 respawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
                 respawnShuttle.Load(false);
-
-                ResetShuttle();
+                respawnItems = new List<Item>();
 
                 //respawnShuttle.GodMode = true;
 
@@ -103,13 +106,9 @@ namespace Barotrauma.Networking
                             Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
                         }
                     }
-                    //Item Removal Prevention
-                    if (item.body != null && item.body.Enabled && item.ParentInventory == null)
-                    {
-                        item.AddTag("RespawnItem");
-                        continue;
-                    }
                 }
+
+                ResetShuttle();
             }
             else
             {
@@ -211,8 +210,11 @@ namespace Barotrauma.Networking
 
             respawnShuttle.Velocity = Vector2.Zero;
 
-            shuttleSteering.AutoPilot = false;
-            shuttleSteering.MaintainPos = false;
+            if (shuttleSteering != null)
+            {
+                shuttleSteering.AutoPilot = false;
+                shuttleSteering.MaintainPos = false;
+            }
         }
 
         private void UpdateTransporting(float deltaTime)
@@ -313,20 +315,23 @@ namespace Barotrauma.Networking
 
                 respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
-                //Default return behaviour
-                if (GameMain.NilMod.RespawnLeavingAutoPilotMode == 0)
+                if (shuttleSteering != null)
                 {
-                    shuttleSteering.SetDestinationLevelStart();
+                    //Default return behaviour
+                    if (GameMain.NilMod.RespawnLeavingAutoPilotMode == 0)
+                    {
+                        shuttleSteering.SetDestinationLevelStart();
+                    }
+                    //Maintain Position
+                    else if (GameMain.NilMod.RespawnLeavingAutoPilotMode == 1)
+                    {
+                        shuttleSteering.AutoPilot = false;
+                        shuttleSteering.MaintainPos = false;
+                        shuttleSteering.MaintainPos = true;
+                        shuttleSteering.AutoPilot = true;
+                    }
+                    //Any other value does nothing aka 2, can code more later
                 }
-                //Maintain Position
-                else if (GameMain.NilMod.RespawnLeavingAutoPilotMode == 1)
-                {
-                    shuttleSteering.AutoPilot = false;
-                    shuttleSteering.MaintainPos = false;
-                    shuttleSteering.MaintainPos = true;
-                    shuttleSteering.AutoPilot = true;
-                }
-                //Any other value does nothing aka 2, can code more later
 
                 if (GameMain.NilMod.RespawnShuttleLeavingCloseDoors)
                 {
@@ -352,7 +357,7 @@ namespace Barotrauma.Networking
 
                 if (!CoroutineManager.IsCoroutineRunning("forcepos"))
                 {
-                    if (shuttleSteering.SteeringPath != null && shuttleSteering.SteeringPath.Finished
+                    if ((shuttleSteering?.SteeringPath != null && shuttleSteering.SteeringPath.Finished)
                         || (respawnShuttle.WorldPosition.Y + respawnShuttle.Borders.Y > Level.Loaded.StartPosition.Y - Level.ShaftHeight &&
                             Math.Abs(Level.Loaded.StartPosition.X - respawnShuttle.WorldPosition.X) < 1000.0f))
                     {
@@ -391,7 +396,10 @@ namespace Barotrauma.Networking
 
                 ResetShuttle();
 
-                shuttleSteering.TargetVelocity = Vector2.Zero;
+                if (shuttleSteering != null)
+                {
+                    shuttleSteering.TargetVelocity = Vector2.Zero;
+                }
 
                 GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawns);
 
@@ -437,11 +445,16 @@ namespace Barotrauma.Networking
             {
                 if (item.Submarine != respawnShuttle) continue;
 
-                //Items originally part of the respawn are no longer removed.
-                if (item.body != null && item.body.Enabled && item.ParentInventory == null && !item.HasTag("RespawnItem"))
+                //remove respawn items that have been left in the shuttle 
+                if (respawnItems.Contains(item))
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
-                    continue;
+                    item.FindHull();
+                    if (item.ContainedItems != null && item.ContainedItems.Length > 0) item.SetContainedItemPositions();
+                    if (item.Submarine == respawnShuttle)
+                    {
+                        Spawner.AddToRemoveQueue(item);
+                        continue;
+                    }
                 }
 
                 item.Condition = item.Prefab.Health;
@@ -454,6 +467,12 @@ namespace Barotrauma.Networking
                     powerContainer.Item.CreateServerEvent(powerContainer);
                     powerContainer.lastSentCharge = powerContainer.Capacity;
                 }
+            }
+
+            foreach (Door door in shuttleDoors)
+            {
+                door.Stuck = 0f;
+                if (door.IsOpen) door.SetState(false, false, true);
             }
 
             foreach (Structure wall in Structure.WallList)
@@ -488,6 +507,7 @@ namespace Barotrauma.Networking
                 if (c.Submarine == respawnShuttle)
                 {
                     if (Character.Controlled == c) Character.Controlled = null;
+                    if (Character.Spied == c) Character.Spied = null;
                     c.Enabled = false;
 
                     if (c.Inventory != null)
@@ -500,8 +520,8 @@ namespace Barotrauma.Networking
                     }
                     
                     c.Kill(CauseOfDeath.Damage, true);
-                    //Need to use hide here
-                    //Entity.Spawner.AddToRemoveQueue(c);
+
+                    Entity.Spawner.AddToRemoveQueue(c);
                 }
             }
 
@@ -609,6 +629,7 @@ namespace Barotrauma.Networking
                 {
                     server.Character = character;
                     Character.Controlled = character;
+                    Character.SpawnCharacter = character;
 
                     GameSession.inGameInfo.AddNoneClientCharacter(character, true);
 
@@ -647,28 +668,26 @@ namespace Barotrauma.Networking
                 {
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(divingSuit, false);
+                    respawnItems.Add(divingSuit);
 
                     var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(oxyTank, false);
                     divingSuit.Combine(oxyTank);
-
-                    if (batteryPrefab != null)
-                    {
-                        var battery = new Item(batteryPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(battery, false);
-                        divingSuit.Combine(battery);
-                    }
+                    respawnItems.Add(oxyTank);
                 }
 
                 if (scooterPrefab != null && batteryPrefab != null)
                 {
                     var scooter     = new Item(scooterPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(scooter, false);
+                    
 
                     var battery     = new Item(batteryPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(battery, false);
 
                     scooter.Combine(battery);
+                    respawnItems.Add(scooter);
+                    respawnItems.Add(battery);
                 }
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub

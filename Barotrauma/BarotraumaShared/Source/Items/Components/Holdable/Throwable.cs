@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -28,7 +29,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return true; //We do the actual throwing in Aim because Use might be used by chems
+            return characterUsable || character == null; //We do the actual throwing in Aim because Use might be used by chems 
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
@@ -98,6 +99,29 @@ namespace Barotrauma.Items.Components
                     throwVector = Vector2.Normalize(throwVector);
 
                     GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+
+                    //Grief watch throw checks
+                    for (int y = 0; y < NilMod.NilModGriefWatcher.GWListThrown.Count; y++)
+                    {
+                        if (NilMod.NilModGriefWatcher.GWListThrown[y] == Item.Name)
+                        {
+                            Barotrauma.Networking.Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == picker);
+
+                            if (item.ContainedItems == null || item.ContainedItems.All(it => it == null))
+                            {
+                                NilMod.NilModGriefWatcher.SendWarning(picker.LogName
+                                    + " threw dangerous item " + Item.Name, warnedclient);
+                            }
+                            else
+                            {
+                                NilMod.NilModGriefWatcher.SendWarning(picker.LogName
+                                    + " threw dangerous item "
+                                    + Item.Name
+                                    + " (" + string.Join(", ", System.Array.FindAll(item.ContainedItems, it => it != null).Select(it => it.Name))
+                                    + ")", warnedclient);
+                            }
+                        }
+                    }
 
                     item.Drop();
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);

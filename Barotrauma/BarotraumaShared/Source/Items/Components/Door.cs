@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
+        public Character LastCharacter;
+
         private Gap linkedGap;
 
         private Rectangle window;
@@ -362,7 +364,7 @@ namespace Barotrauma.Items.Components
             {
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
                 //Nilmod crash prevention
-                if (c?.AnimController.Limbs != null)
+                if (c?.AnimController?.Limbs != null)
                 {
                     List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
                     bodies.Add(c.AnimController.Collider);
@@ -415,7 +417,8 @@ namespace Barotrauma.Items.Components
                             body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
                         }
 
-                        c.SetStun(GameMain.NilMod.DoorStun);
+                        //c.SetStun(GameMain.NilMod.DoorStun);
+                        c.SetStun(0.2f);
                     }
                 }
             }

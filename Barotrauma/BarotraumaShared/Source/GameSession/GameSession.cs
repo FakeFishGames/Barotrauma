@@ -91,14 +91,27 @@ namespace Barotrauma
             set { savePath = value; }
         }
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+            : this(submarine, savePath)
+        {
+            GameMode = gameModePreset.Instantiate(missionType);
+        }
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionPrefab missionPrefab)
+            : this(submarine, savePath)
+        {
+            GameMode = gameModePreset.Instantiate(missionPrefab);
+        }
+
+        private GameSession(Submarine submarine, string savePath)
         {
             Submarine.MainSub = submarine;
+            this.submarine = submarine;
 
             GameMain.GameSession = this;
-            
+
             EventManager = new EventManager(this);
-            
+
             this.savePath = savePath;
 
 #if CLIENT
@@ -112,11 +125,8 @@ namespace Barotrauma
 
             ingameInfoButton.Visible = true;
 #endif
-
-            if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
-            this.submarine = submarine;
         }
-        
+
         public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {

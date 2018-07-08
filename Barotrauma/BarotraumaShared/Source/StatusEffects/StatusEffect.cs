@@ -58,6 +58,8 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
+        private readonly bool removeItem;
+
         public readonly ActionType type;
 
         private Explosion explosion;
@@ -211,6 +213,10 @@ namespace Barotrauma
                     case "useitem":
                         useItemCount++;
                         break;
+                    case "remove":
+                    case "removeitem":
+                        removeItem = true;
+                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -266,10 +272,10 @@ namespace Barotrauma
                 if (target == null || target.SerializableProperties == null) continue;
                 foreach (PropertyConditional pc in propertyConditionals)
                 {
-                    if (!pc.Matches(target)) return false;
+                    if (pc.Matches(target)) return true;
                 }
             }
-            return true;
+            return false;
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
@@ -367,6 +373,14 @@ namespace Barotrauma
                 foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
                     item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                }
+            }
+
+            if (removeItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    Entity.Spawner?.AddToRemoveQueue(item);
                 }
             }
 

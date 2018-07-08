@@ -19,7 +19,7 @@ namespace Barotrauma
         //Class for the storing, sending and receiving of HELP information to players and management of the HELP XML file
         class NilModHelpCommands
     {
-        const string SavePath = "Data/NilModHelpData.xml";
+        const string SavePath = "Data/NilMod/HelpData.xml";
 
         public string DefaultHelpstring;
 

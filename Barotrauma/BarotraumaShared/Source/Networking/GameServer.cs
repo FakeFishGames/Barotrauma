@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma.Networking
 {
@@ -527,7 +528,7 @@ namespace Barotrauma.Networking
 
                             var precheckPermissions = clientPermissions.Find(cp => cp.IP == inc.SenderConnection.RemoteEndPoint.Address.ToString());
 
-                            if ((GameMain.NilMod.CurrentPlayers + unauthenticatedClients.Count) > maxPlayers)
+                            if ((GameMain.NilMod.CurrentPlayers + unauthenticatedClients.Count) >= maxPlayers)
                             {
                                 if (precheckPermissions.OwnerSlot || precheckPermissions.AdministratorSlot || precheckPermissions.TrustedSlot)
                                 {
@@ -1260,7 +1261,7 @@ namespace Barotrauma.Networking
 
                 outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
 
-                outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+                outmsg.WriteRangedInteger(0, MissionPrefab.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
@@ -1557,7 +1558,7 @@ namespace Barotrauma.Networking
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
             {
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, MissionPrefab.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
             }
 
             if (GameMain.GameSession.GameMode.Mission != null &&
@@ -1675,6 +1676,7 @@ namespace Barotrauma.Networking
                     myCharacter.TeamID = (byte)teamID;
 
                     Character.Controlled = myCharacter;
+                    Character.SpawnCharacter = myCharacter;
 
                     GameSession.inGameInfo.AddNoneClientCharacter(myCharacter, true);
 
@@ -1825,6 +1827,8 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
             msg.Write(selectedMode.Name);
+            msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ?
+                -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 
@@ -1897,6 +1901,8 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 #if CLIENT
             myCharacter = null;
+            Character.Spied = null;
+            Character.LastControlled = null;
             GameMain.LightManager.LosEnabled = false;
 #endif
 
@@ -1948,9 +1954,7 @@ namespace Barotrauma.Networking
             {
                 yield return CoroutineStatus.Running;
             } while (cinematic.Running);
-#if CLIENT
-            SoundPlayer.OverrideMusicType = null;
-#endif
+
             Submarine.Unload();
             entityEventManager.Clear();
 
@@ -2266,6 +2270,23 @@ namespace Barotrauma.Networking
             Character senderCharacter = null;
             string senderName = "";
 
+            if(senderClient != null)
+            {
+                if (!GameMain.NilMod.AllowCyrillicText && Regex.IsMatch(message, @"\p{IsCyrillic}"))
+                {
+                    SendChatMessage(senderClient.Name + " has been kicked (Server does not permit cyrillic alphabet).", ChatMessageType.Server, null);
+                    KickClient(senderClient, "Server does not allow for cyrillic alphabet", 0f, 60f);
+                    return;
+                }
+
+                if (!GameMain.NilMod.AllowEnglishText && Regex.IsMatch(message, "^[a-zA-Z]*$"))
+                {
+                    SendChatMessage(senderClient.Name + " has been kicked (Server does not permit english alphabet).", ChatMessageType.Server, null);
+                    KickClient(senderClient, "Server does not allow for cyrillic alphabet", 0f, 60f);
+                    return;
+                }
+            }
+
             Client targetClient = null;
 
             if (type == null)
@@ -2294,7 +2315,7 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command == name.ToLowerInvariant())
+                            if (command.ToLowerInvariant() == name.ToLowerInvariant())
                             {
                                 //a private message to the host
                             }
@@ -2347,25 +2368,37 @@ namespace Barotrauma.Networking
                 //msg sent by the server
                 if (senderClient == null)
                 {
-                    senderCharacter = myCharacter;
-                    senderName = myCharacter == null ? name : myCharacter.Name;
+                    //senderCharacter = myCharacter;
+                    //senderName = myCharacter == null ? name : myCharacter.Name;
+                    senderCharacter = Character.Controlled;
+                    senderName = Character.Controlled == null ? name : Character.Controlled.Name;
                 }
                 else //msg sent by a client
                 {
                     senderCharacter = senderClient.Character;
                     senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
 
-                    //sender doesn't have an alive character -> only ChatMessageType.Dead allowed
-                    if (senderCharacter == null || senderCharacter.IsDead)
+                    if(type == ChatMessageType.Private &&
+                        (senderClient.AdministratorSlot
+                    || senderClient.OwnerSlot
+                    || senderClient.HasPermission(ClientPermissions.Ban)
+                    || senderClient.HasPermission(ClientPermissions.Kick)))
                     {
-                        type = ChatMessageType.Dead;
+                        senderName = "[ADMIN]";
                     }
-                    else if (type == ChatMessageType.Private)
+                    else
                     {
-                        //sender has an alive character, sending private messages not allowed
-                        return;
+                        //sender doesn't have an alive character -> only ChatMessageType.Dead allowed
+                        if (senderCharacter == null || senderCharacter.IsDead)
+                        {
+                            type = ChatMessageType.Dead;
+                        }
+                        else if (type == ChatMessageType.Private)
+                        {
+                            //sender has an alive character, sending private messages not allowed
+                            return;
+                        }
                     }
-
                 }
             }
             else
@@ -2403,6 +2436,8 @@ namespace Barotrauma.Networking
                     {
                         return;
                     }
+                    //Host has a character
+                    if (senderClient == null && Character.Controlled != null && !Character.Controlled.IsDead && !GameMain.NilMod.ShowDeadChat) return;
                     break;
             }
 
@@ -2450,8 +2485,9 @@ namespace Barotrauma.Networking
             }
 
             string myReceivedMessage = message;
-            if (gameStarted && myCharacter != null && senderCharacter != null)
+            if (gameStarted && Character.Controlled != null && senderCharacter != null)
             {
+                if (type == ChatMessageType.Dead && Character.Controlled != null && !Character.Controlled.IsDead && !GameMain.NilMod.ShowDeadChat) return;
                 myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
             }
 
@@ -2534,7 +2570,14 @@ namespace Barotrauma.Networking
             foreach (Client c in clientsToKick)
             {
                 SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
-                KickClient(c, "Kicked by vote", GameMain.NilMod.VoteKickStateNameTimer, GameMain.NilMod.VoteKickDenyRejoinTimer);
+                if (AutoBanTime > 0 && GameMain.NilMod.VoteKickDenyRejoinTimer < 1f)
+                {
+                    BanClient(c, "Kicked by vote (auto ban)", duration: TimeSpan.FromSeconds(AutoBanTime));
+                }
+                else
+                {
+                    KickClient(c, "Kicked by vote", GameMain.NilMod.VoteKickStateNameTimer, GameMain.NilMod.VoteKickDenyRejoinTimer);
+                }
             }
 
             GameMain.NetLobbyScreen.LastUpdateID++;
@@ -2678,25 +2721,40 @@ namespace Barotrauma.Networking
             }
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
-            int count = message.ReadByte();
-            for (int i = 0; i < Math.Min(count, 3); i++)
+            try
             {
-                string jobName = message.ReadString();
+                int count = message.ReadByte();
+                for (int i = 0; i < Math.Min(count, 3); i++)
+                {
+                    string jobName = message.ReadString();
 
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
-                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+                    JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                    if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.Log("Received invalid characterinfo from \"" + sender.Name + "\"! { " + e.Message + " }");
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender);
-            sender.CharacterInfo.HeadSpriteId = headSpriteId;
-            sender.JobPreferences = jobPreferences;
+            if(jobPreferences.Count == 0) DebugConsole.NewMessage("Nilmod warning - Client: " + sender.Name + " updated their character info with 0 job preferences, this should not be possible (bug/modified client?).", Color.Red);
+
+            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
+            {
+                HeadSpriteId = headSpriteId
+            };
+
+            //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor 
+            Debug.Assert(sender.JobPreferences.Count > 0);
+            if (jobPreferences.Count > 0)
+            {
+                sender.JobPreferences = jobPreferences;
+            }
         }
 
         public void AssignJobs(List<Client> unassigned, bool assignHost)
         {
             unassigned = GameMain.NilMod.RandomizeClientOrder(unassigned);
-
-
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in JobPrefab.List)
@@ -2736,6 +2794,16 @@ namespace Barotrauma.Networking
             //if any of the players has chosen a job that is Always Allowed, give them that job
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
+                if (i > unassigned.Count - 1)
+                {
+                    DebugConsole.NewMessage("Nilmod Error - unassigned spawning clients was out of bounds (This shouldn't be possible)", Color.Red);
+                    continue;
+                }
+                if (unassigned[i].JobPreferences == null || unassigned[i].JobPreferences.Count == 0)
+                {
+                    DebugConsole.NewMessage("Nilmod Error - Jobpreferences for client: " + unassigned[i].Name + " is null or empty during character assignment (This shouldn't be possible)", Color.Red);
+                    continue;
+                }
                 if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
@@ -2773,54 +2841,57 @@ namespace Barotrauma.Networking
                 playercount += 1;
             }
 
-            //find a suitable job for the rest of the players
-            foreach (Client c in unassigned)
+            //attempt to give the clients a job they have in their job preferences 
+            for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                foreach (JobPrefab preferredJob in c.JobPreferences)
+                if (unassigned[i].JobPreferences == null || unassigned[i].JobPreferences.Count == 0)
+                {
+                    DebugConsole.NewMessage("Nilmod Error - Jobpreferences for client: " + unassigned[i].Name + " is null during character assignment. This should not be possible, force-assigning a random job.", Color.Red);
+                    continue;
+                }
+
+                foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
                 {
                     //the maximum number of players that can have this job hasn't been reached yet
                     //And add in the required players check too
                     //For each player who gets the job, deduct from the requirement check
                     //So there can only be an instance of this job for each 1 at and above requirement.
                     // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && playercount - assignedClientCount[preferredJob] >= preferredJob.ReqNumber && c.Karma >= preferredJob.MinKarma)
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && playercount - assignedClientCount[preferredJob] >= preferredJob.ReqNumber && unassigned[i].Karma >= preferredJob.MinKarma)
                     {
-                        c.AssignedJob = preferredJob;
+                        unassigned[i].AssignedJob = preferredJob;
                         assignedClientCount[preferredJob]++;
+                        unassigned.RemoveAt(i);
                         break;
                     }
-                    //none of the jobs the client prefers are available anymore
-                    else if (preferredJob == c.JobPreferences.Last())
+                }
+            }
+            //give random jobs to rest of the clients 
+            foreach (Client c in unassigned)
+            {
+                //find all jobs that are still available 
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && playercount - assignedClientCount[jp] >= jp.ReqNumber && c.Karma >= jp.MinKarma);
+
+                //all jobs taken, give a random job 
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int skips = 0;
+                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
                     {
-                        //find all jobs that are still available
-                        //var remainingJobs = JobPrefab.List.FindAll(jp => (assignedClientCount[preferredJob] <= jp.MaxNumber) && (playercount - assignedClientCount[preferredJob] >= jp.ReqNumber) && c.Karma >= jp.MinKarma);
-
-                        //find all jobs that are still available - TEST FIX
-                        var remainingJobs = JobPrefab.List.FindAll(jp => (assignedClientCount[jp] < jp.MaxNumber) && (playercount - assignedClientCount[jp] >= jp.ReqNumber));
-
-
-                        //all jobs taken, give a random job
-                        if (remainingJobs.Count == 0)
-                        {
-                            DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                            int jobIndex = Rand.Range(0, JobPrefab.List.Count);
-                            int skips = 0;
-                            while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
-                            {
-                                jobIndex++;
-                                skips++;
-                                if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
-                                if (skips >= JobPrefab.List.Count) break;
-                            }
-                            c.AssignedJob = JobPrefab.List[jobIndex];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
-                        else //some jobs still left, choose one of them by random
-                        {
-                            c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
+                        jobIndex++;
+                        skips++;
+                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
+                        if (skips >= JobPrefab.List.Count) break;
                     }
+                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    assignedClientCount[c.AssignedJob]++;
+                }
+                else //some jobs still left, choose one of them by random 
+                {
+                    c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
+                    assignedClientCount[c.AssignedJob]++;
                 }
             }
         }
@@ -2831,6 +2902,11 @@ namespace Barotrauma.Networking
             Client preferredClient = null;
             foreach (Client c in clients)
             {
+                if(c.JobPreferences == null || c.JobPreferences.Count == 0)
+                {
+                    DebugConsole.NewMessage("Nilmod Error - Client: " + c.Name + " has null or 0 job preferences (This should not be possible).", Color.Red);
+                    continue;
+                }
                 if (c.Karma < job.MinKarma) continue;
                 int index = c.JobPreferences.IndexOf(job);
                 if (index == -1) index = 1000;
@@ -3107,6 +3183,111 @@ namespace Barotrauma.Networking
                             if (Convert.ToInt16(GameMain.NilMod.ClickArgs[2]) == 0)
                             {
                                 ClearClickCommand();
+                            }
+                        }
+                        break;
+                    case "control":
+                        ClickCommandFrame.Visible = true;
+                        ClickCommandDescription.Text = "CONTROL - Left Click close to a creatures center to control it, Hold shift while clicking to control a players body, Hold ctrl when clicking to release a players control of a character, right click to cancel.";
+                        if (PlayerInput.LeftButtonClicked())
+                        {
+                            //Character to set control to if applicable
+                            Character closestDistChar = null;
+                            //Client to wipe assigned control of if applicable
+                            Client client = null;
+                            float closestDist = GameMain.NilMod.ClickFindSelectionDistance;
+                            foreach (Character c in Character.CharacterList)
+                            {
+                                //Prioritize none-clients if not doing commands on them
+                                if (c.IsRemotePlayer
+                                    && !PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl)
+                                    && !PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift)) continue;
+
+                                float dist = Vector2.Distance(c.WorldPosition, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+
+                                if (dist < closestDist)
+                                {
+                                    if (!c.IsRemotePlayer
+                                        && (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift)
+                                        || PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))) continue;
+
+                                    closestDist = dist;
+                                    closestDistChar = c;
+                                }
+                            }
+                            //We have a valid target
+                            if (closestDistChar != null)
+                            {
+                                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                                {
+                                    client = ConnectedClients.Find(c => c.Character == closestDistChar);
+
+                                    if(client != null)
+                                    {
+                                        GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { client, null });
+                                        ClearClickCommand();
+                                    }
+                                }
+                                else if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+                                {
+                                    client = ConnectedClients.Find(c => c.Character == closestDistChar);
+
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { client, closestDistChar });
+                                    ClearClickCommand();
+                                }
+                                else if(!closestDistChar.IsRemotePlayer)
+                                {
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { null, closestDistChar });
+                                    ClearClickCommand();
+                                }
+                            }
+                        }
+                        break;
+                    case "shield":
+                        ClickCommandFrame.Visible = true;
+                        ClickCommandDescription.Text = "SHIELD - Left Click close to a creatures center to grant immunity, Hold control to revoke immunity, Hold shift while clicking to repeat, right click to cancel.";
+                        if (PlayerInput.LeftButtonClicked())
+                        {
+                            //Character to shield
+                            Character closestDistChar = null;
+                            float closestDist = GameMain.NilMod.ClickFindSelectionDistance;
+                            foreach (Character c in Character.CharacterList)
+                            {
+                                //Prioritize none-clients if not doing commands on them
+                                if (c.IsDead) continue;
+
+                                float dist = Vector2.Distance(c.WorldPosition, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+
+                                if (dist < closestDist)
+                                {
+                                    //Only target characters to be effected.
+                                    if ((!c.Shielded && PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                                        || (c.Shielded && !PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))) continue;
+                                    closestDist = dist;
+                                    closestDistChar = c;
+                                }
+                            }
+                            //We have a valid target
+                            if (closestDistChar != null)
+                            {
+                                if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                                {
+
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar, false });
+                                }
+                                else
+                                {
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar, true });
+                                }
+
+                                if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+                                {
+                                    ClearClickCommand();
+                                }
+                                else
+                                {
+                                    GameMain.NilMod.ClickCooldown = NilMod.ClickCooldownPeriod;
+                                }
                             }
                         }
                         break;

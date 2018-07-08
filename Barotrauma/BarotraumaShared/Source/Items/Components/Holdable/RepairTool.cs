@@ -142,6 +142,7 @@ namespace Barotrauma.Items.Components
                 if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
                 ignoredBodies.Add(limb.body.FarseerBody);
             }
+            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
             IsActive = true;
             activeTimer = 0.1f;
@@ -243,6 +244,7 @@ namespace Barotrauma.Items.Components
                     emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
                 }
 #endif
+                /*
                 if (GameMain.Server != null)
                 {
                     //Check if this tool is meant to destroy walls first and is a submarine body
@@ -254,21 +256,21 @@ namespace Barotrauma.Items.Components
                             //Respawn Shuttle
                             if (targetStructure.Submarine == GameMain.Server?.respawnManager?.respawnShuttle)
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Respawn Shuttle: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Respawn Shuttle: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             //Coalition submarine
                             else if (targetStructure.Submarine == Submarine.MainSubs[0])
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Coalition Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Coalition Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             //Renegade Submarine
                             else if (targetStructure.Submarine == Submarine.MainSubs[1])
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Renegade Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Renegade Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             else
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 50% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                         }
                         //0% Remaining Integrity
@@ -277,25 +279,26 @@ namespace Barotrauma.Items.Components
                             //Respawn Shuttle
                             if (targetStructure.Submarine == GameMain.Server?.respawnManager?.respawnShuttle)
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Respawn Shuttle: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Respawn Shuttle: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             //Coalition submarine
                             else if (targetStructure.Submarine == Submarine.MainSubs[0])
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Coalition Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Coalition Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             //Renegade Submarine
                             else if (targetStructure.Submarine == Submarine.MainSubs[1])
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Renegade Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + " Cut a Hull piece on Renegade Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                             else
                             {
-                                GameMain.Server.ServerLog.WriteLine(user + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                                GameMain.Server.ServerLog.WriteLine(user.LogName + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 0% Integrity.", Networking.ServerLog.MessageType.Attack);
                             }
                         }
                     }
                 }
+                */
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess,user);
 

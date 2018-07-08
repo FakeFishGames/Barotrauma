@@ -17,8 +17,22 @@
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
 
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
-            mission = Mission.LoadRandom(locations, rand, param as string);
+            if (param is string)
+            {
+                mission = Mission.LoadRandom(locations, GameMain.NetLobbyScreen.LevelSeed, (string)param);
+            }
+            else if (param is MissionPrefab)
+            {
+                mission = ((MissionPrefab)param).Instantiate(locations);
+            }
+            else if (param is Mission)
+            {
+                mission = (Mission)param;
+            }
+            else
+            {
+                throw new System.ArgumentException("Unrecognized MissionMode parameter \"" + param + "\"");
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Barotrauma
 
     class VPNBanlist
     {
-        const string LoadPath = "Data/VPNBlacklist.txt";
+        const string LoadPath = "Data/NilMod/VPNBlacklist.txt";
 
         private List<VPNBanEntry> Banlist;
         public Boolean CheckIP(Lidgren.Network.NetConnection address)

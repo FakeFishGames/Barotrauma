@@ -497,23 +497,13 @@ namespace Barotrauma
                         if (LowestTimer > characterlist[i].RemovalTimer) LowestTimer = characterlist[i].RemovalTimer;
                         if (characterlist[i].RemovalTimer <= 0f)
                         {
-                            characterlist.RemoveAt(i);
+                            //characterlist.RemoveAt(i);
                             NeedsRemoval = true;
                         }
                     }
                 }
 
-                if (GuiUpdateRequired)
-                {
-                    Guiupdatetimer -= deltaTime;
-
-                    if (Guiupdatetimer <= 0f)
-                    {
-                        UpdateGameInfoGUIList();
-                        GuiUpdateRequired = false;
-                    }
-                }
-                else if (NeedsRemoval)
+                if (NeedsRemoval)
                 {
                     for (int i = characterlist.Count - 1; i >= 0; i--)
                     {
@@ -522,6 +512,16 @@ namespace Barotrauma
                     UpdateGameInfoGUIList();
                     Guiupdatetimer = 0f;
                     GuiUpdateRequired = false;
+                }
+                else if (GuiUpdateRequired)
+                {
+                    Guiupdatetimer -= deltaTime;
+
+                    if (Guiupdatetimer <= 0f)
+                    {
+                        UpdateGameInfoGUIList();
+                        GuiUpdateRequired = false;
+                    }
                 }
 
                 if (timerwarning != null)
@@ -1120,6 +1120,18 @@ namespace Barotrauma
                     default:
                         ChangeFilter(filterincrement);
                         break;
+                }
+            }
+
+            if (filteredcharacterlist.Count > 0)
+            {
+                for (int i = filteredcharacterlist.Count - 1; i >= 0; i--)
+                {
+                    if (filteredcharacterlist[i].character != null && filteredcharacterlist[i].character.Removed)
+                    {
+                        RemoveCharacter(filteredcharacterlist[i].character);
+                        filteredcharacterlist.RemoveAt(i);
+                    }
                 }
             }
         }

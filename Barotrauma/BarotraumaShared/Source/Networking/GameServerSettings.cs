@@ -48,7 +48,7 @@ namespace Barotrauma.Networking
         public const string SettingsFile = "serversettings.xml";
         public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string VanillaClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
-        public static readonly string NilmodClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "nilmod_clientpermissions.xml";
+        public static readonly string NilmodClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "NilMod" + Path.DirectorySeparatorChar + "clientpermissions.xml";
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -263,6 +263,26 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public List<string> AllowedRandomMissionTypes
+        {
+            get;
+            set;
+        }
+
+        [Serialize(60f, true)]
+        public float AutoBanTime
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(360f, true)]
+        public float MaxAutoBanTime
+        {
+            get;
+            private set;
+        }
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
@@ -281,6 +301,8 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
 
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
+
+            doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
 
 #if SERVER
             doc.Root.SetAttributeValue("password", password);
@@ -334,17 +356,21 @@ namespace Barotrauma.Networking
 #endif
 
             subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
+            Enum.TryParse(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
             var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
+            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+
+            AllowedRandomMissionTypes = doc.Root.GetAttributeStringArray(
+                "AllowedRandomMissionTypes",
+                MissionPrefab.MissionTypes.ToArray()).ToList();
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
@@ -375,6 +401,9 @@ namespace Barotrauma.Networking
                 if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
+
+            AutoBanTime = doc.Root.GetAttributeFloat("autobantime", 60);
+            MaxAutoBanTime = doc.Root.GetAttributeFloat("maxautobantime", 360);
         }
 
         public void LoadClientPermissions()

@@ -10,7 +10,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Reactor : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        const float NetworkUpdateInterval = 0.5f;
+        const float NetworkUpdateInterval = 0.2f;
+        const float GriefWarnTime = 1f;
 
         //the rate at which the reactor is being run un
         //higher rates generate more power (and heat)
@@ -218,7 +219,8 @@ namespace Barotrauma.Items.Components
             if (temperature > meltDownTemp)
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
-                meltDownTimer += deltaTime;
+                meltDownTimer += (deltaTime * GameMain.NilMod.ReactorMeltDownMultiplierIncrease);
+
 
                 if (meltDownTimer > MeltdownDelay)
                 {
@@ -229,7 +231,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 item.SendSignal(0, "0", "meltdown_warning", null);
-                meltDownTimer = Math.Max(0.0f, meltDownTimer - deltaTime);
+                meltDownTimer = Math.Max(0.0f, meltDownTimer - (deltaTime * GameMain.NilMod.ReactorMeltDownMultiplierDecrease));
             }
 
             load = 0.0f;
@@ -346,7 +348,20 @@ namespace Barotrauma.Items.Components
             if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
             {
                 BlameOnBroken.Karma = 0.0f;
-            }            
+
+                if(GameMain.NilMod.EnableGriefWatcher && NilMod.NilModGriefWatcher.ReactorStateLastBlamed)
+                {
+                    if (BlameOnBroken.Character != null && Item.Submarine != null
+                        && Item.Submarine.TeamID != BlameOnBroken.Character.TeamID)
+                    {
+                        NilMod.NilModGriefWatcher.SendWarning("A reactor has been destroyed by meltdown, Last to blame was possibly: " + BlameOnBroken.Character.LogName, BlameOnBroken);
+                    }
+                    else
+                    {
+                        NilMod.NilModGriefWatcher.SendWarning("A reactor has been destroyed by meltdown, Last to blame was possibly: " + BlameOnBroken.Name, BlameOnBroken);
+                    }
+                }
+            }
         }
 
         public override bool Pick(Character picker)
@@ -447,6 +462,36 @@ namespace Barotrauma.Items.Components
             if (!autoTemp && AutoTemp) BlameOnBroken = c;
             if (shutDownTemp > ShutDownTemp) BlameOnBroken = c;
             if (fissionRate > FissionRate) BlameOnBroken = c;
+
+            if(GameMain.NilMod.EnableGriefWatcher)
+            {
+                if (!autoTemp && AutoTemp && NilMod.NilModGriefWatcher.ReactorAutoTempOff
+                    && item.Submarine != null && item.Submarine.TeamID == c.Character.TeamID)
+                {
+                    NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                                                    + " has turned off reactor AutoTemp", c);
+                }
+
+                if (shutDownTemp > ShutDownTemp
+                    && (shutDownTemp > FireTemp || shutDownTemp > MeltDownTemp)
+                    && NilMod.NilModGriefWatcher.ReactorShutDownTemp
+                    && item.Submarine != null && item.Submarine.TeamID == c.Character.TeamID)
+                {
+                    if (!CoroutineManager.IsCoroutineRunning("GWwarnshutdowntemp_" + c.Name))
+                    {
+                        CoroutineManager.StartCoroutine(WarnShutDownTemp(c, shutDownTemp), "GWwarnshutdowntemp_" + c.Name);
+                    }
+                }
+
+                if (fissionRate > FissionRate && NilMod.NilModGriefWatcher.ReactorFissionBeyondAuto
+                    && item.Submarine != null && item.Submarine.TeamID == c.Character.TeamID)
+                {
+                    if (!CoroutineManager.IsCoroutineRunning("GWwarnfission_" + c.Name))
+                    {
+                        CoroutineManager.StartCoroutine(WarnFissionRate(c, fissionRate), "GWwarnfission_" + c.Name);
+                    }
+                }
+            }
             
             AutoTemp = autoTemp;
             ShutDownTemp = shutDownTemp;
@@ -462,6 +507,71 @@ namespace Barotrauma.Items.Components
 
             //need to create a server event to notify all clients of the changed state
             unsentChanges = true;
+        }
+
+        public IEnumerable<Object> WarnShutDownTemp(Client c, float lastshutdowntemp)
+        {
+            float timer = 0f;
+
+            while (timer < 0.5f)
+            {
+                timer += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (shutDownTemp < FireTemp && shutDownTemp < MeltDownTemp) yield return CoroutineStatus.Success;
+
+            if (shutDownTemp > lastshutdowntemp && BlameOnBroken == c) lastshutdowntemp = shutDownTemp;
+
+            NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName 
+                + " has increased reactor maxtemp beyond safe limits: " + Math.Round(lastshutdowntemp,0)
+                + " (Fire: " + Math.Round(fireTemp,0) + ", Max: " + Math.Round(meltDownTemp,0) + ")", c);
+
+            yield return CoroutineStatus.Success;
+        }
+
+        public IEnumerable<Object> WarnFissionRate(Client c, float lastfission)
+        {
+            float timer = 0f;
+
+            while (timer < 0.5f)
+            {
+                timer += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (FissionRate > lastfission && BlameOnBroken == c) lastfission = FissionRate;
+
+            if (Temperature >= ShutDownTemp && Temperature >= prevTemperature)
+            {
+                NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                    + " has increased reactor fission beyond required: " + Math.Round(lastfission,0)
+                    + " Temp: " + Math.Round(Temperature,0) + " ShutdownTemp: " + Math.Round(ShutDownTemp,0), c);
+            }
+
+            yield return CoroutineStatus.Success;
+        }
+
+        public static IEnumerable<Object> WarnFuelRemoved(Client c, Item container, Item item)
+        {
+            float timer = 0f;
+
+            while (timer < NilMod.NilModGriefWatcher.ReactorLastFuelRemovedTimer)
+            {
+                timer += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (container.ContainedItems.Count() > 0) yield return CoroutineStatus.Success;
+
+
+            NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                            + " has removed the last item (" + item.Name
+                            + " - " + Math.Round(item.Condition, 1)
+                            + "%) from " + container.Name
+                            + " without replacing it.", c);
+
+            yield return CoroutineStatus.Success;
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)

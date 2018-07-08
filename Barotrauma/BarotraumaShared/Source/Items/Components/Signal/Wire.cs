@@ -308,6 +308,21 @@ namespace Barotrauma.Items.Components
                     GameServer.Log(user.LogName + " disconnected a wire from " + 
                         connections[0].Item.Name + " (" + connections[0].Name + ") to "+
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.Rewire);
+
+                    if (GameMain.Server != null && GameMain.NilMod.EnableGriefWatcher)
+                    {
+                        for (int z = 0; z < NilMod.NilModGriefWatcher.GWListWireKeyDevices.Count; z++)
+                        {
+                            if (NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == connections[0].Item.Name || NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == connections[1].Item.Name)
+                            {
+                                Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == user);
+                                NilMod.NilModGriefWatcher.SendWarning(user.LogName + " Removed a wire from "
+                                    + connections[0].Item.Name + " (" + connections[0].Name
+                                    + ") to " + connections[1].Item.Name + " (" + connections[1].Name + ")" + ".", warnedclient);
+                            }
+                        }
+                    }
+
                 }
                 else if (connections[0] != null)
                 {

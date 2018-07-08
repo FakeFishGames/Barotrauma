@@ -68,6 +68,29 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawFrontDoorsOnly(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        {
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+
+            foreach (MapEntity e in entitiesToRender)
+            {
+                if (!e.DrawOverWater) continue;
+
+                if (predicate != null)
+                {
+                    if (!predicate(e)) continue;
+                }
+
+                Item it = e as Item;
+                if (it != null
+                    && (it.GetComponent<Barotrauma.Items.Components.Door>() != null
+                    || it.GetComponent<Barotrauma.Items.Components.Ladder>() != null))
+                {
+                    e.Draw(spriteBatch, editing, false);
+                }
+            }
+        }
+
         public static float DamageEffectCutoff;
         public static Color DamageEffectColor;
 
@@ -103,6 +126,29 @@ namespace Barotrauma
                 }
 
                 e.Draw(spriteBatch, editing, true);
+            }
+        }
+
+        public static void DrawBackDoorsOnly(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        {
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+
+            foreach (MapEntity e in entitiesToRender)
+            {
+                if (!e.DrawBelowWater) continue;
+
+                if (predicate != null)
+                {
+                    if (!predicate(e)) continue;
+                }
+
+                Item it = e as Item;
+                if (it != null
+                    && (it.GetComponent<Barotrauma.Items.Components.Door>() != null
+                    || it.GetComponent<Barotrauma.Items.Components.Ladder>() != null))
+                {
+                    e.Draw(spriteBatch, editing, true);
+                }
             }
         }
 

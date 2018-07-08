@@ -20,6 +20,9 @@ namespace Barotrauma
         protected bool hudInfoVisible;
         protected Vector2 LastHealthStatusVector;
 
+        float hudInfoHeight;
+        private Boolean showinghealth;
+
         private List<CharacterSound> sounds;
 
         //the Character that the player is currently controlling
@@ -49,6 +52,12 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+
+                if(controlled != null && value == null)
+                {
+                    LastControlled = controlled;
+                }
+
                 controlled = value;
                 CharacterHUD.Reset();
 
@@ -58,7 +67,10 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public static Character LastControlled;
+        public static Character SpawnCharacter;
+
         private Dictionary<object, HUDProgressBar> hudProgressBars;
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
@@ -111,7 +123,7 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                if (Spied.needsAir &&
+                if (Spied.needsAir && !Spied.Shielded &&
                     Spied.pressureProtection < 80.0f &&
                     (Spied.AnimController.CurrentHull == null || Spied.AnimController.CurrentHull.LethalPressure > 50.0f))
                 {
@@ -246,7 +258,7 @@ namespace Barotrauma
 
             if (moveCam)
             {
-                if (needsAir &&
+                if (needsAir && !Shielded &&
                     pressureProtection < 80.0f &&
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
                 {
@@ -510,6 +522,19 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
+            pos.Y += hudInfoHeight;
+            if(!showinghealth) pos.Y -= 30f;
+
+            if (CurrentHull != null && DrawPosition.Y > CurrentHull.WorldRect.Y - 120.0f)
+            {
+                float lowerAmount = DrawPosition.Y - (CurrentHull.WorldRect.Y - 120.0f);
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f - lowerAmount, 0.65f);
+                hudInfoHeight = Math.Max(hudInfoHeight, 20.0f);
+            }
+            else
+            {
+                hudInfoHeight = MathHelper.Lerp(hudInfoHeight, 100.0f, 0.65f);
+            }
             pos.Y = -pos.Y;
 
             if (speechBubbleTimer > 0.0f)
@@ -521,18 +546,37 @@ namespace Barotrauma
 
             //if (this == controlled) return;
 
-            float hoverRange = 300.0f;
-            float fadeOutRange = 200.0f;
+            float hoverRange = 500.0f;
+            float fadeOutRange = 300.0f;
             float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
-            float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
-            
+            float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.25f, 1.0f);
+
+            //Disable the brightness changes of players names for characterless server hosts
+            if (GameMain.Server != null && Character.Controlled == null) hudInfoAlpha = 1.0f;
+
             if (hudInfoVisible && info != null)
             {
                 string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 90.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
-                Color nameColor = Color.White;
+                if (name != Info.Name)
+                {
+                    if (GameMain.Client != null
+                        && (GameMain.Client.HasPermission(ClientPermissions.Kick) 
+                       || GameMain.Client.HasPermission(ClientPermissions.Ban)))
+                    {
+                        name += " (" + Info.Name + ")";
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        name += " (" + Info.Name + ")";
+                    }
+                    else if (controlled == null)
+                    {
+                        name += " " + TextManager.Get("Disguised");
+                    }
+                }
+
+                Vector2 namePos = new Vector2(pos.X, pos.Y + 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
@@ -541,6 +585,8 @@ namespace Barotrauma
             	namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
             	namePos *= viewportSize / screenSize;
             	namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
+
+                Color nameColor = Color.White;
 
                 if (GameMain.NilMod.UseRecolouredNameInfo)
                 {
@@ -624,8 +670,6 @@ namespace Barotrauma
                     }
                 }
 
-
-
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
@@ -635,13 +679,17 @@ namespace Barotrauma
                 }
             }
 
+            showinghealth = false;
+
             if (isDead) return;
             
             if (GameMain.NilMod.UseUpdatedCharHUD)
             {
                 if (((health < maxHealth * 0.98f) || oxygen < 95f || bleeding >= 0.05f || (((AnimController.CurrentHull == null) ?
-                    100.0f : Math.Min(AnimController.CurrentHull.LethalPressure, 100.0f)) > 10f && NeedsAir && PressureProtection == 0f) || HuskInfectionState > 0f || Stun > 0f) && hudInfoVisible)
+                    100.0f : Math.Min(AnimController.CurrentHull.LethalPressure, 100.0f)) > 10f && NeedsAir && !Shielded && PressureProtection == 0f) || HuskInfectionState > 0f || Stun > 0f) && hudInfoVisible)
                 {
+                    showinghealth = true;
+
                     //Basic Colour
                     Color baseoutlinecolour;
                     //Basic Flash Colour if fine
@@ -675,7 +723,7 @@ namespace Barotrauma
 
                     float pressureFactor = (AnimController.CurrentHull == null) ?
                     100.0f : Math.Min(AnimController.CurrentHull.LethalPressure, 100.0f);
-                    if (PressureProtection > 0.0f && (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthOutsideHull || (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthInHull && CurrentHull != null))) pressureFactor = 0.0f;
+                    if ((PressureProtection > 0.0f && (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthOutsideHull || (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthInHull && CurrentHull != null))) || Shielded) pressureFactor = 0.0f;
 
                     if (IsRemotePlayer || this == Character.Controlled || AIController is HumanAIController)
                     {
@@ -683,14 +731,19 @@ namespace Barotrauma
                         baseoutlinecolour = new Color(255, 255, 255, 15);
                         FlashColour = new Color(220, 220, 220, 15);
 
-                        if (HuskInfectionState >= 1f) FlashColour = new Color(200, 0, 200, 255);
+                        if (HuskInfectionState >= 0.98f) FlashColour = new Color(200, 0, 200, 255);
                         else if (HuskInfectionState > 0.5f) FlashColour = new Color(85, 0, 85, 150);
                         else if (HuskInfectionState > 0f) FlashColour = new Color(50, 0, 120, 50);
                         else if (pressureFactor > 80f) FlashColour = new Color(200, 200, 0, 100);
-                        else if (bleeding > 0.75f) FlashColour = new Color(80, 30, 20, 100);
+                        else if (bleeding > 0.45f) FlashColour = new Color(80, 30, 20, 100);
                         else if (pressureFactor > 45f) FlashColour = new Color(200, 200, 0, 100);
-                        else if (oxygen < 50f) FlashColour = new Color(40, 40, 255, 40);
-                        else if (health < 40f) FlashColour = new Color(25, 25, 25, 40);
+                        else if (health < 0f) FlashColour = new Color(25, 25, 25, 40);
+                        else if (oxygen < 0f) FlashColour = new Color(40, 40, 255, 40);
+                        else if (pressureFactor > 5f) FlashColour = new Color(200, 200, 0, 100);
+                        else if (oxygen < 35f) FlashColour = new Color(40, 40, 255, 40);
+                        else if (health < 25f) FlashColour = new Color(25, 25, 25, 40);
+                        else if (oxygen < 70f) FlashColour = new Color(40, 40, 255, 40);
+                        else if (health < 50f) FlashColour = new Color(25, 25, 25, 40);
                         else if (Stun >= 1f) FlashColour = new Color(5, 5, 5, 80);
 
                         if (IsUnconscious || Stun >= 5f) baseoutlinecolour = new Color(40, 40, 40, 35);
@@ -719,9 +772,42 @@ namespace Barotrauma
                         outLineColour = Color.Lerp(FlashColour, baseoutlinecolour, GameMain.NilMod.CharFlashColourTime / (NilMod.CharFlashColourRate / 2)) * hudInfoAlpha;
                     }
 
+
+
                     //Smooth out the Health bar movement a little c:
-                    if (LastHealthStatusVector == null || LastHealthStatusVector == Vector2.Zero) LastHealthStatusVector = new Vector2(pos.X - 20f, DrawPosition.Y + 70.0f);
-                    if ((LastHealthStatusVector.X + 40f) - DrawPosition.X > 2.0f || (LastHealthStatusVector.X + 40f) - DrawPosition.X < -2.0f || (LastHealthStatusVector.Y - 70f) - DrawPosition.Y > 2.0f || (LastHealthStatusVector.Y - 70f) - DrawPosition.Y < -2.0f) LastHealthStatusVector = new Vector2(pos.X - 40f, DrawPosition.Y + 70.0f);
+                    //if (LastHealthStatusVector == null || LastHealthStatusVector == Vector2.Zero) LastHealthStatusVector = new Vector2(pos.X - 20f, -pos.Y);
+                    //if ((LastHealthStatusVector.X + 40f) - DrawPosition.X > 2.0f || (LastHealthStatusVector.X + 40f) - DrawPosition.X < -2.0f || (LastHealthStatusVector.Y - 70f) - pos.Y > 2.0f || (LastHealthStatusVector.Y - 70f) - pos.Y < -2.0f) LastHealthStatusVector = new Vector2(pos.X - 40f, -pos.Y);
+                    //Vector2 healthBarPos = LastHealthStatusVector;
+
+                    //Smooth out the Health bar movement a little c:
+
+                    Vector2 namePos = Vector2.Zero;
+
+                    if (info != null)
+                    {
+                        namePos = new Vector2(pos.X, pos.Y + 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                    }
+                    
+
+                    Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                    Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
+                    namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
+                    namePos *= screenSize / viewportSize;
+                    namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
+                    namePos *= viewportSize / screenSize;
+                    namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
+
+                    if(info == null)
+                    {
+                        if (LastHealthStatusVector == null || LastHealthStatusVector == Vector2.Zero) LastHealthStatusVector = new Vector2(pos.X - 20f, -pos.Y);
+                        if ((LastHealthStatusVector.X + 40f) - DrawPosition.X > 2.0f || (LastHealthStatusVector.X + 40f) - DrawPosition.X < -2.0f || (LastHealthStatusVector.Y - 70f) - pos.Y > 2.0f || (LastHealthStatusVector.Y - 70f) - pos.Y < -2.0f) LastHealthStatusVector = new Vector2(pos.X - 40f, -pos.Y);
+                    }
+                    else
+                    {
+                        if (LastHealthStatusVector == null || LastHealthStatusVector == Vector2.Zero) LastHealthStatusVector = new Vector2(namePos.X, -namePos.Y);
+                        if ((LastHealthStatusVector.X + 20f) - namePos.X > 2.0f || (LastHealthStatusVector.X + 20f) - namePos.X < -2.0f || (LastHealthStatusVector.Y - 30f) - namePos.Y > 2.0f || (LastHealthStatusVector.Y - 30f) - namePos.Y < -2.0f) LastHealthStatusVector = new Vector2(namePos.X + 20f, -namePos.Y - 30f);
+                    }
+
                     Vector2 healthBarPos = LastHealthStatusVector;
 
                     //GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 10.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);

@@ -462,7 +462,7 @@ namespace Barotrauma
 
             if (item == null || !drawItem) return;
 
-            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
+            item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.GetSpriteColor());
         }
     }
 }

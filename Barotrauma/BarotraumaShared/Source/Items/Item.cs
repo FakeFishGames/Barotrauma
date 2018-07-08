@@ -52,6 +52,9 @@ namespace Barotrauma
         private bool needsPositionUpdate;
         private float lastSentCondition;
 
+        public float? gwcooldown;
+        public string gwlastuser = "";
+
         private float condition;
 
         private bool inWater;
@@ -401,32 +404,34 @@ namespace Barotrauma
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
 
-                        if (ic.statusEffectLists == null) continue;
-
-                        if (statusEffectLists == null) 
-                            statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
-
-                        //go through all the status effects of the component 
-                        //and add them to the corresponding statuseffect list
-                        foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
-                        {
-
-                            ActionType actionType = componentEffectList.First().type;
-
-                            List<StatusEffect> statusEffectList;
-                            if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
-                            {
-                                statusEffectList = new List<StatusEffect>();
-                                statusEffectLists.Add(actionType, statusEffectList);
-                            }
-
-                            foreach (StatusEffect effect in componentEffectList)
-                            {
-                                statusEffectList.Add(effect);
-                            }
-                        }
-
                         break;
+                }
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                if (ic.statusEffectLists == null) continue;
+
+                if (statusEffectLists == null)
+                    statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+
+                //go through all the status effects of the component  
+                //and add them to the corresponding statuseffect list 
+                foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
+                {
+                    ActionType actionType = componentEffectList.First().type;
+
+                    List<StatusEffect> statusEffectList;
+                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    {
+                        statusEffectList = new List<StatusEffect>();
+                        statusEffectLists.Add(actionType, statusEffectList);
+                    }
+
+                    foreach (StatusEffect effect in componentEffectList)
+                    {
+                        statusEffectList.Add(effect);
+                    }
                 }
             }
 
@@ -598,8 +603,8 @@ namespace Barotrauma
         {
             foreach (Item item in ItemList) item.FindHull();
         }
-        
-        public virtual Hull FindHull()
+
+        public Hull FindHull()
         {
             if (parentInventory != null && parentInventory.Owner != null)
             {
@@ -645,39 +650,9 @@ namespace Barotrauma
                 
         public void SetContainedItemPositions()
         {
-            if (ownInventory == null) return;
-
-            Vector2 simPos = SimPosition;
-            Vector2 displayPos = Position;
-
-            foreach (Item contained in ownInventory.Items)
+            foreach (ItemComponent component in components)
             {
-                if (contained == null) continue;
-
-                if (contained.body != null)
-                {
-                    try
-                    {
-                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
-                    }
-                }
-
-                contained.Rect =
-                    new Rectangle(
-                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
-                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
-                        contained.Rect.Width, contained.Rect.Height);
-
-                contained.Submarine = Submarine;
-                contained.CurrentHull = CurrentHull;
-
-                contained.SetContainedItemPositions();
+                (component as ItemContainer)?.SetContainedItemPositions();
             }
         }
         
@@ -815,6 +790,12 @@ namespace Barotrauma
             {
                 Spawner.AddToRemoveQueue(this);
                 return;
+            }
+
+            if (gwcooldown >= 0f)
+            {
+                gwcooldown -= deltaTime;
+                if (gwcooldown <= 0f) gwcooldown = null;
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
@@ -1206,7 +1187,10 @@ namespace Barotrauma
                 }
             }
 
-            if (remove) Remove();
+            if (remove)
+            {
+                Spawner.AddToRemoveQueue(this);
+            }
         }
 
         public List<ColoredText> GetHUDTexts(Character character)
@@ -1243,6 +1227,22 @@ namespace Barotrauma
 
             if (Container != null)
             {
+                if (GameMain.NilMod.EnableGriefWatcher && GameMain.Server != null && dropper != null)
+                {
+                    Barotrauma.Networking.Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == dropper);
+
+                    if (NilMod.NilModGriefWatcher.ReactorLastFuelRemoved && Container.GetComponent<Reactor>() != null)
+                    {
+                        if(Container.ContainedItems.Count() == 1)
+                        {
+                            if (!CoroutineManager.IsCoroutineRunning("GWwarnfuelremoved_" + warnedclient.Character.Name))
+                            {
+                                CoroutineManager.StartCoroutine(Reactor.WarnFuelRemoved(warnedclient, Container, this), "GWwarnfuelremoved_" + warnedclient.Character.Name);
+                            }
+                        }
+                    }
+                }
+
                 if (body != null)
                 {
                     body.Enabled = true;
@@ -1377,12 +1377,40 @@ namespace Barotrauma
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
                         GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
+
+                        if (GameMain.NilMod.EnableGriefWatcher)
+                        {
+                            //Self Usage Check (And Contained)
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListUse.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListUse[y] == Name)
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                                        + " self-used Item " + Name, c);
+                                }
+                            }
+                        }
                     }
                     else
                     {
                         GameServer.Log(
                             c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
                             ServerLog.MessageType.ItemInteraction);
+
+                        if(GameMain.NilMod.EnableGriefWatcher)
+                        {
+                            //Self Usage Check (And Contained)
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListUse.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListUse[y] == Name
+                                    || Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name).Contains(NilMod.NilModGriefWatcher.GWListUse[y]))
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                                        + " self-used item " + Name
+                                        + " (" + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", c);
+                                }
+                            }
+                        }
                     }
 
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, c.Character.ID });
@@ -1758,13 +1786,15 @@ namespace Barotrauma
                 }
             }
 
+            List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
-                ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
+                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
 
                 if (component == null) continue;
 
                 component.Load(subElement);
+                unloadedComponents.Remove(component);
             }
         }
 
@@ -1858,6 +1888,13 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed item\n" + Environment.StackTrace);
+                return;
+            }
+            DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
+
             base.Remove();
 
             foreach (Character character in Character.CharacterList)

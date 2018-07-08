@@ -666,22 +666,18 @@ namespace Barotrauma
             }
 
             Vector2 impulse = direction * impact * 0.5f;
-
-            float length = impulse.Length();
-            if (length > 5.0f) impulse = (impulse / length) * 5.0f;
-
+            impulse = impulse.ClampLength(5.0f);
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) continue;
-
                 if (impact > 2.0f) c.SetStun((impact - 2.0f) * 0.1f);
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    limb.body.ApplyLinearImpulse(limb.Mass * impulse);
+                    limb.body.ApplyLinearImpulse(limb.Mass * impulse, 20.0f);
                 }
 
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse);
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 20.0f);
             }
 
             foreach (Item item in Item.ItemList)
@@ -689,7 +685,7 @@ namespace Barotrauma
                 if (item.Submarine != submarine || item.CurrentHull == null || 
                     item.body == null || !item.body.Enabled) continue;
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
+                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 20.0f);
             }
 
             var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);

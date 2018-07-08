@@ -170,7 +170,7 @@
 
       <StatusEffect type="OnUse" target="This" Condition="-1.0"/>
 
-      <sound file="alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
+      <sound file="Content/Items/Artifacts/alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
       
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -179,7 +179,7 @@
     
     <Propulsion force="-40" usablein="both"/>
 
-    <Projectile launchimpulse="80.0">
+    <Projectile characterusable="false" launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
@@ -195,6 +195,8 @@
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
+      <Containable name="Oxygenite Tank"/>
+      <Containable name="Oxygenite Shard"/>
     </ItemContainer>
   </Item>
 
@@ -209,7 +211,7 @@
 
     <Door canbepicked="false" canbeselected="true" horizontal="true">
       <Sprite texture="Content/Map/ruins.png" sourcerect="0,842,260,54"  depth="0.6" origin="0.0,0.5"/>
-      <sound file="aliendoor.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Artifacts/aliendoor.ogg" type="OnUse" range="1000.0"/>
     </Door>
 
     <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
@@ -231,7 +233,7 @@
 
     <Door canbepicked="false" canbeselected="true">
       <Sprite texture="Content/Map/ruins.png" sourcerect="842,192,54,259" depth="0.6" origin="0.5,0.0"/>
-      <sound file="aliendoor.ogg" type="OnUse" range="3000.0"/>
+      <sound file="Content/Items/Artifacts/aliendoor.ogg" type="OnUse" range="3000.0"/>
     </Door>
 
     <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">

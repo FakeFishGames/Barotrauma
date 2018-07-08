@@ -11,11 +11,14 @@ using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
+
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
 
         public static bool DisableControls;
+
+        public bool FinishedCreation = false;
 
         private bool enabled = true;
         public bool Enabled
@@ -95,6 +98,8 @@ namespace Barotrauma
         private float health;
         //public float lastSentHealth;
         protected float minHealth, maxHealth;
+
+        public bool Shielded = false;
 
         protected Item focusedItem;
         private Character focusedCharacter, selectedCharacter, selectedBy;
@@ -329,6 +334,12 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value)) return;
                 float newoxygen = CheckOxygen(value);
 
+                if (!NeedsAir)
+                {
+                    oxygen = 100f;
+                    return;
+                }
+
                 if (oxygen == newoxygen) return;
                 oxygen = newoxygen;
 
@@ -348,6 +359,7 @@ namespace Barotrauma
 
         public float CheckOxygen(float newoxygen)
         {
+            if(Shielded && newoxygen < oxygen) return oxygen;
             //Nilmod Prevent oxygen gains during progressive implode death
             if (PressureTimer >= 100.0f)
             {
@@ -582,6 +594,7 @@ namespace Barotrauma
             //Take Multipliers of the character into account then Clamp health again in case it went with weird values
             if (GameMain.Client == null)
             {
+                if (Shielded && newHealth < health) return health;
                 newHealth = CalculateMultiplierHealth(Health, newHealth - Health);
 
 
@@ -691,6 +704,8 @@ namespace Barotrauma
         {
             if (GameMain.Client == null)
             {
+                if (Shielded && newBleed > bleeding) return bleeding;
+
                 //NilMod Progressive Implosion Death Anti Healing (Allow Bleeding gain but not bleed reduction during pressure-death)
                 if (PressureTimer >= 100.0f && GameMain.NilMod.UseProgressiveImplodeDeath && GameMain.NilMod.PreventImplodeClotting && newBleed < Bleeding) return Bleeding;
 
@@ -918,6 +933,8 @@ namespace Barotrauma
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
+            FinishedCreation = false;
+
             ConfigPath = file;
             
             selectedItems = new Item[2];
@@ -999,7 +1016,18 @@ namespace Barotrauma
             AnimController.FindHull(null);
             if (AnimController.CurrentHull != null) Submarine = AnimController.CurrentHull.Submarine;
 
-            CharacterList.Add(this);
+            if (AnimController.Limbs == null || AnimController.Limbs.Length < 1)
+            {
+                DebugConsole.ThrowError("Error in Character Creation: " + Name + " has null or 0 limbs on creation!");
+                enabled = false;
+                EntitySpawner.Spawner.AddToRemoveQueue(this);
+            }
+            else
+            {
+                FinishedCreation = true;
+
+                CharacterList.Add(this);
+            }
 
             //characters start disabled in the multiplayer mode, and are enabled if/when
             //  - controlled by the player
@@ -1252,10 +1280,13 @@ namespace Barotrauma
                     Vector2 attackPos =
                         attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
 
+                    List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                    ignoredBodies.Add(AnimController.Collider.FarseerBody);
+
                     var body = Submarine.PickBody(
                         attackLimb.SimPosition,
                         attackPos,
-                        AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                        ignoredBodies,
                         Physics.CollisionCharacter | Physics.CollisionWall);
                     
                     IDamageable attackTarget = null;
@@ -1270,7 +1301,7 @@ namespace Barotrauma
                             body = Submarine.PickBody(
                                 attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
                                 attackPos - ((Submarine)body.UserData).SimPosition,
-                                AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                                ignoredBodies,
                                 Physics.CollisionWall);
 
                             if (body != null)
@@ -1747,7 +1778,35 @@ namespace Barotrauma
             {
                 findFocusedTimer -= deltaTime;
             }
-            
+
+            //climb ladders automatically when pressing up/down inside their trigger area 
+            if (selectedConstruction == null && !AnimController.InWater)
+            {
+                bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
+
+                Ladder nearbyLadder = null;
+                if (Controlled == this || climbInput)
+                {
+                    float minDist = float.PositiveInfinity;
+                    foreach (Ladder ladder in Ladder.List)
+                    {
+                        float dist;
+                        if (CanInteractWith(ladder.Item, out dist) && dist < minDist)
+                        {
+                            minDist = dist;
+                            nearbyLadder = ladder;
+                            if (Controlled == this) ladder.Item.IsHighlighted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (nearbyLadder != null && climbInput)
+                {
+                    if (nearbyLadder.Select(this)) selectedConstruction = nearbyLadder.Item;
+                }
+            }
+
             if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
@@ -1813,6 +1872,7 @@ namespace Barotrauma
                         {
                             foreach(Submarine mainsub in Submarine.MainSubs)
                             {
+                                if (mainsub == null) continue;
                                 //disable AI characters that are far away from the sub and the controlled character
                                 enablelist[i].Enabled = Vector2.DistanceSquared(mainsub.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
                                     (Spied != null && Vector2.DistanceSquared(Spied.WorldPosition, enablelist[i].WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr) ||
@@ -1887,13 +1947,17 @@ namespace Barotrauma
             {
                 bool protectedFromPressure = PressureProtection > 0.0f;
                 
-                protectedFromPressure = protectedFromPressure && (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthOutsideHull || (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthInHull && CurrentHull != null));
-                           
+                protectedFromPressure = protectedFromPressure
+                    && (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthOutsideHull
+                    || (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthInHull && CurrentHull != null) || Shielded);
+
+
                 if (!protectedFromPressure && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     PressureTimer += ((AnimController.CurrentHull == null) ?
                         100.0f : AnimController.CurrentHull.LethalPressure) * deltaTime;
+
 
                     if (PressureTimer >= 100.0f)
                     {
@@ -2548,6 +2612,8 @@ namespace Barotrauma
         {
             if (isDead) return;
 
+            Shielded = false;
+
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.Client != null)
             {
@@ -2652,9 +2718,18 @@ namespace Barotrauma
             if (Removed)
             {
                 DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
+                return;
             }
+            DebugConsole.Log("Removing character " + Name + " (ID: " + ID + ")");
 
             base.Remove();
+
+#if CLIENT
+            if (LastControlled == this) LastControlled = null;
+            if (SpawnCharacter == this) SpawnCharacter = null;
+#endif
+            if (Controlled == this) Controlled = null;
+            if (Spied == this) Spied = null;
 
             if (info != null) info.Remove();
 

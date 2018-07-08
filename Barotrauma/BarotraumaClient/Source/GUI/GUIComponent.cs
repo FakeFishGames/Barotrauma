@@ -402,7 +402,7 @@ namespace Barotrauma
                         if (uiSprite.Sprite.size.X == 0.0f) size.X = rect.Width;
                         if (uiSprite.Sprite.size.Y == 0.0f) size.Y = rect.Height;
 
-                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, currColor * (currColor.A / 255.0f));
+                        uiSprite.Sprite.DrawTiled(spriteBatch, startPos, size, color: currColor * (currColor.A / 255.0f));
                     }
                     else
                     {

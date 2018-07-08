@@ -215,11 +215,17 @@ namespace Barotrauma.Networking
                     //Get the filename
                     if (GameMain.NilMod.RoundSaveName == "")
                     {
-                        GameMain.NilMod.RoundSaveName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+                        GameMain.NilMod.RoundSaveName = serverName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
 
-                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace(":", "");
-                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("../", "");
-                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("/", "");
+                        var invalidChars = Path.GetInvalidFileNameChars();
+                        foreach (char invalidChar in invalidChars)
+                        {
+                            GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace(invalidChar.ToString(), "");
+                        }
+
+                        //GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace(":", "");
+                        //GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("../", "");
+                        //GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("/", "");
 
                         string filePath = Path.Combine(SavePath, GameMain.NilMod.RoundSaveName);
 
@@ -260,11 +266,17 @@ namespace Barotrauma.Networking
                 //Default Saving Methods
                 else
                 {
-                    string fileName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+                    string fileName = serverName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
 
-                    fileName = fileName.Replace(":", "");
-                    fileName = fileName.Replace("../", "");
-                    fileName = fileName.Replace("/", "");
+                    //fileName = fileName.Replace(":", "");
+                    //fileName = fileName.Replace("../", "");
+                    //fileName = fileName.Replace("/", "");
+
+                    var invalidChars = Path.GetInvalidFileNameChars();
+                    foreach (char invalidChar in invalidChars)
+                    {
+                        fileName = fileName.Replace(invalidChar.ToString(), "");
+                    }
 
                     string filePath = Path.Combine(SavePath, fileName);
 

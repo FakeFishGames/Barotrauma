@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
 
     class PlayerLog
     {
-        const string SavePath = "Data/loggedplayers.txt";
+        const string SavePath = "Data/NilMod/loggedplayers.txt";
 
         public Boolean PlayerLogStateNames;
         public Boolean PlayerLogStateFirstJoinedNames;

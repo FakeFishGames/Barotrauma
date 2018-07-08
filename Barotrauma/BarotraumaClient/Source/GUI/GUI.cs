@@ -49,11 +49,26 @@ namespace Barotrauma
 
         public static Color ScreenOverlayColor;
 
-        private static Sprite submarineIcon, arrow;
+        private static Sprite submarineIcon, shuttleIcon, creatureIcon, objectiveIcon, arrow;
 
         public static Sprite SubmarineIcon
         {
             get { return submarineIcon; }
+        }
+
+        public static Sprite CreatureIcon
+        {
+            get { return creatureIcon; }
+        }
+
+        public static Sprite ShuttleIcon
+        {
+            get { return shuttleIcon; }
+        }
+
+        public static Sprite ObjectiveIcon
+        {
+            get { return objectiveIcon; }
         }
 
         public static Sprite SpeechBubbleIcon
@@ -110,14 +125,23 @@ namespace Barotrauma
             t = new Texture2D(graphicsDevice, 1, 1);
             t.SetData(new Color[] { Color.White });// fill the texture with white
 
-            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64), null);
+            submarineIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 192, 64, 64));
             submarineIcon.Origin = submarineIcon.size / 2;
 
-            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16), null);
+            arrow = new Sprite("Content/UI/uiIcons.png", new Rectangle(80, 240, 16, 16));
             arrow.Origin = arrow.size / 2;
 
-            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61), null);
+            SpeechBubbleIcon = new Sprite("Content/UI/uiIcons.png", new Rectangle(0, 129, 65, 61));
             SpeechBubbleIcon.Origin = SpeechBubbleIcon.size / 2;
+
+            creatureIcon = new Sprite("Content/UI/Nilmod/Creature Icon.png", new Rectangle(0, 0, 64, 64));
+            creatureIcon.Origin = creatureIcon.size / 2;
+
+            shuttleIcon = new Sprite("Content/UI/Nilmod/Shuttle Icon.png", new Rectangle(0, 0, 64, 64));
+            shuttleIcon.Origin = shuttleIcon.size / 2;
+
+            objectiveIcon = new Sprite("Content/Map/waypointIcons.png", new Rectangle(0, 32, 32, 32));
+            objectiveIcon.Origin = objectiveIcon.size / 2;
         }
 
         public static void TogglePauseMenu()

@@ -12,6 +12,18 @@
   </Item>
 
   <Item
+    name="Railgun Shell Rack"
+    pickdistance ="120">
+
+    <Sprite texture ="Content/Items/Weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
+
+    <ItemContainer  hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+      <Containable name="Nuclear Shell"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
     name="Medicine Cabinet"
     linkable="true"
     pickdistance ="150">

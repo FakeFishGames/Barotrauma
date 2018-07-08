@@ -44,9 +44,9 @@ namespace Barotrauma
 
     class NilMod
     {
-        const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "09/03/2018-1";
-        public Version NilModNetworkingVersion = new Version(0,0,0,0);
+        const string SettingsSavePath = "Data/NilMod/Settings.xml";
+        public const string NilModVersionDate = "08/07/2018-1";
+        public Version NilModNetworkingVersion = new Version(0,0,0,1);
 
         public int Owners;
         public int Admins;
@@ -114,6 +114,7 @@ namespace Barotrauma
         public static NilModPermissions NilModPermissions;
         public static NilModHelpCommands NilModHelpCommands;
         public static NilModEventChatter NilModEventChatter;
+        public static NilModGriefWatcher NilModGriefWatcher;
         public static PlayerLog NilModPlayerLog;
         public static VPNBanlist NilModVPNBanlist;
 
@@ -166,7 +167,18 @@ namespace Barotrauma
 
         public Boolean RebalanceTeamPreferences;
 
+        public Boolean RenderOther = true;
+        public Boolean RenderLevel = true;
+        public Boolean RenderStructure = true;
+        public Boolean RenderCharacter = true;
+        public Boolean ShowPlayerIndicators = false;
+        public Boolean ShowCreatureIndicators = true;
+        public Boolean ShowShuttleIndicators = true;
+        public Boolean ShowRespawnIndicators = true;
+        public Boolean ShowObjectiveIndicators = true;
+        public Boolean ShowObjectiveIndicatorsAsPlayer = false;
         public Boolean ShowRoomInfo;
+        public Boolean ShowDeadChat = true;
         public Boolean UseUpdatedCharHUD;
         public Boolean UseRecolouredNameInfo;
         public Boolean UseCreatureZoomBoost;
@@ -178,6 +190,7 @@ namespace Barotrauma
         public Boolean EnableEventChatterSystem;
         public Boolean EnableHelpSystem;
         public Boolean EnableAdminSystem;
+        public Boolean EnableGriefWatcher;
         public Boolean EnablePlayerLogSystem;
         public Boolean EnableVPNBanlist;
 
@@ -207,6 +220,10 @@ namespace Barotrauma
         public float KickMaxStateNameTimer;
         public Boolean ClearKickStateNameOnRejoin;
         public Boolean ClearKicksOnRoundStart;
+        public int MaxIdenticalIPConnections = 5;
+
+        public Boolean AllowCyrillicText;
+        public Boolean AllowEnglishText;
 
 
         //NilModDebug
@@ -226,6 +243,7 @@ namespace Barotrauma
         public int ParticleSpawnPercent;
         public float ParticleLifeMultiplier;
         public Boolean DisableParticles = false;
+        public Boolean UseExperimentalFPSLagPrevention;
 
         //Server Settings
         public Boolean OverrideServerSettings;
@@ -418,6 +436,8 @@ namespace Barotrauma
         public float ElectricalFailMaxVoltage;
         public float ElectricalFailStunTime;
         public float ElectricalRelayMaxPowerMultiplier;
+        public float ReactorMeltDownMultiplierIncrease;
+        public float ReactorMeltDownMultiplierDecrease;
         public Boolean CanDamageSubBody;
         public Boolean CanRewireMainSubs;
         //70000 = top of the map
@@ -448,6 +468,7 @@ namespace Barotrauma
         //Client Setup
         public Boolean AllowNilModClients;
         public Boolean AllowVanillaClients;
+        Boolean cl_SpectatorsFullIcons;
         Boolean cl_UseUpdatedCharHUD;
         Boolean cl_UseCreatureZoomBoost;
         float cl_CreatureZoomMultiplier;
@@ -705,6 +726,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("MaxAdminSlots = " + MaxAdminSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxTrustedSlots = " + MaxTrustedSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxSpectatorSlots = " + MaxSpectatorSlots.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("OtherSlotsExcludeSpectators = " + OtherSlotsExcludeSpectators.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DebugConsoleTimeStamp = " + DebugConsoleTimeStamp.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxLogMessages = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ClearLogRoundStart = " + (ClearLogRoundStart ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
@@ -775,6 +797,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("MaxParticles = " + MaxParticles.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ParticleSpawnPercent = " + ParticleSpawnPercent.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ParticleLifeMultiplier = " + ParticleLifeMultiplier.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("UseExperimentalFPSLagPrevention = " + UseExperimentalFPSLagPrevention.ToString(), ServerLog.MessageType.NilMod);
 
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
 
@@ -979,6 +1002,7 @@ namespace Barotrauma
             NilModEventChatter = new NilModEventChatter();
             NilModPermissions = new NilModPermissions();
             NilModPlayerLog = new PlayerLog();
+            NilModGriefWatcher = new NilModGriefWatcher();
 
             if (!loadVanilla)
             {
@@ -1000,7 +1024,7 @@ namespace Barotrauma
 
                 if (doc == null)
                 {
-                    DebugConsole.ThrowError("NilMod config file 'Data/NilModSettings.xml' failed to load - Operating off default settings until resolved.");
+                    DebugConsole.ThrowError("NilMod config file '" + SettingsSavePath + "' failed to load - Operating off default settings until resolved.");
                     DebugConsole.ThrowError("If you cannot correct the issue above, deleting or renaming the XML and restarting or reloading in-server will generate a new one.");
                     ResetToDefault();
                 }
@@ -1017,15 +1041,22 @@ namespace Barotrauma
                     MaxAdminSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxAdminSlots", 0), 0, 8);
                     MaxTrustedSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxTrustedSlots", 0), 0, 8);
                     MaxSpectatorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxSpectatorSlots", 0), 0, 16);
+                    OtherSlotsExcludeSpectators = ServerModGeneralSettings.GetAttributeBool("OtherSlotsExcludeSpectators", true);
                     DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
                     MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10, 16000); //Implemented
                     LogAppendCurrentRound = ServerModGeneralSettings.GetAttributeBool("LogAppendCurrentRound", false); //Implemented
                     LogAppendLineSaveRate = Math.Min(MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("LogAppendLineSaveRate", 5), 1, 16000), MaxLogMessages); //Implemented
                     ClearLogRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearLogRoundStart", false); //Implemented
-                    ChatboxHeight = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxHeight", 0.15f), 0.10f, 0.50f);
-                    ChatboxWidth = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxWidth", 0.35f), 0.25f, 0.85f);
-                    ChatboxMaxMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("ChatboxMaxMessages", 20), 10, 100);
+                    ChatboxHeight = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxHeight", 0.25f), 0.10f, 0.60f);
+                    ChatboxWidth = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxWidth", 0.40f), 0.20f, 0.85f);
+                    ChatboxMaxMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("ChatboxMaxMessages", 40), 20, 120);
                     RebalanceTeamPreferences = ServerModGeneralSettings.GetAttributeBool("RebalanceTeamPreferences", true);
+                    ShowPlayerIndicators = ServerModGeneralSettings.GetAttributeBool("ShowPlayerIndicators", false);
+                    ShowCreatureIndicators = ServerModGeneralSettings.GetAttributeBool("ShowCreatureIndicators", true);
+                    ShowShuttleIndicators = ServerModGeneralSettings.GetAttributeBool("ShowShuttleIndicators", true);
+                    ShowRespawnIndicators = ServerModGeneralSettings.GetAttributeBool("ShowRespawnIndicators", true);
+                    ShowObjectiveIndicators = ServerModGeneralSettings.GetAttributeBool("ShowObjectiveIndicators", true);
+                    ShowObjectiveIndicatorsAsPlayer = ServerModGeneralSettings.GetAttributeBool("ShowObjectiveIndicatorsAsPlayer", false);
                     ShowRoomInfo = ServerModGeneralSettings.GetAttributeBool("ShowRoomInfo", false);
                     UseUpdatedCharHUD = ServerModGeneralSettings.GetAttributeBool("UseUpdatedCharHUD", false);
                     UseRecolouredNameInfo = ServerModGeneralSettings.GetAttributeBool("UseRecolouredNameInfo", false);
@@ -1035,6 +1066,7 @@ namespace Barotrauma
                     EnableEventChatterSystem = ServerModGeneralSettings.GetAttributeBool("EnableEventChatterSystem", false);
                     EnableHelpSystem = ServerModGeneralSettings.GetAttributeBool("EnableHelpSystem", false);
                     EnableAdminSystem = ServerModGeneralSettings.GetAttributeBool("EnableAdminSystem", false);
+                    EnableGriefWatcher = ServerModGeneralSettings.GetAttributeBool("EnableGriefWatcher", false);
                     EnablePlayerLogSystem = ServerModGeneralSettings.GetAttributeBool("EnablePlayerLogSystem", false);
                     NilMod.NilModPlayerLog.PlayerLogStateNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateNames", false);
                     NilMod.NilModPlayerLog.PlayerLogStateFirstJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateFirstJoinedNames", false);
@@ -1068,6 +1100,9 @@ namespace Barotrauma
                     KickMaxStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickMaxStateNameTimer", 60f), 0f, 86400f);
                     ClearKickStateNameOnRejoin = ServerModGeneralSettings.GetAttributeBool("ClearKickStateNameOnRejoin", false);
                     ClearKicksOnRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearKicksOnRoundStart", false);
+                    MaxIdenticalIPConnections = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxIdenticalIPConnections", 5), 1, 32);
+                    AllowCyrillicText = ServerModGeneralSettings.GetAttributeBool("AllowCyrillicText", true);
+                    AllowEnglishText = ServerModGeneralSettings.GetAttributeBool("AllowEnglishText", true);
 
                     //Server Default Settings
                     XElement ServerModDefaultServerSettings = doc.Root.Element("ServerModDefaultServerSettings");
@@ -1146,7 +1181,7 @@ namespace Barotrauma
                     MaxParticles = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("MaxParticles", 1500), 150), 15000);
                     ParticleSpawnPercent = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("ParticleSpawnPercent", 100), 0), 100);
                     MathHelper.Clamp(ParticleLifeMultiplier = ServerModDebugSettings.GetAttributeFloat("ParticleLifeMultiplier", 1f), 0.15f, 1f); //Implemented
-
+                    UseExperimentalFPSLagPrevention = DebugLag = ServerModDebugSettings.GetAttributeBool("UseExperimentalFPSLagPrevention", false);
 #if CLIENT
                     if (GameMain.ParticleManager != null)
                     {
@@ -1294,6 +1329,8 @@ namespace Barotrauma
                     ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
                     ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
                     ElectricalRelayMaxPowerMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalRelayMaxPowerMultiplier", 1f), 0.01f, 1000f);
+                    ReactorMeltDownMultiplierIncrease = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ReactorMeltDownMultiplierIncrease", 1f), 0f, 10000f);
+                    ReactorMeltDownMultiplierDecrease = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ReactorMeltDownMultiplierDecrease", 1f), 0f, 10000f);
                     DoorStun = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("DoorStun", 0.2f), 0f, 60f);
 
                     //All Character Settings
@@ -1494,6 +1531,7 @@ namespace Barotrauma
                 @"    MaxAdminSlots=""" + MaxAdminSlots + @"""",
                 @"    MaxTrustedSlots=""" + MaxTrustedSlots + @"""",
                 @"    MaxSpectatorSlots=""" + MaxSpectatorSlots + @"""",
+                @"    OtherSlotsExcludeSpectators=""" + OtherSlotsExcludeSpectators + @"""",
                 @"    DebugConsoleTimeStamp=""" + DebugConsoleTimeStamp + @"""",
                 @"    MaxLogMessages=""" + MaxLogMessages + @"""",
                 @"    LogAppendCurrentRound=""" + LogAppendCurrentRound + @"""",
@@ -1503,6 +1541,12 @@ namespace Barotrauma
                 @"    ChatboxWidth=""" + ChatboxWidth + @"""",
                 @"    ChatboxMaxMessages=""" + ChatboxMaxMessages + @"""",
                 @"    RebalanceTeamPreferences=""" + RebalanceTeamPreferences + @"""",
+                @"    ShowPlayerIndicators=""" + ShowPlayerIndicators + @"""",
+                @"    ShowCreatureIndicators=""" + ShowCreatureIndicators + @"""",
+                @"    ShowShuttleIndicators=""" + ShowShuttleIndicators + @"""",
+                @"    ShowRespawnIndicators=""" + ShowRespawnIndicators + @"""",
+                @"    ShowObjectiveIndicators=""" + ShowObjectiveIndicators + @"""",
+                @"    ShowObjectiveIndicatorsAsPlayer=""" + ShowObjectiveIndicatorsAsPlayer + @"""",
                 @"    ShowRoomInfo=""" + ShowRoomInfo + @"""",
                 @"    UseUpdatedCharHUD=""" + UseUpdatedCharHUD + @"""",
                 @"    UseRecolouredNameInfo=""" + UseRecolouredNameInfo + @"""",
@@ -1511,6 +1555,7 @@ namespace Barotrauma
                 @"    StartToServer=""" + StartToServer + @"""",
                 @"    EnableEventChatterSystem=""" + EnableEventChatterSystem + @"""",
                 @"    EnableHelpSystem=""" + EnableHelpSystem + @"""",
+                @"    EnableGriefWatcher=""" + EnableGriefWatcher + @"""",
                 @"    EnablePlayerLogSystem=""" + EnablePlayerLogSystem + @"""",
                 @"    PlayerLogStateNames=""" + NilModPlayerLog.PlayerLogStateNames + @"""",
                 @"    PlayerLogStateFirstJoinedNames=""" + NilModPlayerLog.PlayerLogStateFirstJoinedNames + @"""",
@@ -1544,6 +1589,9 @@ namespace Barotrauma
                 @"    KickMaxStateNameTimer=""" + KickMaxStateNameTimer + @"""",
                 @"    ClearKickStateNameOnRejoin=""" + ClearKickStateNameOnRejoin + @"""",
                 @"    ClearKicksOnRoundStart=""" + ClearKicksOnRoundStart + @"""",
+                @"    MaxIdenticalIPConnections=""" + MaxIdenticalIPConnections + @"""",
+                @"    AllowCyrillicText=""" + AllowCyrillicText + @"""",
+                @"    AllowEnglishText=""" + AllowEnglishText + @"""",
                 "  />",
 
                 "",
@@ -1603,8 +1651,9 @@ namespace Barotrauma
                 @"    MaxParticles=""" + MaxParticles + @"""",
                 @"    ParticleSpawnPercent=""" + ParticleSpawnPercent + @"""",
                 @"    ParticleLifeMultiplier=""" + ParticleLifeMultiplier + @"""",
+                @"    UseExperimentalFPSLagPrevention=""" + UseExperimentalFPSLagPrevention + @"""",
                 "  />",
-
+                
                 "",
 
                 "  <!--These Settings are related to Campaign-->",
@@ -1720,6 +1769,8 @@ namespace Barotrauma
                 @"    ElectricalFailMaxVoltage=""" + ElectricalFailMaxVoltage + @"""",
                 @"    ElectricalFailStunTime=""" + ElectricalFailStunTime + @"""",
                 @"    ElectricalRelayMaxPowerMultiplier=""" + ElectricalRelayMaxPowerMultiplier + @"""",
+                @"    ReactorMeltDownMultiplierIncrease=""" + ReactorMeltDownMultiplierIncrease + @"""",
+                @"    ReactorMeltDownMultiplierDecrease=""" + ReactorMeltDownMultiplierDecrease + @"""",
                 @"    DoorStun=""" + DoorStun + @"""",
                 "  />",
 
@@ -1824,6 +1875,7 @@ namespace Barotrauma
                 "  <ServerModClientSettings",
                 @"    AllowVanillaClients=""" + AllowVanillaClients + @"""",
                 @"    AllowNilModClients=""" + AllowNilModClients + @"""",
+                @"    cl_SpectatorsFullIcons=""" + cl_SpectatorsFullIcons + @"""",
                 @"    cl_UseUpdatedCharHUD=""" + cl_UseUpdatedCharHUD + @"""",
                 @"    cl_UseRecolouredNameInfo=""" + cl_UseRecolouredNameInfo + @"""",
                 @"    cl_UseCreatureZoomBoost=""" + cl_UseCreatureZoomBoost + @"""",
@@ -1935,6 +1987,7 @@ namespace Barotrauma
                 "  <!--KickMaxStateNameTimer=-->",
                 "  <!--ClearKickStateNameOnRejoin=-->",
                 "  <!--ClearKicksOnRoundStart=-->",
+                "  <!--MaxIdenticalIPConnections=-->",
 
                 "  <!--SuppressPacketSizeWarning = Suppresses an error that annoys server hosts but is actually mostly harmless anyways, Default=false-->",
                 "  <!--StartToServer = Setting to use the server default settings when starting NilMod - for now please use actually valid settings XD, Default=false-->",
@@ -1993,6 +2046,7 @@ namespace Barotrauma
             MaxAdminSlots = 0;
             MaxTrustedSlots = 0;
             MaxSpectatorSlots = 0;
+            OtherSlotsExcludeSpectators = true;
             if (!ClientMode) DebugConsoleTimeStamp = false;
             MaxLogMessages = 800;
             LogAppendCurrentRound = false;
@@ -2000,9 +2054,9 @@ namespace Barotrauma
             ClearLogRoundStart = false;
             if (!ClientMode)
             {
-                ChatboxHeight = 0.15f;
-                ChatboxWidth = 0.35f;
-                ChatboxMaxMessages = 20;
+                ChatboxHeight = 0.25f;
+                ChatboxWidth = 0.40f;
+                ChatboxMaxMessages = 40;
             }
             RebalanceTeamPreferences = true;
             ShowRoomInfo = false;
@@ -2047,6 +2101,28 @@ namespace Barotrauma
             KickMaxStateNameTimer = 60f;
             ClearKickStateNameOnRejoin = false;
             ClearKicksOnRoundStart = false;
+            MaxIdenticalIPConnections = 5;
+            AllowCyrillicText = true;
+            AllowEnglishText = true;
+
+            if (ClientMode)
+            {
+                ShowPlayerIndicators = false;
+                ShowCreatureIndicators = false;
+                ShowShuttleIndicators = true;
+                ShowRespawnIndicators = true;
+                ShowObjectiveIndicators = false;
+                ShowObjectiveIndicatorsAsPlayer = false;
+            }
+            else
+            {
+                ShowPlayerIndicators = false;
+                ShowCreatureIndicators = true;
+                ShowShuttleIndicators = true;
+                ShowRespawnIndicators = true;
+                ShowObjectiveIndicators = true;
+                ShowObjectiveIndicatorsAsPlayer = false;
+            }
 
             //Server Default Settings
             OverrideServerSettings = false;
@@ -2081,9 +2157,12 @@ namespace Barotrauma
 
             //Debug Settings
             DebugReportSettingsOnLoad = false;
-            ShowPacketMTUErrors = true;
-            ShowOpenALErrors = true;
-            ShowPathfindingErrors = true;
+            if (!ClientMode)
+            {
+                ShowPacketMTUErrors = true;
+                ShowOpenALErrors = true;
+                ShowPathfindingErrors = true;
+            }
             ShowMasterServerSuccess = true;
             DebugLag = false;
             DebugLagSimulatedPacketLoss = 0.05f;
@@ -2117,6 +2196,7 @@ namespace Barotrauma
             //ParticleWhitelist.Add("flare");
             //ParticleWhitelist.Add("shrapnel");
             //ParticleWhitelist.Add("iceshards");
+            if (!ClientMode) UseExperimentalFPSLagPrevention = false;
 
             UseDesyncPrevention = true;
             DesyncPreventionItemPassTimer = 0.15f;
@@ -2207,6 +2287,8 @@ namespace Barotrauma
             ElectricalFailMaxVoltage = 0.1f;
             ElectricalFailStunTime = 5f;
             ElectricalRelayMaxPowerMultiplier = 1f;
+            ReactorMeltDownMultiplierIncrease = 1f;
+            ReactorMeltDownMultiplierDecrease = 1f;
             DoorStun = 0.2f;
 
             //All Character Settings
@@ -2292,6 +2374,7 @@ namespace Barotrauma
             //Client Settings
             AllowVanillaClients = true;
             AllowNilModClients = true;
+            cl_SpectatorsFullIcons = false;
             cl_UseUpdatedCharHUD = false;
             cl_UseRecolouredNameInfo = false;
             cl_UseCreatureZoomBoost = false;
@@ -2321,6 +2404,7 @@ namespace Barotrauma
             NilModHelpCommands.Load();
             NilModEventChatter.Load();
             NilModPlayerLog.Load();
+            NilModGriefWatcher.Load();
             //NilModPermissions.Load();
         }
 
@@ -2479,6 +2563,8 @@ namespace Barotrauma
                 if (GameMain.Server != null)
                 {
                     GameMain.Server.AutoRestart = AutoRestart;
+
+                    NilMod.NilModGriefWatcher.GameInitialize();
                 }
 
                 if (GameMain.Client == null)
@@ -2555,6 +2641,23 @@ namespace Barotrauma
             if (NilModNetworkingVersion.CompareTo(serverversion) == 0)
             {
                 //Client Settings
+                Boolean UseFullIcons = inc.ReadBoolean();
+                if(UseFullIcons)
+                {
+                    ShowPlayerIndicators = false;
+                    ShowCreatureIndicators = true;
+                    ShowShuttleIndicators = true;
+                    ShowRespawnIndicators = true;
+                    ShowObjectiveIndicators = true;
+                }
+                else
+                {
+                    ShowPlayerIndicators = false;
+                    ShowCreatureIndicators = false;
+                    ShowShuttleIndicators = true;
+                    ShowRespawnIndicators = true;
+                    ShowObjectiveIndicators = false;
+                }
                 UseUpdatedCharHUD = inc.ReadBoolean();
                 UseRecolouredNameInfo = inc.ReadBoolean();
                 UseCreatureZoomBoost = inc.ReadBoolean();
@@ -2632,6 +2735,7 @@ namespace Barotrauma
             outmsg.Write(NilModNetworkingVersion.ToString());
 
             //Client Settings
+            outmsg.Write(cl_SpectatorsFullIcons);
             outmsg.Write(cl_UseUpdatedCharHUD);
             outmsg.Write(cl_UseRecolouredNameInfo);
             outmsg.Write(cl_UseCreatureZoomBoost);
@@ -2779,6 +2883,12 @@ namespace Barotrauma
             ServerExistingCampaignAutobuy.Add(new CampaignPurchase("Railgun Shell", 2));
         }
 
+#if CLIENT
+        public void ActivateAdminMode()
+        {
+        }
+#endif
+
         public void RecheckPlayerCounts()
         {
             Owners = 0;
@@ -2786,27 +2896,77 @@ namespace Barotrauma
             Trusted = 0;
             Spectators = 0;
             CurrentPlayers = 0;
+
+            int PlayerSpectators = 0;
             
             foreach(Client c in GameMain.Server.ConnectedClients)
             {
+
                 //Slots will use the types before them if multiple are to be used.
-                if(c.OwnerSlot && Owners < MaxOwnerSlots)
+                if (c.OwnerSlot && Owners < MaxOwnerSlots)
                 {
                     Owners += 1;
-                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly)
+                    {
+                        if (Spectators < MaxSpectatorSlots)
+                        {
+                            Spectators += 1;
+                        }
+                        else
+                        {
+                            if(PlayerSpectators > 0)
+                            {
+                                PlayerSpectators -= 1;
+                                CurrentPlayers += 1;
+                            }
+                        }
+                    }
                 }
                 else if(c.AdministratorSlot && Admins < MaxOwnerSlots)
                 {
                     Admins += 1;
-                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly)
+                    {
+                        if (Spectators < MaxSpectatorSlots)
+                        {
+                            Spectators += 1;
+                        }
+                        else
+                        {
+                            if (PlayerSpectators > 0)
+                            {
+                                PlayerSpectators -= 1;
+                                CurrentPlayers += 1;
+                            }
+                        }
+                    }
                 }
                 else if(c.TrustedSlot && Trusted < MaxTrustedSlots)
                 {
                     Trusted += 1;
-                    if(!OtherSlotsExcludeSpectators && c.SpectateOnly) Spectators += 1;
+                    if (!OtherSlotsExcludeSpectators && c.SpectateOnly)
+                    {
+                        if (Spectators < MaxSpectatorSlots)
+                        {
+                            Spectators += 1;
+                        }
+                        else
+                        {
+                            if (PlayerSpectators > 0)
+                            {
+                                PlayerSpectators -= 1;
+                                CurrentPlayers += 1;
+                            }
+                            else
+                            {
+                                Spectators += 1;
+                            }
+                        }
+                    }
                 }
-                else if(c.SpectateOnly && Spectators < MaxSpectatorSlots && OtherSlotsExcludeSpectators)
+                else if (c.SpectateOnly && Spectators < MaxSpectatorSlots)
                 {
+                    PlayerSpectators += 1;
                     Spectators += 1;
                 }
                 else
@@ -2815,16 +2975,24 @@ namespace Barotrauma
                 }
             }
 
+            //Server is not full on the default player slot
             if (CurrentPlayers < GameMain.Server.maxPlayers)
             {
-                if (CurrentPlayers + Owners + Admins + Trusted <= GameMain.Server.maxPlayers)
+                //Server has space remaining counting all players, show the total count
+                if (CurrentPlayers + Owners + Admins + Trusted + PlayerSpectators < GameMain.Server.maxPlayers)
                 {
-                    CurrentPlayers = CurrentPlayers + Owners + Admins + Trusted;
+                    CurrentPlayers = CurrentPlayers + Owners + Admins + Trusted + PlayerSpectators;
                 }
+                //Server has max players or more total players, but it still has normal slots left so show 1 below the max
                 else
                 {
                     CurrentPlayers = Math.Max(GameMain.Server.maxPlayers - 1, 0);
                 }
+            }
+            //Server is full, simply display the max players.
+            else
+            {
+                CurrentPlayers = GameMain.Server.maxPlayers;
             }
         }
     }

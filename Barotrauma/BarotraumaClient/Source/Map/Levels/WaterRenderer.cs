@@ -56,15 +56,22 @@ namespace Barotrauma
 
         public void RenderBack(SpriteBatch spriteBatch, RenderTarget2D texture, float blurAmount = 0.0f)
         {
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearWrap, null, null, waterEffect);
+            if (GameMain.NilMod.RenderOther && GameMain.NilMod.RenderStructure)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearWrap, null, null, waterEffect);
 
-            waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
-            waterEffect.Parameters["xWavePos"].SetValue(wavePos);
-            waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
-            //waterEffect.CurrentTechnique.Passes[0].Apply();
-            
-//#if WINDOWS
-            waterEffect.Parameters["xTexture"].SetValue(texture);
+                waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
+                waterEffect.Parameters["xWavePos"].SetValue(wavePos);
+                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+                //waterEffect.CurrentTechnique.Passes[0].Apply();
+
+                //#if WINDOWS
+                waterEffect.Parameters["xTexture"].SetValue(texture);
+            }
+            else
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearWrap, null, null, null);
+            }
             spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
 //#elif LINUX
 

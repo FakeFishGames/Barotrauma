@@ -158,10 +158,25 @@ namespace Barotrauma.Items.Components
                 if (newFlowPercentage != FlowPercentage)
                 {
                     GameServer.Log(c.Character.LogName + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
+
+                    if (GameMain.NilMod.EnableGriefWatcher && NilMod.NilModGriefWatcher.PumpPositive && newFlowPercentage > FlowPercentage && newFlowPercentage > 0)
+                    {
+                        NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                                                + " Set " + item.Name + " to pump in at "
+                                                + (int)(newFlowPercentage) + " %"
+                                                + (newIsActive ? " (On) " : " (Off) "), c);
+                    }
                 }
                 if (newIsActive != IsActive)
                 {
                     GameServer.Log(c.Character.LogName + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
+
+                    if (GameMain.NilMod.EnableGriefWatcher && NilMod.NilModGriefWatcher.PumpOff && IsActive)
+                    {
+                        NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName
+                                                + " turned off " + item.Name
+                                                + " (" + (int)(newFlowPercentage) + " % Speed)", c);
+                    }
                 }
 
                 FlowPercentage  = newFlowPercentage;

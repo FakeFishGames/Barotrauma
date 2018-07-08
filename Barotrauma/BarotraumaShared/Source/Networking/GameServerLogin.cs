@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma.Networking
 {
@@ -49,7 +50,7 @@ namespace Barotrauma.Networking
                 int nonce;
 
                 //new client, generate nonce and add to unauth queue
-                if ((GameMain.NilMod.CurrentPlayers + unauthenticatedClients.Count) > maxPlayers)
+                if ((GameMain.NilMod.CurrentPlayers + unauthenticatedClients.Count) >= maxPlayers)
                 {
                     if (precheckPermissions.OwnerSlot && GameMain.NilMod.Owners + 1 <= GameMain.NilMod.MaxOwnerSlots)
                     {
@@ -63,7 +64,7 @@ namespace Barotrauma.Networking
                         unauthClient = new UnauthenticatedClient(conn, nonce);
                         unauthenticatedClients.Add(unauthClient);
                     }
-                    else if (precheckPermissions.AdministratorSlot && GameMain.NilMod.Trusted + 1 <= GameMain.NilMod.MaxTrustedSlots)
+                    else if (precheckPermissions.TrustedSlot && GameMain.NilMod.Trusted + 1 <= GameMain.NilMod.MaxTrustedSlots)
                     {
                         nonce = CryptoRandom.Instance.Next();
                         unauthClient = new UnauthenticatedClient(conn, nonce);
@@ -82,8 +83,6 @@ namespace Barotrauma.Networking
                     unauthClient = new UnauthenticatedClient(conn, nonce);
                     unauthenticatedClients.Add(unauthClient);
                 }
-
-
             }
             unauthClient.AuthTimer = 10.0f;
             //if the client is already in the queue, getting another unauth request means that our response was lost; resend
@@ -246,8 +245,24 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            if (!GameMain.NilMod.AllowCyrillicText && Regex.IsMatch(clName, @"\p{IsCyrillic}"))
+            {
+                DisconnectUnauthClient(inc, unauthClient, "This server does not allow Cyrillic alphabets.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Name contains cyrillic characters)", ServerLog.MessageType.Connection);
+                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Name contains cyrillic characters)", Color.Red);
+                return;
+            }
+
+            if (!GameMain.NilMod.AllowEnglishText && Regex.IsMatch(clName, "^[a-zA-Z]*$"))
+            {
+                DisconnectUnauthClient(inc, unauthClient, "This server does not allow English alphabets.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Name contains english characters)", ServerLog.MessageType.Connection);
+                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Name contains english characters)", Color.Red);
+                return;
+            }
+
             //Nilmod prevent players rejoining as server hosts current name OR server name.
-            if (Homoglyphs.Compare(clName.ToLower(), Name.ToLower()) || Homoglyphs.Compare(clName.ToLower(), GameMain.NilMod.PlayYourselfName.ToLower()))
+            if (Homoglyphs.Compare(clName.ToLower(), Name.ToLower()) || Homoglyphs.Compare(clName.ToLower(), GameMain.NilMod.PlayYourselfName.ToLower()) || Homoglyphs.Compare(clName.ToLower(), NilMod.NilModGriefWatcher.GriefWatchName))
             {
                 DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Connection);
@@ -275,6 +290,18 @@ namespace Barotrauma.Networking
                     DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", Color.Red);
                     return;
                 }
+            }
+
+            //MaxIdenticalIPConnections
+            List<Client> SimilarIP = ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == inc.SenderConnection.RemoteEndPoint.Address.ToString());
+
+            if (SimilarIP.Count >= GameMain.NilMod.MaxIdenticalIPConnections)
+            {
+                //can't authorize this client
+                DisconnectUnauthClient(inc, unauthClient, "Too many similar IPs are on the server, max is " + GameMain.NilMod.MaxIdenticalIPConnections);
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Max Identical IP Connections exceeded)", ServerLog.MessageType.Connection);
+                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Max Identical IP Connections exceeded)", Color.Red);
+                return;
             }
 
             KickedClient kickedclient = null;

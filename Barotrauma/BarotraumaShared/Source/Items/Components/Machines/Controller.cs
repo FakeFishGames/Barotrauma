@@ -39,6 +39,12 @@ namespace Barotrauma.Items.Components
             set { userPos = value; }
         }
 
+        [Serialize(false, true)]
+        public bool RequireAimToUse
+        {
+            get; set;
+        }
+
         public Controller(Item item, XElement element)
             : base(item, element)
         {
@@ -160,6 +166,8 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
+            if (RequireAimToUse && !activator.IsKeyDown(InputType.Aim)) return false;
+
             item.SendSignal(0, "1", "trigger_out", character);
             
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
@@ -185,7 +193,14 @@ namespace Barotrauma.Items.Components
             Entity focusTarget = GetFocusTarget();
             if (focusTarget == null)
             {
-                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
+
+                Vector2 offset = character.CursorWorldPosition - centerPos;
+                offset.Y = -offset.Y;
+
+                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
                 return false;
             }
             
@@ -202,7 +217,24 @@ namespace Barotrauma.Items.Components
             
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
-                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
+
+                Item targetItem = focusTarget as Item;
+                if (targetItem != null)
+                {
+                    Turret turret = targetItem.GetComponent<Turret>();
+                    if (turret != null)
+                    {
+                        centerPos = new Vector2(targetItem.WorldRect.X + turret.BarrelPos.X, targetItem.WorldRect.Y - turret.BarrelPos.Y);
+                    }
+                }
+
+                Vector2 offset = character.CursorWorldPosition - centerPos;
+                offset.Y = -offset.Y;
+
+                float targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+
+                item.SendSignal(0, targetRotation.ToString(), "position_out", character);
             }
 
             return true;

@@ -29,4 +29,5 @@
   GameMode="SandBox"
   MissionType="Random"
   TraitorsEnabled="No"
+  autobantime="60"
  />

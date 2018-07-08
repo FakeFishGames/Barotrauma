@@ -74,7 +74,7 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (particleCount >= MaxParticles || prefab == null || GameMain.NilMod.DisableParticles) return null;
+            if (particleCount >= MaxParticles || prefab == null || GameMain.NilMod.DisableParticles || !GameMain.NilMod.RenderOther) return null;
 
             if (((Rand.Range(1, 100) <= GameMain.NilMod.ParticleSpawnPercent) || GameMain.NilMod.ParticleWhitelist.Find(p => p == prefab.Name) != null))
             {

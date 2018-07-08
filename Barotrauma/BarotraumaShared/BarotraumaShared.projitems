@@ -9,6 +9,7 @@
     <Import_RootNamespace>BarotraumaShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Data\NilMod\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
     <Folder Include="$(MSBuildThisFileDirectory)Source\NilModification\Missions\" />
   </ItemGroup>
@@ -221,9 +222,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
-	<Content Include="$(MSBuildThisFileDirectory)Content\Items\Diving\DivingSuitLight.png"> 
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
-    </Content> 
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Diving\DivingSuitLight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\SearchLight\SearchLight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\SearchLight\searchlight.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\SearchLight\SearchLightBase.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -698,6 +708,8 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\inventoryIcons.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Nilmod\Creature Icon.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Nilmod\Shuttle Icon.png" />
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\noise.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
@@ -743,13 +755,13 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.8.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\NilModEventChatterSettings.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\NilMod\EventChatterSettings.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\NilModHelpData.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\NilMod\HelpData.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\NilModSettings.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\NilMod\Settings.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\permissionpresets.xml" />
@@ -1464,6 +1476,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\NilModification\NilModGriefWatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />

@@ -142,6 +142,14 @@ namespace Barotrauma.Items.Components
             set { removeOnCombined = value; }
         }
 
+        //Can the "Use" action be triggered by characters or just other items/statuseffects 
+        [Serialize(false, false)]
+        public bool CharacterUsable
+        {
+            get { return characterUsable; }
+            set { characterUsable = value; }
+        }
+
         public InputType PickKey
         {
             get;

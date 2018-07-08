@@ -9,7 +9,7 @@ namespace Barotrauma
 
         private int state;
 
-        private Character monster;
+        public Character monster;
 
         private Vector2 radarPosition;
 
@@ -18,10 +18,10 @@ namespace Barotrauma
             get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
         }
 
-        public MonsterMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public MonsterMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            monsterFile = element.GetAttributeString("monsterfile", "");
+            monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", "");
 
         }
         

@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -166,6 +167,10 @@ namespace Barotrauma
 
         //used for keeping track of the message entered when pressing up/down
         static int selectedIndex;
+
+        private static List<ColoredText> unsavedMessages = new List<ColoredText>();
+        private static int messagesPerFile = 800;
+        public const string SavePath = "ConsoleLogs";
 
         static DebugConsole()
         {
@@ -422,7 +427,7 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI On";
+                    GameMain.Server.ToggleCrewAIButton.Text = "CrewAI: On";
                     GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI On.";
                 }
 #endif
@@ -442,7 +447,7 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI Off";
+                    GameMain.Server.ToggleCrewAIButton.Text = "CrewAI: Off";
                     GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI Off.";
                 }
 #endif
@@ -537,10 +542,8 @@ namespace Barotrauma
                 }
             }, null, null));
             
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
+            commands.Add(new Command("giveperm", CommandType.Network, "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
-                //todo: allow client usage
-
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
@@ -643,7 +646,7 @@ namespace Barotrauma
                 NewMessage(senderClient.Name + " granted " + perm + " permissions to " + client.Name + ".", Color.White);
             }));
 
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
+            commands.Add(new Command("revokeperm", CommandType.Network, "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
@@ -748,8 +751,397 @@ namespace Barotrauma
                 NewMessage(senderClient.Name + " revoked " + perm + " permissions from " + client.Name + ".", Color.White);
             }));
 
-            commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
+            commands.Add(new Command("giverank", CommandType.Network, "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", (string[] args) =>
             {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("giverank [id]: Assigns a specific rank(= a set of administrative permissions) to the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                NewMessage("Valid ranks are:", Color.White);
+                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                {
+                    NewMessage(" - " + permissionPreset.Name, Color.White);
+                }
+
+                ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
+                {
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                    if (preset == null)
+                    {
+                        ThrowError("Rank \"" + rank + "\" not found.");
+                        return;
+                    }
+
+                    client.SetPermissions(preset.Permissions, preset.PermittedCommands);
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                NewMessage("Valid ranks are:", Color.White);
+                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                {
+                    NewMessage(" - " + permissionPreset.Name, Color.White);
+                }
+                ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
+                {
+                    GameMain.Client.SendConsoleCommand("giverank " + id + " " + rank);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string rank = string.Join("", args.Skip(1));
+                PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                if (preset == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient);
+                    return;
+                }
+
+                client.SetPermissions(preset.Permissions, preset.PermittedCommands);
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", senderClient);
+                NewMessage(senderClient.Name + " granted  the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+            }));
+
+            commands.Add(new Command("givecommandperm", CommandType.Network, "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to grant to \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
+                {
+                    string[] splitCommands = commandsStr.Split(' ');
+                    List<Command> grantedCommands = new List<Command>();
+                    for (int i = 0; i < splitCommands.Length; i++)
+                    {
+                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                        if (matchingCommand == null)
+                        {
+                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                        }
+                        else
+                        {
+                            grantedCommands.Add(matchingCommand);
+                        }
+                    }
+
+                    client.GivePermission(ClientPermissions.ConsoleCommands);
+                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                {
+                    GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string[] splitCommands = args.Skip(1).ToArray();
+                List<Command> grantedCommands = new List<Command>();
+                for (int i = 0; i < splitCommands.Length; i++)
+                {
+                    splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                    Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                    if (matchingCommand == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                    }
+                    else
+                    {
+                        grantedCommands.Add(matchingCommand);
+                    }
+                }
+
+                client.GivePermission(ClientPermissions.ConsoleCommands);
+                client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", senderClient);
+                NewMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+            }));
+
+
+            commands.Add(new Command("revokecommandperm", CommandType.Network, "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to revoke from \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
+                {
+                    string[] splitCommands = commandsStr.Split(' ');
+                    List<Command> revokedCommands = new List<Command>();
+                    for (int i = 0; i < splitCommands.Length; i++)
+                    {
+                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                        if (matchingCommand == null)
+                        {
+                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                        }
+                        else
+                        {
+                            revokedCommands.Add(matchingCommand);
+                        }
+                    }
+
+                    client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                    GameMain.Server.UpdateClientPermissions(client);
+                    NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+                });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                {
+                    GameMain.Client.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string[] splitCommands = args.Skip(1).ToArray();
+                List<Command> revokedCommands = new List<Command>();
+                for (int i = 0; i < splitCommands.Length; i++)
+                {
+                    splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                    Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                    if (matchingCommand == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                    }
+                    else
+                    {
+                        revokedCommands.Add(matchingCommand);
+                    }
+                }
+
+                client.GivePermission(ClientPermissions.ConsoleCommands);
+                client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
+                NewMessage(senderClient.Name + " revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+            }));
+
+
+            commands.Add(new Command("showperm", CommandType.Network, "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", Color.Cyan);
+                    return;
+                }
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                if (client.Permissions == ClientPermissions.None)
+                {
+                    NewMessage(client.Name + " has no special permissions.", Color.White);
+                    return;
+                }
+
+                NewMessage(client.Name + " has the following permissions:", Color.White);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
+                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    NewMessage("   - " + attributes[0].Description, Color.White);
+                }
+                if (client.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        NewMessage("No permitted console commands:", Color.White);
+                    }
+                    else
+                    {
+                        NewMessage("Permitted console commands:", Color.White);
+                        foreach (Command permittedCommand in client.PermittedConsoleCommands)
+                        {
+                            NewMessage("   - " + permittedCommand.names[0], Color.White);
+                        }
+                    }
+                }
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                GameMain.Client.SendConsoleCommand("showperm " + id);
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                if (client.Permissions == ClientPermissions.None)
+                {
+                    GameMain.Server.SendConsoleMessage(client.Name + " has no special permissions.", senderClient);
+                    return;
+                }
+
+                GameMain.Server.SendConsoleMessage(client.Name + " has the following permissions:", senderClient);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (permission == ClientPermissions.None || !client.HasPermission(permission)) continue;
+                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    GameMain.Server.SendConsoleMessage("   - " + attributes[0].Description, senderClient);
+                }
+                if (client.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        GameMain.Server.SendConsoleMessage("No permitted console commands:", senderClient);
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage("Permitted console commands:", senderClient);
+                        foreach (Command permittedCommand in client.PermittedConsoleCommands)
+                        {
+                            GameMain.Server.SendConsoleMessage("   - " + permittedCommand.names[0], senderClient);
+                        }
+                    }
+                }
+            }));
+
+            commands.Add(new Command("togglekarma", CommandType.Network, "togglekarma: Toggles the karma system.", (string[] args) =>
+            {
+                throw new NotImplementedException();
                 if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
             }));
@@ -900,7 +1292,7 @@ namespace Barotrauma
                             {
                                 if(GameMain.Server.ConnectedClients[i].Connection.RemoteEndPoint.Address.ToString() == args[0])
                                 {
-                                    GameMain.Server.KickBannedClient(client.Connection, reason);
+                                    GameMain.Server.KickBannedClient(GameMain.Server.ConnectedClients[i].Connection, reason);
                                 }
                             }
                             GameMain.Server.BanList.BanPlayer(name, args[0], reason, banDuration);
@@ -973,12 +1365,12 @@ namespace Barotrauma
                 {
                     if (Submarine.MainSub.GodMode)
                     {
-                        GameMain.Server.ToggleGodmodeButton.Text = "GodMode Off";
+                        GameMain.Server.ToggleGodmodeButton.Text = "GodMode: Off";
                         GameMain.Server.ToggleGodmodeButton.ToolTip = "Turns off godmode which allows for submarine damage.";
                     }
                     else
                     {
-                        GameMain.Server.ToggleGodmodeButton.Text = "GodMode On";
+                        GameMain.Server.ToggleGodmodeButton.Text = "GodMode: On";
                         GameMain.Server.ToggleGodmodeButton.ToolTip = "Turns on godmode which stops submarine damage.";
                     }
                 }
@@ -1263,7 +1655,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            GameMain.Server.WaterButton.Text = "Water On";
+                            GameMain.Server.WaterButton.Text = "Water: On";
                             GameMain.Server.WaterButton.ToolTip = "Turns on water control, Left click to add water, Right click to remove.";
                         }
                     }
@@ -1282,15 +1674,15 @@ namespace Barotrauma
                     {
                         if (Hull.EditFire)
                         {
-                            GameMain.Server.FiresButton.Text = "Fire Off";
+                            GameMain.Server.FiresButton.Text = "Fire: Off";
                             GameMain.Server.FiresButton.ToolTip = "Turns off fire control.";
-                            GameMain.Server.WaterButton.Text = "Water On";
+                            GameMain.Server.WaterButton.Text = "Water: On";
                             GameMain.Server.WaterButton.ToolTip = "Turns on water control, Left click to add water, Right click to remove.";
                             Hull.EditWater = false;
                         }
                         else
                         {
-                            GameMain.Server.FiresButton.Text = "Fire On";
+                            GameMain.Server.FiresButton.Text = "Fire: On";
                             GameMain.Server.FiresButton.ToolTip = "Turns on fire control, Left click to add fires.";
                         }
                     }
@@ -1410,15 +1802,15 @@ namespace Barotrauma
                 GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
                 if (GameMain.Server.ShowNetStats)
                 {
-                    GameMain.Server.ShowNetStatsButton.Text = "NetStats Off";
+                    GameMain.Server.ShowNetStatsButton.Text = "NetStats: Off";
                     GameMain.Server.ShowNetStatsButton.ToolTip = "Turns off the netstats screen which shows the latencies and IP Addresses of connections.";
                 }
                 else
                 {
-                    GameMain.Server.ShowNetStatsButton.Text = "NetStats On";
+                    GameMain.Server.ShowNetStatsButton.Text = "NetStats: On";
                     GameMain.Server.ShowNetStatsButton.ToolTip = "Turns on the netstats screen which shows the latencies and IP Addresses of connections.";
                 }
-                GameMain.Server.ShowLagDiagnosticsButton.Text = "Lag Profiler On";
+                GameMain.Server.ShowLagDiagnosticsButton.Text = "LagProfiler: On";
                 GameMain.Server.ShowLagDiagnosticsButton.ToolTip = "Turns on the lag profiling information.";
 #endif
             }));
@@ -1671,6 +2063,11 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("flipx", CommandType.Debug, "flipx: mirror the main submarine horizontally", (string[] args) =>
+            {
+                Submarine.MainSub?.FlipX();
+            }));
+
             //NilMod Commands
             AddNilModCommands();
 
@@ -1824,14 +2221,14 @@ namespace Barotrauma
             }
         }
 
-        public static void ExecuteCommand(string command)
+        public static void ExecuteCommand(string command, Boolean hidecommand = false)
         {
             if (activeQuestionCallback != null)
             {
 #if CLIENT
                 activeQuestionText = null;
 #endif
-                NewMessage(command, Color.White, true);
+                if(!hidecommand) NewMessage(command, Color.White, true);
                 //reset the variable before invoking the delegate because the method may need to activate another question
                 var temp = activeQuestionCallback;
                 activeQuestionCallback = null;
@@ -1845,7 +2242,7 @@ namespace Barotrauma
             
             if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
-                NewMessage(command, Color.White, true);
+                if (!hidecommand) NewMessage(command, Color.White, true);
             }
 
 #if CLIENT
@@ -1858,20 +2255,48 @@ namespace Barotrauma
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
                     if (matchingCommand == null || matchingCommand.RelayToServer)
                     {
-                        GameMain.Client.SendConsoleCommand(command);
+                        if (splitCommand[0].ToLowerInvariant() != "spy"
+                            || splitCommand[0].ToLowerInvariant() != "spycharacter"
+                            || splitCommand[0].ToLowerInvariant() != "spyid"
+                            || splitCommand[0].ToLowerInvariant() != "spyclientid"
+                            || splitCommand[0].ToLowerInvariant() != "clientlist")
+                        {
+                            GameMain.Client.SendConsoleCommand(command);
+                        }
                     }
                     else
                     {
                         matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
                     }
 
-                    NewMessage("Server command: " + command, Color.White);
+                    if (splitCommand[0].ToLowerInvariant() != "spy"
+                            || splitCommand[0].ToLowerInvariant() != "spycharacter"
+                            || splitCommand[0].ToLowerInvariant() != "spyid"
+                            || splitCommand[0].ToLowerInvariant() != "spyclientid"
+                            || splitCommand[0].ToLowerInvariant() != "clientlist")
+                    {
+                        NewMessage("Server command: " + command, Color.White);
+                    }
                     return;
                 }
 #if !DEBUG
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
                     ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+
+                    if(GameMain.Client.permittedConsoleCommands.Count > 0)
+                    {
+                        NewMessage("You are permitted to use the following commands on this server:", Color.Cyan);
+                        foreach (string permittedcommand in GameMain.Client.permittedConsoleCommands)
+                        {
+                            NewMessage("     " + permittedcommand, Color.Cyan);
+                        }
+                    }
+                    else
+                    {
+                        NewMessage("You are not permitted to use any console commands on this server.", Color.Cyan);
+                    }
+
                     return;
                 }
 #endif
@@ -2168,13 +2593,16 @@ namespace Barotrauma
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
+            ColoredText newMsg;
             if (GameMain.NilMod.DebugConsoleTimeStamp)
             {
-                Messages.Add(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color, isCommand));
+                newMsg = new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color, isCommand);
+                Messages.Add(newMsg);
             }
             else
             {
-                Messages.Add(new ColoredText(msg, color, isCommand));
+                newMsg = new ColoredText(msg, color, isCommand); 
+                Messages.Add(newMsg);
             }
 
             //TODO: REMOVE
@@ -2190,11 +2618,20 @@ namespace Barotrauma
                 }
             Console.ForegroundColor = ConsoleColor.White;
 
+            if (GameSettings.SaveDebugConsoleLogs) 
+            { 
+                unsavedMessages.Add(newMsg); 
+                if (unsavedMessages.Count >= messagesPerFile) 
+                { 
+                    SaveLogs(); 
+                    unsavedMessages.Clear(); 
+                } 
+            }
+
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }            
-
+            }
 #elif CLIENT
             lock (queuedMessages)
             {
@@ -2295,6 +2732,51 @@ namespace Barotrauma
 #if CLIENT
             isOpen = true;
 #endif
+        }
+
+        public static void SaveLogs()
+        {
+            if (unsavedMessages.Count == 0) return;
+            if (!Directory.Exists(SavePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SavePath);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to create a folder for debug console logs", e);
+                    return;
+                }
+            }
+
+            string fileName = "DebugConsoleLog_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+
+            string filePath = Path.Combine(SavePath, fileName);
+            if (File.Exists(filePath))
+            {
+                int fileNum = 2;
+                while (File.Exists(filePath + " (" + fileNum + ")"))
+                {
+                    fileNum++;
+                }
+                filePath = filePath + " (" + fileNum + ")";
+            }
+
+            try
+            {
+                File.WriteAllLines(filePath, unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
+            }
+            catch (Exception e)
+            {
+                unsavedMessages.Clear();
+                ThrowError("Saving debug console log to " + filePath + " failed", e);
+            }
         }
 
         //NilMod Custom Commands
@@ -2461,15 +2943,15 @@ namespace Barotrauma
                 GameMain.Server.ShowLagDiagnostics = !GameMain.Server.ShowLagDiagnostics;
                 if (GameMain.Server.ShowLagDiagnostics)
                 {
-                    GameMain.Server.ShowLagDiagnosticsButton.Text = "Lag Profiler Off";
+                    GameMain.Server.ShowLagDiagnosticsButton.Text = "LagProfiler: Off";
                     GameMain.Server.ShowLagDiagnosticsButton.ToolTip = "Turns off the lag profiling information.";
                 }
                 else
                 {
-                    GameMain.Server.ShowLagDiagnosticsButton.Text = "Lag Profiler On";
+                    GameMain.Server.ShowLagDiagnosticsButton.Text = "LagProfiler: On";
                     GameMain.Server.ShowLagDiagnosticsButton.ToolTip = "Turns on the lag profiling information.";
                 }
-                GameMain.Server.ShowNetStatsButton.Text = "NetStats On";
+                GameMain.Server.ShowNetStatsButton.Text = "NetStats: On";
                 GameMain.Server.ShowNetStatsButton.ToolTip = "Turns on the netstats screen which shows the latencies and IP Addresses of connections.";
             }));
 #endif
@@ -2859,6 +3341,7 @@ namespace Barotrauma
                 }
             }));
 
+            /*
             commands.Add(new Command("checktraitor|traitor|traitorcheck",CommandType.Network, "checktraitor: States the current traitor if there was one and his target.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
@@ -2871,6 +3354,7 @@ namespace Barotrauma
                 //Needs Fixing
                 //DebugConsole.NewMessage(traitorManager.TraitorCharacter + " Is the traitor and his target is: " + traitorManager.TargetCharacter, Color.Cyan);
             }));
+            */
 
             commands.Add(new Command("debugarmor|debugarmour", CommandType.Debug, "debugarmor|debugarmour [Armour Value]: Shows a series of damage estimations for a lone modifier using nilmod/Vanilla armour calculation! - 1.0 by default is no damage and 0.5 is half (Configure nilmodsettings.xml to change behaviour!)", (string[] args) =>
             {
@@ -2932,18 +3416,90 @@ namespace Barotrauma
                 {
                     if (GameMain.NilMod.DisableCrushDamage)
                     {
-                        GameMain.Server.ToggleCrushButton.Text = "Depth Crush On";
+                        GameMain.Server.ToggleCrushButton.Text = "DepthCrush: On";
                         GameMain.Server.ToggleCrushButton.ToolTip = "Turns on Abyss Crushing damage to submarines.";
                     }
                     else
                     {
-                        GameMain.Server.ToggleCrushButton.Text = "Depth Crush Off";
+                        GameMain.Server.ToggleCrushButton.Text = "DepthCrush: Off";
                         GameMain.Server.ToggleCrushButton.ToolTip = "Turns off Abyss Crushing damage to submarines.";
                     }
                 }
 #endif
                 NewMessage(GameMain.NilMod.DisableCrushDamage ? "Abyss crush damage off" : "Abyss crush damage on", Color.White);
             }));
+
+            commands.Add(new Command("listtraitor|listtraitors|traitorlist", CommandType.Network, "listtraitor: Sends to chat the current traitors, targets and their status.", (string[] args) =>
+            {
+                if (GameMain.Server == null || GameMain.Server.TraitorManager == null || GameMain.Server.TraitorManager.TraitorList.Count() < 1) return;
+
+                foreach(Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
+                {
+                    if (traitor.Character == null) continue;
+                    if (traitor.TargetCharacter != null)
+                    {
+                        GameMain.NetworkMember.AddChatMessage(
+                            traitor.Character.LogName
+                            + (traitor.Character.IsDead ? " (Dead)" : " (Alive)")
+                            + " has target " + traitor.TargetCharacter.LogName
+                            + (traitor.TargetCharacter.IsDead ? " (Dead)" : " (Alive)"), ChatMessageType.Server);
+                    }
+                    else
+                    {
+                        GameMain.NetworkMember.AddChatMessage(
+                            traitor.Character.LogName
+                            + (traitor.Character.IsDead ? " (Dead)" : " (Alive)")
+                            + " and their target no longer exists", ChatMessageType.Server);
+                    }
+                }
+            },
+            null,
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server.TraitorManager == null || GameMain.Server.TraitorManager.TraitorList.Count() < 1)
+                {
+                    GameMain.Server.SendConsoleMessage("The server has no traitors this round.", senderClient);
+                }
+                else
+                {
+                    foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
+                    {
+                        if (traitor.Character != null)
+                        {
+                            if (traitor.TargetCharacter != null)
+                            {
+                                var chatMsg = ChatMessage.Create(
+                                    null,
+                                    traitor.Character.LogName
+                                    + (traitor.Character.IsDead ? " (Dead)" : " (Alive)")
+                                    + " has target " + traitor.TargetCharacter.LogName
+                                    + (traitor.TargetCharacter.IsDead ? " (Dead)" : " (Alive)"),
+                                    (ChatMessageType)ChatMessageType.Server,
+                                    null);
+
+                                GameMain.Server.SendChatMessage(chatMsg, senderClient);
+                            }
+                            else
+                            {
+                                var chatMsg = ChatMessage.Create(
+                                    null,
+                                    traitor.Character.LogName
+                                    + (traitor.Character.IsDead ? " (Dead)" : " (Alive)")
+                                    + " and their target no longer exists",
+                                    (ChatMessageType)ChatMessageType.Server,
+                                    null);
+
+                                GameMain.Server.SendChatMessage(chatMsg, senderClient);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+            },
+            null));
         }
     }
 }

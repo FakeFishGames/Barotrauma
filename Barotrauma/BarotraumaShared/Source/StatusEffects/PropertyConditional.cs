@@ -206,22 +206,30 @@ namespace Barotrauma
             switch (Operator)
             {
                 case OperatorType.Equals:
-                    if (floatValue == null)
+                    if (type == typeof(bool))
                     {
-                        return property.GetValue().Equals(floatValue);
+                        return ((bool)propertyValue) == (Value.ToLowerInvariant() == "true");
+                    }
+                    else if (floatValue == null)
+                    {
+                        return propertyValue.ToString().Equals(Value);
                     }
                     else
                     {
-                        return property.GetValue().Equals(Value);
+                        return propertyValue.Equals(floatValue);
                     }
                 case OperatorType.NotEquals:
-                    if (floatValue == null)
+                    if (type == typeof(bool))
                     {
-                        return !property.GetValue().Equals(floatValue);
+                        return ((bool)propertyValue) != (Value.ToLowerInvariant() == "true");
+                    }
+                    else if (floatValue == null)
+                    {
+                        return !propertyValue.ToString().Equals(Value);
                     }
                     else
                     {
-                        return !property.GetValue().Equals(Value);
+                        return !propertyValue.Equals(floatValue);
                     }
                 case OperatorType.GreaterThan:
                     if (floatValue == null)

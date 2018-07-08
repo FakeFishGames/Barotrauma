@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                     if (!Connections.Any(connection => connection.Wires.Contains(wire)))
                     {
                         if (!wire.Item.CanClientAccess(c)) return;
-                    }                    
+                    }
                 }
             }
             
@@ -243,6 +243,26 @@ namespace Barotrauma.Items.Components
                             GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.Rewire);
 
+                            if (GameMain.NilMod.EnableGriefWatcher)
+                            {
+                                for (int z = 0; z < NilMod.NilModGriefWatcher.GWListWireKeyDevices.Count; z++)
+                                {
+                                    if (NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == Connections[i].Item.Name || NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == existingWire.Connections[0].Item.Name)
+                                    {
+                                        NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName + " Modified a wire from "
+                                            + Connections[i].Item.Name + " (" + Connections[i].Name
+                                            + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")" + ".", c);
+                                    }
+                                }
+
+                                if (NilMod.NilModGriefWatcher.GWListWireJunctions.Contains(Connections[i].Item.Name) && NilMod.NilModGriefWatcher.GWListWireJunctions.Contains(existingWire.Connections[0].Item.Name))
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName + " Modified a wire from "
+                                        + Connections[i].Item.Name + " (" + Connections[i].Name
+                                        + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")" + ".", c);
+                                }
+                            }
+
                             //wires that are not in anyone's inventory (i.e. not currently being rewired) 
                             //can never be connected to only one connection
                             // -> the client must have dropped the wire from the connection panel
@@ -257,6 +277,26 @@ namespace Barotrauma.Items.Components
                         {
                             GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.Rewire);
+
+                            if (GameMain.NilMod.EnableGriefWatcher)
+                            {
+                                for (int z = 0; z < NilMod.NilModGriefWatcher.GWListWireKeyDevices.Count - 1; z++)
+                                {
+                                    if (NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == Connections[i].Item.Name || NilMod.NilModGriefWatcher.GWListWireKeyDevices[z] == existingWire.Connections[1].Item.Name)
+                                    {
+                                        NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName + " Modified a wire from "
+                                            + Connections[i].Item.Name + " (" + Connections[i].Name
+                                            + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")" + ".", c);
+                                    }
+                                }
+
+                                if (NilMod.NilModGriefWatcher.GWListWireJunctions.Contains(Connections[i].Item.Name) && NilMod.NilModGriefWatcher.GWListWireJunctions.Contains(existingWire.Connections[1].Item.Name))
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(c.Character.LogName + " Modified a wire from "
+                                        + Connections[i].Item.Name + " (" + Connections[i].Name
+                                        + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")" + ".", c);
+                                }
+                            }
 
                             if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
                             {

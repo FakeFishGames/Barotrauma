@@ -1249,7 +1249,7 @@ namespace Barotrauma
                 List<Item> items = new List<Item>(Item.ItemList);
                 foreach (Item item in items)
                 {
-                    DebugConsole.ThrowError("Error while unloading submarines - item \""+item.Name+"\" not removed");
+                    DebugConsole.ThrowError("Error while unloading submarines - item \"" + item.Name + "\" (ID:" + item.ID + ") not removed");
                     try
                     {
                         item.Remove();

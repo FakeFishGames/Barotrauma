@@ -12,7 +12,7 @@ namespace Barotrauma
     //Class for storing, sending and receiving of Event-Specific Chat information to players and management of the Chat XML file
     class NilModEventChatter
     {
-        const string ChatSavePath = "Data/NilModEventChatterSettings.xml";
+        const string ChatSavePath = "Data/NilMod/EventChatterSettings.xml";
 
         //Chat Configuration
         public Boolean ChatModServerJoin;

@@ -10,7 +10,7 @@ namespace Barotrauma
             public double AverageFramesPerSecond { get; private set; }
             public double CurrentFramesPerSecond { get; private set; }
 
-            public const int MaximumSamples = 10;
+            public const int MaximumSamples = 4;
 
             private Queue<double> sampleBuffer = new Queue<double>();
 

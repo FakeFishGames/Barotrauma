@@ -44,7 +44,7 @@ namespace Barotrauma
 
     class NilModPermissions
     {
-        const string PermissionsSavePath = "Data/NilModPermissions.xml";
+        const string PermissionsSavePath = "Data/NilMod/Permissions.xml";
         public Boolean HostAdminMode;
 
         public List<PermissionGroup> Groups;

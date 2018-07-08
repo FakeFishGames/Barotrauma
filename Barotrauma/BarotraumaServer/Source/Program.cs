@@ -111,11 +111,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (Character.CharacterList[i].AnimController.Limbs == null) foundnulllimbs += 1;
-                        if (Character.CharacterList[i].AnimController.Limbs.Length < 1) foundzerolengthlimbs += 1;
+                        if (Character.CharacterList[i].AnimController.Limbs == null)
+                        {
+                            foundnulllimbs += 1;
+                        }
+                        else if (Character.CharacterList[i].AnimController.Limbs.Length < 1) foundzerolengthlimbs += 1;
                     }
                 }
-                if(foundnullanimcontroller > 0) sb.AppendLine(foundnullanimcontroller + " Characters with null AnimControllers found.");
+                if (foundnullanimcontroller > 0) sb.AppendLine(foundnullanimcontroller + " Characters with null AnimControllers found.");
                 if (foundnulllimbs > 0) sb.AppendLine(foundnulllimbs + " Characters with null limbs[] reference found.");
                 if (foundzerolengthlimbs > 0) sb.AppendLine(foundzerolengthlimbs + " characters with 0 limbs found.");
             }

@@ -303,6 +303,71 @@ namespace Barotrauma.Items.Components
                 }
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
+
+                if (GameMain.NilMod.EnableGriefWatcher && user != null && user.TeamID == targetCharacter.TeamID && !targetCharacter.IsDead)
+                {
+                    Barotrauma.Networking.Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == user);
+
+                    if (warnedclient != null)
+                    {
+                        //Melee Other check
+                        if (item.ContainedItems != null && item.ContainedItems.Length > 0)
+                        {
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListMeleeOther.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListMeleeOther[y] == item.Name)
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(warnedclient.Character.LogName
+                                        + " attacked " + targetCharacter.LogName
+                                        + " using " + item.Name
+                                        + " (" + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")", warnedclient);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListMeleeOther.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListMeleeOther[y] == item.Name)
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(warnedclient.Character.LogName
+                                        + " attacked " + targetCharacter.LogName
+                                        + " using " + item.Name, warnedclient);
+                                }
+                            }
+                        }
+
+                        //Item Usage Other check
+                        if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
+                        {
+                            //Usage Check (And Contained)
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListUse.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListUse[y] == item.Name)
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(warnedclient.Character.LogName
+                                        + " used Item " + item.Name
+                                        + " on " + targetCharacter.LogName, warnedclient);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //Usage Check (And Contained)
+                            for (int y = 0; y < NilMod.NilModGriefWatcher.GWListUse.Count; y++)
+                            {
+                                if (NilMod.NilModGriefWatcher.GWListUse[y] == item.Name
+                                    || Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name).Contains(NilMod.NilModGriefWatcher.GWListUse[y]))
+                                {
+                                    NilMod.NilModGriefWatcher.SendWarning(warnedclient.Character.LogName
+                                        + " used item " + item.Name
+                                        + " (" + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")"
+                                        + " on " + targetCharacter.LogName, warnedclient);
+                                }
+                            }
+                        }
+                    }
+                }
             }
             
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??

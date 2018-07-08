@@ -171,7 +171,8 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < waveY.Length; i++)
+            if (waterVolume < 1.0f) return;
+            for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
                 if (maxDelta > Rand.Range(1.0f, 10.0f))

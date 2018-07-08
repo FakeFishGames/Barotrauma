@@ -90,9 +90,10 @@ namespace Barotrauma
                     //inputThread.Abort(); inputThread.Join();
                     Environment.Exit(-1);
 #else
-                    //System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
-                    //Application.ExitThread();
-                    //Application.Exit();
+                    System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
+                    Application.ExitThread();
+                    Application.Exit();
+                    Environment.Exit(-1);
 #endif
                 }
             }
@@ -209,8 +210,11 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (Character.CharacterList[i].AnimController.Limbs == null) foundnulllimbs += 1;
-                        if (Character.CharacterList[i].AnimController.Limbs.Length < 1) foundzerolengthlimbs += 1;
+                        if (Character.CharacterList[i].AnimController.Limbs == null)
+                        {
+                            foundnulllimbs += 1;
+                        }
+                        else if (Character.CharacterList[i].AnimController.Limbs.Length < 1) foundzerolengthlimbs += 1;
                     }
                 }
                 if (foundnullanimcontroller > 0) sb.AppendLine(foundnullanimcontroller + " Characters with null AnimControllers found.");
@@ -250,6 +254,22 @@ namespace Barotrauma
                 sb.AppendLine("    GPU status: " + game.GraphicsDevice.GraphicsDeviceStatus);
             }
 
+#if LINUX
+            if (GameMain.NilMod != null && GameMain.NilMod.AutoRestart)
+            {
+                sb.AppendLine("\n");
+                sb.AppendLine("Attempted restart of process using: " + System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().CodeBase + "\\Barotrauma NilEdit.exe"));
+                sb.AppendLine("\n");
+            }
+#else
+            if (GameMain.NilMod != null && GameMain.NilMod.AutoRestart)
+            {
+                sb.AppendLine("\n");
+                sb.AppendLine("Attempted restart of process using: " + Application.StartupPath + "\\Barotrauma NilEdit.exe");
+                sb.AppendLine("\n");
+            }
+#endif
+
             sb.AppendLine("\n");
             sb.AppendLine("This was running NilMod Code!");
             sb.AppendLine("\n");
@@ -268,14 +288,14 @@ namespace Barotrauma
                     {
                         for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
                         {
-                            sb.AppendLine("   " + DebugConsole.Messages[i].Text);
+                            sb.AppendLine(DebugConsole.Messages[i].Text);
                         }
                     }
                     else
                     {
                         for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
                         {
-                            sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                            sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                         }
                     }
                 }
@@ -283,7 +303,7 @@ namespace Barotrauma
                 {
                     for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
                     {
-                        sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                        sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                     }
                 }
             }
@@ -291,7 +311,7 @@ namespace Barotrauma
             {
                 for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
                 {
-                    sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                    sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                 }
             }
 
@@ -302,6 +322,7 @@ namespace Barotrauma
             {
                 if (GameMain.NilMod.CrashRestart)
                 {
+                    if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 #if LINUX
                     //System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().CodeBase + "\\Barotrauma NilEdit.exe");
 #else
@@ -310,16 +331,22 @@ namespace Barotrauma
                 }
                 else
                 {
-                    CrashMessageBox("A crash report (\"crashreport.txt\") was saved in the root folder of the game." +
-                    " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");
+                    if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+
+                    CrashMessageBox("A crash report (\"crashreport.log\") was saved in the root folder of the game." + Environment.NewLine +
+                    "If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/" + Environment.NewLine +
+                    "Alternatively, If you believe this to be a mod bug, please post the report on the forum topic or the mods GitHub issue tracker: https://github.com/NilanthAnimosus/Barotrauma---Nilanths-Edits/issues");
                 }
             }
             else
             {
-                CrashMessageBox("A crash report (\"crashreport.txt\") was saved in the root folder of the game." +
-                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");
+                if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+
+                CrashMessageBox("A crash report (\"crashreport.log\") was saved in the root folder of the game." + Environment.NewLine +
+                    "If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/" + Environment.NewLine +
+                    "Alternatively, If you believe this to be a mod bug, please post the report on the forum topic or the mods GitHub issue tracker: https://github.com/NilanthAnimosus/Barotrauma---Nilanths-Edits/issues");
             }
         }
     }
 #endif
-                }
+}

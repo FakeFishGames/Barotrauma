@@ -235,6 +235,11 @@ namespace Barotrauma
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
             }
 
+            if(husk.AnimController.Limbs == null || husk.AnimController.Limbs.Length < 1)
+            {
+                DebugConsole.ThrowError("Error in Husk Creation, Character " + husk.Name + " has null or no limbs on creation!");
+            }
+
             yield return CoroutineStatus.Success;
         }
     }

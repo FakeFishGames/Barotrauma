@@ -26,7 +26,10 @@ namespace Barotrauma
                 {
                     if(character != null)
                     {
-                        DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed);
+                        DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name
+                            + ", id: " + character.ID
+                            + ", removed: " + character.Removed
+                            + ", finished creation: " + character.FinishedCreation);
                         Character foundcharacter = Character.CharacterList.Find(c => c == character);
 
                         DebugConsole.ThrowError("Character list: " + (foundcharacter != null ? "is in list, Ragdoll list: " : "not in list, Ragdoll list: ")
@@ -36,8 +39,8 @@ namespace Barotrauma
                             + ", ConfigPath: " + character.ConfigPath
                             + ", IsDead: " + (character.IsDead ? "Dead, Cause: " + character.CauseOfDeath + "." : "Alive."), Color.Red);
 
-                        DebugConsole.NewMessage("NILMOD: Attempting removal of broken character to prevent server crash (Clients will crash).", Color.Red);
-                        character.Remove();
+                        DebugConsole.NewMessage("NILMOD: Attempting removal of broken character to prevent server crash (Clients will likely crash).", Color.Red);
+                        Entity.Spawner.AddToRemoveQueue(character);
                     }
                     else
                     {

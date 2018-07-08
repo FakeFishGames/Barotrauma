@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -299,7 +300,31 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(character.LogName + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
+
+                    //Detonator attachment check
+                    for (int y = 0; y < NilMod.NilModGriefWatcher.GWListDetonators.Count; y++)
+                    {
+                        if (NilMod.NilModGriefWatcher.GWListDetonators[y] == item.Name)
+                        {
+                            Barotrauma.Networking.Client warnedclient = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+
+                            if (item.ContainedItems == null || item.ContainedItems.All(it => it == null))
+                            {
+                                NilMod.NilModGriefWatcher.SendWarning(character.LogName
+                                + " attached " + item.Name
+                                + " to a wall", warnedclient);
+                            }
+                            else
+                            {
+                                NilMod.NilModGriefWatcher.SendWarning(character.LogName
+                                    + " attached " + item.Name
+                                    + " (" + string.Join(", ", System.Array.FindAll(item.ContainedItems, it => it != null).Select(it => it.Name))
+                                    + ")"
+                                    + " to a wall", warnedclient);
+                            }
+                        }
+                    }
                 }
                 item.Drop();
             }

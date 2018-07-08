@@ -84,7 +84,7 @@ namespace Barotrauma
 
         public void Init()
         {
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
 
@@ -162,27 +162,166 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
             }
-            
+
+            int MaximumSamples = 5;
+            Queue<double> sampleBuffer = new Queue<double>();
+            double CurrentUpdatesPerSecond = 0;
+            double AverageUpdatesPerSecond = 0;
+
             Stopwatch stopwatch = Stopwatch.StartNew();
             long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
             {
                 long currTicks = stopwatch.ElapsedTicks;
                 //Necessary for some timing
-                Timing.TotalTime = stopwatch.ElapsedMilliseconds / 1000;
-                Timing.Accumulator += (double)(currTicks - prevTicks) / frequency;
+                //Timing.TotalTime = stopwatch.ElapsedMilliseconds / 1000;
+                //Timing.Accumulator += (double)(currTicks - prevTicks) / frequency;
+                double elapsedTime = (currTicks - prevTicks) / frequency;
+                Timing.Accumulator += elapsedTime;
+                Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
-                while (Timing.Accumulator>=Timing.Step)
+
+                if (GameMain.NilMod.UseExperimentalFPSLagPrevention)
+                {
+                    if ((int)AverageUpdatesPerSecond <= 2)
+                    {
+                        Timing.Step = 1.0 / 8.0;
+                        FarseerPhysics.Settings.VelocityIterations = 10;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 25;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 4)
+                    {
+                        Timing.Step = 1.0 / 10.0;
+                        FarseerPhysics.Settings.VelocityIterations = 10;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 25;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 6)
+                    {
+                        Timing.Step = 1.0 / 12.0;
+                        FarseerPhysics.Settings.VelocityIterations = 10;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 25;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 10;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 8)
+                    {
+                        Timing.Step = 1.0 / 15.0;
+                        FarseerPhysics.Settings.VelocityIterations = 9;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 22;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 10)
+                    {
+                        Timing.Step = 1.0 / 20.0;
+                        FarseerPhysics.Settings.VelocityIterations = 9;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 22;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 12)
+                    {
+                        Timing.Step = 1.0 / 25.0;
+                        FarseerPhysics.Settings.VelocityIterations = 9;
+                        FarseerPhysics.Settings.PositionIterations = 4;
+                        FarseerPhysics.Settings.TOIPositionIterations = 22;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 9;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 14)
+                    {
+                        Timing.Step = 1.0 / 30.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 16)
+                    {
+                        Timing.Step = 1.0 / 35.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 18)
+                    {
+                        Timing.Step = 1.0 / 40.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 20)
+                    {
+                        Timing.Step = 1.0 / 45.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 22)
+                    {
+                        Timing.Step = 1.0 / 50.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else if ((int)AverageUpdatesPerSecond <= 25)
+                    {
+                        Timing.Step = 1.0 / 55.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                    else
+                    {
+                        Timing.Step = 1.0 / 60.0;
+                        FarseerPhysics.Settings.VelocityIterations = 8;
+                        FarseerPhysics.Settings.PositionIterations = 3;
+                        FarseerPhysics.Settings.TOIPositionIterations = 20;
+                        FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                    }
+                }
+                else
+                {
+                    Timing.Step = 1.0 / 60.0;
+                    FarseerPhysics.Settings.VelocityIterations = 8;
+                    FarseerPhysics.Settings.PositionIterations = 3;
+                    FarseerPhysics.Settings.TOIPositionIterations = 20;
+                    FarseerPhysics.Settings.TOIVelocityIterations = 8;
+                }
+
+                while (Timing.Accumulator >= Timing.Step)
                 {
                     DebugConsole.Update();
                     if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
-            
+
+                    CurrentUpdatesPerSecond = (1.0 / Timing.Step);
+
+                    sampleBuffer.Enqueue(CurrentUpdatesPerSecond);
+
+                    if (sampleBuffer.Count > MaximumSamples)
+                    {
+                        sampleBuffer.Dequeue();
+                        AverageUpdatesPerSecond = sampleBuffer.Average(i => i);
+                    }
+                    else
+                    {
+                        AverageUpdatesPerSecond = CurrentUpdatesPerSecond;
+                    }
+
                     Timing.Accumulator -= Timing.Step;
                 }
-                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency)*1000.0);
-                Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime)/2,0));
+                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
+                Thread.Sleep(Math.Max(((int)((double)(1d / 60d) * 1000.0) - frameTime) / 2, 0));
             }
             stopwatch.Stop();
 

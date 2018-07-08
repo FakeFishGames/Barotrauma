@@ -37,6 +37,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float Rotation;
+
         [Editable(ToolTip = "Should structures cast shadows when light from this light source hits them. "+
             "Disabling shadows increases the performance of the game, and is recommended for lights with a short range."), Serialize(true, true)]
         public bool CastShadows
@@ -155,7 +157,13 @@ namespace Barotrauma.Items.Components
                     return;
                 }
             }
-            
+            else
+            {
+#if CLIENT
+                light.Rotation = -Rotation;
+#endif
+            }
+
             if (powerConsumption == 0.0f)
             {
                 voltage = 1.0f;
