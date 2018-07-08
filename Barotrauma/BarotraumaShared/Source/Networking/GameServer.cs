@@ -2150,16 +2150,17 @@ namespace Barotrauma.Networking
             }
 
             //attempt to give the clients a job they have in their job preferences
-            foreach (Client c in unassigned)
+            for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                foreach (JobPrefab preferredJob in c.JobPreferences)
+                foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
                 {
                     //the maximum number of players that can have this job hasn't been reached yet
                     // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && c.Karma >= preferredJob.MinKarma)
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && unassigned[i].Karma >= preferredJob.MinKarma)
                     {
-                        c.AssignedJob = preferredJob;
+                        unassigned[i].AssignedJob = preferredJob;
                         assignedClientCount[preferredJob]++;
+                        unassigned.RemoveAt(i);
                         break;
                     }
                 }
