@@ -2488,7 +2488,7 @@ namespace Barotrauma.Networking
             if (gameStarted && Character.Controlled != null && senderCharacter != null)
             {
                 if (type == ChatMessageType.Dead && Character.Controlled != null && !Character.Controlled.IsDead && !GameMain.NilMod.ShowDeadChat) return;
-                myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
+                myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, Character.Controlled);
             }
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage) &&
