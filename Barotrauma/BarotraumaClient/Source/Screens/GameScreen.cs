@@ -15,11 +15,9 @@ namespace Barotrauma
         private RenderTarget2D renderTargetFinal;
 
         private Effect damageEffect;
+        private Effect postProcessEffect;
 
-        private Texture2D damageStencil;
-
-        public float BlurStrength;
-        public float DistortStrength;        
+        private Texture2D damageStencil;       
         private Texture2D distortTexture;
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
@@ -39,13 +37,16 @@ namespace Barotrauma
 #else
             var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
+            postProcessEffect = content.Load<Effect>("Effects/postprocess");
 #endif
+
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
             
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
+            postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -280,10 +281,17 @@ namespace Barotrauma
             }
             graphics.SetRenderTarget(null);
 
+            float BlurStrength = 0.0f;
+            float DistortStrength = 0.0f;
+            Vector3 chromaticAberrationStrength = GameMain.Config.ChromaticAberrationEnabled ?
+                new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+
             if (Character.Controlled != null)
             {
                 BlurStrength = Character.Controlled.BlurStrength * 0.005f;
-                DistortStrength = Character.Controlled.DistortStrength * 0.5f;
+                DistortStrength = Character.Controlled.DistortStrength;
+                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
             }
             else
             {
@@ -291,26 +299,37 @@ namespace Barotrauma
                 DistortStrength = 0.0f;
             }
 
-            if (BlurStrength > 0.0f || DistortStrength > 0.0f)
+            string postProcessTechnique = "";
+            if (BlurStrength > 0.0f)
             {
-                WaterRenderer.Instance.WaterEffect.CurrentTechnique = WaterRenderer.Instance.WaterEffect.Techniques["WaterShaderPostProcess"];
-                WaterRenderer.Instance.WaterEffect.Parameters["xUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
-                WaterRenderer.Instance.WaterEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
-                WaterRenderer.Instance.WaterEffect.Parameters["xWaveWidth"].SetValue(DistortStrength);
-                WaterRenderer.Instance.WaterEffect.Parameters["xWaveHeight"].SetValue(DistortStrength);
-                WaterRenderer.Instance.WaterEffect.Parameters["xBlurDistance"].SetValue(BlurStrength);
-                WaterRenderer.Instance.WaterEffect.CurrentTechnique.Passes[0].Apply();
-
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, WaterRenderer.Instance.WaterEffect, null);
-			    spriteBatch.Draw(distortTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-			    spriteBatch.End();
+                postProcessTechnique += "Blur";
+                postProcessEffect.Parameters["blurDistance"].SetValue(BlurStrength);
+            }
+            if (chromaticAberrationStrength != Vector3.Zero)
+            {
+                postProcessTechnique += "ChromaticAberration";
+                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(chromaticAberrationStrength);
+            }
+            if (DistortStrength > 0.0f)
+            {
+                postProcessTechnique += "Distort";
+                postProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
+                postProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
+                postProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+            }
+            
+            if (string.IsNullOrEmpty(postProcessTechnique))
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None);
             }
             else
             {
-			    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
-			    spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-			    spriteBatch.End();
+                postProcessEffect.CurrentTechnique = postProcessEffect.Techniques[postProcessTechnique];
+                postProcessEffect.CurrentTechnique.Passes[0].Apply();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: postProcessEffect);
             }
+            spriteBatch.Draw(DistortStrength > 0.0f ? distortTexture : renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+            spriteBatch.End();            
         }
     }
 }

@@ -294,6 +294,8 @@ namespace Barotrauma
             float blurStrength = 0.0f;
             float distortStrength = 0.0f;
             float distortSpeed = 0.0f;
+            float radialDistortStrength = 0.0f;
+            float chromaticAberrationStrength = 0.0f;
             
             if (character.IsUnconscious)
             {
@@ -312,6 +314,8 @@ namespace Barotrauma
             {
                 distortStrength = Math.Max(distortStrength, affliction.GetScreenDistortStrength());
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
+                radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
+                chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {
@@ -319,9 +323,13 @@ namespace Barotrauma
                 {
                     distortStrength = Math.Max(distortStrength, affliction.GetScreenDistortStrength());
                     blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
+                    radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
+                    chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
                 }
             }
 
+            character.RadialDistortStrength = radialDistortStrength;
+            character.ChromaticAberrationStrength = chromaticAberrationStrength;
             if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;

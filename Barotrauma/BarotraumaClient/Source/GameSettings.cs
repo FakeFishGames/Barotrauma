@@ -159,6 +159,20 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ChromaticAberration"))
+            {
+                Selected = ChromaticAberrationEnabled,
+                OnSelected = (tickBox) =>
+                {
+                    ChromaticAberrationEnabled = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+            
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ContentPackages"));
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
