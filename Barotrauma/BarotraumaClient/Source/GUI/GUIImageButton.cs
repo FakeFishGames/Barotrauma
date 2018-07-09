@@ -27,6 +27,7 @@ namespace Barotrauma
         public delegate bool OnPressedHandler();
         public OnPressedHandler OnPressed;
 
+        public bool CanDoubleClick = true;
         public bool CanBeSelected = true;
 
         private bool enabled;
@@ -84,6 +85,14 @@ namespace Barotrauma
         {
             get { return textBlock.TextColor; }
             set { textBlock.TextColor = value; }
+        }
+
+        private Vector2 offset;
+
+        public Vector2 Offset
+        {
+            get { return offset; }
+            set { offset = value; }
         }
 
         public override ScalableFont Font
@@ -180,7 +189,7 @@ namespace Barotrauma
 
             if (sprite != null && sprite.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
+                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X + (Int16)offset.X, rect.Y + (Int16)offset.Y), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
                     Scale, SpriteEffects.None, 0.0f);
             }          
             
@@ -201,7 +210,7 @@ namespace Barotrauma
                         if (OnPressed()) state = ComponentState.Pressed;
                     }
                 }
-                else if (PlayerInput.DoubleClicked())
+                else if (PlayerInput.DoubleClicked() && CanDoubleClick)
                 {
                     GUI.PlayUISound(GUISoundType.Click);
                     if (OnDoubleClicked != null)

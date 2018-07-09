@@ -330,7 +330,10 @@ namespace Barotrauma
                         }
                     }
 
-                    DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2) * progress), (int)size.Y - padding * 2),
+                    DrawRectangle(sb, new Rectangle((int)start.X + padding,
+                        -(int)(start.Y - padding),
+                        (int)((size.X - padding * 2) * progress),
+                        (int)size.Y - padding * 2),
                         clr, true, depth);
                     break;
 
@@ -346,7 +349,10 @@ namespace Barotrauma
                         }
                     }
 
-                    DrawRectangle(sb, new Rectangle((int)((start.X + padding) - (((size.X - padding)) * (-1f + progress))), -(int)((start.Y - padding)), (int)((size.X - padding) - ((size.X - padding) * (1f - progress))), (int)(size.Y - (padding * 2))),
+                    DrawRectangle(sb, new Rectangle((int)((start.X + padding) - (((size.X - padding)) * (-1f + progress))),
+                        -(int)((start.Y - padding)),
+                        (int)((size.X - padding) - ((size.X - padding) * (1f - progress))),
+                        (int)(size.Y - (padding * 2))),
                         clr, true, depth);
                     break;
 
@@ -362,7 +368,10 @@ namespace Barotrauma
                         }
                     }
 
-                    DrawRectangle(sb, new Rectangle((int)(start.X + padding), -(int)((start.Y - padding)), (int)(size.X - (padding * 2)), (int)((size.Y - (padding * 2)) + ((size.Y - (padding * 2)) * (-1f + progress)))),
+                    DrawRectangle(sb, new Rectangle((int)(start.X + padding),
+                        -(int)((start.Y - padding)),
+                        (int)(size.X - (padding * 2)),
+                        (int)((size.Y - (padding * 2)) + ((size.Y - (padding * 2)) * (-1f + progress)))),
                         clr, true, depth);
                     break;
 
@@ -378,7 +387,10 @@ namespace Barotrauma
                         }
                     }
 
-                    DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2)), (int)((size.Y - padding * 2) * progress)),
+                    DrawRectangle(sb, new Rectangle((int)start.X + padding,
+                        -(int)(start.Y - padding),
+                        (int)((size.X - padding * 2)),
+                        (int)((size.Y - padding * 2) * progress)),
                         clr, true, depth);
                     break;
             }

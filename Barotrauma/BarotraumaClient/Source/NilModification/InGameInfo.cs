@@ -45,26 +45,30 @@ namespace Barotrauma
 
             int barheight = rect.Y;
 
-            healthlabel = new GUITextBlock(new Rectangle(rect.X, barheight, 55, 15), "Health", null, Alignment.Center, Alignment.Center, this, false);
+            healthlabel = new GUITextBlock(new Rectangle(rect.X, barheight, 55, 15), "", null, Alignment.Center, Alignment.Center, this, false);
             healthlabel.TextColor = Color.Black;
             healthlabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Health";
             healthlabel.Visible = true;
 
-            bleedlabel = new GUITextBlock(new Rectangle(rect.X + 55, barheight, 45, 15), "Bleed", null, Alignment.Center, Alignment.Center, this, false);
+            bleedlabel = new GUITextBlock(new Rectangle(rect.X + 55, barheight, 45, 15), "", null, Alignment.Center, Alignment.Center, this, false);
             bleedlabel.TextColor = Color.Black;
             bleedlabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Bleed";
             bleedlabel.Visible = false;
 
             barheight += 15;
 
-            oxygenlabel = new GUITextBlock(new Rectangle(rect.X, barheight, 55, 15), "Oxygen", null, Alignment.Center, Alignment.Center, this, false);
+            oxygenlabel = new GUITextBlock(new Rectangle(rect.X, barheight, 55, 15), "", null, Alignment.Center, Alignment.Center, this, false);
             oxygenlabel.TextColor = Color.Black;
             oxygenlabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Oxygen";
             oxygenlabel.Visible = false;
 
             pressurelabel = new GUITextBlock(new Rectangle(rect.X + 55, barheight, 45, 15), "Pressure", null, Alignment.Center, Alignment.Center, this, false);
             pressurelabel.TextColor = Color.Black;
             pressurelabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Pressure";
             pressurelabel.Visible = false;
 
             barheight += 15;
@@ -72,11 +76,13 @@ namespace Barotrauma
             stunlabel = new GUITextBlock(new Rectangle(rect.X, barheight, 55, 15), "Stun", null, Alignment.Center, Alignment.Center, this, false);
             stunlabel.TextColor = Color.Black;
             stunlabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Stun";
             stunlabel.Visible = true;
 
             husklabel = new GUITextBlock(new Rectangle(rect.X + 55, barheight, 45, 15), "Husk", null, Alignment.Center, Alignment.Center, this, false);
             husklabel.TextColor = Color.Black;
             husklabel.TextScale = 0.75f;
+            healthlabel.ToolTip = "Husk Infection";
             husklabel.Visible = false;
 
 
@@ -143,9 +149,30 @@ namespace Barotrauma
             if (!character.IsDead)
             {
                 Parent.Color = Color.Transparent;
-                healthlabel.Rect = new Rectangle(rect.X, barheight, (character.Bleeding >= 0.1f ? 55 : 100), 15);
-                healthlabel.TextScale = 0.75f;
-                healthlabel.Text = "Health";
+                if(character.Health >= (character.MaxHealth * 0.24f))
+                {
+                    healthlabel.Rect = new Rectangle(rect.X, barheight,
+                    Convert.ToInt16((character.Bleeding >= 0.1f ? 55 : 100) * (character.Health / character.MaxHealth))
+                    , 15);
+                    healthlabel.TextScale = 0.75f;
+                    healthlabel.Text = Math.Round((character.Health / character.MaxHealth) * 100, 0) + "%";
+                }
+                else if(character.Health <= -(character.MaxHealth * 0.24f))
+                {
+                    healthlabel.Rect = new Rectangle(rect.X, barheight,
+                    Convert.ToInt16((character.Bleeding >= 0.1f ? 55 : 100) * (character.Health / character.MaxHealth))
+                    , 15);
+                    healthlabel.TextScale = 0.75f;
+                    healthlabel.Text = "-" + Math.Round(-character.Health, 0) + "/" + Math.Round(character.MaxHealth, 0);
+                }
+                else
+                {
+                    healthlabel.Rect = new Rectangle(rect.X, barheight,
+                    Convert.ToInt16((character.Bleeding >= 0.1f ? 55 : 100) * (character.Health / character.MaxHealth))
+                    , 15);
+                    healthlabel.TextScale = 0.75f;
+                    healthlabel.Text = "";
+                }
 
                 if (character.Health >= 0f)
                 {
@@ -258,22 +285,248 @@ namespace Barotrauma
 
     class ControlWidget : GUIComponent
     {
-        Character character;
-
-        public ControlWidget(Rectangle rect, Alignment alignment, Character character, GUIComponent parent = null)
+        public ControlWidget(Rectangle rect, Alignment alignment, Character character, Client client = null, GUIComponent parent = null)
             : base(null)
         {
             this.rect = rect;
+            this.parent = parent;
             this.alignment = alignment;
-            this.character = character;
             color = new Color(15, 15, 15, 125);
-            int barheight = rect.Y;
+            this.Padding = Vector4.Zero;
+            Vector2 ButtonPosition = new Vector2(parent.Rect.X, parent.Rect.Y);
+
+            int Buttoncount = 0;
 
             //Widget code goes here
 
+            GUIImageButton GUITempImageButton = null;
+
+            if (character != null)
+            {
+                //Heal Character Button
+                ButtonPosition = CalculatePageButtonPosition(Buttoncount, parent);
+                GUITempImageButton = new GUIImageButton(new Rectangle((Int16)ButtonPosition.X, (Int16)ButtonPosition.Y, 20, 20)
+                    , InGameInfo.HealButton, Alignment.Left, this);
+                //Colour Definition
+                GUITempImageButton.Color = new Color(255, 255, 255, 255);
+                GUITempImageButton.HoverColor = new Color(200, 200, 25, 255);
+                GUITempImageButton.SelectedColor = new Color(100, 100, 100, 255);
+
+                //Button image Definition
+                //GUITempImageButton.Offset = new Vector2(6, 6);
+                GUITempImageButton.Scale = 0.16f;
+                GUITempImageButton.Padding = Vector4.Zero;
+                GUITempImageButton.CanDoubleClick = false;
+
+                //Button code / specifics
+                GUITempImageButton.ToolTip = "Revive/Heal";
+                GUITempImageButton.UserData = parent.UserData;
+                GUITempImageButton.OnClicked += (btn, userData) =>
+                {
+                    InGameInfoCharacter thischar = (InGameInfoCharacter)parent.UserData;
+
+                    if (!thischar.character.IsDead)
+                    {
+                        thischar.character.Heal();
+                    }
+                    else
+                    {
+                        thischar.character.Revive(true);
+                    }
+
+                    return true;
+                };
+                Buttoncount += 1;
+
+                //Teleport Character Button
+                ButtonPosition = CalculatePageButtonPosition(Buttoncount, parent);
+                GUITempImageButton = new GUIImageButton(new Rectangle((Int16)ButtonPosition.X, (Int16)ButtonPosition.Y, 20, 20)
+                    , InGameInfo.TeleportButton, Alignment.Left, this);
+                //Colour Definition
+                GUITempImageButton.Color = new Color(255, 255, 255, 255);
+                GUITempImageButton.HoverColor = new Color(200, 200, 25, 255);
+                GUITempImageButton.SelectedColor = new Color(100, 100, 100, 255);
+
+                //Button image Definition
+                //GUITempImageButton.Offset = new Vector2(6, 6);
+                GUITempImageButton.Scale = 0.16f;
+                GUITempImageButton.Padding = Vector4.Zero;
+                GUITempImageButton.CanDoubleClick = false;
+
+                //Button code / specifics
+                GUITempImageButton.ToolTip = "Relocate";
+                GUITempImageButton.UserData = parent.UserData;
+                GUITempImageButton.OnClicked += (btn, userData) =>
+                {
+                    InGameInfoCharacter thischar = (InGameInfoCharacter)parent.UserData;
+
+                    GameMain.NilMod.ClickCommandType = "relocate";
+                    GameMain.NilMod.ActiveClickCommand = true;
+                    GameMain.NilMod.ClickCooldown = 0.5f;
+                    GameMain.Server.ClickCommandFrame.Visible = true;
+                    GameMain.NilMod.RelocateTarget = thischar.character;
+                    GameMain.Server.ClickCommandDescription.Text = "RELOCATE - " + GameMain.NilMod.RelocateTarget + " - Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
+
+                    return true;
+                };
+                Buttoncount += 1;
+
+                //Kill Character/remove corpse Button
+                ButtonPosition = CalculatePageButtonPosition(Buttoncount, parent);
+                GUITempImageButton = new GUIImageButton(new Rectangle((Int16)ButtonPosition.X, (Int16)ButtonPosition.Y, 20, 20)
+                    , InGameInfo.KillButton, Alignment.Left, this);
+                //Colour Definition
+                GUITempImageButton.Color = new Color(255, 255, 255, 255);
+                GUITempImageButton.HoverColor = new Color(200, 200, 25, 255);
+                GUITempImageButton.SelectedColor = new Color(100, 100, 100, 255);
+
+                //Button image Definition
+                //GUITempImageButton.Offset = new Vector2(6, 6);
+                GUITempImageButton.Scale = 0.16f;
+                GUITempImageButton.Padding = Vector4.Zero;
+                GUITempImageButton.CanDoubleClick = false;
+
+                //Button code / specifics
+                GUITempImageButton.ToolTip = "Kill/remove corpse";
+                GUITempImageButton.UserData = parent.UserData;
+                GUITempImageButton.OnClicked += (btn, userData) =>
+                {
+                    InGameInfoCharacter thischar = (InGameInfoCharacter)parent.UserData;
+
+                    if(!thischar.character.IsDead)
+                    {
+                        thischar.character.Kill(CauseOfDeath.Disconnected, true);
+                        thischar.character.Health = -10000f;
+                        thischar.character.Oxygen = -100f;
+                    }
+                    else
+                    {
+                        GameSession.inGameInfo.RemoveCharacter(thischar.character);
+                        Entity.Spawner.AddToRemoveQueue(thischar.character);
+                    }
+
+                    return true;
+                };
+                Buttoncount += 1;
+            }
+            //Client OR host character (Specifically, forced respawning really)
+            if((client != null && (client.Character == null || client.Character.IsDead))
+                || (client == null && ((InGameInfoCharacter)parent.UserData).IsHostCharacter && ((Character.Controlled != null && Character.Controlled.IsDead) || (Character.SpawnCharacter != null && Character.SpawnCharacter.IsDead))))
+            {
+                //Respawn client/host button.
+                ButtonPosition = CalculatePageButtonPosition(Buttoncount, parent);
+                GUITempImageButton = new GUIImageButton(new Rectangle((Int16)ButtonPosition.X, (Int16)ButtonPosition.Y, 20, 20)
+                    , InGameInfo.RespawnButton, Alignment.Left, this);
+                //Colour Definition
+                GUITempImageButton.Color = new Color(255, 255, 255, 255);
+                GUITempImageButton.HoverColor = new Color(200, 200, 25, 255);
+                GUITempImageButton.SelectedColor = new Color(100, 100, 100, 255);
+
+                //Button image Definition
+                //GUITempImageButton.Offset = new Vector2(6, 6);
+                GUITempImageButton.Scale = 0.16f;
+                GUITempImageButton.Padding = Vector4.Zero;
+                GUITempImageButton.CanDoubleClick = false;
+
+                //Button code / specifics
+                GUITempImageButton.ToolTip = "Respawn character";
+                GUITempImageButton.UserData = parent.UserData;
+                GUITempImageButton.OnClicked += (btn, userData) =>
+                {
+                    InGameInfoCharacter thischar = (InGameInfoCharacter)parent.UserData;
+
+                    //Respawnlogic goes here 
+
+                    return true;
+                };
+                Buttoncount += 1;
+            }
+            //Client only buttons
+            if (client != null)
+            {
+                //Set client character Button
+                ButtonPosition = CalculatePageButtonPosition(Buttoncount, parent);
+                GUITempImageButton = new GUIImageButton(new Rectangle((Int16)ButtonPosition.X, (Int16)ButtonPosition.Y, 20, 20)
+                    , InGameInfo.ControlButton, Alignment.Left, this);
+                //Colour Definition
+                GUITempImageButton.Color = new Color(255, 255, 255, 255);
+                GUITempImageButton.HoverColor = new Color(200, 200, 25, 255);
+                GUITempImageButton.SelectedColor = new Color(100, 100, 100, 255);
+
+                //Button image Definition
+                //GUITempImageButton.Offset = new Vector2(6, 6);
+                GUITempImageButton.Scale = 0.16f;
+                GUITempImageButton.Padding = Vector4.Zero;
+                GUITempImageButton.CanDoubleClick = false;
+
+                //Button code / specifics
+                GUITempImageButton.ToolTip = "Set client character";
+                GUITempImageButton.UserData = parent.UserData;
+                GUITempImageButton.OnClicked += (btn, userData) =>
+                {
+                    InGameInfoCharacter thischar = (InGameInfoCharacter)parent.UserData;
+
+                    GameMain.NilMod.ClickCommandType = "setclientcharacter";
+                    GameMain.NilMod.ActiveClickCommand = true;
+                    GameMain.NilMod.ClickCooldown = 0.5f;
+                    GameMain.Server.ClickCommandFrame.Visible = true;
+                    GameMain.NilMod.RelocateTarget = thischar.character;
+                    GameMain.Server.ClickCommandDescription.Text = "RELOCATE - " + GameMain.NilMod.RelocateTarget + " - Left Click to select target to teleport, Left click again to teleport target to new destination, hold shift to repeat (Does not keep last target), Ctrl+Left Click to relocate self, Ctrl+Shift works, Right click to cancel.";
+
+                    return true;
+                };
+                Buttoncount += 1;
+            }
+
             if (parent != null) parent.AddChild(this);
-            this.parent = parent;
         }
+
+        Vector2 CalculatePageButtonPosition(int Button, GUIComponent parent)
+        {
+            int ButtonCoordX = parent.Rect.X - 20 + 6;
+            int ButtonCoordY = parent.Rect.Y + 6;
+            int processedbuttons = 0;
+
+            while (processedbuttons <= Button)
+            {
+                
+                if (processedbuttons % 5 == 0 && processedbuttons != 0)
+                {
+                    ButtonCoordY += 20;
+                    ButtonCoordX -= 80;
+                }
+                else
+                {
+                    ButtonCoordX += 20;
+                }
+
+                processedbuttons += 1;
+            }
+
+            return new Vector2(ButtonCoordX, ButtonCoordY);
+        }
+
+        public override void Update(float deltaTime)
+        {
+            if (!Visible) return;
+            base.Update(deltaTime);
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            if (!Visible) return;
+
+            base.Draw(spriteBatch);
+
+            Color currColor = color;
+            //if (state == ComponentState.Hover) currColor = hoverColor;
+            //if (state == ComponentState.Selected) currColor = selectedColor;
+            if (state == ComponentState.Hover) Parent.State = ComponentState.Hover;
+            if (state == ComponentState.Selected) Parent.State = ComponentState.Selected;
+
+            DrawChildren(spriteBatch);
+        }
+
     }
 
 
@@ -281,6 +534,12 @@ namespace Barotrauma
     {
         private static Texture2D CommandIcons;
         private static Texture2D NoCommandIcon;
+
+        public static Sprite HealButton;
+        public static Sprite TeleportButton;
+        public static Sprite KillButton;
+        public static Sprite ControlButton;
+        public static Sprite RespawnButton;
 
         public float LowestRemoveTimer;
         public int TotalRemovesleft;
@@ -314,6 +573,13 @@ namespace Barotrauma
             //if (CommandIcons == null) CommandIcons = TextureLoader.FromFile("Content/UI/NilMod/inventoryIcons.png");
             //if (NoCommandIcon == null) NoCommandIcon = TextureLoader.FromFile("Content/UI/NilMod/NoCommandIcon.png");
             if (NoCommandIcon == null) NoCommandIcon = TextureLoader.FromFile("Content/UI/uiButton.png");
+
+            //HealButton = new Sprite("Content/UI/Nilmod/BtnBlank.png", new Rectangle(0, 0, 128, 128));
+            if(HealButton == null) HealButton = new Sprite("Content/UI/Nilmod/BtnHeal.png", new Rectangle(0, 0, 128, 128));
+            if (TeleportButton == null) TeleportButton = new Sprite("Content/UI/Nilmod/BtnTeleport.png", new Rectangle(0, 0, 128, 128));
+            if (KillButton == null) KillButton = new Sprite("Content/UI/Nilmod/BtnKill.png", new Rectangle(0, 0, 128, 128));
+            if (ControlButton == null) ControlButton = new Sprite("Content/UI/Nilmod/BtnControl.png", new Rectangle(0, 0, 128, 128));
+            if (RespawnButton == null) RespawnButton = new Sprite("Content/UI/Nilmod/BtnRespawn.png", new Rectangle(0, 0, 128, 128));
 
             characterlist = new List<InGameInfoCharacter>();
             filteredcharacterlist = new List<InGameInfoCharacter>();
@@ -437,7 +703,7 @@ namespace Barotrauma
             if(GameMain.Server.GameStarted)
             {
                 removed.Removed = true;
-                removed.RemovalTimer = 5f;
+                removed.RemovalTimer = 10f;
             }
             else
             {
@@ -488,13 +754,13 @@ namespace Barotrauma
             if (characterlist != null && characterlist.Count > 0)
             {
                 Boolean NeedsRemoval = false;
-                float LowestTimer = 100f;
+                float HighestTimer = 0f;
                 for (int i = characterlist.Count - 1; i >= 0; i--)
                 {
                     if (characterlist[i].Removed)
                     {
                         characterlist[i].RemovalTimer -= deltaTime;
-                        if (LowestTimer > characterlist[i].RemovalTimer) LowestTimer = characterlist[i].RemovalTimer;
+                        if (HighestTimer < characterlist[i].RemovalTimer) HighestTimer = characterlist[i].RemovalTimer;
                         if (characterlist[i].RemovalTimer <= 0f)
                         {
                             //characterlist.RemoveAt(i);
@@ -526,10 +792,10 @@ namespace Barotrauma
 
                 if (timerwarning != null)
                 {
-                    if (LowestTimer <= 5f)
+                    if (HighestTimer <= 10f)
                     {
                         timerwarning.Visible = true;
-                        timerwarning.Text = "Removal in: " + Math.Round(LowestTimer, 1) + "s";
+                        timerwarning.Text = "Removal in: " + Math.Round(HighestTimer, 1) + "s";
                     }
                     else
                     {
@@ -994,6 +1260,8 @@ namespace Barotrauma
 
                             StatusWidget playerstatus = new StatusWidget(new Rectangle(25, 40, 100, 46), Alignment.Left, filteredcharacterlist[i].character, frame);
                         }
+
+                        ControlWidget playercontrols = new ControlWidget(new Rectangle(25, 86, 100, 50), Alignment.Left, filteredcharacterlist[i].character, filteredcharacterlist[i].client, frame);
                     }
                     else
                     {

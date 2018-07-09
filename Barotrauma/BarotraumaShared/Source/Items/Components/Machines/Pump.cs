@@ -99,7 +99,12 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (hull1 == null) return;
+
+            if (hull1 == null)
+            {
+                GetHull();
+                if (hull1 == null) return;
+            }
 
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
