@@ -176,6 +176,7 @@
 
   <Item
     name="Adder Component"
+    identifier="addercomponent"
     category="Electrical"
     Tags="smallitem"
     linkable="false"

@@ -31,7 +31,7 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture="ff_medicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
+    <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
