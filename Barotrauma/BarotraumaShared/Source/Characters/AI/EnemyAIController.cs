@@ -601,6 +601,11 @@ namespace Barotrauma
             Structure wall = closestBody.UserData as Structure;
             if (wall == null)
             {
+                if (wall.Submarine == null)
+                {
+                    wallAttackPos = Vector2.Zero;
+                    return;
+                }
                 wallAttackPos = Submarine.LastPickedPosition;
                 latchOntoAI?.SetAttachTarget(closestBody, selectedAiTarget.Entity.Submarine, wallAttackPos);
                 //if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
