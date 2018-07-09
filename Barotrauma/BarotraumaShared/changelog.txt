@@ -1,4 +1,34 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients getting assigned random jobs regardless of job preferences.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed server-side crashes during job assignment if a client hasn't sent any job preferences.
+- Fixed crashing if the selected respawn shuttle doesn't have a navigation terminal or any other item 
+with a Steering component.
+- Fixed InWater status effects triggering when an item is fabricated, causing issues such as 
+water-sensitive items to breaking/exploding immediately after being fabricated.
+- Fixed motion sensors sending out signals even if the output is set to nothing.
+- Fixed crashing when a round starts if the sub has been saved while a fabricator was running. 
+- Fixed explosives not detonating inside railgun shells.
+- Fixed characters spawning inside the respawn shuttle if no suitable spawnpoint is found inside the
+main submarine.
+- Fixed a timing bug in the dedicated server which prevented clients from ever timing out, AI characters
+from fixing leaks and reactor usage from being logged.
+- Changed the format of the server log filenames to make them more easily sortable.
+- Increased assistant's skill levels.
+- Added oxygenite tanks.
+- Added a rearward facing variant of railgun controller.
+- Added railgun loader variants with 1 shell capacity.
+- Added railgun shell rack.
+- Decreased the skill level requirements for fixing docking ports.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.2
 ---------------------------------------------------------------------------------------------------------
 
