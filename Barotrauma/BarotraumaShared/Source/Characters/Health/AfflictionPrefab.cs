@@ -24,7 +24,9 @@ namespace Barotrauma
 
             public float MinScreenBlurStrength, MaxScreenBlurStrength;
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
-            
+            public float MinRadialDistortStrength, MaxRadialDistortStrength;
+            public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
+
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
@@ -42,6 +44,14 @@ namespace Barotrauma
                 MinScreenDistortStrength = element.GetAttributeFloat("minscreendistort", 0.0f);
                 MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
                 MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
+
+                MinRadialDistortStrength = element.GetAttributeFloat("minradialdistort", 0.0f);
+                MaxRadialDistortStrength = element.GetAttributeFloat("maxradialdistort", 0.0f);
+                MaxRadialDistortStrength = Math.Max(MinRadialDistortStrength, MaxRadialDistortStrength);
+
+                MinChromaticAberrationStrength = element.GetAttributeFloat("minchromaticaberration", 0.0f);
+                MaxChromaticAberrationStrength = element.GetAttributeFloat("maxchromaticaberration", 0.0f);
+                MaxChromaticAberrationStrength = Math.Max(MinChromaticAberrationStrength, MaxChromaticAberrationStrength);
 
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
@@ -223,6 +233,11 @@ namespace Barotrauma
             }
 
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });
+        }
+
+        public override string ToString()
+        {
+            return "AfflictionPrefab (" + Name + ")";
         }
 
         public Affliction Instantiate(float strength)

@@ -181,7 +181,9 @@
       maxscreendistort="1.0"
       minscreenblur="0.1"
       maxscreenblur="1.0"
-      strengthchange="-0.2">
+      strengthchange="-0.2"
+      minradialdistort="0.0"
+      maxradialdistort="5.0">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -193,7 +195,9 @@
       maxscreendistort="3.0"
       minscreenblur="1.0"
       maxscreenblur="3.0"
-      strengthchange="-0.2">
+      strengthchange="-0.2"
+      minradialdistort="5.0"
+      maxradialdistort="10.0">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
     
@@ -217,7 +221,9 @@
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
       maxvitalitydecrease="20"
-      strengthchange="-0.05">
+      strengthchange="-0.05"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="1.0">
       <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
     </Effect>
 
@@ -226,7 +232,9 @@
     <Effect minstrength="40" maxstrength="80"
       minvitalitydecrease="20"
       maxvitalitydecrease="50"
-      strengthchange="-0.1">
+      strengthchange="-0.1"
+      minchromaticaberration="1.0"
+      maxchromaticaberration="5.0">
       <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
     </Effect>
 
@@ -236,7 +244,11 @@
       maxvitalitydecrease="200"
       minscreendistort="0.0"
       maxscreendistort="3.0"
-      strengthchange="-0.2">
+      strengthchange="-0.2"
+      minchromaticaberration="5.0"
+      maxchromaticaberration="10.0"
+      minradialdistort="0.0"
+      maxradialdistort="10.0">
       <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
     </Effect>
 

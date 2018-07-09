@@ -64,6 +64,20 @@ namespace Barotrauma
             set { distortStrength = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private float radialDistortStrength;
+        public float RadialDistortStrength
+        {
+            get { return radialDistortStrength; }
+            set { radialDistortStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        private float chromaticAberrationStrength;
+        public float ChromaticAberrationStrength
+        {
+            get { return chromaticAberrationStrength; }
+            set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
         partial void InitProjSpecific(XDocument doc)
         {
             soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);

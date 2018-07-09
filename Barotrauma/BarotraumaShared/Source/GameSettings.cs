@@ -36,6 +36,8 @@ namespace Barotrauma
         public bool EnableSplashScreen { get; set; }
 
         public int ParticleLimit { get; set; }
+
+        public bool ChromaticAberrationEnabled { get; set; }
                 
         private KeyOrMouse[] keyMapping;
 
@@ -225,6 +227,7 @@ namespace Barotrauma
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
 
             var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
             if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
@@ -406,6 +409,7 @@ namespace Barotrauma
             }
 
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
+            gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
             gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
