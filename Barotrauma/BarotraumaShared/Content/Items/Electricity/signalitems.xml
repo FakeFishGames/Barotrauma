@@ -153,16 +153,16 @@
     linkable="false"
     cargocontainername="Metal Crate"
     price="10"
-    description="Sends a signal when both inputs receive a signal within a set period of each other.">
+    description="Outputs the sum of the received signals.">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
 
-    <AdderComponent canbeselected = "true"/>
+    <AdderComponent canbeselected="true"/>
 
     <Body width="16" height="16" density="30"/>
 
@@ -170,7 +170,6 @@
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
-
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
