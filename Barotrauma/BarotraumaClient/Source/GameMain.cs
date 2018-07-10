@@ -245,21 +245,16 @@ namespace Barotrauma
                 userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
                 {
                     GameSettings.SendUserStatistics = true;
-                    GameAnalytics.ConfigureBuild(Version.ToString());
-                    GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "dbcdabf31c6481129a024df3ee6bad02aeddbab7");
+                    GameAnalyticsManager.Init();
                     return true;
                 };
                 userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
                 userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) => { GameSettings.SendUserStatistics = false; return true; };
                 userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
             }
-            else
+            else if (GameSettings.SendUserStatistics)
             {
-                if (GameSettings.SendUserStatistics)
-                {
-                    GameAnalytics.ConfigureBuild(Version.ToString());
-                    GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "dbcdabf31c6481129a024df3ee6bad02aeddbab7");
-                }
+                GameAnalyticsManager.Init();
             }
         }
 

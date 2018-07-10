@@ -279,10 +279,8 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-
-
+                        
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
-
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
                         break;
                 }

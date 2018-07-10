@@ -501,6 +501,8 @@ namespace Barotrauma
                     }
                 }
 
+                GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("multiplayer");
+
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
