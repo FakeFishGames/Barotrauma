@@ -2,12 +2,27 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        class ConnectedTransducer
+        {
+            public readonly SonarTransducer Transducer;
+            public float SignalStrength;
+            public float DisconnectTimer;
+
+            public ConnectedTransducer(SonarTransducer transducer, float signalStrength, float disconnectTimer)
+            {
+                Transducer = transducer;
+                SignalStrength = signalStrength;
+                DisconnectTimer = disconnectTimer;
+            }
+        }
+
         private float range;
 
         private float pingState;
@@ -19,11 +34,11 @@ namespace Barotrauma.Items.Components
         private bool aiPingCheckPending;
 
         //the float value is a timer used for disconnecting the transducer if no signal is received from it for 1 second
-        private Dictionary<SonarTransducer, float> connectedTransducers;
+        private List<ConnectedTransducer> connectedTransducers;
 
         public IEnumerable<SonarTransducer> ConnectedTransducers
         {
-            get { return connectedTransducers.Keys; }
+            get { return connectedTransducers.Select(t => t.Transducer); }
         }
 
         [Serialize(10000.0f, false)]
@@ -66,7 +81,7 @@ namespace Barotrauma.Items.Components
         public Sonar(Item item, XElement element)
             : base(item, element)
         {
-            connectedTransducers = new Dictionary<SonarTransducer, float>();
+            connectedTransducers = new List<ConnectedTransducer>();
 
             foreach (XElement subElement in element.Elements())
             {
@@ -98,12 +113,11 @@ namespace Barotrauma.Items.Components
 
             if (UseTransducers)
             {
-                List<SonarTransducer> transducers = new List<SonarTransducer>(connectedTransducers.Keys);
-                foreach (SonarTransducer transducer in transducers)
+                foreach (ConnectedTransducer transducer in connectedTransducers)
                 {
-                    connectedTransducers[transducer] -= deltaTime;
-                    if (connectedTransducers[transducer] <= 0.0f) connectedTransducers.Remove(transducer);
+                    transducer.DisconnectTimer -= deltaTime;
                 }
+                connectedTransducers.RemoveAll(t => t.DisconnectTimer <= 0.0f);
             }
             
             if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
@@ -198,22 +212,32 @@ namespace Barotrauma.Items.Components
         {
             if (!UseTransducers || connectedTransducers.Count == 0) return Vector2.Zero;
             Vector2 transducerPosSum = Vector2.Zero;
-            foreach (SonarTransducer transducer in connectedTransducers.Keys)
+            foreach (ConnectedTransducer transducer in connectedTransducers)
             {
-                transducerPosSum += transducer.Item.WorldPosition;
+                transducerPosSum += transducer.Transducer.Item.WorldPosition;
             }
             return transducerPosSum / connectedTransducers.Count;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             if (connection.Name == "transducer_in")
             {
                 var transducer = source.GetComponent<SonarTransducer>();
                 if (transducer == null) return;
-                connectedTransducers[transducer] = 1.0f;
+
+                var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
+                if (connectedTransducer == null)
+                {
+                    connectedTransducers.Add(new ConnectedTransducer(transducer, signalStrength, 1.0f));
+                }
+                else
+                {
+                    connectedTransducer.SignalStrength = signalStrength;
+                    connectedTransducer.DisconnectTimer = 1.0f;
+                }
             }
         }
 

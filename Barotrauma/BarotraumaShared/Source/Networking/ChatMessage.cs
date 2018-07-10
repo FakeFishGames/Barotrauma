@@ -119,9 +119,14 @@ namespace Barotrauma.Networking
 
             if (Submarine.CheckVisibility(listener.SimPosition, Sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
             if (dist > range) return "";
+            
+            return ApplyDistanceEffect(text, dist / range);
+        }
 
-            float garbleAmount = dist / range;
+        public static string ApplyDistanceEffect(string text, float garbleAmount)
+        {
             if (garbleAmount < 0.3f) return text;
+            if (garbleAmount > 1.0f) return "";
 
             int startIndex = Math.Max(text.IndexOf(':') + 1, 1);
 

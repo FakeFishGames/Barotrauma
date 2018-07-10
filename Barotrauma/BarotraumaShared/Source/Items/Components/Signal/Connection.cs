@@ -159,7 +159,7 @@ namespace Barotrauma.Items.Components
             recipientsDirty = true;
         }
         
-        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power)
+        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power);
+                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
                 }
 
                 bool broken = recipient.Item.Condition <= 0.0f;
