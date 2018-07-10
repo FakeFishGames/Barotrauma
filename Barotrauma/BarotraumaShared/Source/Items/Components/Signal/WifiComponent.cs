@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class WifiComponent : ItemComponent
+    partial class WifiComponent : ItemComponent
     {
         private static List<WifiComponent> list = new List<WifiComponent>();
 

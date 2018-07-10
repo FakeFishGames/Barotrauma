@@ -116,6 +116,8 @@
     <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Items\Components\Optimizable.cs" />
+    <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
+    <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="Source\Items\ItemInventory.cs" />
     <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreatureManager.cs" />
