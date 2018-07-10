@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private bool castShadows;
 
         private float blinkTimer;
-
+        
         public PhysicsBody ParentBody;
 
         [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
@@ -233,9 +233,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             switch (connection.Name)
             {

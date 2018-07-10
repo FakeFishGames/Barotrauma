@@ -381,7 +381,7 @@ namespace Barotrauma.Items.Components
             SetAllConnectionsDirty();
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             if (connection.IsPower) return;
 
@@ -400,7 +400,7 @@ namespace Barotrauma.Items.Components
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
                         if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
+                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;

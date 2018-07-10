@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjectSpecific(XElement element);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
             if (currPowerConsumption == 0.0f) voltage = 0.0f;
             if (connection.IsPower) voltage = Math.Max(0.0f, power);                

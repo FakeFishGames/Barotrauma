@@ -472,7 +472,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {

@@ -1103,33 +1103,32 @@ namespace Barotrauma
         }
 
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null)
+        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             if (connections == null) return;
 
             stepsTaken++;
 
-            Connection c = null;
-            if (!connections.TryGetValue(connectionName, out c)) return;
+            if (!connections.TryGetValue(connectionName, out Connection c)) return;
 
             if (stepsTaken > 10)
             {
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, c, sender, power));
+                CoroutineManager.StartCoroutine(SendSignal(signal, c, sender, power, signalStrength));
             }
             else
             {
-                c.SendSignal(stepsTaken, signal, source ?? this, sender, power);
+                c.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
             }            
         }
 
-        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f)
+        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            connection.SendSignal(0, signal, this, sender, power);
+            connection.SendSignal(0, signal, this, sender, power, signalStrength);
 
             yield return CoroutineStatus.Success;
         }

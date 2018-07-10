@@ -61,12 +61,12 @@ namespace Barotrauma.Items.Components
 
             if (sender == null || sender.channel != channel) return false;
 
-            return Vector2.Distance(item.WorldPosition, sender.item.WorldPosition) <= sender.Range;
+            return Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) <= sender.range * sender.range;
         }
-        
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            var senderComponent = source.GetComponent<WifiComponent>();
+            var senderComponent = source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) return;
 
             if (LinkToChat)
@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (senderComponent != null)
                     {
-                        signal = ChatMessage.ApplyDistanceEffect(item, sender, signal, senderComponent.range);
+                        signal = ChatMessage.ApplyDistanceEffect(signal, 1.0f - signalStrength);
                     }
 
                     GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio);
@@ -86,7 +86,6 @@ namespace Barotrauma.Items.Components
             }
 
             if (connection == null) return;
-
             switch (connection.Name)
             {
                 case "signal_in":
@@ -94,7 +93,10 @@ namespace Barotrauma.Items.Components
 
                     foreach (WifiComponent wifiComp in receivers)
                     {
-                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender, 0, source);
+                        //signal strength diminishes by distance
+                        float sentSignalStrength = signalStrength *
+                            MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
+                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender, 0, source, sentSignalStrength);
                     }
                     break;
             }

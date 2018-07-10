@@ -442,7 +442,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             if (connection.Name == "velocity_in")
             {
@@ -450,7 +450,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
             }
         }
 

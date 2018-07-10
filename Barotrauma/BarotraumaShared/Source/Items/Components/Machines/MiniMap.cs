@@ -76,9 +76,9 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             if (sender == null || sender.CurrentHull == null) return;
 

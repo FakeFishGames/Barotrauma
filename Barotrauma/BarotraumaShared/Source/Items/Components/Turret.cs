@@ -499,7 +499,7 @@ namespace Barotrauma.Items.Components
             rotation = (minRotation + maxRotation) / 2;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
