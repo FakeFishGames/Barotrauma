@@ -125,6 +125,18 @@ namespace Barotrauma
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
 
+        private static bool sendUserStatistics;
+        public static bool SendUserStatistics
+        {
+            get { return sendUserStatistics; }
+            set
+            {
+                sendUserStatistics = value;
+                GameMain.Config.Save("config.xml");
+            }
+        }
+        public static bool ShowUserStatisticsPrompt { get; private set; }
+
         public GameSettings(string filePath)
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
@@ -143,6 +155,14 @@ namespace Barotrauma
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+            if (doc.Root.Attribute("senduserstatistics") == null)
+            {
+                ShowUserStatisticsPrompt = true;
+            }
+            else
+            {
+                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
+            }
 
             if (doc == null)
             {
@@ -287,7 +307,8 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen));
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("senduserstatistics", sendUserStatistics));
 
             if (WasGameUpdated)
             {
