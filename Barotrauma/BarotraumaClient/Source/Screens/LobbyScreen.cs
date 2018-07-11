@@ -87,6 +87,9 @@ namespace Barotrauma
             campaignUI.StartRound = StartRound;
             campaignUI.OnLocationSelected = SelectLocation;            
             campaignUI.UpdateCharacterLists();
+
+
+            GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("singleplayer");
         }
         
         public override void AddToGUIUpdateList()

@@ -228,6 +228,10 @@ namespace Barotrauma
 
             if (GameMode != null) GameMode.MsgBox();
 
+            GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Submarine:" + submarine.Name);
+            GameAnalyticsSDK.Net.GameAnalytics.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
+                GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+
 #if CLIENT
             roundSummary = new RoundSummary(this);
 
@@ -239,6 +243,9 @@ namespace Barotrauma
         public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
+            
+            GameAnalyticsSDK.Net.GameAnalytics.AddProgressionEvent((Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
+                GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
 
 #if CLIENT
             if (roundSummary != null)
