@@ -1,5 +1,6 @@
 ﻿#region Using Statements
 
+using GameAnalyticsSDK.Net;
 using System;
 using System.IO;
 using System.Text;
@@ -46,7 +47,6 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma Dedicated Server crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version);
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
@@ -75,11 +75,24 @@ namespace Barotrauma
                 sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
             }
 
+            string crashReport = sb.ToString();
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(sb.ToString());
+            Console.Write(crashReport);
 
             sw.WriteLine(sb.ToString());
-            sw.Close();    
+            sw.Close();
+
+            if (GameSettings.SendUserStatistics)
+            {
+                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
+                GameAnalytics.OnStop();
+                Console.Write("A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
+            }
+            else
+            {
+                Console.Write("A crash report(\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
+            }
         }
     }
 }

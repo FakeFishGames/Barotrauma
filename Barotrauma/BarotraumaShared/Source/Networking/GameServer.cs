@@ -208,6 +208,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.Select();
             GameMain.NetLobbyScreen.RandomizeSettings();
             started = true;
+            
+            GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:Start");
 
             yield return CoroutineStatus.Success;
         }
@@ -1357,6 +1359,8 @@ namespace Barotrauma.Networking
                 }
             }
 
+            GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
+
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
 
             yield return CoroutineStatus.Running;
@@ -2249,7 +2253,8 @@ namespace Barotrauma.Networking
                 Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
                 log.Save();
             }
-                        
+            
+            GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:ShutDown");
             server.Shutdown("The server has been shut down");
         }
     }
