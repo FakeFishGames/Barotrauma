@@ -927,8 +927,20 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
                     floorY = GetFloorY();
+                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    if (targetMovement.Y < 0.0f)
+                    {
+                        Vector2 colliderBottom = GetColliderBottom();
+                        floorY = Math.Min(colliderBottom.Y, floorY);
+                        //check if the bottom of the collider is below the current hull
+                        if (floorY < ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height))
+                        {
+                            //set floorY to the position of the floor in the hull below the character
+                            var lowerHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(colliderBottom), useWorldCoordinates: false);
+                            if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
+                        }
+                    }
                     if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
                     {
                         inWater = true;
@@ -1092,7 +1104,8 @@ namespace Barotrauma
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
-                            if (IgnorePlatforms || colliderBottomDisplay.Y < platform.Rect.Y - 16) return -1;
+                            //ignore platforms if collider is below it and the character is heading downwards
+                            if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && targetMovement.Y < 0.0f)) return -1;
                             break;
                         case Physics.CollisionWall:
                             break;

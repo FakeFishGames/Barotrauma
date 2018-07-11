@@ -23,8 +23,10 @@ namespace Barotrauma
         private float cprAnimTimer;
         private float cprPump;
 
-        private float inWaterTimer;
         private bool swimming;
+        //time until the character can switch from walking to swimming or vice versa
+        //rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
+        private float swimmingStateLockTimer;
 
         private float useItemTimer;
         
@@ -188,21 +190,21 @@ namespace Barotrauma
                         DragCharacter(character.SelectedCharacter);
                     }
 
+                    swimmingStateLockTimer -= deltaTime;
+
                     if (forceStanding)
                     {
                         swimming = false;
                     }
-                    //0.5 second delay for switching between swimming and walking
-                    //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
-                    else if (inWater)
-                    {
-                        inWaterTimer = Math.Max(inWaterTimer + deltaTime, 0.5f);
-                        if (inWaterTimer >= 1.0f) swimming = true;
-                    }
                     else
                     {
-                        inWaterTimer = Math.Min(inWaterTimer - deltaTime, 0.5f);
-                        if (inWaterTimer <= 0.0f) swimming = false;
+                        //0.5 second delay for switching between swimming and walking
+                        //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
+                        if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
+                        {
+                            swimming = inWater;
+                            swimmingStateLockTimer = 0.5f;
+                        }
                     }
 
                     if (swimming)
@@ -582,9 +584,30 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
-            if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f))
+            if (currentHull != null)
             {
-                surfaceLimiter = (ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfaceY);
+                float surfacePos = currentHull.Surface;
+                //if the hull is almost full of water, check if there's a water-filled hull above it
+                //and use its water surface instead of the current hull's 
+                if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
+                {
+                    foreach (Gap gap in currentHull.ConnectedGaps)
+                    {
+                        if (gap.IsHorizontal || gap.Open <= 0.0f) continue;
+                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) continue;
+                        
+                        foreach (var linkedTo in gap.linkedTo)
+                        {
+                            if (linkedTo is Hull hull && hull != currentHull)
+                            {
+                                surfacePos = Math.Max(surfacePos, hull.Surface);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfacePos;
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 50.0f) return;
             }
