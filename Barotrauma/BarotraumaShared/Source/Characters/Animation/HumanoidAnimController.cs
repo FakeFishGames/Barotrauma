@@ -25,7 +25,7 @@ namespace Barotrauma
 
         private bool swimming;
         //time until the character can switch from walking to swimming or vice versa
-        //rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
+        //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
         private float swimmingStateLockTimer;
 
         private float useItemTimer;

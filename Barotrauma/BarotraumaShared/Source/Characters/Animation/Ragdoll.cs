@@ -1104,8 +1104,9 @@ namespace Barotrauma
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
-                            //ignore platforms if collider is below it and the character is heading downwards
-                            if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && targetMovement.Y < 0.0f)) return -1;
+                            //ignore platforms if collider is below it
+                            // OR allow the character to "lift" itself above it if heading upwards and not on stairs
+                            if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || onStairs))) return -1;
                             break;
                         case Physics.CollisionWall:
                             break;
