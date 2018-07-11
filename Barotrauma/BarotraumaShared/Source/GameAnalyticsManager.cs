@@ -7,7 +7,9 @@ namespace Barotrauma
     {
         public static void Init()
         {
+#if DEBUB
             GameAnalytics.SetEnabledInfoLog(true);
+#endif
             GameAnalytics.ConfigureBuild(GameMain.Version.ToString());
             GameAnalytics.ConfigureAvailableCustomDimensions01("singleplayer", "multiplayer", "editor");
             GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "9010ad9a671233b8d9610d76cec8c897d9ff3ba7");
