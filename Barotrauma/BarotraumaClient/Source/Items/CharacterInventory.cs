@@ -17,6 +17,8 @@ namespace Barotrauma
         //which slot is the toggle arrow drawn above
         private int toggleArrowSlotIndex;
 
+        private Point screenResolution;
+
         public Vector2[] SlotPositions;
         
         private Alignment alignment;
@@ -134,6 +136,8 @@ namespace Barotrauma
             AssignQuickUseNumKeys();
 
             highlightedSubInventorySlots.Clear();
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected override bool HideSlot(int i)
@@ -256,6 +260,10 @@ namespace Barotrauma
         public override void Update(float deltaTime, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                SetSlotPositions(alignment);
+            }
 
             base.Update(deltaTime);
 
