@@ -667,7 +667,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
 
-    <WifiComponent canbeselected = "true"/>
+    <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true"/>
 
     <Body width="16" height="16" density="30"/>
 
