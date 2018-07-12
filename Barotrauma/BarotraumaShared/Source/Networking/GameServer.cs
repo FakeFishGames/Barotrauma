@@ -1819,8 +1819,7 @@ namespace Barotrauma.Networking
 
             if (type == null)
             {
-                string tempStr;
-                string command = ChatMessage.GetChatMessageCommand(message, out tempStr);
+                string command = ChatMessage.GetChatMessageCommand(message, out string tempStr);
                 switch (command.ToLowerInvariant())
                 {
                     case "r":
@@ -1971,6 +1970,11 @@ namespace Barotrauma.Networking
             {
                 senderName = null;
                 senderCharacter = null;
+            }
+            else if (type == ChatMessageType.Radio)
+            {
+                //send to chat-linked wifi components
+                senderRadio.TransmitSignal(0, message, senderRadio.Item, senderCharacter, false);
             }
 
             //check which clients can receive the message and apply distance effects
