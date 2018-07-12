@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
                 style: "GUISlider", barSize: 0.1f)
             {
-                BarScroll = 1.0f,
+                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
-                BarScroll = 1.0f,
+                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -200,6 +200,7 @@ namespace Barotrauma.Items.Components
                 barSize: 0.5f, style: "OnOffSlider")
             {
                 IsBooleanSwitch = true,
+                BarScroll = 1.0f,
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -211,7 +212,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
+            
             onOffSwitch = new GUIScrollBar(new RectTransform(new Point(50, 80), columnRight.RectTransform, Anchor.TopRight),
                 barSize: 0.2f, style: "OnOffLever")
             {
@@ -229,7 +230,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
+            
             var lever = onOffSwitch.GetChild<GUIButton>();
             lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);
 
@@ -283,6 +284,21 @@ namespace Barotrauma.Items.Components
 
                 tempMeterBar.Draw(spriteBatch, meterBarPos, color);
                 meterBarPos.Y -= (tempMeterBar.size.Y + barPadding);
+            }
+
+            if (temperature > optimalTemperature.Y)
+            {
+                GUI.DrawRectangle(spriteBatch, 
+                    new Vector2(graphArea.X - 30, graphArea.Y), 
+                    new Vector2(tempMeterFrame.SourceRect.Width, (graphArea.Bottom - graphArea.Height * optimalTemperature.Y / 100.0f) - graphArea.Y), 
+                    Color.Red * (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.7f, isFilled: true);
+            }
+            if (temperature < optimalTemperature.X)
+            {
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(graphArea.X - 30, graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f),
+                    new Vector2(tempMeterFrame.SourceRect.Width, graphArea.Bottom - (graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f)),
+                    Color.Red * (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.7f, isFilled: true);
             }
 
             tempRangeIndicator.Draw(spriteBatch, new Vector2(meterBarPos.X, graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f));
@@ -348,7 +364,7 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && onOffSwitch.BarScroll > 0.5f;
-            
+                        
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
             shutDown = onOffSwitch.BarScroll > 0.5f;
 

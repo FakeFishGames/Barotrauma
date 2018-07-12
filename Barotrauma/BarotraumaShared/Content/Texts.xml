@@ -507,7 +507,7 @@
     <ReactorWarningCriticalTemp>Critical\nHeat</ReactorWarningCriticalTemp>
     <ReactorWarningCriticalLowTemp>Critically\nLow Temperature</ReactorWarningCriticalLowTemp>
     <ReactorWarningCriticalOutput>Critical\nOutput</ReactorWarningCriticalOutput>
-    <ReactorWarningLowTemp>Temperature Low</ReactorWarningLowTemp>
+    <ReactorWarningLowTemp>Temp Low</ReactorWarningLowTemp>
     <ReactorWarningOverheating>Overheat</ReactorWarningOverheating>
     <ReactorWarningLowOutput>Output Low</ReactorWarningLowOutput>
     <ReactorWarningHighOutput>Output High</ReactorWarningHighOutput>
