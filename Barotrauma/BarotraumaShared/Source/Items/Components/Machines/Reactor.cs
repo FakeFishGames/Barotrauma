@@ -447,6 +447,9 @@ namespace Barotrauma.Items.Components
             switch (objective.Option.ToLowerInvariant())
             {
                 case "power up":
+#if CLIENT
+                    onOffSwitch.BarScroll = 0.0f;
+#endif
                     shutDown = false;
                     //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
                     if (degreeOfSuccess < 0.5f)
@@ -462,6 +465,9 @@ namespace Barotrauma.Items.Components
                     }                    
                     break;
                 case "shutdown":
+#if CLIENT
+                    onOffSwitch.BarScroll = 1.0f;
+#endif
                     AutoTemp = false;
                     shutDown = true;
                     targetFissionRate = 0.0f;
@@ -480,9 +486,13 @@ namespace Barotrauma.Items.Components
                     if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
                     {
                         shutDown = true;
+                        AutoTemp = false;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
                         unsentChanges = true;
+#if CLIENT
+                        onOffSwitch.BarScroll = 1.0f;
+#endif
                     }
                     break;
             }
