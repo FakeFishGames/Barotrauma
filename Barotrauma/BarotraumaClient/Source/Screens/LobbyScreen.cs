@@ -94,14 +94,10 @@ namespace Barotrauma
         {
             graphics.Clear(Color.Black);
             
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
+            GUI.DrawBackgroundSprite(spriteBatch, GameMain.GameSession.Map.CurrentLocation.Type.Background);
 
-            Sprite backGround = GameMain.GameSession.Map.CurrentLocation.Type.Background;
-            spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,
-                Math.Max((float)GameMain.GraphicsWidth / backGround.SourceRect.Width, (float)GameMain.GraphicsHeight / backGround.SourceRect.Height), SpriteEffects.None, 0.0f);
-            
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
 
         }

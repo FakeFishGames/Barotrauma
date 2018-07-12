@@ -1326,30 +1326,11 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.Black);
-            
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            if (backgroundSprite != null)
-            {
-                float scale = Math.Max((float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.2f;
-                
-                float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
-                float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
-                //TODO: blur the background
-
-                double noiseT = (Timing.TotalTime * 0.02f);
-                Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
-                pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
-
-                spriteBatch.Draw(backgroundSprite.Texture, 
-                    new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos, 
-                    null, Color.White, 0.0f, backgroundSprite.size / 2,
-                    scale, SpriteEffects.None, 0.0f);
-            }
-            
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
 

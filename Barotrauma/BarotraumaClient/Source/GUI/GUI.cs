@@ -344,6 +344,35 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite)
+        {
+            double aberrationT = (Timing.TotalTime * 0.5f);
+            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f);
+            GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
+                (float)(PerlinNoise.Perlin(aberrationT, aberrationT, 0) + 0.5f));
+            GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
+            GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
+
+            spriteBatch.Begin(SpriteSortMode.Immediate, effect: GameMain.GameScreen.PostProcessEffect);
+
+            float scale = Math.Max(
+                (float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, 
+                (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.1f;
+            float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
+            float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+                
+            double noiseT = (Timing.TotalTime * 0.02f);
+            Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
+            pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
+
+            spriteBatch.Draw(backgroundSprite.Texture,
+                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
+                null, Color.White, 0.0f, backgroundSprite.size / 2,
+                scale, SpriteEffects.None, 0.0f);
+            
+            spriteBatch.End();
+        }
+
         #region Update list
         private static List<GUIComponent> updateList = new List<GUIComponent>();
         private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
