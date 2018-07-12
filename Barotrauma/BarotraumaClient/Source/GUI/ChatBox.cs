@@ -11,10 +11,8 @@ namespace Barotrauma
     {
         const float HideDelay = 5.0f;
 
-        private static Sprite radioIcon;//, toggleArrow;
-
-        private Point defaultPos;
-
+        private static Sprite radioIcon;
+        
         private GUIFrame guiFrame;
 
         private GUIListBox chatBox;
@@ -24,11 +22,14 @@ namespace Barotrauma
 
         private GUIButton radioButton;
 
+        private Point screenResolution;
+
         private bool isSinglePlayer;
 
         private float hideTimer;
 
         private bool toggleOpen;
+        private float openState;
 
         public float HideTimer
         {
@@ -98,11 +99,14 @@ namespace Barotrauma
                 radioIcon = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(527, 952, 38, 52), null);
                 radioIcon.Origin = radioIcon.size / 2;
             }
-                        
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
             guiFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, isSinglePlayer ? 1.0f : 0.9f), guiFrame.RectTransform), style: "ChatBox");
 
-            toggleButton = new GUIButton(new RectTransform(new Point(25, 70), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(10, 0) },
+            toggleButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), guiFrame.RectTransform, Anchor.TopRight, Pivot.TopLeft)
+                { RelativeOffset = new Vector2(-0.01f, 0.0f) },
                 style: "GUIButtonHorizontalArrow");
             toggleButton.OnClicked += (GUIButton btn, object userdata) =>
             {
@@ -115,11 +119,9 @@ namespace Barotrauma
                 return true;
             };
             
-            defaultPos = guiFrame.Rect.Location;
-            
             if (isSinglePlayer)
             {
-                radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), guiFrame.RectTransform, Anchor.BottomRight, Pivot.Center),
+                radioButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.2f), guiFrame.RectTransform, Anchor.BottomRight, Pivot.BottomLeft),
                     style: null);
                 new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true)
                 {
@@ -140,7 +142,7 @@ namespace Barotrauma
                     MaxTextLength = ChatMessage.MaxLength
                 };
 
-                radioButton = new GUIButton(new RectTransform(radioIcon.size.ToPoint(), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
+                radioButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.2f), inputBox.RectTransform, Anchor.CenterRight, Pivot.Center),
                     style: null);
                 new GUIImage(new RectTransform(Vector2.One, radioButton.RectTransform), radioIcon, scaleToFit: true);
                 radioButton.OnClicked = (GUIButton btn, object userData) =>
@@ -220,12 +222,20 @@ namespace Barotrauma
             GUI.PlayUISound(soundType);
             hideTimer = HideDelay;
         }
-
-        private float openState;
-        
+                
         public void Update(float deltaTime)
         {
             if (inputBox != null && inputBox.Selected) hideTimer = HideDelay;
+
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                guiFrame.RectTransform.AbsoluteOffset = Point.Zero;
+                guiFrame.RectTransform.RelativeOffset = new Vector2(
+                    HUDLayoutSettings.ChatBoxArea.X / (float)GameMain.GraphicsWidth,
+                    HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
+                guiFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
+                screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            }
 
             bool hovering =
                 (PlayerInput.MousePosition.X > Math.Min(Math.Min(chatBox.Rect.X, toggleButton.Rect.X), radioButton.Rect.X) || HUDLayoutSettings.ChatBoxAlignment == Alignment.Left) &&

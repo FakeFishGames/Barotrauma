@@ -17,8 +17,10 @@ namespace Barotrauma
         const float ConversationIntervalMin = 100.0f;
         const float ConversationIntervalMax = 180.0f;
         
-        private List<CharacterInfo> characterInfos;
-        private List<Character> characters;
+        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private List<Character> characters = new List<Character>();
+
+        private Point screenResolution;
 
         public int WinningTeam = 1;
         
@@ -70,9 +72,6 @@ namespace Barotrauma
 
         partial void InitProjectSpecific()
         {
-            characters = new List<Character>();
-            characterInfos = new List<CharacterInfo>();
-
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
@@ -124,6 +123,8 @@ namespace Barotrauma
             {
                 chatBox = new ChatBox(guiFrame, true);
             }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         #endregion
@@ -675,7 +676,20 @@ namespace Barotrauma
         partial void UpdateProjectSpecific(float deltaTime)
         {
             if (GUI.DisableHUD) return;
-            //guiFrame.UpdateManually(deltaTime);
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                var prevCharacterListBox = characterListBox;
+                InitProjectSpecific();
+
+                foreach (GUIComponent c in prevCharacterListBox.Content.Children)
+                {
+                    Character character = c.UserData as Character;
+                    if (character == null) continue;
+                    AddCharacter(character);
+                    DisplayCharacterOrder(character, character.CurrentOrder);
+                }
+            }
+
             if (chatBox != null) chatBox.Update(deltaTime);
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;

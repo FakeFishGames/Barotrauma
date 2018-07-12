@@ -375,6 +375,8 @@ namespace Barotrauma
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredText"));
             }
 
+            if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
+
             return true;
         }
     }

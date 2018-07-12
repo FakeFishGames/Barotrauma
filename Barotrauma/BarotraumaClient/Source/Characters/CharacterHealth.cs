@@ -14,8 +14,9 @@ namespace Barotrauma
 
         private GUIButton cprButton;
 
-        private Alignment alignment = Alignment.Left;
+        private Point screenResolution;
 
+        private Alignment alignment = Alignment.Left;
         public Alignment Alignment
         {
             get { return alignment; }
@@ -237,6 +238,7 @@ namespace Barotrauma
                 healthWindowHealthBar.RectTransform.NonScaledSize = new Point((int)(30 * GUI.Scale), healthWindow.Rect.Height);
                 healthWindowHealthBar.RectTransform.AbsoluteOffset = new Point(healthWindow.Rect.Right, healthWindow.Rect.Y);
             }
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -440,6 +442,11 @@ namespace Barotrauma
         public void DrawHUD(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                UpdateAlignment();
+            }
+
             float damageOverlayAlpha = DamageOverlayTimer;
             if (vitality < MaxVitality * 0.1f)
             {
