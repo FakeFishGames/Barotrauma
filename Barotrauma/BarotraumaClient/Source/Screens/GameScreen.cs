@@ -20,6 +20,11 @@ namespace Barotrauma
         private Texture2D damageStencil;       
         private Texture2D distortTexture;
 
+        public Effect PostProcessEffect
+        {
+            get { return postProcessEffect; }            
+        }
+
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
             cam = new Camera();
