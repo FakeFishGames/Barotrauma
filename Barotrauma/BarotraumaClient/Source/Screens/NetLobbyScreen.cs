@@ -14,6 +14,7 @@ namespace Barotrauma
     {
         private GUIFrame menu;
         private GUIFrame infoFrame;
+        private GUIFrame myCharacterFrame;
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
@@ -141,6 +142,13 @@ namespace Barotrauma
             set { StartButton.Enabled = value; }
         }
 
+        public GUIFrame MyCharacterFrame
+        {
+            get { return myCharacterFrame; }
+        }
+
+        public bool MyCharacterFrameOpen;
+
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -253,14 +261,25 @@ namespace Barotrauma
 
             //player info panel ------------------------------------------------------------
 
-            var myPlayerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
-            playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myPlayerFrame.RectTransform, Anchor.Center), style: null);
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
+            playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
-            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myPlayerFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
+            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
                 TextManager.Get("PlayYourself"))
             {
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
+            };
+
+            var toggleMyPlayerFrame = new GUIButton(new RectTransform(new Point(25, 70), myCharacterFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight), "", style: "GUIButtonHorizontalArrow");
+            toggleMyPlayerFrame.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                MyCharacterFrameOpen = !MyCharacterFrameOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = MyCharacterFrameOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
             };
 
             //player list ------------------------------------------------------------------
@@ -519,6 +538,7 @@ namespace Barotrauma
         public override void Deselect()
         {
             textBox.Deselect();
+            myCharacterFrame.GetChild<GUIButton>().Visible = true;
         }
 
         public override void Select()
@@ -530,6 +550,9 @@ namespace Barotrauma
             textBox.Select();
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
             textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
+
+            myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
+            myCharacterFrame.GetChild<GUIButton>().Visible = false;
             
             subList.Enabled = AllowSubSelection || GameMain.Server != null;
             shuttleList.Enabled = AllowSubSelection || GameMain.Server != null;

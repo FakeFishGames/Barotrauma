@@ -196,45 +196,7 @@ namespace Barotrauma.Networking
             }
 
 #if CLIENT
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
-            {
-                //msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
-
-                if (!GUI.DisableHUD)
-                {
-                    inGameHUD.UpdateManually(deltaTime);            
-                    chatBox.Update(deltaTime);
-                }
-                
-                if (Character.Controlled == null || Character.Controlled.IsDead)
-                {
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                    GameMain.LightManager.LosEnabled = false;
-                }
-            }
-
-            //tab doesn't autoselect the chatbox when debug console is open, 
-            //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
-            {
-                if (msgBox.Selected)
-                {
-                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
-                    {
-                        msgBox.Text = "r; ";
-                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
-                    }
-                }
-            }
+            UpdateHUD(deltaTime);            
 #endif
         }
 
