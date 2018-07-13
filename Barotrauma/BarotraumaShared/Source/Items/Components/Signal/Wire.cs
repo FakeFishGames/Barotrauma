@@ -35,6 +35,7 @@ namespace Barotrauma.Items.Components
 
         private Connection[] connections;
 
+        private bool canPlaceNode;
         private Vector2 newNodePos;
 
         public bool Hidden, Locked;
@@ -159,13 +160,14 @@ namespace Barotrauma.Items.Components
                     ic.Drop(null);
                 }
                 if (item.Container != null) item.Container.RemoveContained(this.item);
-
                 if (item.body != null) item.body.Enabled = false;
 
                 IsActive = false;
 
                 CleanNodes();
             }
+            
+            if (item.body != null) item.Submarine = newConnection.Item.Submarine;
 
             if (sendNetworkEvent)
             {
@@ -212,20 +214,38 @@ namespace Barotrauma.Items.Components
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
             if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
 
-            if ((item.Submarine != sub || sub == null) && Screen.Selected != GameMain.SubEditorScreen)
+            if (Screen.Selected != GameMain.SubEditorScreen)
             {
-                ClearConnections();
-                return;
-            }
+                //cannot run wires from sub to another
+                if (sub == null || (item.Submarine != sub && sub != null && item.Submarine != null))
+                {
+                    ClearConnections();
+                    return;
+                }
 
-            newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                if (item.CurrentHull == null)
+                {
+                    newNodePos = item.WorldPosition - sub.Position - sub.HiddenSubPosition;
+                    canPlaceNode = false;
+                }
+                else
+                {
+                    newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                    canPlaceNode = true;
+                }
+            }
+            else
+            {
+                newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                canPlaceNode = true;
+            }            
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
 
-            if (newNodePos != Vector2.Zero && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
                 nodes.Add(newNodePos);
                 UpdateSections();
