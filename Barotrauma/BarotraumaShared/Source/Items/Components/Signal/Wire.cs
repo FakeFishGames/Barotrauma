@@ -37,12 +37,19 @@ namespace Barotrauma.Items.Components
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
-
+        
         public bool Hidden, Locked;
 
         public Connection[] Connections
         {
             get { return connections; }
+        }
+
+        [Serialize(5000.0f, false)]
+        public float MaxLength
+        {
+            get;
+            set;
         }
                 
         public Wire(Item item, XElement element)
@@ -233,14 +240,43 @@ namespace Barotrauma.Items.Components
                     newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
                     canPlaceNode = true;
                 }
+
+                //prevent the wire from extending too far when rewiring
+                if (nodes.Count > 0)
+                {
+                    Character user = item.ParentInventory?.Owner as Character;
+                    if (user == null) return;
+
+                    Vector2 prevNodePos = nodes[nodes.Count - 1];
+                    prevNodePos += sub.HiddenSubPosition;
+
+                    float currLength = 0.0f;
+                    for (int i = 0; i < nodes.Count - 1; i++)
+                    {
+                        currLength += Vector2.Distance(nodes[i], nodes[i + 1]);
+                    }
+                    currLength += Vector2.Distance(nodes[nodes.Count - 1], newNodePos);
+
+                    if (currLength > MaxLength)
+                    {
+                        Vector2 pullBackDir = Vector2.Normalize(nodes[nodes.Count - 1] - newNodePos);
+                        user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
+                        user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
+                        if (currLength > MaxLength * 1.5f)
+                        {
+                            ClearConnections();
+                            return;
+                        }
+                    }
+                }
             }
             else
             {
                 newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
                 canPlaceNode = true;
-            }            
+            }
         }
-
+        
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
