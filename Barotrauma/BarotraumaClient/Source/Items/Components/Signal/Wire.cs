@@ -81,6 +81,14 @@ namespace Barotrauma.Items.Components
 
             if (IsActive && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
+                Submarine sub = null;
+                if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
+                if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+                if (sub != null)
+                {
+                    drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
+                }
+
                 WireSection.Draw(
                     spriteBatch,
                     new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,

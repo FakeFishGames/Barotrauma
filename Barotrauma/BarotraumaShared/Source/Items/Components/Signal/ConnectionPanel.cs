@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -54,7 +55,12 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            user.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            Vector2 itemPos = item.SimPosition;
+            if (user.Submarine == null)
+            {
+                itemPos = ConvertUnits.ToSimUnits(item.WorldPosition);
+            }
+            user.AnimController.UpdateUseItem(true, itemPos + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
 
             if (user.IsKeyHit(InputType.Aim))
             {
