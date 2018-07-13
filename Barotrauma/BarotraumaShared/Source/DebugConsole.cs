@@ -179,6 +179,10 @@ namespace Barotrauma
         
         static DebugConsole()
         {
+#if DEBUG
+            CheatsEnabled = true;
+#endif
+
             commands.Add(new Command("help", "", (string[] args) =>
             {
                 if (args.Length == 0)
@@ -1325,14 +1329,23 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", client);
             }, isCheat: true));
 
+            commands.Add(new Command("lock", "lock: Lock movement of the main submarine.", (string[] args) =>
+            {
+                Submarine.LockX = !Submarine.LockX;
+                Submarine.LockY = Submarine.LockX;
+                NewMessage((Submarine.LockX ? "Submarine movement locked." : "Submarine movement unlocked."), Color.White);
+            }, null, null, isCheat: true));
+
             commands.Add(new Command("lockx", "lockx: Lock horizontal movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockX = !Submarine.LockX;
+                NewMessage((Submarine.LockX ? "Horizontal submarine movement locked." : "Horizontal submarine movement unlocked."), Color.White);
             }, null, null, isCheat: true));
 
             commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
+                NewMessage((Submarine.LockX ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
             }, null, null, isCheat: true));
 
             commands.Add(new Command("dumpids", "", (string[] args) =>
