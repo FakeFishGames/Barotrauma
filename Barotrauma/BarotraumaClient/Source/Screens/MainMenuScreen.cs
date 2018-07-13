@@ -143,7 +143,7 @@ namespace Barotrauma
 
             SelectTab(null, 0);
 
-            GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("");
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("");
         }
 
         public bool SelectTab(GUIButton button, object obj)

@@ -1949,18 +1949,20 @@ namespace Barotrauma
             AnimController.Frozen = false;
 
             GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
-
-            string characterType = "Unknown";
-            if (this == controlled)
-                characterType = "Player";
-            else if (IsRemotePlayer)
-                characterType = "RemotePlayer";
-            else if (AIController is EnemyAIController)
-                characterType = "Enemy";
-            else if (AIController is HumanAIController)
-                characterType = "AICrew";
-            GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeath);
-            
+            if (GameSettings.SendUserStatistics)
+            {
+                string characterType = "Unknown";
+                if (this == controlled)
+                    characterType = "Player";
+                else if (IsRemotePlayer)
+                    characterType = "RemotePlayer";
+                else if (AIController is EnemyAIController)
+                    characterType = "Enemy";
+                else if (AIController is HumanAIController)
+                    characterType = "AICrew";
+                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeath);
+            }
+                        
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
             KillProjSpecific();

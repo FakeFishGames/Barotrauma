@@ -349,7 +349,7 @@ namespace Barotrauma
 
             cam.UpdateTransform();
 
-            GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("editor");
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("editor");
         }
 
         public override void Deselect()

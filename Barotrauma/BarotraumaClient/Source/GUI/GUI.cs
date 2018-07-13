@@ -214,9 +214,12 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null)
             {
-                Mission mission = GameMain.GameSession.Mission;
-                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
                 GameMain.GameSession = null;
             }
 
