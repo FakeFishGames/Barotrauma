@@ -107,9 +107,11 @@ namespace Barotrauma
         {
             get { return GameMain.GraphicsHeight / 1080.0f; }
         }
-
+                
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
+
+        protected Point screenResolution;
 
         public float HideTimer;
 
@@ -152,18 +154,11 @@ namespace Barotrauma
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
-
-        private Vector2 centerPos;
-
+        
         public Vector2 CenterPos
         {
-            get { return centerPos; }
-            set
-            {
-                centerPos = value;
-                centerPos.X *= GameMain.GraphicsWidth;
-                centerPos.Y *= GameMain.GraphicsHeight;
-            }
+            get;
+            set;
         }
         
         public static SlotReference SelectedSlot
@@ -181,8 +176,8 @@ namespace Barotrauma
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
             int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)centerPos.X - (rectWidth * columns + spacing * (columns - 1)) / 2;
-            int startY = (int)centerPos.Y - (rows * (spacing + rectHeight)) / 2;
+            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacing * (columns - 1)) / 2;
+            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacing + rectHeight)) / 2;
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
@@ -197,6 +192,8 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
             }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected virtual bool HideSlot(int i)

@@ -7,6 +7,11 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                CreateSlots();
+            }
+
             if (slots != null && slots.Length > 0)
             {
                 Rectangle backgroundFrame = slots[0].Rect;

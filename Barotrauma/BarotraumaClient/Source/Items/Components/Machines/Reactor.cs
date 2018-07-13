@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
         private float graphTimer;
         private int updateGraphInterval = 500;
 
+        private Point screenResolution;
+
         private Sprite fissionRateMeter, turbineOutputMeter;
         private Sprite meterPointer;
         private Sprite sectorSprite;
@@ -250,11 +252,17 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            SetInventoryPos();
+        }
+
+        private void SetInventoryPos()
+        {
             Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
-            
             inventory.CenterPos = new Vector2(
-                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth, 
+                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth,
                 (leftHUDColumn.Rect.Y + leftHUDColumn.Rect.Height * 0.85f) / GameMain.GraphicsHeight);
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -346,6 +354,11 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime)
         {
             IsActive = true;
+
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                SetInventoryPos();
+            }
 
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
