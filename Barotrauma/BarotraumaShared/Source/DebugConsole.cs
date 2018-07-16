@@ -2119,23 +2119,48 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
 
-            int extraParams = 0;
-            switch (args.Last())
+            if (args.Length > 1)
             {
-                case "cursor":
-                    extraParams = 1;
-                    spawnPos = cursorPos;
-                    break;
-                case "inventory":
-                    extraParams = 1;
-                    spawnInventory = controlledCharacter == null ? null : controlledCharacter.Inventory;
-                    break;
-                default:
-                    extraParams = 0;
-                    break;
+                switch (args[1])
+                {
+                    case "cursor":
+                        spawnPos = cursorPos;
+                        break;
+                    case "inventory":
+                        spawnInventory = controlledCharacter?.Inventory;
+                        break;
+                    default:
+                        //Check if last arg matches the name of an in-game player
+                        if (GameMain.Server != null)
+                        {
+                            var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
+                            if (client == null)
+                            {
+                                NewMessage("No player found with the name \"" + args.Last() + "\".  Spawning item at random location. If the player you want to give the item to has a space in their name, try surrounding their name with quotes (\").", Color.Red);
+                                break;
+                            }
+                            else if (client.Character == null)
+                            {
+                                errorMsg = "The player \"" + args.Last() + "\" is connected, but hasn't spawned yet.";
+                                return;
+                            }
+                            else
+                            {
+                                //If the last arg matches the name of an in-game player, set the destination to their inventory.
+                                spawnInventory = client.Character.Inventory;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                            if (matchingCharacter?.Inventory != null) spawnInventory = matchingCharacter.Inventory;
+                        }
+                        break;
+                }
             }
 
-            string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
+            string itemName = args[0];
 
             var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
@@ -2153,7 +2178,6 @@ namespace Barotrauma
             if (spawnPos != null)
             {
                 Entity.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
-
             }
             else if (spawnInventory != null)
             {
