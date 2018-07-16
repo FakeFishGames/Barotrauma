@@ -80,7 +80,7 @@ namespace Barotrauma
                     if (distSqr > displayRangeSqr) continue;
 
                     //ignore reactors (don't want to blow them up)
-                    if (item.GetComponent<Reactor>() == null) continue;
+                    if (item.GetComponent<Reactor>() != null) continue;
 
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
 
