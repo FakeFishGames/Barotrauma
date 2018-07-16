@@ -52,7 +52,7 @@ namespace Barotrauma
         public float Range { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float DamageRange { get; private set; }
+        public float DamageRange { get; set; }
 
         [Serialize(0.0f, false)]
         public float Duration { get; private set; }

@@ -664,19 +664,20 @@ namespace Barotrauma
             float damageAmount = 0.0f;
             for (int i = 0; i < SectionCount; i++)
             {
-                if (Vector2.DistanceSquared(SectionPosition(i, true), worldPosition) <= attack.DamageRange * attack.DamageRange)
+                Rectangle sectionRect = sections[i].rect;
+                sectionRect.Y -= sections[i].rect.Height;
+                if (MathUtils.CircleIntersectsRectangle(transformedPos, attack.DamageRange, sectionRect))
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
-
 #if CLIENT
-            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 #endif
                 }
             }
 
 #if CLIENT
-            if (playSound)// && !SectionBodyDisabled(i))
+            if (playSound)
             {
                 string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
