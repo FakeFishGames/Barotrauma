@@ -2054,7 +2054,7 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
-
+            
             if (causeOfDeath == CauseOfDeathType.Affliction)
             {
                 GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
@@ -2062,6 +2062,23 @@ namespace Barotrauma
             else
             {
                 GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+            }
+
+            if (GameSettings.SendUserStatistics)
+            {
+                string characterType = "Unknown";
+                if (this == controlled)
+                    characterType = "Player";
+                else if (IsRemotePlayer)
+                    characterType = "RemotePlayer";
+                else if (AIController is EnemyAIController)
+                    characterType = "Enemy";
+                else if (AIController is HumanAIController)
+                    characterType = "AICrew";
+
+                string causeOfDeathStr = causeOfDeathAffliction == null ?
+                    causeOfDeathAffliction.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
+                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
             }
 
             CauseOfDeath = new CauseOfDeath(causeOfDeath, causeOfDeathAffliction, LastAttacker, LastDamageSource);

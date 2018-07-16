@@ -176,6 +176,18 @@ namespace Barotrauma
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
 
+        private static bool sendUserStatistics;
+        public static bool SendUserStatistics
+        {
+            get { return sendUserStatistics; }
+            set
+            {
+                sendUserStatistics = value;
+                GameMain.Config.Save();
+            }
+        }
+        public static bool ShowUserStatisticsPrompt { get; private set; }
+
         public GameSettings(string filePath)
         {
             SelectedContentPackages = new HashSet<ContentPackage>();
@@ -196,6 +208,14 @@ namespace Barotrauma
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+            if (doc.Root.Attribute("senduserstatistics") == null)
+            {
+                ShowUserStatisticsPrompt = true;
+            }
+            else
+            {
+                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
+            }
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
@@ -340,7 +360,6 @@ namespace Barotrauma
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
                         var matchingContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
-
                         if (matchingContentPackage == null)
                         {
                             DebugConsole.ThrowError("Content package \"" + path + "\" not found!");
@@ -374,7 +393,8 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("senduserstatistics", sendUserStatistics));
 
             if (WasGameUpdated)
             {

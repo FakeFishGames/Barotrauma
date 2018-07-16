@@ -241,6 +241,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.RandomizeSettings();
             started = true;
 
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:Start");
+
             yield return CoroutineStatus.Success;
         }
 
@@ -834,11 +836,21 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
                     string banReason = inc.ReadString();
+                    bool range = inc.ReadBoolean();
+                    double durationSeconds = inc.ReadDouble();
+
                     var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, false);
+                        if (durationSeconds > 0)
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range, TimeSpan.FromSeconds(durationSeconds));
+                        }
+                        else
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range);
+                        }
                     }
                     break;
                 case ClientPermissions.EndRound:
@@ -1464,11 +1476,12 @@ namespace Barotrauma.Networking
                 List<Character> characters = new List<Character>();
                 foreach (Client client in ConnectedClients)
                 {
-                    if (client.Character != null)
-                        characters.Add(client.Character);
+                    if (client.Character != null) characters.Add(client.Character);
                 }
-                var max = (int)Math.Round(characters.Count * 0.2f, 1);
-                var traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
+                if (Character != null) characters.Add(Character);
+
+                int max = Math.Max(TraitorUseRatio ? (int)Math.Round(characters.Count * TraitorRatio, 1) : 1, 1);
+                int traitorCount = Rand.Int(max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
                 if (TraitorManager.TraitorList.Count > 0)
@@ -1479,6 +1492,8 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
 
@@ -1626,6 +1641,7 @@ namespace Barotrauma.Networking
                 foreach (Client client in connectedClients)
                 {
                     client.Character = null;
+                    client.HasSpawned = false;
                     client.InGame = false;
                 }
             }
@@ -1753,6 +1769,7 @@ namespace Barotrauma.Networking
             }
 
             client.Character = null;
+            client.HasSpawned = false;
             client.InGame = false;
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.Name + " has left the server";
@@ -2524,7 +2541,11 @@ namespace Barotrauma.Networking
                 Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
                 log.Save();
             }
-                        
+
+            if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:ShutDown");
+            }
             server.Shutdown("The server has been shut down");
         }
     }

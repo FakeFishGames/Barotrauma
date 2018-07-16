@@ -13,7 +13,7 @@
       <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
-      <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="0.5"/>
+      <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
       <sound file="Content/Items/OxygenGenerator/oxygengenerator.ogg" type="OnActive" range="1000.0" volume="CurrFlow" volumemultiplier="0.001f" loop="true"/>
     </OxygenGenerator>
   
