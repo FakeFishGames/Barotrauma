@@ -1512,6 +1512,7 @@ namespace Barotrauma.Networking
                 foreach (Client client in connectedClients)
                 {
                     client.Character = null;
+                    client.HasSpawned = false;
                     client.InGame = false;
                 }
             }
@@ -1631,6 +1632,7 @@ namespace Barotrauma.Networking
             }
 
             client.Character = null;
+            client.HasSpawned = false;
             client.InGame = false;
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.Name + " has left the server";
