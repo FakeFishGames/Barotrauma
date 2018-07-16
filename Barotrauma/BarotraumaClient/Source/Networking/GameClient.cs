@@ -1441,6 +1441,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientPermissions.Ban);
             msg.Write(kickedName);
             msg.Write(reason);
+            msg.Write(range);
+            msg.Write(duration.HasValue ? duration.Value.TotalSeconds : 0.0); //0 = permaban
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }

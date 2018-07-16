@@ -780,11 +780,21 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
                     string banReason = inc.ReadString();
+                    bool range = inc.ReadBoolean();
+                    double durationSeconds = inc.ReadDouble();
+
                     var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, false);
+                        if (durationSeconds > 0)
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range, TimeSpan.FromSeconds(durationSeconds));
+                        }
+                        else
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range);
+                        }
                     }
                     break;
                 case ClientPermissions.EndRound:
