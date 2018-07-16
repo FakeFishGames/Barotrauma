@@ -88,6 +88,7 @@ namespace Barotrauma
 
             public void Execute(string[] args)
             {
+                if (onExecute == null) return;
                 onExecute(args);
             }
 
@@ -100,6 +101,7 @@ namespace Barotrauma
             {
                 if (onClientRequestExecute == null)
                 {
+                    if (onExecute == null) return;
                     onExecute(args);
                 }
                 else
