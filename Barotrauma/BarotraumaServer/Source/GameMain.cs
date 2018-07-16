@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
+using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -67,8 +68,10 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
+            
             SteamManager.Initialize();
+            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
+            
             GameScreen = new GameScreen();
         }
 
@@ -128,6 +131,7 @@ namespace Barotrauma
         public void CloseServer()
         {
             SteamManager.ShutDown();
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             Server.Disconnect();
             Server = null;
         }

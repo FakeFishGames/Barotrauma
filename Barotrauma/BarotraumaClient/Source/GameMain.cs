@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using GameAnalyticsSDK.Net;
 
 namespace Barotrauma
 {
@@ -153,7 +154,7 @@ namespace Barotrauma
 
             Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
-
+            
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -246,13 +247,38 @@ namespace Barotrauma
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
+        private void InitUserStats()
+        {
+            if (GameSettings.ShowUserStatisticsPrompt)
+            {
+                var userStatsPrompt = new GUIMessageBox(
+                    "Do you want to help us make Barotrauma better?",
+                    "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
+                    "does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.",
+                    new string[] { "Yes", "No" });
+                userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    GameSettings.SendUserStatistics = true;
+                    GameAnalyticsManager.Init();
+                    return true;
+                };
+                userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
+                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) => { GameSettings.SendUserStatistics = false; return true; };
+                userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+            }
+            else if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsManager.Init();
+            }
+        }
+
         private IEnumerable<object> Load()
         {
             if (GameSettings.VerboseLogging)
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-
+            
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
@@ -272,6 +298,8 @@ namespace Barotrauma
             {
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
+
+            InitUserStats();
 
         yield return CoroutineStatus.Running;
 
@@ -551,9 +579,8 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-
             SteamManager.ShutDown();
-
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             base.OnExiting(sender, args);
         }
     }

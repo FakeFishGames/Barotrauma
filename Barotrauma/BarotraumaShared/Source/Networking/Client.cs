@@ -30,10 +30,20 @@ namespace Barotrauma.Networking
 
         public byte TeamID = 0;
 
-        public Character Character;
+        private Character character;
+        public Character Character
+        {
+            get { return character; }
+            set
+            {
+                character = value;
+                if (character != null) HasSpawned = true;
+            }
+        }
         public CharacterInfo CharacterInfo;
         public NetConnection Connection { get; set; }
-        public bool InGame;
+        public bool InGame;        
+        public bool HasSpawned; //has the client spawned as a character during the current round
         
         public UInt16 LastRecvGeneralUpdate = 0;
         

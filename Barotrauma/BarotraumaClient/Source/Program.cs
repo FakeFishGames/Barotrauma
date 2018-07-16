@@ -7,6 +7,7 @@ using System.Text;
 
 #if WINDOWS
 using System.Windows.Forms;
+using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework.Graphics;
 #endif
 
@@ -155,7 +156,6 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/.");
             sb.AppendLine("\n");
 #if DEBUG
             sb.AppendLine("Game version " + GameMain.Version + " (debug build)");
@@ -219,14 +219,25 @@ namespace Barotrauma
             {
                 sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
             }
+
+            string crashReport = sb.ToString();
             
-            sw.WriteLine(sb.ToString());
+            sw.WriteLine(crashReport);
             sw.Close();
             
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
-            CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please post the report on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");       
+            if (GameSettings.SendUserStatistics)
+            {
+                CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
+                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
+                GameAnalytics.OnStop();
+            }
+            else
+            {
+                CrashMessageBox("A crash report (\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
+            }
         }
     }
 #endif

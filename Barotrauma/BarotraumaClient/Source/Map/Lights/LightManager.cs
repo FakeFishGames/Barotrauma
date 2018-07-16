@@ -286,10 +286,11 @@ namespace Barotrauma.Lights
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
             if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
+            if (ViewTarget == null) return;
 
             graphics.SetRenderTarget(LosTexture);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
+            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(lightmapScale, lightmapScale, 1.0f)));
             
             if (ObstructVision)
             {

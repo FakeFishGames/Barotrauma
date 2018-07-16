@@ -583,7 +583,7 @@ namespace Barotrauma
                 //only the first message (the currently visible one) is updated at a time
                 break;
             }
-
+            
             foreach (GUIMessage msg in messages)
             {
                 if (!msg.WorldSpace) continue;
@@ -1132,7 +1132,8 @@ namespace Barotrauma
 
         private static bool QuitClicked(GUIButton button, object obj)
         {
-            if (button.UserData as string == "save")
+            bool save = button.UserData as string == "save";
+            if (save)
             {
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
@@ -1144,11 +1145,19 @@ namespace Barotrauma
             }
 
             CoroutineManager.StopCoroutines("EndCinematic");
-
-            GameMain.GameSession = null;
-
+            
+            if (GameMain.GameSession != null)
+            {
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
+                GameMain.GameSession = null;
+            }
+            
             GameMain.MainMenuScreen.Select();
-            //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
         }
