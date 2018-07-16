@@ -1343,11 +1343,12 @@ namespace Barotrauma.Networking
                 List<Character> characters = new List<Character>();
                 foreach (Client client in ConnectedClients)
                 {
-                    if (client.Character != null)
-                        characters.Add(client.Character);
+                    if (client.Character != null) characters.Add(client.Character);
                 }
-                var max = (int)Math.Round(characters.Count * 0.2f, 1);
-                var traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
+                if (Character != null) characters.Add(Character);
+
+                int max = Math.Max(TraitorUseRatio ? (int)Math.Round(characters.Count * TraitorRatio, 1) : 1, 1);
+                int traitorCount = Rand.Int(max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
                 if (TraitorManager.TraitorList.Count > 0)
