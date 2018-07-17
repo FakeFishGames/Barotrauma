@@ -230,7 +230,14 @@ namespace Barotrauma
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();
 
-            if (GameMode != null) GameMode.MsgBox();
+            if (GameMode != null)
+            {
+                GameMode.MsgBox();
+                if (GameMode is MultiPlayerCampaign campaign && GameMain.Server != null)
+                {
+                    campaign.CargoManager.CreateItems();
+                }
+            }
 
             if (GameSettings.SendUserStatistics)
             {
@@ -238,7 +245,7 @@ namespace Barotrauma
                 GameAnalyticsSDK.Net.GameAnalytics.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
                     GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
             }
-
+            
 #if CLIENT
             if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
             roundSummary = new RoundSummary(this);
