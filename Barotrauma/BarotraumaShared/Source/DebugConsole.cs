@@ -1267,6 +1267,26 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                args[0] = args[0].ToLowerInvariant();
+                foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+                {
+                    if (mapEntity.Name.ToLowerInvariant() == args[0])
+                    {
+                        ThrowError(mapEntity.ID + ": " + mapEntity.Name.ToString());
+                    }
+                }
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.Name.ToLowerInvariant() == args[0] || character.SpeciesName.ToLowerInvariant() == args[0])
+                    {
+                        ThrowError(character.ID + ": " + character.Name.ToString());
+                    }
+                }
+            }));
+
             commands.Add(new Command("heal", "heal [character name]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed.", (string[] args) =>
             {
                 Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);

@@ -315,9 +315,9 @@ namespace Barotrauma
         public override string ToString()
         {
 #if CLIENT
-            return (GameMain.DebugDraw) ? Name + "(ID: " + ID + ")" : Name;
+            return (GameMain.DebugDraw) ? Name + " (ID: " + ID + ")" : Name;
 #elif SERVER
-            return Name + "(ID: " + ID + ")";
+            return Name + " (ID: " + ID + ")";
 #endif
         }
 
