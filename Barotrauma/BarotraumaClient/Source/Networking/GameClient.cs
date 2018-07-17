@@ -691,6 +691,7 @@ namespace Barotrauma.Networking
             string shuttleHash      = inc.ReadString();
 
             string modeName         = inc.ReadString();
+            int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
@@ -750,7 +751,7 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
                 GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
             }
             else
@@ -821,7 +822,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
                 }
             }
             
@@ -883,7 +884,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1440,6 +1441,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientPermissions.Ban);
             msg.Write(kickedName);
             msg.Write(reason);
+            msg.Write(range);
+            msg.Write(duration.HasValue ? duration.Value.TotalSeconds : 0.0); //0 = permaban
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }

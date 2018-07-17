@@ -62,6 +62,7 @@ namespace Barotrauma
 
             if (File.Exists(file))
             {
+                ToolBox.IsProperFilenameCase(file);
                 return TextureLoader.FromFile(file);
             }
             else

@@ -238,6 +238,7 @@ namespace Barotrauma.Lights
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
             if (!LosEnabled && !ObstructVision) return;
+            if (ViewTarget == null) return;
 
             graphics.SetRenderTarget(losTexture);
 

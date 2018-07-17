@@ -501,6 +501,8 @@ namespace Barotrauma
                     }
                 }
 
+                if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("multiplayer");
+
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
@@ -559,14 +561,18 @@ namespace Barotrauma
                 var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PlayYourself"), Alignment.TopLeft, myPlayerFrame);
                 playYourself.Selected = GameMain.NetworkMember.CharacterInfo != null;
                 playYourself.OnSelected = TogglePlayYourself;
-                playYourself.UserData = "playyourself";                
-                
-                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", "", myPlayerFrame);
-                toggleHead.UserData = -1;
-                toggleHead.OnClicked = ToggleHead;
-                toggleHead = new GUIButton(new Rectangle(60, 50, 15, 15), ">", "", myPlayerFrame);
-                toggleHead.UserData = 1;
-                toggleHead.OnClicked = ToggleHead;
+                playYourself.UserData = "playyourself";
+
+                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", "", myPlayerFrame)
+                {
+                    UserData = -1,
+                    OnClicked = ToggleHead
+                };
+                toggleHead = new GUIButton(new Rectangle(60, 50, 15, 15), ">", "", myPlayerFrame)
+                {
+                    UserData = 1,
+                    OnClicked = ToggleHead
+                };
 
                 new GUITextBlock(new Rectangle(100, 30, 200, 30), TextManager.Get("Gender"), "", myPlayerFrame);
 
@@ -629,7 +635,10 @@ namespace Barotrauma
         {
             if (tickBox.Selected)
             {
-                GameMain.NetworkMember.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, Gender.None, null);
+                GameMain.NetworkMember.CharacterInfo = 
+                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
+                GameMain.NetworkMember.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
+
                 UpdatePlayerFrame(GameMain.NetworkMember.CharacterInfo);
             }
             else
@@ -688,9 +697,9 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
+            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
+            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
         }
 
@@ -701,8 +710,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeBlock.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = Mission.MissionTypes.Count - 1;
-            if (missionTypeIndex >= Mission.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
+            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 
@@ -1247,14 +1256,12 @@ namespace Barotrauma
 
         private bool ToggleHead(GUIButton button, object userData)
         {
-            int dir = (int)userData;
-
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
 
+            int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
-
+            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
-
             return true;
         }
 
@@ -1262,7 +1269,7 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-
+            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }

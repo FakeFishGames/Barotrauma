@@ -91,27 +91,35 @@ namespace Barotrauma
             set { savePath = value; }
         }
 
-        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, string missionType = "")
+            : this(submarine, savePath)
+        {
+            GameMode = gameModePreset.Instantiate(missionType);
+        }
+
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset, MissionPrefab missionPrefab)
+            : this(submarine, savePath)
+        {
+            GameMode = gameModePreset.Instantiate(missionPrefab);
+        }
+
+        private GameSession(Submarine submarine, string savePath)
         {
             Submarine.MainSub = submarine;
-
+            this.submarine = submarine;
             GameMain.GameSession = this;
-            
             EventManager = new EventManager(this);
-            
             this.savePath = savePath;
-
 #if CLIENT
             CrewManager = new CrewManager();
 
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
-
-            if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
-            this.submarine = submarine;
         }
-        
+
+
         public GameSession(Submarine selectedSub, string saveFile, XDocument doc)
             : this(selectedSub, saveFile)
         {
@@ -218,8 +226,22 @@ namespace Barotrauma
 
             EventManager.StartRound(level);
 
-            if (GameMode != null) GameMode.MsgBox();
+            if (GameMode != null)
+            {
+                GameMode.MsgBox();
+                if (GameMode is MultiPlayerCampaign campaign && GameMain.Server != null)
+                {
+                    campaign.CargoManager.CreateItems();
+                }
+            }
 
+            if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Submarine:" + submarine.Name);
+                GameAnalyticsSDK.Net.GameAnalytics.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
+                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+            }
+            
 #if CLIENT
             roundSummary = new RoundSummary(this);
 
@@ -231,6 +253,11 @@ namespace Barotrauma
         public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
+            if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsSDK.Net.GameAnalytics.AddProgressionEvent((Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
+                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+            }
 
 #if CLIENT
             if (roundSummary != null)

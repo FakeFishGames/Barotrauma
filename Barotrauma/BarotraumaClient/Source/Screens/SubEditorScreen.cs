@@ -348,6 +348,8 @@ namespace Barotrauma
             }
 
             cam.UpdateTransform();
+
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("editor");
         }
 
         public override void Deselect()

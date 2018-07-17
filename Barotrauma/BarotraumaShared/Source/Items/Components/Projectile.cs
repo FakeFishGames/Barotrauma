@@ -93,6 +93,26 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (attack != null && attack.DamageRange <= 0.0f && item.body != null)
+            {
+                switch (item.body.BodyShape)
+                {
+                    case PhysicsBody.Shape.Circle:
+                        attack.DamageRange = item.body.radius;
+                        break;
+                    case PhysicsBody.Shape.Capsule:
+                        attack.DamageRange = item.body.height / 2 + item.body.radius;
+                        break;
+                    case PhysicsBody.Shape.Rectangle:
+                        attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
+                        break;
+                }
+                attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
+            }
+        }
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character != null && !characterUsable) return false;
@@ -196,7 +216,6 @@ namespace Barotrauma.Items.Components
                 if (OnProjectileCollision(fixture, normal))
                 {
                     hitSomething = true;
-                    //Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero);
                     break;
                 }
             }
@@ -281,8 +300,7 @@ namespace Barotrauma.Items.Components
             Character character = null;
             if (attack != null)
             {
-                var submarine = target.Body.UserData as Submarine;
-                if (submarine != null)
+                if (target.Body.UserData is Submarine submarine)
                 {
                     item.Move(-submarine.Position);
                     item.Submarine = submarine;
@@ -290,9 +308,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
 
-                Limb limb = target.Body.UserData as Limb;
                 Structure structure;
-                if (limb != null)
+                if (target.Body.UserData is Limb limb)
                 {
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
                     if (limb.character != null)
@@ -350,13 +367,12 @@ namespace Barotrauma.Items.Components
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
                     }
-                    //contained.Condition = 0.0f; //Let the freaking .xml handle it jeez
                 }
             }
 
             if (RemoveOnHit)
             {
-                Item.Spawner.AddToRemoveQueue(item);
+                Entity.Spawner.AddToRemoveQueue(item);
             }
 
             return true;
