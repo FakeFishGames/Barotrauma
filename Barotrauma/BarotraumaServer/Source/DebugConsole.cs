@@ -14,7 +14,7 @@ namespace Barotrauma
         {
             lock (QueuedCommands)
             {
-                while (QueuedCommands.Count>0)
+                while (QueuedCommands.Count > 0)
                 {
                     ExecuteCommand(QueuedCommands[0]);
                     QueuedCommands.RemoveAt(0);
@@ -190,6 +190,16 @@ namespace Barotrauma
                     NewMessage(ent.ToString(), Color.Lime);
                 }
             }));
+
+            //"dummy commands" that only exist so that the server can give clients permissions to use them
+            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character (client-only).", null));
+            commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null));
+            commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null));
+            commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null));
+            commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
+            commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
+            commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null));
+
 #if DEBUG
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {

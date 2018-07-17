@@ -394,7 +394,7 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             }));
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the ", (string[] args) =>
+            commands.Add(new Command("followsub", "followsub: Toggle whether the camera should follow the nearest submarine.", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
