@@ -111,11 +111,11 @@ namespace Barotrauma
 #endif
                     break;
                 case VoteType.EndRound:
-                    if (sender.Character == null) return;
+                    if (!sender.HasSpawned) return;
                     sender.SetVote(voteType, inc.ReadBoolean());
 
-                    GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.Character != null && c.GetVote<bool>(VoteType.EndRound));
-                    GameMain.NetworkMember.EndVoteMax = GameMain.Server.ConnectedClients.Count(c => c.Character != null);
+                    GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound));
+                    GameMain.NetworkMember.EndVoteMax = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned);
 
                     break;
                 case VoteType.Kick:

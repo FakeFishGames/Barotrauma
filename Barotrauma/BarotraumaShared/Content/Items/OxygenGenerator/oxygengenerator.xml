@@ -13,6 +13,7 @@
     </fixrequirement>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
+
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Oxygenite Tank" Condition="0.0"/>
