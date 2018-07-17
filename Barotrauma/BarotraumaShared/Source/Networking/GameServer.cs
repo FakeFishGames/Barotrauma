@@ -209,6 +209,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.RandomizeSettings();
             started = true;
 
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:Start");
+
             yield return CoroutineStatus.Success;
         }
 
@@ -778,11 +780,21 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
                     string banReason = inc.ReadString();
+                    bool range = inc.ReadBoolean();
+                    double durationSeconds = inc.ReadDouble();
+
                     var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, false);
+                        if (durationSeconds > 0)
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range, TimeSpan.FromSeconds(durationSeconds));
+                        }
+                        else
+                        {
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.Name : banReason, range);
+                        }
                     }
                     break;
                 case ClientPermissions.EndRound:
@@ -993,7 +1005,7 @@ namespace Barotrauma.Networking
 
                 outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
 
-                outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
+                outmsg.WriteRangedInteger(0, MissionPrefab.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
 
                 outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
@@ -1213,7 +1225,7 @@ namespace Barotrauma.Networking
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
             {
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, MissionPrefab.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
             }
 
             if (GameMain.GameSession.GameMode.Mission != null &&
@@ -1341,11 +1353,12 @@ namespace Barotrauma.Networking
                 List<Character> characters = new List<Character>();
                 foreach (Client client in ConnectedClients)
                 {
-                    if (client.Character != null)
-                        characters.Add(client.Character);
+                    if (client.Character != null) characters.Add(client.Character);
                 }
-                var max = (int)Math.Round(characters.Count * 0.2f, 1);
-                var traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
+                if (Character != null) characters.Add(Character);
+
+                int max = Math.Max(TraitorUseRatio ? (int)Math.Round(characters.Count * TraitorRatio, 1) : 1, 1);
+                int traitorCount = Rand.Int(max + 1);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
                 if (TraitorManager.TraitorList.Count > 0)
@@ -1356,6 +1369,8 @@ namespace Barotrauma.Networking
                     }
                 }
             }
+
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
 
@@ -1402,6 +1417,8 @@ namespace Barotrauma.Networking
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
             msg.Write(selectedMode.Name);
+            msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ? 
+                -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
 
@@ -1495,6 +1512,7 @@ namespace Barotrauma.Networking
                 foreach (Client client in connectedClients)
                 {
                     client.Character = null;
+                    client.HasSpawned = false;
                     client.InGame = false;
                 }
             }
@@ -1614,6 +1632,7 @@ namespace Barotrauma.Networking
             }
 
             client.Character = null;
+            client.HasSpawned = false;
             client.InGame = false;
 
             if (string.IsNullOrWhiteSpace(msg)) msg = client.Name + " has left the server";
@@ -2063,9 +2082,17 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender);
-            sender.CharacterInfo.HeadSpriteId = headSpriteId;
-            sender.JobPreferences = jobPreferences;
+            sender.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, sender.Name, gender)
+            {
+                HeadSpriteId = headSpriteId
+            };
+
+            //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
+            Debug.Assert(sender.JobPreferences.Count > 0);
+            if (jobPreferences.Count > 0)
+            {
+                sender.JobPreferences = jobPreferences;
+            }
         }
         
         public void AssignJobs(List<Client> unassigned, bool assignHost)
@@ -2110,6 +2137,7 @@ namespace Barotrauma.Networking
             //if any of the players has chosen a job that is Always Allowed, give them that job
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
+                if (unassigned[i].JobPreferences.Count == 0) continue;
                 if (!unassigned[i].JobPreferences[0].AllowAlways) continue;
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
@@ -2138,47 +2166,49 @@ namespace Barotrauma.Networking
                 }
             }
 
-            //find a suitable job for the rest of the players
-            foreach (Client c in unassigned)
+            //attempt to give the clients a job they have in their job preferences
+            for (int i = unassigned.Count - 1; i >= 0; i--)
             {
-                foreach (JobPrefab preferredJob in c.JobPreferences)
+                foreach (JobPrefab preferredJob in unassigned[i].JobPreferences)
                 {
                     //the maximum number of players that can have this job hasn't been reached yet
                     // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && c.Karma >= preferredJob.MinKarma)
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && unassigned[i].Karma >= preferredJob.MinKarma)
                     {
-                        c.AssignedJob = preferredJob;
+                        unassigned[i].AssignedJob = preferredJob;
                         assignedClientCount[preferredJob]++;
+                        unassigned.RemoveAt(i);
                         break;
                     }
-                    //none of the jobs the client prefers are available anymore
-                    else if (preferredJob == c.JobPreferences.Last())
-                    {
-                        //find all jobs that are still available
-                        var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[preferredJob] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+                }
+            }
 
-                        //all jobs taken, give a random job
-                        if (remainingJobs.Count == 0)
-                        {
-                            DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                            int jobIndex = Rand.Range(0,JobPrefab.List.Count);
-                            int skips = 0;
-                            while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
-                            {
-                                jobIndex++;
-                                skips++;
-                                if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
-                                if (skips >= JobPrefab.List.Count) break;
-                            }
-                            c.AssignedJob = JobPrefab.List[jobIndex];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
-                        else //some jobs still left, choose one of them by random
-                        {
-                            c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
-                            assignedClientCount[c.AssignedJob]++;
-                        }
+            //give random jobs to rest of the clients
+            foreach (Client c in unassigned)
+            {
+                //find all jobs that are still available
+                var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[jp] < jp.MaxNumber && c.Karma >= jp.MinKarma);
+
+                //all jobs taken, give a random job
+                if (remainingJobs.Count == 0)
+                {
+                    DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    int jobIndex = Rand.Range(0, JobPrefab.List.Count);
+                    int skips = 0;
+                    while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                    {
+                        jobIndex++;
+                        skips++;
+                        if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
+                        if (skips >= JobPrefab.List.Count) break;
                     }
+                    c.AssignedJob = JobPrefab.List[jobIndex];
+                    assignedClientCount[c.AssignedJob]++;
+                }
+                else //some jobs still left, choose one of them by random
+                {
+                    c.AssignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
+                    assignedClientCount[c.AssignedJob]++;
                 }
             }
         }
@@ -2236,7 +2266,11 @@ namespace Barotrauma.Networking
                 Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
                 log.Save();
             }
-                        
+
+            if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("GameServer:ShutDown");
+            }
             server.Shutdown("The server has been shut down");
         }
     }

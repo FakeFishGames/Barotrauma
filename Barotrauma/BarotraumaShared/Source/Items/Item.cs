@@ -315,9 +315,9 @@ namespace Barotrauma
         public override string ToString()
         {
 #if CLIENT
-            return (GameMain.DebugDraw) ? Name + "(ID: " + ID + ")" : Name;
+            return (GameMain.DebugDraw) ? Name + " (ID: " + ID + ")" : Name;
 #elif SERVER
-            return Name + "(ID: " + ID + ")";
+            return Name + " (ID: " + ID + ")";
 #endif
         }
 
@@ -602,7 +602,7 @@ namespace Barotrauma
             foreach (Item item in ItemList) item.FindHull();
         }
         
-        public virtual Hull FindHull()
+        public Hull FindHull()
         {
             if (parentInventory != null && parentInventory.Owner != null)
             {
@@ -648,39 +648,9 @@ namespace Barotrauma
                 
         public void SetContainedItemPositions()
         {
-            if (ownInventory == null) return;
-
-            Vector2 simPos = SimPosition;
-            Vector2 displayPos = Position;
-
-            foreach (Item contained in ownInventory.Items)
+            foreach (ItemComponent component in components)
             {
-                if (contained == null) continue;
-
-                if (contained.body != null)
-                {
-                    try
-                    {
-                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
-                    }
-                }
-
-                contained.Rect =
-                    new Rectangle(
-                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
-                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
-                        contained.Rect.Width, contained.Rect.Height);
-
-                contained.Submarine = Submarine;
-                contained.CurrentHull = CurrentHull;
-
-                contained.SetContainedItemPositions();
+                (component as ItemContainer)?.SetContainedItemPositions();
             }
         }
         
@@ -804,7 +774,7 @@ namespace Barotrauma
         private bool IsInWater()
         {
             if (CurrentHull == null) return true;
-            
+                        
             float surfaceY = CurrentHull.Surface;
 
             return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;

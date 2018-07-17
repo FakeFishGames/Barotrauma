@@ -25,7 +25,7 @@ namespace Barotrauma
         public bool EnableSplashScreen { get; set; }
 
         //public bool FullScreenEnabled { get; set; }
-        
+
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
@@ -51,8 +51,37 @@ namespace Barotrauma
             }
         }
 
-        private bool unsavedSettings;
+        private int characterHeadIndex;
+        public int CharacterHeadIndex
+        {
+            get { return characterHeadIndex; }
+            set
+            {
+                if (value == characterHeadIndex) return;
+                // Begin saving coroutine. Remove any existing save coroutines if one is running.
+                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
+                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
 
+                characterHeadIndex = value;
+            }
+        }
+
+        private Gender characterGender;
+        public Gender CharacterGender
+        {
+            get { return characterGender; }
+            set
+            {
+                if (value == characterGender) return;
+                // Begin saving coroutine. Remove any existing save coroutines if one is running.
+                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
+                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
+
+                characterGender = value;
+            }
+        }
+
+        private bool unsavedSettings;
         public bool UnsavedSettings
         {
             get
@@ -125,6 +154,18 @@ namespace Barotrauma
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
 
+        private static bool sendUserStatistics;
+        public static bool SendUserStatistics
+        {
+            get { return sendUserStatistics; }
+            set
+            {
+                sendUserStatistics = value;
+                GameMain.Config.Save("config.xml");
+            }
+        }
+        public static bool ShowUserStatisticsPrompt { get; private set; }
+
         public GameSettings(string filePath)
         {
             ContentPackage.LoadAll(ContentPackage.Folder);
@@ -143,6 +184,14 @@ namespace Barotrauma
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+            if (doc.Root.Attribute("senduserstatistics") == null)
+            {
+                ShowUserStatisticsPrompt = true;
+            }
+            else
+            {
+                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
+            }
 
             if (doc == null)
             {
@@ -210,18 +259,15 @@ namespace Barotrauma
                     case "keymapping":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            InputType inputType;
-                            if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
+                            if (Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType))
                             {
-                                int mouseButton;
-                                if (int.TryParse(attribute.Value.ToString(), out mouseButton))
+                                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
                                 else
                                 {
-                                    Keys key;
-                                    if (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
                                     {
                                         keyMapping[(int)inputType] = new KeyOrMouse(key);
                                     }
@@ -238,6 +284,9 @@ namespace Barotrauma
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
+                        characterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        characterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
+                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
                         break;
                 }
             }
@@ -259,10 +308,8 @@ namespace Barotrauma
                 {
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
-
-
+                        
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);
-
                         if (SelectedContentPackage == null) SelectedContentPackage = new ContentPackage(path);
                         break;
                 }
@@ -287,7 +334,8 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen));
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("senduserstatistics", sendUserStatistics));
 
             if (WasGameUpdated)
             {
@@ -344,8 +392,10 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
+            var playerElement = new XElement("player",
+                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("headindex", characterHeadIndex),
+                new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
 
             doc.Save(filePath);

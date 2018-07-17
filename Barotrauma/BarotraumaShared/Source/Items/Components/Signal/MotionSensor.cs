@@ -49,14 +49,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (motionDetected)
-            {
-                item.SendSignal(1, output, "state_out", null);
-            }
-            else if (!string.IsNullOrWhiteSpace(falseOutput))
-            {
-                item.SendSignal(1, falseOutput, "state_out", null);
-            }
+            string signalOut = motionDetected ? output : falseOutput;
+
+            if (!string.IsNullOrEmpty(signalOut)) item.SendSignal(1, signalOut, "state_out", null);
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;

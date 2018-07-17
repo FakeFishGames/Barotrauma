@@ -17,9 +17,11 @@
 
     <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+        <Conditional Condition="gt 25"/>
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="3.0"/>
       </StatusEffect>
+      <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true"/>
     </Pickable>
   </Item>
 
@@ -188,7 +190,7 @@
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems name="Battery Cell,Fulgurium Battery Cell" type="Contained" msg="Battery Cell required"/>
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0"/>
-      <sound file="scooter.ogg" type="OnUse" range="500.0" loop="true"/>
+      <sound file="Content/Items/Diving/scooter.ogg" type="OnUse" range="500.0" loop="true"/>
       <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.2" range="800">
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>

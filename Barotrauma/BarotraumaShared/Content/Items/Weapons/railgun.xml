@@ -35,8 +35,7 @@
     category="Machine"
     type="Controller"
     linkable="true"
-    disableitemusagewhenselected="true"
-    >
+    disableitemusagewhenselected="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -56,14 +55,79 @@
   </Item>
 
   <Item
+    name="Rear Railgun Controller"
+    category="Machine"
+    type="Controller"
+    linkable="true"
+    disableitemusagewhenselected="true" >
+
+    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="188,0,57,96"/>
+    
+    <Controller UserPos="35, -50.0" direction ="Left" canbeselected = "true">
+      <limbposition limb="Head" position="-5,-62"/>
+      <limbposition limb="Torso" position="-5,-108"/>
+      <limbposition limb="LeftHand" position="43,-85"/>
+      <limbposition limb="RightHand" position="43,-85"/>
+    </Controller>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="power_in"/>
+      <output name="position_out"/>
+      <output name="trigger_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
     name="Railgun Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+      <Containable name="Nuclear Shell"/>
+      <Containable name="Ancient Weapon"/>
+    </ItemContainer>      
+  </Item>
+
+  <Item
+    name="Railgun Single Loader"
+    category="Machine"
+    linkable="true">
+
+    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="23,-76" iteminterval="0,0" itemrotation="90" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+      <Containable name="Nuclear Shell"/>
+      <Containable name="Ancient Weapon"/>
+    </ItemContainer>      
+  </Item>
+  
+  <Item
+    name="Forward Railgun Loader"
+    category="Machine"
+    linkable="true">
+
+    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable name="Railgun Shell"/>
+      <Containable name="Nuclear Shell"/>
+      <Containable name="Ancient Weapon"/>
+    </ItemContainer>      
+  </Item>
+  
+  <Item
+    name="Rear Railgun Loader"
+    category="Machine"
+    linkable="true">
+
+    <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
+
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true">
       <Containable name="Railgun Shell"/>
       <Containable name="Nuclear Shell"/>
       <Containable name="Ancient Weapon"/>
@@ -86,7 +150,7 @@
     <Body width="87" height="18" density="30"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
-    
+
     <Projectile characterusable="false" launchimpulse="80.0">
       <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
 
@@ -94,7 +158,9 @@
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
 
-      <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>      
+      <StatusEffect type="OnImpact" target="Contained">
+        <Use/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">

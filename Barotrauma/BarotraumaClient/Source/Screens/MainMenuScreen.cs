@@ -142,6 +142,8 @@ namespace Barotrauma
             campaignSetupUI.UpdateSubList();
 
             SelectTab(null, 0);
+
+            if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("");
         }
 
         public bool SelectTab(GUIButton button, object obj)

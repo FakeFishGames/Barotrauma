@@ -147,6 +147,39 @@
   </Item>
 
   <Item
+    name="Adder Component"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the sum of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <AdderComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
     name="Or Component"
     category="Electrical"
     Tags="smallitem"

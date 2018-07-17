@@ -13,7 +13,7 @@
 
       <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
-      <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
       <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
@@ -135,7 +135,7 @@
 
       <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
-      <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
       <fabricableitem name="Medical Syringe" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Chloral Hydrate" requireditems="Chlorine, Ethanol" requiredtime="20">
@@ -216,7 +216,7 @@
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,128,64,128"/>
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
-      <sound file="deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
+      <sound file="Content/Items/Fabricators/deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       
       <GuiFrame rect="0,0,300,200" alignment="Center" style="ItemUI"/>
     </Deconstructor>

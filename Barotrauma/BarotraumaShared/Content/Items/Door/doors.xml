@@ -11,7 +11,7 @@
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
-      <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
@@ -45,7 +45,7 @@
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
-      <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
@@ -79,7 +79,7 @@
       <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
       <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
-      <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Door/door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
@@ -110,18 +110,24 @@
 
     <DockingPort IsHorizontal="true" DistanceTolerance="128,64" DockedDistance="64">
       <Sprite texture ="dockingport.png" sourcerect="127,0,112,144" depth="0.05" origin="0.5,0.5"/>
-      <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
     </DockingPort>
-
+    
+    <fixrequirement name="Electrical repairs">
+      <skill name="Electrical Engineering" level="40"/>
+      <item name="Wire"/>
+      <item name="Screwdriver"/>
+    </fixrequirement>
+    
     <PowerTransfer/>
     <Wire/>
     
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Construction" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -144,8 +150,8 @@
 
     <DockingPort IsHorizontal="false" DistanceTolerance="64,128" DockedDistance="64">
       <Sprite texture ="dockingport.png" sourcerect="127,144,48,112" depth="0.05" origin="0.5,0.5"/>
-      <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <sound file="Content/Items/Door/dockingport1.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Door/dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
@@ -161,7 +167,7 @@
     <Wire/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="60"/>
+      <skill name="Construction" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -187,7 +193,7 @@
       <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
       <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true"/>
-      <sound file="duct.ogg" type="OnUse" range="300"/>
+      <sound file="Content/Items/Door/duct.ogg" type="OnUse" range="300"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0"/>
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Door/ductBreak.ogg" range="2000"/>
