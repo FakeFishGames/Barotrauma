@@ -991,7 +991,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
                 }
             }
             
