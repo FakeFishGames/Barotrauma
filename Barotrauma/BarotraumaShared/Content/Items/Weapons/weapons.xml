@@ -125,7 +125,7 @@
     <Body width="37" height="18" density="50"/>
 
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
-              aimpos="90,10" handle1="-11,-7"/>
+              aimpos="75,18" handle1="-10,-5"/>
 
     <RangedWeapon barrelpos="37,3" spread="0" unskilledspread="2">
       <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
