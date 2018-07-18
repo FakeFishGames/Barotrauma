@@ -3,10 +3,10 @@
 using System;
 using System.IO;
 using System.Text;
+using GameAnalyticsSDK.Net;
 
 #if WINDOWS
 using System.Windows.Forms;
-using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework.Graphics;
 #endif
 

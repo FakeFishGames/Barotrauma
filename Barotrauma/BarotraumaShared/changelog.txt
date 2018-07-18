@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.5
+---------------------------------------------------------------------------------------------------------
+
+- Added the option to automatically send crash reports and anonymous usage statistics to the developers.
+The usage statistics include information such as the selected game mode, selected submarine, causes of
+death and mission outcomes. When the game is started for the first time, a message box prompts you to
+select whether you want to send the information or not.
+- Fixed a bug that caused clients to get desynced when purchasing items in the multiplayer campaign.
+- Added a signal component that adds the received signals together.
+- Devices outside the submarine can be rewired in-game (not just in the sub editor).
+- Fixed a crash caused by vision obstruction logic.
+- Fixed clients being unable to give non-permanent or range bans.
+- Clients are allowed to vote to end the round if they have spawned at some point during the round, 
+even if the character they controlled doesn't exist anymore.
+- Dedicated servers can give clients the permission to use console commands that aren't available in
+for dedicated server (e.g. los, lights, control)
+- Banip, banid & kickid commands can be used by clients now (if they have the permission to do so).
+- Spawnitem [item] inventory, ragdoll and kill commands target the character of the client using
+the command instead of the host's character.
+- Spawnitem can be used to spawn items in the inventory of a specific character.
+- Fixed explosions with an EMP value only damaging reactors (when they should only ignore reactors).
+- Fire can only explode oxygen tanks that are >25% full (otherwise the condition of the tank just drops 
+to 0). Prevents infinite explosions when an oxygen generator is on fire with oxygen tanks inside.
+- Fixed projectiles with a damage range of 0 not applying their structuredamage value to structures.
+- Items with a physics body can be used as pumps, so now it's possible to make portable items that remove
+water from inside the sub.
+- Fixed traitor ratio setting being ignored and the minimum number of traitors being 2.
+- Fixed crashes caused by custom characters with no AI configuration.
+- Character head and gender settings are saved.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.4
 ---------------------------------------------------------------------------------------------------------
 
