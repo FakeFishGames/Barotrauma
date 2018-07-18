@@ -31,6 +31,7 @@ namespace Barotrauma
                 inputThread.Start();
                 game.Run();
                 inputThread.Abort(); inputThread.Join();
+                if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             }
             catch (Exception e)
             {
