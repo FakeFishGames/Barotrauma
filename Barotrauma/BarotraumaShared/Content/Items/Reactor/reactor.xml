@@ -21,7 +21,7 @@
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
-    <Reactor canbeselected = "true">
+    <Reactor canbeselected="true" vulnerabletoemp="false">
       <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Construction" level="30"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
