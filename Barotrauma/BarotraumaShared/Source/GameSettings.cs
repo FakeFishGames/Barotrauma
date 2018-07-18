@@ -164,7 +164,7 @@ namespace Barotrauma
                 GameMain.Config.Save("config.xml");
             }
         }
-        public static bool ShowUserStatisticsPrompt { get; private set; }
+        public static bool ShowUserStatisticsPrompt { get; set; }
 
         public GameSettings(string filePath)
         {
@@ -334,8 +334,12 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("senduserstatistics", sendUserStatistics));
+                new XAttribute("enablesplashscreen", EnableSplashScreen));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
 
             if (WasGameUpdated)
             {
