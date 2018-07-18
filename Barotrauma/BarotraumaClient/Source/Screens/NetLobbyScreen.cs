@@ -770,7 +770,10 @@ namespace Barotrauma
         {
             if (tickBox.Selected)
             {
-                GameMain.NetworkMember.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, Gender.None, null);
+                GameMain.NetworkMember.CharacterInfo = 
+                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
+                GameMain.NetworkMember.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
+
                 UpdatePlayerFrame(GameMain.NetworkMember.CharacterInfo);
             }
             else
@@ -931,8 +934,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
-            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
@@ -1389,9 +1392,11 @@ namespace Barotrauma
 
         private bool ToggleHead(GUIButton button, object userData)
         {
-            int dir = (int)userData;
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
+
+            int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
+            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
@@ -1400,7 +1405,7 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-
+            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
@@ -1610,8 +1615,8 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
+            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
             var matchingListSub = subList.Content.GetChildByUserData(sub);
             if (matchingListSub != null)

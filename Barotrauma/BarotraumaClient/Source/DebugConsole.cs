@@ -505,6 +505,8 @@ namespace Barotrauma
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 
+                GameSettings.ShowUserStatisticsPrompt = true;
+
                 GameSettings.VerboseLogging = false;
 
                 if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")

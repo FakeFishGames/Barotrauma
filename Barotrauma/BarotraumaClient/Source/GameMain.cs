@@ -143,7 +143,7 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
+            
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
@@ -258,12 +258,18 @@ namespace Barotrauma
                     new string[] { "Yes", "No" });
                 userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
                 {
+                    GameSettings.ShowUserStatisticsPrompt = false;
                     GameSettings.SendUserStatistics = true;
                     GameAnalyticsManager.Init();
                     return true;
                 };
                 userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
-                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) => { GameSettings.SendUserStatistics = false; return true; };
+                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    GameSettings.ShowUserStatisticsPrompt = false;
+                    GameSettings.SendUserStatistics = false;
+                    return true;
+                };
                 userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
             }
             else if (GameSettings.SendUserStatistics)

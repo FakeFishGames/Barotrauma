@@ -259,7 +259,9 @@ namespace Barotrauma.Items.Components
 
                     if (currLength > MaxLength)
                     {
-                        Vector2 pullBackDir = Vector2.Normalize(nodes[nodes.Count - 1] - newNodePos);
+                        Vector2 diff = nodes[nodes.Count - 1] - newNodePos;
+                        Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
+
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
                         user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
                         if (currLength > MaxLength * 1.5f)
@@ -279,6 +281,7 @@ namespace Barotrauma.Items.Components
         
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (character == null) return false;
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)

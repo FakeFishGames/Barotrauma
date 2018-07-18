@@ -130,8 +130,8 @@ namespace Barotrauma
 
         public void CloseServer()
         {
+            //TODO: fix
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             Server.Disconnect();
             Server = null;
         }
@@ -178,7 +178,6 @@ namespace Barotrauma
             stopwatch.Stop();
 
             CloseServer();
-
         }
         
         public void ProcessInput()

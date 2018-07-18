@@ -984,7 +984,7 @@ namespace Barotrauma.Networking
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
 
-                var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName && s.MD5Hash.Hash == subHash);
+                var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
                 if (matchingSub != null)
                 {
                     submarines.Add(matchingSub);
@@ -1351,8 +1351,12 @@ namespace Barotrauma.Networking
                 case FileTransferType.Submarine:
                     new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.Get("FileDownloadedNotification").Replace("[filename]", transfer.FileName));
                     var newSub = new Submarine(transfer.FilePath);
-                    Submarine.SavedSubmarines.RemoveAll(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash);
-                    Submarine.SavedSubmarines.Add(newSub);
+                    var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
+                    foreach (Submarine existingSub in existingSubs)
+                    {
+                        existingSub.Dispose();
+                    }
+                    Submarine.AddToSavedSubs(newSub);
 
                     for (int i = 0; i < 2; i++)
                     {

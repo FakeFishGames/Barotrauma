@@ -355,6 +355,12 @@ namespace Barotrauma.Items.Components
 
         private void PushCharactersAway()
         {
+            if (!MathUtils.IsValid(item.SimPosition))
+            {
+                DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
+                return;
+            }
+
             //push characters out of the doorway when the door is closing/opening
             Vector2 simPos = ConvertUnits.ToSimUnits(new Vector2(item.Rect.X, item.Rect.Y));
 
@@ -366,6 +372,12 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
+                if (!c.Enabled) continue;
+                if (!MathUtils.IsValid(c.SimPosition))
+                {
+                    DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")");
+                    continue;
+                }
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
                 List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
@@ -378,13 +390,11 @@ namespace Barotrauma.Items.Components
                     if (isHorizontal)
                     {
                         if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
-
                         diff = body.SimPosition.Y - item.SimPosition.Y;
                     }
                     else
                     {
                         if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
-
                         diff = body.SimPosition.X - item.SimPosition.X;
                     }
                    

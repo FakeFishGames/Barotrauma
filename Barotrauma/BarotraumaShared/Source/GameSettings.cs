@@ -34,11 +34,11 @@ namespace Barotrauma
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
-
+        
         public int ParticleLimit { get; set; }
 
         public bool ChromaticAberrationEnabled { get; set; }
-                
+
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
@@ -89,8 +89,31 @@ namespace Barotrauma
             set { jobNamePreferences = value; }
         }
 
-        private bool unsavedSettings;
+        private int characterHeadIndex;
+        public int CharacterHeadIndex
+        {
+            get { return characterHeadIndex; }
+            set
+            {
+                if (value == characterHeadIndex) return;
+                characterHeadIndex = value;
+                Save();
+            }
+        }
 
+        private Gender characterGender;
+        public Gender CharacterGender
+        {
+            get { return characterGender; }
+            set
+            {
+                if (value == characterGender) return;
+                characterGender = value;
+                Save();
+            }
+        }
+
+        private bool unsavedSettings;
         public bool UnsavedSettings
         {
             get
@@ -186,7 +209,7 @@ namespace Barotrauma
                 GameMain.Config.Save();
             }
         }
-        public static bool ShowUserStatisticsPrompt { get; private set; }
+        public static bool ShowUserStatisticsPrompt { get; set; }
 
         public GameSettings(string filePath)
         {
@@ -332,6 +355,9 @@ namespace Barotrauma
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
+                        characterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        characterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
+                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
                         break;
                     case "tutorials":
                         foreach (XElement tutorialElement in subElement.Elements())
@@ -393,8 +419,12 @@ namespace Barotrauma
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("senduserstatistics", sendUserStatistics));
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
 
             if (WasGameUpdated)
             {
@@ -461,8 +491,10 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
+            var playerElement = new XElement("player",
+                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("headindex", characterHeadIndex),
+                new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
 
 #if CLIENT
