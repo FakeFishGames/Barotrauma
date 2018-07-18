@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -151,7 +152,7 @@ namespace Barotrauma
                 {
                     int votes = inc.ReadByte();
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.Find(sm => sm.Name == subName);
+                    Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(sm => sm.Name == subName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
                 }
             }

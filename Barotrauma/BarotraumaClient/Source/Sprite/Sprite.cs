@@ -254,11 +254,14 @@ namespace Barotrauma
         partial void DisposeTexture()
         {
             //check if another sprite is using the same texture
-            foreach (Sprite s in list)
+            if (!string.IsNullOrEmpty(file)) //file can be empty if the sprite is created directly from a Texture2D instance
             {
-                if (s.file == file) return;
+                foreach (Sprite s in list)
+                {
+                    if (s.file == file) return;
+                }
             }
-
+            
             //if not, free the texture
             if (texture != null)
             {
@@ -267,6 +270,5 @@ namespace Barotrauma
             }
         }
     }
-
 }
 
