@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public static void Init()
         {
-#if DEBUB
+#if DEBUG
             GameAnalytics.SetEnabledInfoLog(true);
 #endif
             GameAnalytics.ConfigureBuild(GameMain.Version.ToString());
