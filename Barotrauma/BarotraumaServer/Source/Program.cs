@@ -1,5 +1,6 @@
 ﻿#region Using Statements
 
+using Barotrauma.Steam;
 using GameAnalyticsSDK.Net;
 using System;
 using System.IO;
@@ -33,6 +34,7 @@ namespace Barotrauma
                 game.Run();
                 inputThread.Abort(); inputThread.Join();
                 if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
+                SteamManager.ShutDown();
             }
             catch (Exception e)
             {
@@ -95,6 +97,7 @@ namespace Barotrauma
                 Console.Write("A crash report(\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
             }
+            SteamManager.ShutDown();
         }
     }
 }

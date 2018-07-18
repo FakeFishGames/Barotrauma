@@ -130,8 +130,6 @@ namespace Barotrauma
 
         public void CloseServer()
         {
-            //TODO: fix
-            SteamManager.ShutDown();
             Server.Disconnect();
             Server = null;
         }
