@@ -21,8 +21,7 @@
     
 	<StatusEffect type="OnBroken" target="This" disabledeltatime="true">
 		<sound file="Content/Items/Reactor/explosion.ogg"/>
-		<Explosion range ="200" damage="20" structuredamage="20" stun="5" force="10" decal="explosion" decalsize="0.4"/>
-		<Fire size="50"/>
+		<Explosion range="50" damage="0" stun="0" force="3.0" flames="false" shockwave="false" sparks="true"/>
 	</StatusEffect>
     </OxygenGenerator>
   
