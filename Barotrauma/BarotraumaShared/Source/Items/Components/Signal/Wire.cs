@@ -222,6 +222,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (character == null) return false;
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
 
             if (newNodePos != Vector2.Zero && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
