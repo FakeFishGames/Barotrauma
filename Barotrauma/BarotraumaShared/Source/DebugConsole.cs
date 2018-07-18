@@ -249,7 +249,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 SpawnItem(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Character.Controlled, out string errorMsg);
@@ -2139,57 +2139,55 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
 
-            if (args.Length > 1)
+            int extraParams = 0;
+            switch (args.Last().ToLowerInvariant())
             {
-                switch (args[1])
-                {
-                    case "cursor":
-                        spawnPos = cursorPos;
-                        break;
-                    case "inventory":
-                        spawnInventory = controlledCharacter?.Inventory;
-                        break;
-                    default:
-                        //Check if last arg matches the name of an in-game player
-                        if (GameMain.Server != null)
-                        {
-                            var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
-                            if (client == null)
-                            {
-                                NewMessage("No player found with the name \"" + args.Last() + "\".  Spawning item at random location. If the player you want to give the item to has a space in their name, try surrounding their name with quotes (\").", Color.Red);
-                                break;
-                            }
-                            else if (client.Character == null)
-                            {
-                                errorMsg = "The player \"" + args.Last() + "\" is connected, but hasn't spawned yet.";
-                                return;
-                            }
-                            else
-                            {
-                                //If the last arg matches the name of an in-game player, set the destination to their inventory.
-                                spawnInventory = client.Character.Inventory;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
-                            if (matchingCharacter?.Inventory != null) spawnInventory = matchingCharacter.Inventory;
-                        }
-                        break;
-                }
+                case "cursor":
+                    extraParams = 1;
+                    spawnPos = cursorPos;
+                    break;
+                case "inventory":
+                    extraParams = 1;
+                    spawnInventory = controlledCharacter == null ? null : controlledCharacter.Inventory;
+                    break;
+                case "cargo":
+                    var wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+                    spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
+                    break;
+                //Dont do a thing, random is basically Human points anyways - its in the help description.
+                case "random":
+                    extraParams = 1;
+                    return;
+                default:
+                    extraParams = 0;
+                    break;
             }
 
-            string itemName = args[0];
+            string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
 
-            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            if (itemPrefab == null && extraParams == 0)
+            {
+                if (GameMain.Server != null)
+                {
+                    var client = GameMain.Server.ConnectedClients.Find(c => c.Name.ToLower() == args.Last().ToLower());
+                    if (client != null)
+                    {
+                        extraParams += 1;
+                        itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
+                        if (client.Character != null && client.Character.Name == args.Last().ToLower()) spawnInventory = client.Character.Inventory;
+                        itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                    }
+                }
+            }
+            //Check again if the item can be found again after having checked for a character
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
                 return;
             }
 
-            if (spawnPos == null && spawnInventory == null)
+            if ((spawnPos == null || spawnPos == Vector2.Zero) && spawnInventory == null)
             {
                 var wp = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
                 spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
@@ -2198,6 +2196,7 @@ namespace Barotrauma
             if (spawnPos != null)
             {
                 Entity.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
+
             }
             else if (spawnInventory != null)
             {
