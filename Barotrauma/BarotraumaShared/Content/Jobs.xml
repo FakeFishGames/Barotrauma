@@ -16,10 +16,14 @@
       <Item name="Headset" equip="true">
         <Item name="Battery Cell"/>
       </Item>
-      <Item name="Revolver" equip="false">
-        <Item name="Revolver Round"/>
-        <Item name="Revolver Round"/>
-      </Item>
+        <Item name="Revolver" equip="false">
+          <Item name="Revolver Round"/>
+          <Item name="Revolver Round"/>
+          <Item name="Revolver Round"/>
+          <Item name="Revolver Round"/>
+          <Item name="Revolver Round"/>
+          <Item name="Revolver Round"/>
+        </Item>
     </Items>
   </Job>
   
