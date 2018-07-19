@@ -1,5 +1,6 @@
 ﻿using GameAnalyticsSDK.Net;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,8 @@ namespace Barotrauma
 {
     public static class GameAnalyticsManager
     {
+        private static HashSet<string> sentEventIdentifiers = new HashSet<string>();
+
         public static void Init()
         {
 #if DEBUG
@@ -46,6 +49,18 @@ namespace Barotrauma
                 GameAnalytics.AddDesignEvent("ContentPackage:" +
                     contentPackageName.Replace(":", "").Substring(0, Math.Min(32, contentPackageName.Length)));
             }
+        }
+
+        /// <summary>
+        /// Adds an error event to GameAnalytics if an event with the same identifier has not been added yet.
+        /// </summary>
+        public static void AddErrorEventOnce(string identifier, EGAErrorSeverity errorSeverity, string message)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            if (sentEventIdentifiers.Contains(identifier)) return;
+
+            GameAnalytics.AddErrorEvent(errorSeverity, message);
+            sentEventIdentifiers.Add(identifier);
         }
     }
 }

@@ -203,7 +203,7 @@ namespace Barotrauma
             if (GameSettings.SendUserStatistics)
             {
                 CrashMessageBox( "A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Error, crashReport);
+                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnStop();
             }
             else
