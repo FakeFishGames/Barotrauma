@@ -1985,6 +1985,13 @@ namespace Barotrauma
                 return;
             }
 
+            if (!MathUtils.IsValid(cursorWorldPos))
+            {
+                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client);
+                NewMessage(client.Name + " attempted to execute the console command \"" + command + "\" with invalid cursor position.", Color.White);
+                return;
+            }
+
             try
             {
                 matchingCommand.ServerExecuteOnClientRequest(client, cursorWorldPos, splitCommand.Skip(1).ToArray());
