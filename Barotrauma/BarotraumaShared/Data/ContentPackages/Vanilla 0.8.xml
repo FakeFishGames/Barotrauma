@@ -11,6 +11,7 @@
   <Item file="Content/Items/Jobgear/engigear.xml" />
   <Item file="Content/Items/Jobgear/misc.xml" />
   <Item file="Content/Items/Jobgear/securitygear.xml" />
+  <Item file="Content/Items/CreatureLoot/creatureloot.xml" />
   <Item file="Content/Items/Diving/divinggear.xml" />
   <Item file="Content/Items/Door/doors.xml" />
   <Item file="Content/Items/Electricity/lights.xml" />
