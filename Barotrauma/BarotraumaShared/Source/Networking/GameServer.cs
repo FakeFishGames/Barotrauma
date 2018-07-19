@@ -1583,24 +1583,7 @@ namespace Barotrauma.Networking
 
             BanClient(client, reason, range, duration);
         }
-
-        public void BanClient(NetConnection conn, string reason, bool range = false, TimeSpan? duration = null)
-        {
-            Client client = connectedClients.Find(c => c.Connection == conn);
-            if (client == null)
-            {
-                conn.Disconnect("You have been banned from the server");
-                if (!banList.IsBanned(conn.RemoteEndPoint.Address.ToString()))
-                {
-                    banList.BanPlayer("Unnamed", conn.RemoteEndPoint.Address.ToString(), reason, duration);
-                }                
-            }
-            else
-            {
-                BanClient(client, reason, range);
-            }
-        }
-
+        
         public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
         {
             if (client == null) return;
