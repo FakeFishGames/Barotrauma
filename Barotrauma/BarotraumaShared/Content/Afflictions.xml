@@ -35,6 +35,7 @@
     damageoverlayalpha="1">
     <SuitableTreatment name="Bandage" suitability="100"/>
     <SuitableTreatment name="Hemostop" suitability="80"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
@@ -53,6 +54,7 @@
     burnoverlayalpha="1">
     <SuitableTreatment name="Fentanyl" suitability="100"/>
     <SuitableTreatment name="Bandage" suitability="100"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -74,6 +76,7 @@
     <SuitableTreatment name="Liquid Oxygenite" suitability="50"/>
     <SuitableTreatment name="Fentanyl" suitability="-100"/>
     <SuitableTreatment name="Morphine" suitability="-100"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
@@ -91,7 +94,9 @@
     activationthreshold="5"
     maxstrength="100">
     <SuitableTreatment name="Plasma" suitability="100"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
+    <SuitableTreatment name="Hemostop" suitability="10"/>
+    <SuitableTreatment name="Auxiliorizine" suitability="20"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="5" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
@@ -144,6 +149,7 @@
     maxstrength="100"
     achievementonremoved="healhusk">
     <SuitableTreatment name="Calyxanide" suitability="100"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
@@ -214,8 +220,8 @@
     indicatorlimb="Head"
     showiconthreshold="20"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="100"/>
-    <SuitableTreatment name="Fentanyl" suitability="100"/>    
+    <SuitableTreatment name="Morphine" suitability="50"/>
+    <SuitableTreatment name="Fentanyl" suitability="50"/>    
     <SuitableTreatment name="Naloxone" suitability="100"/>
     <!-- Slow down the character and slightly decrease vitality -->
     <Effect minstrength="20" maxstrength="40"
@@ -246,6 +252,43 @@
       maxscreendistort="3.0"
       strengthchange="-0.2"
       minchromaticaberration="5.0"
+      maxchromaticaberration="10.0"
+      minradialdistort="0.0"
+      maxradialdistort="10.0">
+      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+    </Effect>
+
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Opiate overdose"
+    description="Opiate overdose may lead to respiratory failure and death."
+    type="poison"
+    causeofdeathdescription="Died of opiate overdose"
+    selfcauseofdeathdescription="You have died of opiate overdose."
+    limbspecific="false"
+    indicatorlimb="Head"
+    showiconthreshold="50"
+    maxstrength="100">
+    <SuitableTreatment name="Morphine" suitability="-100"/>
+    <SuitableTreatment name="Fentanyl" suitability="-100"/>
+    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <!-- No effects except slight distortion at this level -->
+    <Effect minstrength="0" maxstrength="50"
+      strengthchange="-1"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="1.0">
+    </Effect>
+
+    <!-- Starts to become lethal when strength is above 50 -->
+    <Effect minstrength="50" maxstrength="100"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="200"
+      minscreendistort="0.0"
+      maxscreendistort="3.0"
+      strengthchange="-1"
+      minchromaticaberration="0.0"
       maxchromaticaberration="10.0"
       minradialdistort="0.0"
       maxradialdistort="10.0">
@@ -301,6 +344,9 @@
     maxstrength="100"
     damageoverlayalpha="1"
     strengthchange="-0.1">
+    <SuitableTreatment name="Bandage" suitability="100"/>
+    <SuitableTreatment name="Hemostop" suitability="80"/>
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"/>
@@ -318,7 +364,7 @@
     showiconthreshold="5"
     maxstrength="100">
     <SuitableTreatment name="Morbusanide" suitability="100"/>
-    
+    <SuitableTreatment name="Morbusine" suitability="-100"/>
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
     <Effect minstrength="0" maxstrength="100"
