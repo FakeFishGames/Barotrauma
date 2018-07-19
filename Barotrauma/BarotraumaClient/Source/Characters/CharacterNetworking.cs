@@ -185,6 +185,7 @@ namespace Barotrauma
 
                                 Controlled = this;
                                 IsRemotePlayer = false;
+                                GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
@@ -291,6 +292,7 @@ namespace Barotrauma
                 
                 if (GameMain.Client.ID == ownerId)
                 {
+                    GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
                     Controlled = character;
 
