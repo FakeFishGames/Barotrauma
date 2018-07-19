@@ -115,10 +115,9 @@
   <RoundSummaryGameOver>The ocean has claimed [sub] and its crew.</RoundSummaryGameOver>
   <RoundSummaryCrewStatus>Crew status</RoundSummaryCrewStatus>
   
-
   <!-- Character HUD -->
-  <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
-  <PressureInfo>Water pressure increasing!</PressureInfo>
+  <OxygenHUDWarning>Oxygen low</OxygenHUDWarning>
+  <PressureHUDWarning>High pressure</PressureHUDWarning>
   <Grabbing>Grabbing</Grabbing>
   <Stun>Stun</Stun>
   <Disguised>(Disguised)</Disguised>

@@ -469,7 +469,9 @@ namespace Barotrauma
             {
                 List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
                 if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f)
-                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.Pressure.Icon, "High pressure"));
+                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.Pressure.Icon, TextManager.Get("PressureHUDWarning")));
+                if (character.CurrentHull != null && character.OxygenAvailable < LowOxygenThreshold && oxygenLowAffliction.Strength < oxygenLowAffliction.Prefab.ShowIconThreshold)
+                    statusIcons.Add(new Pair<Sprite, string>(AfflictionPrefab.OxygenLow.Icon, TextManager.Get("OxygenHUDWarning")));
 
                 var allAfflictions = GetAllAfflictions(true);
                 foreach (Affliction affliction in allAfflictions)
