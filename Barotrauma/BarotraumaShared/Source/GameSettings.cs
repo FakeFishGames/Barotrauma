@@ -402,7 +402,16 @@ namespace Barotrauma
                 new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
 
-            doc.Save(filePath);
+            try
+            {
+                doc.Save(filePath);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving game settings failed.", e);
+                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace);
+            }
         }
         
         private IEnumerable<object> ApplyUnsavedChanges()
