@@ -1020,29 +1020,32 @@ namespace Barotrauma.Networking
                         ChatMessage.ClientRead(inc);
                         break;
                     default:
-                        DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
-                        if (prevObjHeader != null)
+                        List<string> errorLines = new List<string>
                         {
-                            DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Error occurred on the very first object!");
-                        }
-                        DebugConsole.ThrowError("Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)");
+                            "Error while reading update from server (unknown object header \"" + objHeader + "\"!)",
+                            prevObjHeader != null ? "Previous object type: " + prevObjHeader.ToString() : "Error occurred on the very first object!",
+                            "Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)"
+                        };
                         if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
                         {
                             foreach (IServerSerializable ent in entities)
                             {
                                 if (ent == null)
                                 {
-                                    DebugConsole.ThrowError(" - NULL");
+                                    errorLines.Add(" - NULL");
                                     continue;
                                 }
                                 Entity e = ent as Entity;
-                                DebugConsole.ThrowError(" - "+e.ToString());
+                                errorLines.Add(" - " + e.ToString());
                             }
                         }
+
+                        foreach (string line in errorLines)
+                        {
+                            DebugConsole.ThrowError(line);
+                        }
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadInGameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, string.Join("\n", errorLines));
+
                         DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
                         FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);

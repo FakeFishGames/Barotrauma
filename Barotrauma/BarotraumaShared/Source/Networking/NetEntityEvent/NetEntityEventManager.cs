@@ -30,6 +30,9 @@ namespace Barotrauma.Networking
                 catch (Exception exception)
                 {
                     DebugConsole.ThrowError("Failed to write an event for the entity \"" + e.Entity + "\"", exception);
+                    GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:WriteFailed" + e.Entity.ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to write an event for the entity \"" + e.Entity + "\"\n" + exception.StackTrace);
 
                     //write an empty event to avoid messing up IDs
                     //(otherwise the clients might read the next event in the message and think its ID 
@@ -49,6 +52,9 @@ namespace Barotrauma.Networking
                 if (tempEventBuffer.LengthBytes > 255)
                 {
                     DebugConsole.ThrowError("Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
+                    GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:TooLong" + e.Entity.ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
                 }
 
                 //the ID has been taken by another entity (the original entity has been removed) -> write an empty event

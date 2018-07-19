@@ -55,6 +55,10 @@ namespace Barotrauma.Sounds
 #else
                 DebugConsole.NewMessage("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace, Microsoft.Xna.Framework.Color.Red);
 #endif
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "OggStream.Check:"+ AL.GetErrorString(error), 
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace);
             }
         }
     }

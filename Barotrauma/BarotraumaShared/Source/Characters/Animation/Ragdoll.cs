@@ -25,6 +25,11 @@ namespace Barotrauma
                 if (limbs == null)
                 {
                     DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Ragdoll.Limbs:AccessRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+
                     return new Limb[0];
                 }
                 return limbs;
@@ -1165,6 +1170,16 @@ namespace Barotrauma
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll.SetPosition:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                return;
+            }
+
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
             Collider.SetTransform(simPosition, Collider.Rotation);

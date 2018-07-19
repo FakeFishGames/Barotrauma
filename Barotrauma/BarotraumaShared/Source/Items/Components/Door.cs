@@ -352,6 +352,8 @@ namespace Barotrauma.Items.Components
             if (!MathUtils.IsValid(item.SimPosition))
             {
                 DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
+                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                      "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
                 return;
             }
 
@@ -370,6 +372,10 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(c.SimPosition))
                 {
                     DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")");
+                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
+                        " Removed: " + c.Removed +
+                        " Remoteplayer: " + c.IsRemotePlayer);
                     continue;
                 }
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
