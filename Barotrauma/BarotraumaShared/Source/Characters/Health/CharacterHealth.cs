@@ -67,6 +67,9 @@ namespace Barotrauma
             }
         }
 
+        const float InsufficientOxygenThreshold = 30.0f;
+        const float LowOxygenThreshold = 50.0f;
+
         private readonly Character character;
 
         private float vitality;
@@ -522,7 +525,7 @@ namespace Barotrauma
             }
             else
             {
-                OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (character.OxygenAvailable < 30.0f ? -5.0f : 10.0f), -100.0f, 100.0f);
+                OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (character.OxygenAvailable < InsufficientOxygenThreshold ? -5.0f : 10.0f), -100.0f, 100.0f);
             }
 
             UpdateOxygenProjSpecific(prevOxygen);
