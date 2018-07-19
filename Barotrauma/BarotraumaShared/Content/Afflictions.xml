@@ -306,4 +306,34 @@
       maxvitalitydecrease="10"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
   </AfflictionBleeding>
+
+  <Affliction
+    name="Morbusine poisoning"
+    description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
+    type="poison"
+    causeofdeathdescription="Died of morbusine poisoning."
+    selfcauseofdeathdescription="You have died of morbusine poisoning."
+    limbspecific="false"
+    indicatorlimb="Torso"
+    showiconthreshold="5"
+    maxstrength="100">
+    <SuitableTreatment name="Morbusanide" suitability="100"/>
+    
+    <!-- Slow down the character and decrease vitality -->
+    <!-- Becomes lethal in ~50 seconds -->
+    <Effect minstrength="0" maxstrength="100"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="100"
+      strengthchange="2"
+      minscreendistort="0.0"
+      maxscreendistort="1.0"
+      minscreenblur="0.0"
+      maxscreenblur="1.0"
+      minchromaticaberration="0.0"
+      maxchromaticaberration="5.0">
+      <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
+    </Effect>
+
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
 </Afflictions>

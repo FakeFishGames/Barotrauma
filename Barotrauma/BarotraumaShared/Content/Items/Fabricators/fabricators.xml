@@ -115,7 +115,7 @@
       <fabricableitem name="Welding Fuel Tank" displayname="Welding Fuel Tank (empty)" requireditems="Steel Bar" outcondition="0.0"/>
     </Fabricator>
 		
-		<ConnectionPanel selectkey="Action" canbeselected = "true">
+		<ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
 			<requireditem name="Screwdriver" type="Equipped"/>
 			<output name="power_in"/>
@@ -151,18 +151,19 @@
       <fabricableitem name="Volatile Compound N" requireditems="Compound N, Flash Powder" requiredtime="20">
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
-      
-      
-      <fabricableitem name="Corrigodone" requireditems="Stabilozine, Chloral Hydrate" requiredtime="20">
+            
+      <fabricableitem name="Morphine" requireditems="Stabilozine, Chloral Hydrate" requiredtime="10">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
-
+      <fabricableitem name="Fentanyl" requireditems="Stabilozine, Morphine" requiredtime="20">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
 
       <fabricableitem name="Erythrozine" requireditems="Stabilozine, Iron Powder" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
-      <fabricableitem name="Fibrinozine" requireditems="Stabilozine, Phosphorus" requiredtime="20">
+      <fabricableitem name="Hemostop" requireditems="Stabilozine, Phosphorus" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
@@ -174,7 +175,7 @@
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
 
-      <fabricableitem name="Auxiliorizine" requireditems="Corrigodone, Erythrozine, Flash Powder" requiredtime="25">
+      <fabricableitem name="Auxiliorizine" requireditems="Fentanyl, Erythrozine, Flash Powder" requiredtime="25">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
@@ -192,7 +193,7 @@
         <Item name="Stabilozine" mincondition="0.25"/>
       </fabricableitem>
 
-      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
+      <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Morphine" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
@@ -201,7 +202,7 @@
       </fabricableitem>
     </Fabricator>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true">
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>
@@ -227,7 +228,7 @@
       <GuiFrame rect="0,0,300,200" alignment="Center" style="ItemUI"/>
     </Deconstructor>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true">
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_in"/>

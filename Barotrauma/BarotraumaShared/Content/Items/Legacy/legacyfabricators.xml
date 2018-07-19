@@ -147,7 +147,7 @@
       </fabricableitem>
       
       
-      <fabricableitem name="Corrigodone" requireditems="Stabilozine, Chloral Hydrate" requiredtime="20">
+      <fabricableitem name="Morphine" requireditems="Stabilozine, Chloral Hydrate" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
@@ -156,7 +156,7 @@
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
-      <fabricableitem name="Fibrinozine" requireditems="Stabilozine, Phosphorus" requiredtime="20">
+      <fabricableitem name="Hemostop" requireditems="Stabilozine, Phosphorus" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
@@ -168,7 +168,7 @@
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
 
-      <fabricableitem name="Auxiliorizine" requireditems="Corrigodone, Erythrozine, Flash Powder" requiredtime="25">
+      <fabricableitem name="Auxiliorizine" requireditems="Morphine, Erythrozine, Flash Powder" requiredtime="25">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
