@@ -47,6 +47,9 @@ namespace Barotrauma.Networking
 
         private FileReceiver fileReceiver;
 
+        //has the client been given a character to control this round
+        public bool HasSpawned;
+
         public byte ID
         {
             get { return myID; }
@@ -524,7 +527,7 @@ namespace Barotrauma.Networking
 
                 if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
+                endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
 
                 if (respawnManager != null)
                 {
@@ -831,6 +834,7 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
         {
             if (Character != null) Character.Remove();
+            HasSpawned = false;
             
             GameMain.LightManager.LightingEnabled = true;
 
@@ -1452,7 +1456,7 @@ namespace Barotrauma.Networking
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-
+            
             if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
             {
                 Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - 35);
@@ -1744,14 +1748,13 @@ namespace Barotrauma.Networking
         {
             if (!gameStarted) return false;
 
-            if (!Voting.AllowEndVoting || myCharacter==null)
+            if (!Voting.AllowEndVoting || !HasSpawned)
             {
                 tickBox.Visible = false;
                 return false;
             }
 
             Vote(VoteType.EndRound, tickBox.Selected);
-
             return false;
         }
     }
