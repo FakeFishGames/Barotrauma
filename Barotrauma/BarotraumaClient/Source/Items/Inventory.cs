@@ -595,7 +595,7 @@ namespace Barotrauma
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
-
+            
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -632,7 +632,7 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             if (GameMain.DebugDraw) GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
 
             if (slot.BorderHighlightColor != Color.Transparent)
@@ -656,6 +656,22 @@ namespace Barotrauma
                 }
 
                 sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, 0, scale);
+                
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
+                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    if (skill > 50.0f)
+                    {
+                        Rectangle highlightRect = rect;
+                        highlightRect.Inflate(3, 3);
+
+                        Color color = treatmentSuitability < 0.0f ?
+                            Color.Lerp(Color.Transparent, Color.Red, -treatmentSuitability) :
+                            Color.Lerp(Color.Transparent, Color.Green, treatmentSuitability);
+                        GUI.DrawRectangle(spriteBatch, highlightRect, color * (((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f), false, 0, 5);
+                    }
+                }
             }
 
             if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)
