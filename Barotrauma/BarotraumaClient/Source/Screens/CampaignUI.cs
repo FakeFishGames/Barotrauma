@@ -149,6 +149,8 @@ namespace Barotrauma
                     null, null,
                     Alignment.TopRight, "", frame);
             }
+
+            RefreshItemTab();
         }
 
         public void Update(float deltaTime)
@@ -293,6 +295,7 @@ namespace Barotrauma
             {
                 CreateItemFrame(ip, selectedItemList, selectedItemList.Rect.Width);
             }
+            selectedItemList.UpdateScrollBarSize();
         }
         
         public void SelectTab(Tab tab)
