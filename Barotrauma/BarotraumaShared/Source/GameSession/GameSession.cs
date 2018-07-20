@@ -236,6 +236,7 @@ namespace Barotrauma
             }
             
             GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
+            GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
                     GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
             

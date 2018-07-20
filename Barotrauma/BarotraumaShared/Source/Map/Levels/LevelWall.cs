@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private List<Body> bodies;
         
-        public LevelWall(List<Vector2> edgePositions, Vector2 extendAmount, Color color)
+        public LevelWall(List<Vector2> edgePositions, Vector2 extendAmount, Color color, Level level)
         {
             cells = new List<VoronoiCell>();
             for (int i = 0; i < edgePositions.Count - 1; i++)
@@ -46,13 +46,13 @@ namespace Barotrauma
                 cells.Add(wallCell);
             }
 
-            bodies = CaveGenerator.GeneratePolygons(cells, out List<Vector2[]> triangles, false);
+            bodies = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles, false);
 
 #if CLIENT
             List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
 
             SetBodyVertices(bodyVertices.ToArray(), color);
-            SetWallVertices(CaveGenerator.GenerateWallShapes(cells), color);
+            SetWallVertices(CaveGenerator.GenerateWallShapes(cells, level), color);
 #endif
         }
 
