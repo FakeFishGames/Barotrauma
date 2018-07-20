@@ -96,6 +96,9 @@ namespace Barotrauma
             if (Limbs == null)
             {
                 DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.Draw:LimbsRemoved", 
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
                 return;
             }
 

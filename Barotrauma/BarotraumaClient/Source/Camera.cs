@@ -101,14 +101,14 @@ namespace Barotrauma
 
         public Camera()
         {
-            zoom = 1.0f;
+            zoom = prevZoom = 1.0f;
             rotation = 0.0f;
             position = Vector2.Zero;
 
             CreateMatrices();
             GameMain.Instance.OnResolutionChanged += () => { CreateMatrices(); };
 
-            UpdateTransform();
+            UpdateTransform(false);
         }
 
         public Vector2 TargetPos

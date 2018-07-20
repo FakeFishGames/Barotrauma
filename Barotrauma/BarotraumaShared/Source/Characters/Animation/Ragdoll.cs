@@ -25,6 +25,11 @@ namespace Barotrauma
                 if (limbs == null)
                 {
                     DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Ragdoll.Limbs:AccessRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
+
                     return new Limb[0];
                 }
                 return limbs;
@@ -385,8 +390,8 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
-                joint.BodyB.SetTransform(
-                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
+                joint.LimbB?.body?.SetTransform(
+                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
@@ -765,7 +770,15 @@ namespace Barotrauma
 
         public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
         {
-            Vector2 findPos = worldPosition==null ? this.WorldPosition : (Vector2)worldPosition;
+            Vector2 findPos = worldPosition == null ? this.WorldPosition : (Vector2)worldPosition;
+            if (!MathUtils.IsValid(findPos))
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll.FindHull:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace);
+                return;
+            }
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
             
@@ -870,6 +883,7 @@ namespace Barotrauma
             prevCollisionCategory = collisionCategory;
 
             Collider.CollidesWith = collisionCategory | Physics.CollisionItemBlocking;
+
             foreach (Limb limb in Limbs)
             {
                 if (limb.ignoreCollisions || limb.IsSevered) continue;
@@ -1217,6 +1231,16 @@ namespace Barotrauma
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll.SetPosition:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                return;
+            }
+
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
             Collider.SetTransform(simPosition, Collider.Rotation);

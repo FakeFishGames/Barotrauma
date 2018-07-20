@@ -616,7 +616,8 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("multiplayer");
+                GameAnalyticsManager.SetCustomDimension01("multiplayer");
+                
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
@@ -881,8 +882,20 @@ namespace Barotrauma
             //hash will be null if opening the sub file failed -> don't select the sub
             if (string.IsNullOrWhiteSpace(hash))
             {
-                (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
-                component.CanBeFocused = false;
+                if (component is GUITextBlock textBlock)
+                {
+                    textBlock.TextColor = Color.DarkRed * 0.8f;
+                    textBlock.CanBeFocused = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "NetLobbyScreen.SelectSub:InvalidComponent", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                }
+
 
                 StartButton.Enabled = false;
 

@@ -496,7 +496,7 @@ namespace Barotrauma
                 new XAttribute("headindex", characterHeadIndex),
                 new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
-
+            
 #if CLIENT
             if (Tutorial.Tutorials != null)
             {
@@ -523,10 +523,19 @@ namespace Barotrauma
                 NewLineOnAttributes = true
             };
 
-            using (var writer = XmlWriter.Create(FilePath, settings))
+            try
             {
-                doc.WriteTo(writer);
-                writer.Flush();
+                using (var writer = XmlWriter.Create(FilePath, settings))
+                {
+                    doc.WriteTo(writer);
+                    writer.Flush();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving game settings failed.", e);
+                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace);
             }
         }
     }

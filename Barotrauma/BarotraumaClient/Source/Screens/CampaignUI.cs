@@ -172,6 +172,8 @@ namespace Barotrauma
                 var frame = c.CreateCharacterFrame(hireList.Content, c.Name + " (" + c.Job.Name + ")", c);
                 new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), c.Salary.ToString(), textAlignment: Alignment.CenterRight);
             }
+
+            RefreshItemTab();
         }
         
         private void DrawMap(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
@@ -303,6 +305,7 @@ namespace Barotrauma
             {
                 CreateItemFrame(ip, ip.GetPrice(campaign.Map.CurrentLocation), selectedItemList, selectedItemList.Rect.Width);
             }
+            selectedItemList.UpdateScrollBarSize();
         }
         
         public void SelectTab(Tab tab)
