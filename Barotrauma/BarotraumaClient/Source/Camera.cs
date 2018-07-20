@@ -99,7 +99,7 @@ namespace Barotrauma
 
         public Camera()
         {
-            zoom = 1.0f;
+            zoom = prevZoom = 1.0f;
             rotation = 0.0f;
             position = Vector2.Zero;
 
@@ -112,7 +112,7 @@ namespace Barotrauma
             viewMatrix = 
                 Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
 
-            UpdateTransform();
+            UpdateTransform(false);
         }
 
         public Vector2 TargetPos
