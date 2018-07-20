@@ -57,6 +57,7 @@ namespace Barotrauma
         public void CreateItems()
         {
             CreateItems(purchasedItems);
+            OnItemsChanged?.Invoke();
         }
 
         public static void CreateItems(List<ItemPrefab> itemsToSpawn)
