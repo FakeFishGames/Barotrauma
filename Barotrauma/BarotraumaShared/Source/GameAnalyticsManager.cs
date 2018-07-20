@@ -62,5 +62,35 @@ namespace Barotrauma
             GameAnalytics.AddErrorEvent(errorSeverity, message);
             sentEventIdentifiers.Add(identifier);
         }
+
+        public static void AddDesignEvent(string eventID)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            GameAnalytics.AddDesignEvent(eventID);
+        }
+
+        public static void AddDesignEvent(string eventID, double value)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            GameAnalytics.AddDesignEvent(eventID, value);
+        }
+
+        public static void AddProgressionEvent(EGAProgressionStatus progressionStatus, string progression01)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            GameAnalytics.AddProgressionEvent(progressionStatus, progression01);
+        }
+
+        public static void AddProgressionEvent(EGAProgressionStatus progressionStatus, string progression01, string progression02)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            GameAnalytics.AddProgressionEvent(progressionStatus, progression01, progression02);
+        }
+
+        public static void SetCustomDimension01(string dimension)
+        {
+            if (!GameSettings.SendUserStatistics) return;
+            GameAnalytics.SetCustomDimension01(dimension);
+        }
     }
 }

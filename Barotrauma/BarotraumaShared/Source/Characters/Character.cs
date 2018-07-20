@@ -1960,7 +1960,7 @@ namespace Barotrauma
                     characterType = "Enemy";
                 else if (AIController is HumanAIController)
                     characterType = "AICrew";
-                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeath);
+                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeath);
             }
                         
             if (OnDeath != null) OnDeath(this, causeOfDeath);

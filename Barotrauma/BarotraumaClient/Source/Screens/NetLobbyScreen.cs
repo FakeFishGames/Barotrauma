@@ -501,7 +501,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameSettings.SendUserStatistics) GameAnalyticsSDK.Net.GameAnalytics.SetCustomDimension01("multiplayer");
+                GameAnalyticsManager.SetCustomDimension01("multiplayer");
 
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
