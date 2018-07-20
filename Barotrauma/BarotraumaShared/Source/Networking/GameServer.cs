@@ -1334,13 +1334,10 @@ namespace Barotrauma.Networking
             {
                 if (sub == null) continue;
 
-                List<ItemPrefab> spawnList = new List<ItemPrefab>();
+                List<PurchasedItem> spawnList = new List<PurchasedItem>();
                 foreach (KeyValuePair<ItemPrefab, int> kvp in extraCargo)
                 {
-                    for (int i = 0; i < kvp.Value; i++)
-                    {
-                        spawnList.Add(kvp.Key);
-                    }
+                    spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value));
                 }
 
                 CargoManager.CreateItems(spawnList);
