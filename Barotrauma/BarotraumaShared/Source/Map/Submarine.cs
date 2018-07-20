@@ -51,8 +51,12 @@ namespace Barotrauma
 
         public static bool LockX, LockY;
 
-        public static List<Submarine> SavedSubmarines = new List<Submarine>();
-        
+        private static List<Submarine> savedSubmarines = new List<Submarine>();
+        public static IEnumerable<Submarine> SavedSubmarines
+        {
+            get { return savedSubmarines; }
+        }
+
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
         public static Submarine[] MainSubs = new Submarine[2];
@@ -214,10 +218,10 @@ namespace Barotrauma
                 return ConvertUnits.ToSimUnits(Position);
             }
         }
-        
+
         public Vector2 Velocity
         {
-            get { return subBody==null ? Vector2.Zero : subBody.Velocity; }
+            get { return subBody == null ? Vector2.Zero : subBody.Velocity; }
             set
             {
                 if (subBody == null) return;
@@ -244,7 +248,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "Barotrauma.Submarine ("+name+")";
+            return "Barotrauma.Submarine (" + name + ")";
         }
 
         public override bool Removed
@@ -296,9 +300,19 @@ namespace Barotrauma
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
                     if (!string.IsNullOrEmpty(previewImageData))
                     {
-                        using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                        try
                         {
-                            PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
+                            using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                            {
+                                PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
+                            }                    
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.", e);
+                            GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                                "Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.");
+                            PreviewImage = null;
                         }
                     }
 #endif
@@ -344,7 +358,7 @@ namespace Barotrauma
             {
                 if (dockedSub == this) continue;
 
-                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;                    
+                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;
 
                 Rectangle dockedSubBorders = dockedSub.Borders;
                 dockedSubBorders.Y -= dockedSubBorders.Height;
@@ -383,15 +397,15 @@ namespace Barotrauma
         public Vector2 FindSpawnPos(Vector2 spawnPos)
         {
             Rectangle dockedBorders = GetDockedBorders();
-            
+
             int iterations = 0;
             bool wallTooClose = false;
             do
             {
                 Rectangle worldBorders = new Rectangle(
                     dockedBorders.X + (int)spawnPos.X,
-                    dockedBorders.Y + (int)spawnPos.Y, 
-                    dockedBorders.Width, 
+                    dockedBorders.Y + (int)spawnPos.Y,
+                    dockedBorders.Width,
                     dockedBorders.Height);
 
                 wallTooClose = false;
@@ -507,8 +521,8 @@ namespace Barotrauma
 
         public Rectangle CalculateDimensions(bool onlyHulls = true)
         {
-            List<MapEntity> entities = onlyHulls ? 
-                Hull.hullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() : 
+            List<MapEntity> entities = onlyHulls ?
+                Hull.hullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
                 MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
 
             if (entities.Count == 0) return Rectangle.Empty;
@@ -557,7 +571,7 @@ namespace Barotrauma
             }
         }
 
-        public static bool RectsOverlap(Rectangle rect1, Rectangle rect2, bool inclusive=true)
+        public static bool RectsOverlap(Rectangle rect1, Rectangle rect2, bool inclusive = true)
         {
             if (inclusive)
             {
@@ -584,25 +598,25 @@ namespace Barotrauma
             {
                 if (fixture == null ||
                     (ignoreSensors && fixture.IsSensor) ||
-                    fixture.CollisionCategories == Category.None || 
+                    fixture.CollisionCategories == Category.None ||
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
-                
-                if (collisionCategory != null && 
+
+                if (collisionCategory != null &&
                     !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
                     !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
-      
+
                 if (ignoredBodies != null && ignoredBodies.Contains(fixture.Body)) return -1;
-                
-                Structure structure = fixture.Body.UserData as Structure;                
+
+                Structure structure = fixture.Body.UserData as Structure;
                 if (structure != null)
                 {
                     if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
-                }                    
+                }
 
                 if (fraction < closestFraction)
                 {
                     closestFraction = fraction;
-                    if (fixture.Body!=null) closestBody = fixture.Body;
+                    if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
             }
@@ -669,7 +683,7 @@ namespace Barotrauma
             get { return flippedX; }
         }
 
-        public void FlipX(List<Submarine> parents=null)
+        public void FlipX(List<Submarine> parents = null)
         {
             if (parents == null) parents = new List<Submarine>();
             parents.Add(this);
@@ -729,7 +743,7 @@ namespace Barotrauma
             {
                 if (bodyItems.Contains(item))
                 {
-                    item.Submarine = this;             
+                    item.Submarine = this;
                     if (Position == Vector2.Zero) item.Move(-HiddenSubPosition);
                 }
                 else if (item.Submarine != this)
@@ -751,7 +765,7 @@ namespace Barotrauma
             if (Level.Loaded == null || subBody == null) return;
 
             if (WorldPosition.Y < Level.MaxEntityDepth &&
-                subBody.Body.Enabled && 
+                subBody.Body.Enabled &&
                 (GameMain.NetworkMember?.RespawnManager == null || this != GameMain.NetworkMember.RespawnManager.RespawnShuttle))
             {
                 subBody.Body.ResetDynamics();
@@ -778,26 +792,26 @@ namespace Barotrauma
             }
 
             subBody.Body.LinearVelocity = new Vector2(
-                LockX ? 0.0f : subBody.Body.LinearVelocity.X, 
+                LockX ? 0.0f : subBody.Body.LinearVelocity.X,
                 LockY ? 0.0f : subBody.Body.LinearVelocity.Y);
-                
-            
+
+
             subBody.Update(deltaTime);
 
-            for (int i = 0; i < 2; i++ )
+            for (int i = 0; i < 2; i++)
             {
                 if (MainSubs[i] == null) continue;
                 if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) return;
             }
 
             //send updates more frequently if moving fast
-            networkUpdateTimer -= MathHelper.Clamp(Velocity.Length()*10.0f, 0.1f, 5.0f) * deltaTime;
+            networkUpdateTimer -= MathHelper.Clamp(Velocity.Length() * 10.0f, 0.1f, 5.0f) * deltaTime;
 
             if (networkUpdateTimer < 0.0f)
             {
                 networkUpdateTimer = 1.0f;
             }
-            
+
         }
 
         public void ApplyForce(Vector2 force)
@@ -867,7 +881,7 @@ namespace Barotrauma
 
                 subBorders.Inflate(500.0f, 500.0f);
 
-                if (subBorders.Contains(position)) return sub;                
+                if (subBorders.Contains(position)) return sub;
             }
 
             return null;
@@ -875,9 +889,18 @@ namespace Barotrauma
 
         //saving/loading ----------------------------------------------------
 
+        public static void AddToSavedSubs(Submarine sub)
+        {
+            savedSubmarines.Add(sub);
+        }
+
         public static void RefreshSavedSubs()
         {
-            SavedSubmarines.Clear();
+            for (int i = savedSubmarines.Count - 1; i>= 0; i--)
+            {
+                savedSubmarines[i].Dispose();
+            }
+            System.Diagnostics.Debug.Assert(savedSubmarines.Count == 0);
 
             if (!Directory.Exists(SavePath))
             {
@@ -921,7 +944,7 @@ namespace Barotrauma
 
             foreach (string path in filePaths)
             {
-                SavedSubmarines.Add(new Submarine(path));
+                savedSubmarines.Add(new Submarine(path));
             }
         }
 
@@ -971,7 +994,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! ("+e.Message+")");
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
             }
@@ -1147,12 +1170,12 @@ namespace Barotrauma
             Submarine sub = new Submarine(element.GetAttributeString("name", ""), "", false);
             sub.Load(unloadPrevious, element);
 
-            return sub; 
+            return sub;
         }
 
         public static Submarine Load(string fileName, bool unloadPrevious)
         {
-           return Load(fileName, SavePath, unloadPrevious);
+            return Load(fileName, SavePath, unloadPrevious);
         }
 
         public static Submarine Load(string fileName, string folder, bool unloadPrevious)
@@ -1283,6 +1306,15 @@ namespace Barotrauma
             if (MainSubs[1] == this) MainSubs[1] = null;
 
             DockedTo.Clear();
+        }
+
+        public void Dispose()
+        {
+            savedSubmarines.Remove(this);
+#if CLIENT
+            PreviewImage?.Remove();
+            PreviewImage = null;
+#endif
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)

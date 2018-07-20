@@ -261,7 +261,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
-    <RelayComponent canbeselected = "true">
+    <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 

@@ -32,7 +32,7 @@ namespace Barotrauma
 
         public static void TakeDamage(float amount)
         {
-            healthBar.Flash();
+            healthBar?.Flash();
 
             damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 1.0f);
         }

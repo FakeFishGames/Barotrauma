@@ -93,7 +93,7 @@ namespace Barotrauma
             {
                 case VoteType.Sub:
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                    Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
 #if CLIENT
                     UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);

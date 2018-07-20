@@ -274,6 +274,12 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            {
+                state = AIState.None;
+                return;
+            }
+
             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);

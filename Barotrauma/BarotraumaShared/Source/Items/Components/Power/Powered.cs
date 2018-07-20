@@ -33,8 +33,7 @@ namespace Barotrauma.Items.Components
             get { return powerConsumption; }
             set { powerConsumption = value; }
         }
-
-
+        
         [Serialize(false, true)]
         public override bool IsActive
         {
@@ -58,6 +57,13 @@ namespace Barotrauma.Items.Components
         {
             get { return voltage; }
             set { voltage = Math.Max(0.0f, value); }
+        }
+
+        [Editable(ToolTip = "Can the item be damaged by electomagnetic pulses."), Serialize(true, true)]
+        public bool VulnerableToEMP
+        {
+            get;
+            set;
         }
 
         public Powered(Item item, XElement element)
