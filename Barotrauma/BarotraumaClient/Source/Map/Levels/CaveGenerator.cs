@@ -27,7 +27,7 @@ namespace Barotrauma
             return verticeList;
         }
 
-        public static VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells)
+        public static VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells, Level level)
         {
             float inwardThickness = 500.0f, outWardThickness = 30.0f;
 
@@ -80,6 +80,10 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid left normal");
 #endif
+                        GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidLeftNormal:" + level.Seed,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid left normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + leftNormal + ", seed: " + level.Seed + ")");
+
                         if (cell.body != null)
                         {
                             GameMain.World.RemoveBody(cell.body);
@@ -106,6 +110,10 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError("Invalid right normal");
 #endif
+                        GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidRightNormal:" + level.Seed,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid right normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + rightNormal + ", seed: " + level.Seed + ")");
+
                         if (cell.body != null)
                         {
                             GameMain.World.RemoveBody(cell.body);

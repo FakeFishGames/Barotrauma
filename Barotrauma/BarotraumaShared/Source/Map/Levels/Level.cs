@@ -449,11 +449,11 @@ namespace Barotrauma
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
 
             List<Vector2[]> triangles;
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
+            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, this, out triangles);
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells, this), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
@@ -700,7 +700,7 @@ namespace Barotrauma
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
             
-            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor) };
+            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor, this) };
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),

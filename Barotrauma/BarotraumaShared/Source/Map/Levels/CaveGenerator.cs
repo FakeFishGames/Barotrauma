@@ -349,7 +349,7 @@ namespace Barotrauma
             return pathCells;
         }
 
-        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid = true)
+        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, Level level, out List<Vector2[]> renderTriangles, bool setSolid = true)
         {
             renderTriangles = new List<Vector2[]>();
             var bodies = new List<Body>();
@@ -428,6 +428,15 @@ namespace Barotrauma
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
                     newFixture.UserData = cell;
+
+                    if (newFixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)
+                    {
+                        DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "CaveGenerator.GeneratePolygons:InvalidTriangle",
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
+                    }
                 }
                 
                 cell.body = cellBody;
