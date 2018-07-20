@@ -1430,6 +1430,10 @@ namespace Barotrauma
                     msg.Write(((Rectangle)value).Width);
                     msg.Write(((Rectangle)value).Height);
                 }
+                else if (value is Enum)
+                {
+                    msg.Write((int)value);
+                }
                 else
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
@@ -1486,6 +1490,24 @@ namespace Barotrauma
             else if (type == typeof(Rectangle))
             {
                 property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
+            }
+            else if (typeof(Enum).IsAssignableFrom(type))
+            {
+                int intVal = msg.ReadInt32();
+                try
+                {
+                    property.TrySetValue(Enum.ToObject(type, intVal));
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to convert the int value \"" + intVal + "\" to " + type, e);
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Item.ReadPropertyChange:" + Name + ":" + type,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                        "Failed to convert the int value \"" + intVal + "\" to " + type + " (item " + Name + ")");
+                }
             }
             else
             {
