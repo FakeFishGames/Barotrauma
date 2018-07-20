@@ -17,7 +17,6 @@ namespace Barotrauma
 #if DEBUG
             GameAnalytics.SetEnabledInfoLog(true);
 #endif
-            GameAnalytics.ConfigureBuild(GameMain.Version.ToString());
             
             string exePath = Assembly.GetEntryAssembly().Location;
             string exeName = null;
@@ -36,9 +35,13 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error while calculating MD5 hash for the executable \"" + exePath + "\"", e);
             }
             
+            GameAnalytics.ConfigureBuild(GameMain.Version.ToString()
+                + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
+                + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
+            
             GameAnalytics.AddDesignEvent("Executable:"
                 + (string.IsNullOrEmpty(exeName) ? "Unknown" : exeName) + ":"
-                + ((exeHash == null) ? "Unknown" : exeHash.ShortHash));
+                + ((exeHash?.ShortHash == null) ? "Unknown" : exeHash.ShortHash));
 
             GameAnalytics.ConfigureAvailableCustomDimensions01("singleplayer", "multiplayer", "editor");
             GameAnalytics.Initialize("a3a073c20982de7c15d21e840e149122", "9010ad9a671233b8d9610d76cec8c897d9ff3ba7");
