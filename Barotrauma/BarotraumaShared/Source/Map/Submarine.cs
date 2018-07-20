@@ -1312,7 +1312,7 @@ namespace Barotrauma
         {
             savedSubmarines.Remove(this);
 #if CLIENT
-            PreviewImage.Remove();
+            PreviewImage?.Remove();
             PreviewImage = null;
 #endif
         }
