@@ -2078,7 +2078,7 @@ namespace Barotrauma
 
                 string causeOfDeathStr = causeOfDeathAffliction == null ?
                     causeOfDeathAffliction.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
-                GameAnalyticsSDK.Net.GameAnalytics.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
+                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
             }
 
             CauseOfDeath = new CauseOfDeath(causeOfDeath, causeOfDeathAffliction, LastAttacker, LastDamageSource);

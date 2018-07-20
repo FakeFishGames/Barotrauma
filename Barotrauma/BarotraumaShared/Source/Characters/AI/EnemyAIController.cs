@@ -373,7 +373,7 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            if (selectedAiTarget == null)
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
                 State = AIState.None;
                 return;

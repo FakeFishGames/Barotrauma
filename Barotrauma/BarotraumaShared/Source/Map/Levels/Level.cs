@@ -494,7 +494,7 @@ namespace Barotrauma
                     if (iceChunkPositions.Count == 0) break;
                     Vector2 selectedPos = iceChunkPositions[Rand.Int(iceChunkPositions.Count, Rand.RandSync.Server)];
                     float chunkRadius = Rand.Range(500.0f, 1000.0f, Rand.RandSync.Server);
-                    var newChunk = new LevelWall(CaveGenerator.CreateRandomChunk(chunkRadius, 8, chunkRadius * 0.8f), Color.White, true)
+                    var newChunk = new LevelWall(CaveGenerator.CreateRandomChunk(chunkRadius, 8, chunkRadius * 0.8f), Color.White, this, true)
                     {
                         MoveSpeed = Rand.Range(100.0f, 200.0f, Rand.RandSync.Server),
                         MoveAmount = new Vector2(0.0f, minWidth * 0.7f)
@@ -518,11 +518,11 @@ namespace Barotrauma
             endPosition.Y = borders.Height;
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-            bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, out List<Vector2[]> triangles));
+            bodies.Add(CaveGenerator.GeneratePolygons(cellsWithBody, this, out List<Vector2[]> triangles));
 
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells, this), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
@@ -772,7 +772,7 @@ namespace Barotrauma
             }
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
-            seaFloor = new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.WallColor);
+            seaFloor = new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), generationParams.WallColor, this);
             extraWalls.Add(seaFloor);
 
             BottomBarrier = BodyFactory.CreateEdge(GameMain.World,

@@ -306,9 +306,19 @@ namespace Barotrauma
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
                     if (!string.IsNullOrEmpty(previewImageData))
                     {
-                        using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                        try
                         {
-                            PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
+                            using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                            {
+                                PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
+                            }                    
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.", e);
+                            GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                                "Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.");
+                            PreviewImage = null;
                         }
                     }
 #endif
@@ -1294,7 +1304,7 @@ namespace Barotrauma
         {
             savedSubmarines.Remove(this);
 #if CLIENT
-            PreviewImage.Remove();
+            PreviewImage?.Remove();
             PreviewImage = null;
 #endif
         }
