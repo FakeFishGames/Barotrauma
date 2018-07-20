@@ -386,6 +386,15 @@ namespace Barotrauma.Items.Components
                 foreach (PhysicsBody body in bodies)
                 {
                     float diff = 0.0f;
+                    if (!MathUtils.IsValid(body.SimPosition))
+                    {
+                        DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
+                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:LimbPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + body.SimPosition + ")." +
+                            " Removed: " + c.Removed +
+                            " Remoteplayer: " + c.IsRemotePlayer);
+                        continue;
+                    }
 
                     if (isHorizontal)
                     {

@@ -368,8 +368,8 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
-                joint.BodyB.SetTransform(
-                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
+                joint.LimbB?.body?.SetTransform(
+                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
@@ -394,7 +394,7 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-            MainLimb = torso == null ? head : torso;
+            MainLimb = torso ?? head;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
