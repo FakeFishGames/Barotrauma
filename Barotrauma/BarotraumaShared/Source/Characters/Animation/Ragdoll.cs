@@ -28,7 +28,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Ragdoll.Limbs:AccessRemoved",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
 
                     return new Limb[0];
                 }
