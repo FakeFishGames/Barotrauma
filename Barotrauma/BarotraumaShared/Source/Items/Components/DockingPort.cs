@@ -345,17 +345,31 @@ namespace Barotrauma.Items.Components
 
         private void CreateDoorBody()
         {
+            Vector2 position = ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition));
+            if (!MathUtils.IsValid(position))
+            {
+                string errorMsg =
+                    "Attempted to create a door body at an invalid position (item pos: " + item.Position
+                    + ", item world pos: " + item.WorldPosition
+                    + ", docking target world pos: " + DockingTarget.door.Item.WorldPosition + ")\n" + Environment.StackTrace;
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "DockingPort.CreateDoorBody:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                position = Vector2.Zero;
+            }
+
             doorBody = BodyFactory.CreateRectangle(GameMain.World,
                 dockingTarget.door.Body.width,
                 dockingTarget.door.Body.height,
                 1.0f,
+                position,
                 dockingTarget.door);
 
             doorBody.CollisionCategories = Physics.CollisionWall;
             doorBody.BodyType = BodyType.Static;
-            doorBody.SetTransform(
-                ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition)),
-                0.0f);
         }
 
         private void CreateHull()
