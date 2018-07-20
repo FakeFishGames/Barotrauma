@@ -54,7 +54,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Failed to load sound "+file+"!", e);
                 }
-                ALHelper.Check();
+                ALHelper.Check(file);
             }
 
             baseVolume = 1.0f;
@@ -219,7 +219,7 @@ namespace Barotrauma
                 (SoundManager.IsPlaying(alSourceId) || SoundManager.IsPaused(alSourceId)))
             {
                 SoundManager.Stop(alSourceId);
-                ALHelper.Check();
+                ALHelper.Check(filePath);
             }
 
             foreach (Sound s in loadedSounds)
@@ -228,7 +228,7 @@ namespace Barotrauma
             }
 
             SoundManager.ClearAlSource(AlBufferId);
-            ALHelper.Check();
+            ALHelper.Check(filePath);
 
             if (oggSound != null)
             {

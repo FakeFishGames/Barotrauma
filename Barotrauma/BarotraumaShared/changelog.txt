@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.7
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashes when trying to load submarines in the sub editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.6
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a memory leak in submarine preview images which caused crashes in the server lobby screen and
+submarine editor.
+- Fixed clients not seeing the "vote to end the round" tickbox if they don't have a character assigned to
+them (despite the server allowing voting if the client has had a character earlier during the round).
+- Fixed clients being able to crash servers if they had the permission to use console commands that
+use the position of the client's cursor.
+- Fixed crashing if a wire is used by a statuseffect (for example if a detonator tries to trigger a wire
+contained inside it).
+- Fixed GameAnalytics being stopped if the dedicated server is restarted with the "restart" console command.- 
+- Fixed wiring items outside the submarine.
+- Fixed chatbox discarding the second chat message instead of the first one when the maximum number of
+chat messages is reached.
+- Some error checking and debug logging to diagnose and prevent a crash caused by doors pushing characters away.
+- The spawnitem command doesn't require multi-word item names to be surrounded with quotes anymore.
+- Added the option to make powered items immune to electromagnetic pulses.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.5
 ---------------------------------------------------------------------------------------------------------
 

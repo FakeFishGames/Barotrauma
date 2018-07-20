@@ -119,7 +119,7 @@ namespace Barotrauma
 
             subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
-            if (subs == null || subs.Count()==0)
+            if (subs == null || subs.Count() == 0)
             {
                 throw new Exception("No submarines are available.");
             }
@@ -187,7 +187,7 @@ namespace Barotrauma
 
             if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = Submarine.SavedSubmarines.FindAll(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus));
+                var nonShuttles = Submarine.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)

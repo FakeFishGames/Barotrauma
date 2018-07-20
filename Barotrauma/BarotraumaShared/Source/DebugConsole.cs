@@ -1898,7 +1898,16 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(command)) return;
 
             string[] splitCommand = SplitCommand(command);
-            
+            if (splitCommand.Length == 0)
+            {
+                DebugConsole.ThrowError("Failed to execute command \"" + command + "\"!");
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "DebugConsole.ExecuteCommand:LengthZero",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Failed to execute command \"" + command + "\"!");
+                return;
+            }
+
             if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
                 NewMessage(command, Color.White, true);
@@ -1973,6 +1982,13 @@ namespace Barotrauma
             else if (matchingCommand == null)
             {
                 GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client);
+                return;
+            }
+
+            if (!MathUtils.IsValid(cursorWorldPos))
+            {
+                GameMain.Server.SendConsoleMessage("Could not execute command \"" + command + "\" - invalid cursor position.", client);
+                NewMessage(client.Name + " attempted to execute the console command \"" + command + "\" with invalid cursor position.", Color.White);
                 return;
             }
 

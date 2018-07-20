@@ -423,6 +423,7 @@ namespace Barotrauma.RuinGeneration
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
                 var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
+                if (prop == null) continue;
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 

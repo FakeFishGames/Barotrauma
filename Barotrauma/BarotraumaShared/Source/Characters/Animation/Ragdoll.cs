@@ -25,6 +25,11 @@ namespace Barotrauma
                 if (limbs == null)
                 {
                     DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Ragdoll.Limbs:AccessRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
+
                     return new Limb[0];
                 }
                 return limbs;
@@ -87,7 +92,9 @@ namespace Barotrauma
 
         protected List<PhysicsBody> collider;
         protected int colliderIndex = 0;
-        
+
+        private Category prevCollisionCategory = Category.None;
+
         public PhysicsBody Collider
         {
             get
@@ -269,11 +276,7 @@ namespace Barotrauma
             get { return ignorePlatforms; }
             set 
             {
-                if (ignorePlatforms == value) return;
                 ignorePlatforms = value;
-
-                UpdateCollisionCategories();
-
             }
         }
 
@@ -365,8 +368,8 @@ namespace Barotrauma
 
             foreach (var joint in LimbJoints)
             {
-                joint.BodyB.SetTransform(
-                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
+                joint.LimbB?.body?.SetTransform(
+                    joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB) * 0.1f,
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
@@ -391,7 +394,7 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-            MainLimb = torso == null ? head : torso;
+            MainLimb = torso ?? head;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -739,7 +742,15 @@ namespace Barotrauma
 
         public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
         {
-            Vector2 findPos = worldPosition==null ? this.WorldPosition : (Vector2)worldPosition;
+            Vector2 findPos = worldPosition == null ? this.WorldPosition : (Vector2)worldPosition;
+            if (!MathUtils.IsValid(findPos))
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll.FindHull:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace);
+                return;
+            }
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
             
@@ -799,10 +810,7 @@ namespace Barotrauma
             }
             
             CurrentHull = newHull;
-
-            character.Submarine = currentHull == null ? null : currentHull.Submarine;
-
-            UpdateCollisionCategories();
+            character.Submarine = currentHull?.Submarine;
         }
         
         public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
@@ -842,7 +850,10 @@ namespace Barotrauma
             Category collisionCategory = (ignorePlatforms) ?
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
                 : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
-
+            
+            if (collisionCategory == prevCollisionCategory) return;
+            prevCollisionCategory = collisionCategory;
+            
             Collider.CollidesWith = collisionCategory;
 
             foreach (Limb limb in Limbs)
@@ -868,6 +879,7 @@ namespace Barotrauma
 
             UpdateNetPlayerPosition(deltaTime);
             CheckDistFromCollider();
+            UpdateCollisionCategories();
 
             Vector2 flowForce = Vector2.Zero;
 
@@ -1089,22 +1101,19 @@ namespace Barotrauma
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
                     float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
-                    
-                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
+
+                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
-                        Vector2 newSpeed = Collider.LinearVelocity;
-                        newSpeed.Y = (targetY - Collider.SimPosition.Y)*5.0f;
-                        Collider.LinearVelocity = newSpeed;
-                    }
-                    else
-                    {
-                        Vector2 newSpeed = Collider.LinearVelocity;
-                        newSpeed.Y = 0.0f;
-                        Collider.LinearVelocity = newSpeed;
-                        Vector2 newPos = Collider.SimPosition;
-                        newPos.Y = targetY;
-                        Collider.SetTransform(newPos, Collider.Rotation);
-                    }
+                        if (forceImmediate)
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 0);
+                            Collider.SetTransform(new Vector2(Collider.SimPosition.X, targetY), Collider.Rotation);
+                        }
+                        else
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
+                        }
+                    }                
                 }
             }
         }
@@ -1165,6 +1174,16 @@ namespace Barotrauma
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll.SetPosition:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                return;
+            }
+
             Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
             Collider.SetTransform(simPosition, Collider.Rotation);
@@ -1245,8 +1264,6 @@ namespace Barotrauma
             {
                 //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
                 SetPosition(Collider.SimPosition, true);
-
-                UpdateCollisionCategories();
                 collisionsDisabled = false;
             }
         }
@@ -1445,22 +1462,17 @@ namespace Barotrauma
         
         private Vector2 GetFlowForce()
         {
-            Vector2 limbPos = ConvertUnits.ToDisplayUnits(Limbs[0].SimPosition);
+            Vector2 limbPos = Limbs[0].Position;
 
             Vector2 force = Vector2.Zero;
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (Gap gap in Gap.GapList)
             {
-                Gap gap = e as Gap;
-                if (gap == null || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
+                if (gap.Open <= 0.0f || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
 
                 Vector2 gapPos = gap.SimPosition;
-
                 float dist = Vector2.Distance(limbPos, gapPos);
-
                 force += Vector2.Normalize(gap.LerpedFlowForce) * (Math.Max(gap.LerpedFlowForce.Length() - dist, 0.0f) / 500.0f);
             }
-
-            if (force.Length() > 20.0f) return force;
             return force;
         }
 
