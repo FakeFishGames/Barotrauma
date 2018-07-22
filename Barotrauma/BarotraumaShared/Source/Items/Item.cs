@@ -532,6 +532,20 @@ namespace Barotrauma
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                string errorMsg =
+                    "Attempted to move the item " + Name +
+                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace;
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Item.SetPosition:InvalidPosition" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
+            }
+
             if (body != null)
             {
                 try
