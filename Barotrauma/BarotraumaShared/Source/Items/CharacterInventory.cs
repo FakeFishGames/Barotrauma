@@ -50,6 +50,10 @@ namespace Barotrauma
             }
 
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+
+            //item may have been removed by a status effect
+            if (Items[slotIndex] == null) return true;
+
             foreach (ItemComponent ic in Items[slotIndex].components)
             {
                 if (ic.DeleteOnUse)
