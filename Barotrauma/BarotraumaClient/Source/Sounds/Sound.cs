@@ -246,7 +246,7 @@ namespace Barotrauma
 
         public static void StreamVolume(float volume = 1.0f)
         {
-            if (SoundManager.Disabled) return;
+            if (SoundManager.Disabled || stream == null) return;
             stream.Volume = volume;
         }
 
