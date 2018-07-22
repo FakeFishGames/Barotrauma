@@ -1265,6 +1265,8 @@ namespace Barotrauma
                 //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
                 SetPosition(Collider.SimPosition, true);
                 collisionsDisabled = false;
+                //force collision categories to be updated
+                prevCollisionCategory = Category.None;
             }
         }
         
