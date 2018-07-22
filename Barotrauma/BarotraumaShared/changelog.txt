@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.8
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "invalid cursor position" errors when a client attempts to use console commands in the server lobby.
+- Fixed crashing if a character takes damage during the first frame of a round.
+- Fixed crashing if suitable prop items are not found when generating alien ruins.
+- Some ragdoll and physics optimization.
+- More automatic error logging to help with debugging.
+- Fixed errors when attempting to change the output type of an oscillator in multiplayer.
+- Campaign store menu includes a quantity field which lets the player select how many items to buy instead
+of showing each item individually.
+- Fixed clients not seeing vote counts on submarines that the client doesn't have.
+- Fixed crashing if a player attempts to use an item on themselves and the item has a status effect that
+causes the item to be removed.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.7
 ---------------------------------------------------------------------------------------------------------
 
