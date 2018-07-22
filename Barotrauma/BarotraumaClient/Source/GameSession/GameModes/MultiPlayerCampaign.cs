@@ -92,9 +92,10 @@ namespace Barotrauma
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (ItemPrefab ip in CargoManager.PurchasedItems)
+            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(ip));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.itemPrefab));
+                msg.Write((UInt16)pi.quantity);
             }
         }
 
@@ -111,11 +112,12 @@ namespace Barotrauma
             int money = msg.ReadInt32();
 
             UInt16 purchasedItemCount = msg.ReadUInt16();
-            List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
+            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
-                purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
+                UInt16 itemQuantity = msg.ReadUInt16();
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
