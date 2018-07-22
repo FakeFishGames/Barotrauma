@@ -256,7 +256,8 @@ namespace Barotrauma
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }
 
-            textBlock = new GUITextBlock(new RectTransform(new Point(80, 25), frame.RectTransform, Anchor.CenterRight), priceInfo.BuyPrice.ToString(), font: font)
+            textBlock = new GUITextBlock(new RectTransform(new Point(120, 25), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(20, 0) }, 
+                priceInfo.BuyPrice.ToString(), font: font)
             {
                 ToolTip = pi.ItemPrefab.Description
             };
@@ -265,7 +266,8 @@ namespace Barotrauma
             //If its the store menu, quantity will always be 0
             if (pi.Quantity > 0)
             {
-                var amountInput = new GUINumberInput(new RectTransform(new Point(50, 40), frame.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
+                var amountInput = new GUINumberInput(new RectTransform(new Point(50, 40), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(20, 0) }, 
+                    GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 1000,
