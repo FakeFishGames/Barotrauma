@@ -417,7 +417,19 @@ namespace Barotrauma
                 Directory.CreateDirectory(SaveUtil.TempPath);
             }
 
-            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+            try
+            {
+                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+            }
+            catch (IOException e)
+            {
+                DebugConsole.ThrowError("Copying the file \"" + selectedSub.FilePath + "\" failed. The file may have been deleted or in use by another process. Try again or select another submarine.", e);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "MainMenuScreen.StartGame:IOException" + selectedSub.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace);
+                return;
+            }
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 

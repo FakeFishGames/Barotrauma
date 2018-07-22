@@ -214,9 +214,10 @@ namespace Barotrauma
             msg.Write(Money);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (ItemPrefab ip in CargoManager.PurchasedItems)
+            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(ip));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
+                msg.Write((UInt16)pi.Quantity);
             }
         }
         
@@ -225,11 +226,12 @@ namespace Barotrauma
             UInt16 selectedLocIndex = msg.ReadUInt16();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
-            List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
+            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
-                purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
+                UInt16 itemQuantity = msg.ReadUInt16();
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))
@@ -240,15 +242,15 @@ namespace Barotrauma
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
 
-            List<ItemPrefab> currentItems = new List<ItemPrefab>(CargoManager.PurchasedItems);
-            foreach (ItemPrefab ip in currentItems)
+            List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
+            foreach (PurchasedItem pi in currentItems)
             {
-                CargoManager.SellItem(ip);
+                CargoManager.SellItem(pi.ItemPrefab, pi.Quantity);
             }
 
-            foreach (ItemPrefab ip in purchasedItems)
+            foreach (PurchasedItem pi in purchasedItems)
             {
-                CargoManager.PurchaseItem(ip);
+                CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
             }
         }
     }

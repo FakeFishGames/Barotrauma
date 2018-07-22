@@ -65,7 +65,7 @@ namespace Barotrauma
 #if CLIENT
             List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
             SetBodyVertices(bodyVertices.ToArray(), color);
-            SetWallVertices(CaveGenerator.GenerateWallShapes(cells), color);
+            SetWallVertices(CaveGenerator.GenerateWallShapes(cells, level), color);
 #endif
         }
 
