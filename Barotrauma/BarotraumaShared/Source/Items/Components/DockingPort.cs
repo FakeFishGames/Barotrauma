@@ -243,29 +243,28 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Error - attempted to lock a docking port that's not connected to anything");
                 return;
             }
-            else if (joint is WeldJoint)
-            {
-                //DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
-                return;
-            }
 
-            dockingDir = IsHorizontal ?
-                Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
-            dockingTarget.dockingDir = -dockingDir;
+            if (!(joint is WeldJoint))
+            {
+
+                dockingDir = IsHorizontal ?
+                    Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                    Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                dockingTarget.dockingDir = -dockingDir;
 
 #if CLIENT
-            PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+                PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 #endif
 
-            ConnectWireBetweenPorts();
+                ConnectWireBetweenPorts();
+                CreateJoint(true);
 
-            CreateJoint(true);
-
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
+
 
             List<MapEntity> removedEntities = item.linkedTo.Where(e => e.Removed).ToList();
             foreach (MapEntity removed in removedEntities) item.linkedTo.Remove(removed);
