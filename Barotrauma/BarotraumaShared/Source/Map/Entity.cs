@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -126,22 +127,27 @@ namespace Barotrauma
                 catch (Exception exception)
                 {
                     DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Entity.RemoveAll:Exception" + e.ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Error while removing entity \"" + e.ToString() + "\"" + exception.Message);
                 }
             }
+            StringBuilder errorMsg = new StringBuilder();
             if (dictionary.Count > 0)
             {
-                DebugConsole.ThrowError("Some entities were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some entities were not removed in Entity.RemoveAll:");
                 foreach (Entity e in dictionary.Values)
                 {
-                    DebugConsole.ThrowError(" - " + e.ToString() + "(ID " + e.id + ")");
+                    errorMsg.AppendLine(" - " + e.ToString() + "(ID " + e.id + ")");
                 }
             }
             if (Item.ItemList.Count > 0)
             {
-                DebugConsole.ThrowError("Some items were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some items were not removed in Entity.RemoveAll:");
                 foreach (Item item in Item.ItemList)
                 {
-                    DebugConsole.ThrowError(" - " + item.Name + "(ID " + item.id + ")");
+                    errorMsg.AppendLine(" - " + item.Name + "(ID " + item.id + ")");
                 }
 
                 var items = new List<Item>(Item.ItemList);
@@ -153,17 +159,17 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing entity \"" + item.ToString() + "\"", exception);
+                        DebugConsole.ThrowError("Error while removing item \"" + item.ToString() + "\"", exception);
                     }
                 }
                 Item.ItemList.Clear();
             }
             if (Character.CharacterList.Count > 0)
             {
-                DebugConsole.ThrowError("Some characters were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some characters were not removed in Entity.RemoveAll:");
                 foreach (Character character in Character.CharacterList)
                 {
-                    DebugConsole.ThrowError(" - " + character.Name + "(ID " + character.id + ")");
+                    errorMsg.AppendLine(" - " + character.Name + "(ID " + character.id + ")");
                 }
 
                 var characters = new List<Character>(Character.CharacterList);
@@ -175,10 +181,19 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing entity \"" + character.ToString() + "\"", exception);
+                        DebugConsole.ThrowError("Error while removing character \"" + character.ToString() + "\"", exception);
                     }
                 }
                 Character.CharacterList.Clear();
+            }
+
+            if (!string.IsNullOrEmpty(errorMsg.ToString()))
+            {
+                foreach (string errorLine in errorMsg.ToString().Split('\n'))
+                {
+                    DebugConsole.ThrowError(errorLine);
+                }
+                GameAnalyticsManager.AddErrorEventOnce("Entity.RemoveAll", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg.ToString());
             }
 
             dictionary.Clear();
@@ -186,15 +201,22 @@ namespace Barotrauma
 
         public virtual void Remove()
         {
-            DebugConsole.Log("Removing entity " + this.ToString() + " (" + ID + ") from entity dictionary.");
-            Entity existingEntity;
-            if (!dictionary.TryGetValue(ID, out existingEntity))
+            DebugConsole.Log("Removing entity " + ToString() + " (" + ID + ") from entity dictionary.");
+            if (!dictionary.TryGetValue(ID, out Entity existingEntity))
             {
-                DebugConsole.Log("Entity " + this.ToString() + " (" + ID + ") not present in entity dictionary.");
+                DebugConsole.Log("Entity " + ToString() + " (" + ID + ") not present in entity dictionary.");
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Entity.Remove:EntityNotFound" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Entity " + ToString() + " (" + ID + ") not present in entity dictionary.\n" + Environment.StackTrace);
             }
             else if (existingEntity != this)
             {
-                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID);
+                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
+                GameAnalyticsManager.AddErrorEventOnce("Entity.Remove:EntityMismatch" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
+
                 foreach (var keyValuePair in dictionary.Where(kvp => kvp.Value == this).ToList())
                 {
                     dictionary.Remove(keyValuePair.Key);
