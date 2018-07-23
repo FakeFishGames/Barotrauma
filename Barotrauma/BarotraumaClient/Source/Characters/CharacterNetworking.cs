@@ -150,7 +150,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this)
+                    if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
