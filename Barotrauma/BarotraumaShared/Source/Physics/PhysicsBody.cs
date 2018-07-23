@@ -463,30 +463,32 @@ namespace Barotrauma
             body.ApplyTorque(torque);
         }
 
-        public void SetTransform(Vector2 simPosition, float rotation)
+        public bool SetTransform(Vector2 simPosition, float rotation)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
-            if (!IsValidValue(rotation, "rotation")) return;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
+            if (!IsValidValue(rotation, "rotation")) return false;
 
             body.SetTransform(simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
+            return true;
         }
 
-        public void SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
+        public bool SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
-            if (!IsValidValue(rotation, "rotation")) return;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
+            if (!IsValidValue(rotation, "rotation")) return false;
 
             body.SetTransformIgnoreContacts(ref simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
+            return true;
         }
 
         public void SetPrevTransform(Vector2 simPosition, float rotation)
