@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.9
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a bug in docking port syncing that caused entity ID mismatches and "unknown object header" errors.
+- Fixed a bug that occasionally caused entity ID mismatches and "unknown object header" errors when 
+a respawn shuttle got damaged before returning back to the starting location.
+- Fixed error messages when attempting to use the console commands "\" or "\n".
+- Fixed clients not syncing the position of their controlled character with the server when dead/unconscious.
+- Fixed swimming ragdolls "dropping down" if the server freezes them due to a connection error.
+- Fixed excessive "attempted to apply invalid velocity to a physics body" console errors.
+- Fixed crashing when selecting a level seed that has no background portrait defined.
+- Fixed crashing if the player clicks yes on the "download sub from the server" prompt after 
+returning to the main menu.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.8
 ---------------------------------------------------------------------------------------------------------
 
