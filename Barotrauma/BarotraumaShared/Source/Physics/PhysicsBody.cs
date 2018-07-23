@@ -379,7 +379,7 @@ namespace Barotrauma
                     " to a physics body (userdata: " + userData +
                     "), value: " + value + "\n" + Environment.StackTrace;
 
-                DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
@@ -401,7 +401,7 @@ namespace Barotrauma
                     " to a physics body (userdata: " + userData +
                     "), value: " + value + "\n" + Environment.StackTrace;
 
-                DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
