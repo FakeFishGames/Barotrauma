@@ -1895,12 +1895,12 @@ namespace Barotrauma
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(command)) return;
+            if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") return;
 
             string[] splitCommand = SplitCommand(command);
             if (splitCommand.Length == 0)
             {
-                DebugConsole.ThrowError("Failed to execute command \"" + command + "\"!");
+                ThrowError("Failed to execute command \"" + command + "\"!");
                 GameAnalyticsManager.AddErrorEventOnce(
                     "DebugConsole.ExecuteCommand:LengthZero",
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
