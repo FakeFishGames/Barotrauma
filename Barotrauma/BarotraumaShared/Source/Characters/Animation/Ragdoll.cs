@@ -47,6 +47,7 @@ namespace Barotrauma
                 frozen = value;
                 
                 Collider.PhysEnabled = !frozen;
+                if (frozen && MainLimb != null) MainLimb.pullJoint.WorldAnchorB = MainLimb.SimPosition;                
             }
         }
 
