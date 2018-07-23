@@ -1332,23 +1332,23 @@ namespace Barotrauma
                         character.AnimController.Anim = AnimController.Animation.None;
                     }
 
-                    Vector2 newVelocity = overrideTargetMovement;
+                    Vector2 newVelocity = Vector2.Zero;
                     Vector2 newPosition = Collider.SimPosition;
                     Collider.CorrectPosition(character.MemState, deltaTime, out newVelocity, out newPosition);
 
                     newVelocity = newVelocity.ClampLength(100.0f);
                     if (!MathUtils.IsValid(newVelocity)) newVelocity = Vector2.Zero;
-
+                    overrideTargetMovement = newVelocity;
                     Collider.LinearVelocity = newVelocity;
+
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
                     if (distSqrd > 10.0f)
                     {
                         SetPosition(newPosition);
                     }
-                    else if (distSqrd > 0.1f)
+                    else if (distSqrd > 0.01f)
                     {
                         Collider.SetTransform(newPosition, Collider.Rotation);
-                        overrideTargetMovement = newVelocity;
                     }
 
                     //unconscious/dead characters can't correct their position using AnimController movement

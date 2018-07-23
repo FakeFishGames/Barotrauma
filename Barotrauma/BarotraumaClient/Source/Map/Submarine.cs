@@ -243,7 +243,6 @@ namespace Barotrauma
                 return;
             }
             
-            subBody.LastReceivedPositionUpdate = Math.Max(subBody.LastReceivedPositionUpdate, Timing.TotalTime);
             subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
         }
     }
