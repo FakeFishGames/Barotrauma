@@ -190,6 +190,11 @@ namespace Barotrauma
 
                 Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
                 Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
+                newVelocity = newVelocity.ClampLength(100.0f);
+                if (!MathUtils.IsValid(newVelocity))
+                {
+                    return;
+                }
 
                 List<Submarine> subsToMove = submarine.GetConnectedSubs();
                 foreach (Submarine dockedSub in subsToMove)
