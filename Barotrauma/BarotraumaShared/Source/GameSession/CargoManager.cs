@@ -177,8 +177,11 @@ namespace Barotrauma
                         }
 
                         //reduce the number of available slots in the container
-                        availableContainers[itemContainer]--;
-                        if (availableContainers[itemContainer] <= 0)
+                        if (availableContainers.Count() > 0)
+                        {
+                            availableContainers[itemContainer]--;
+                        }
+                        if (availableContainers.ContainsKey(itemContainer) && availableContainers[itemContainer] <= 0)
                         {
                             availableContainers.Remove(itemContainer);
                         }
