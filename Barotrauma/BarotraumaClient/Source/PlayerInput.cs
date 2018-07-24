@@ -51,10 +51,7 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// MouseSpeed multiplied by deltaTime.
-        /// </summary>
-        public static Vector2 ScaledMouseSpeed { get; private set; }
+        public static Vector2 MouseSpeedPerSecond { get; private set; }
 
         public static KeyboardState GetKeyboardState
         {
@@ -167,7 +164,7 @@ namespace Barotrauma
             oldKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
 
-            ScaledMouseSpeed = MouseSpeed * (float)deltaTime;
+            MouseSpeedPerSecond = MouseSpeed / (float)deltaTime;
 
             doubleClicked = false;
             if (LeftButtonClicked())
