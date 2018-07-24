@@ -211,16 +211,16 @@ namespace Voronoi2
 
         public VoronoiCell AdjacentCell(VoronoiCell cell)
         {
-            if (cell1==cell)
+            if (cell1 == cell)
             {
                 return cell2;
             }
-            else if (cell2==cell)
+            else if (cell2 == cell)
             {
                 return cell1;
             }
 
-            return null;            
+            return null;
         }
 
         /// <summary>
@@ -238,6 +238,11 @@ namespace Voronoi2
             }
 
             return normal;
+        }
+
+        public override string ToString()
+        {
+            return "GraphEdge (" + point1.ToString() + ", " + point2.ToString() + ")";
         }
     }
     
