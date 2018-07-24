@@ -29,6 +29,8 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity
         protected Rectangle rect;
@@ -45,7 +47,8 @@ namespace Barotrauma
         private static bool resizing;
         private int resizeDirX, resizeDirY;
         
-        public virtual Rectangle Rect { 
+        public virtual Rectangle Rect
+        { 
             get { return rect; }
             set { rect = value; }
         }
@@ -353,15 +356,12 @@ namespace Barotrauma
 
                 foreach (ushort i in e.linkedToID)
                 {
-                    MapEntity linked = FindEntityByID(i) as MapEntity;
-
-                    if (linked != null) e.linkedTo.Add(linked);
+                    if (FindEntityByID(i) is MapEntity linked) e.linkedTo.Add(linked);
                 }
             }
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
-            
-            for (int i = 0; i<mapEntityList.Count; i++)
+            for (int i = 0; i < mapEntityList.Count; i++)
             {
                 if (mapEntityList[i].Submarine != sub) continue;
 
