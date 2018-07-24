@@ -47,6 +47,7 @@ namespace Barotrauma
                 frozen = value;
                 
                 Collider.PhysEnabled = !frozen;
+                if (frozen && MainLimb != null) MainLimb.pullJoint.WorldAnchorB = MainLimb.SimPosition;                
             }
         }
 
@@ -1391,8 +1392,24 @@ namespace Barotrauma
                         character.AnimController.Anim = AnimController.Animation.None;
                     }
 
-                    Collider.LinearVelocity = Vector2.Zero;
-                    Collider.CorrectPosition(character.MemState, deltaTime, out overrideTargetMovement);
+                    Vector2 newVelocity = Vector2.Zero;
+                    Vector2 newPosition = Collider.SimPosition;
+                    Collider.CorrectPosition(character.MemState, deltaTime, out newVelocity, out newPosition);
+
+                    newVelocity = newVelocity.ClampLength(100.0f);
+                    if (!MathUtils.IsValid(newVelocity)) newVelocity = Vector2.Zero;
+                    overrideTargetMovement = newVelocity;
+                    Collider.LinearVelocity = newVelocity;
+
+                    float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
+                    if (distSqrd > 10.0f)
+                    {
+                        SetPosition(newPosition);
+                    }
+                    else if (distSqrd > 0.01f)
+                    {
+                        Collider.SetTransform(newPosition, Collider.Rotation);
+                    }
 
                     //unconscious/dead characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
@@ -1510,10 +1527,18 @@ namespace Barotrauma
                         }
                     }
 
-                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
-                    foreach (Limb limb in Limbs)
+                    float errorMagnitude = positionError.Length();
+                    if (errorMagnitude > 0.01f)
                     {
-                        limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
+                        Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);   
+                        if (errorMagnitude > 0.5f)
+                        {
+                            character.MemLocalState.Clear();                 
+                            foreach (Limb limb in Limbs)
+                            {
+                                limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
+                            }
+                        }    
                     }
                 }
 

@@ -236,6 +236,11 @@ namespace Voronoi2
             }
             return normal;
         }
+
+        public override string ToString()
+        {
+            return "GraphEdge (" + Point1.ToString() + ", " + Point2.ToString() + ")";
+        }
     }
     
     // للترتيب

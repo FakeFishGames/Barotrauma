@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Sounds;
 using FarseerPhysics;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -290,6 +291,33 @@ namespace Barotrauma
                 }
             }
         }
+        
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            var newTargetPosition = new Vector2(
+                msg.ReadFloat(),
+                msg.ReadFloat());
+            
+            //already interpolating with more up-to-date data -> ignore
+            if (subBody.MemPos.Count > 1 && subBody.MemPos[0].Timestamp > sendingTime)
+            {
+                return;
+            }
 
+            int index = 0;
+            while (index < subBody.MemPos.Count && sendingTime > subBody.MemPos[index].Timestamp)
+            {
+                index++;
+            }
+
+            //position with the same timestamp already in the buffer (duplicate packet?)
+            //  -> no need to add again
+            if (index < subBody.MemPos.Count && sendingTime == subBody.MemPos[index].Timestamp)
+            {
+                return;
+            }
+            
+            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
+        }
     }
 }

@@ -183,7 +183,7 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (ge.Point1 == ge.Point2) continue;
+                if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.001f) continue;
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -418,9 +418,9 @@ namespace Barotrauma
                 {
                     //don't create a triangle if any of the vertices are too close to each other
                     //(apparently Farseer doesn't like polygons with a very small area, see Shape.ComputeProperties)
-                    if (Vector2.Distance(triangles[i][0], triangles[i][1]) < 0.05f ||
-                        Vector2.Distance(triangles[i][0], triangles[i][2]) < 0.05f ||
-                        Vector2.Distance(triangles[i][1], triangles[i][2]) < 0.05f) continue;
+                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][0], triangles[i][2]) < 0.006f ||
+                        Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.006f) continue;
                     
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
