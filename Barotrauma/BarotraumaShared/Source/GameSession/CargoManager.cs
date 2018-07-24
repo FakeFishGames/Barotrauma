@@ -152,11 +152,17 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < Pi.quantity; i++)
                 {
+                    //if the intial container has been removed due to it running out of space, add a new container
+                    //of the same type and begin filling it
                     if (!availableContainers.ContainsKey(itemContainer))
                     {
                         Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
                         itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
                         availableContainers.Add(itemContainer, itemContainer.Capacity);
+                        if (GameMain.Server != null)
+                        {
+                            Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
+                        }
                     }
 
                     if (itemContainer == null)
