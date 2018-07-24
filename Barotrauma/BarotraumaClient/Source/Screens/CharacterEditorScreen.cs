@@ -562,9 +562,15 @@ namespace Barotrauma
             Cam.Position = character.Position;
         }
 
+        /// <summary>
+        /// Fps independent mouse input. The draw method is called multiple times per frame.
+        /// </summary>
+        private Vector2 scaledMouseSpeed;
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             base.Draw(deltaTime, graphics, spriteBatch);
+            scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
+
             graphics.Clear(Color.CornflowerBlue);
             Cam.UpdateTransform(true);
 
@@ -586,7 +592,7 @@ namespace Barotrauma
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             if (showAnimControls)
             {
-                DrawAnimationControls(spriteBatch, (float)deltaTime);
+                DrawAnimationControls(spriteBatch);
             }
             if (editSpriteOrigins)
             {
@@ -664,7 +670,7 @@ namespace Barotrauma
         #endregion
 
         #region Animation Controls
-        private void DrawAnimationControls(SpriteBatch spriteBatch, float deltaTime)
+        private void DrawAnimationControls(SpriteBatch spriteBatch)
         {
             var collider = character.AnimController.Collider;
             var colliderDrawPos = SimToScreen(collider.SimPosition);
@@ -704,10 +710,10 @@ namespace Barotrauma
             // Speed
             Vector2 referencePoint = SimToScreen(head != null ? head.SimPosition : collider.SimPosition);
             Vector2 drawPos = referencePoint;
-            drawPos += forward * animParams.Speed / 0.01f * Cam.Zoom;
+            drawPos += forward * ConvertUnits.ToDisplayUnits(animParams.Speed) * Cam.Zoom;
             DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 20, Color.Turquoise, "Movement Speed", () =>
             {
-                float speed = animParams.Speed + Vector2.Multiply(PlayerInput.ScaledMouseSpeed, forward).Combine() / Cam.Zoom * 0.6f;
+                float speed = animParams.Speed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
                 TryUpdateAnimParam("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
                 GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Turquoise);
             });
@@ -725,10 +731,9 @@ namespace Barotrauma
                         drawPos = SimToScreen(head.SimPosition.X + humanGroundedParams.HeadLeanAmount * dir, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head", () =>
                         {
-                            float input = 0.006f * PlayerInput.ScaledMouseSpeed.X / Cam.Zoom * dir;
-                            TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + input);
-                            input = 0.015f * PlayerInput.ScaledMouseSpeed.Y / Cam.Zoom;
-                            TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - input);
+                            var scaledInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
+                            TryUpdateAnimParam("headleanamount", humanGroundedParams.HeadLeanAmount + scaledInput.X * dir);
+                            TryUpdateAnimParam("headposition", humanGroundedParams.HeadPosition - scaledInput.Y * 1.5f);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(head.SimPosition), Color.Red);
                         });
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
@@ -739,7 +744,7 @@ namespace Barotrauma
                         drawPos = SimToScreen(head.SimPosition.X, head.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Head Position", () =>
                         {
-                            float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(PlayerInput.ScaledMouseSpeed.Y / Cam.Zoom);
+                            float v = groundedParams.HeadPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom;
                             TryUpdateAnimParam("headposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
                         });
@@ -765,10 +770,9 @@ namespace Barotrauma
                         drawPos = SimToScreen(torso.SimPosition.X + humanGroundedParams.TorsoLeanAmount * dir, torso.SimPosition.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso", () =>
                         {
-                            float input = 0.005f * PlayerInput.ScaledMouseSpeed.X / Cam.Zoom * dir;
-                            TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + input);
-                            input = 0.02f * PlayerInput.ScaledMouseSpeed.Y / Cam.Zoom;
-                            TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - input);
+                            var scaledInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
+                            TryUpdateAnimParam("torsoleanamount", humanGroundedParams.TorsoLeanAmount + scaledInput.X * dir);
+                            TryUpdateAnimParam("torsoposition", humanGroundedParams.TorsoPosition - scaledInput.Y * 1.5f);
                             GUI.DrawLine(spriteBatch, drawPos, SimToScreen(torso.SimPosition), Color.Red);
                         });
                         var origin = drawPos + new Vector2(widgetDefaultSize / 2, 0) * dir;
@@ -779,7 +783,7 @@ namespace Barotrauma
                         drawPos = SimToScreen(torso.SimPosition.X, torso.pullJoint.WorldAnchorB.Y);
                         DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Red, "Torso Position", () =>
                         {
-                            float v = groundedParams.TorsoPosition - ConvertUnits.ToSimUnits(PlayerInput.ScaledMouseSpeed.Y / Cam.Zoom);
+                            float v = groundedParams.TorsoPosition - ConvertUnits.ToSimUnits(scaledMouseSpeed.Y) / Cam.Zoom;
                             TryUpdateAnimParam("torsoposition", v);
                             GUI.DrawLine(spriteBatch, new Vector2(drawPos.X, 0), new Vector2(drawPos.X, GameMain.GraphicsHeight), Color.Red);
                         });
@@ -803,7 +807,7 @@ namespace Barotrauma
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Step Size", () =>
                     {
-                        var transformedInput = PlayerInput.ScaledMouseSpeed * 0.6f * dir / Cam.Zoom;
+                        var transformedInput = ConvertUnits.ToSimUnits(scaledMouseSpeed) * dir / Cam.Zoom;
                         if (dir > 0)
                         {
                             transformedInput.Y = -transformedInput.Y;
@@ -830,12 +834,12 @@ namespace Barotrauma
                 if (hand != null || arm != null)
                 {
                     referencePoint = SimToScreen(collider.SimPosition + simSpaceForward * 0.2f);
-                    var v = humanGroundedParams.HandMoveAmount * 50;
+                    var v = ConvertUnits.ToDisplayUnits(humanGroundedParams.HandMoveAmount);
                     drawPos = referencePoint + new Vector2(v.X * dir, v.Y) * Cam.Zoom;
                     var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                     DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                     {
-                        var transformedInput = new Vector2(PlayerInput.ScaledMouseSpeed.X * dir, PlayerInput.ScaledMouseSpeed.Y) * 1.2f / Cam.Zoom;
+                        var transformedInput = ConvertUnits.ToSimUnits(new Vector2(scaledMouseSpeed.X * dir, scaledMouseSpeed.Y)) / Cam.Zoom;
                         TryUpdateAnimParam("handmoveamount", humanGroundedParams.HandMoveAmount + transformedInput);
                         GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
                     });
@@ -845,33 +849,35 @@ namespace Barotrauma
             // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
-                float lengthMultiplier = 5 * Cam.Zoom;
-                float amplitudeMultiplier = 200 * Cam.Zoom;
-                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 2 * Cam.Zoom;
+                float amplitudeMultiplier = 0.5f;
+                float lengthMultiplier = 20;
+                float amplitude = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
+                float length = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
+                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 5 * Cam.Zoom;
                 drawPos = referencePoint;
-                drawPos -= screenSpaceForward * fishSwimParams.WaveLength * lengthMultiplier;
+                drawPos -= screenSpaceForward * length;
                 Vector2 toRefPoint = referencePoint - drawPos;
                 var start = drawPos + toRefPoint / 2;
-                var control = start + (screenSpaceLeft * dir * fishSwimParams.WaveAmplitude * amplitudeMultiplier);
+                var control = start + (screenSpaceLeft * dir * amplitude);
                 int points = 1000;
                 // Length
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Wave Length", () =>
                 {
-                    var input = Vector2.Multiply(PlayerInput.ScaledMouseSpeed, screenSpaceForward).Combine();
+                    var input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceForward).Combine() / Cam.Zoom * lengthMultiplier;
                     TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
                     //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, amplitude, length, 5000, points, Color.Purple);
 
                 });
                 // Amplitude
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Wave Amplitude", () =>
                 {
-                    var input = Vector2.Multiply(PlayerInput.ScaledMouseSpeed, screenSpaceLeft).Combine() * dir;
+                    var input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceLeft).Combine() * dir / Cam.Zoom * amplitudeMultiplier;
                     TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
                     //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, fishSwimParams.WaveAmplitude * amplitudeMultiplier, fishSwimParams.WaveLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, amplitude, length, 5000, points, Color.Purple);
 
                 });
             }
@@ -879,42 +885,44 @@ namespace Barotrauma
             else if (humanSwimParams != null)
             {
                 // Legs
-                var amplitudeMultiplier = 20 * Cam.Zoom;
-                var lengthMultiplier = 20 * Cam.Zoom;
+                float amplitudeMultiplier = 5;
+                float lengthMultiplier = 5;
+                float legMoveAmount = ConvertUnits.ToDisplayUnits(humanSwimParams.LegMoveAmount) * Cam.Zoom / amplitudeMultiplier;
+                float legCycleLength = ConvertUnits.ToDisplayUnits(humanSwimParams.LegCycleLength) * Cam.Zoom / lengthMultiplier;
                 referencePoint = SimToScreen(character.SimPosition - simSpaceForward / 2);
                 drawPos = referencePoint;
-                drawPos -= screenSpaceForward * (humanSwimParams.LegCycleLength * lengthMultiplier) * Cam.Zoom;
+                drawPos -= screenSpaceForward * legCycleLength;
                 Vector2 toRefPoint = referencePoint - drawPos;
-                var start = drawPos + toRefPoint / 2;
-                var control = start + (screenSpaceLeft * dir * humanSwimParams.LegMoveAmount * amplitudeMultiplier);
+                Vector2 start = drawPos + toRefPoint / 2;
+                Vector2 control = start + (screenSpaceLeft * dir * legMoveAmount);
                 int points = 1000;
                 // Cycle length
                 DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 15, Color.Purple, "Leg Movement Speed", () =>
                 {
-                    float input = Vector2.Multiply(PlayerInput.ScaledMouseSpeed, screenSpaceForward).Combine();
+                    float input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceForward).Combine() / Cam.Zoom * amplitudeMultiplier;
                     TryUpdateAnimParam("legcyclelength", MathHelper.Clamp(humanSwimParams.LegCycleLength - input, 0, 20));
                     //GUI.DrawLine(spriteBatch, drawPos, referencePoint, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, legMoveAmount, legCycleLength, 5000, points, Color.Purple);
                 });
                 // Movement amount
                 DrawWidget(spriteBatch, control, WidgetType.Circle, 15, Color.Purple, "Leg Movement Amount", () =>
                 {
-                    float input = Vector2.Multiply(PlayerInput.ScaledMouseSpeed, screenSpaceLeft).Combine() * dir;
+                    float input = Vector2.Multiply(ConvertUnits.ToSimUnits(scaledMouseSpeed), screenSpaceLeft).Combine() * dir / Cam.Zoom * lengthMultiplier;
                     TryUpdateAnimParam("legmoveamount", MathHelper.Clamp(humanSwimParams.LegMoveAmount + input, -2, 2));
                     //GUI.DrawLine(spriteBatch, start, control, Color.Purple);
                     //GUI.DrawBezierWithDots(spriteBatch, referencePoint, drawPos, control, points, Color.Purple);
-                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, humanSwimParams.LegMoveAmount * amplitudeMultiplier, humanSwimParams.LegCycleLength * lengthMultiplier, 5000 * Cam.Zoom, points, Color.Purple);
+                    GUI.DrawSineWithDots(spriteBatch, referencePoint, -toRefPoint, legMoveAmount, legCycleLength, 5000, points, Color.Purple);
                 });
                 // Arms
                 referencePoint = colliderDrawPos + screenSpaceForward * 10;
-                Vector2 v = ConvertUnits.ToDisplayUnits(humanSwimParams.HandMoveAmount) * Cam.Zoom;
-                drawPos = referencePoint + new Vector2(v.X * dir, v.Y);
-                var origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
+                Vector2 handMoveAmount = ConvertUnits.ToDisplayUnits(humanSwimParams.HandMoveAmount) * Cam.Zoom;
+                drawPos = referencePoint + new Vector2(handMoveAmount.X * dir, handMoveAmount.Y);
+                Vector2 origin = drawPos - new Vector2(widgetDefaultSize / 2, 0) * -dir;
                 DrawWidget(spriteBatch, drawPos, WidgetType.Rectangle, widgetDefaultSize, Color.Blue, "Hand Move Amount", () =>
                 {
-                    var transformedInput = new Vector2(PlayerInput.ScaledMouseSpeed.X * dir, PlayerInput.ScaledMouseSpeed.Y) / Cam.Zoom;
-                    var handMovement = humanSwimParams.HandMoveAmount + transformedInput;
+                    Vector2 transformedInput = ConvertUnits.ToSimUnits(new Vector2(scaledMouseSpeed.X * dir, scaledMouseSpeed.Y)) / Cam.Zoom;
+                    Vector2 handMovement = humanSwimParams.HandMoveAmount + transformedInput;
                     TryUpdateAnimParam("handmoveamount", handMovement);
                     TryUpdateAnimParam("handcyclespeed", handMovement.X * 4);
                     GUI.DrawLine(spriteBatch, origin, referencePoint, Color.Blue);
@@ -965,8 +973,9 @@ namespace Barotrauma
             }
             if (selectedLimb != null)
             {
+                float multiplier = 0.5f;
                 Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
-                var input = -PlayerInput.ScaledMouseSpeed * inputMultiplier * Cam.Zoom / selectedLimb.Scale;
+                var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / selectedLimb.Scale * multiplier;
                 selectedLimb.sprite.Origin += input.TransformVector(up);
                 var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
                 selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
@@ -1048,7 +1057,7 @@ namespace Barotrauma
                                 {
                                     freeze = true;
                                 }
-                                Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.ScaledMouseSpeed) / Cam.Zoom;
+                                Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
                                 input = input.TransformVector(-up);
                                 if (joint.BodyA == limb.body.FarseerBody)
@@ -1135,7 +1144,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
                         if (PlayerInput.LeftButtonHeld() && rect.Contains(PlayerInput.MousePosition))
                         {
-                            var input = PlayerInput.ScaledMouseSpeed;
+                            var input = scaledMouseSpeed;
                             input.X *= character.AnimController.Dir;
                             limb.sprite.Origin += input;
                             // TODO: handle updating limb sub params
@@ -1202,7 +1211,7 @@ namespace Barotrauma
                         GUI.DrawRectangle(spriteBatch, inputRect, color);
                         if (PlayerInput.LeftButtonHeld())
                         {
-                            Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.ScaledMouseSpeed);
+                            Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                             input.Y = -input.Y;
                             input.X *= character.AnimController.Dir;
                             input *= limb.Scale;
@@ -1284,7 +1293,7 @@ namespace Barotrauma
                 }
                 //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, rotationOffsetInDegrees.FormatAsInt(), Color.Red);
                 //GUI.DrawString(spriteBatch, drawPos + Vector2.UnitX * 30, transformedRot.FormatAsInt(), Color.Red);
-                var input = PlayerInput.ScaledMouseSpeed * 100;
+                var input = scaledMouseSpeed * 1.5f;
                 float x = input.X;
                 float y = input.Y;
                 if (clockWise)
