@@ -119,15 +119,14 @@
       <Item name="Aluminium"/>
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
+    
+    <Sprite texture="weapons.png" sourcerect="26,97,25,19" depth="0.55"/>
 
-    <Sprite texture="weapons.png" sourcerect="24,102,37,19" depth="0.55"/>
-  
-    <Body width="37" height="18" density="50"/>
-
+    <Body width="25" height="15" density="50"/>
+ 
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
-              aimpos="75,18" handle1="-10,-5"/>
-
-    <RangedWeapon barrelpos="37,3" spread="0" unskilledspread="2">
+      aimpos="90,10" handle1="-11,-7"/> 
+      <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
       <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
