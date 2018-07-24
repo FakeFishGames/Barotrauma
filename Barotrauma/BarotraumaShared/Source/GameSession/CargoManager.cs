@@ -152,6 +152,8 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < Pi.quantity; i++)
                 {
+                    //if the intial container has been removed due to it running out of space, add a new container
+                    //of the same type and begin filling it
                     if (!availableContainers.ContainsKey(itemContainer))
                     {
                         Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
