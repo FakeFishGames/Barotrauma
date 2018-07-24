@@ -110,6 +110,7 @@ namespace Barotrauma
             }
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
+            ItemPrefab containerPrefab = null;
             foreach (PurchasedItem Pi in itemsToSpawn)
             {
                 Vector2 position = new Vector2(
@@ -125,7 +126,7 @@ namespace Barotrauma
 
                     if (itemContainer == null)
                     {
-                        var containerPrefab = MapEntityPrefab.List.Find(ep => 
+                        containerPrefab = MapEntityPrefab.List.Find(ep => 
                             ep.NameMatches(Pi.itemPrefab.CargoContainerName) || 
                             (ep.Tags != null && ep.Tags.Contains(Pi.itemPrefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
 
@@ -151,6 +152,15 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < Pi.quantity; i++)
                 {
+                    //if the intial container has been removed due to it running out of space, add a new container
+                    //of the same type and begin filling it
+                    if (!availableContainers.ContainsKey(itemContainer))
+                    {
+                        Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
+                        itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
+                        availableContainers.Add(itemContainer, itemContainer.Capacity);
+                    }
+
                     if (itemContainer == null)
                     {
                         //no container, place at the waypoint
@@ -177,8 +187,12 @@ namespace Barotrauma
                         }
 
                         //reduce the number of available slots in the container
-                        availableContainers[itemContainer]--;
-                        if (availableContainers[itemContainer] <= 0)
+                        //if there is a container
+                        if (availableContainers.ContainsKey(itemContainer))
+                        {
+                            availableContainers[itemContainer]--;
+                        }
+                        if (availableContainers.ContainsKey(itemContainer) && availableContainers[itemContainer] <= 0)
                         {
                             availableContainers.Remove(itemContainer);
                         }
