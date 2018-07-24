@@ -15,14 +15,14 @@
 
     <Body width="12" height="33" density="5"/>
 
-    <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <Conditional Condition="gt 25"/>
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="3.0"/>
       </StatusEffect>
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true"/>
-    </Pickable>
+    </Holdable>
   </Item>
 
   <Item
@@ -42,12 +42,13 @@
 
     <Body width="12" height="33" density="9.9"/>
 
-    <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+        <Conditional Condition="gt 20"/>
         <sound file="Content/Items/Reactor/explosion.ogg"/>
-        <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="3.0"/>
+        <Explosion range="280.0" structuredamage="20" damage="30" stun="8" force="3.0"/>
       </StatusEffect>
-    </Pickable>
+    </Holdable>
   </Item> 
  
   <Item

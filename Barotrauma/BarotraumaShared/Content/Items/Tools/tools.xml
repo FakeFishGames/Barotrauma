@@ -104,7 +104,8 @@
 
       <RequiredSkill name="Construction" level="30"/>
 
-      <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
+       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
+       <StatusEffect type="OnFailure" target="Contained" targetnames="Oxygenite Tank" Condition="-1.5"/>
 
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
