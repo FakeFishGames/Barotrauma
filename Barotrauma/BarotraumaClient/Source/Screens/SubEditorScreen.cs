@@ -1082,6 +1082,12 @@ namespace Barotrauma
                 }
             }
 
+            if (wallPoints.Count < 4)
+            {
+                DebugConsole.ThrowError("Generating hulls for the submarine failed. Not enough wall structures to generate hulls.");
+                return;
+            }
+
             min = wallPoints[0];
             max = wallPoints[0];
             for (int i = 0; i < wallPoints.Count; i++)
