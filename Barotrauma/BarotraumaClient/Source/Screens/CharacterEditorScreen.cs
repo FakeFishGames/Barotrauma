@@ -853,7 +853,7 @@ namespace Barotrauma
                 float lengthMultiplier = 20;
                 float amplitude = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
                 float length = ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
-                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 5 * Cam.Zoom;
+                referencePoint = colliderDrawPos - screenSpaceForward * ConvertUnits.ToDisplayUnits(collider.radius) * 3 * Cam.Zoom;
                 drawPos = referencePoint;
                 drawPos -= screenSpaceForward * length;
                 Vector2 toRefPoint = referencePoint - drawPos;
