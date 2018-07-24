@@ -31,6 +31,8 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public bool ShouldBeSaved = true;
         
         //the position and dimensions of the entity
         protected Rectangle rect;
@@ -44,7 +46,8 @@ namespace Barotrauma
             set { isHighlighted = value; }
         }
                 
-        public virtual Rectangle Rect { 
+        public virtual Rectangle Rect
+        {
             get { return rect; }
             set { rect = value; }
         }
@@ -431,9 +434,7 @@ namespace Barotrauma
 
                 foreach (ushort i in e.linkedToID)
                 {
-                    MapEntity linked = FindEntityByID(i) as MapEntity;
-
-                    if (linked != null) e.linkedTo.Add(linked);
+                    if (FindEntityByID(i) is MapEntity linked) e.linkedTo.Add(linked);
                 }
             }
 

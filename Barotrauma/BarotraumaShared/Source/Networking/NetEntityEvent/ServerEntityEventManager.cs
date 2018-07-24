@@ -135,10 +135,14 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
+                    string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
+                        DebugConsole.ThrowError("Failed to read server event for entity \"" + entityName + "\"!", e);
                     }
+                    GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace);
                 }
 
                 bufferedEvent.IsProcessed = true;

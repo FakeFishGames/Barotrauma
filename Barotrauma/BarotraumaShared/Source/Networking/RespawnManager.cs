@@ -319,15 +319,15 @@ namespace Barotrauma.Networking
                     if (door.IsOpen) door.SetState(false,false,true);
                 }
 
+                var server = networkMember as GameServer;
+                if (server == null) return;
+                
                 var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
-                shuttleGaps.ForEach(g => g.Remove());
+                shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
 
                 var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == respawnShuttle && i.GetComponent<DockingPort>() != null);
                 dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
 
-                var server = networkMember as GameServer;
-                if (server == null) return;
-                
                 //shuttle has returned if the path has been traversed or the shuttle is close enough to the exit
 
                 if (!CoroutineManager.IsCoroutineRunning("forcepos"))
@@ -447,7 +447,7 @@ namespace Barotrauma.Networking
             }
 
             var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);
-            shuttleGaps.ForEach(g => g.Remove());
+            shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
 
             foreach (Hull hull in Hull.hullList)
             {

@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
 
         private Joint joint;
 
-        private Hull[] hulls;
+        private readonly Hull[] hulls = new Hull[2];
         private ushort?[] hullIds;
 
         private Door door;
@@ -241,35 +241,37 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
 
-            if (dockingTarget==null)
+            if (dockingTarget == null)
             {
                 DebugConsole.ThrowError("Error - attempted to lock a docking port that's not connected to anything");
                 return;
             }
-            else if (joint is WeldJoint)
-            {
-                //DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
-                return;
-            }
 
-            dockingDir = IsHorizontal ?
-                Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
-            dockingTarget.dockingDir = -dockingDir;
+            if (!(joint is WeldJoint))
+            {
+
+                dockingDir = IsHorizontal ?
+                    Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                    Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                dockingTarget.dockingDir = -dockingDir;
 
 #if CLIENT
-            PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+                PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 #endif
 
-            ConnectWireBetweenPorts();
+                ConnectWireBetweenPorts();
+                CreateJoint(true);
 
-            CreateJoint(true);
-
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
 
+
+            List<MapEntity> removedEntities = item.linkedTo.Where(e => e.Removed).ToList();
+            foreach (MapEntity removed in removedEntities) item.linkedTo.Remove(removed);
+            
             if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
             {
                 CreateHull();
@@ -380,7 +382,6 @@ namespace Barotrauma.Items.Components
             var hullRects = new Rectangle[] { item.WorldRect, dockingTarget.item.WorldRect };
             var subs = new Submarine[] { item.Submarine, dockingTarget.item.Submarine };
 
-            hulls = new Hull[2];
             bodies = new Body[4];
 
             if (dockingTarget.door != null)
@@ -409,6 +410,7 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
+                    if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
 
                     for (int j = 0; j < 2; j++)
                     {
@@ -419,9 +421,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
+                if (gapId != null) gap.ID = (ushort)gapId;                
             }
             else
             {
@@ -439,25 +439,25 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
-
                     if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
                 if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
             }
 
-            item.linkedTo.Add(hulls[0]);
-            item.linkedTo.Add(hulls[1]);
+            LinkHullsToGap();
 
             hullIds[0] = hulls[0].ID;
             hullIds[1] = hulls[1].ID;
+            hulls[0].ShouldBeSaved = false;
+            hulls[1].ShouldBeSaved = false;
+            item.linkedTo.Add(hulls[0]);
+            item.linkedTo.Add(hulls[1]);
 
             gap.DisableHullRechecks = true;
+            gap.ShouldBeSaved = false;
             gapId = gap.ID;
-
             item.linkedTo.Add(gap);
 
             foreach (Body body in bodies)
@@ -563,13 +563,9 @@ namespace Barotrauma.Items.Components
                 GameMain.World.RemoveJoint(joint);
                 joint = null;
             }
-
-            if (hulls != null)
-            {
-                hulls[0].Remove();
-                hulls[1].Remove();
-                hulls = null;
-            }
+            
+            hulls[0]?.Remove(); hulls[0] = null;
+            hulls[1]?.Remove(); hulls[1] = null;
 
             if (gap != null)
             {
@@ -579,10 +575,9 @@ namespace Barotrauma.Items.Components
 
             hullIds[0] = null;
             hullIds[1] = null;
-
             gapId = null;
-            
-            if (bodies!=null)
+
+            if (bodies != null)
             {
                 foreach (Body body in bodies)
                 {
@@ -751,6 +746,21 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
             bool isDocked = msg.ReadBoolean();
+
+            for (int i = 0; i < 2; i++)
+            {
+                if (hulls[i] == null) continue;
+                item.linkedTo.Remove(hulls[i]);
+                hulls[i].Remove();
+                hulls[i] = null;
+            }
+
+            if (gap != null)
+            {
+                item.linkedTo.Remove(gap);
+                gap.Remove();
+                gap = null;
+            }
 
             if (isDocked)
             {

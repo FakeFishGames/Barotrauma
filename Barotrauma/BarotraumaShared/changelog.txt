@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.9
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a bug in docking port syncing that caused entity ID mismatches and "unknown object header" errors.
+- Fixed a bug that occasionally caused entity ID mismatches and "unknown object header" errors when 
+a respawn shuttle got damaged before returning back to the starting location.
+- Fixed error messages when attempting to use the console commands "\" or "\n".
+- Fixed clients not syncing the position of their controlled character with the server when dead/unconscious.
+- Fixed swimming ragdolls "dropping down" if the server freezes them due to a connection error.
+- Fixed excessive "attempted to apply invalid velocity to a physics body" console errors.
+- Fixed crashing when selecting a level seed that has no background portrait defined.
+- Fixed crashing if the player clicks yes on the "download sub from the server" prompt after 
+returning to the main menu.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.8
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "invalid cursor position" errors when a client attempts to use console commands in the server lobby.
+- Fixed crashing if a character takes damage during the first frame of a round.
+- Fixed crashing if suitable prop items are not found when generating alien ruins.
+- Some ragdoll and physics optimization.
+- More automatic error logging to help with debugging.
+- Fixed errors when attempting to change the output type of an oscillator in multiplayer.
+- Campaign store menu includes a quantity field which lets the player select how many items to buy instead
+of showing each item individually.
+- Fixed clients not seeing vote counts on submarines that the client doesn't have.
+- Fixed crashing if a player attempts to use an item on themselves and the item has a status effect that
+causes the item to be removed.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.7
 ---------------------------------------------------------------------------------------------------------
 

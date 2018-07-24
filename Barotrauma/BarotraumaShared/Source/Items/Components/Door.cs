@@ -340,9 +340,13 @@ namespace Barotrauma.Items.Components
                 body.Remove();
                 body = null;
             }
-
-
-            if (linkedGap != null) linkedGap.Remove();
+            
+            //no need to remove the gap if we're unloading the whole submarine
+            //otherwise the gap will be removed twice and cause console warnings
+            if (!Submarine.Unloading)
+            {
+                if (linkedGap != null) linkedGap.Remove();
+            }
 
             doorSprite.Remove();
             if (weldedSprite != null) weldedSprite.Remove();
