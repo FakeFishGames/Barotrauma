@@ -183,7 +183,7 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (ge.point1 == ge.point2) continue;
+                if (Vector2.DistanceSquared(ge.point1, ge.point2) < 0.001f) continue;
 
                 for (int i = 0; i < 2; i++)
                 {
