@@ -418,9 +418,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
+                if (gapId != null) gap.ID = (ushort)gapId;                
             }
             else
             {
@@ -443,19 +441,20 @@ namespace Barotrauma.Items.Components
 
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
                 if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
             }
 
-            item.linkedTo.Add(hulls[0]);
-            item.linkedTo.Add(hulls[1]);
+            LinkHullsToGap();
 
             hullIds[0] = hulls[0].ID;
             hullIds[1] = hulls[1].ID;
+            hulls[0].ShouldBeSaved = false;
+            hulls[1].ShouldBeSaved = false;
+            item.linkedTo.Add(hulls[0]);
+            item.linkedTo.Add(hulls[1]);
 
             gap.DisableHullRechecks = true;
+            gap.ShouldBeSaved = false;
             gapId = gap.ID;
-
             item.linkedTo.Add(gap);
 
             foreach (Body body in bodies)
