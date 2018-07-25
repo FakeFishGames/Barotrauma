@@ -140,7 +140,13 @@ namespace Barotrauma.Networking
                 
                 if (entityID == 0)
                 {
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID + " (null entity)",
+                            Microsoft.Xna.Framework.Color.Orange);
+                    }
                     msg.ReadPadBits();
+                    entities.Add(null);
                     if (thisEventID == (UInt16)(lastReceivedID + 1)) lastReceivedID++;
                     continue;
                 }
