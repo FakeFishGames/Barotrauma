@@ -45,6 +45,18 @@ namespace Barotrauma
             CalculateMovementLimits();
             SpawnCharacter(Character.HumanConfigFile);
             ResetParamsEditor();
+            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
+            GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
+        }
+
+        private void OnResolutionChanged()
+        {
+            CreateGUI();
         }
 
         #region Inifinite runner
