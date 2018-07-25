@@ -62,6 +62,15 @@ namespace Barotrauma.Steam
                     DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
                 }
             }
+            catch (DllNotFoundException e)
+            {
+                isInitialized = false;
+#if CLIENT
+                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed (steam_api64.dll not found).");
+#else
+                DebugConsole.ThrowError("Initializing Steam client failed (steam_api64.dll not found).", e);
+#endif
+            }
             catch (Exception e)
             {
                 isInitialized = false;
@@ -70,6 +79,19 @@ namespace Barotrauma.Steam
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed.", e);
 #endif
+            }
+
+            if (!isInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
             }
         }
 
