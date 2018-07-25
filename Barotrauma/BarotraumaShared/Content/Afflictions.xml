@@ -4,6 +4,55 @@
   <!-- Basic afflictions. 
   These afflictions are required by the vanilla game; 
   modifying them may require modifications to the code. -->
+
+  <CPRSettings
+    revivechanceperskill="0.01"
+    revivechanceexponent="2"
+    revivechancemin="0.05"
+    revivechancemax="0.9"
+    stabilizationperskill="0.02"
+    stabilizationmin="0.5"
+    stabilizationmax="2"
+    damageskillthreshold="20"
+    damageskillmultiplier="0.05">
+    <!--
+    CPR revive chance = max(min((medicalskill * cprrevivechanceperskill) ^ cprrevivechanceexponent, cprrevivechancemin), cprrevivechancemax)
+      Example:
+        cprrevivechanceperskill="0.01"
+        cprrevivechanceexponent="2"
+        cprrevivechancemin="0.05"  
+        cprrevivechancemax="0.9"  
+        
+        Skill 5: 5%
+        Skill 20: 5%
+        Skill 50: 25%
+        Skill 70: 49%
+        Skill 90: 81%
+        Skill 100: 90%
+        
+    Stabilization means that the oxygen level of the target increases (but doesn't get back to normal until the character is revived).
+    A value of 1 means that the oxygen level doesn't drop (nor increase), 0.5 means the character takes twice as long to die of lack of oxygen
+      Example:
+        cprstabilizationperskill="0.02"
+        cprstabilizationmin="0.5"
+        cprstabilizationmax="2"
+        
+        Skill 5: stabilization 50%, character takes twice as long to die of lack of oxygen
+        Skill 20: stabilization 50%
+        Skill 50: stabilization 100%, character won't die of lack of oxygen, but oxygen level doesn't rise
+        Skill 75: stabilization 150%, oxygen level rises      
+        
+    If the skill of the character performing cpr is below damageskillthreshold, each pump causes damage
+    The amount damage is calculated as (damageskillthreshold - skill) * damageskillmultiplier
+      Example:
+        damageskillthreshold="20"
+        damageskillmultiplier="0.05"
+        
+        Skill 5: 0.75
+        Skill 15: 0.25
+        Skill 38: 0.0
+    -->
+  </CPRSettings>
   
   <InternalDamage
     name="Internal Damage"
@@ -68,7 +117,7 @@
     causeofdeathdescription="Suffocated"
     selfcauseofdeathdescription="You have suffocated."
     limbspecific="false"
-    indicatorlimb="Torso"    
+    indicatorlimb="Torso"
     activationthreshold="1"
     maxstrength="200">
     <SuitableTreatment name="Erythrozine" suitability="100"/>
