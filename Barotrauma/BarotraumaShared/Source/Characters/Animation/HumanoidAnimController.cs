@@ -998,9 +998,10 @@ namespace Barotrauma
                 if (GameMain.Client == null && target.Oxygen < -10.0f)
                 {
                     //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                    float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
-                    character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) target.Oxygen += cpr * deltaTime; //we didn't suffocate yet did we    
+                    float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
+                    stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
+                    character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
+                    if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
 
                     //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
                 }
@@ -1020,24 +1021,22 @@ namespace Barotrauma
                     targetTorso.body.ApplyForce(new Vector2(0, -1000f));
                     cprPump = 0;
 
-                    if (skill < 50.0f)
+                    if (skill < CPRSettings.DamageSkillThreshold)
                     {
-                        //10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
                         target.LastDamageSource = null;
                         target.DamageLimb(
                             targetTorso.WorldPosition, targetTorso, 
-                            new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
+                            new List<Affliction>()
+                            {
+                                AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier)
+                            },
                             0.0f, true, 0.0f, character);
                     }
                     if (GameMain.Client == null) //Serverside code
                     {
-                        //0.1% chance for 10 skill
-                        //1.5% chance for 25 skill
-                        //13% chance for 50 skill
-                        //42% chance for 75 skill
-                        //100% chance for 100 skill
-                        float reviveChance = skill / 100.0f;
-                        reviveChance *= reviveChance * reviveChance;
+                        float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
+                        reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
+                        reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.ReviveChanceMin, CPRSettings.ReviveChanceMax);
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) <= reviveChance)
                         {
@@ -1055,15 +1054,18 @@ namespace Barotrauma
             //got the character back into a non-critical state, increase medical skill
             //BUT only if it has been more than 10 seconds since the character revived someone
             //otherwise it's easy to abuse the system by repeatedly reviving in a low-oxygen room 
-            target.CharacterHealth.CalculateVitality();
-            if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
+            if (!target.IsDead)
             {
-                character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
-                SteamAchievementManager.OnCharacterRevived(target, character);
-                lastReviveTime = (float)Timing.TotalTime;
-                //reset attacker, we don't want the character to start attacking us
-                //because we caused a bit of damage to them during CPR
-                if (target.LastAttacker == character) target.LastAttacker = null;
+                target.CharacterHealth.CalculateVitality();
+                if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
+                {
+                    character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    SteamAchievementManager.OnCharacterRevived(target, character);
+                    lastReviveTime = (float)Timing.TotalTime;
+                    //reset attacker, we don't want the character to start attacking us
+                    //because we caused a bit of damage to them during CPR
+                    if (target.LastAttacker == character) target.LastAttacker = null;
+                }
             }
         }
         public override void DragCharacter(Character target)

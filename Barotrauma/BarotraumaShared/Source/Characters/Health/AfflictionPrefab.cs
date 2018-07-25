@@ -2,11 +2,38 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public static class CPRSettings
+    {
+        public static float ReviveChancePerSkill { get; private set; }
+        public static float ReviveChanceExponent { get; private set; }
+        public static float ReviveChanceMin { get; private set; }
+        public static float ReviveChanceMax { get; private set; }
+        public static float StabilizationPerSkill { get; private set; }
+        public static float StabilizationMin { get; private set; }
+        public static float StabilizationMax { get; private set; }
+        public static float DamageSkillThreshold { get; private set; }
+        public static float DamageSkillMultiplier { get; private set; }
+
+        public static void Load(XElement element)
+        {
+            ReviveChancePerSkill = Math.Max(element.GetAttributeFloat("revivechanceperskill", 0.01f), 0.0f);
+            ReviveChanceExponent = Math.Max(element.GetAttributeFloat("revivechanceexponent", 2.0f), 0.0f);
+            ReviveChanceMin = MathHelper.Clamp(element.GetAttributeFloat("revivechancemin", 0.05f), 0.0f, 1.0f);
+            ReviveChanceMax = MathHelper.Clamp(element.GetAttributeFloat("revivechancemax", 0.9f), ReviveChanceMin, 1.0f);
+
+            StabilizationPerSkill = Math.Max(element.GetAttributeFloat("stabilizationperskill", 0.01f), 0.0f);
+            StabilizationMin = MathHelper.Max(element.GetAttributeFloat("stabilizationmin", 0.05f), 0.0f);
+            StabilizationMax = MathHelper.Max(element.GetAttributeFloat("stabilizationmax", 2.0f), StabilizationMin);
+
+            DamageSkillThreshold = MathHelper.Clamp(element.GetAttributeFloat("damageskillthreshold", 40.0f), 0.0f, 100.0f);
+            DamageSkillMultiplier = MathHelper.Clamp(element.GetAttributeFloat("damageskillmultiplier", 0.1f), 0.0f, 100.0f);
+        }
+    }
+
     class AfflictionPrefab
     {
         public class Effect
@@ -153,6 +180,9 @@ namespace Barotrauma
                             break;
                         case "husk":
                             List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                            break;
+                        case "cprsettings":
+                            CPRSettings.Load(element);
                             break;
                         default:
                             List.Add(new AfflictionPrefab(element));
