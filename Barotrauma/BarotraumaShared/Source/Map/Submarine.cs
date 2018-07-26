@@ -328,7 +328,7 @@ namespace Barotrauma
             DockedTo = new List<Submarine>();
 
             ID = ushort.MaxValue;
-            base.Remove();
+            FreeID();
         }
 
         public bool HasTag(SubmarineTag tag)

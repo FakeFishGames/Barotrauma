@@ -223,12 +223,29 @@ namespace Barotrauma
 
                     var connectedItem = originalWire.Connections[n].Item;
                     if (connectedItem == null) continue;
-                    
+
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
+                    if (itemIndex < 0)
+                    {
+                        DebugConsole.ThrowError("Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
+                        GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectedNotFound" + connectedItem.ID,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
+                        continue;
+                    }
+
                     //index of the connection in the connectionpanel of the target item
                     int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
-                    
+                    if (connectionIndex < 0)
+                    {
+                        DebugConsole.ThrowError("Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
+                        GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectionNotFound" + connectedItem.ID,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
+                        continue;
+                    }
+
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
