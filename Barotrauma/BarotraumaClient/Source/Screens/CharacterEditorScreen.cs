@@ -26,7 +26,7 @@ namespace Barotrauma
         private Character character;
         private Vector2 spawnPosition;
         private bool showAnimControls;
-        private bool editSpriteOrigins;
+        private bool editSpriteDimensions;
         private bool editRagdoll;
         private bool editJointPositions;
         private bool editJointLimits;
@@ -313,7 +313,7 @@ namespace Barotrauma
             };
             var animControlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Animation Controls") { Selected = showAnimControls };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
-            var originsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Origins") { Selected = editSpriteOrigins };
+            var spriteDimensionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Dimensions") { Selected = editSpriteDimensions };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
@@ -326,7 +326,7 @@ namespace Barotrauma
                 if (showAnimControls)
                 {
                     spritesheetToggle.Selected = false;
-                    originsToggle.Selected = false;
+                    spriteDimensionsToggle.Selected = false;
                     ragdollToggle.Selected = false;
                     ResetParamsEditor();
                 }
@@ -341,13 +341,14 @@ namespace Barotrauma
                 }
                 return true;
             };
-            originsToggle.OnSelected = box =>
+            spriteDimensionsToggle.OnSelected = box =>
             {
-                editSpriteOrigins = box.Selected;
-                if (editSpriteOrigins)
+                editSpriteDimensions = box.Selected;
+                if (editSpriteDimensions)
                 {
                     ragdollToggle.Selected = false;
                     animControlsToggle.Selected = false;
+                    spritesheetToggle.Selected = true;
                 }
                 return true;
             };
@@ -356,7 +357,7 @@ namespace Barotrauma
                 editRagdoll = box.Selected;
                 if (editRagdoll)
                 {
-                    originsToggle.Selected = false;
+                    spriteDimensionsToggle.Selected = false;
                     animControlsToggle.Selected = false;
                     ResetParamsEditor();
                 }
@@ -484,7 +485,7 @@ namespace Barotrauma
         private void ResetParamsEditor()
         {
             ParamsEditor.Instance.Clear();
-            if (editRagdoll || editSpriteOrigins)
+            if (editRagdoll || editSpriteDimensions)
             {
                 RagdollParams.AddToEditor(ParamsEditor.Instance);
             }
@@ -606,7 +607,7 @@ namespace Barotrauma
             {
                 DrawAnimationControls(spriteBatch);
             }
-            if (editSpriteOrigins)
+            if (editSpriteDimensions)
             {
                 DrawSpriteOriginEditor(spriteBatch);
             }
@@ -1147,21 +1148,56 @@ namespace Barotrauma
                     {
                         DrawSpritesheetRagdollEditor(spriteBatch, limb, limbBodyPos);
                     }
-                    if (editSpriteOrigins)
+                    if (editSpriteDimensions)
                     {
-                        // Sprite origin
+                        // Draw the sprite origins
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.Red);
                         GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.Red);
-                        if (PlayerInput.LeftButtonHeld() && rect.Contains(PlayerInput.MousePosition))
+                        // Draw the  source rect widgets
+                        int widgetSize = 5;
+                        Vector2 stringOffset = new Vector2(5, 14);
+                        var topLeft = rect.Location.ToVector2();
+                        var topRight = new Vector2(topLeft.X + rect.Width, topLeft.Y);
+                        var bottomRight = new Vector2(topRight.X, topRight.Y + rect.Height);
+                        //var bottomLeft = new Vector2(topLeft.X, bottomRight.Y);
+                        DrawWidget(spriteBatch, topLeft, WidgetType.Rectangle, widgetSize, Color.Red, "Position", () =>
+                        {
+                            // Adjust the source rect location
+                            var newRect = limb.sprite.SourceRect;
+                            var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
+                            newRect.Location = newLocation.ToPoint();
+                            limb.sprite.SourceRect = newRect;
+                            GUI.DrawString(spriteBatch, PlayerInput.MousePosition + stringOffset, limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                        });
+                        DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
+                        {
+                            // Adjust the source rect width and height, and the sprite size.
+                            var newRect = limb.sprite.SourceRect;
+                            int width = (int)PlayerInput.MousePosition.X - rect.X;
+                            int height = (int)PlayerInput.MousePosition.Y - rect.Y;
+                            int dx = newRect.Width - width;
+                            newRect.Width = width;
+                            newRect.Height = height;
+                            limb.sprite.SourceRect = newRect;
+                            limb.sprite.size = new Vector2(width, height);
+                            // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
+                            limb.sprite.Origin = new Vector2(limb.sprite.Origin.X - dx, limb.sprite.Origin.Y);
+                            GUI.DrawString(spriteBatch, PlayerInput.MousePosition + stringOffset, limb.sprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        });
+                        if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
                         {
                             var input = scaledMouseSpeed;
                             input.X *= character.AnimController.Dir;
-                            limb.sprite.Origin += input;
-                            // TODO: handle updating limb sub params
-                            //TryUpdateLimbParam(limb, "sprite", ConvertUnits.ToDisplayUnits(limb.sprite.Origin));
-                            GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            if (rect.Contains(PlayerInput.MousePosition))
+                            {
+                                // Adjust the sprite origin
+                                limb.sprite.Origin += input;
+                                // TODO: handle updating limb sub params
+                                //TryUpdateLimbParam(limb, "sprite", ConvertUnits.ToDisplayUnits(limb.sprite.Origin));
+                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            }
                         }
                     }
                 }
