@@ -28,16 +28,12 @@ namespace Barotrauma.Items.Components
         private Joint joint;
 
         private readonly Hull[] hulls = new Hull[2];
-        private ushort?[] hullIds;
+        private Gap gap;
 
         private Door door;
 
         private Body[] bodies;
-
         private Body doorBody;
-
-        private Gap gap;
-        private ushort? gapId;
 
         private bool docked;
 
@@ -114,9 +110,7 @@ namespace Barotrauma.Items.Components
             }
             
             IsActive = true;
-
-            hullIds = new ushort?[2];
-
+            
             list.Add(this);
         }
 
@@ -407,7 +401,7 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
-                    if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
+                    hulls[i].FreeID();
 
                     for (int j = 0; j < 2; j++)
                     {
@@ -418,7 +412,6 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;                
             }
             else
             {
@@ -436,25 +429,22 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
-                    if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
+                    hulls[i].FreeID();
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;
             }
 
             LinkHullsToGap();
-
-            hullIds[0] = hulls[0].ID;
-            hullIds[1] = hulls[1].ID;
+            
             hulls[0].ShouldBeSaved = false;
             hulls[1].ShouldBeSaved = false;
             item.linkedTo.Add(hulls[0]);
             item.linkedTo.Add(hulls[1]);
 
+            gap.FreeID();
             gap.DisableHullRechecks = true;
             gap.ShouldBeSaved = false;
-            gapId = gap.ID;
             item.linkedTo.Add(gap);
 
             foreach (Body body in bodies)
@@ -569,11 +559,7 @@ namespace Barotrauma.Items.Components
                 gap.Remove();
                 gap = null;
             }
-
-            hullIds[0] = null;
-            hullIds[1] = null;
-            gapId = null;
-
+            
             if (bodies != null)
             {
                 foreach (Body body in bodies)
@@ -636,6 +622,9 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             list.Remove(this);
+            hulls[0]?.Remove(); hulls[0] = null;
+            hulls[1]?.Remove(); hulls[1] = null;
+            gap?.Remove(); gap = null;
         }
 
         public override void OnMapLoaded()
@@ -724,19 +713,8 @@ namespace Barotrauma.Items.Components
 
             if (docked)
             {
-                msg.Write(dockingTarget.item.ID);
-
-                if (hulls != null && hulls[0] != null && hulls[1] != null && gap != null)
-                {
-                    msg.Write(true);
-                    msg.Write(hulls[0].ID);
-                    msg.Write(hulls[1].ID);
-                    msg.Write(gap.ID);
-                }
-                else
-                {
-                    msg.Write(false);
-                }
+                msg.Write(dockingTarget.item.ID);                
+                msg.Write(hulls != null && hulls[0] != null && hulls[1] != null && gap != null);
             }
         }
 
@@ -764,14 +742,7 @@ namespace Barotrauma.Items.Components
                 ushort dockingTargetID = msg.ReadUInt16();
 
                 bool isLocked = msg.ReadBoolean();
-
-                if (isLocked)
-                {
-                    hullIds[0] = msg.ReadUInt16();
-                    hullIds[1] = msg.ReadUInt16();
-                    gapId = msg.ReadUInt16();
-                }
-
+                
                 Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
                 if (targetEntity == null || !(targetEntity is Item))
                 {
@@ -791,10 +762,6 @@ namespace Barotrauma.Items.Components
                 if (isLocked)
                 {
                     Lock(true);
-
-                    hulls[0].ID = (ushort)hullIds[0];
-                    hulls[1].ID = (ushort)hullIds[1];
-                    gap.ID = (ushort)gapId;
                 }
             }
             else

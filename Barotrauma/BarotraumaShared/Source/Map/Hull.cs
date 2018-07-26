@@ -406,7 +406,7 @@ namespace Barotrauma
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-                if (GameMain.Server != null)
+                if (GameMain.Server != null && !IdFreed)
                 {
                     sendUpdateTimer -= deltaTime;
                     if (sendUpdateTimer < 0.0f)
