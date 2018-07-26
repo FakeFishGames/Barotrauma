@@ -436,6 +436,7 @@ namespace Barotrauma
         {
             RagdollParams.Reset();
             ResetJoints();
+            ResetLimbs();
         }
 
         /// <summary>
@@ -452,6 +453,11 @@ namespace Barotrauma
         public void ResetJoints()
         {
             LimbJoints.ForEach(j => j.LoadParams());
+        }
+
+        public void ResetLimbs()
+        {
+            Limbs.ForEach(l => l.LoadParams());
         }
 
         public void AddJoint(JointParams jointParams)
