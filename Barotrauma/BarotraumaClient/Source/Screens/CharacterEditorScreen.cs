@@ -349,6 +349,7 @@ namespace Barotrauma
                     ragdollToggle.Selected = false;
                     animControlsToggle.Selected = false;
                     spritesheetToggle.Selected = true;
+                    ResetParamsEditor();
                 }
                 return true;
             };
@@ -522,10 +523,25 @@ namespace Barotrauma
 
         private void TryUpdateLimbParam(Limb limb, string name, object value)
         {
-            // TODO: handle updating the sub params
             if (limb.limbParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
                 limb.limbParams.SerializableEntityEditor.UpdateValue(p, value);
+            }
+            else
+            {
+                var subParams = limb.limbParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
+                if (subParams != null)
+                {
+                    if (subParams.SerializableProperties.TryGetValue(name, out p))
+                    {
+                        subParams.SerializableEntityEditor.UpdateValue(p, value);
+                    }
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"No field for {name} found!");
+                    limb.limbParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
+                }
             }
         }
         #endregion
@@ -986,11 +1002,18 @@ namespace Barotrauma
                 float multiplier = 0.5f;
                 Vector2 up = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(selectedLimb.Rotation));
                 var input = -scaledMouseSpeed * inputMultiplier * Cam.Zoom / selectedLimb.Scale * multiplier;
-                selectedLimb.sprite.Origin += input.TransformVector(up);
-                var max = new Vector2(selectedLimb.sprite.SourceRect.Width, selectedLimb.sprite.SourceRect.Height);
-                selectedLimb.sprite.Origin = selectedLimb.sprite.Origin.Clamp(Vector2.Zero, max);
-                // TODO: handle updating limb sub params
-                //TryUpdateLimbParam(selectedLimb, "sprite", ConvertUnits.ToDisplayUnits(selectedLimb.sprite.Origin));
+                var sprite = selectedLimb.sprite;
+                var origin = sprite.Origin;
+                origin += input.TransformVector(up);
+                var sourceRect = sprite.SourceRect;
+                var max = new Vector2(sourceRect.Width, sourceRect.Height);
+                sprite.Origin = origin.Clamp(Vector2.Zero, max);
+                if (character.AnimController.IsFlipped)
+                {
+                    origin.X = Math.Abs(origin.X - sourceRect.Width);
+                }
+                var relativeOrigin = new Vector2(sprite.Origin.X / sourceRect.Width, sprite.Origin.Y / sourceRect.Height);
+                TryUpdateLimbParam(selectedLimb, "origin", relativeOrigin);
             }
         }
 
@@ -1179,7 +1202,7 @@ namespace Barotrauma
                             limb.sprite.SourceRect = newRect;
                             limb.sprite.size = new Vector2(width, height);
                             // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
-                            limb.sprite.Origin = new Vector2(limb.sprite.Origin.X - dx, limb.sprite.Origin.Y);
+                            limb.sprite.Origin = new Vector2(origin.X - dx, origin.Y);
                             GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.sprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         });
                         if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
@@ -1189,10 +1212,18 @@ namespace Barotrauma
                                 var input = scaledMouseSpeed;
                                 input.X *= character.AnimController.Dir;
                                 // Adjust the sprite origin
-                                limb.sprite.Origin += input;
-                                // TODO: handle updating limb sub params
-                                //TryUpdateLimbParam(limb, "sprite", ConvertUnits.ToDisplayUnits(limb.sprite.Origin));
-                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), limb.sprite.Origin.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                                origin += input;
+                                var sprite = limb.sprite;
+                                var sourceRect = sprite.SourceRect;
+                                var max = new Vector2(sourceRect.Width, sourceRect.Height);
+                                sprite.Origin = origin.Clamp(Vector2.Zero, max);
+                                if (character.AnimController.IsFlipped)
+                                {
+                                    origin.X = Math.Abs(origin.X - sourceRect.Width);
+                                }
+                                var relativeOrigin = new Vector2(origin.X / sourceRect.Width, origin.Y / sourceRect.Height);
+                                TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                                GUI.DrawString(spriteBatch, limbBodyPos + new Vector2(10, -10), relativeOrigin.FormatAsDoubleDecimal(), Color.White, Color.Black * 0.5f);
                             }
                         }
                     }

@@ -595,5 +595,12 @@ namespace Barotrauma
             }
 #endif
         }
+
+        public void LoadParams()
+        {
+            bool isFlipped = dir == Direction.Left;
+            sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            damagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+        }
     }
 }

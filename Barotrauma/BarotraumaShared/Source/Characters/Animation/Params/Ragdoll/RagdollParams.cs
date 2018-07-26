@@ -226,14 +226,19 @@ namespace Barotrauma
             var spriteElement = element.Element("sprite");
             if (spriteElement != null)
             {
-                SubParams.Add(new SpriteParams(spriteElement, ragdoll));
+                normalSpriteParams = new SpriteParams(spriteElement, ragdoll);
+                SubParams.Add(normalSpriteParams);
             }
             var damagedElement = element.Element("damagedsprite");
             if (damagedElement != null)
             {
-                SubParams.Add(new SpriteParams(damagedElement, ragdoll));
+                damagedSpriteParams = new SpriteParams(damagedElement, ragdoll);
+                SubParams.Add(damagedSpriteParams);
             }
         }
+
+        public readonly SpriteParams normalSpriteParams;
+        public readonly SpriteParams damagedSpriteParams;
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
@@ -274,16 +279,16 @@ namespace Barotrauma
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
-        [Serialize("", true)]
+        [Serialize("", true),]
         public string Texture { get; set; }
 
         [Serialize("0, 0, 0, 0", true)]
-        public Vector4 Mass { get; set; }
+        public Vector4 SourceRect { get; set; }
 
         [Serialize(0f, true)]
         public float Depth { get; set; }
 
-        [Serialize("0.5, 0.5", true)]
+        [Serialize("0.5, 0.5", true), Editable]
         public Vector2 Origin { get; set; }
     }
 
