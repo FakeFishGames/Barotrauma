@@ -28,6 +28,11 @@ namespace Barotrauma
             private set;
         }
 
+        public bool IdFreed
+        {
+            get { return idFreed; }
+        }
+
         public ushort ID
         {
             get 
@@ -230,7 +235,6 @@ namespace Barotrauma
             }
 
             dictionary.Remove(ID);
-            id = 0;
             idFreed = true;
         }
 
