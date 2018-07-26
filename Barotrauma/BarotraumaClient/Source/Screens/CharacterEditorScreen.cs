@@ -961,18 +961,15 @@ namespace Barotrauma
                 corners = MathUtils.GetImaginaryRect(corners, up, limbScreenPos, size);
                 //var rect = new Rectangle(limbBodyPos.ToPoint() - size.Divide(2), size);
                 //GUI.DrawRectangle(spriteBatch, rect, Color.Blue);
-
                 GUI.DrawRectangle(spriteBatch, corners, Color.Red);
                 GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.White, width: 3);
                 GUI.DrawLine(spriteBatch, limbScreenPos, limbScreenPos + up * 20, Color.Red);
-
                 // Limb positions
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.White, width: 3);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.White, width: 3);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitY * 5.0f, limbScreenPos - Vector2.UnitY * 5.0f, Color.Red);
                 GUI.DrawLine(spriteBatch, limbScreenPos + Vector2.UnitX * 5.0f, limbScreenPos - Vector2.UnitX * 5.0f, Color.Red);
-
-                if (PlayerInput.LeftButtonHeld() && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
+                if (PlayerInput.LeftButtonHeld() && selectedWidget == null && MathUtils.RectangleContainsPoint(corners, PlayerInput.MousePosition))
                 {
                     if (selectedLimb == null)
                     {
@@ -1036,7 +1033,6 @@ namespace Barotrauma
                     ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.White, size: 1);
                     GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Black, width: 3);
                     GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
-
                     if (editJointLimits)
                     {
                         DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: true, rotationOffset: character.AnimController.Collider.Rotation);
@@ -1169,7 +1165,7 @@ namespace Barotrauma
                             var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
                             newRect.Location = newLocation.ToPoint();
                             limb.sprite.SourceRect = newRect;
-                            GUI.DrawString(spriteBatch, PlayerInput.MousePosition + stringOffset, limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, topLeft + stringOffset, limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
                         });
                         DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
                         {
@@ -1184,14 +1180,14 @@ namespace Barotrauma
                             limb.sprite.size = new Vector2(width, height);
                             // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
                             limb.sprite.Origin = new Vector2(limb.sprite.Origin.X - dx, limb.sprite.Origin.Y);
-                            GUI.DrawString(spriteBatch, PlayerInput.MousePosition + stringOffset, limb.sprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
+                            GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.sprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         });
                         if (PlayerInput.LeftButtonHeld() && selectedWidget == null)
                         {
-                            var input = scaledMouseSpeed;
-                            input.X *= character.AnimController.Dir;
                             if (rect.Contains(PlayerInput.MousePosition))
                             {
+                                var input = scaledMouseSpeed;
+                                input.X *= character.AnimController.Dir;
                                 // Adjust the sprite origin
                                 limb.sprite.Origin += input;
                                 // TODO: handle updating limb sub params
@@ -1215,7 +1211,6 @@ namespace Barotrauma
                 if (joint.BodyA == limb.body.FarseerBody)
                 {
                     jointPos = anchorPosA;
-
                 }
                 else if (joint.BodyB == limb.body.FarseerBody)
                 {
