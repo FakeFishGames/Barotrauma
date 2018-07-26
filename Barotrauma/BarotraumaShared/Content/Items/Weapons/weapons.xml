@@ -126,7 +126,8 @@
  
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
       aimpos="90,10" handle1="-11,-7"/> 
-      <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
+    
+    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
       <Sound file="Content/Items/Weapons/revolver.ogg" type="OnUse" range="3000"/>
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
