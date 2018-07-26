@@ -496,40 +496,29 @@ namespace Barotrauma
             }
         }
 
-        private void TryUpdateAnimParam(string name, object value)
+        private void TryUpdateAnimParam(string name, object value) => TryUpdateParam(character.AnimController.CurrentAnimationParams, name, value);
+        private void TryUpdateRagdollParam(string name, object value) => TryUpdateParam(RagdollParams, name, value);
+
+        private void TryUpdateParam(EditableParams editableParams, string name, object value)
         {
-            var animParams = character.AnimController.CurrentAnimationParams;
-            if (animParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            if (editableParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                animParams.SerializableEntityEditor.UpdateValue(p, value);
+                editableParams.SerializableEntityEditor.UpdateValue(p, value);
             }
         }
 
-        private void TryUpdateRagdollParam(string name, object value)
-        {
-            if (RagdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
-            {
-                RagdollParams.SerializableEntityEditor.UpdateValue(p, value);
-            }
-        }
+        private void TryUpdateJointParam(LimbJoint joint, string name, object value) => TryUpdateSubParam(joint.jointParams, name, value);
+        private void TryUpdateLimbParam(Limb limb, string name, object value) => TryUpdateSubParam(limb.limbParams, name, value);
 
-        private void TryUpdateJointParam(LimbJoint joint, string name, object value)
+        private void TryUpdateSubParam(RagdollSubParams ragdollParams, string name, object value)
         {
-            if (joint.jointParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
+            if (ragdollParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
             {
-                joint.jointParams.SerializableEntityEditor.UpdateValue(p, value);
-            }
-        }
-
-        private void TryUpdateLimbParam(Limb limb, string name, object value)
-        {
-            if (limb.limbParams.SerializableProperties.TryGetValue(name, out SerializableProperty p))
-            {
-                limb.limbParams.SerializableEntityEditor.UpdateValue(p, value);
+                ragdollParams.SerializableEntityEditor.UpdateValue(p, value);
             }
             else
             {
-                var subParams = limb.limbParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
+                var subParams = ragdollParams.SubParams.Where(sp => sp.SerializableProperties.ContainsKey(name)).FirstOrDefault();
                 if (subParams != null)
                 {
                     if (subParams.SerializableProperties.TryGetValue(name, out p))
@@ -540,7 +529,7 @@ namespace Barotrauma
                 else
                 {
                     DebugConsole.ThrowError($"No field for {name} found!");
-                    limb.limbParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
+                    ragdollParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
                 }
             }
         }
