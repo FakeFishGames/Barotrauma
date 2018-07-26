@@ -124,7 +124,11 @@ namespace Barotrauma
             {
                 ScriptedEventSet eventSet = selectedEventSets[i];
 
-                if ((Submarine.MainSub == null || Submarine.MainSub.WorldPosition.X / level.Size.X < eventSet.MinDistanceTraveled) &&
+                float distanceTraveled = MathHelper.Clamp(
+                    (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
+                    0.0f, 1.0f);
+
+                if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
                     roundDuration < eventSet.MinMissionTime)
                 {
                     continue;
