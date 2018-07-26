@@ -883,7 +883,7 @@ namespace Barotrauma
                 if (damageDiff < 0.0f && GameMain.Client == null)
                 {
                     attacker.Info.IncreaseSkillLevel("Mechanical Engineering", 
-                        -damageDiff * SkillIncreaseMultiplier / Math.Min(attacker.GetSkillLevel("Mechanical Engineering"), 1.0f),
+                        -damageDiff * SkillIncreaseMultiplier / Math.Max(attacker.GetSkillLevel("Mechanical Engineering"), 1.0f),
                         SectionPosition(sectionIndex, true));                                    
                 }
             }
