@@ -18,8 +18,6 @@ namespace Barotrauma
         public Rectangle rect;
         public float damage;
         public Gap gap;
-
-        public int GapID;
         
         public WallSection(Rectangle rect)
         {
@@ -757,7 +755,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        private void SetDamage(int sectionIndex, float damage, Character attacker = null)
+        private void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
@@ -765,7 +763,7 @@ namespace Barotrauma
 
             damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
-            if (GameMain.Server != null && damage != sections[sectionIndex].damage)
+            if (GameMain.Server != null && createNetworkEvent && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
@@ -789,6 +787,8 @@ namespace Barotrauma
                     {
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
+
+                    DebugConsole.Log("Removing gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
 
                     //remove existing gap if damage is below leak threshold
                     sections[sectionIndex].gap.Open = 0.0f;
@@ -848,7 +848,14 @@ namespace Barotrauma
                     }
 
                     sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
+
+                    //free the ID, because if we give gaps IDs we have to make sure they always match between the clients and the server and
+                    //that clients create them in the correct order along with every other entity created/removed during the round
+                    //which COULD be done via entityspawner, but it's unnecessary because we never access these gaps by ID
+                    sections[sectionIndex].gap.FreeID();
+                    sections[sectionIndex].gap.ShouldBeSaved = false;
                     sections[sectionIndex].gap.ConnectedWall = this;
+                    DebugConsole.Log("Created gap (ID " + sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") on wall " + ID);
                     //AdjustKarma(attacker, 300);
 
                     //the structure didn't have any other gaps yet, log the breach
@@ -996,9 +1003,8 @@ namespace Barotrauma
         {
             for (int i = 0; i < sections.Length; i++)
             {
-                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
-
-                SetDamage(i, damage);
+                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;                
+                SetDamage(i, damage);                
             }
         }
         public override void FlipX(bool relativeToSub)
@@ -1077,10 +1083,12 @@ namespace Barotrauma
             }
 
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
-            Structure s = new Structure(rect, prefab, submarine);
-            s.Submarine = submarine;
-            s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            
+            Structure s = new Structure(rect, prefab, submarine)
+            {
+                Submarine = submarine,
+                ID = (ushort)int.Parse(element.Attribute("ID").Value)
+            };
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
@@ -1088,12 +1096,7 @@ namespace Barotrauma
                     case "section":
                         int index = subElement.GetAttributeInt("i", -1);
                         if (index == -1) continue;
-
-                        s.sections[index].damage = 
-                            subElement.GetAttributeFloat("damage", 0.0f);
-
-                        s.sections[index].GapID = subElement.GetAttributeInt("gap", -1);
-
+                        s.sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
                         break;
                 }
             }
@@ -1126,17 +1129,10 @@ namespace Barotrauma
             for (int i = 0; i < sections.Length; i++)
             {
                 if (sections[i].damage == 0.0f) continue;
-
                 var sectionElement =
                     new XElement("section",
                         new XAttribute("i", i),
                         new XAttribute("damage", sections[i].damage));
-
-                if (sections[i].gap != null)
-                {
-                    sectionElement.Add(new XAttribute("gap", sections[i].gap.ID));
-                }
-
                 element.Add(sectionElement);
             }
 
@@ -1149,14 +1145,10 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            foreach (WallSection s in sections)
+            for (int i = 0; i < sections.Length; i++)
             {
-                if (s.GapID == -1) continue;
-
-                s.gap = FindEntityByID((ushort)s.GapID) as Gap;
-                if (s.gap != null) s.gap.ConnectedWall = this;
+                SetDamage(i, sections[i].damage, createNetworkEvent: false);
             }
         }
-        
     }
 }

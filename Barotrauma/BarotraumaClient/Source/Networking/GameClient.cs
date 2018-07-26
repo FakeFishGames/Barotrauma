@@ -1148,6 +1148,9 @@ namespace Barotrauma.Networking
             long prevBitPos = 0;
             long prevBytePos = 0;
 
+            long prevBitLength = 0;
+            long prevByteLength = 0;
+
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -1185,8 +1188,9 @@ namespace Barotrauma.Networking
                         List<string> errorLines = new List<string>
                         {
                             "Error while reading update from server (unknown object header \"" + objHeader + "\"!)",
+                            "Message length: " + inc.LengthBits + " (" + inc.LengthBytes + " bytes)",
                             prevObjHeader != null ? "Previous object type: " + prevObjHeader.ToString() : "Error occurred on the very first object!",
-                            "Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)"
+                            "Previous object was " + (prevBitLength) + " bits long (" + (prevByteLength) + " bytes)"
                         };
                         if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
                         {
@@ -1213,13 +1217,16 @@ namespace Barotrauma.Networking
                         FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);
                         BinaryWriter sw = new BinaryWriter(fl);
 
-                        sw.Write(inc.Data, (int)prevBytePos, (int)(inc.LengthBytes - prevBytePos));
+                        sw.Write(inc.Data, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
 
                         sw.Close();
                         fl.Close();
 
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
                 }
+                prevBitLength = inc.Position - prevBitPos;
+                prevByteLength = inc.PositionInBytes - prevByteLength;
+
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;
                 prevBytePos = inc.PositionInBytes;

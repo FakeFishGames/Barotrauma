@@ -51,12 +51,12 @@ namespace Barotrauma
 
             if (purchasedItem != null && quantity == 1)
             {
-                campaign.Money -= purchasedItem.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
+                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
                 purchasedItem.Quantity += 1;
             }
             else
             {
-                campaign.Money -= (item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity);
+                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
                 purchasedItem = new PurchasedItem(item, quantity);
                 purchasedItems.Add(purchasedItem);
             }
@@ -110,6 +110,7 @@ namespace Barotrauma
             }
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
+            ItemPrefab containerPrefab = null;
             foreach (PurchasedItem pi in itemsToSpawn)
             {
                 Vector2 position = new Vector2(
@@ -125,7 +126,7 @@ namespace Barotrauma
 
                     if (itemContainer == null)
                     {
-                        var containerPrefab = MapEntityPrefab.List.Find(ep => 
+                        containerPrefab = MapEntityPrefab.List.Find(ep => 
                             ep.NameMatches(pi.ItemPrefab.CargoContainerName) || 
                             (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
 
@@ -162,27 +163,42 @@ namespace Barotrauma
                         {
                             new Item(pi.ItemPrefab, position, wp.Submarine);
                         }
+                        continue;
+                    }
+                    //if the intial container has been removed due to it running out of space, add a new container
+                    //of the same type and begin filling it
+                    if (!availableContainers.ContainsKey(itemContainer))
+                    {
+                        Item containerItemOverFlow = new Item(containerPrefab, position, wp.Submarine);
+                        itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
+                        availableContainers.Add(itemContainer, itemContainer.Capacity);
+                        if (GameMain.Server != null)
+                        {
+                            Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
+                        }
+                    }
+
+                    //place in the container
+                    if (GameMain.Server != null)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
                     }
                     else
                     {
-                        //place in the container
-                        if (GameMain.Server != null)
-                        {
-                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
-                        }
-                        else
-                        {
-                            var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                            itemContainer.Inventory.TryPutItem(item, null);
-                        }
-
-                        //reduce the number of available slots in the container
-                        availableContainers[itemContainer]--;
-                        if (availableContainers[itemContainer] <= 0)
-                        {
-                            availableContainers.Remove(itemContainer);
-                        }
+                        var item = new Item(pi.ItemPrefab, position, wp.Submarine);
+                        itemContainer.Inventory.TryPutItem(item, null);
                     }
+
+                    //reduce the number of available slots in the container
+                    //if there is a container
+                    if (availableContainers.ContainsKey(itemContainer))
+                    {
+                        availableContainers[itemContainer]--;
+                    }
+                    if (availableContainers.ContainsKey(itemContainer) && availableContainers[itemContainer] <= 0)
+                    {
+                        availableContainers.Remove(itemContainer);
+                    }                    
                 }
             }
             itemsToSpawn.Clear();

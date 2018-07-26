@@ -20,6 +20,7 @@
       <Item name="Revolver" equip="false">
         <Item name="Revolver Round"/>
         <Item name="Revolver Round"/>
+        <Item name="Revolver Round"/>
       </Item>
     </Items>
   </Job>
