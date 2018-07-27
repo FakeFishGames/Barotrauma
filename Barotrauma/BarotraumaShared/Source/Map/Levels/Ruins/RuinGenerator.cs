@@ -139,11 +139,28 @@ namespace Barotrauma.RuinGeneration
 
             Walls = newLines;
         }
+
+        public void MirrorX(Vector2 mirrorOrigin)
+        {
+            rect.X = (int)(mirrorOrigin.X + (mirrorOrigin.X - rect.Right));
+            for (int i = 0; i < Walls.Count; i++)
+            {
+                Walls[i].A = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].A.X), Walls[i].A.Y);
+                Walls[i].B = new Vector2(mirrorOrigin.X + (mirrorOrigin.X - Walls[i].B.X), Walls[i].B.Y);
+
+                if (Walls[i].B.X < Walls[i].A.X)
+                {
+                    var temp = Walls[i].A.X;
+                    Walls[i].A.X = Walls[i].B.X;
+                    Walls[i].B.X = temp;
+                }
+            }
+        }
     }
 
-    struct Line
+    class Line
     {
-        public readonly Vector2 A, B;
+        public Vector2 A, B;
 
         public readonly RuinStructureType Type;
 
@@ -183,7 +200,7 @@ namespace Barotrauma.RuinGeneration
             private set;
         }
 
-        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public Ruin(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             Area = area;
 
@@ -194,10 +211,10 @@ namespace Barotrauma.RuinGeneration
 
             allShapes = new List<RuinShape>();
 
-            Generate(closestPathCell, caveCells, area);
+            Generate(closestPathCell, caveCells, area, mirror);
         }
              
-        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area)
+        public void Generate(VoronoiCell closestPathCell, List<VoronoiCell> caveCells, Rectangle area, bool mirror = false)
         {
             corridors.Clear();
             rooms.Clear();
@@ -289,13 +306,21 @@ namespace Barotrauma.RuinGeneration
 
             BTRoom.CalculateDistancesFromEntrance(entranceRoom, corridors);
 
-            allShapes = GenerateStructures(caveCells);
+            allShapes = GenerateStructures(caveCells, area, mirror);
         }
 
-        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells)
+        private List<RuinShape> GenerateStructures(List<VoronoiCell> caveCells, Rectangle ruinArea, bool mirror)
         {
             List<RuinShape> shapes = new List<RuinShape>(rooms);
             shapes.AddRange(corridors);
+
+            if (mirror)
+            {
+                foreach (RuinShape shape in shapes)
+                {
+                    shape.MirrorX(ruinArea.Center.ToVector2());
+                }
+            }
             
             foreach (RuinShape leaf in shapes)
             {

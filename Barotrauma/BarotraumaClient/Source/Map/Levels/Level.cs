@@ -27,9 +27,16 @@ namespace Barotrauma
                     {
                         color = Color.LightGray;
                     }
-
-
+                    
                     GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
+                }
+
+                foreach (RuinGeneration.Ruin ruin in ruins)
+                {
+                    Rectangle ruinArea = ruin.Area;
+                    ruinArea.Y = -ruinArea.Y - ruinArea.Height;
+
+                    GUI.DrawRectangle(spriteBatch, ruinArea, Color.DarkSlateBlue, false, 0, 5);
                 }
             }
         }
