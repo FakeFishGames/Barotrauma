@@ -159,23 +159,24 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (thisEventID != (UInt16) (lastReceivedID + 1))
                     {
-                        if (thisEventID != (UInt16) (lastReceivedID + 1))
+                        if (GameSettings.VerboseLogging)
                         {
                             DebugConsole.NewMessage(
-                                "received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
+                                "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
                                 thisEventID < lastReceivedID + 1
                                     ? Microsoft.Xna.Framework.Color.Yellow
                                     : Microsoft.Xna.Framework.Color.Red);
                         }
-                        else if (entity == null)
-                        {
-                            DebugConsole.NewMessage(
-                                "received msg " + thisEventID + ", entity " + entityID + " not found",
-                                Microsoft.Xna.Framework.Color.Red);
-                        }
                     }
+                    else if (entity == null)
+                    {
+                        DebugConsole.NewMessage(
+                            "Received msg " + thisEventID + ", entity " + entityID + " not found",
+                            Microsoft.Xna.Framework.Color.Red);
+                    }
+                    
                     msg.Position += msgLength * 8;
                 }
                 else
