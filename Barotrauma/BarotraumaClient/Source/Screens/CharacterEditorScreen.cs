@@ -376,6 +376,7 @@ namespace Barotrauma
                 {
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
+                    jointLimitsToggle.Selected = false;
                 }
                 return true;
             };
@@ -386,6 +387,7 @@ namespace Barotrauma
                 {
                     ragdollToggle.Selected = true;
                     spritesheetToggle.Selected = !paramsToggle.Selected;
+                    jointPositionsToggle.Selected = false;
                 }
                 return true;
             };
