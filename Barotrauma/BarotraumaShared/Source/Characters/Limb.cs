@@ -50,8 +50,11 @@ namespace Barotrauma
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / jointParams.Ragdoll.JointScale;
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / jointParams.Ragdoll.JointScale;
-                jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
+                if (LimitEnabled)
+                {
+                    jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
+                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
+                }
             }
             else
             {
