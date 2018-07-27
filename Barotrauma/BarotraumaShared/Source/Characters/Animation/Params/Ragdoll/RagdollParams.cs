@@ -279,7 +279,7 @@ namespace Barotrauma
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
-        [Serialize("", true),]
+        [Serialize("", true)]
         public string Texture { get; set; }
 
         [Serialize(0f, true)]
