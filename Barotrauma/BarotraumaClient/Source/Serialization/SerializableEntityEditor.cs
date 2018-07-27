@@ -32,11 +32,12 @@ namespace Barotrauma
         /// </summary>
         public Dictionary<SerializableProperty, GUIComponent[]> Fields { get; private set; } = new Dictionary<SerializableProperty, GUIComponent[]>();
 
-        /// <summary>
-        /// Note: currently only handles floats and vector2s.
-        /// </summary>
         public void UpdateValue(SerializableProperty property, object newValue, bool flash = true)
         {
+            if (newValue is bool || newValue is string || newValue is Enum)
+            {
+                DebugConsole.ThrowError($"{newValue.GetType().ToString()} not yet implemented!");
+            }
             if (!Fields.TryGetValue(property, out GUIComponent[] fields))
             {
                 DebugConsole.ThrowError($"No field for {property.Name} found!");
@@ -59,7 +60,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (newValue is Vector2 v)
+            else if (newValue is Vector2 v2)
             {
                 for (int i = 0; i < fields.Length; i++)
                 {
@@ -68,7 +69,132 @@ namespace Barotrauma
                     {
                         if (numInput.InputType == GUINumberInput.NumberType.Float)
                         {
-                            numInput.FloatValue = i == 0 ? v.X : v.Y;
+                            numInput.FloatValue = i == 0 ? v2.X : v2.Y;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector3 v3)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.FloatValue = v3.X;
+                                    break;
+                                case 1:
+                                    numInput.FloatValue = v3.Y;
+                                    break;
+                                case 2:
+                                    numInput.FloatValue = v3.Z;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Vector4 v4)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Float)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.FloatValue = v4.X;
+                                    break;
+                                case 1:
+                                    numInput.FloatValue = v4.Y;
+                                    break;
+                                case 2:
+                                    numInput.FloatValue = v4.Z;
+                                    break;
+                                case 3:
+                                    numInput.FloatValue = v4.W;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Color c)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.IntValue = c.R;
+                                    break;
+                                case 1:
+                                    numInput.IntValue = c.G;
+                                    break;
+                                case 2:
+                                    numInput.IntValue = c.B;
+                                    break;
+                                case 3:
+                                    numInput.IntValue = c.A;
+                                    break;
+                            }
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is Rectangle r)
+            {
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            switch (i)
+                            {
+                                case 0:
+                                    numInput.IntValue = r.X;
+                                    break;
+                                case 1:
+                                    numInput.IntValue = r.Y;
+                                    break;
+                                case 2:
+                                    numInput.IntValue = r.Width;
+                                    break;
+                                case 3:
+                                    numInput.IntValue = r.Height;
+                                    break;
+                            }
                             if (flash)
                             {
                                 numInput.Flash(Color.LightGreen);
