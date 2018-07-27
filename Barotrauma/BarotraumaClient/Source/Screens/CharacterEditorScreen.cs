@@ -999,6 +999,10 @@ namespace Barotrauma
                 var sourceRect = sprite.SourceRect;
                 var max = new Vector2(sourceRect.Width, sourceRect.Height);
                 sprite.Origin = origin.Clamp(Vector2.Zero, max);
+                if (selectedLimb.damagedSprite != null)
+                {
+                    selectedLimb.damagedSprite.Origin = sprite.Origin;
+                }
                 if (character.AnimController.IsFlipped)
                 {
                     origin.X = Math.Abs(origin.X - sourceRect.Width);
@@ -1179,6 +1183,10 @@ namespace Barotrauma
                             var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
                             newRect.Location = newLocation.ToPoint();
                             limb.sprite.SourceRect = newRect;
+                            if (limb.damagedSprite != null)
+                            {
+                                limb.damagedSprite.SourceRect = limb.sprite.SourceRect;
+                            }
                             TryUpdateLimbParam(limb, "sourcerect", newRect);
                             GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
                         });
@@ -1195,6 +1203,11 @@ namespace Barotrauma
                             limb.sprite.size = new Vector2(width, height);
                             // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
                             limb.sprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                            if (limb.damagedSprite != null)
+                            {
+                                limb.damagedSprite.SourceRect = limb.sprite.SourceRect;
+                                limb.damagedSprite.Origin = limb.sprite.Origin;
+                            }
                             if (character.AnimController.IsFlipped)
                             {
                                 origin.X = Math.Abs(origin.X - newRect.Width);
@@ -1216,6 +1229,10 @@ namespace Barotrauma
                                 var sourceRect = sprite.SourceRect;
                                 var max = new Vector2(sourceRect.Width, sourceRect.Height);
                                 sprite.Origin = origin.Clamp(Vector2.Zero, max);
+                                if (limb.damagedSprite != null)
+                                {
+                                    limb.damagedSprite.Origin = limb.sprite.Origin;
+                                }
                                 if (character.AnimController.IsFlipped)
                                 {
                                     origin.X = Math.Abs(origin.X - sourceRect.Width);
