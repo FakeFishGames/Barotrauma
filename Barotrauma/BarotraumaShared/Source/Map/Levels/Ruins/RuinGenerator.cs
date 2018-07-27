@@ -1,6 +1,7 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace Barotrauma.RuinGeneration
 
         public Alignment GetLineAlignment(Line line)
         {
-            if (line.A.Y == line.B.Y)
+            if (line.IsHorizontal)
             {
                 if (line.A.Y > rect.Center.Y && line.B.Y > rect.Center.Y)
                 {
@@ -70,7 +71,7 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Line line in Walls)
             {
-                if (line.A.X == line.B.X) //vertical line
+                if (!line.IsHorizontal) //vertical line
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.A.X || rectangle.Right < line.A.X ||
@@ -100,7 +101,7 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(line.A.X, rectangle.Bottom), line.B, line.Type));
                     }
                 }
-                else if (line.A.Y == line.B.Y) //horizontal line
+                else
                 {
                     //line doesn't intersect the rectangle
                     if (rectangle.X > line.B.X || rectangle.Right < line.A.X ||
@@ -130,11 +131,6 @@ namespace Barotrauma.RuinGeneration
                         newLines.Add(new Line(new Vector2(rectangle.Right, line.A.Y), line.B, line.Type));
                     }
                 }
-                else
-                {
-                    DebugConsole.ThrowError("Error in StructureGenerator.SplitLines - lines must be axis aligned");
-                }
-
             }
 
             Walls = newLines;
@@ -163,6 +159,11 @@ namespace Barotrauma.RuinGeneration
         public Vector2 A, B;
 
         public readonly RuinStructureType Type;
+
+        public bool IsHorizontal
+        {
+            get { return Math.Abs(A.Y - B.Y) < Math.Abs(A.X - B.X); }
+        }
 
         public Line(Vector2 a, Vector2 b, RuinStructureType type)
         {
@@ -260,7 +261,12 @@ namespace Barotrauma.RuinGeneration
             float shortestDistance = 0.0f;
             foreach (BTRoom leaf in rooms)
             {
-                float distance = Vector2.Distance(leaf.Rect.Center.ToVector2(), closestPathCell.Center);
+                Vector2 leafPos = leaf.Rect.Center.ToVector2();
+                if (mirror)
+                {
+                    leafPos.X = area.Center.X + (area.Center.X - leafPos.X);
+                }
+                float distance = Vector2.Distance(leafPos, closestPathCell.Center);
                 if (entranceRoom == null || distance < shortestDistance)
                 {
                     entranceRoom = leaf;

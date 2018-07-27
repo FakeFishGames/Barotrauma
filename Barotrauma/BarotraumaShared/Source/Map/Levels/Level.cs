@@ -397,11 +397,13 @@ namespace Barotrauma
             // remove unnecessary cells and create some holes at the bottom of the level
             //----------------------------------------------------------------------------------
 
+            System.Diagnostics.Debug.WriteLine("cellcount before cleaning: " + cells.Count);
             cells = CleanCells(pathCells);            
             pathCells.AddRange(CreateBottomHoles(generationParams.BottomHoleProbability, new Rectangle(
                 (int)(borders.Width * 0.2f), 0,
                 (int)(borders.Width * 0.6f), (int)(borders.Height * 0.8f))));
-            
+            System.Diagnostics.Debug.WriteLine("cellcount after bottom holes: " + cells.Count);
+
             foreach (VoronoiCell cell in cells)
             {
                 if (cell.Center.Y < borders.Height / 2) continue;
@@ -412,6 +414,7 @@ namespace Barotrauma
             // initialize the cells that are still left and insert them into the cell grid
             //----------------------------------------------------------------------------------
             
+            System.Diagnostics.Debug.WriteLine("pathcells before init: " + cells.Count);
             foreach (VoronoiCell cell in pathCells)
             {
                 cell.edges.ForEach(e => e.OutsideLevel = false);
@@ -432,11 +435,15 @@ namespace Barotrauma
             // mirror if needed
             //----------------------------------------------------------------------------------
 
+            System.Diagnostics.Debug.WriteLine("cellcount: "+cells.Count);
+            System.Diagnostics.Debug.WriteLine("pathcellcount: " + pathCells.Count);
             if (mirror)
             {
                 HashSet<GraphEdge> mirroredEdges = new HashSet<GraphEdge>();
                 HashSet<Site> mirroredSites = new HashSet<Site>();
-                foreach (VoronoiCell cell in cells)
+                List<VoronoiCell> allCells = new List<VoronoiCell>(cells);
+                allCells.AddRange(pathCells);
+                foreach (VoronoiCell cell in allCells)
                 {
                     foreach (GraphEdge edge in cell.edges)
                     {
@@ -500,7 +507,7 @@ namespace Barotrauma
             }
 
             int testSync = Rand.Int(1000, Rand.RandSync.Server);
-            DebugConsole.NewMessage("TESTSYNC: " + testSync + " ---------------------------------------------",Color.White);
+            System.Diagnostics.Debug.WriteLine("TESTSYNC: " + testSync + " ---------------------------------------------",Color.White);
 
             //----------------------------------------------------------------------------------
             // generate the bodies and rendered triangles of the cells
@@ -529,7 +536,7 @@ namespace Barotrauma
 
             bodies.Add(TopBarrier);
 
-            GenerateSeaFloor();
+            GenerateSeaFloor(mirror);
 
             backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
 #if CLIENT
@@ -728,7 +735,7 @@ namespace Barotrauma
             return newCells;
         }
 
-        private void GenerateSeaFloor()
+        private void GenerateSeaFloor(bool mirror)
         {
             BottomPos = generationParams.SeaFloorDepth;
             SeaFloorTopPos = BottomPos;
@@ -751,14 +758,22 @@ namespace Barotrauma
             {
                 for (int i = 0; i < bottomPositions.Count - 1; i++)
                 {
-                    bottomPositions.Insert(i+1,
+                    bottomPositions.Insert(i + 1,
                         (bottomPositions[i] + bottomPositions[i + 1]) / 2.0f +
                         Vector2.UnitY * Rand.Range(0.0f, generationParams.SeaFloorVariance, Rand.RandSync.Server));
-                    
+
                     i++;
                 }
 
                 currInverval /= 2.0f;
+            }
+
+            if (mirror)
+            {
+                for (int i = 0; i < bottomPositions.Count; i++)
+                {
+                    bottomPositions[i] = new Vector2(borders.Size.X - bottomPositions[i].X, bottomPositions[i].Y);
+                }
             }
 
             SeaFloorTopPos = bottomPositions.Max(p => p.Y);
@@ -878,6 +893,10 @@ namespace Barotrauma
             float ruinRadius = Math.Max(ruinSize.X, ruinSize.Y) * 0.5f;
 
             System.Diagnostics.Debug.WriteLine("Cell count " + cells.Count);
+            for (int i = 0; i<cells.Count && i < 100; i++)
+            {
+                System.Diagnostics.Debug.WriteLine("    " + i + ": " + cells[i].Center);
+            }
             int cellIndex = Rand.Int(cells.Count, Rand.RandSync.Server);
             System.Diagnostics.Debug.WriteLine("Cell index " + cellIndex);
             Vector2 ruinPos = cells[cellIndex].Center;
@@ -939,8 +958,13 @@ namespace Barotrauma
             }
 
             System.Diagnostics.Debug.WriteLine("Final ruin pos: " + ruinPos);
+            int testSync = Rand.Int(1000, Rand.RandSync.Server);
+            System.Diagnostics.Debug.WriteLine("TESTSYNC2: " + testSync + " ---------------------------------------------", Color.White);
             var ruin = new Ruin(closestPathCell, cells, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)), mirror);
             ruins.Add(ruin);
+
+            testSync = Rand.Int(1000, Rand.RandSync.Server);
+            System.Diagnostics.Debug.WriteLine("TESTSYNC3: " + testSync + " ---------------------------------------------", Color.White);
 
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
             for (int i = 0; i < 4; i++)
@@ -1091,15 +1115,12 @@ namespace Barotrauma
 
             List<VoronoiCell> cells = new List<VoronoiCell>();
 
-            for (int x = startX; x <= endX; x++)
+            for (int y = startY; y <= endY; y++)
             {
-                for (int y = startY; y <= endY; y++)
+                for (int x = startX; x <= endX; x++)
                 {
-                    foreach (VoronoiCell cell in cellGrid[x, y])
-                    {
-                        cells.Add(cell);
-                    }
-                }
+                    foreach (VoronoiCell cell in cellGrid[x, y]) cells.Add(cell); 
+                }                              
             }
 
             if (extraWalls != null)
