@@ -2077,7 +2077,7 @@ namespace Barotrauma
                     characterType = "AICrew";
 
                 string causeOfDeathStr = causeOfDeathAffliction == null ?
-                    causeOfDeathAffliction.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
                 GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
             }
 
