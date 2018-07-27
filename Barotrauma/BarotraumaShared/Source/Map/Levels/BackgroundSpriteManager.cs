@@ -231,6 +231,8 @@ namespace Barotrauma
                 Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server), 
                 Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
 
+            if (level.Mirrored) randomPos.X = level.Size.X - randomPos.X;
+
             if (prefab.SpawnPos == BackgroundSpritePrefab.SpawnPosType.None) return randomPos;
 
             List<GraphEdge> edges = new List<GraphEdge>();
