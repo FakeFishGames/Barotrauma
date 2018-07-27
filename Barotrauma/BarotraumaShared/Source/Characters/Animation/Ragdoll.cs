@@ -455,6 +455,9 @@ namespace Barotrauma
             LimbJoints.ForEach(j => j.LoadParams());
         }
 
+        /// <summary>
+        /// Resets the current limb values to the serialized limb params.
+        /// </summary>
         public void ResetLimbs()
         {
             Limbs.ForEach(l => l.LoadParams());

@@ -529,7 +529,7 @@ namespace Barotrauma
                 else
                 {
                     DebugConsole.ThrowError($"No field for {name} found!");
-                    ragdollParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
+                    //ragdollParams.SubParams.ForEach(sp => sp.SerializableProperties.ForEach(prop => DebugConsole.ThrowError($"{sp.Name}: sub param field: {prop.Key}")));
                 }
             }
         }
@@ -1177,7 +1177,8 @@ namespace Barotrauma
                             var newLocation = new Vector2(PlayerInput.MousePosition.X - x, PlayerInput.MousePosition.Y - y);
                             newRect.Location = newLocation.ToPoint();
                             limb.sprite.SourceRect = newRect;
-                            GUI.DrawString(spriteBatch, topLeft + stringOffset, limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
+                            TryUpdateLimbParam(limb, "sourcerect", newRect);
+                            GUI.DrawString(spriteBatch, topLeft + new Vector2(stringOffset.X, -stringOffset.Y * 1.5f), limb.sprite.SourceRect.Location.ToString(), Color.White, Color.Black * 0.5f);
                         });
                         DrawWidget(spriteBatch, bottomRight, WidgetType.Rectangle, widgetSize, Color.White, "Size", () =>
                         {
@@ -1192,6 +1193,13 @@ namespace Barotrauma
                             limb.sprite.size = new Vector2(width, height);
                             // Also the origin should be adjusted to the new width, so that it will remain at the same position relative to the source rect location.
                             limb.sprite.Origin = new Vector2(origin.X - dx, origin.Y);
+                            if (character.AnimController.IsFlipped)
+                            {
+                                origin.X = Math.Abs(origin.X - newRect.Width);
+                            }
+                            var relativeOrigin = new Vector2(origin.X / newRect.Width, origin.Y / newRect.Height);
+                            TryUpdateLimbParam(limb, "origin", relativeOrigin);
+                            TryUpdateLimbParam(limb, "sourcerect", newRect);
                             GUI.DrawString(spriteBatch, bottomRight + stringOffset, limb.sprite.size.FormatAsZeroDecimal(), Color.White, Color.Black * 0.5f);
                         });
                         if (PlayerInput.LeftButtonHeld() && selectedWidget == null)

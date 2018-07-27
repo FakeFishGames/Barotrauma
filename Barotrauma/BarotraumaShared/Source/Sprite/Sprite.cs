@@ -109,8 +109,7 @@ namespace Barotrauma
 
         internal void LoadParams(SpriteParams spriteParams, bool isFlipped)
         {
-            Vector4 r = spriteParams.SourceRect;
-            //sourceRect = new Rectangle((int)r.X, (int)r.Y, (int)r.Z, (int)r.W);
+            sourceRect = spriteParams.SourceRect;
             origin = spriteParams.Origin;
             origin.X = origin.X * sourceRect.Width;
             if (isFlipped)
@@ -118,7 +117,7 @@ namespace Barotrauma
                 origin.X = sourceRect.Width - origin.X;
             }
             origin.Y = origin.Y * sourceRect.Height;
-            // TODO: size and depth
+            // TODO: size? and depth
         }
 
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)
