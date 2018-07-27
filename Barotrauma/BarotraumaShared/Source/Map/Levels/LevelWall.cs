@@ -30,6 +30,7 @@ namespace Barotrauma
                 vertices[3] = vertices[1] + extendAmount;
 
                 VoronoiCell wallCell = new VoronoiCell(vertices);
+                wallCell.CellType = CellType.Edge;
                 wallCell.edges[0].cell1 = wallCell;
                 wallCell.edges[1].cell1 = wallCell;
                 wallCell.edges[2].cell1 = wallCell;
@@ -47,6 +48,10 @@ namespace Barotrauma
             }
 
             bodies = CaveGenerator.GeneratePolygons(cells, level, out List<Vector2[]> triangles, false);
+            foreach (var body in bodies)
+            {
+                body.CollisionCategories = Physics.CollisionLevel;
+            }
 
 #if CLIENT
             List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
