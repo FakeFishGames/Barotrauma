@@ -282,11 +282,11 @@ namespace Barotrauma
         [Serialize("", true),]
         public string Texture { get; set; }
 
-        [Serialize("0, 0, 0, 0", true)]
-        public Vector4 SourceRect { get; set; }
-
         [Serialize(0f, true)]
         public float Depth { get; set; }
+
+        [Serialize("0, 0, 0, 0", true), Editable]
+        public Rectangle SourceRect { get; set; }
 
         [Serialize("0.5, 0.5", true), Editable]
         public Vector2 Origin { get; set; }
