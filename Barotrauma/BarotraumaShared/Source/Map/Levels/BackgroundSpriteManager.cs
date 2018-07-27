@@ -243,7 +243,13 @@ namespace Barotrauma
 
             if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
             if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
-            
+
+            //make sure the cells are in the same order regardless of whether the level is mirrored or not
+            cells.Sort((c1, c2) => { return level.Mirrored ? Math.Sign(c1.Center.X - c2.Center.X) : -Math.Sign(c1.Center.X - c2.Center.X); });
+
+            /*System.Diagnostics.Debug.WriteLine("FindSpritePosition - prefab: "+System.IO.Path.GetFileNameWithoutExtension(prefab.Sprite.FilePath)+" cells: "+cells.Count+" spawnpos: "+ prefab.SpawnPos+" randompos: "+ randomPos);
+            System.Diagnostics.Debug.WriteLine(string.Join(", ",cells.Select(c => level.cells.IndexOf(c))));*/
+
             if (cells.Any())
             {
                 VoronoiCell cell = cells[Rand.Int(cells.Count, Rand.RandSync.Server)];

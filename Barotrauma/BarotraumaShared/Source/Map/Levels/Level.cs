@@ -55,7 +55,8 @@ namespace Barotrauma
         //private float shaftHeight;
 
         //List<Body> bodies;
-        private List<VoronoiCell> cells;
+        //TODO: change back to private
+        public List<VoronoiCell> cells;
 
         //private VertexBuffer vertexBuffer;
 
@@ -452,11 +453,16 @@ namespace Barotrauma
                         edge.point2.X = borders.Width - edge.point2.X;
                         if (!mirroredSites.Contains(edge.site1))
                         {
+                            //make sure that sites right at the edge of a grid cell end up in the same cell as in the non-mirrored level
+                            if (edge.site1.coord.x % GridCellSize < 1.0f &&
+                                edge.site1.coord.x % GridCellSize >= 0.0f) edge.site1.coord.x += 1.0f;
                             edge.site1.coord.x = borders.Width - edge.site1.coord.x;
                             mirroredSites.Add(edge.site1);
                         }
                         if (!mirroredSites.Contains(edge.site2))
                         {
+                            if (edge.site2.coord.x % GridCellSize < 1.0f &&
+                                edge.site2.coord.x % GridCellSize >= 0.0f) edge.site2.coord.x += 1.0f;
                             edge.site2.coord.x = borders.Width - edge.site2.coord.x;
                             mirroredSites.Add(edge.site2);
                         }
