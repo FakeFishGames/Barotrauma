@@ -63,6 +63,7 @@ namespace Barotrauma
                 jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
                 jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
             }
+            jointParams.LimitEnabled = LimitEnabled;
         }
 
         public void LoadParams()
@@ -97,6 +98,7 @@ namespace Barotrauma
                     LimitEnabled = false;
                 }
             }
+            jointParams.LimitEnabled = LimitEnabled;
         }
     }
     
