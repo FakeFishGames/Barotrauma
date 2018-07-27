@@ -1304,32 +1304,48 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, LimbJoint joint, Vector2 drawPos, bool autoFreeze, float rotationOffset = 0)
         {
-            // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
-            if (character.AnimController.IsFlipped)
+            if (!joint.LimitEnabled)
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 10, Color.Red, "Enable Joint Limits", () =>
                 {
-                    joint.UpperLimit = MathHelper.ToRadians(-angle);
-                    TryUpdateJointParam(joint, "upperlimit", -angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
-                {
-                    joint.LowerLimit = MathHelper.ToRadians(-angle);
-                    TryUpdateJointParam(joint, "lowerlimit", -angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                    joint.LimitEnabled = true;
+                    TryUpdateJointParam(joint, "limitenabled", true);
+                });
             }
             else
             {
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
+                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 10, Color.DarkGray, "Disable Joint Limits", () =>
                 {
-                    joint.UpperLimit = MathHelper.ToRadians(angle);
-                    TryUpdateJointParam(joint, "upperlimit", angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
+                    joint.LimitEnabled = false;
+                    TryUpdateJointParam(joint, "limitenabled", false);
+                });
+                // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
+                if (character.AnimController.IsFlipped)
                 {
-                    joint.LowerLimit = MathHelper.ToRadians(angle);
-                    TryUpdateJointParam(joint, "lowerlimit", angle);
-                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
+                    {
+                        joint.UpperLimit = MathHelper.ToRadians(-angle);
+                        TryUpdateJointParam(joint, "upperlimit", -angle);
+                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
+                    {
+                        joint.LowerLimit = MathHelper.ToRadians(-angle);
+                        TryUpdateJointParam(joint, "lowerlimit", -angle);
+                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }
+                else
+                {
+                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
+                    {
+                        joint.UpperLimit = MathHelper.ToRadians(angle);
+                        TryUpdateJointParam(joint, "upperlimit", angle);
+                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
+                    {
+                        joint.LowerLimit = MathHelper.ToRadians(angle);
+                        TryUpdateJointParam(joint, "lowerlimit", angle);
+                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                }
             }
         }
         #endregion

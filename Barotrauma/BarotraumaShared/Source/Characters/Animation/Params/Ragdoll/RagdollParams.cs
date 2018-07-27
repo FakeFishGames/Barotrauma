@@ -205,6 +205,9 @@ namespace Barotrauma
         [Serialize("1.0, 1.0", true), Editable]
         public Vector2 Limb2Anchor { get; set; }
 
+        [Serialize(false, true), Editable]
+        public bool LimitEnabled { get; set; }
+
         /// <summary>
         /// In degrees.
         /// </summary>
