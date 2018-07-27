@@ -34,10 +34,6 @@ namespace Barotrauma
 
         public void UpdateValue(SerializableProperty property, object newValue, bool flash = true)
         {
-            if (newValue is bool || newValue is string || newValue is Enum)
-            {
-                DebugConsole.ThrowError($"{newValue.GetType().ToString()} not yet implemented!");
-            }
             if (!Fields.TryGetValue(property, out GUIComponent[] fields))
             {
                 DebugConsole.ThrowError($"No field for {property.Name} found!");
@@ -57,6 +53,56 @@ namespace Barotrauma
                                 numInput.Flash(Color.LightGreen);
                             }
                         }
+                    }
+                }
+            }
+            else if (newValue is int integer)
+            {
+                foreach (var field in fields)
+                {
+                    if (field is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            numInput.IntValue = integer;
+                            if (flash)
+                            {
+                                numInput.Flash(Color.LightGreen);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (newValue is bool b)
+            {
+                if (fields[0] is GUITickBox tickBox)
+                {
+                    tickBox.Selected = b;
+                    if (flash)
+                    {
+                        tickBox.Flash(Color.LightGreen);
+                    }
+                }
+            }
+            else if (newValue is string s)
+            {
+                if (fields[0] is GUITextBox textBox)
+                {
+                    textBox.Text = s;
+                    if (flash)
+                    {
+                        textBox.Flash(Color.LightGreen);
+                    }
+                }
+            }
+            else if (newValue.GetType().IsEnum)
+            {
+                if (fields[0] is GUIDropDown dropDown)
+                {
+                    dropDown.Select((int)newValue);
+                    if (flash)
+                    {
+                        dropDown.Flash(Color.LightGreen);
                     }
                 }
             }
@@ -228,7 +274,6 @@ namespace Barotrauma
             layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
         }
 
-        // TODO: remove or refactor? The new system uses a layout group.
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
             component.RectTransform.Parent = layoutGroup.RectTransform;
