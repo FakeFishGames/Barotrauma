@@ -220,6 +220,7 @@ namespace Barotrauma
             this.character = character;
             CreateTextures();
             CreateGUI();
+            //widgets.Clear();
             return character;
         }
         #endregion
@@ -232,6 +233,8 @@ namespace Barotrauma
         private GUITickBox freezeToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
+
+        //private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
         private void CreateGUI()
         {
@@ -580,6 +583,12 @@ namespace Barotrauma
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
+            //foreach (var widget in widgets.Values)
+            //{
+            //    widget.Update((float)deltaTime);
+            //}
+            //HandleTestWidgets();
+            //HandleTestWidgets2();
         }
 
         /// <summary>
@@ -607,9 +616,6 @@ namespace Barotrauma
 
             // GUI
             spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
-            Structure wall = clones.FirstOrDefault();
-            Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
-            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             if (showAnimControls)
             {
                 DrawAnimationControls(spriteBatch);
@@ -626,6 +632,10 @@ namespace Barotrauma
             {
                 DrawSpritesheetEditor(spriteBatch);
             }
+            //widgets.Values.ForEach(w => w.Draw(spriteBatch, (float)deltaTime));
+            Structure wall = clones.FirstOrDefault();
+            Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
+            GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw((float)deltaTime, spriteBatch);
 
             // Debug
@@ -1478,6 +1488,448 @@ namespace Barotrauma
                 {
                     freeze = freezeToggle.Selected;
                 }
+            }
+        }
+
+        // --> Widgets as classes (experimental)
+        private void HandleTestWidgets()
+        {
+            //if (!widgets.TryGetValue("test", out Widget w))
+            //{
+            //    w = new Widget("test", new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2), Widget.Shape.Rectangle)
+            //    {
+            //        size = 20,
+            //        tooltip = "Test"
+            //    };
+            //    w.MouseHeld += () => w.drawPos = PlayerInput.MousePosition;
+            //    w.MouseDown += () => w.shape = Widget.Shape.Circle;
+            //    w.MouseUp += () => w.shape = Widget.Shape.Rectangle;
+            //    w.MouseClicked += () => w.tooltip = "Clicked";
+            //    widgets.Add(w.ID, w);
+            //}
+            //if (w.IsSelected)
+            //{
+            //    if (PlayerInput.LeftButtonHeld())
+            //    {
+            //        float speed = animParams.Speed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
+            //        TryUpdateAnimParam("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
+            //    }
+            //}
+
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
+                foreach (var joint in character.AnimController.LimbJoints)
+                {
+                    Vector2 jointPos = Vector2.Zero;
+                    Vector2 otherPos = Vector2.Zero;
+                    Vector2 jointDir = Vector2.Zero;
+                    Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                    Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                    Vector2 up = -VectorExtensions.Forward(limb.Rotation);
+                    if (joint.BodyA == limb.body.FarseerBody)
+                    {
+                        jointPos = anchorPosA;
+                        otherPos = anchorPosB;
+                    }
+                    else if (joint.BodyB == limb.body.FarseerBody)
+                    {
+                        jointPos = anchorPosB;
+                        otherPos = anchorPosA;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
+                    f.Y = -f.Y;
+                    Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
+                    //ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.Black, size: 5);
+                    //ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.White, size: 1);
+                    //GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Black, width: 3);
+                    //GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
+                    bool aBody = joint.BodyA == limb.body.FarseerBody;
+                    string id = joint.jointParams.Name + (aBody ? "A" : "B");
+                    if (!widgets.TryGetValue(id, out Widget widget))
+                    {
+                        widget = new Widget(id, tformedJointPos, Widget.Shape.Rectangle)
+                        {
+                            tooltip = $"{id}: {jointPos.FormatAsZeroDecimal()}",
+                            size = 5,
+                            inputAreaMargin = new Point(2, 2),
+                            color = aBody ? Color.Red : Color.Blue
+                        };
+                        widget.OnMouseHeld += () =>
+                        {
+                            Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
+                            input.Y = -input.Y;
+                            input = input.TransformVector(-up);
+                            if (aBody)
+                            {
+                                joint.LocalAnchorA += input;
+                                TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
+                            }
+                            else
+                            {
+                                joint.LocalAnchorB += input;
+                                TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
+                            }
+                            widget.drawPos = PlayerInput.MousePosition;
+                        };
+                        widgets.Add(id, widget);
+                    }
+                    if (!widget.IsControlled)
+                    {
+                        widget.drawPos = tformedJointPos;
+                    }
+                }
+            }
+        }
+
+        private void HandleTestWidgets2()
+        {
+            int y = 30;
+            int x = 30;
+            for (int i = 0; i < Textures.Count; i++)
+            {
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
+                    Rectangle rect = limb.sprite.SourceRect;
+                    rect.X += x;
+                    rect.Y += y;
+                    Vector2 origin = limb.sprite.Origin;
+                    Vector2 limbBodyPos = new Vector2(rect.X + origin.X, rect.Y + origin.Y);
+                    // The origin is manipulated when the character is flipped. We have to undo it here.
+                    if (character.AnimController.Dir < 0)
+                    {
+                        limbBodyPos.X = rect.X + rect.Width - origin.X;
+                    }
+                    foreach (var joint in character.AnimController.LimbJoints)
+                    {
+                        Vector2 jointPos = Vector2.Zero;
+                        Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
+                        Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
+                        if (joint.BodyA == limb.body.FarseerBody)
+                        {
+                            jointPos = anchorPosA;
+                        }
+                        else if (joint.BodyB == limb.body.FarseerBody)
+                        {
+                            jointPos = anchorPosB;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        Vector2 tformedJointPos = jointPos /= limb.Scale;
+                        tformedJointPos.Y = -tformedJointPos.Y;
+                        tformedJointPos.X *= character.AnimController.Dir;
+                        tformedJointPos += limbBodyPos;
+                        if (joint.BodyA == limb.body.FarseerBody)
+                        {
+                            string toggleID = joint.jointParams.Name + "limits toggle spritesheet";
+                            if (!widgets.TryGetValue(toggleID, out Widget widget))
+                            {
+                                widget = new Widget(toggleID, tformedJointPos, Widget.Shape.Circle) { size = 10 };
+                                void check()
+                                {
+                                    if (joint.LimitEnabled)
+                                    {
+                                        widget.tooltip = joint.jointParams.Name + " Disable Joint Limits";
+                                        widget.color = Color.DarkGray;
+                                    }
+                                    else
+                                    {
+                                        widget.tooltip = joint.jointParams.Name + " Enable Joint Limits";
+                                        widget.color = Color.Red;
+                                    }
+                                }
+                                check();
+                                widget.OnClicked += () =>
+                                {
+                                    joint.LimitEnabled = !joint.LimitEnabled;
+                                    TryUpdateJointParam(joint, "limitenabled", joint.LimitEnabled);
+                                    check();
+                                };
+                                widgets.Add(toggleID, widget);
+                            }
+                            if (joint.LimitEnabled)
+                            {
+                                string upperlimitID = joint.jointParams.Name + " upperlimit";
+                                if (!widgets.TryGetValue(upperlimitID, out Widget uw))
+                                {
+                                    uw = new RadialWidget(upperlimitID, Widget.Shape.Rectangle, tformedJointPos)
+                                    {
+                                        color = Color.Cyan
+                                    };
+                                    var rw = uw as RadialWidget;
+                                    rw.OnMouseHeld += () =>
+                                    {
+                                        joint.UpperLimit = MathHelper.ToRadians(rw.angle);
+                                        TryUpdateJointParam(joint, "upperlimit", rw.angle);
+                                    };
+                                    widgets.Add(upperlimitID, uw);
+                                }
+                                var upperLimitWidget = uw as RadialWidget;
+                                if (character.AnimController.IsFlipped)
+                                {
+                                    upperLimitWidget.angle = -upperLimitWidget.angle;
+                                    //upperLimitWidget.rotationOffset = MathHelper.ToDegrees(-joint.UpperLimit);
+                                }
+                                else
+                                {
+                                    //upperLimitWidget.rotationOffset = MathHelper.ToDegrees(joint.UpperLimit);
+                                }
+                                // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
+                                if (character.AnimController.IsFlipped)
+                                {
+                                    //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
+                                    //{
+                                    //    joint.UpperLimit = MathHelper.ToRadians(-angle);
+                                    //    TryUpdateJointParam(joint, "upperlimit", -angle);
+                                    //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                                    //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
+                                    //{
+                                    //    joint.LowerLimit = MathHelper.ToRadians(-angle);
+                                    //    TryUpdateJointParam(joint, "lowerlimit", -angle);
+                                    //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                                }
+                                else
+                                {
+                                    //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
+                                    //{
+                                    //    joint.UpperLimit = MathHelper.ToRadians(angle);
+                                    //    TryUpdateJointParam(joint, "upperlimit", angle);
+                                    //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                                    //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
+                                    //{
+                                    //    joint.LowerLimit = MathHelper.ToRadians(angle);
+                                    //    TryUpdateJointParam(joint, "lowerlimit", angle);
+                                    //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                                }
+                            }
+                        }
+                    }
+                }
+                y += Textures[i].Height;
+            }
+        }
+
+        private class RadialWidget : Widget
+        {
+            public float angle;
+            public float circleRadius = 30;
+            public float rotationOffset;
+            public bool clockWise = true;
+            public bool displayAngle = true;
+            public Vector2 center;
+
+            public RadialWidget(string id, Shape shape, Vector2 center) : base(id, center, shape)
+            {
+                this.center = center;
+            }
+
+            public override void Update(float deltaTime)
+            {
+                if (!MathUtils.IsValid(angle))
+                {
+                    angle = 0;
+                }
+                var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
+                drawPos = center + up;
+                drawPos = MathUtils.RotatePointAroundTarget(drawPos, center, angle, clockWise);
+                base.Update(deltaTime);            
+                if (IsSelected && PlayerInput.LeftButtonHeld())
+                {
+                    var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
+                    // Collider rotation is counter-clockwise, todo: this should be handled before passing the arguments
+                    var transformedRot = clockWise ? angle - rotationOffsetInDegrees : angle + rotationOffsetInDegrees;
+                    if (transformedRot > 360)
+                    {
+                        transformedRot -= 360;
+                    }
+                    else if (transformedRot < -360)
+                    {
+                        transformedRot += 360;
+                    }
+                    var input = PlayerInput.MouseSpeed * 1.5f;
+                    float x = input.X;
+                    float y = input.Y;
+                    if (clockWise)
+                    {
+                        if ((transformedRot > 90 && transformedRot < 270) || (transformedRot < -90 && transformedRot > -270))
+                        {
+                            x = -x;
+                        }
+                        if (transformedRot > 180 || (transformedRot < 0 && transformedRot > -180))
+                        {
+                            y = -y;
+                        }
+                    }
+                    else
+                    {
+                        if (transformedRot < 90 && transformedRot > -90)
+                        {
+                            x = -x;
+                        }
+                        if (transformedRot < 0 && transformedRot > -180)
+                        {
+                            y = -y;
+                        }
+                    }
+                    angle += x + y;
+                    if (angle > 360 || angle < -360)
+                    {
+                        angle = 0;
+                    }
+                }
+            }
+
+            public override void Draw(SpriteBatch spriteBatch, float deltaTime)
+            {
+                base.Draw(spriteBatch, deltaTime);
+                GUI.DrawLine(spriteBatch, drawPos, drawPos, color);
+                // Draw controller widget
+                if (IsSelected)
+                {
+                    //var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
+                    //GUI.DrawLine(spriteBatch, drawPos, drawPos + up, Color.Red);
+                    ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, sides, color, thickness: 1);
+                    if (displayAngle)
+                    {
+                        GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), textColor, textBackgroundColor, font: GUI.SmallFont);
+                    }
+                }
+            }
+        }
+
+        private class Widget
+        {
+            public enum Shape
+            {
+                Rectangle,
+                Circle
+            }
+
+            public Shape shape;
+            public string tooltip;
+            public Rectangle DrawRect => new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
+            public Rectangle InputRect
+            {
+                get
+                {
+                    var inputRect = DrawRect;
+                    inputRect.Inflate(inputAreaMargin.X, inputAreaMargin.Y);
+                    return inputRect;
+                }
+            }
+
+            public Vector2 drawPos;
+            public int size = 10;
+            /// <summary>
+            /// Used only for circles.
+            /// </summary>
+            public int sides = 40;
+            /// <summary>
+            /// Currently used only for rectangles.
+            /// </summary>
+            public bool isFilled;
+            public Point inputAreaMargin;
+            public Color color = Color.Red;
+            public Color textColor = Color.White;
+            public Color textBackgroundColor = Color.Black * 0.5f;
+            public bool autoFreeze;
+            public readonly string id;
+
+            public event Action OnHovered;
+            public event Action OnClicked;
+            public event Action OnMouseDown;
+            public event Action OnMouseUp;
+            public event Action OnMouseHeld;
+            public event Action<SpriteBatch, float> PreDraw;
+            public event Action<SpriteBatch, float> PostDraw;
+
+            public bool IsSelected => selectedWidget == this;
+            public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
+            public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
+            public Vector2? tooltipOffset;
+
+            public static Widget selectedWidget;
+
+            public Widget(string id, Vector2 drawPos, Shape shape)
+            {
+                this.id = id;
+                this.drawPos = drawPos;
+                this.shape = shape;
+            }
+
+            public virtual void Update(float deltaTime)
+            {
+                if (IsMouseOver)
+                {
+                    if (selectedWidget == null)
+                    {
+                        selectedWidget = this;
+                    }
+                    OnHovered?.Invoke();
+                }
+                else if (selectedWidget == this)
+                {
+                    selectedWidget = null;
+                }
+                if (IsSelected)
+                {
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        if (autoFreeze)
+                        {
+                            //freeze = true;
+                        }
+                        OnMouseHeld?.Invoke();
+                    }
+                    else
+                    {
+                        //freeze = freezeToggle.Selected;
+                    }
+                    if (PlayerInput.LeftButtonDown())
+                    {
+                        OnMouseDown?.Invoke();
+                    }
+                    if (PlayerInput.LeftButtonReleased())
+                    {
+                        OnMouseUp?.Invoke();
+                    }
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        OnClicked?.Invoke();
+                    }
+                }
+            }
+
+            public virtual void Draw(SpriteBatch spriteBatch, float deltaTime)
+            {
+                PreDraw?.Invoke(spriteBatch, deltaTime);
+                var drawRect = DrawRect;
+                switch (shape)
+                {
+                    case Shape.Rectangle:
+                        GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
+                        break;
+                    case Shape.Circle:
+                        ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
+                        break;
+                    default: throw new NotImplementedException(shape.ToString());
+                }
+                if (IsSelected)
+                {
+                    if (!string.IsNullOrEmpty(tooltip))
+                    {
+                        var offset = tooltipOffset ?? new Vector2(size, -size / 2);
+                        GUI.DrawString(spriteBatch, drawPos + offset, tooltip, textColor, textBackgroundColor);
+                    }
+                }
+                PostDraw?.Invoke(spriteBatch, deltaTime);
             }
         }
         #endregion
