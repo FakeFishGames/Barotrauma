@@ -1044,6 +1044,12 @@ namespace Barotrauma.Networking
                             }
                         }
 
+                        errorLines.Add("Last console messages:");
+                        for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                        {
+                            errorLines.Add("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
+                        }
+
                         foreach (string line in errorLines)
                         {
                             DebugConsole.ThrowError(line);
