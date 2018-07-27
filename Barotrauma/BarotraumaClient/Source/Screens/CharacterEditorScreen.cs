@@ -1408,7 +1408,7 @@ namespace Barotrauma
         {
             var drawRect = new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
             var inputRect = drawRect;
-            inputRect.Inflate(size, size);
+            inputRect.Inflate(size / 2, size / 2);
             bool isMouseOn = inputRect.Contains(PlayerInput.MousePosition);
             // Unselect
             if (!isMouseOn && selectedWidget == name)
