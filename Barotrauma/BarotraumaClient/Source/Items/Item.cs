@@ -406,6 +406,8 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
                     break;
+                case NetEntityEvent.Type.Invalid:
+                    break;
             }
         }
 
