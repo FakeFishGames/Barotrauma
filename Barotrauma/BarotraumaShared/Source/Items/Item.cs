@@ -1284,18 +1284,58 @@ namespace Barotrauma
         {
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
+                string errorMsg = "";
+                if (extraData == null)
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was null.";
+                }
+                else if (extraData.Length == 0)
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was empty.";
+                }
+                else
+                {
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event type not set.";
+                }
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
+
+            long initialWritePos = msg.Position;
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
             msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
+                    string componentErrorMsg = "";
+                    if (extraData.Length < 2 || !(extraData[1] is int))
+                    {
+                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
+                    }
                     int componentIndex = (int)extraData[1];
-                    msg.WriteRangedInteger(0, components.Count-1, componentIndex);
-
-                    (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+                    if (componentIndex < 0 || componentIndex >= components.Count)
+                    {
+                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
+                    }
+                    else if (!(components[componentIndex] is IServerSerializable))
+                    {
+                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
+                    }
+                    if (string.IsNullOrEmpty(componentErrorMsg))
+                    {
+                        msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
+                        (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+                    }
+                    else
+                    {
+                        msg.Position = initialWritePos;
+                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                        DebugConsole.Log(componentErrorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidComponentData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, componentErrorMsg);
+                    }
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerWrite(msg, c, extraData);
@@ -1320,6 +1360,16 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
+                    break;
+                default:
+                    {
+                        //event type not valid for items - rewind the write position and write invalid event type 
+                        msg.Position = initialWritePos;
+                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                        string errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
+                        DebugConsole.Log(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    }
                     break;
             }
         }

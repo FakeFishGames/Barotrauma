@@ -504,7 +504,10 @@ namespace Barotrauma.Networking
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to write a network message for the client \""+c.Name+"\"!", e);
+                            DebugConsole.ThrowError("Failed to write a network message for the client \"" + c.Name + "\"!", e);
+                            GameAnalyticsManager.AddErrorEventOnce("GameServer.Update:ClientWriteFailed" + e.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                                "Failed to write a network message for the client \"" + c.Name + "\"! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
+                                + e.Message + "\n" + e.StackTrace);
                         }
                     }
 
