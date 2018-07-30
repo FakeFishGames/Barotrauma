@@ -117,7 +117,8 @@ namespace Barotrauma
                 origin.X = sourceRect.Width - origin.X;
             }
             origin.Y = origin.Y * sourceRect.Height;
-            // TODO: size? and depth
+            depth = spriteParams.Depth;
+            // TODO: size?
         }
 
         public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)

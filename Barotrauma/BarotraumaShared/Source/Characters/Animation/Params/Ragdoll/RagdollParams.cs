@@ -282,17 +282,17 @@ namespace Barotrauma
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
-        [Serialize("", true)]
-        public string Texture { get; set; }
-
-        [Serialize(0f, true)]
-        public float Depth { get; set; }
-
         [Serialize("0, 0, 0, 0", true), Editable]
         public Rectangle SourceRect { get; set; }
 
         [Serialize("0.5, 0.5", true), Editable]
         public Vector2 Origin { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float Depth { get; set; }
+
+        //[Serialize("", true)]
+        //public string Texture { get; set; }
     }
 
     abstract class RagdollSubParams : ISerializableEntity
