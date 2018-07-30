@@ -220,7 +220,7 @@ namespace Barotrauma
             this.character = character;
             CreateTextures();
             CreateGUI();
-            //widgets.Clear();
+            widgets.Clear();
             return character;
         }
         #endregion
@@ -477,6 +477,7 @@ namespace Barotrauma
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
                 ResetParamsEditor();
+                widgets.Values.ForEach(w => w.refresh?.Invoke());
                 return true;
             };
         }
@@ -581,12 +582,7 @@ namespace Barotrauma
             //Cam.TargetPos = Vector2.Zero;
             Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Cam.Position = character.Position;
-            //foreach (var widget in widgets.Values)
-            //{
-            //    widget.Update((float)deltaTime);
-            //}
-            //HandleTestWidgets();
-            //HandleTestWidgets2();
+            widgets.Values.ForEach(w => w.Update((float)deltaTime));
         }
 
         /// <summary>
@@ -624,11 +620,11 @@ namespace Barotrauma
             }
             if (editRagdoll)
             {
-                DrawRagdollEditor(spriteBatch);
+                DrawRagdollEditor(spriteBatch, (float)deltaTime);
             }
             if (showSpritesheet)
             {
-                DrawSpritesheetEditor(spriteBatch);
+                DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
             //widgets.Values.ForEach(w => w.Draw(spriteBatch, (float)deltaTime));
             Structure wall = clones.FirstOrDefault();
@@ -1020,7 +1016,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawRagdollEditor(SpriteBatch spriteBatch)
+        private void DrawRagdollEditor(SpriteBatch spriteBatch, float deltaTime)
         {
             bool ctrlDown = PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
             if (!ctrlDown && editJointPositions)
@@ -1061,7 +1057,12 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
                     if (editJointLimits)
                     {
-                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: true, rotationOffset: character.AnimController.Collider.Rotation);
+                        GetToggleWidget($"{joint.jointParams.Name} limits toggle ragdoll", $"{joint.jointParams.Name} limits toggle spritesheet", joint)
+                            .Draw(spriteBatch, deltaTime, tformedJointPos);
+                        if (joint.LimitEnabled)
+                        {
+                            DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: true, rotationOffset: character.AnimController.Collider.Rotation);
+                        }
                     }
                     if (editJointPositions)
                     {
@@ -1143,7 +1144,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawSpritesheetEditor(SpriteBatch spriteBatch)
+        private void DrawSpritesheetEditor(SpriteBatch spriteBatch, float deltaTime)
         {
             //TODO: allow to zoom the sprite sheet
             //TODO: separate or combine the controls for the limbs that share a texture?
@@ -1168,7 +1169,7 @@ namespace Barotrauma
                     }
                     if (editRagdoll)
                     {
-                        DrawSpritesheetRagdollEditor(spriteBatch, limb, limbBodyPos);
+                        DrawSpritesheetRagdollEditor(spriteBatch, deltaTime, limb, limbBodyPos);
                     }
                     if (editSpriteDimensions)
                     {
@@ -1256,7 +1257,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawSpritesheetRagdollEditor(SpriteBatch spriteBatch, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
+        private void DrawSpritesheetRagdollEditor(SpriteBatch spriteBatch, float deltaTime, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
         {
             foreach (var joint in character.AnimController.LimbJoints)
             {
@@ -1292,7 +1293,12 @@ namespace Barotrauma
                     //}
                     if (joint.BodyA == limb.body.FarseerBody)
                     {
-                        DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: false);
+                        GetToggleWidget($"{joint.jointParams.Name} limits toggle spritesheet", $"{joint.jointParams.Name} limits toggle ragdoll", joint)
+                            .Draw(spriteBatch, deltaTime, tformedJointPos);
+                        if (joint.LimitEnabled)
+                        {
+                            DrawJointLimitWidgets(spriteBatch, joint, tformedJointPos, autoFreeze: false);
+                        }
                     }
                 }
                 if (editJointPositions)
@@ -1331,53 +1337,37 @@ namespace Barotrauma
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, LimbJoint joint, Vector2 drawPos, bool autoFreeze, float rotationOffset = 0)
         {
-            if (!joint.LimitEnabled)
+            // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
+            if (character.AnimController.IsFlipped)
             {
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 10, Color.Red, "Enable Joint Limits", () =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
                 {
-                    joint.LimitEnabled = true;
-                    TryUpdateJointParam(joint, "limitenabled", true);
-                });
+                    joint.UpperLimit = MathHelper.ToRadians(-angle);
+                    TryUpdateJointParam(joint, "upperlimit", -angle);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
+                {
+                    joint.LowerLimit = MathHelper.ToRadians(-angle);
+                    TryUpdateJointParam(joint, "lowerlimit", -angle);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
             else
             {
-                DrawWidget(spriteBatch, drawPos, WidgetType.Circle, 10, Color.DarkGray, "Disable Joint Limits", () =>
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
                 {
-                    joint.LimitEnabled = false;
-                    TryUpdateJointParam(joint, "limitenabled", false);
-                });
-                // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
-                if (character.AnimController.IsFlipped)
+                    joint.UpperLimit = MathHelper.ToRadians(angle);
+                    TryUpdateJointParam(joint, "upperlimit", angle);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
+                DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
                 {
-                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
-                    {
-                        joint.UpperLimit = MathHelper.ToRadians(-angle);
-                        TryUpdateJointParam(joint, "upperlimit", -angle);
-                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
-                    {
-                        joint.LowerLimit = MathHelper.ToRadians(-angle);
-                        TryUpdateJointParam(joint, "lowerlimit", -angle);
-                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                }
-                else
-                {
-                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
-                    {
-                        joint.UpperLimit = MathHelper.ToRadians(angle);
-                        TryUpdateJointParam(joint, "upperlimit", angle);
-                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                    DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
-                    {
-                        joint.LowerLimit = MathHelper.ToRadians(angle);
-                        TryUpdateJointParam(joint, "lowerlimit", angle);
-                    }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-                }
+                    joint.LowerLimit = MathHelper.ToRadians(angle);
+                    TryUpdateJointParam(joint, "lowerlimit", angle);
+                }, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
             }
         }
         #endregion
 
-        #region Widgets
+        #region Widgets as methods
         private void DrawCircularWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
             float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool autoFreeze = false)
         {
@@ -1488,234 +1478,205 @@ namespace Barotrauma
                 }
             }
         }
+        #endregion
 
-        // --> Widgets as classes (experimental)
-        //private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
-        //
-        //private void HandleTestWidgets()
-        //{
-        //    //if (!widgets.TryGetValue("test", out Widget w))
-        //    //{
-        //    //    w = new Widget("test", new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2), Widget.Shape.Rectangle)
-        //    //    {
-        //    //        size = 20,
-        //    //        tooltip = "Test"
-        //    //    };
-        //    //    w.MouseHeld += () => w.drawPos = PlayerInput.MousePosition;
-        //    //    w.MouseDown += () => w.shape = Widget.Shape.Circle;
-        //    //    w.MouseUp += () => w.shape = Widget.Shape.Rectangle;
-        //    //    w.MouseClicked += () => w.tooltip = "Clicked";
-        //    //    widgets.Add(w.ID, w);
-        //    //}
-        //    //if (w.IsSelected)
-        //    //{
-        //    //    if (PlayerInput.LeftButtonHeld())
-        //    //    {
-        //    //        float speed = animParams.Speed + ConvertUnits.ToSimUnits(Vector2.Multiply(scaledMouseSpeed, forward).Combine()) / Cam.Zoom;
-        //    //        TryUpdateAnimParam("speed", MathHelper.Clamp(speed, 0.1f, Ragdoll.MAX_SPEED));
-        //    //    }
-        //    //}
+        #region Widgets as classes (experimental)
+        private Dictionary<string, Widget> widgets = new Dictionary<string, Widget>();
 
-        //    foreach (Limb limb in character.AnimController.Limbs)
-        //    {
-        //        Vector2 limbScreenPos = SimToScreen(limb.SimPosition);
-        //        foreach (var joint in character.AnimController.LimbJoints)
-        //        {
-        //            Vector2 jointPos = Vector2.Zero;
-        //            Vector2 otherPos = Vector2.Zero;
-        //            Vector2 jointDir = Vector2.Zero;
-        //            Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
-        //            Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
-        //            Vector2 up = -VectorExtensions.Forward(limb.Rotation);
-        //            if (joint.BodyA == limb.body.FarseerBody)
-        //            {
-        //                jointPos = anchorPosA;
-        //                otherPos = anchorPosB;
-        //            }
-        //            else if (joint.BodyB == limb.body.FarseerBody)
-        //            {
-        //                jointPos = anchorPosB;
-        //                otherPos = anchorPosA;
-        //            }
-        //            else
-        //            {
-        //                continue;
-        //            }
-        //            var f = Vector2.Transform(jointPos, Matrix.CreateRotationZ(limb.Rotation));
-        //            f.Y = -f.Y;
-        //            Vector2 tformedJointPos = limbScreenPos + f * Cam.Zoom;
-        //            //ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.Black, size: 5);
-        //            //ShapeExtensions.DrawPoint(spriteBatch, limbScreenPos, Color.White, size: 1);
-        //            //GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Black, width: 3);
-        //            //GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.White, width: 1);
-        //            bool aBody = joint.BodyA == limb.body.FarseerBody;
-        //            string id = joint.jointParams.Name + (aBody ? "A" : "B");
-        //            if (!widgets.TryGetValue(id, out Widget widget))
-        //            {
-        //                widget = new Widget(id, tformedJointPos, Widget.Shape.Rectangle)
-        //                {
-        //                    tooltip = $"{id}: {jointPos.FormatAsZeroDecimal()}",
-        //                    size = 5,
-        //                    inputAreaMargin = new Point(2, 2),
-        //                    color = aBody ? Color.Red : Color.Blue
-        //                };
-        //                widget.OnMouseHeld += () =>
-        //                {
-        //                    Vector2 input = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed) / Cam.Zoom;
-        //                    input.Y = -input.Y;
-        //                    input = input.TransformVector(-up);
-        //                    if (aBody)
-        //                    {
-        //                        joint.LocalAnchorA += input;
-        //                        TryUpdateJointParam(joint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA));
-        //                    }
-        //                    else
-        //                    {
-        //                        joint.LocalAnchorB += input;
-        //                        TryUpdateJointParam(joint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB));
-        //                    }
-        //                    widget.drawPos = PlayerInput.MousePosition;
-        //                };
-        //                widgets.Add(id, widget);
-        //            }
-        //            if (!widget.IsControlled)
-        //            {
-        //                widget.drawPos = tformedJointPos;
-        //            }
-        //        }
-        //    }
-        //}
+        private Widget GetToggleWidget(string id, string linkedId, LimbJoint joint)
+        {
+            // Joint creation method
+            Widget CreateJointLimitToggle(string ID, LimbJoint j)
+            {
+                var widget = new Widget(ID, Widget.Shape.Circle) { size = 10 };
+                widget.refresh = () =>
+                {
+                    if (j.LimitEnabled)
+                    {
+                        widget.tooltip = j.jointParams.Name + " Disable Joint Limits";
+                        widget.color = Color.Green;
+                    }
+                    else
+                    {
+                        widget.tooltip = j.jointParams.Name + " Enable Joint Limits";
+                        widget.color = Color.Red;
+                    }
+                };
+                widget.refresh();
+                widget.Clicked += () =>
+                {
+                    j.LimitEnabled = !j.LimitEnabled;
+                    TryUpdateJointParam(j, "limitenabled", j.LimitEnabled);
+                    if (j.LimitEnabled)
+                    {
+                        if (float.IsNaN(j.jointParams.UpperLimit))
+                        {
+                            joint.UpperLimit = 0;
+                            TryUpdateJointParam(j, "upperlimit", 0);
+                        }
+                        if (float.IsNaN(j.jointParams.LowerLimit))
+                        {
+                            joint.LowerLimit = 0;
+                            TryUpdateJointParam(j, "lowerlimit", 0);
+                        }
+                    }
+                    widget.refresh();
+                    if (widget.linkedWidget != null)
+                    {
+                        widget.linkedWidget.refresh();
+                    }
+                };
+                widgets.Add(ID, widget);
+                return widget;
+            }
+            // Handle joint linking and create the joints
+            if (!widgets.TryGetValue(id, out Widget toggleWidget))
+            {
+                if (!widgets.TryGetValue(linkedId, out Widget linkedWidget))
+                {
+                    linkedWidget = CreateJointLimitToggle(linkedId, joint);
+                }
+                toggleWidget = CreateJointLimitToggle(id, joint);
+                toggleWidget.linkedWidget = linkedWidget;
+                linkedWidget.linkedWidget = toggleWidget;
+            }
+            return toggleWidget;
+        }
 
-        //private void HandleTestWidgets2()
-        //{
-        //    int y = 30;
-        //    int x = 30;
-        //    for (int i = 0; i < Textures.Count; i++)
-        //    {
-        //        foreach (Limb limb in character.AnimController.Limbs)
-        //        {
-        //            if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
-        //            Rectangle rect = limb.sprite.SourceRect;
-        //            rect.X += x;
-        //            rect.Y += y;
-        //            Vector2 origin = limb.sprite.Origin;
-        //            Vector2 limbBodyPos = new Vector2(rect.X + origin.X, rect.Y + origin.Y);
-        //            // The origin is manipulated when the character is flipped. We have to undo it here.
-        //            if (character.AnimController.Dir < 0)
-        //            {
-        //                limbBodyPos.X = rect.X + rect.Width - origin.X;
-        //            }
-        //            foreach (var joint in character.AnimController.LimbJoints)
-        //            {
-        //                Vector2 jointPos = Vector2.Zero;
-        //                Vector2 anchorPosA = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA);
-        //                Vector2 anchorPosB = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB);
-        //                if (joint.BodyA == limb.body.FarseerBody)
-        //                {
-        //                    jointPos = anchorPosA;
-        //                }
-        //                else if (joint.BodyB == limb.body.FarseerBody)
-        //                {
-        //                    jointPos = anchorPosB;
-        //                }
-        //                else
-        //                {
-        //                    continue;
-        //                }
-        //                Vector2 tformedJointPos = jointPos /= limb.Scale;
-        //                tformedJointPos.Y = -tformedJointPos.Y;
-        //                tformedJointPos.X *= character.AnimController.Dir;
-        //                tformedJointPos += limbBodyPos;
-        //                if (joint.BodyA == limb.body.FarseerBody)
-        //                {
-        //                    string toggleID = joint.jointParams.Name + "limits toggle spritesheet";
-        //                    if (!widgets.TryGetValue(toggleID, out Widget widget))
-        //                    {
-        //                        widget = new Widget(toggleID, tformedJointPos, Widget.Shape.Circle) { size = 10 };
-        //                        void check()
-        //                        {
-        //                            if (joint.LimitEnabled)
-        //                            {
-        //                                widget.tooltip = joint.jointParams.Name + " Disable Joint Limits";
-        //                                widget.color = Color.DarkGray;
-        //                            }
-        //                            else
-        //                            {
-        //                                widget.tooltip = joint.jointParams.Name + " Enable Joint Limits";
-        //                                widget.color = Color.Red;
-        //                            }
-        //                        }
-        //                        check();
-        //                        widget.OnClicked += () =>
-        //                        {
-        //                            joint.LimitEnabled = !joint.LimitEnabled;
-        //                            TryUpdateJointParam(joint, "limitenabled", joint.LimitEnabled);
-        //                            check();
-        //                        };
-        //                        widgets.Add(toggleID, widget);
-        //                    }
-        //                    if (joint.LimitEnabled)
-        //                    {
-        //                        string upperlimitID = joint.jointParams.Name + " upperlimit";
-        //                        if (!widgets.TryGetValue(upperlimitID, out Widget uw))
-        //                        {
-        //                            uw = new RadialWidget(upperlimitID, Widget.Shape.Rectangle, tformedJointPos)
-        //                            {
-        //                                color = Color.Cyan
-        //                            };
-        //                            var rw = uw as RadialWidget;
-        //                            rw.OnMouseHeld += () =>
-        //                            {
-        //                                joint.UpperLimit = MathHelper.ToRadians(rw.angle);
-        //                                TryUpdateJointParam(joint, "upperlimit", rw.angle);
-        //                            };
-        //                            widgets.Add(upperlimitID, uw);
-        //                        }
-        //                        var upperLimitWidget = uw as RadialWidget;
-        //                        if (character.AnimController.IsFlipped)
-        //                        {
-        //                            upperLimitWidget.angle = -upperLimitWidget.angle;
-        //                            //upperLimitWidget.rotationOffset = MathHelper.ToDegrees(-joint.UpperLimit);
-        //                        }
-        //                        else
-        //                        {
-        //                            //upperLimitWidget.rotationOffset = MathHelper.ToDegrees(joint.UpperLimit);
-        //                        }
-        //                        // The joint limits are flipped and inversed when the character is flipped, so we have to handle it here, because we don't want it to affect the user interface.
-        //                        if (character.AnimController.IsFlipped)
-        //                        {
-        //                            //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.UpperLimit), "Upper Limit", Color.Cyan, angle =>
-        //                            //{
-        //                            //    joint.UpperLimit = MathHelper.ToRadians(-angle);
-        //                            //    TryUpdateJointParam(joint, "upperlimit", -angle);
-        //                            //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-        //                            //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(-joint.LowerLimit), "Lower Limit", Color.Yellow, angle =>
-        //                            //{
-        //                            //    joint.LowerLimit = MathHelper.ToRadians(-angle);
-        //                            //    TryUpdateJointParam(joint, "lowerlimit", -angle);
-        //                            //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-        //                        }
-        //                        else
-        //                        {
-        //                            //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), "Upper Limit", Color.Yellow, angle =>
-        //                            //{
-        //                            //    joint.UpperLimit = MathHelper.ToRadians(angle);
-        //                            //    TryUpdateJointParam(joint, "upperlimit", angle);
-        //                            //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-        //                            //DrawCircularWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), "Lower Limit", Color.Cyan, angle =>
-        //                            //{
-        //                            //    joint.LowerLimit = MathHelper.ToRadians(angle);
-        //                            //    TryUpdateJointParam(joint, "lowerlimit", angle);
-        //                            //}, rotationOffset: rotationOffset, autoFreeze: autoFreeze);
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        y += Textures[i].Height;
-        //    }
-        //}
+        private class Widget
+        {
+            public enum Shape
+            {
+                Rectangle,
+                Circle
+            }
 
+            public Shape shape;
+            public string tooltip;
+            public Rectangle DrawRect => new Rectangle((int)DrawPos.X - size / 2, (int)DrawPos.Y - size / 2, size, size);
+            public Rectangle InputRect
+            {
+                get
+                {
+                    var inputRect = DrawRect;
+                    inputRect.Inflate(inputAreaMargin.X, inputAreaMargin.Y);
+                    return inputRect;
+                }
+            }
+
+            public Vector2 DrawPos { get; private set; }
+            public int size = 10;
+            /// <summary>
+            /// Used only for circles.
+            /// </summary>
+            public int sides = 40;
+            /// <summary>
+            /// Currently used only for rectangles.
+            /// </summary>
+            public bool isFilled;
+            public Point inputAreaMargin;
+            public Color color = Color.Red;
+            public Color textColor = Color.White;
+            public Color textBackgroundColor = Color.Black * 0.5f;
+            public bool autoFreeze;
+            public readonly string id;
+
+            public event Action Hovered;
+            public event Action Clicked;
+            public event Action MouseDown;
+            public event Action MouseUp;
+            public event Action MouseHeld;
+            public event Action<SpriteBatch, float> PreDraw;
+            public event Action<SpriteBatch, float> PostDraw;
+
+            public Action refresh;
+
+            public bool IsSelected => selectedWidget == this;
+            public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
+            public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
+            public Vector2? tooltipOffset;
+            
+            public Widget linkedWidget;
+
+            public static Widget selectedWidget;
+
+            public Widget(string id, Shape shape)
+            {
+                this.id = id;
+                this.shape = shape;
+            }
+
+            public virtual void Update(float deltaTime)
+            {
+                if (IsMouseOver)
+                {
+                    if (selectedWidget == null)
+                    {
+                        selectedWidget = this;
+                    }
+                    Hovered?.Invoke();
+                }
+                else if (selectedWidget == this)
+                {
+                    selectedWidget = null;
+                }
+                if (IsSelected)
+                {
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        if (autoFreeze)
+                        {
+                            //freeze = true;
+                        }
+                        MouseHeld?.Invoke();
+                    }
+                    else
+                    {
+                        //freeze = freezeToggle.Selected;
+                    }
+                    if (PlayerInput.LeftButtonDown())
+                    {
+                        MouseDown?.Invoke();
+                    }
+                    if (PlayerInput.LeftButtonReleased())
+                    {
+                        MouseUp?.Invoke();
+                    }
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        Clicked?.Invoke();
+                    }
+                }
+            }
+
+            public virtual void Draw(SpriteBatch spriteBatch, float deltaTime, Vector2 drawPos)
+            {
+                PreDraw?.Invoke(spriteBatch, deltaTime);
+                DrawPos = drawPos;
+                var drawRect = DrawRect;
+                switch (shape)
+                {
+                    case Shape.Rectangle:
+                        GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
+                        break;
+                    case Shape.Circle:
+                        ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
+                        break;
+                    default: throw new NotImplementedException(shape.ToString());
+                }
+                if (IsSelected)
+                {
+                    if (!string.IsNullOrEmpty(tooltip))
+                    {
+                        var offset = tooltipOffset ?? new Vector2(size, -size / 2);
+                        GUI.DrawString(spriteBatch, drawPos + offset, tooltip, textColor, textBackgroundColor);
+                    }
+                }
+                PostDraw?.Invoke(spriteBatch, deltaTime);
+            }
+        }
+
+        //// TODO: test and fix
         //private class RadialWidget : Widget
         //{
         //    public float angle;
@@ -1739,7 +1700,7 @@ namespace Barotrauma
         //        var up = -VectorExtensions.Forward(rotationOffset, circleRadius);
         //        drawPos = center + up;
         //        drawPos = MathUtils.RotatePointAroundTarget(drawPos, center, angle, clockWise);
-        //        base.Update(deltaTime);            
+        //        base.Update(deltaTime);
         //        if (IsControlled)
         //        {
         //            var rotationOffsetInDegrees = MathHelper.ToDegrees(MathUtils.WrapAnglePi(rotationOffset));
@@ -1801,135 +1762,6 @@ namespace Barotrauma
         //                GUI.DrawString(spriteBatch, drawPos, angle.FormatAsInt(), textColor, textBackgroundColor, font: GUI.SmallFont);
         //            }
         //        }
-        //    }
-        //}
-
-        //private class Widget
-        //{
-        //    public enum Shape
-        //    {
-        //        Rectangle,
-        //        Circle
-        //    }
-
-        //    public Shape shape;
-        //    public string tooltip;
-        //    public Rectangle DrawRect => new Rectangle((int)drawPos.X - size / 2, (int)drawPos.Y - size / 2, size, size);
-        //    public Rectangle InputRect
-        //    {
-        //        get
-        //        {
-        //            var inputRect = DrawRect;
-        //            inputRect.Inflate(inputAreaMargin.X, inputAreaMargin.Y);
-        //            return inputRect;
-        //        }
-        //    }
-
-        //    public Vector2 drawPos;
-        //    public int size = 10;
-        //    /// <summary>
-        //    /// Used only for circles.
-        //    /// </summary>
-        //    public int sides = 40;
-        //    /// <summary>
-        //    /// Currently used only for rectangles.
-        //    /// </summary>
-        //    public bool isFilled;
-        //    public Point inputAreaMargin;
-        //    public Color color = Color.Red;
-        //    public Color textColor = Color.White;
-        //    public Color textBackgroundColor = Color.Black * 0.5f;
-        //    public bool autoFreeze;
-        //    public readonly string id;
-
-        //    public event Action OnHovered;
-        //    public event Action OnClicked;
-        //    public event Action OnMouseDown;
-        //    public event Action OnMouseUp;
-        //    public event Action OnMouseHeld;
-        //    public event Action<SpriteBatch, float> PreDraw;
-        //    public event Action<SpriteBatch, float> PostDraw;
-
-        //    public bool IsSelected => selectedWidget == this;
-        //    public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
-        //    public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
-        //    public Vector2? tooltipOffset;
-
-        //    public static Widget selectedWidget;
-
-        //    public Widget(string id, Vector2 drawPos, Shape shape)
-        //    {
-        //        this.id = id;
-        //        this.drawPos = drawPos;
-        //        this.shape = shape;
-        //    }
-
-        //    public virtual void Update(float deltaTime)
-        //    {
-        //        if (IsMouseOver)
-        //        {
-        //            if (selectedWidget == null)
-        //            {
-        //                selectedWidget = this;
-        //            }
-        //            OnHovered?.Invoke();
-        //        }
-        //        else if (selectedWidget == this)
-        //        {
-        //            selectedWidget = null;
-        //        }
-        //        if (IsSelected)
-        //        {
-        //            if (PlayerInput.LeftButtonHeld())
-        //            {
-        //                if (autoFreeze)
-        //                {
-        //                    //freeze = true;
-        //                }
-        //                OnMouseHeld?.Invoke();
-        //            }
-        //            else
-        //            {
-        //                //freeze = freezeToggle.Selected;
-        //            }
-        //            if (PlayerInput.LeftButtonDown())
-        //            {
-        //                OnMouseDown?.Invoke();
-        //            }
-        //            if (PlayerInput.LeftButtonReleased())
-        //            {
-        //                OnMouseUp?.Invoke();
-        //            }
-        //            if (PlayerInput.LeftButtonClicked())
-        //            {
-        //                OnClicked?.Invoke();
-        //            }
-        //        }
-        //    }
-
-        //    public virtual void Draw(SpriteBatch spriteBatch, float deltaTime)
-        //    {
-        //        PreDraw?.Invoke(spriteBatch, deltaTime);
-        //        var drawRect = DrawRect;
-        //        switch (shape)
-        //        {
-        //            case Shape.Rectangle:
-        //                GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
-        //                break;
-        //            case Shape.Circle:
-        //                ShapeExtensions.DrawCircle(spriteBatch, drawPos, size / 2, sides, color, thickness: IsSelected ? 3 : 1);
-        //                break;
-        //            default: throw new NotImplementedException(shape.ToString());
-        //        }
-        //        if (IsSelected)
-        //        {
-        //            if (!string.IsNullOrEmpty(tooltip))
-        //            {
-        //                var offset = tooltipOffset ?? new Vector2(size, -size / 2);
-        //                GUI.DrawString(spriteBatch, drawPos + offset, tooltip, textColor, textBackgroundColor);
-        //            }
-        //        }
-        //        PostDraw?.Invoke(spriteBatch, deltaTime);
         //    }
         //}
         #endregion

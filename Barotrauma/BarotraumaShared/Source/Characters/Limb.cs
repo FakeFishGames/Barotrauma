@@ -46,6 +46,7 @@ namespace Barotrauma
 
         public void SaveParams()
         {
+            jointParams.LimitEnabled = LimitEnabled;
             if (ragdoll.IsFlipped)
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / jointParams.Ragdoll.JointScale;
@@ -55,32 +56,57 @@ namespace Barotrauma
                     jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
                     jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
                 }
+                else
+                {
+                    jointParams.UpperLimit = float.NaN;
+                    jointParams.LowerLimit = float.NaN;
+                }
             }
             else
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / jointParams.Ragdoll.JointScale;
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / jointParams.Ragdoll.JointScale;
-                jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
-                jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
+                if (LimitEnabled)
+                {
+                    jointParams.UpperLimit = MathHelper.ToDegrees(LowerLimit);
+                    jointParams.LowerLimit = MathHelper.ToDegrees(UpperLimit);
+                }
+                else
+                {
+                    jointParams.UpperLimit = float.NaN;
+                    jointParams.LowerLimit = float.NaN;
+                }
             }
-            jointParams.LimitEnabled = LimitEnabled;
         }
 
         public void LoadParams()
         {
+            // If limits have been defined, limits are enabled, else disabled by default
+            if (!float.IsNaN(jointParams.LowerLimit) || !float.IsNaN(jointParams.UpperLimit))
+            {
+                jointParams.LimitEnabled = true;
+            }
+            LimitEnabled = jointParams.LimitEnabled;
+            if (LimitEnabled)
+            {
+                // If limits are enabled, don't allow NaN
+                if (float.IsNaN(jointParams.LowerLimit))
+                {
+                    jointParams.LowerLimit = 0;
+                }
+                if (float.IsNaN(jointParams.UpperLimit))
+                {
+                    jointParams.UpperLimit = 0;
+                }
+            }
             if (ragdoll.IsFlipped)
             {
                 LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb1Anchor.X, jointParams.Limb1Anchor.Y) * jointParams.Ragdoll.JointScale);
                 LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-jointParams.Limb2Anchor.X, jointParams.Limb2Anchor.Y) * jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
                 {
-                    LimitEnabled = true;
                     UpperLimit = MathHelper.ToRadians(-jointParams.LowerLimit);
                     LowerLimit = MathHelper.ToRadians(-jointParams.UpperLimit);
-                }
-                else
-                {
-                    LimitEnabled = false;
                 }
             }
             else
@@ -89,16 +115,10 @@ namespace Barotrauma
                 LocalAnchorB = ConvertUnits.ToSimUnits(jointParams.Limb2Anchor * jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.LowerLimit) && !float.IsNaN(jointParams.UpperLimit))
                 {
-                    LimitEnabled = true;
                     UpperLimit = MathHelper.ToRadians(jointParams.UpperLimit);
                     LowerLimit = MathHelper.ToRadians(jointParams.LowerLimit);
                 }
-                else
-                {
-                    LimitEnabled = false;
-                }
             }
-            jointParams.LimitEnabled = LimitEnabled;
         }
     }
     
