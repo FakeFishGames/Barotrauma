@@ -184,13 +184,10 @@ namespace Barotrauma
             Name = $"Joint {element.Attribute("limb1").Value} - {element.Attribute("limb2").Value}";
         }
 
-        [Serialize(true, true), Editable]
-        public bool CanBeSevered { get; set; }
-
-        [Serialize(-1, true), Editable(0, 255)]
+        [Serialize(-1, true)]
         public int Limb1 { get; set; }
 
-        [Serialize(-1, true), Editable(0, 255)]
+        [Serialize(-1, true)]
         public int Limb2 { get; set; }
 
         /// <summary>
@@ -204,6 +201,9 @@ namespace Barotrauma
         /// </summary>
         [Serialize("1.0, 1.0", true), Editable]
         public Vector2 Limb2Anchor { get; set; }
+
+        [Serialize(true, true), Editable]
+        public bool CanBeSevered { get; set; }
 
         [Serialize(false, true), Editable]
         public bool LimitEnabled { get; set; }
@@ -245,29 +245,40 @@ namespace Barotrauma
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
+        /// <summary>
+        /// TODO: editing this in-game doesn't currently have any effect
+        /// </summary>
         [Serialize(-1, true)]
         public int ID { get; set; }
 
-        [Serialize(LimbType.None, true)]
+        /// <summary>
+        /// TODO: editing this in-game doesn't currently have any effect
+        /// </summary>
+        [Serialize(LimbType.None, true), Editable]
         public LimbType Type { get; set; }
 
-        [Serialize(0f, true)]
-        public float Radius { get; set; }
+        [Serialize(false, true), Editable]
+        public bool Flip { get; set; }
 
-        [Serialize(0f, true)]
-        public float Height { get; set; }
-
-        [Serialize(0f, true)]
-        public float Mass { get; set; }
-
-        [Serialize(0, true)]
+        [Serialize(0, true), Editable]
         public int HealthIndex { get; set; }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, true), Editable]
         public float AttackPriority { get; set; }
 
-        [Serialize(false, true)]
-        public bool Flip { get; set; }
+        [Serialize(0f, true), Editable]
+        public float SteerForce { get; set; }
+
+        // Following params are not used right now. The params are assigned to a PhysicsBody.
+
+        //[Serialize(0f, true)]
+        //public float Radius { get; set; }
+
+        //[Serialize(0f, true)]
+        //public float Height { get; set; }
+
+        //[Serialize(0f, true)]
+        //public float Mass { get; set; }
 
         //[Serialize(false, true)]
         //public bool IgnoreCollisions { get; set; }

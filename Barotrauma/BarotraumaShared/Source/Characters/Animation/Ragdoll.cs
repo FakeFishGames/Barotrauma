@@ -425,7 +425,7 @@ namespace Barotrauma
         /// </summary>
         public void SaveRagdoll()
         {
-            SaveJoints();
+            //SaveJoints();
             RagdollParams.Save();
         }
 
