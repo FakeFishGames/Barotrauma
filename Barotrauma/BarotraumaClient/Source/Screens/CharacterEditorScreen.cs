@@ -258,27 +258,31 @@ namespace Barotrauma
             jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.JointScale / 2,
+                MinValue = 0.25f,
+                MaxValue = 1f,
+                Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    TryUpdateRagdollParam("jointscale", MathHelper.Clamp(value * 2, 0.5f, 2f));
+                    TryUpdateRagdollParam("jointscale", value * 2);
                     jointScaleText.Text = $"Joint Scale: {RagdollParams.JointScale.FormatAsDoubleDecimal()}";
                     character.AnimController.ResetJoints();
                     return true;
-                },
-                Step = 0.01f
+                }
             };
             var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var limbScaleText = new GUITextBlock(new RectTransform(new Point(sliderSize.X, textAreaHeight), limbScaleElement.RectTransform), $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}", Color.Black, textAlignment: Alignment.Center);
             limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.2f)
             {
                 BarScroll = RagdollParams.LimbScale / 2,
+                MinValue = 0.25f,
+                MaxValue = 1f,
+                Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    TryUpdateRagdollParam("limbscale", MathHelper.Clamp(value * 2, 0.5f, 2f));
+                    TryUpdateRagdollParam("limbscale", value * 2);
                     limbScaleText.Text = $"Limb Scale: {RagdollParams.LimbScale.FormatAsDoubleDecimal()}";
                     return true;
-                },
-                Step = 0.01f
+                }
             };
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerPanel.RectTransform), style: null) { CanBeFocused = false };
