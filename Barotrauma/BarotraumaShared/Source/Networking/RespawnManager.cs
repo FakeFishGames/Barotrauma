@@ -353,6 +353,11 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
+            if (respawnShuttle == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
             while (Math.Abs(position.Y - respawnShuttle.WorldPosition.Y) > 100.0f)
@@ -373,6 +378,8 @@ namespace Barotrauma.Networking
         {
             shuttleTransportTimer = maxTransportTime;
             shuttleReturnTimer = maxTransportTime;
+
+            if (respawnShuttle == null) return;
 
             foreach (Item item in Item.ItemList)
             {
@@ -448,7 +455,7 @@ namespace Barotrauma.Networking
             var server = networkMember as GameServer;
             if (server == null) return;
 
-            var respawnSub = respawnShuttle != null ? respawnShuttle : Submarine.MainSub;
+            var respawnSub = respawnShuttle ?? Submarine.MainSub;
             
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
@@ -514,31 +521,33 @@ namespace Barotrauma.Networking
                 }
 #endif
 
-                Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-                
-                if (divingSuitPrefab != null && oxyPrefab != null)
+                if (respawnShuttle != null)
                 {
-                    var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(divingSuit, false);
-                    respawnItems.Add(divingSuit);
+                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;                
+                    if (divingSuitPrefab != null && oxyPrefab != null)
+                    {
+                        var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(divingSuit, false);
+                        respawnItems.Add(divingSuit);
 
-                    var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(oxyTank, false);
-                    divingSuit.Combine(oxyTank);
-                    respawnItems.Add(oxyTank);
-                }
+                        var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(oxyTank, false);
+                        divingSuit.Combine(oxyTank);
+                        respawnItems.Add(oxyTank);
+                    }
 
-                if (scooterPrefab != null && batteryPrefab != null)
-                {
-                    var scooter     = new Item(scooterPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(scooter, false);
+                    if (scooterPrefab != null && batteryPrefab != null)
+                    {
+                        var scooter     = new Item(scooterPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(scooter, false);
 
-                    var battery     = new Item(batteryPrefab, pos, respawnSub);
-                    Spawner.CreateNetworkEvent(battery, false);
+                        var battery     = new Item(batteryPrefab, pos, respawnSub);
+                        Spawner.CreateNetworkEvent(battery, false);
 
-                    scooter.Combine(battery);
-                    respawnItems.Add(scooter);
-                    respawnItems.Add(battery);
+                        scooter.Combine(battery);
+                        respawnItems.Add(scooter);
+                        respawnItems.Add(battery);
+                    }
                 }
                                 
                 //give the character the items they would've gotten if they had spawned in the main sub
