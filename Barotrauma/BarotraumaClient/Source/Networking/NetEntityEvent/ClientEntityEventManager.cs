@@ -23,6 +23,11 @@ namespace Barotrauma.Networking
 
         private UInt16 lastReceivedID;
 
+        public bool MidRoundSyncing
+        {
+            get { return firstNewID.HasValue; }
+        }
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
@@ -195,13 +200,19 @@ namespace Barotrauma.Networking
 
                     catch (Exception e)
                     {
+                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\"! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace;
+                        errorMsg += "\nPrevious entities:";
+                        for (int j = entities.Count - 2; j >= 0; j--)
+                        {
+                            errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
+                        }
+
                         if (GameSettings.VerboseLogging)
                         {
                             DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
                         }
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to read event for entity \"" + entity.ToString() + "\"!\n" + e.StackTrace);
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         msg.Position = msgPosition + msgLength * 8;
                     }
                 }

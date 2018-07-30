@@ -64,6 +64,11 @@ namespace Barotrauma.Networking
         {
             get { return fileReceiver; }
         }
+
+        public bool MidRoundSyncing
+        {
+            get { return entityEventManager.MidRoundSyncing; }
+        }
         
         public GameClient(string newName)
         {

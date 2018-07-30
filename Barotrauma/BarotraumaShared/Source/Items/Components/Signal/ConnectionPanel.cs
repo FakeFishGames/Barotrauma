@@ -150,11 +150,9 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection connection in Connections)
             {
-                Wire[] wires = Array.FindAll(connection.Wires, w => w != null);
-                msg.WriteRangedInteger(0, Connection.MaxLinked, wires.Length);
-                for (int i = 0; i < wires.Length; i++)
+                for (int i = 0; i < Connection.MaxLinked; i++)
                 {
-                    msg.Write(wires[i].Item.ID);
+                    msg.Write(connection.Wires[i]?.Item == null ? (ushort)0 : connection.Wires[i].Item.ID);
                 }
             }
         }
@@ -295,52 +293,6 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             ClientWrite(msg, extraData);
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
-            List<Wire> newWires = new List<Wire>();
-
-            foreach (Connection connection in Connections)
-            {
-                connection.ClearConnections();
-            }
-
-            foreach (Connection connection in Connections)
-            {
-                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
-                for (int i = 0; i < wireCount; i++)
-                {
-                    ushort wireId = msg.ReadUInt16();
-
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
-
-                    Wire wireComponent = wireItem.GetComponent<Wire>();
-                    if (wireComponent == null) continue;
-
-                    newWires.Add(wireComponent);
-
-                    connection.Wires[i] = wireComponent;
-                    wireComponent.Connect(connection, false);
-                }
-            }
-
-            foreach (Wire wire in prevWires)
-            {
-                if (wire.Connections[0] == null && wire.Connections[1] == null)
-                {
-                    wire.Item.Drop(null);
-                }
-                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
-                // -> someone must have dropped the wire from the connection panel
-                else if (wire.Item.ParentInventory == null && 
-                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
-                {
-                    wire.Item.Drop(null);
-                }
-            }
-        }        
+        } 
     }
 }
