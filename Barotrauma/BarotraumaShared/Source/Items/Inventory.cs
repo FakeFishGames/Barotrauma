@@ -140,7 +140,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateNetworkEvent()
+        protected virtual void CreateNetworkEvent()
         {
             if (GameMain.Server != null)
             {
