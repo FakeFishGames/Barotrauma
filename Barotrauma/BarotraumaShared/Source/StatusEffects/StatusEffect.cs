@@ -370,6 +370,7 @@ namespace Barotrauma
             {
                 foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
+                    if (item.Removed) continue;
                     item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
                 }
             }
@@ -396,10 +397,14 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    if (target is Entity targetEntity)
+                    {
+                        if (targetEntity.Removed) continue;
+                    }
+
                     for (int i = 0; i < propertyNames.Length; i++)
                     {
                         SerializableProperty property;
-
                         if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(propertyNames[i], out property)) continue;
 
                         ApplyToProperty(property, propertyEffects[i], deltaTime);
