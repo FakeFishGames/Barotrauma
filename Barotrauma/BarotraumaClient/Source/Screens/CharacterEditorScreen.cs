@@ -1280,7 +1280,7 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos /= limb.Scale;
+                Vector2 tformedJointPos = jointPos /= RagdollParams.JointScale;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
