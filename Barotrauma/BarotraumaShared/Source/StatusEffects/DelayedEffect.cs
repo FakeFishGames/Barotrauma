@@ -13,7 +13,7 @@ namespace Barotrauma
     }
     class DelayedEffect : StatusEffect
     {
-        public static List<DelayedListElement> DelayList = new List<DelayedListElement>();
+        public static readonly List<DelayedListElement> DelayList = new List<DelayedListElement>();
 
         private float delay;
 
