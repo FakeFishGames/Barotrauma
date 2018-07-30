@@ -480,9 +480,7 @@ namespace Barotrauma
             Vector2 avgContactNormal = Vector2.Zero;
             foreach (Contact levelContact in levelContacts)
             {
-                Vector2 contactNormal;
-                FixedArray2<Vector2> temp;
-                levelContact.GetWorldManifold(out contactNormal, out temp);
+                levelContact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> temp);
 
                 //if the contact normal is pointing from the limb towards the level cell it's touching, flip the normal
                 VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ?
@@ -504,7 +502,21 @@ namespace Barotrauma
             float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
             if (contactDot > 0.0f)
             {
-                Body.LinearVelocity -= Vector2.Normalize(Body.LinearVelocity) * contactDot;
+                Vector2 velChange = Vector2.Normalize(Body.LinearVelocity) * contactDot;
+                if (!MathUtils.IsValid(velChange))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "SubmarineBody.HandleLimbCollision:" + submarine.ID,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Invalid velocity change in SubmarineBody.HandleLimbCollision (submarine velocity: " + Body.LinearVelocity
+                        + ", avgContactNormal: " + avgContactNormal
+                        + ", contactDot: " + contactDot
+                        + ", velChange: " + velChange + ")");
+                    return;
+                }
+
+
+                Body.LinearVelocity -= velChange;
 
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
 
