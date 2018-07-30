@@ -205,7 +205,7 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool CanBeSevered { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(true, true), Editable]
         public bool LimitEnabled { get; set; }
 
         /// <summary>
