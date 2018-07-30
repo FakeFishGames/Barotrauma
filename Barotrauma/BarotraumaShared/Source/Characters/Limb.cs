@@ -46,45 +46,40 @@ namespace Barotrauma
 
         public void SaveParams()
         {
-            jointParams.LimitEnabled = LimitEnabled;
             if (ragdoll.IsFlipped)
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / jointParams.Ragdoll.JointScale;
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / jointParams.Ragdoll.JointScale;
-                if (LimitEnabled)
+                if (!float.IsNaN(jointParams.LowerLimit))
                 {
                     jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
-                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
                 }
-                else
+                if (!float.IsNaN(jointParams.UpperLimit))
                 {
-                    jointParams.UpperLimit = float.NaN;
-                    jointParams.LowerLimit = float.NaN;
+                    jointParams.LowerLimit = MathHelper.ToDegrees(-UpperLimit);
                 }
             }
             else
             {
                 jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / jointParams.Ragdoll.JointScale;
                 jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / jointParams.Ragdoll.JointScale;
-                if (LimitEnabled)
+                if (!float.IsNaN(jointParams.UpperLimit))
                 {
-                    jointParams.UpperLimit = MathHelper.ToDegrees(LowerLimit);
-                    jointParams.LowerLimit = MathHelper.ToDegrees(UpperLimit);
+                    jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
                 }
-                else
+                if (!float.IsNaN(jointParams.LowerLimit))
                 {
-                    jointParams.UpperLimit = float.NaN;
-                    jointParams.LowerLimit = float.NaN;
+                    jointParams.LowerLimit = MathHelper.ToDegrees(LowerLimit);
                 }
             }
         }
 
         public void LoadParams()
         {
-            // If limits have been defined, limits are enabled, else disabled by default
-            if (!float.IsNaN(jointParams.LowerLimit) || !float.IsNaN(jointParams.UpperLimit))
+            // If neither of the limits have been defined, disable the limits
+            if (float.IsNaN(jointParams.LowerLimit) && float.IsNaN(jointParams.UpperLimit))
             {
-                jointParams.LimitEnabled = true;
+                jointParams.LimitEnabled = false;
             }
             LimitEnabled = jointParams.LimitEnabled;
             if (LimitEnabled)
@@ -164,6 +159,8 @@ namespace Barotrauma
         public int HealthIndex => limbParams.HealthIndex;
         public float Scale => limbParams.Ragdoll.LimbScale;
         public float AttackPriority => limbParams.AttackPriority;
+        public bool DoesFlip => limbParams.Flip;
+        public float SteerForce => limbParams.SteerForce;
 
         public bool IsSevered
         {
@@ -176,8 +173,6 @@ namespace Barotrauma
 #endif
             }
         }
-
-        public bool DoesFlip { get; private set; }
 
         public Vector2 WorldPosition
         {
@@ -201,8 +196,6 @@ namespace Barotrauma
 
         //where an animcontroller is trying to pull the limb, only used for debug visualization
         public Vector2 AnimTargetPos { get; private set; }
-
-        public float SteerForce { get; private set; }
 
         public float Mass
         {
@@ -310,8 +303,6 @@ namespace Barotrauma
             };
 
             GameMain.World.AddJoint(pullJoint);
-
-            SteerForce = element.GetAttributeFloat("steerforce", 0.0f);
             
             if (element.Attribute("mouthpos") != null)
             {
