@@ -1723,7 +1723,7 @@ namespace Barotrauma
                         var itemContainer = item.GetComponent<ItemContainer>();
                         if (itemContainer != null)
                         {
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState });
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState, 0 });
                         }
 
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });

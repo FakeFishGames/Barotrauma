@@ -1330,7 +1330,24 @@ namespace Barotrauma
                     (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ServerWrite(msg, c, extraData);
+                    if (extraData.Length < 2 || !(extraData[1] is int))
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component index not given.";
+                        break;
+                    }
+                    int containerIndex = (int)extraData[1];
+                    if (containerIndex < 0 || containerIndex >= components.Count)
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - container index out of range (" + containerIndex + ").";
+                        break;
+                    }
+                    else if (!(components[containerIndex] is ItemContainer))
+                    {
+                        errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component \"" + components[containerIndex] + "\" is not server serializable.";
+                        break;
+                    }
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
                 case NetEntityEvent.Type.Status:
                     //clamp to (MaxHealth / 255.0f) if condition > 0.0f
@@ -1389,7 +1406,8 @@ namespace Barotrauma
                     (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ServerRead(type, msg, c);
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
                     break;
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count == 0) return;
