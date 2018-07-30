@@ -228,7 +228,7 @@ namespace Barotrauma
                 }
             }
 
-            GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+            CreateNetworkEvent();
 
             foreach (Item item in Items.Distinct())
             {
