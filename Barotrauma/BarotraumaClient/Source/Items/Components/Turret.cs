@@ -148,8 +148,10 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
-            Item projectile = Entity.FindEntityByID(projectileID) as Item;
+            //projectile removed, do nothing
+            if (projectileID == 0) return;
 
+            Item projectile = Entity.FindEntityByID(projectileID) as Item;
             if (projectile == null)
             {
                 DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");

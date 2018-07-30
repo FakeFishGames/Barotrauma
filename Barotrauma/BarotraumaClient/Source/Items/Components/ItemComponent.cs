@@ -224,19 +224,25 @@ namespace Barotrauma.Items.Components
         }
 
         //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
-        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync = false)
         {
             if (delayedCorrectionCoroutine != null) CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
 
-            delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime));
+            delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync)
         {
-            while (correctionTimer > 0.0f)
+            while (GameMain.Client != null && 
+                (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))
             {
                 correctionTimer -= CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
+            }
+
+            if (item.Removed || GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Success;
             }
 
             ((IServerSerializable)this).ClientRead(type, buffer, sendingTime);
