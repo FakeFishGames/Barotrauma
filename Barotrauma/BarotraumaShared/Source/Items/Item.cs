@@ -1303,7 +1303,7 @@ namespace Barotrauma
                 return;
             }
 
-            long initialWritePos = msg.Position;
+            int initialWritePos = msg.LengthBits;
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
             msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
@@ -1368,7 +1368,8 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(errorMsg))
             {
                 //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
-                msg.Position = initialWritePos;
+                msg.ReadBits(msg.Data, 0, initialWritePos);
+                msg.LengthBits = initialWritePos;
                 msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
