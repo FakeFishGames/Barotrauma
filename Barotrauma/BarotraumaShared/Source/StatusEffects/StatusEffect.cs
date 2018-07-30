@@ -50,7 +50,7 @@ namespace Barotrauma
         private HashSet<string> tags;
         
         private readonly float duration;
-        public static List<DurationListElement> DurationList = new List<DurationListElement>();
+        public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
@@ -510,6 +510,8 @@ namespace Barotrauma
         public static void StopAll()
         {
             CoroutineManager.StopCoroutines("statuseffect");
+            DelayedEffect.DelayList.Clear();
+            DurationList.Clear();
         }
 
         public void AddTag(string tag)
