@@ -1282,9 +1282,9 @@ namespace Barotrauma
         
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
+            string errorMsg = "";
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
-                string errorMsg = "";
                 if (extraData == null)
                 {
                     errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event data was null.";
@@ -1310,32 +1310,24 @@ namespace Barotrauma
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
-                    string componentErrorMsg = "";
                     if (extraData.Length < 2 || !(extraData[1] is int))
                     {
-                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index not given.";
+                        break;
                     }
                     int componentIndex = (int)extraData[1];
                     if (componentIndex < 0 || componentIndex >= components.Count)
                     {
-                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component index out of range (" + componentIndex + ").";
+                        break;
                     }
                     else if (!(components[componentIndex] is IServerSerializable))
                     {
-                        componentErrorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
+                        errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
+                        break;
                     }
-                    if (string.IsNullOrEmpty(componentErrorMsg))
-                    {
-                        msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-                        (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
-                    }
-                    else
-                    {
-                        msg.Position = initialWritePos;
-                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
-                        DebugConsole.Log(componentErrorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidComponentData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, componentErrorMsg);
-                    }
+                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
+                    (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerWrite(msg, c, extraData);
@@ -1359,19 +1351,29 @@ namespace Barotrauma
                     msg.Write(targetID);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData);
-                    break;
-                default:
+                    try
                     {
-                        //event type not valid for items - rewind the write position and write invalid event type 
-                        msg.Position = initialWritePos;
-                        msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
-                        string errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
-                        DebugConsole.Log(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        WritePropertyChange(msg, extraData);
+                    }
+                    catch (Exception e)
+                    {
+                        errorMsg = "Failed to write a ChangeProperty network event for the item \"" + Name + "\" (" + e.Message + ")";
                     }
                     break;
+                default:
+                    errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
+                    break;
             }
+
+            if (!string.IsNullOrEmpty(errorMsg))
+            {
+                //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
+                msg.Position = initialWritePos;
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+            }
+
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c) 
@@ -1502,6 +1504,10 @@ namespace Barotrauma
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
                 }
+            }
+            else
+            {
+                throw new ArgumentException("Failed to write propery value - property \"" + (property == null ? "null" : property.Name) + "\" is not serializable.");
             }
         }
 
