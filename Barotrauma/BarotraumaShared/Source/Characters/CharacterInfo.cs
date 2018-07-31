@@ -295,7 +295,7 @@ namespace Barotrauma
 
         private void LoadHeadSprite()
         {
-            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FilePath).Root.Elements())
+            foreach (XElement limbElement in XMLExtensions.TryLoadXml(Ragdoll.FullPath).Root.Elements())
             {
                 if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 

@@ -12,7 +12,9 @@ namespace Barotrauma
     {
         public bool IsLoaded { get; private set; }
         public string Name { get; private set; }
-        public string FilePath { get; private set; }
+        public string FileName { get; private set; }
+        public string Folder { get; private set; }
+        public string FullPath { get; private set; }
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         protected XDocument doc;
@@ -43,14 +45,21 @@ namespace Barotrauma
 
         protected virtual bool Load(string file)
         {
-            FilePath = file;
-            Name = Path.GetFileNameWithoutExtension(FilePath);
-            doc = XMLExtensions.TryLoadXml(FilePath);
+            UpdatePath(file);
+            doc = XMLExtensions.TryLoadXml(FullPath);
             IsLoaded = Deserialize(doc.Root);
             return IsLoaded;
         }
 
-        public virtual bool Save()
+        private void UpdatePath(string newPath)
+        {
+            FullPath = newPath;
+            Name = Path.GetFileNameWithoutExtension(FullPath);
+            FileName = Path.GetFileName(FullPath);
+            Folder = Path.GetDirectoryName(FullPath);
+        }
+
+        public virtual bool Save(string fileNameWithoutExtension = null)
         {
             Serialize(Doc.Root);
             // TODO: would Doc.Save() be enough?
@@ -60,7 +69,11 @@ namespace Barotrauma
                 OmitXmlDeclaration = true,
                 NewLineOnAttributes = true
             };
-            using (var writer = XmlWriter.Create(FilePath, settings))
+            if (fileNameWithoutExtension != null)
+            {
+                UpdatePath(Path.Combine(Folder, $"{fileNameWithoutExtension}.xml"));
+            }
+            using (var writer = XmlWriter.Create(FullPath, settings))
             {
                 Doc.WriteTo(writer);
                 writer.Flush();
