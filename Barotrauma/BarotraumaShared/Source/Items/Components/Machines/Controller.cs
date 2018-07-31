@@ -116,7 +116,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     diff.Y = 0.0f;
-                    if (diff != Vector2.Zero && diff.Length() > 10.0f)
+                    if (diff != Vector2.Zero && diff.LengthSquared() > 10.0f * 10.0f)
                     {
                         character.AnimController.TargetMovement = Vector2.Normalize(diff);
                         character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;

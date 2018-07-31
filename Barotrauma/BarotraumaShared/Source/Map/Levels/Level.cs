@@ -919,7 +919,7 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(endPos),
                     null, Physics.CollisionLevel) != null)
                 {
-                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) +  Vector2.Normalize(startPos - endPos)*offsetFromWall;
+                    position = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + Vector2.Normalize(startPos - endPos) * offsetFromWall;
                     break;
                 }
 

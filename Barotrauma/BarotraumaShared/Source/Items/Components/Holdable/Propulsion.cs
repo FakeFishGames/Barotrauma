@@ -74,6 +74,8 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
+            //move upwards if the cursor is at the position of the character
+            if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
 
             Vector2 propulsion = dir * force;
 
