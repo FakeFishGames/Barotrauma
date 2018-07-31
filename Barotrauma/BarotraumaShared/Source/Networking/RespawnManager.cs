@@ -362,8 +362,12 @@ namespace Barotrauma.Networking
 
             while (Math.Abs(position.Y - respawnShuttle.WorldPosition.Y) > 100.0f)
             {
-                Vector2 displayVel = Vector2.Normalize(position - respawnShuttle.WorldPosition) * speed;
-                respawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
+                Vector2 diff = position - respawnShuttle.WorldPosition;
+                if (diff.LengthSquared() > 0.01f)
+                {
+                    Vector2 displayVel = Vector2.Normalize(diff) * speed;
+                    respawnShuttle.SubBody.Body.LinearVelocity = ConvertUnits.ToSimUnits(displayVel);
+                }
                 yield return CoroutineStatus.Running;
 
                 if (respawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
