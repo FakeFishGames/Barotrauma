@@ -47,7 +47,7 @@ namespace Barotrauma
                 subscribedToDeathEvent = true;
             }
 
-            UpdateMessages(prevStrength, characterHealth.Character);
+            if (characterHealth.Character == Character.Controlled) UpdateMessages(prevStrength, characterHealth.Character);
             if (Strength < Prefab.MaxStrength * 0.5f)
             {
                 UpdateDormantState(deltaTime, characterHealth.Character);
@@ -69,19 +69,20 @@ namespace Barotrauma
             {
                 if (prevStrength % 10.0f > 0.05f && Strength % 10.0f < 0.05f)
                 {
-                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red, 4.0f);
+                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red);
                 }
             }
             else if (Strength < Prefab.MaxStrength)
             {
                 if (state == InfectionState.Dormant && Character.Controlled == character)
                 {
-                    new GUIMessageBox("", TextManager.Get("HuskCantSpeak"));
+                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), Color.Red);
                 }
             }
             else if (state != InfectionState.Active && Character.Controlled == character)
             {
-                new GUIMessageBox("", TextManager.Get("HuskActivate").Replace("[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()));
+                GUI.AddMessage(TextManager.Get("HuskActivate").Replace("[Attack]", GameMain.Config.KeyBind(InputType.Attack).ToString()), 
+                    Color.Red);
             }
 #endif
         }
@@ -116,6 +117,7 @@ namespace Barotrauma
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                character.LastDamageSource = null;
                 character.DamageLimb(
                     limb.WorldPosition, limb,
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) },
@@ -192,7 +194,7 @@ namespace Barotrauma
             subscribedToDeathEvent = false;
         }
 
-        private void CharacterDead(Character character, CauseOfDeathType causeOfDeath)
+        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
 

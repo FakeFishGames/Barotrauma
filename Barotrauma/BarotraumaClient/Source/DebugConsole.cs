@@ -16,7 +16,7 @@ namespace Barotrauma
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
         private static GUITextBlock activeQuestionText;
-
+        
         public static bool IsOpen
         {
             get
@@ -313,7 +313,7 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("shake", "", (string[] args) =>
             {
@@ -324,13 +324,31 @@ namespace Barotrauma
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
+
+            commands.Add(new Command("multiplylights [color]", "Multiplies the colors of all the static lights in the sub with the given color value.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || args.Length < 1) return;
+
+                Color color = XMLExtensions.ParseColor(args[0]);
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.ParentInventory != null || item.body != null) continue;
+                    var lightComponent = item.GetComponent<LightComponent>();
+                    if (lightComponent != null) lightComponent.LightColor = 
+                        new Color(
+                            (lightComponent.LightColor.R / 255.0f) * (color.R / 255.0f), 
+                            (lightComponent.LightColor.G / 255.0f) * (color.G / 255.0f),
+                            (lightComponent.LightColor.B / 255.0f) * (color.B / 255.0f),
+                            (lightComponent.LightColor.A / 255.0f) * (color.A / 255.0f));
+                }
+            }, isCheat: false));
 
             commands.Add(new Command("tutorial", "", (string[] args) =>
             {
@@ -399,7 +417,7 @@ namespace Barotrauma
                         }
                     }
                 }
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("messagebox", "", (string[] args) =>
             {
@@ -410,12 +428,17 @@ namespace Barotrauma
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
                 GameMain.ShowFPS = !GameMain.ShowFPS;
                 NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+            }));
+            commands.Add(new Command("showperf", "showperf: Toggle performance statistics on/off.", (string[] args) =>
+            {
+                GameMain.ShowPerf = !GameMain.ShowPerf;
+                NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
             }));
 
             commands.Add(new Command("hudlayoutdebugdraw", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
@@ -432,7 +455,7 @@ namespace Barotrauma
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             }));
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the ", (string[] args) =>
+            commands.Add(new Command("followsub", "followsub: Toggle whether the camera should follow the nearest submarine.", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
@@ -442,7 +465,7 @@ namespace Barotrauma
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
-            }));
+            }, isCheat: true));
 #if DEBUG
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -475,6 +498,8 @@ namespace Barotrauma
                 GameMain.Config.WindowMode = WindowMode.Fullscreen;
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
+
+                GameSettings.ShowUserStatisticsPrompt = true;
 
                 GameSettings.VerboseLogging = false;
 

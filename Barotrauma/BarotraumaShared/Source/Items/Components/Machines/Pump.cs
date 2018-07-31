@@ -89,7 +89,9 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (hull1 == null) return;
+            //check the hull if the item is movable
+            if (item.body != null) GetHull();
+            if (hull1 == null) return;            
 
             float powerFactor = currPowerConsumption <= 0.0f ? 1.0f : voltage;
 
@@ -107,10 +109,10 @@ namespace Barotrauma.Items.Components
             hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
-            
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+
             if (connection.Name == "toggle")
             {
                 IsActive = !IsActive;
@@ -121,18 +123,16 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "set_speed")
             {
-                float tempSpeed;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempSpeed))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                 }
             }
             else if (connection.Name == "set_targetlevel")
             {
-                float tempTarget;
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out tempTarget))
+                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp((tempTarget+100.0f)/2.0f, 0.0f, 100.0f);
+                    targetLevel = MathHelper.Clamp((tempTarget + 100.0f) / 2.0f, 0.0f, 100.0f);
                 }
             }
 

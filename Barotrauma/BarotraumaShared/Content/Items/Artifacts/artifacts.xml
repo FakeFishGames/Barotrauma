@@ -5,7 +5,7 @@
     identifier="skyholderartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
@@ -28,7 +28,7 @@
     identifier="thermalartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
@@ -53,7 +53,7 @@
     identifier="faradayartifact"
     category="Alien"
     Tags="alien"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
@@ -76,7 +76,7 @@
     Tags="alien,nasonov"
     pickdistance="150"
     indestructible="true"
-    radarsize="30">
+    sonarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
 
@@ -122,6 +122,10 @@
           <affliction name="Stun" strength="5"/>
         </Explosion>
       </StatusEffect>
+
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
     </Throwable>
   </Item>
 
@@ -146,7 +150,11 @@
 
     <Body width="8" height="32" density="15"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10"/>
+    <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <Remove/>
+      </StatusEffect>
+    </Throwable>
   </Item>
 
   <Item
@@ -167,7 +175,8 @@
 
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
-    <RepairTool structurefixamount="-5.0" limbfixamount="-2.0" range="600" barrelpos="30,15">
+    <RepairTool structurefixamount="-3.0" limbfixamount="-1.0" range="600" barrelpos="30,15">
+      <RequiredItems name="Sulphurite Shard,Oxygenite Shard" type="Contained"/>
       <Fixable name="structure"/>
 
       <ParticleEmitter particle="largeplasma" particlespersecond="50"/>
@@ -177,18 +186,22 @@
       <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
       <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
-      <StatusEffect type="OnUse" target="This" Condition="-1.0"/>
+      <StatusEffect type="OnUse" target="This" Condition="-0.5"/>
 
+      <StatusEffect type="OnUse" target="Contained" Condition="-5.0"/>
+      
       <sound file="Content/Items/Artifacts/alienweapon.ogg" type="OnUse" range="800.0" loop="true"/>
       
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
       </LightComponent>
     </RepairTool>
-    
-    <Propulsion force="-40" usablein="both"/>
 
-    <Projectile characterusable="false" launchimpulse="80.0">
+    <Propulsion force="-40" usablein="both">
+      <RequiredItems name="Sulphurite Shard,Oxygenite Shard" type="Contained"/>
+    </Propulsion>
+
+    <Projectile characterusable="false" launchimpulse="80.0">      
       <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
@@ -205,10 +218,8 @@
     </Projectile>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Oxygenite Tank"/>
       <Containable name="Oxygenite Shard"/>
+      <Containable name="Sulphurite Shard"/>
     </ItemContainer>
   </Item>
 

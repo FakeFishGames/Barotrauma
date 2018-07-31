@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System.Xml;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Tutorials;
@@ -16,6 +17,13 @@ namespace Barotrauma
         Windowed, Fullscreen, BorderlessWindowed
     }
 
+    public enum LosMode
+    {
+        None,
+        Transparent,
+        Opaque
+    }
+
     public partial class GameSettings
     {
         const string FilePath = "config.xml";
@@ -26,21 +34,47 @@ namespace Barotrauma
         public bool VSyncEnabled { get; set; }
 
         public bool EnableSplashScreen { get; set; }
-
+        
         public int ParticleLimit { get; set; }
-                
+
+        public bool ChromaticAberrationEnabled { get; set; }
+
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
 
+        private LosMode losMode;
+
         public List<string> jobNamePreferences;
-        
-        public bool UseSteamMatchmaking { get; set; }
-        public bool RequireSteamAuthentication { get; set; }
+
+        private bool useSteamMatchmaking;
+        private bool requireSteamAuthentication;
 
 #if DEBUG
         //steam functionality can be enabled/disabled in debug builds
         public bool UseSteam;
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && UseSteam; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && UseSteam; }
+            set { useSteamMatchmaking = value; }
+        }
+#else
+        public bool UseSteam;
+        public bool RequireSteamAuthentication
+        {
+            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
+            set { requireSteamAuthentication = value; }
+        }
+        public bool UseSteamMatchmaking
+        {
+            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
+            set { useSteamMatchmaking = value; }
+        }
 #endif
 
         public WindowMode WindowMode
@@ -55,8 +89,31 @@ namespace Barotrauma
             set { jobNamePreferences = value; }
         }
 
-        private bool unsavedSettings;
+        private int characterHeadIndex;
+        public int CharacterHeadIndex
+        {
+            get { return characterHeadIndex; }
+            set
+            {
+                if (value == characterHeadIndex) return;
+                characterHeadIndex = value;
+                Save();
+            }
+        }
 
+        private Gender characterGender;
+        public Gender CharacterGender
+        {
+            get { return characterGender; }
+            set
+            {
+                if (value == characterGender) return;
+                characterGender = value;
+                Save();
+            }
+        }
+
+        private bool unsavedSettings;
         public bool UnsavedSettings
         {
             get
@@ -131,10 +188,28 @@ namespace Barotrauma
             }
         }
 
+        public LosMode LosMode
+        {
+            get { return losMode; }
+            set { losMode = value; }
+        }
+
         public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
+
+        private static bool sendUserStatistics;
+        public static bool SendUserStatistics
+        {
+            get { return sendUserStatistics; }
+            set
+            {
+                sendUserStatistics = value;
+                GameMain.Config.Save();
+            }
+        }
+        public static bool ShowUserStatisticsPrompt { get; set; }
 
         public GameSettings(string filePath)
         {
@@ -156,9 +231,19 @@ namespace Barotrauma
 
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", false);
+            if (doc.Root.Attribute("senduserstatistics") == null)
+            {
+                ShowUserStatisticsPrompt = true;
+            }
+            else
+            {
+                sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", true);
+            }
 
 #if DEBUG
             UseSteam = doc.Root.GetAttributeBool("usesteam", true);
+#else
+            UseSteam = true;
 #endif
 
             if (doc == null)
@@ -185,6 +270,13 @@ namespace Barotrauma
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
+            ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
+
+            var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
+            if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
+            {
+                losMode = LosMode.Transparent;
+            }
 
 #if CLIENT
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
@@ -206,11 +298,11 @@ namespace Barotrauma
             MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
 #if DEBUG
-            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && UseSteam;
-            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && UseSteam;
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #else
-            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true) && Steam.SteamManager.USE_STEAM;
-            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true) && Steam.SteamManager.USE_STEAM;
+            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
@@ -263,6 +355,9 @@ namespace Barotrauma
                         break;
                     case "player":
                         defaultPlayerName = subElement.GetAttributeString("name", "");
+                        characterHeadIndex = subElement.GetAttributeInt("headindex", Rand.Int(10));
+                        characterGender = subElement.GetAttributeString("gender", Rand.Range(0.0f, 1.0f) < 0.5f ? "male" : "female")
+                            .ToLowerInvariant() == "male" ? Gender.Male : Gender.Female;
                         break;
                     case "tutorials":
                         foreach (XElement tutorialElement in subElement.Elements())
@@ -291,7 +386,6 @@ namespace Barotrauma
                     case "contentpackage":
                         string path = subElement.GetAttributeString("path", "");
                         var matchingContentPackage = ContentPackage.List.Find(cp => cp.Path == path);
-
                         if (matchingContentPackage == null)
                         {
                             DebugConsole.ThrowError("Content package \"" + path + "\" not found!");
@@ -323,7 +417,14 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
-                new XAttribute("enablesplashscreen", EnableSplashScreen));
+                new XAttribute("enablesplashscreen", EnableSplashScreen),
+                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("requiresteamauthentication", requireSteamAuthentication));
+
+            if (!ShowUserStatisticsPrompt)
+            {
+                doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
+            }
 
             if (WasGameUpdated)
             {
@@ -358,6 +459,8 @@ namespace Barotrauma
             }
 
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
+            gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
+            gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
@@ -388,10 +491,12 @@ namespace Barotrauma
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
-            var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
+            var playerElement = new XElement("player",
+                new XAttribute("name", defaultPlayerName ?? ""),
+                new XAttribute("headindex", characterHeadIndex),
+                new XAttribute("gender", characterGender));
             doc.Root.Add(playerElement);
-
+            
 #if CLIENT
             if (Tutorial.Tutorials != null)
             {
@@ -410,8 +515,28 @@ namespace Barotrauma
                 tutorialElement.Add(new XElement("Tutorial", new XAttribute("name", tutorialName)));
             }
             doc.Root.Add(tutorialElement);
+            
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
 
-            doc.Save(FilePath);
+            try
+            {
+                using (var writer = XmlWriter.Create(FilePath, settings))
+                {
+                    doc.WriteTo(writer);
+                    writer.Flush();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving game settings failed.", e);
+                GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace);
+            }
         }
     }
 }

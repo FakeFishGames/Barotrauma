@@ -55,13 +55,7 @@ namespace Barotrauma
 
         public override void Start()
         {
-            base.Start();
-
-            if (GameMain.Server != null)
-            {
-                CargoManager.CreateItems();
-            }
-
+            base.Start();            
             lastUpdateID++;
         }
 
@@ -158,6 +152,20 @@ namespace Barotrauma
         public void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
+            CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
+                {
+                    SteamAchievementManager.CheatsEnabled = true;
+#if CLIENT
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive Steam Achievements until you restart the game.");       
+#else
+                    DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
+#endif
+                }
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -183,8 +191,9 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("MultiPlayerCampaign");
-            modeElement.Add(new XAttribute("money", Money));            
+            XElement modeElement = new XElement("MultiPlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
             Map.Save(modeElement);
             element.Add(modeElement);
 
@@ -205,9 +214,10 @@ namespace Barotrauma
             msg.Write(Money);
 
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (ItemPrefab ip in CargoManager.PurchasedItems)
+            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(ip));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
+                msg.Write((UInt16)pi.Quantity);
             }
         }
         
@@ -216,11 +226,12 @@ namespace Barotrauma
             UInt16 selectedLocIndex = msg.ReadUInt16();
             UInt16 purchasedItemCount = msg.ReadUInt16();
 
-            List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
+            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
-                purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
+                UInt16 itemQuantity = msg.ReadUInt16();
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))
@@ -231,15 +242,15 @@ namespace Barotrauma
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
 
-            List<ItemPrefab> currentItems = new List<ItemPrefab>(CargoManager.PurchasedItems);
-            foreach (ItemPrefab ip in currentItems)
+            List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
+            foreach (PurchasedItem pi in currentItems)
             {
-                CargoManager.SellItem(ip);
+                CargoManager.SellItem(pi.ItemPrefab, pi.Quantity);
             }
 
-            foreach (ItemPrefab ip in purchasedItems)
+            foreach (PurchasedItem pi in purchasedItems)
             {
-                CargoManager.PurchaseItem(ip);
+                CargoManager.PurchaseItem(pi.ItemPrefab, pi.Quantity);
             }
         }
     }

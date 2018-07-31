@@ -27,17 +27,13 @@ namespace Barotrauma.Items.Components
 
         private Joint joint;
 
-        private Hull[] hulls;
-        private ushort?[] hullIds;
+        private readonly Hull[] hulls = new Hull[2];
+        private Gap gap;
 
         private Door door;
 
         private Body[] bodies;
-
         private Body doorBody;
-
-        private Gap gap;
-        private ushort? gapId;
 
         private bool docked;
 
@@ -114,9 +110,7 @@ namespace Barotrauma.Items.Components
             }
             
             IsActive = true;
-
-            hullIds = new ushort?[2];
-
+            
             list.Add(this);
         }
 
@@ -241,35 +235,37 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
 
-            if (dockingTarget==null)
+            if (dockingTarget == null)
             {
                 DebugConsole.ThrowError("Error - attempted to lock a docking port that's not connected to anything");
                 return;
             }
-            else if (joint is WeldJoint)
-            {
-                //DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
-                return;
-            }
 
-            dockingDir = IsHorizontal ?
-                Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
-            dockingTarget.dockingDir = -dockingDir;
+            if (!(joint is WeldJoint))
+            {
+
+                dockingDir = IsHorizontal ?
+                    Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                    Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                dockingTarget.dockingDir = -dockingDir;
 
 #if CLIENT
-            PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+                PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 #endif
 
-            ConnectWireBetweenPorts();
+                ConnectWireBetweenPorts();
+                CreateJoint(true);
 
-            CreateJoint(true);
-
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
 
+
+            List<MapEntity> removedEntities = item.linkedTo.Where(e => e.Removed).ToList();
+            foreach (MapEntity removed in removedEntities) item.linkedTo.Remove(removed);
+            
             if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
             {
                 CreateHull();
@@ -348,17 +344,31 @@ namespace Barotrauma.Items.Components
 
         private void CreateDoorBody()
         {
+            Vector2 position = ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition));
+            if (!MathUtils.IsValid(position))
+            {
+                string errorMsg =
+                    "Attempted to create a door body at an invalid position (item pos: " + item.Position
+                    + ", item world pos: " + item.WorldPosition
+                    + ", docking target world pos: " + DockingTarget.door.Item.WorldPosition + ")\n" + Environment.StackTrace;
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "DockingPort.CreateDoorBody:InvalidPosition",
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                position = Vector2.Zero;
+            }
+
             doorBody = BodyFactory.CreateRectangle(GameMain.World,
                 dockingTarget.door.Body.width,
                 dockingTarget.door.Body.height,
                 1.0f,
+                position,
                 dockingTarget.door);
 
             doorBody.CollisionCategories = Physics.CollisionWall;
             doorBody.BodyType = BodyType.Static;
-            doorBody.SetTransform(
-                ConvertUnits.ToSimUnits(item.Position + (dockingTarget.door.Item.WorldPosition - item.WorldPosition)),
-                0.0f);
         }
 
         private void CreateHull()
@@ -366,7 +376,6 @@ namespace Barotrauma.Items.Components
             var hullRects = new Rectangle[] { item.WorldRect, dockingTarget.item.WorldRect };
             var subs = new Submarine[] { item.Submarine, dockingTarget.item.Submarine };
 
-            hulls = new Hull[2];
             bodies = new Body[4];
 
             if (dockingTarget.door != null)
@@ -395,6 +404,7 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
+                    hulls[i].FreeID();
 
                     for (int j = 0; j < 2; j++)
                     {
@@ -405,9 +415,6 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
             }
             else
             {
@@ -425,25 +432,22 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find("Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
-
-                    if (hullIds[i] != null) hulls[i].ID = (ushort)hullIds[i];
+                    hulls[i].FreeID();
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
-                if (gapId != null) gap.ID = (ushort)gapId;
-
-                LinkHullsToGap();
             }
 
+            LinkHullsToGap();
+            
+            hulls[0].ShouldBeSaved = false;
+            hulls[1].ShouldBeSaved = false;
             item.linkedTo.Add(hulls[0]);
             item.linkedTo.Add(hulls[1]);
 
-            hullIds[0] = hulls[0].ID;
-            hullIds[1] = hulls[1].ID;
-
+            gap.FreeID();
             gap.DisableHullRechecks = true;
-            gapId = gap.ID;
-
+            gap.ShouldBeSaved = false;
             item.linkedTo.Add(gap);
 
             foreach (Body body in bodies)
@@ -549,26 +553,17 @@ namespace Barotrauma.Items.Components
                 GameMain.World.RemoveJoint(joint);
                 joint = null;
             }
-
-            if (hulls != null)
-            {
-                hulls[0].Remove();
-                hulls[1].Remove();
-                hulls = null;
-            }
+            
+            hulls[0]?.Remove(); hulls[0] = null;
+            hulls[1]?.Remove(); hulls[1] = null;
 
             if (gap != null)
             {
                 gap.Remove();
                 gap = null;
             }
-
-            hullIds[0] = null;
-            hullIds[1] = null;
-
-            gapId = null;
             
-            if (bodies!=null)
+            if (bodies != null)
             {
                 foreach (Body body in bodies)
                 {
@@ -630,6 +625,9 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             list.Remove(this);
+            hulls[0]?.Remove(); hulls[0] = null;
+            hulls[1]?.Remove(); hulls[1] = null;
+            gap?.Remove(); gap = null;
         }
 
         public override void OnMapLoaded()
@@ -679,7 +677,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             if (GameMain.Client != null) return;
 
@@ -718,19 +716,8 @@ namespace Barotrauma.Items.Components
 
             if (docked)
             {
-                msg.Write(dockingTarget.item.ID);
-
-                if (hulls != null && hulls[0] != null && hulls[1] != null && gap != null)
-                {
-                    msg.Write(true);
-                    msg.Write(hulls[0].ID);
-                    msg.Write(hulls[1].ID);
-                    msg.Write(gap.ID);
-                }
-                else
-                {
-                    msg.Write(false);
-                }
+                msg.Write(dockingTarget.item.ID);                
+                msg.Write(hulls != null && hulls[0] != null && hulls[1] != null && gap != null);
             }
         }
 
@@ -738,19 +725,27 @@ namespace Barotrauma.Items.Components
         {
             bool isDocked = msg.ReadBoolean();
 
+            for (int i = 0; i < 2; i++)
+            {
+                if (hulls[i] == null) continue;
+                item.linkedTo.Remove(hulls[i]);
+                hulls[i].Remove();
+                hulls[i] = null;
+            }
+
+            if (gap != null)
+            {
+                item.linkedTo.Remove(gap);
+                gap.Remove();
+                gap = null;
+            }
+
             if (isDocked)
             {
                 ushort dockingTargetID = msg.ReadUInt16();
 
                 bool isLocked = msg.ReadBoolean();
-
-                if (isLocked)
-                {
-                    hullIds[0] = msg.ReadUInt16();
-                    hullIds[1] = msg.ReadUInt16();
-                    gapId = msg.ReadUInt16();
-                }
-
+                
                 Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
                 if (targetEntity == null || !(targetEntity is Item))
                 {
@@ -770,10 +765,6 @@ namespace Barotrauma.Items.Components
                 if (isLocked)
                 {
                     Lock(true);
-
-                    hulls[0].ID = (ushort)hullIds[0];
-                    hulls[1].ID = (ushort)hullIds[1];
-                    gap.ID = (ushort)gapId;
                 }
             }
             else

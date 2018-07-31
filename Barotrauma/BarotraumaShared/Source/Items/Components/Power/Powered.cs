@@ -37,8 +37,7 @@ namespace Barotrauma.Items.Components
             get { return powerConsumption; }
             set { powerConsumption = value; }
         }
-
-
+        
         [Serialize(false, true)]
         public override bool IsActive
         {
@@ -64,6 +63,13 @@ namespace Barotrauma.Items.Components
             set { voltage = Math.Max(0.0f, value); }
         }
 
+        [Editable(ToolTip = "Can the item be damaged by electomagnetic pulses."), Serialize(true, true)]
+        public bool VulnerableToEMP
+        {
+            get;
+            set;
+        }
+
         public Powered(Item item, XElement element)
             : base(item, element)
         {
@@ -72,7 +78,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjectSpecific(XElement element);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
             if (currPowerConsumption == 0.0f) voltage = 0.0f;
             if (connection.IsPower) voltage = Math.Max(0.0f, power);                
@@ -99,7 +105,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition.X, item.WorldPosition.Y, 0.0f)) < powerOnSound.BaseFar * powerOnSound.BaseFar)
                     {
-                        powerOnSound.Play(1.0f, powerOnSound.BaseFar, item.WorldPosition);
+                        SoundPlayer.PlaySound(powerOnSound, 1.0f, powerOnSound.BaseFar, item.WorldPosition, item.CurrentHull);
                     }
                     powerOnSoundPlayed = true;
                 }

@@ -5,7 +5,7 @@
     linkable="true"
     category="Machine">
 
-    <Sprite texture ="FF_Pump.png" depth="0.8" sourcerect="0,0,460,224"/>
+    <Sprite texture ="FF_pump.png" depth="0.8" sourcerect="0,0,460,224"/>
 
     <Pump canbeselected = "true" maxflow="500" PowerConsumption="300.0" MinVoltage="0.3">
       <GuiFrame rect="0,0,330,145" alignment="Center" style="ItemUI"/>

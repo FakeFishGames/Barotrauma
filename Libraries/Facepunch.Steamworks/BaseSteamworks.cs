@@ -83,7 +83,14 @@ namespace Facepunch.Steamworks
 
             if ( native != null )
             {
-                native.Dispose();
+                try
+                {
+                    native.Dispose();
+                }
+                catch (DllNotFoundException e)
+                {
+                    System.Diagnostics.Debug.WriteLine("Disposing SteamWorks NativeInterface failed (" + e.Message + ")\n" + e.StackTrace);
+                }
                 native = null;
             }
 

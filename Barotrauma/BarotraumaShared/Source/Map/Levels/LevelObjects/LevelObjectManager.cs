@@ -1,7 +1,9 @@
 ﻿#if CLIENT
 using Barotrauma.Particles;
 #endif
+using Barotrauma.Networking;
 using FarseerPhysics;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,42 +13,15 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    partial class LevelObjectManager
+    partial class LevelObjectManager : Entity, IServerSerializable
     {
         const int GridSize = 2000;
 
-        private List<LevelObjectPrefab> prefabs = new List<LevelObjectPrefab>();
-
         private List<LevelObject> objects;
         private List<LevelObject>[,] objectGrid;
-        
-        public LevelObjectManager(string configPath)
-        {
-            LoadConfig(configPath);
-        }
-        public LevelObjectManager(IEnumerable<string> files)
-        {
-            foreach (var file in files)
-            {
-                LoadConfig(file);
-            }
-        }
-        private void LoadConfig(string configPath)
-        {
-            try
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configPath);
-                if (doc == null || doc.Root == null) return;
 
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    prefabs.Add(new LevelObjectPrefab(element));
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
-            }
+        public LevelObjectManager() : base(null)
+        {
         }
 
         class SpawnPosition
@@ -87,13 +62,9 @@ namespace Barotrauma
             
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
             var levelCells = level.GetAllCells();
-            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));
-
-            foreach (var extraWall in level.ExtraWalls)
-            {
-                availableSpawnPositions.AddRange(GetAvailableSpawnPositions(extraWall.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
-            }
-
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(levelCells, LevelObjectPrefab.SpawnPosType.Wall));            
+            availableSpawnPositions.AddRange(GetAvailableSpawnPositions(level.SeaFloor.Cells, LevelObjectPrefab.SpawnPosType.SeaFloor));
+            
             foreach (RuinGeneration.Ruin ruin in level.Ruins)
             {
                 foreach (var ruinShape in ruin.RuinShapes)
@@ -160,12 +131,12 @@ namespace Barotrauma
                     int childCount = Rand.Range(child.MinCount, child.MaxCount, Rand.RandSync.Server);
                     for (int j = 0; j < childCount; j++)
                     {
-                        var matchingPrefabs = prefabs.Where(p => child.AllowedNames.Contains(p.Name));
+                        var matchingPrefabs = LevelObjectPrefab.List.Where(p => child.AllowedNames.Contains(p.Name));
                         int prefabCount = matchingPrefabs.Count();
                         var childPrefab = prefabCount == 0 ? null : matchingPrefabs.ElementAt(Rand.Range(0, prefabCount, Rand.RandSync.Server));
                         if (childPrefab == null) continue;
 
-                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * prefab.MinSurfaceWidth;
+                        Vector2 childPos = position + edgeDir * Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server) * newObject.Scale * prefab.MinSurfaceWidth;
 
                         var childObject = new LevelObject(childPrefab,
                             new Vector3(childPos, Rand.Range(childPrefab.DepthRange.X, childPrefab.DepthRange.Y, Rand.RandSync.Server)),
@@ -195,16 +166,18 @@ namespace Barotrauma
                 Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero
             };
 
+            Sprite sprite = newObject.Prefab.Sprite ?? newObject.Prefab.DeformableSprite?.Sprite;
+
             //calculate the positions of the corners of the rotated sprite
-            if (newObject.Prefab.Sprite != null)
+            if (sprite != null)
             {
-                Vector2 halfSize = newObject.Prefab.Sprite.size * newObject.Scale / 2;
+                Vector2 halfSize = sprite.size * newObject.Scale / 2;
                 spriteCorners[0] = -halfSize;
                 spriteCorners[1] = new Vector2(-halfSize.X, halfSize.Y);
                 spriteCorners[2] = halfSize;
                 spriteCorners[3] = new Vector2(halfSize.X, -halfSize.Y);
 
-                Vector2 pivotOffset = newObject.Prefab.Sprite.Origin * newObject.Scale - halfSize;
+                Vector2 pivotOffset = sprite.Origin * newObject.Scale - halfSize;
                 pivotOffset.X = -pivotOffset.X;
                 pivotOffset = new Vector2(
                     (float)(pivotOffset.X * Math.Cos(-newObject.Rotation) - pivotOffset.Y * Math.Sin(-newObject.Rotation)),
@@ -228,7 +201,8 @@ namespace Barotrauma
 
             foreach (LevelTrigger trigger in newObject.Triggers)
             {
-                for (int i = 0; i<trigger.PhysicsBody.FarseerBody.FixtureList.Count; i++)
+                if (trigger.PhysicsBody == null) continue;
+                for (int i = 0; i < trigger.PhysicsBody.FarseerBody.FixtureList.Count; i++)
                 {
                     trigger.PhysicsBody.FarseerBody.GetTransform(out FarseerPhysics.Common.Transform transform);
                     trigger.PhysicsBody.FarseerBody.FixtureList[i].Shape.ComputeAABB(out FarseerPhysics.Collision.AABB aabb, ref transform, i);
@@ -254,8 +228,8 @@ namespace Barotrauma
                 }
             }
 #endif
-
             objects.Add(newObject);
+            newObject.Position.Z += (minX + minY) % 100.0f * 0.00001f;
 
             int xStart = (int)Math.Floor(minX / GridSize);
             int xEnd = (int)Math.Floor(maxX / GridSize);
@@ -356,6 +330,15 @@ namespace Barotrauma
         {
             foreach (LevelObject obj in objects)
             {
+                if (GameMain.Server != null)
+                {
+                    if (obj.NeedsNetworkSyncing)
+                    {
+                        GameMain.Server.CreateEntityEvent(this, new object[] { obj });
+                        obj.NeedsNetworkSyncing = false;
+                    }
+                }
+
                 obj.ActivePrefab = obj.Prefab;
                 for (int i = 0; i < obj.Triggers.Count; i++)
                 {
@@ -364,6 +347,13 @@ namespace Barotrauma
                     {
                         obj.ActivePrefab = obj.Prefab.OverrideProperties[i];
                     }
+                }
+
+                if (obj.PhysicsBody != null)
+                {
+                    if (obj.Prefab.PhysicsBodyTriggerIndex > -1) obj.PhysicsBody.Enabled = obj.Triggers[obj.Prefab.PhysicsBodyTriggerIndex].IsTriggered;
+                    obj.Position = new Vector3(obj.PhysicsBody.Position, obj.Position.Z);
+                    obj.Rotation = obj.PhysicsBody.Rotation;
                 }
 
                 if (obj.ActivePrefab.SonarDisruption > 0.0f)
@@ -392,7 +382,30 @@ namespace Barotrauma
 
         private LevelObjectPrefab GetRandomPrefab(string levelType)
         {
-            return ToolBox.SelectWeightedRandom(prefabs, prefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
+            return ToolBox.SelectWeightedRandom(
+                LevelObjectPrefab.List, 
+                LevelObjectPrefab.List.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
+        }
+
+        public override void Remove()
+        {
+            foreach (LevelObject obj in objects)
+            {
+                obj.Remove();
+            }
+            objects.Clear();
+            RemoveProjSpecific();
+
+            base.Remove();
+        }
+
+        partial void RemoveProjSpecific();
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            LevelObject obj = extraData[0] as LevelObject;
+            msg.WriteRangedInteger(0, objects.Count, objects.IndexOf(obj));
+            obj.ServerWrite(msg, c);
         }
     }
 }

@@ -11,7 +11,7 @@
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="70,0,70,123" depth="0.8" maxcondition="50" fadein="true"/>
     <BrokenSprite texture="FF_junctionbox.png" sourcerect="140,0,70,123" depth="0.8" maxcondition="0"/>
 
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="30">
+    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10">
       <skill name="Electrical Engineering" level="40"/>
       <item name="Screwdriver"/>
     </fixrequirement>
@@ -101,6 +101,54 @@
       <input name="power_out"/>
       <input name="power_in"/>
     </ConnectionPanel>
+  </Item>
+
+
+  <Item
+    name="Battery Cell"
+    identifier="batterycell"
+    category="Equipment,Electrical"
+    tags="smallitem,loadable"
+    cargocontainername="Metal Crate"
+    description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Copper Bar" mincondition="0.5"/>
+      <Item name="Sulphuric Acid" mincondition="0.9"/>
+    </Deconstruct>
+
+    <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
+
+    <Body width="20" height="9" density="30"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
+  </Item>
+
+  <Item
+    name="Fulgurium Battery Cell"
+    identifier="fulguriumbatterycell"
+    category="Equipment,Electrical"
+    tags="smallitem,loadable"
+    cargocontainername="Metal Crate"
+    description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Fulgurium Bar" mincondition="0.8"/>
+      <Item name="Sulphuric Acid" mincondition="0.9"/>
+    </Deconstruct>
+
+    <Sprite texture="Content/Items/Weapons/weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
+
+    <Body width="20" height="9" density="30"/>
+
+    <Pickable slots="Any,RightHand,LeftHand"/>
   </Item>
 
   <Item

@@ -5,7 +5,8 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="1000"
-    radarlabel="Infrasonic signal"
+    achievementidentifier="artifactmission"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -32,7 +33,8 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
-    radarlabel="Infrasonic signal"
+    achievementidentifier="artifactmission"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -59,7 +61,8 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
-    radarlabel="Infrasonic signal"
+    achievementidentifier="artifactmission"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
@@ -86,7 +89,8 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
-    radarlabel="Infrasonic signal"
+    achievementidentifier="artifactmission"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
@@ -113,7 +117,8 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1500"
-    radarlabel="Infrasonic signal"
+    achievementidentifier="artifactmission"
+    sonarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
@@ -140,7 +145,7 @@
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."
     commonness="10"
     reward="1000"
-    radarlabel="Moloch"
+    sonarlabel="Moloch"
     successmessage="The Moloch has been killed."
     monsterfile="Content/Characters/MolochBoss/molochboss.xml">
 
@@ -165,7 +170,7 @@
     description="A particularly aggressive Tiger Thresher has been terrorizing vessels traveling between [location1] and [location2]. A reward of 800 credits has been promised to those who kill the creature."
     commonness="10"
     reward="800"
-    radarlabel="Tiger Thresher"
+    sonarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
     monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -190,7 +195,7 @@
     description="Seismic readings are indicating that something colossal has emerged from the depths of Europa into the passageway between [location1] and [location2]. All transports through the passageway have been canceled for now and a reward of 10,000 has been promised to those who get rid of whatever is causing the seismic activity."
     commonness="2"
     reward="10000"
-    radarlabel="Target"
+    sonarlabel="Target"
     successmessage="The End Worm is dead and the passageway is open for transport again."
     monsterfile="Content/Characters/Endworm/endworm.xml">
     <message header="Target terminated" text="The beast is dead. Navigate the submarine out of the cavern to claim the reward."/>
@@ -207,7 +212,7 @@
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="5"
     reward="1000"
-    radarlabel="Infrasonic signal"
+    sonarlabel="Infrasonic signal"
     successmessage="It turns out the signal was emitted by a Moloch. The researchers of [location1] have agreed to pay you the reward nevertheless for getting rid of the Moloch."
     monsterfile="Content/Characters/Moloch/moloch.xml">
     
@@ -231,7 +236,7 @@
     description="A small cargo vessel went missing approximately two months ago when transporting xenomaterials from [location1] to [location2]. The vessel was presumed to be taken by the abyss, but now its emergency beacon seems to have been activated near [location2]. Find the vessel and recover the cargo."
     commonness="10"
     reward="1000"
-    radarlabel="Emergency Signal"
+    sonarlabel="Emergency Signal"
     successmessage="The researchers of [location2] are eager to know all the details of the encounter, but seem hesitant to answer any questions regarding the vessel. They do however offer you 1000 credits as &quot;reimbursement for your troubles&quot;."
     monsterfile="Content/Characters/Carrier/carrier.xml">
     <message header="Target destroyed" text="The missing vessel appears to have been taken over by some sort of parasitic growth, but it seems to be incapacitated now. You should report the incident to [location2]."/>
@@ -252,6 +257,7 @@
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="10"
     reward="500"
+    achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
       <Item name="Explosive Crate">
@@ -284,6 +290,7 @@
     description="A local arms dealer is offering 200 credits in exchange for delivering two crates of high explosives to a customer in [location2]."
     commonness="5"
     reward="200"
+    achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
       <Item name="Explosive Crate">
@@ -319,6 +326,7 @@
     description="Reseachers of [location1] need someone to deliver some dangerous chemicals to [location2] for a reward of 200 credits."
     commonness="10"
     reward="200"
+    achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered."
     requireddeliveryamount="20">
     <Items>
@@ -349,6 +357,7 @@
     description="Local reseachers are offering 500 credits for delivering a container of husk parasite eggs to [location2]."
     commonness="10"
     reward="500"
+    achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
       <Item name="Chemical Crate">
@@ -372,6 +381,7 @@
     description="Local reseachers are offering 2000 credits for delivering a large amount of nitroglycerin to [location2]."
     commonness="15"
     reward="2000"
+    achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
       <Item name="Explosive Crate">
@@ -402,6 +412,7 @@
    description="A local clown syndicate is offering 100 credits for delivering a shipment of clowning supplies to [location2]."
    commonness="2"
    reward="100"
+   achievementidentifier="cargomission"
    successmessage="The clown gear has been successfully delivered."
    requireddeliveryamount="35">
     <Items >
@@ -425,8 +436,10 @@
     name="Search and Destroy"
     
     descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
-    description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades and return to [location1]!"
-    description2="You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew and return to [location2]."    
+    description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades by any means necessary."
+    description2="You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew by any means necessary."    
+    
+    achievementidentifier="combatmission"
     
     teamname1="Coalition"
     teamname2="Renegade"

@@ -62,7 +62,7 @@ namespace Barotrauma
             return prevExplosions.FindAll(e => e.Third >= Timing.TotalTime - maxSecondsAgo);
         }
         
-        public void Explode(Vector2 worldPosition)
+        public void Explode(Vector2 worldPosition, Entity damageSource)
         {
             prevExplosions.Add(new Triplet<Explosion, Vector2, float>(this, worldPosition, (float)Timing.TotalTime));
             if (prevExplosions.Count > 100)
@@ -92,15 +92,13 @@ namespace Barotrauma
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
                     if (distSqr > displayRangeSqr) continue;
-
-                    //ignore reactors (don't want to blow them up)
-                    if (item.GetComponent<Reactor>() == null) continue;
-
+                    
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
 
                     //damage repairable power-consuming items
-                    var powerTransfer = item.GetComponent<Powered>();
-                    if (powerTransfer != null && item.FixRequirements.Count > 0)
+                    var powered = item.GetComponent<Powered>();
+                    if (powered == null || !powered.VulnerableToEMP) continue;
+                    if (item.FixRequirements.Count > 0)
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }
@@ -116,7 +114,7 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
-            ApplyExplosionForces(worldPosition, attack, force);
+            DamageCharacters(worldPosition, attack, force, damageSource);
 
             if (flames && GameMain.Client == null)
             {
@@ -157,7 +155,7 @@ namespace Barotrauma
                 MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
         }
 
-        public static void ApplyExplosionForces(Vector2 worldPosition, Attack attack, float force)
+        public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource)
         {
             if (attack.Range <= 0.0f) return;
 
@@ -192,7 +190,14 @@ namespace Barotrauma
                     {
                         modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor));
                     }
-                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false);
+                    c.LastDamageSource = damageSource;
+                    Character attacker = null;
+                    if (damageSource is Item item)
+                    {
+                        attacker = item.GetComponent<Projectile>()?.User;
+                        if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
+                    }
+                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {

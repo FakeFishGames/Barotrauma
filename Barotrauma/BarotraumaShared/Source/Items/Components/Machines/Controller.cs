@@ -261,7 +261,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, "1", "signal_out", picker);
 
 #if CLIENT
-            PlaySound(ActionType.OnUse, item.WorldPosition);
+            PlaySound(ActionType.OnUse, item.WorldPosition, picker);
 #endif
 
             return true;

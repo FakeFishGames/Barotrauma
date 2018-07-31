@@ -14,6 +14,11 @@
   <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
+  <Inventory slots="Any, Any" accessiblewhenalive="false">
+    <Item name="Crawler Shell"/>
+    <Item name="Swim Bladder"/>
+  </Inventory>
+
   <ai
     combatstrength="100"
     sight="0.5"

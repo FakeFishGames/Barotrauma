@@ -49,14 +49,12 @@ namespace Barotrauma
 
             var crewButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"))
             {
-                ClampMouseRectToParent = false,
                 UserData = InfoFrameTab.Crew,
                 OnClicked = SelectInfoFrameTab
             };
 
             var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"))
             {
-                ClampMouseRectToParent = false,
                 UserData = InfoFrameTab.Mission,
                 OnClicked = SelectInfoFrameTab
             };
@@ -65,7 +63,6 @@ namespace Barotrauma
             {
                 var manageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("ManagePlayers"))
                 {
-                    ClampMouseRectToParent = false,
                     UserData = InfoFrameTab.ManagePlayers,
                     OnClicked = SelectInfoFrameTab
                 };
@@ -123,35 +120,28 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            infoButton.AddToGUIUpdateList();
-
-            if (GameMode != null) GameMode.AddToGUIUpdateList();
-
-            if (infoFrame != null) infoFrame.AddToGUIUpdateList();
-        }
-
-        public void Update(float deltaTime)
-        {
-            EventManager.Update(deltaTime);
-
             if (GUI.DisableHUD) return;
-
-            //guiRoot.Update(deltaTime);
-            infoButton.UpdateManually(deltaTime);
-
-            if (GameMode != null) GameMode.Update(deltaTime);
-            if (Mission != null) Mission.Update(deltaTime);
-            if (infoFrame != null) infoFrame.UpdateManually(deltaTime);
+            infoButton.AddToGUIUpdateList();
+            GameMode?.AddToGUIUpdateList();
+            infoFrame?.AddToGUIUpdateList();
         }
 
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            if (GUI.DisableHUD) return;
+            
+            infoButton?.UpdateManually(deltaTime);
+            infoFrame?.UpdateManually(deltaTime);
+        }
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD) return;
 
             infoButton.DrawManually(spriteBatch);
 
-            if (GameMode != null) GameMode.Draw(spriteBatch);
-            if (infoFrame != null) infoFrame.DrawManually(spriteBatch);
+            GameMode?.Draw(spriteBatch);
+            infoFrame?.DrawManually(spriteBatch);
         }
     }
 }

@@ -75,20 +75,7 @@ namespace Barotrauma
             locations = new List<Location>();
 
             connections = new List<LocationConnection>();
-            
-#if CLIENT       
-            if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
-            if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/MapLine.png");
 
-            if (circleTexture == null) circleTexture = GUI.CreateCircle(512, false);
-
-            //TODO: move this to xml
-            for (int i = 1; i < 17; i++)
-            {
-                mapPieces.Add(new Sprite("Content/Map/MapPieces/btMAP_Test_" + i.ToString().PadLeft(2, '0') + ".png", Vector2.Zero, preMultiplyAlpha: false));
-            }     
-#endif
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
             Generate();
@@ -303,12 +290,14 @@ namespace Barotrauma
 
         private void AssignBiomes()
         {
+            float locationRadius = size * 0.5f * generationParams.LocationRadius;
+
             var biomes = LevelGenerationParams.GetBiomes();
             Vector2 centerPos = new Vector2(size, size) / 2;
-            for (int i = 0; i< generationParams.DifficultyZones; i++)
+            for (int i = 0; i < generationParams.DifficultyZones; i++)
             {
-                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i + 1));
-                float zoneRadius = size / 2 * ((i + 1.0f) / generationParams.DifficultyZones);
+                List<Biome> allowedBiomes = biomes.FindAll(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i));
+                float zoneRadius = locationRadius * ((i + 1.0f) / generationParams.DifficultyZones);
                 foreach (LocationConnection connection in connections)
                 {
                     if (connection.Biome != null) continue;

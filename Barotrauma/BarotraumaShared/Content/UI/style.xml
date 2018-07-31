@@ -439,7 +439,7 @@
     <Sprite texture="Content/Items/MachineInterface.png" state="Pressed" sourcerect ="0,92,121,46" slice="18,103,104,129"/>
 
     <GUITextBlock
-      textcolor="0.6, 0.65, 0.7, 0.7"
+      textcolor="0.0, 0.0, 0.0, 1.0"
       padding="10.0, 0.0, 10.0, 0.0"/>
   </IndicatorButton>
 

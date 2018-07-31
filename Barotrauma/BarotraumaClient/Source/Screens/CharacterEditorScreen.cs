@@ -634,7 +634,7 @@ namespace Barotrauma
             Structure wall = clones.FirstOrDefault();
             Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             // Debug
             if (GameMain.DebugDraw)

@@ -116,6 +116,7 @@
       <RequiredSkill name="Mechanical Engineering" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetnames="Welding Fuel Tank,Oxygen Tank" Condition="-3.0"/>
+      <StatusEffect type="OnFailure" target="Contained" targetnames="Oxygenite Tank" Condition="-1.5"/>
 
       <LightComponent LightColor="0.8,0.7,1.0,1.0" Flicker="0.5">
         <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5"/>
@@ -297,14 +298,14 @@
     <Holdable slots="Any,RightHand,LeftHand"
               holdangle="30" handle1="-10,0"/>
 
-    <Radar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
+    <Sonar range="6000.0" powerconsumption="10" drawhudwhenequipped="true" detectsubmarinewalls="true" displaybordersize="0.2">
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0" disabledeltatime="true"/>
-      <sound file="Content/Items/Command/radarPing.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Command/sonarPing.ogg" type="OnUse" range="1000.0"/>
       <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
-    </Radar>
+      <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
+    </Sonar>
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Battery Cell, Fulgurium Battery Cell">
@@ -313,6 +314,42 @@
     </ItemContainer>
   </Item>
 
+  <Item
+    name="Sonar Beacon"
+    identifier="sonarbeacon"
+    category="Equipment"
+    Tags="smallitem,sonar"
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+
+    <Deconstruct time="15">
+      <Item name="Copper Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
+    <!-- TODO: sonar beacon sprite -->
+    <Sprite texture="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
+
+    <Body width="31" height="6" density="10"/>
+    
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0"/>
+
+    <LightComponent LightColor="0.0,1.0,0.0,1.0" range="50" powerconsumption="10" blinkfrequency="2" IsOn="true">
+      <AiTarget soundrange="20000" sonarlabel="Sonar Beacon"/>
+      <StatusEffect type="OnActive" target="Contained" Condition="-0.5"/>
+    </LightComponent>
+
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell, Fulgurium Battery Cell">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
+      </Containable>
+    </ItemContainer>
+  </Item>
+  
   <Item
     name="Flashlight"
     identifier="flashlight"

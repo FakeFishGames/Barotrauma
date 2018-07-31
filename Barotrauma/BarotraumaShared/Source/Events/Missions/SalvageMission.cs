@@ -14,7 +14,7 @@ namespace Barotrauma
 
         private int state;
 
-        public override Vector2 RadarPosition
+        public override Vector2 SonarPosition
         {
             get
             {

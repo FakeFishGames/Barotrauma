@@ -13,7 +13,11 @@ namespace Barotrauma.Items.Components
 
         public readonly string Name;
 
-        public Wire[] Wires;
+        private Wire[] wires;
+        public IEnumerable<Wire> Wires
+        {
+            get { return wires; }
+        }
 
         private Item item;
 
@@ -29,21 +33,17 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        private bool recipientsDirty = true;
+        private List<Connection> recipients = new List<Connection>();
         public List<Connection> Recipients
         {
             get
             {
-                List<Connection> recipients = new List<Connection>();
-                for (int i = 0; i < MaxLinked; i++)
-                {
-                    if (Wires[i] == null) continue;
-                    Connection recipient = Wires[i].OtherConnection(this);
-                    if (recipient != null) recipients.Add(recipient);
-                }
+                if (recipientsDirty) RefreshRecipients();
                 return recipients;
             }
         }
-        
+
         public Item Item
         {
             get { return item; }
@@ -65,8 +65,7 @@ namespace Barotrauma.Items.Components
 
             this.item = item;
 
-            //recipient = new Connection[MaxLinked];
-            Wires = new Wire[MaxLinked];
+            wires = new Wire[MaxLinked];
 
             IsOutput = (element.Name.ToString() == "output");
             Name = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
@@ -102,31 +101,42 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void RefreshRecipients()
+        {
+            recipients.Clear();
+            for (int i = 0; i < MaxLinked; i++)
+            {
+                if (wires[i] == null) continue;
+                Connection recipient = wires[i].OtherConnection(this);
+                if (recipient != null) recipients.Add(recipient);
+            }
+            recipientsDirty = false;
+        }
+
         public int FindEmptyIndex()
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null) return i;
+                if (wires[i] == null) return i;
             }
             return -1;
         }
 
-        //public int FindLinkIndex(Item item)
-        //{
-        //    for (int i = 0; i < MaxLinked; i++)
-        //    {
-        //        if (item == null && recipient[i] == null) return i;
-        //        if (recipient[i]!=null && recipient[i].item == item) return i;
-        //    }
-        //    return -1;
-        //}
+        public int FindWireIndex(Wire wire)
+        {
+            for (int i = 0; i < MaxLinked; i++)
+            {
+                if (wires[i] == wire) return i;
+            }
+            return -1;
+        }
 
         public int FindWireIndex(Item wireItem)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null && wireItem == null) return i;
-                if (Wires[i] != null && Wires[i].Item == wireItem) return i;
+                if (wires[i] == null && wireItem == null) return i;
+                if (wires[i] != null && wires[i].Item == wireItem) return i;
             }
             return -1;
         }
@@ -135,32 +145,33 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null)
+                if (wires[i] == null)
                 {
-                    Wires[i] = wire;
+                    SetWire(i, wire);
                     return;
                 }
             }
         }
 
-        public void AddLink(int index, Wire wire)
+        public void SetWire(int index, Wire wire)
         {
-            Wires[index] = wire;
+            wires[index] = wire;
+            recipientsDirty = true;
         }
         
-        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power)
+        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null) continue;
+                if (wires[i] == null) continue;
 
-                Connection recipient = Wires[i].OtherConnection(this);
+                Connection recipient = wires[i].OtherConnection(this);
                 if (recipient == null) continue;
                 if (recipient.item == this.item || recipient.item == source) continue;
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, item, sender, power);
+                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
                 }
 
                 bool broken = recipient.Item.Condition <= 0.0f;
@@ -176,10 +187,11 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null) continue;
+                if (wires[i] == null) continue;
 
-                Wires[i].RemoveConnection(this);
-                Wires[i] = null;
+                wires[i].RemoveConnection(this);
+                wires[i] = null;
+                recipientsDirty = true;
             }
         }
         
@@ -191,15 +203,16 @@ namespace Barotrauma.Items.Components
             {
                 if (wireId[i] == 0) continue;
 
-                Item wireItem = MapEntity.FindEntityByID(wireId[i]) as Item;
+                Item wireItem = Entity.FindEntityByID(wireId[i]) as Item;
 
                 if (wireItem == null) continue;
-                Wires[i] = wireItem.GetComponent<Wire>();
+                wires[i] = wireItem.GetComponent<Wire>();
+                recipientsDirty = true;
 
-                if (Wires[i] != null)
+                if (wires[i] != null)
                 {
-                    if (Wires[i].Item.body != null) Wires[i].Item.body.Enabled = false;
-                    Wires[i].Connect(this, false, false);
+                    if (wires[i].Item.body != null) wires[i].Item.body.Enabled = false;
+                    wires[i].Connect(this, false, false);
                 }
             }
         }
@@ -209,7 +222,7 @@ namespace Barotrauma.Items.Components
         {
             XElement newElement = new XElement(IsOutput ? "output" : "input", new XAttribute("name", Name));
 
-            Array.Sort(Wires, delegate (Wire wire1, Wire wire2)
+            Array.Sort(wires, delegate (Wire wire1, Wire wire2)
             {
                 if (wire1 == null) return 1;
                 if (wire2 == null) return -1;
@@ -218,10 +231,10 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (Wires[i] == null) continue;
+                if (wires[i] == null) continue;
                 
                 newElement.Add(new XElement("link",
-                    new XAttribute("w", Wires[i].Item.ID.ToString())));
+                    new XAttribute("w", wires[i].Item.ID.ToString())));
             }
 
             parentElement.Add(newElement);

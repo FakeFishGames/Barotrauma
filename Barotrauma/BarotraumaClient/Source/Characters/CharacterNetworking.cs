@@ -18,7 +18,7 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 3, 0);
-                        inventory.ClientWrite(msg, extraData);
+                        Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Repair:
                         msg.WriteRangedInteger(0, 3, 1);
@@ -147,7 +147,7 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this)
+                    if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
                         var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -171,7 +171,7 @@ namespace Barotrauma
                     switch (eventType)
                     {
                         case 0:
-                            inventory.ClientRead(type, msg, sendingTime);
+                            Inventory.ClientRead(type, msg, sendingTime);
                             break;
                         case 1:
                             byte ownerID = msg.ReadByte();
@@ -185,6 +185,7 @@ namespace Barotrauma
 
                                 Controlled = this;
                                 IsRemotePlayer = false;
+                                GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
                             }
@@ -291,6 +292,7 @@ namespace Barotrauma
                 
                 if (GameMain.Client.ID == ownerId)
                 {
+                    GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
                     Controlled = character;
 
@@ -320,8 +322,6 @@ namespace Barotrauma
                     causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
                 }
 
-                causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
-
                 byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
@@ -331,7 +331,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Kill(causeOfDeath, true);
+                        Kill(causeOfDeathType, causeOfDeathAffliction, true);
                     }
                 }
 
@@ -343,7 +343,7 @@ namespace Barotrauma
             }
             else
             {
-                this.isDead = false;
+                this.IsDead = false;
 
                 CharacterHealth.ClientRead(msg);
                 

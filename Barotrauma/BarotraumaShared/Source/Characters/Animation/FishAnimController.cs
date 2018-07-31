@@ -100,19 +100,10 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
+                Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                if (character.IsRemotePlayer)
-                {
-                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                    MainLimb.pullJoint.Enabled = true;
-                }
-                else
-                {
-                    Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
-                    Collider.SmoothRotate(MainLimb.Rotation);
-                }
-
+                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;

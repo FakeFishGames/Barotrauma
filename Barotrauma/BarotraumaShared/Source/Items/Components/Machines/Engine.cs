@@ -126,6 +126,7 @@ namespace Barotrauma.Items.Components
                 float dist = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
                 if (dist > propellerDamage.DamageRange * propellerDamage.DamageRange) continue;
 
+                character.LastDamageSource = item;
                 propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
             }
         }
@@ -137,9 +138,9 @@ namespace Barotrauma.Items.Components
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             if (connection.Name == "set_force")
             {

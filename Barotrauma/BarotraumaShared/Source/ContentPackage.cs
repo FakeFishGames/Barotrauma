@@ -16,7 +16,8 @@ namespace Barotrauma
         Character, 
         Structure, 
         Executable, 
-        LocationTypes, 
+        LocationTypes,
+        MapGenerationParameters,
         LevelGenerationParameters,
         LevelObjectPrefabs,
         RandomEvents, 
@@ -47,8 +48,8 @@ namespace Barotrauma
             ContentType.Character,
             ContentType.Structure,
             ContentType.LocationTypes,
+            ContentType.MapGenerationParameters,
             ContentType.LevelGenerationParameters,
-            ContentType.RandomEvents, //TODO: is it enough if only the server has the random event configs?
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
@@ -88,6 +89,11 @@ namespace Barotrauma
         }
 
         public List<ContentFile> Files;
+
+        public bool HasMultiplayerIncompatibleContent
+        {
+            get { return Files.Any(f => multiplayerIncompatibleContent.Contains(f.Type)); }
+        }
 
         private ContentPackage()
         {

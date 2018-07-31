@@ -50,7 +50,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f && CharacterHealth.OpenHealthWindow == null)
+                    if (!character.LockHands && character.Stun < 0.1f)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -69,7 +69,7 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
@@ -245,7 +245,7 @@ namespace Barotrauma
                 }
             }
             
-            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f && CharacterHealth.OpenHealthWindow == null)
+            if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
             {
                 character.Inventory.DrawOwn(spriteBatch);
             }
@@ -262,7 +262,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        character.Inventory.Alignment = Alignment.Center;
+                        character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                     }
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
@@ -272,7 +272,7 @@ namespace Barotrauma
                 }
                 else if (character.Inventory != null)
                 {
-                    character.Inventory.Alignment = Alignment.Center;
+                    character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                 }
             }
         }

@@ -156,10 +156,7 @@ namespace Barotrauma
         }
 
         public SteeringPath FindPath(Vector2 start, Vector2 end)
-        {
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            
+        {            
             float closestDist = 0.0f;
             PathNode startNode = null;
             foreach (PathNode node in nodes)
@@ -240,10 +237,7 @@ namespace Barotrauma
 
 
             var path =  FindPath(startNode,endNode);
-
-            sw.Stop();
-            System.Diagnostics.Debug.WriteLine("findpath: " + sw.ElapsedMilliseconds+" ms");
-
+            
             return path;
         }
 

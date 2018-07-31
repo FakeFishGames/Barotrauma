@@ -58,7 +58,7 @@ namespace Barotrauma.Networking
             //find the index of the first event the server hasn't received
             int startIndex = events.Count;
             while (startIndex > 0 &&
-                NetIdUtils.IdMoreRecent(events[startIndex-1].ID,thisClient.LastSentEntityEventID))
+                NetIdUtils.IdMoreRecent(events[startIndex - 1].ID, thisClient.LastSentEntityEventID))
             {
                 startIndex--;
             }
@@ -138,9 +138,15 @@ namespace Barotrauma.Networking
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);                
                 UInt16 entityID = msg.ReadUInt16();
                 
-                if (entityID == 0)
+                if (entityID == Entity.NullEntityID)
                 {
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID + " (null entity)",
+                            Microsoft.Xna.Framework.Color.Orange);
+                    }
                     msg.ReadPadBits();
+                    entities.Add(null);
                     if (thisEventID == (UInt16)(lastReceivedID + 1)) lastReceivedID++;
                     continue;
                 }
@@ -192,6 +198,9 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
                         }
+                        GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to read event for entity \"" + entity.ToString() + "\"!\n" + e.StackTrace);
                         msg.Position = msgPosition + msgLength * 8;
                     }
                 }

@@ -17,8 +17,6 @@ namespace Barotrauma
     {
         public static List<Character> CharacterList = new List<Character>();
 
-        public static bool DisableControls;
-
         private bool enabled = true;
         public bool Enabled
         {
@@ -59,11 +57,6 @@ namespace Barotrauma
         public Hull CurrentHull = null;
 
         public bool IsRemotePlayer;
-
-        private CharacterInventory inventory;
-
-        protected float lastRecvPositionUpdateTime;
-
         public readonly Dictionary<string, SerializableProperty> Properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -71,8 +64,6 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-
-        private Item selectedConstruction;
         private Item[] selectedItems;
 
         private byte teamID;
@@ -95,14 +86,10 @@ namespace Barotrauma
 
         //seed used to generate this character
         private readonly string seed;
-
-        private readonly CharacterHealth health;
-
         protected Item focusedItem;
         private Character focusedCharacter, selectedCharacter, selectedBy;
-
-        private bool isDead;
-        private Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath;
+        public Character LastAttacker;
+        public Entity LastDamageSource;
 
         public readonly bool IsHumanoid;
 
@@ -183,10 +170,7 @@ namespace Barotrauma
             get { return AnimController.Mass; }
         }
 
-        public CharacterInventory Inventory
-        {
-            get { return inventory; }
-        }
+        public CharacterInventory Inventory { get; private set; }
 
         private Color speechBubbleColor;
         private float speechBubbleTimer;
@@ -206,7 +190,7 @@ namespace Barotrauma
 
         public bool AllowInput
         {
-            get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
+            get { return !IsUnconscious && Stun <= 0.0f && !IsDead; }
         }
 
         public bool CanInteract
@@ -307,7 +291,7 @@ namespace Barotrauma
 
         public bool IsUnconscious
         {
-            get { return health.IsUnconscious; }
+            get { return CharacterHealth.IsUnconscious; }
         }
 
         public bool NeedsAir
@@ -318,11 +302,11 @@ namespace Barotrauma
 
         public float Oxygen
         {
-            get { return health.OxygenAmount; }
+            get { return CharacterHealth.OxygenAmount; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                health.OxygenAmount = MathHelper.Clamp(value, -100.0f, 100.0f);
+                CharacterHealth.OxygenAmount = MathHelper.Clamp(value, -100.0f, 100.0f);
             }
         }
 
@@ -334,7 +318,7 @@ namespace Barotrauma
                 
         public float Stun
         {
-            get { return IsRagdolled ? 1.0f : health.StunTimer; }
+            get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
             set
             {
                 if (GameMain.Client != null) return;
@@ -343,59 +327,56 @@ namespace Barotrauma
             }
         }
 
-        public CharacterHealth CharacterHealth
-        {
-            get { return health; }
-        }
+        public CharacterHealth CharacterHealth { get; private set; }
 
         public float Vitality
         {
-            get { return health.Vitality; }
+            get { return CharacterHealth.Vitality; }
         }
 
         public float Health
         {
-            get { return health.Vitality; }
+            get { return CharacterHealth.Vitality; }
         }
 
         public float MaxVitality
         {
-            get { return health.MaxVitality; }
+            get { return CharacterHealth.MaxVitality; }
         }
 
         public float Bloodloss
         {
-            get { return health.BloodlossAmount; }
+            get { return CharacterHealth.BloodlossAmount; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                health.BloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f);
+                CharacterHealth.BloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
 
         public bool UseBloodParticles
         {
-            get { return health.UseBloodParticles; }
+            get { return CharacterHealth.UseBloodParticles; }
         }
 
         public float Bleeding
         {
-            get { return health.GetAfflictionStrength("bleeding", true); }
+            get { return CharacterHealth.GetAfflictionStrength("bleeding", true); }
         }
         
         public float HuskInfectionState
         {
             get
             {
-                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
                 return huskAffliction == null ? 0.0f : huskAffliction.Strength;
             }
             set
             {
-                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
                 if (huskAffliction == null)
                 {
-                    health.ApplyAffliction(null, AfflictionPrefab.Husk.Instantiate(value));
+                    CharacterHealth.ApplyAffliction(null, AfflictionPrefab.Husk.Instantiate(value));
                 }
                 else
                 {
@@ -410,7 +391,7 @@ namespace Barotrauma
             get
             {
                 if (!canSpeak) return false;
-                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                var huskAffliction = CharacterHealth.GetAffliction("huskinfection", false) as AfflictionHusk;
                 if (huskAffliction != null && !huskAffliction.CanSpeak) return false;
                 return !IsUnconscious && Stun <= 0.0f;
             }
@@ -439,11 +420,7 @@ namespace Barotrauma
             get { return selectedItems; }
         }
 
-        public Item SelectedConstruction
-        {
-            get { return selectedConstruction; }
-            set { selectedConstruction = value; }
-        }
+        public Item SelectedConstruction { get; set; }
 
         public Item FocusedItem
         {
@@ -461,14 +438,12 @@ namespace Barotrauma
             get { return null; }
         }
 
-        public bool IsDead
-        {
-            get { return isDead; }
-        }
+        public bool IsDead { get; private set; }
 
-        public Pair<CauseOfDeathType, AfflictionPrefab> CauseOfDeath
+        public CauseOfDeath CauseOfDeath
         {
-            get { return causeOfDeath; }
+            get;
+            private set;
         }
 
         //can other characters select (= grab) this character
@@ -485,7 +460,7 @@ namespace Barotrauma
             get
             {
                 if (Removed || !AnimController.Draggable) return false;
-                return isDead || Stun > 0.0f || LockHands || IsUnconscious;
+                return IsDead || Stun > 0.0f || LockHands || IsUnconscious;
             }
         }
         
@@ -494,15 +469,15 @@ namespace Barotrauma
         {
             get
             {
-                if (Removed || inventory == null) return false;
+                if (Removed || Inventory == null) return false;
 
-                if (!inventory.AccessibleWhenAlive)
+                if (!Inventory.AccessibleWhenAlive)
                 {
                     return IsDead;
                 }
                 else
                 {
-                    return (isDead || Stun > 0.0f || LockHands || IsUnconscious);
+                    return (IsDead || Stun > 0.0f || LockHands || IsUnconscious);
                 }
             }
         }
@@ -522,7 +497,7 @@ namespace Barotrauma
             get { return AnimController.MainLimb.body.DrawPosition; }
         }
 
-        public delegate void OnDeathHandler(Character character, CauseOfDeathType causeOfDeath);
+        public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
 
         public delegate void OnAttackedHandler(Character attacker, AttackResult attackResult);
@@ -678,10 +653,10 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "inventory":
-                        inventory = new CharacterInventory(subElement, this);
+                        Inventory = new CharacterInventory(subElement, this);
                         break;
                     case "health":
-                        health = new CharacterHealth(subElement, this);
+                        CharacterHealth = new CharacterHealth(subElement, this);
                         break;
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement));
@@ -689,7 +664,7 @@ namespace Barotrauma
                 }
             }
             
-            if (health == null) health = new CharacterHealth(this);
+            if (CharacterHealth == null) CharacterHealth = new CharacterHealth(this);
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
                         
@@ -705,7 +680,7 @@ namespace Barotrauma
                     if (item == null) continue;
 
                     item.TryInteract(this, true, true, true);
-                    inventory.TryPutItem(item, i, false, false, null, false);
+                    Inventory.TryPutItem(item, i, false, false, null, false);
                 }                
             }
 
@@ -1083,10 +1058,10 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedConstruction != null)
+            if (SelectedConstruction != null)
             {
-                if (IsKeyDown(InputType.Use)) selectedConstruction.Use(deltaTime, this);
-                if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
+                if (IsKeyDown(InputType.Use)) SelectedConstruction.Use(deltaTime, this);
+                if (SelectedConstruction != null && IsKeyDown(InputType.Aim)) SelectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (SelectedCharacter != null)
@@ -1159,9 +1134,9 @@ namespace Barotrauma
         
         public bool HasEquippedItem(Item item)
         {
-            for (int i = 0; i < inventory.Capacity; i++)
+            for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (inventory.Items[i] == item && inventory.SlotTypes[i] != InvSlotType.Any) return true;
+                if (Inventory.Items[i] == item && Inventory.SlotTypes[i] != InvSlotType.Any) return true;
             }
 
             return false;
@@ -1169,11 +1144,13 @@ namespace Barotrauma
 
         public bool HasEquippedItem(string itemName, bool allowBroken = true)
         {
-            for (int i = 0; i < inventory.Capacity; i++)
+            if (Inventory == null) return false;
+            for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (inventory.SlotTypes[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
-                if (!allowBroken && inventory.Items[i].Condition <= 0.0f) continue;
-                if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
+                if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) continue;
+                if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) continue;
+                if (Inventory.Items[i].Prefab.NameMatches(itemName) || Inventory.Items[i].HasTag(itemName)) return true;
+                if (!string.IsNullOrEmpty(Inventory.Items[i].Prefab.Identifier) && Inventory.Items[i].Prefab.Identifier == itemName) return true;
             }
 
             return false;
@@ -1186,8 +1163,8 @@ namespace Barotrauma
 
         public bool TrySelectItem(Item item)
         {
-            bool rightHand = inventory.IsInLimbSlot(item, InvSlotType.RightHand);
-            bool leftHand = inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
+            bool rightHand = Inventory.IsInLimbSlot(item, InvSlotType.RightHand);
+            bool leftHand = Inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
 
             bool selected = false;
             if (rightHand && SelectedItems[0] == null)
@@ -1247,7 +1224,7 @@ namespace Barotrauma
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
             if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
-            if (!c.health.UseHealthWindow && !c.CanBeDragged) return false;
+            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1279,8 +1256,8 @@ namespace Barotrauma
                 if (wire.Locked) return false;
 
                 //wires are interactable if the character has selected either of the items the wire is connected to
-                if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
-                if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
+                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item) return true;
+                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item) return true;
             }
 
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
@@ -1491,7 +1468,7 @@ namespace Barotrauma
 
             if (!CanInteract)
             {
-                selectedConstruction = null;
+                SelectedConstruction = null;
                 focusedItem = null;
                 if (!AllowInput)
                 {
@@ -1525,7 +1502,7 @@ namespace Barotrauma
             }
 
             //climb ladders automatically when pressing up/down inside their trigger area
-            if (selectedConstruction == null && !AnimController.InWater)
+            if (SelectedConstruction == null && !AnimController.InWater)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 
@@ -1548,7 +1525,7 @@ namespace Barotrauma
 
                 if (nearbyLadder != null && climbInput)
                 {
-                    if (nearbyLadder.Select(this)) selectedConstruction = nearbyLadder.Item;
+                    if (nearbyLadder.Select(this)) SelectedConstruction = nearbyLadder.Item;
                 }
             }
             
@@ -1580,9 +1557,9 @@ namespace Barotrauma
 #endif
                 }
             }
-            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
+            else if (IsKeyHit(InputType.Select) && SelectedConstruction != null)
             {
-                selectedConstruction = null;
+                SelectedConstruction = null;
 #if CLIENT
                 CharacterHealth.OpenHealthWindow = null;
 #endif
@@ -1656,9 +1633,9 @@ namespace Barotrauma
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
 
-            if (inventory != null)
+            if (Inventory != null)
             {
-                foreach (Item item in inventory.Items)
+                foreach (Item item in Inventory.Items)
                 {
                     if (item == null || item.body == null || item.body.Enabled) continue;
 
@@ -1669,7 +1646,7 @@ namespace Barotrauma
 
             HideFace = false;
 
-            if (isDead) return;
+            if (IsDead) return;
             
             if (GameMain.NetworkMember != null)
             {
@@ -1716,7 +1693,7 @@ namespace Barotrauma
             
             //Health effects
             if (needsAir) UpdateOxygen(deltaTime);
-            health.Update(deltaTime);
+            CharacterHealth.Update(deltaTime);
             
             if (IsUnconscious)
             {
@@ -1741,7 +1718,7 @@ namespace Barotrauma
                 /*if(GameMain.Server != null)
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
                 AnimController.ResetPullJoints();
-                selectedConstruction = null;
+                SelectedConstruction = null;
                 return;
             }
 
@@ -1754,9 +1731,9 @@ namespace Barotrauma
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
                         
-            if (selectedConstruction != null && !CanInteractWith(selectedConstruction))
+            if (SelectedConstruction != null && !CanInteractWith(SelectedConstruction))
             {
-                selectedConstruction = null;
+                SelectedConstruction = null;
             }
 
             UpdateSightRange();
@@ -1796,7 +1773,7 @@ namespace Barotrauma
             Stun = Math.Max(5.0f, Stun);
 
             AnimController.ResetPullJoints();
-            selectedConstruction = null;
+            SelectedConstruction = null;
         }
 
         private void UpdateSightRange()
@@ -1811,7 +1788,8 @@ namespace Barotrauma
             if (orderGiver != null)
             {
                 //set the character order only if the character is close enough to hear the message
-                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) ? ChatMessageType.Radio : ChatMessageType.Default;
+                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) && ChatMessage.CanUseRadio(this) ? 
+                    ChatMessageType.Radio : ChatMessageType.Default;
                 if (string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, orderGiver, this))) return;
             }
 
@@ -1918,7 +1896,7 @@ namespace Barotrauma
                 if (attacker.TeamID == TeamID)
                 {
                     attackerClient.Karma -= attackResult.Damage * 0.01f;
-                    if (health.MaxVitality <= health.MinVitality) attackerClient.Karma = 0.0f;
+                    if (CharacterHealth.MaxVitality <= CharacterHealth.MinVitality) attackerClient.Karma = 0.0f;
                 }
             }                              
         }
@@ -1927,10 +1905,10 @@ namespace Barotrauma
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
         {
-            health.SetAllDamage(damageAmount, bleedingDamageAmount, burnDamageAmount);
+            CharacterHealth.SetAllDamage(damageAmount, bleedingDamageAmount, burnDamageAmount);
         }
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
             return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
         }
@@ -1960,7 +1938,7 @@ namespace Barotrauma
             }
 
             if (GameMain.Client == null &&
-                isDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                IsDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
                 {
@@ -1992,8 +1970,7 @@ namespace Barotrauma
         
         public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f, Character attacker = null)
         {
-            Limb temp = null;
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out temp, attacker);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out _, attacker);
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
@@ -2030,9 +2007,14 @@ namespace Barotrauma
             }
 
             AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);
-            health.ApplyDamage(hitLimb, attackResult);
+            CharacterHealth.ApplyDamage(hitLimb, attackResult);
             OnAttacked?.Invoke(attacker, attackResult);
             AdjustKarma(attacker, attackResult);
+
+            if (attacker != null && attackResult.Damage > 0.0f)
+            {
+                LastAttacker = attacker;
+            }
 
             return attackResult;
         }
@@ -2045,10 +2027,10 @@ namespace Barotrauma
             
             if (Math.Sign(newStun) != Math.Sign(Stun)) AnimController.ResetPullJoints();
 
-            health.StunTimer = newStun;
+            CharacterHealth.StunTimer = newStun;
             if (newStun > 0.0f)
             {
-                selectedConstruction = null;
+                SelectedConstruction = null;
             }
         }
 
@@ -2069,8 +2051,8 @@ namespace Barotrauma
             }
 
             Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
-            health.PressureAffliction.Strength = health.PressureAffliction.Prefab.MaxStrength;
-            health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
+            CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
+            CharacterHealth.SetAllDamage(CharacterHealth.MaxVitality, 0.0f, 0.0f);
             BreakJoints();            
         }
 
@@ -2097,14 +2079,9 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-        public void Kill(Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
-            Kill(causeOfDeath.First, causeOfDeath.Second, isNetworkMessage);
-        }
-
-        public void Kill(CauseOfDeathType causeOfDeathType, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
-        {
-            if (isDead) return;
+            if (IsDead) return;
 
             //clients aren't allowed to kill characters unless they receive a network message
             if (!isNetworkMessage && GameMain.Client != null)
@@ -2115,24 +2092,43 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
             AnimController.Frozen = false;
-
-            if (causeOfDeathType == CauseOfDeathType.Affliction)
+            
+            if (causeOfDeath == CauseOfDeathType.Affliction)
             {
                 GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Name + ")", ServerLog.MessageType.Attack);
             }
             else
             {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathType + ")", ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
             }
 
-            this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeathType, causeOfDeathAffliction);
-            OnDeath?.Invoke(this, causeOfDeathType);
+            if (GameSettings.SendUserStatistics)
+            {
+                string characterType = "Unknown";
+                if (this == controlled)
+                    characterType = "Player";
+                else if (IsRemotePlayer)
+                    characterType = "RemotePlayer";
+                else if (AIController is EnemyAIController)
+                    characterType = "Enemy";
+                else if (AIController is HumanAIController)
+                    characterType = "AICrew";
+
+                string causeOfDeathStr = causeOfDeathAffliction == null ?
+                    causeOfDeath.ToString() : causeOfDeathAffliction.Name.Replace(" ", "");
+                GameAnalyticsManager.AddDesignEvent("Kill:" + characterType + ":" + SpeciesName + ":" + causeOfDeathStr);
+            }
+
+            CauseOfDeath = new CauseOfDeath(causeOfDeath, causeOfDeathAffliction, LastAttacker, LastDamageSource);
+            OnDeath?.Invoke(this, CauseOfDeath);
+
+            SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
             KillProjSpecific();
 
-            isDead = true;
+            IsDead = true;
 
-            if (info != null) info.CauseOfDeath = this.causeOfDeath;
+            if (info != null) info.CauseOfDeath = CauseOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 
@@ -2167,7 +2163,7 @@ namespace Barotrauma
                 return;
             }
 
-            isDead = false;
+            IsDead = false;
 
             if (aiTarget != null)
             {
@@ -2176,7 +2172,7 @@ namespace Barotrauma
 
             aiTarget = new AITarget(this);
             SetAllDamage(0.0f, 0.0f, 0.0f);
-            health.RemoveAllAfflictions();
+            CharacterHealth.RemoveAllAfflictions();
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
@@ -2222,7 +2218,7 @@ namespace Barotrauma
             if (selectedItems[0] != null) selectedItems[0].Drop(this);
             if (selectedItems[1] != null) selectedItems[1].Drop(this);
 
-            health.Remove();
+            CharacterHealth.Remove();
 
             foreach (Character c in CharacterList)
             {

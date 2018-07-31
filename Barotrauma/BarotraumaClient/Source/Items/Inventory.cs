@@ -107,9 +107,11 @@ namespace Barotrauma
         {
             get { return GameMain.GraphicsHeight / 1080.0f; }
         }
-
+                
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;
+
+        protected Point screenResolution;
 
         public float HideTimer;
 
@@ -152,18 +154,11 @@ namespace Barotrauma
         protected static SlotReference selectedSlot;
 
         public InventorySlot[] slots;
-
-        private Vector2 centerPos;
-
+        
         public Vector2 CenterPos
         {
-            get { return centerPos; }
-            set
-            {
-                centerPos = value;
-                centerPos.X *= GameMain.GraphicsWidth;
-                centerPos.Y *= GameMain.GraphicsHeight;
-            }
+            get;
+            set;
         }
         
         public static SlotReference SelectedSlot
@@ -181,8 +176,8 @@ namespace Barotrauma
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
             int columns = Math.Min(slotsPerRow, capacity);
 
-            int startX = (int)centerPos.X - (rectWidth * columns + spacing * (columns - 1)) / 2;
-            int startY = (int)centerPos.Y - (rows * (spacing + rectHeight)) / 2;
+            int startX = (int)(CenterPos.X * GameMain.GraphicsWidth) - (rectWidth * columns + spacing * (columns - 1)) / 2;
+            int startY = (int)(CenterPos.Y * GameMain.GraphicsHeight) - (rows * (spacing + rectHeight)) / 2;
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
@@ -197,6 +192,8 @@ namespace Barotrauma
             {
                 selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
             }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected virtual bool HideSlot(int i)
@@ -316,7 +313,7 @@ namespace Barotrauma
 
                 int spacing = (int)(10 * UIScale);
 
-                int columns = slot.Rect.Width / subRect.Width;
+                int columns = Math.Max(slot.Rect.Width / subRect.Width, 1);
                 while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
                 {
                     columns++;
@@ -598,7 +595,7 @@ namespace Barotrauma
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
-
+            
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -635,7 +632,7 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             if (GameMain.DebugDraw) GUI.DrawRectangle(spriteBatch, rect, Color.White, false, 0, 1);
 
             if (slot.BorderHighlightColor != Color.Transparent)
@@ -659,6 +656,22 @@ namespace Barotrauma
                 }
 
                 sprite.Draw(spriteBatch, itemPos, sprite == item.Sprite ? item.GetSpriteColor() : item.Prefab.InventoryIconColor, 0, scale);
+                
+                if (CharacterHealth.OpenHealthWindow != null)
+                {
+                    float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
+                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    if (skill > 50.0f)
+                    {
+                        Rectangle highlightRect = rect;
+                        highlightRect.Inflate(3, 3);
+
+                        Color color = treatmentSuitability < 0.0f ?
+                            Color.Lerp(Color.Transparent, Color.Red, -treatmentSuitability) :
+                            Color.Lerp(Color.Transparent, Color.Green, treatmentSuitability);
+                        GUI.DrawRectangle(spriteBatch, highlightRect, color * (((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f), false, 0, 5);
+                    }
+                }
             }
 
             if (inventory != null && Character.Controlled?.Inventory == inventory && slot.QuickUseKey != Keys.None)

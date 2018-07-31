@@ -27,7 +27,7 @@ namespace Barotrauma
             return verticeList;
         }
 
-        public static VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells)
+        public static VertexPositionTexture[] GenerateWallShapes(List<VoronoiCell> cells, Level level)
         {
             float inwardThickness = 500.0f, outWardThickness = 30.0f;
 
@@ -78,8 +78,12 @@ namespace Barotrauma
                     if (!MathUtils.IsValid(leftNormal))
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Invalid left normal");
+                        DebugConsole.ThrowError("Invalid left normal (" + leftNormal + "). LeftEdge: " + leftEdge + ", RightEdge: " + rightEdge);
 #endif
+                        GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidLeftNormal:" + level.Seed,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid left normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + leftNormal + ", seed: " + level.Seed + ")");
+
                         if (cell.body != null)
                         {
                             GameMain.World.RemoveBody(cell.body);
@@ -104,8 +108,12 @@ namespace Barotrauma
                     if (!MathUtils.IsValid(rightNormal))
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Invalid right normal");
+                        DebugConsole.ThrowError("Invalid right normal (" + rightNormal + "). LeftEdge: " + leftEdge + ", RightEdge: " + rightEdge);
 #endif
+                        GameAnalyticsManager.AddErrorEventOnce("CaveGenerator.GenerateWallShapes:InvalidRightNormal:" + level.Seed,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            "Invalid right normal (leftedge: " + leftEdge + ", rightedge: " + rightEdge + ", normal: " + rightNormal + ", seed: " + level.Seed + ")");
+
                         if (cell.body != null)
                         {
                             GameMain.World.RemoveBody(cell.body);
@@ -119,8 +127,7 @@ namespace Barotrauma
                     {
                         Vector2[] verts = new Vector2[3];
                         VertexPositionTexture[] vertPos = new VertexPositionTexture[3];
-
-
+                        
                         if (i == 0)
                         {
                             verts[0] = edge.Point1 - leftNormal * outWardThickness;

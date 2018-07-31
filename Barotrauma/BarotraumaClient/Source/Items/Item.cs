@@ -81,7 +81,10 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
+                    bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
+                    bool flipVertical = (SpriteEffects & SpriteEffects.FlipVertically) != 0;
+
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || flipHorizontal || flipVertical)
                     {
                         selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color);
                         fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
@@ -126,11 +129,11 @@ namespace Barotrauma
                 selectedSprite.effects = oldEffects;
             }
 
-
-            List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
-            for (int i = 0; i < staticDrawableComponents.Count; i++)
+            //use a backwards for loop because the drawable components may disable drawing, 
+            //causing them to be removed from the list
+            for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                staticDrawableComponents[i].Draw(spriteBatch, editing);
+                drawableComponents[i].Draw(spriteBatch, editing);
             }
 
             if (GameMain.DebugDraw)
@@ -507,12 +510,25 @@ namespace Barotrauma
             float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
             bool awake = msg.ReadBoolean();
             Vector2 newVelocity = Vector2.Zero;
-
+            
             if (awake)
             {
                 newVelocity = new Vector2(
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+            }
+
+            if (!MathUtils.IsValid(newPosition) || !MathUtils.IsValid(newRotation) || !MathUtils.IsValid(newVelocity))
+            {
+                string errorMsg = "Received invalid position data for the item \"" + Name
+                    + "\" (position: " + newPosition + ", rotation: " + newRotation + ", velocity: " + newVelocity + ")";
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("Item.ClientReadPosition:InvalidData" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
             }
 
             if (body == null)
@@ -524,7 +540,7 @@ namespace Barotrauma
             body.FarseerBody.Awake = awake;
             if (body.FarseerBody.Awake)
             {
-                if ((newVelocity - body.LinearVelocity).Length() > 8.0f) body.LinearVelocity = newVelocity;
+                if ((newVelocity - body.LinearVelocity).LengthSquared() > 8.0f * 8.0f) body.LinearVelocity = newVelocity;
             }
             else
             {
@@ -544,11 +560,12 @@ namespace Barotrauma
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
             {
-                body.SetTransform(newPosition, newRotation);
-
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                if (body.SetTransform(newPosition, newRotation))
+                {
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                }
             }
         }
 

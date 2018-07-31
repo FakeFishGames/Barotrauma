@@ -339,7 +339,6 @@ namespace FarseerPhysics.Dynamics
 
                     // You tried to remove a body that is not contained in the BodyList.
                     // Are you removing the body more than once?
-                    System.Diagnostics.Debug.WriteLine(body.UserData);
                     Debug.Assert(BodyList.Contains(body));
 
 #if USE_AWAKE_BODY_SET

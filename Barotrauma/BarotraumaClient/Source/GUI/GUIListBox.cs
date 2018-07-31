@@ -208,9 +208,11 @@ namespace Barotrauma
         
         private void UpdateChildrenRect()
         {
-            int i = 0;
-            foreach (GUIComponent child in Content.Children)
+            for (int i = 0; i < Content.CountChildren; i++)
             {
+                var child = Content.RectTransform.GetChild(i)?.GUIComponent;
+                if (child == null) continue;
+
                 // selecting
                 if (Enabled && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
@@ -233,7 +235,6 @@ namespace Barotrauma
                 {
                     child.State = ComponentState.None;
                 }
-                i++;
             }
         }
 
@@ -243,6 +244,10 @@ namespace Barotrauma
 
             if (childrenNeedsRecalculation)
             {
+                foreach (GUIComponent child in Content.Children)
+                {
+                    ClampChildMouseRects(child);
+                }
                 RepositionChildren();
                 childrenNeedsRecalculation = false;
             }
@@ -274,6 +279,15 @@ namespace Barotrauma
                 ScrollBar.AddToGUIUpdateList(false, order);
             }
             OnAddedToGUIUpdateList?.Invoke(this);
+        }
+
+        private void ClampChildMouseRects(GUIComponent child)
+        {
+            child.ClampMouseRectToParent = true;
+            foreach (GUIComponent grandChild in child.Children)
+            {
+                ClampChildMouseRects(grandChild);
+            }
         }
 
         protected override void Update(float deltaTime)

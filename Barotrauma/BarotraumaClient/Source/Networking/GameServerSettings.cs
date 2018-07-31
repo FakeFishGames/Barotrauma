@@ -224,8 +224,7 @@ namespace Barotrauma.Networking
             };
             var monsterFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomLeft, Pivot.BottomRight))
             {
-                Visible = false,
-                ClampMouseRectToParent = false
+                Visible = false
             };
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
@@ -267,8 +266,7 @@ namespace Barotrauma.Networking
             };
             var cargoFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
             {
-                Visible = false,
-                ClampMouseRectToParent = false
+                Visible = false
             };
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>

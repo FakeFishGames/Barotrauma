@@ -54,6 +54,11 @@ namespace Barotrauma
 
         public static KeyboardDispatcher KeyboardDispatcher { get; private set; }
 
+        /// <summary>
+        /// Has the selected Screen changed since the last time the GUI was drawn.
+        /// </summary>
+        public static bool ScreenChanged;
+
         public static ScalableFont Font => Style?.Font;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
@@ -156,8 +161,15 @@ namespace Barotrauma
         /// <summary>
         /// By default, all the gui elements are drawn automatically in the same order they appear on the update list. 
         /// </summary>
-        public static void Draw(float deltaTime, SpriteBatch spriteBatch)
+        public static void Draw(Camera cam, SpriteBatch spriteBatch)
         {
+            if (ScreenChanged)
+            {
+                updateList.Clear();
+                Screen.Selected?.AddToGUIUpdateList();
+                ScreenChanged = false;
+            }
+
             updateList.ForEach(c => c.DrawAuto(spriteBatch));
 
             if (ScreenOverlayColor.A > 0.0f)
@@ -171,8 +183,41 @@ namespace Barotrauma
             if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
                 DrawString(spriteBatch, new Vector2(10, 10),
-                    "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
+                    "FPS: " + (int)GameMain.PerformanceCounter.AverageFramesPerSecond,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
+            }
+
+            if (GameMain.ShowPerf)
+            {
+                int y = 10;
+                DrawString(spriteBatch, new Vector2(300, y), "Draw - Max val: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue()+" ms", Color.Green, Color.Black * 0.8f, font: GUI.SmallFont);
+                y += 15;
+                GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.Green);
+                y += 50;
+                DrawString(spriteBatch, new Vector2(300, y), "Update - Max val: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue() + " ms", Color.LightBlue, Color.Black * 0.8f, font: GUI.SmallFont);
+                y += 15;
+                GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
+                GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, Color.Red);
+                y += 50;
+                foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
+                {
+                    float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
+                    DrawString(spriteBatch, new Vector2(300, y),
+                        key + ": " + elapsedMillisecs,
+                        Color.Lerp(Color.LightGreen, Color.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+
+                    y += 15;
+                }
+
+                if (FarseerPhysics.Settings.EnableDiagnostics)
+                {
+                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContinuousPhysicsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ControllersUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.AddRemoveTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.NewContactsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContactsUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.SolveUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                }
             }
 
             if (GameMain.DebugDraw)
@@ -198,6 +243,20 @@ namespace Barotrauma
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
+
+                DrawString(spriteBatch, new Vector2(10, 90),
+                    "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
+                    Color.Lerp(Color.Green, Color.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+
+                /*var activeParticles = GameMain.ParticleManager.CountActiveParticles();
+                int y = 115;
+                foreach (KeyValuePair<Particles.ParticlePrefab, int> particleCount in activeParticles)
+                {
+                    DrawString(spriteBatch, new Vector2(15, y),
+                        particleCount.Key.Name+": "+ particleCount.Value,
+                        Color.Lerp(Color.Green, Color.Red, (particleCount.Value / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+                    y += 15;
+                }*/
 
                 for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                 {
@@ -244,7 +303,7 @@ namespace Barotrauma
                         //if (playingSoundChannel.Position != null) soundStr += " " + Vector3.Distance(GameMain.SoundManager.ListenerPosition, playingSoundChannel.Position.Value) + " " + playingSoundChannel.Near;
                     }
 
-                    DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    DrawString(spriteBatch, new Vector2(500, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
 
@@ -260,17 +319,16 @@ namespace Barotrauma
                 }
             }
 
-            DrawMessages(spriteBatch, deltaTime);
+            DrawMessages(spriteBatch, cam);
 
             if (GameMain.DebugDraw)
             {
-                DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                /*DrawString(spriteBatch, new Vector2(500, 0), "gui components: " + updateList.Count, Color.White, Color.Black * 0.5f, 0, SmallFont);
                 DrawString(spriteBatch, new Vector2(500, 20), "mouse on: " + (MouseOn == null ? "null" : MouseOn.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
+                DrawString(spriteBatch, new Vector2(500, 40), "scroll bar value: " + (GUIScrollBar.draggingBar == null ? "null" : GUIScrollBar.draggingBar.BarScroll.ToString()), Color.White, Color.Black * 0.5f, 0, SmallFont);
+                */
                 GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch);
             }
-            
-            //TODO: move this somewhere else
-            //HumanoidAnimParams.DrawEditor(spriteBatch); 
 
             if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
             {
@@ -281,6 +339,35 @@ namespace Barotrauma
             {
                 Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
             }
+        }
+
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite)
+        {
+            double aberrationT = (Timing.TotalTime * 0.5f);
+            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f);
+            GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
+                (float)(PerlinNoise.Perlin(aberrationT, aberrationT, 0) + 0.5f));
+            GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
+            GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
+
+            spriteBatch.Begin(SpriteSortMode.Immediate, effect: GameMain.GameScreen.PostProcessEffect);
+
+            float scale = Math.Max(
+                (float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, 
+                (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.1f;
+            float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
+            float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+                
+            double noiseT = (Timing.TotalTime * 0.02f);
+            Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
+            pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
+
+            spriteBatch.Draw(backgroundSprite.Texture,
+                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
+                null, Color.White, 0.0f, backgroundSprite.size / 2,
+                scale, SpriteEffects.None, 0.0f);
+            
+            spriteBatch.End();
         }
 
         #region Update list
@@ -462,6 +549,44 @@ namespace Barotrauma
             RefreshUpdateList();
             UpdateMouseOn();
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
+            UpdateMessages(deltaTime);
+        }
+
+        private static void UpdateMessages(float deltaTime)
+        {
+            foreach (GUIMessage msg in messages)
+            {
+                if (msg.WorldSpace) continue;
+                msg.Timer -= deltaTime;
+
+                if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
+                {
+                    msg.Pos = Vector2.Lerp(Vector2.Zero, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), 1.0f - msg.Timer / msg.LifeTime);
+                }
+                else
+                {
+                    //enough space to show the full message, position it at the center of the msg area
+                    if (msg.Timer > 1.0f)
+                    {
+                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width / 2 - msg.Size.X / 2, 0), Math.Min(deltaTime * 10.0f, 1.0f));
+                    }
+                    else
+                    {
+                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), deltaTime * 10.0f);
+                    }
+                }
+                //only the first message (the currently visible one) is updated at a time
+                break;
+            }
+            
+            foreach (GUIMessage msg in messages)
+            {
+                if (!msg.WorldSpace) continue;
+                msg.Timer -= deltaTime;                
+                msg.Pos += msg.Velocity * deltaTime;                
+            }
+
+            messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
         #region Element drawing
@@ -641,44 +766,43 @@ namespace Barotrauma
             return clicked;
         }
 
-        private static void DrawMessages(SpriteBatch spriteBatch, float deltaTime)
+        private static void DrawMessages(SpriteBatch spriteBatch, Camera cam)
         {
             if (messages.Count == 0) return;
 
-            Vector2 currPos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
+            bool useScissorRect = messages.Any(m => !m.WorldSpace);
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = HUDLayoutSettings.MessageAreaTop;
 
-            int i = 1;
             foreach (GUIMessage msg in messages)
             {
-                float alpha = 1.0f;
+                if (msg.WorldSpace) continue;
 
-                if (msg.LifeTime < 1.0f)
-                {
-                    alpha -= 1.0f - msg.LifeTime;
-                }
+                Vector2 drawPos = new Vector2(HUDLayoutSettings.MessageAreaTop.Right, HUDLayoutSettings.MessageAreaTop.Center.Y);
 
-                if (msg.AutoCenter)
-                {
-                    msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime * 20.0f);
-                    currPos.Y += 30.0f;
-                }
-
-                Font.DrawString(spriteBatch, msg.Text,
-                    new Vector2((int)msg.Pos.X - 1, (int)msg.Pos.Y - 1),
-                    Color.Black * alpha * 0.5f, 0.0f,
-                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
-
-                Font.DrawString(spriteBatch, msg.Text,
-                    new Vector2((int)msg.Pos.X, (int)msg.Pos.Y),
-                    msg.Color * alpha, 0.0f,
-                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
-
-                messages[0].LifeTime -= deltaTime / i;
-
-                i++;
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                break;                
             }
 
-            if (messages[0].LifeTime <= 0.0f) messages.Remove(messages[0]);
+            if (useScissorRect) spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            
+            foreach (GUIMessage msg in messages)
+            {
+                if (!msg.WorldSpace) continue;
+                
+                if (cam != null)
+                {
+                    float alpha = 1.0f;
+                    if (msg.Timer < 1.0f) alpha -= 1.0f - msg.Timer;                    
+
+                    Vector2 drawPos = cam.WorldToScreen(msg.Pos);
+                    msg.Font.DrawString(spriteBatch, msg.Text, drawPos + Vector2.One, Color.Black * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                    msg.Font.DrawString(spriteBatch, msg.Text, drawPos, msg.Color * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                }                
+            }
+
+            messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
         /// <summary>
@@ -1046,7 +1170,8 @@ namespace Barotrauma
 
         private static bool QuitClicked(GUIButton button, object obj)
         {
-            if (button.UserData as string == "save")
+            bool save = button.UserData as string == "save";
+            if (save)
             {
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
@@ -1058,11 +1183,19 @@ namespace Barotrauma
             }
 
             CoroutineManager.StopCoroutines("EndCinematic");
-
-            GameMain.GameSession = null;
-
+            
+            if (GameMain.GameSession != null)
+            {
+                if (GameSettings.SendUserStatistics)
+                {
+                    Mission mission = GameMain.GameSession.Mission;
+                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
+                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
+                }
+                GameMain.GameSession = null;
+            }
+            
             GameMain.MainMenuScreen.Select();
-            //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
         }
@@ -1070,34 +1203,26 @@ namespace Barotrauma
         /// <summary>
         /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
         /// </summary>
-        public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)
+        public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true)
         {
-            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
+            foreach (GUIMessage msg in messages)
             {
-                messages[messages.Count - 1].LifeTime = lifeTime;
-                return;
+                if (msg.Text == message) return;
             }
-
-            Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
-            pos.Y += messages.FindAll(m => m.AutoCenter).Count * 30;
-
-            messages.Add(new GUIMessage(message, color, pos, lifeTime, Alignment.Center, true));
+            
+            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 
-        /// <summary>
-        /// Display and automatically fade out a piece of text at an arbitrary position on the screen
-        /// </summary>
-        public static void AddMessage(string message, Vector2 position, Alignment alignment, Color color, float lifeTime = 3.0f, bool playSound = true)
+        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true)
         {
-            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
-            {
-                messages[messages.Count - 1].LifeTime = lifeTime;
-                return;
-            }
-
-            messages.Add(new GUIMessage(message, color, position, lifeTime, alignment, false));
+            messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
             if (playSound) PlayUISound(GUISoundType.Message);
+        }
+
+        public static void ClearMessages()
+        {
+            messages.Clear();
         }
 
         public static void PlayUISound(GUISoundType soundType)

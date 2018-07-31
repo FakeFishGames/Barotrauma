@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -54,7 +55,12 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            user.AnimController.UpdateUseItem(true, item.SimPosition + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            Vector2 itemPos = item.SimPosition;
+            if (user.Submarine == null)
+            {
+                itemPos = ConvertUnits.ToSimUnits(item.WorldPosition);
+            }
+            user.AnimController.UpdateUseItem(true, itemPos + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
 
             if (user.IsKeyHit(InputType.Aim))
             {
@@ -163,7 +169,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection connection in Connections)
             {
-                Wire[] wires = Array.FindAll(connection.Wires, w => w != null);
+                Wire[] wires = connection.Wires.Where(w => w != null).ToArray();
                 msg.WriteRangedInteger(0, Connection.MaxLinked, wires.Length);
                 for (int i = 0; i < wires.Length; i++)
                 {
@@ -218,9 +224,10 @@ namespace Barotrauma.Items.Components
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                for (int j = 0; j < Connection.MaxLinked; j++)
+                int j = -1;
+                foreach (Wire existingWire in Connections[i].Wires)
                 {
-                    Wire existingWire = Connections[i].Wires[j];
+                    j++;
                     if (existingWire == null) continue;
                     
                     //existing wire not in the list of new wires -> disconnect it
@@ -269,9 +276,8 @@ namespace Barotrauma.Items.Components
                             }
                         }
                         
-                        Connections[i].Wires[j] = null;
-                    }
-                    
+                        Connections[i].SetWire(j, null);
+                    }                    
                 }
             }
 
@@ -312,7 +318,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
+            List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();
 
             foreach (Connection connection in Connections)
@@ -335,7 +341,7 @@ namespace Barotrauma.Items.Components
 
                     newWires.Add(wireComponent);
 
-                    connection.Wires[i] = wireComponent;
+                    connection.SetWire(i, wireComponent);
                     wireComponent.Connect(connection, false);
                 }
             }

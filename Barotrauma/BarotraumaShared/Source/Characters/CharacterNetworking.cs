@@ -107,10 +107,11 @@ namespace Barotrauma
         
         private void UpdateNetInput()
         {
-            if (this != Character.Controlled)
+            if (this != Controlled)
             {
                 if (GameMain.Client != null)
                 {
+#if CLIENT
                     //freeze AI characters if more than 1 seconds have passed since last update from the server
                     if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
                     {
@@ -123,6 +124,7 @@ namespace Barotrauma
                             return;
                         }
                     }
+#endif
                 }
                 else if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
                 {
@@ -201,7 +203,7 @@ namespace Barotrauma
                     AnimController.Collider.Rotation,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    SelectedCharacter == null ? (Entity)selectedConstruction : (Entity)SelectedCharacter,
+                    SelectedCharacter == null ? (Entity)SelectedConstruction : (Entity)SelectedCharacter,
                     AnimController.Anim);
 
                 memLocalState.Add(posInfo);
@@ -333,7 +335,7 @@ namespace Barotrauma
                     switch (eventType)
                     {
                         case 0:
-                            inventory.ServerRead(type, msg, c);
+                            Inventory.ServerRead(type, msg, c);
                             break;
                         case 1:
                             bool doingCPR = msg.ReadBoolean();
@@ -358,7 +360,8 @@ namespace Barotrauma
 
                             if (IsUnconscious)
                             {
-                                Kill(health.GetCauseOfDeath());
+                                var causeOfDeath = CharacterHealth.GetCauseOfDeath();
+                                Kill(causeOfDeath.First, causeOfDeath.Second);
                             }
                             break;
                     }
@@ -377,7 +380,7 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 2, 0);
-                        inventory.ClientWrite(msg, extraData);
+                        Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(0, 2, 1);
@@ -458,10 +461,10 @@ namespace Barotrauma
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                if (SelectedCharacter != null || selectedConstruction != null)
+                if (SelectedCharacter != null || SelectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : selectedConstruction.ID);
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : SelectedConstruction.ID);
                     if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
@@ -493,13 +496,13 @@ namespace Barotrauma
                 return;
             }
             
-            msg.Write(isDead);
-            if (isDead)
+            msg.Write(IsDead);
+            if (IsDead)
             {
-                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)causeOfDeath.First);
-                if (causeOfDeath.First == CauseOfDeathType.Affliction)
+                msg.WriteRangedInteger(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(causeOfDeath.Second));
+                    msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
                 }
 
                 if (AnimController?.LimbJoints == null)
@@ -526,7 +529,7 @@ namespace Barotrauma
             }
             else
             {
-                health.ServerWrite(msg);                
+                CharacterHealth.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
             }
         }

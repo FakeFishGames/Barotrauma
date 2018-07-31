@@ -30,18 +30,19 @@
       </LightComponent>
     </Steering>
 
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
-      <sound file="radarPing.ogg" type="OnUse" range="4000.0"/>
+    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
+      <sound file="sonarPing.ogg" type="OnUse" range="4000.0"/>
       <GuiFrame rect="0,0,0.5,0.7" alignment="Center" style="ItemUI" color="0.0,0.0,0.0,0.0"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
-    </Radar>
+      <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
+    </Sonar>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
+      <input name="transducer_in"/>
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
       <output name="velocity_y_out"/>
@@ -62,7 +63,7 @@
       <item name="Screwdriver"/>
     </fixrequirement>
 
-    <Radar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
+    <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="-0.1">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1000" loop="false"/>
       <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
@@ -71,16 +72,17 @@
       <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <GuiFrame rect="0,0,0.5,0.7" alignment="Center" style="ItemUI"/>
       <PingCircle texture="Content/Items/Command/pingCircle.png" origin="0.5,0.5"/>
-      <ScreenOverlay texture="Content/Items/Command/radarOverlay.png" origin="0.5,0.5"/>
-      <Blip texture="Content/Items/Command/radarBlip.png" origin="0.5,0.5"/>
-    </Radar>
+      <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5"/>
+      <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5"/>
+    </Sonar>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>
-  </Item>
+  
+</Item>
 
   <Item
     name="Status Monitor"    
@@ -106,6 +108,25 @@
       <input name="power_in"/>
       <input name="water_data_in"/>
       <input name="oxygen_data_in"/>
+    </ConnectionPanel>
+  </Item>
+    
+  <Item
+    name="Sonar Transducer"    
+    identifier="sonartransducer"
+    category="Machine"
+    spritecolor="0,0,0,1">
+
+    <!-- TODO: sonar transducer sprite -->
+    <Sprite texture="Content/Items/Command/statusMonitor.png" sourcerect="0,0,266,224" depth="0.8"/>
+
+    <SonarTransducer MinVoltage="0.5" PowerConsumption="100" canbeselected="true"/>
+
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+      <output name="data_out"/>
     </ConnectionPanel>
   </Item>
 </Items>

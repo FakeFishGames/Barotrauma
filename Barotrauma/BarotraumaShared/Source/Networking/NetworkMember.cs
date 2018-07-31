@@ -38,6 +38,7 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
+        ACHIEVEMENT,        //give the client a steam achievement
 
         FILE_TRANSFER,
 
@@ -53,7 +54,7 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
     }
 
     enum VoteType
@@ -65,13 +66,34 @@ namespace Barotrauma.Networking
         Kick
     }
 
+    enum DisconnectReason
+    {
+        Unknown,
+        Banned,
+        Kicked,
+        ServerShutdown,
+        ServerFull,
+        AuthenticationRequired,
+        SteamAuthenticationRequired,
+        SteamAuthenticationFailed,
+        SessionTaken,
+        TooManyFailedLogins,
+        NoName,
+        InvalidName,
+        NameTaken,
+        InvalidVersion,
+        MissingContentPackage,
+        IncompatibleContentPackage,
+        NotOnWhitelist,
+    }
+
     abstract partial class NetworkMember
     {
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
 
-        public NetPeer netPeer
+        public NetPeer NetPeer
         {
             get;
             protected set;
@@ -174,45 +196,7 @@ namespace Barotrauma.Networking
             }
 
 #if CLIENT
-            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
-            {
-                msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
-
-                if (!GUI.DisableHUD)
-                {
-                    inGameHUD.UpdateManually(deltaTime);            
-                    chatBox.Update(deltaTime);
-                }
-                
-                if (Character.Controlled == null || Character.Controlled.IsDead)
-                {
-                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                    GameMain.LightManager.LosEnabled = false;
-                }
-            }
-
-            //tab doesn't autoselect the chatbox when debug console is open, 
-            //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
-            {
-                if (msgBox.Selected)
-                {
-                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
-                    msgBox.Text = "";
-                    msgBox.Deselect();
-                }
-                else
-                {
-                    msgBox.Select();
-                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
-                    {
-                        msgBox.Text = "r; ";
-                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
-                    }
-                }
-            }
+            UpdateHUD(deltaTime);            
 #endif
         }
 

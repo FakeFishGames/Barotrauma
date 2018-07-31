@@ -175,6 +175,40 @@
   </Item>
 
   <Item
+    name="Adder Component"
+    identifier="addercomponent"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="false"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Outputs the sum of the received signals.">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
+
+    <AdderComponent canbeselected="true"/>
+
+    <Body width="16" height="16" density="30"/>
+
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <input name="signal_in1"/>
+      <input name="signal_in2"/>
+      <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
     name="Or Component"
     identifier="orcomponent"
     category="Electrical"
@@ -273,7 +307,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
-    <RelayComponent canbeselected = "true">
+    <RelayComponent canbeselected="true" vulnerabletoemp="false">
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 
@@ -633,7 +667,7 @@
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
 
-    <WifiComponent canbeselected = "true"/>
+    <WifiComponent canbeselected="true" MinChatMessageInterval="1.0" DiscardDuplicateChatMessages="true"/>
 
     <Body width="16" height="16" density="30"/>
 

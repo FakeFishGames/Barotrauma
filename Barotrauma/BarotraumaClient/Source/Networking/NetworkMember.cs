@@ -25,6 +25,8 @@ namespace Barotrauma.Networking
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
 
+        private float myCharacterFrameOpenState;
+
         public GUIFrame InGameHUD
         {
             get { return inGameHUD; }
@@ -44,16 +46,22 @@ namespace Barotrauma.Networking
 
         protected void SetRadioButtonColor()
         {
-            var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            chatBox.RadioButton.GetChild<GUIImage>().Color =
-                (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
-                Color.White : new Color(60, 60, 60, 255);
+            if (Character.Controlled == null || !Character.Controlled.CanSpeak)
+            {
+                chatBox.RadioButton.GetChild<GUIImage>().Color = new Color(60, 60, 60, 255);
+            }
+            else
+            {
+                var radioItem = Character.Controlled?.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                chatBox.RadioButton.GetChild<GUIImage>().Color =
+                    (radioItem != null && Character.Controlled.HasEquippedItem(radioItem) && radioItem.GetComponent<WifiComponent>().CanTransmit()) ?
+                    Color.White : new Color(60, 60, 60, 255);
+            }
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
-            string tempStr;
-            string command = ChatMessage.GetChatMessageCommand(text, out tempStr);
+            string command = ChatMessage.GetChatMessageCommand(text, out _);
             switch (command)
             {
                 case "r":
@@ -65,10 +73,18 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    if (command != "") //PMing
+                    if (Character.Controlled != null && (Character.Controlled.IsDead || !Character.Controlled.CanSpeak))
+                    {
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    }
+                    else if (command != "") //PMing
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    }
                     else
+                    {
                         textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    }
                     break;
             }
 
@@ -101,9 +117,68 @@ namespace Barotrauma.Networking
 
         public virtual void AddToGUIUpdateList()
         {
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            if (gameStarted && 
+                Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
+
+                if (Character.Controlled == null)
+                {
+                    GameMain.NetLobbyScreen.MyCharacterFrame.AddToGUIUpdateList();
+                }
+            }
+        }
+
+        public void UpdateHUD(float deltaTime)
+        {
+            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatBox.InputBox : GameMain.NetLobbyScreen.TextBox);
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            {
+                if (!GUI.DisableHUD)
+                {
+                    inGameHUD.UpdateManually(deltaTime);
+                    chatBox.Update(deltaTime);
+
+                    if (Character.Controlled == null)
+                    {
+                        myCharacterFrameOpenState = GameMain.NetLobbyScreen.MyCharacterFrameOpen ? myCharacterFrameOpenState + deltaTime * 5 : myCharacterFrameOpenState - deltaTime * 5;
+                        myCharacterFrameOpenState = MathHelper.Clamp(myCharacterFrameOpenState, 0.0f, 1.0f);
+
+                        var myCharFrame = GameMain.NetLobbyScreen.MyCharacterFrame;
+                        int padding = GameMain.GraphicsWidth - myCharFrame.Parent.Rect.Right;
+
+                        myCharFrame.RectTransform.AbsoluteOffset =
+                            Vector2.SmoothStep(new Vector2(-myCharFrame.Rect.Width - padding, 0.0f), new Vector2(-padding, 0), myCharacterFrameOpenState).ToPoint();
+                    }
+                }
+                if (Character.Controlled == null || Character.Controlled.IsDead)
+                {
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    GameMain.LightManager.LosEnabled = false;
+                }
+            }
+
+
+            //tab doesn't autoselect the chatbox when debug console is open, 
+            //because tab is used for autocompleting console commands
+            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
+                !DebugConsole.IsOpen && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
+            {
+                if (msgBox.Selected)
+                {
+                    if (msgBox == chatBox.InputBox) chatBox.HideTimer = 0.0f;
+                    msgBox.Text = "";
+                    msgBox.Deselect();
+                }
+                else
+                {
+                    msgBox.Select();
+                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                    {
+                        msgBox.Text = "r; ";
+                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
+                    }
+                }
             }
         }
 
@@ -144,7 +219,6 @@ namespace Barotrauma.Networking
                         new Vector2(120.0f, 10),
                         respawnInfo, Color.White, null, 0, GUI.SmallFont);
                 }
-
             }
         }
 

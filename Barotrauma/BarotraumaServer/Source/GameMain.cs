@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
+using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -41,13 +42,7 @@ namespace Barotrauma
         //null screens because they are not implemented by the server,
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
-        public static readonly Screen MainMenuScreen = UnimplementedScreen.Instance;
-        public static readonly Screen LobbyScreen = UnimplementedScreen.Instance;
-
-        public static readonly Screen ServerListScreen = UnimplementedScreen.Instance;
-
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
-        public static readonly Screen CharacterEditorScreen = UnimplementedScreen.Instance;
         
         public static bool ShouldRun = true;
 
@@ -73,8 +68,10 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
+            
             SteamManager.Initialize();
+            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
+            
             GameScreen = new GameScreen();
         }
 
@@ -82,6 +79,7 @@ namespace Barotrauma
         {
             MissionPrefab.Init();
             MapEntityPrefab.Init();
+            MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
 
@@ -89,6 +87,7 @@ namespace Barotrauma
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            LevelObjectPrefab.LoadAll();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
 
             GameModePreset.Init();
@@ -131,7 +130,6 @@ namespace Barotrauma
 
         public void CloseServer()
         {
-            SteamManager.ShutDown();
             Server.Disconnect();
             Server = null;
         }
@@ -178,7 +176,6 @@ namespace Barotrauma
             stopwatch.Stop();
 
             CloseServer();
-
         }
         
         public void ProcessInput()

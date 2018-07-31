@@ -155,7 +155,7 @@
     name="Railgun Shell"
     identifier="railgunshell"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
 
     <Price locationtype="Outpost" buyprice="300"/>
     <Price locationtype="Military" buyprice="200"/>
@@ -196,7 +196,7 @@
     name="Nuclear Shell"
     identifier="nuclearshell"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
     
     <Price locationtype="Military" buyprice="500"/>
     

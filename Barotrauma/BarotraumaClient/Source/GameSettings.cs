@@ -138,6 +138,41 @@ namespace Barotrauma
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("LosEffect"));
+            var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+            losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
+            losModeDD.AddItem(TextManager.Get("LosModeTransparent"), LosMode.Transparent);
+            losModeDD.AddItem(TextManager.Get("LosModeOpaque"), LosMode.Opaque);
+            losModeDD.SelectItem(GameMain.Config.LosMode);
+            losModeDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                GameMain.Config.LosMode = (LosMode)guiComponent.UserData;
+                //don't allow changing los mode when playing as a client
+                if (GameMain.Client == null)
+                {
+                    GameMain.LightManager.LosMode = GameMain.Config.LosMode;
+                }
+                return true;
+            };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ChromaticAberration"))
+            {
+                Selected = ChromaticAberrationEnabled,
+                OnSelected = (tickBox) =>
+                {
+                    ChromaticAberrationEnabled = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+            
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("ContentPackages"));
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
@@ -339,6 +374,8 @@ namespace Barotrauma
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredText"));
             }
+
+            if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
 
             return true;
         }

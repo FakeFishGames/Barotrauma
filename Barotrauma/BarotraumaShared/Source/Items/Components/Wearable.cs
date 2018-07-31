@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT
-            PlaySound(ActionType.OnWearing, picker.WorldPosition);
+            PlaySound(ActionType.OnWearing, picker.WorldPosition, picker);
 #endif
         }
 

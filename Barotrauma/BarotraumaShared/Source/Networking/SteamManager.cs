@@ -1,4 +1,5 @@
-﻿using Facepunch.Steamworks;
+﻿using Barotrauma.Networking;
+using Facepunch.Steamworks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +22,7 @@ namespace Barotrauma.Steam
 
         const uint AppID = 602960;
         
-        private Client client;
+        private Facepunch.Steamworks.Client client;
         private Server server;
 
         private static SteamManager instance;
@@ -53,13 +54,22 @@ namespace Barotrauma.Steam
         {
             try
             {
-                client = new Client(AppID);
+                client = new Facepunch.Steamworks.Client(AppID);
                 isInitialized = client.IsSubscribed && client.IsValid;
 
                 if (isInitialized)
                 {
                     DebugConsole.Log("Logged in as " + client.Username + " (SteamID " + client.SteamId + ")");
                 }
+            }
+            catch (DllNotFoundException e)
+            {
+                isInitialized = false;
+#if CLIENT
+                new Barotrauma.GUIMessageBox("Error", "Initializing Steam client failed (steam_api64.dll not found).");
+#else
+                DebugConsole.ThrowError("Initializing Steam client failed (steam_api64.dll not found).", e);
+#endif
             }
             catch (Exception e)
             {
@@ -69,6 +79,19 @@ namespace Barotrauma.Steam
 #else
                 DebugConsole.ThrowError("Initializing Steam client failed.", e);
 #endif
+            }
+
+            if (!isInitialized)
+            {
+                try
+                {
+
+                    Facepunch.Steamworks.Client.Instance.Dispose();
+                }
+                catch (Exception e)
+                {
+                    if (GameSettings.VerboseLogging) DebugConsole.ThrowError("Disposing Steam client failed.", e);
+                }
             }
         }
 
@@ -88,13 +111,13 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            instance.client.Achievements.Trigger(achievementName);
-            return true;
+            DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
+            return instance.client.Achievements.Trigger(achievementName);
         }
 
 #region Connecting to servers
 
-        public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action onFinished)
+        public static bool GetServers(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -109,17 +132,17 @@ namespace Barotrauma.Steam
             };
 
             var query = instance.client.ServerList.Internet(filter);
-            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound); };
+            query.OnUpdate += () => { UpdateServerQuery(query, onServerFound, onServerRulesReceived); };
             query.OnFinished = onFinished;
 
             var localQuery = instance.client.ServerList.Local(filter);
-            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound); };
+            localQuery.OnUpdate += () => { UpdateServerQuery(localQuery, onServerFound, onServerRulesReceived); };
             localQuery.OnFinished = onFinished;
 
             return true;
         }
 
-        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound)
+        private static void UpdateServerQuery(ServerList.Request query, Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived)
         {
             foreach (ServerList.Server s in query.Responded)
             {
@@ -131,13 +154,42 @@ namespace Barotrauma.Steam
                     IP = s.Address.ToString(),
                     PlayerCount = s.Players,
                     MaxPlayers = s.MaxPlayers,
-                    HasPassword = s.Passworded
+                    HasPassword = s.Passworded,
                 };
                 s.FetchRules();
-                s.OnReceivedRules += (bool asd) =>
+                s.OnReceivedRules += (_) =>
                 {
-                    DebugConsole.Log(string.Join(", ", s.Rules.Values));
+                    if (s.Rules.ContainsKey("message")) serverInfo.ServerMessage = s.Rules["message"];
+                    if (s.Rules.ContainsKey("version")) serverInfo.GameVersion = s.Rules["version"];
+                    if (s.Rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(s.Rules["contentpackage"].Split(','));
+                    if (s.Rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(s.Rules["contentpackagehash"].Split(','));
+                    if (s.Rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = s.Rules["usingwhitelist"]=="True";
+                    if (s.Rules.ContainsKey("modeselectionmode"))
+                    {
+                        if (Enum.TryParse(s.Rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+                    }
+                    if (s.Rules.ContainsKey("subselectionmode"))
+                    {
+                        if (Enum.TryParse(s.Rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+                    }
+                    if (s.Rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = s.Rules["allowspectating"] == "True";
+                    if (s.Rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = s.Rules["allowrespawn"] == "True";
+                    if (s.Rules.ContainsKey("traitors"))
+                    {
+                        if (Enum.TryParse(s.Rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+                    }
+
+
+
+                    if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count)
+                    {
+                        //invalid contentpackage info
+                        serverInfo.ContentPackageNames.Clear();
+                        serverInfo.ContentPackageHashes.Clear();
+                    }
+                    onServerRulesReceived(serverInfo);
                 };
+
                 onServerFound(serverInfo);
             }
             foreach (ServerList.Server s in query.Unresponsive)
@@ -211,9 +263,19 @@ namespace Barotrauma.Steam
             instance.server.ServerName = server.Name;
             instance.server.MaxPlayers = server.MaxPlayers;
             instance.server.Passworded = server.HasPassword;
+            Instance.server.SetKey("message", GameMain.NetLobbyScreen.ServerMessageText);
             Instance.server.SetKey("version", GameMain.Version.ToString());
             Instance.server.SetKey("contentpackage", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.Name)));
             Instance.server.SetKey("contentpackagehash", string.Join(",", GameMain.Config.SelectedContentPackages.Select(cp => cp.MD5hash.Hash)));
+            Instance.server.SetKey("usingwhitelist", (server.WhiteList != null && server.WhiteList.Enabled).ToString());
+            Instance.server.SetKey("modeselectionmode", server.ModeSelectionMode.ToString());
+            Instance.server.SetKey("subselectionmode", server.SubSelectionMode.ToString());
+            Instance.server.SetKey("allowspectating", server.AllowSpectating.ToString());
+            Instance.server.SetKey("allowrespawn", server.AllowRespawn.ToString());
+            Instance.server.SetKey("traitors", server.TraitorsEnabled.ToString());
+            Instance.server.SetKey("gamestarted", server.GameStarted.ToString());
+            Instance.server.SetKey("gamemode", server.GameMode);
+
 #if SERVER
             instance.server.DedicatedServer = true;
 #endif
@@ -554,12 +616,14 @@ namespace Barotrauma.Steam
         
         #endregion
 
-        public static void Update()
+        public static void Update(float deltaTime)
         {
             if (instance == null || !instance.isInitialized) return;
             
             instance.client?.Update();
             instance.server?.Update();
+
+            SteamAchievementManager.Update(deltaTime);
         }
 
         public static void ShutDown()

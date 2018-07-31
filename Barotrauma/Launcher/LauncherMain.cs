@@ -237,7 +237,7 @@ namespace Launcher
 
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
             
-            GUI.Draw((float)(gameTime.ElapsedGameTime.TotalMilliseconds / 1000.0f), spriteBatch);
+            GUI.Draw(null, spriteBatch);
 
             spriteBatch.End();
 

@@ -8,6 +8,12 @@ namespace Barotrauma
 {
     partial class LevelObjectPrefab : ISerializableEntity
     {
+        private static List<LevelObjectPrefab> list = new List<LevelObjectPrefab>();
+        public static List<LevelObjectPrefab> List
+        {
+            get { return list; }
+        }
+
         public class ChildObject
         {
             public readonly List<string> AllowedNames;
@@ -17,7 +23,7 @@ namespace Barotrauma
             {
                 AllowedNames = element.GetAttributeStringArray("names", new string[0]).ToList();
                 MinCount = element.GetAttributeInt("mincount", 1);
-                MinCount = element.GetAttributeInt("maxcount", 1);
+                MaxCount = Math.Max(element.GetAttributeInt("maxcount", 1), MinCount);
             }
         }
 
@@ -42,17 +48,36 @@ namespace Barotrauma
             private set;
         }
 
+        public DeformableSprite DeformableSprite
+        {
+            get;
+            private set;
+        }
+
         public readonly Vector2 Scale;
 
         public SpawnPosType SpawnPos;
 
-        public readonly List<XElement> LevelTriggerElements;
+        public readonly XElement Config;
 
+        public readonly List<XElement> LevelTriggerElements;
+        
         /// <summary>
         /// Overrides the commonness of the object in a specific level type. 
         /// Key = name of the level type, value = commonness in that level type.
         /// </summary>
         public Dictionary<string, float> OverrideCommonness;
+
+        public XElement PhysicsBodyElement
+        {
+            get;
+            private set;
+        }
+        public int PhysicsBodyTriggerIndex
+        {
+            get;
+            private set;
+        }
 
         [Serialize("0.0,1.0", false)]
         public Vector2 DepthRange
@@ -191,8 +216,44 @@ namespace Barotrauma
             return "LevelObjectPrefab (" + Name + ")";
         }
 
+        public static void LoadAll()
+        {
+            var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
+            if (files.Count() > 0)
+            {
+                foreach (var file in files)
+                {
+                    LoadConfig(file);
+                }
+            }
+            else
+            {
+                LoadConfig("Content/LevelObjects/LevelObject/Prefabs.xml");
+            }
+        }
+
+        private static void LoadConfig(string configPath)
+        {
+            try
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(configPath);
+                if (doc == null || doc.Root == null) return;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    list.Add(new LevelObjectPrefab(element));
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError(String.Format("Failed to load LevelObject prefabs from {0}", configPath), e);
+            }
+        }
+
         public LevelObjectPrefab(XElement element)
         {
+            Config = element;
+
             Name = element.Name.ToString();
 
             ChildObjects = new List<ChildObject>();
@@ -220,12 +281,31 @@ namespace Barotrauma
             
             OverrideCommonness = new Dictionary<string, float>();
 
+            LoadElements(element, -1);
+
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            InitProjSpecific(element);
+
+            //use the maximum width of the sprite as the minimum surface width if no value is given
+            if (!element.Attributes("minsurfacewidth").Any())
+            {
+                if (Sprite != null) MinSurfaceWidth = Sprite.size.X * Scale.Y;
+                if (DeformableSprite != null) MinSurfaceWidth = Math.Max(MinSurfaceWidth, DeformableSprite.Size.X * Scale.Y);
+            }
+        }
+
+        private void LoadElements(XElement element, int parentTriggerIndex)
+        {
             foreach (XElement subElement in element.Elements())
             {
-                switch(subElement.Name.ToString().ToLowerInvariant())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement);
+                        break;
+                    case "deformablesprite":
+                        DeformableSprite = new DeformableSprite(subElement);
                         break;
                     case "overridecommonness":
                         string levelType = subElement.GetAttributeString("leveltype", "");
@@ -236,37 +316,31 @@ namespace Barotrauma
                         break;
                     case "leveltrigger":
                     case "trigger":
-                        LevelTriggerElements.Add(subElement);
                         OverrideProperties.Add(null);
-                        foreach (XElement overridePropertiesElement in subElement.Elements())
-                        {
-                            if (overridePropertiesElement.Name.ToString().ToLowerInvariant() == "overrideproperties")
-                            {
-                                var propertyOverride = new LevelObjectPrefab(overridePropertiesElement);
-                                OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
-                                if (propertyOverride.Sprite == null) propertyOverride.Sprite = Sprite;
-
-                                break;
-                            }
-                        }
+                        LevelTriggerElements.Add(subElement);
+                        LoadElements(subElement, LevelTriggerElements.Count - 1);
                         break;
                     case "childobject":
                         ChildObjects.Add(new ChildObject(subElement));
                         break;
+                    case "overrideproperties":
+                        var propertyOverride = new LevelObjectPrefab(subElement);
+                        OverrideProperties[OverrideProperties.Count - 1] = propertyOverride;
+                        if (propertyOverride.Sprite == null && propertyOverride.DeformableSprite == null)
+                        {
+                            propertyOverride.Sprite = Sprite;
+                            propertyOverride.DeformableSprite = DeformableSprite;
+                        }
+                        break;
+                    case "body":
+                    case "physicsbody":
+                        PhysicsBodyElement = subElement;
+                        PhysicsBodyTriggerIndex = parentTriggerIndex;
+                        break;
                 }
             }
-
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-
-            InitProjSpecific(element);
-
-            //use the maximum width of the sprite as the minimum surface width if no value is given
-            if (!element.Attributes("minsurfacewidth").Any() && Sprite != null)
-            {
-                MinSurfaceWidth = Sprite.size.X * Scale.Y;
-            }
         }
-
+        
         partial void InitProjSpecific(XElement element);
 
         public float GetCommonness(string levelType)

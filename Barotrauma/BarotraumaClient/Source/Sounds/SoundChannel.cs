@@ -251,7 +251,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public SoundChannel(Sound sound,float gain,Vector3? position,float near,float far,string category)
+        public SoundChannel(Sound sound, float gain, Vector3? position, float near, float far, string category, bool muffle = false)
         {
             Sound = sound;
 
@@ -279,7 +279,7 @@ namespace Barotrauma.Sounds
                         throw new Exception(sound.Filename + " has an invalid buffer!");    
                     }
 
-                    uint alBuffer = sound.Owner.GetCategoryMuffle(category) ? sound.ALMuffledBuffer : sound.ALBuffer;
+                    uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
                     AL.BindBufferToSource(sound.Owner.GetSourceFromIndex(ALSourceIndex), alBuffer);
                     alError = AL.GetError();
                     if (alError != ALError.NoError)
@@ -452,12 +452,14 @@ namespace Barotrauma.Sounds
                         {
                             throw new Exception("Failed to unqueue buffers from streamed source: " + AL.GetErrorString(alError));
                         }
+                        System.Diagnostics.Debug.WriteLine("!startedplaying, "+buffersToUnqueue+", "+unqueuedBuffers.Length);
                     }
                     else
                     {
                         startedPlaying = false;
                         buffersToUnqueue = 4;
                         unqueuedBuffers = (int[])streamBuffers.Clone();
+                        System.Diagnostics.Debug.WriteLine("startedplaying, " + buffersToUnqueue + ", " + unqueuedBuffers.Length);
                     }
 
                     for (int i = 0; i < buffersToUnqueue; i++)

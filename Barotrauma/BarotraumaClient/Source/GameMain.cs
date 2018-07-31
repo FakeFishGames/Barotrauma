@@ -11,15 +11,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using GameAnalyticsSDK.Net;
 
 namespace Barotrauma
 {
     class GameMain : Game
     {
         public static bool ShowFPS = false;
+        public static bool ShowPerf = false;
         public static bool DebugDraw;
 
-        public static FrameCounter FrameCounter;
+        public static PerformanceCounter PerformanceCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
@@ -140,18 +142,18 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
-
+            
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
 
-            FrameCounter = new FrameCounter();
+            PerformanceCounter = new PerformanceCounter();
 
             IsFixedTimeStep = false;
 
             Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
-
+            
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
@@ -244,13 +246,44 @@ namespace Barotrauma
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
+        private void InitUserStats()
+        {
+            if (GameSettings.ShowUserStatisticsPrompt)
+            {
+                var userStatsPrompt = new GUIMessageBox(
+                    "Do you want to help us make Barotrauma better?",
+                    "Do you allow Barotrauma to send usage statistics and error reports to the developers? The data is anonymous, " +
+                    "does not contain any personal information and is only used to help us diagnose issues and improve Barotrauma.",
+                    new string[] { "Yes", "No" });
+                userStatsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    GameSettings.ShowUserStatisticsPrompt = false;
+                    GameSettings.SendUserStatistics = true;
+                    GameAnalyticsManager.Init();
+                    return true;
+                };
+                userStatsPrompt.Buttons[0].OnClicked += userStatsPrompt.Close;
+                userStatsPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                {
+                    GameSettings.ShowUserStatisticsPrompt = false;
+                    GameSettings.SendUserStatistics = false;
+                    return true;
+                };
+                userStatsPrompt.Buttons[1].OnClicked += userStatsPrompt.Close;
+            }
+            else if (GameSettings.SendUserStatistics)
+            {
+                GameAnalyticsManager.Init();
+            }
+        }
+
         private IEnumerable<object> Load()
         {
             if (GameSettings.VerboseLogging)
             {
                 DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             }
-
+            
             SoundManager = new Sounds.SoundManager();
             SoundManager.SetCategoryGainMultiplier("default", Config.SoundVolume);
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume);
@@ -271,6 +304,8 @@ namespace Barotrauma
                 DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
             }
 
+            InitUserStats();
+
         yield return CoroutineStatus.Running;
 
             LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
@@ -286,6 +321,7 @@ namespace Barotrauma
             MissionPrefab.Init();
             MapEntityPrefab.Init();
             Tutorials.Tutorial.Init();
+            MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
@@ -357,6 +393,7 @@ namespace Barotrauma
 
             ParticleManager = new ParticleManager(GameScreen.Cam);
             ParticleManager.LoadPrefabs();
+            LevelObjectPrefab.LoadAll();
             DecalManager = new DecalManager();
         yield return CoroutineStatus.Running;
 
@@ -399,6 +436,7 @@ namespace Barotrauma
         {
             Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
+            int updateIterations = (int)Math.Floor(Timing.Accumulator / Timing.Step);
             if (Timing.Accumulator > Timing.Step * 6.0)
             {
                 //if the game's running too slowly then we have no choice
@@ -412,6 +450,9 @@ namespace Barotrauma
 
             while (Timing.Accumulator >= Timing.Step)
             {
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
@@ -483,9 +524,14 @@ namespace Barotrauma
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
-                SteamManager.Update();
+                SteamManager.Update((float)Timing.Step);
 
                 Timing.Accumulator -= Timing.Step;
+
+                sw.Stop();
+                PerformanceCounter.AddElapsedTicks("Update total", sw.ElapsedTicks);
+                PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+                PerformanceCounter.UpdateIterationsGraph.Update(updateIterations);
             }
 
             if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
@@ -497,9 +543,12 @@ namespace Barotrauma
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
-            FrameCounter.Update(deltaTime);
+            PerformanceCounter.Update(deltaTime);
 
             if (loadingScreenOpen)
             {
@@ -510,13 +559,16 @@ namespace Barotrauma
                 Screen.Selected.Draw(deltaTime, base.GraphicsDevice, spriteBatch);
             }
 
-            if (!DebugDraw) return;
-            if (GUI.MouseOn != null)
+            if (DebugDraw && GUI.MouseOn != null)
             {
                 spriteBatch.Begin();
                 GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
                 spriteBatch.End();
             }
+
+            sw.Stop();
+            PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
+            PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
         }
 
         static bool waitForKeyHit = true;
@@ -531,9 +583,8 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
-
             SteamManager.ShutDown();
-
+            if (GameSettings.SendUserStatistics) GameAnalytics.OnStop();
             base.OnExiting(sender, args);
         }
     }

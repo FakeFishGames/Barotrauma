@@ -17,7 +17,7 @@
     identifier="railgunshellrack"
     pickdistance="120">
 
-    <Sprite texture="content/items/weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
+    <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
 
     <ItemContainer  hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
       <Containable name="Railgun Shell"/>
@@ -31,7 +31,7 @@
     linkable="true"
     pickdistance="150">
 
-    <Sprite texture="ff_medicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
+    <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>

@@ -101,14 +101,14 @@ namespace Barotrauma
 
         public Camera()
         {
-            zoom = 1.0f;
+            zoom = prevZoom = 1.0f;
             rotation = 0.0f;
             position = Vector2.Zero;
 
             CreateMatrices();
             GameMain.Instance.OnResolutionChanged += () => { CreateMatrices(); };
 
-            UpdateTransform();
+            UpdateTransform(false);
         }
 
         public Vector2 TargetPos
@@ -153,11 +153,11 @@ namespace Barotrauma
 
             if (Character.Controlled == null)
             {
-                GameMain.SoundManager.ListenerPosition = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, 0.0f);
+                GameMain.SoundManager.ListenerPosition = new Vector3(WorldViewCenter.X, WorldViewCenter.Y, -(100.0f / zoom));
             }
             else
             {
-                GameMain.SoundManager.ListenerPosition = new Vector3(Character.Controlled.WorldPosition.X, Character.Controlled.WorldPosition.Y, 0.0f);
+                GameMain.SoundManager.ListenerPosition = new Vector3(Character.Controlled.WorldPosition.X, Character.Controlled.WorldPosition.Y, -(100.0f / zoom));
             }
             
 

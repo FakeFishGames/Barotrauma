@@ -15,6 +15,11 @@
   <sound file="Content/Characters/Mantis/idle2.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Mantis/idle3.ogg" state="None" range="500"/>
 
+  <Inventory slots="Any, Any" accessiblewhenalive="false">
+    <Item name="Mantis Shell"/>
+    <Item name="Swim Bladder"/>
+  </Inventory>
+  
   <ai
     combatstrength="250"
     attackcooldown="1.0"

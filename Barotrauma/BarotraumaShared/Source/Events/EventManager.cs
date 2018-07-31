@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     partial class EventManager
     {
+        const float IntensityUpdateInterval = 5.0f;
+
         private List<ScriptedEvent> events;
 
         private Level level;
@@ -122,7 +124,11 @@ namespace Barotrauma
             {
                 ScriptedEventSet eventSet = selectedEventSets[i];
 
-                if ((Submarine.MainSub == null || Submarine.MainSub.WorldPosition.X / level.Size.X < eventSet.MinDistanceTraveled) &&
+                float distanceTraveled = MathHelper.Clamp(
+                    (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
+                    0.0f, 1.0f);
+
+                if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
                     roundDuration < eventSet.MinMissionTime)
                 {
                     continue;
@@ -159,85 +165,18 @@ namespace Barotrauma
                 }
             }
         }
-
-        /*private void CreateInitialEvents()
-        {
-            if (GameMain.Client != null) return;
-
-            System.Diagnostics.Debug.Assert(events.Count == 0);
-
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
-
-            if (GameSettings.VerboseLogging)
-            {
-                DebugConsole.NewMessage("Generating events (seed: " + level.Seed + ")", Color.White);
-            }
-
-            events.AddRange(ScriptedEvent.GenerateInitialEvents(rand, level));
-        }*/
-
-        /*private void CreateRandomEvent()
-        {
-            List<ScriptedEventPrefab> allowedEvents = new List<ScriptedEventPrefab>();
-
-            foreach (ScriptedEventPrefab prefab in ScriptedEventPrefab.List)
-            {
-                float commonness = prefab.GetMidRoundCommonness(level);
-                if (commonness <= 0.0f) continue;
-                
-                allowedEvents.Add(prefab);
-            }
-
-            allowedEvents.RemoveAll(e => 
-                e.Difficulty < settings.MinEventDifficulty || 
-                e.Difficulty > settings.MaxEventDifficulty);
-
-            if (allowedEvents.Count == 0)
-            {
-                DebugConsole.ThrowError("EventManager failed to create a random event - no allowed events found for the level type \"" + level.GenerationParams.Name + "\"!");
-                return;
-            }
-            
-            allowedEvents.RemoveAll(e =>
-            {
-                var tempInstance = e.CreateInstance();
-                return !tempInstance.CanAffectSubImmediately(level);
-            });
-
-            float totalCommonness = allowedEvents.Sum(e => e.GetMidRoundCommonness(level));
-            float randomNumber = Rand.Range(0.0f, totalCommonness, Rand.RandSync.Server);
-            ScriptedEventPrefab selectedEvent = null;
-            foreach (ScriptedEventPrefab prefab in allowedEvents)
-            {
-                float commonness = prefab.GetMidRoundCommonness(level);
-                if (randomNumber <= commonness)
-                {
-                    selectedEvent = prefab;
-                    break;
-                }
-                randomNumber -= commonness;
-            }
-
-            if (selectedEvent == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError("EventManager failed to create a random event - no event could be made to affect the submarine immediately (no spawnpositions nearby?)");
-#endif
-                return;
-            }
-
-            ScriptedEvent eventInstance = selectedEvent.CreateInstance();
-            eventInstance.Init(true);
-            events.Add(eventInstance);
-        }*/
         
         public void Update(float deltaTime)
         {
-            if (GameMain.Client != null || !Enabled) return;
+            if (!Enabled) return;
+
+            //clients only calculate the intensity but don't create any events
+            //(the intensity is used for controlling the background music)
+            CalculateCurrentIntensity(deltaTime);
+            
+            if (GameMain.Client != null) return;
 
             roundDuration += deltaTime;
-
-            CalculateCurrentIntensity(deltaTime);
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
             if (eventCoolDown > 0.0f)
@@ -265,7 +204,7 @@ namespace Barotrauma
         {
             intensityUpdateTimer -= deltaTime;
             if (intensityUpdateTimer > 0.0f) return;
-            intensityUpdateTimer = settings.IntensityUpdateInterval;
+            intensityUpdateTimer = IntensityUpdateInterval;
 
             // crew health --------------------------------------------------------
 
@@ -274,7 +213,8 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead) continue;
-                if (character.AIController is HumanAIController || character.IsRemotePlayer || character == Character.Controlled)
+                if ((character.AIController is HumanAIController || character.IsRemotePlayer ||  character == Character.Controlled) &&
+                    (GameMain.NetworkMember?.Character == null || GameMain.NetworkMember.Character.TeamID == character.TeamID))
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
@@ -344,12 +284,12 @@ namespace Barotrauma
             if (targetIntensity > currentIntensity)
             {
                 //50 seconds for intensity to go from 0.0 to 1.0
-                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * settings.IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * IntensityUpdateInterval, targetIntensity);
             }
             else
             {
                 //400 seconds for intensity to go from 1.0 to 0.0
-                currentIntensity = MathHelper.Max(0.0025f * settings.IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
             }
         }
     }

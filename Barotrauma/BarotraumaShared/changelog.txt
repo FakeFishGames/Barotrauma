@@ -1,4 +1,122 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.9
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a bug in docking port syncing that caused entity ID mismatches and "unknown object header" errors.
+- Fixed a bug that occasionally caused entity ID mismatches and "unknown object header" errors when 
+a respawn shuttle got damaged before returning back to the starting location.
+- Fixed error messages when attempting to use the console commands "\" or "\n".
+- Fixed clients not syncing the position of their controlled character with the server when dead/unconscious.
+- Fixed swimming ragdolls "dropping down" if the server freezes them due to a connection error.
+- Fixed excessive "attempted to apply invalid velocity to a physics body" console errors.
+- Fixed crashing when selecting a level seed that has no background portrait defined.
+- Fixed crashing if the player clicks yes on the "download sub from the server" prompt after 
+returning to the main menu.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.8
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "invalid cursor position" errors when a client attempts to use console commands in the server lobby.
+- Fixed crashing if a character takes damage during the first frame of a round.
+- Fixed crashing if suitable prop items are not found when generating alien ruins.
+- Some ragdoll and physics optimization.
+- More automatic error logging to help with debugging.
+- Fixed errors when attempting to change the output type of an oscillator in multiplayer.
+- Campaign store menu includes a quantity field which lets the player select how many items to buy instead
+of showing each item individually.
+- Fixed clients not seeing vote counts on submarines that the client doesn't have.
+- Fixed crashing if a player attempts to use an item on themselves and the item has a status effect that
+causes the item to be removed.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.7
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashes when trying to load submarines in the sub editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.6
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a memory leak in submarine preview images which caused crashes in the server lobby screen and
+submarine editor.
+- Fixed clients not seeing the "vote to end the round" tickbox if they don't have a character assigned to
+them (despite the server allowing voting if the client has had a character earlier during the round).
+- Fixed clients being able to crash servers if they had the permission to use console commands that
+use the position of the client's cursor.
+- Fixed crashing if a wire is used by a statuseffect (for example if a detonator tries to trigger a wire
+contained inside it).
+- Fixed GameAnalytics being stopped if the dedicated server is restarted with the "restart" console command.- 
+- Fixed wiring items outside the submarine.
+- Fixed chatbox discarding the second chat message instead of the first one when the maximum number of
+chat messages is reached.
+- Some error checking and debug logging to diagnose and prevent a crash caused by doors pushing characters away.
+- The spawnitem command doesn't require multi-word item names to be surrounded with quotes anymore.
+- Added the option to make powered items immune to electromagnetic pulses.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.5
+---------------------------------------------------------------------------------------------------------
+
+- Added the option to automatically send crash reports and anonymous usage statistics to the developers.
+The usage statistics include information such as the selected game mode, selected submarine, causes of
+death and mission outcomes. When the game is started for the first time, a message box prompts you to
+select whether you want to send the information or not.
+- Fixed a bug that caused clients to get desynced when purchasing items in the multiplayer campaign.
+- Added a signal component that adds the received signals together.
+- Devices outside the submarine can be rewired in-game (not just in the sub editor).
+- Fixed a crash caused by vision obstruction logic.
+- Fixed clients being unable to give non-permanent or range bans.
+- Clients are allowed to vote to end the round if they have spawned at some point during the round, 
+even if the character they controlled doesn't exist anymore.
+- Dedicated servers can give clients the permission to use console commands that aren't available in
+for dedicated server (e.g. los, lights, control)
+- Banip, banid & kickid commands can be used by clients now (if they have the permission to do so).
+- Spawnitem [item] inventory, ragdoll and kill commands target the character of the client using
+the command instead of the host's character.
+- Spawnitem can be used to spawn items in the inventory of a specific character.
+- Fixed explosions with an EMP value only damaging reactors (when they should only ignore reactors).
+- Fire can only explode oxygen tanks that are >25% full (otherwise the condition of the tank just drops 
+to 0). Prevents infinite explosions when an oxygen generator is on fire with oxygen tanks inside.
+- Fixed projectiles with a damage range of 0 not applying their structuredamage value to structures.
+- Items with a physics body can be used as pumps, so now it's possible to make portable items that remove
+water from inside the sub.
+- Fixed traitor ratio setting being ignored and the minimum number of traitors being 2.
+- Fixed crashes caused by custom characters with no AI configuration.
+- Character head and gender settings are saved.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients getting assigned random jobs regardless of job preferences.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed server-side crashes during job assignment if a client hasn't sent any job preferences.
+- Fixed crashing if the selected respawn shuttle doesn't have a navigation terminal or any other item 
+with a Steering component.
+- Fixed InWater status effects triggering when an item is fabricated, causing issues such as 
+water-sensitive items to breaking/exploding immediately after being fabricated.
+- Fixed motion sensors sending out signals even if the output is set to nothing.
+- Fixed crashing when a round starts if the sub has been saved while a fabricator was running. 
+- Fixed explosives not detonating inside railgun shells.
+- Fixed characters spawning inside the respawn shuttle if no suitable spawnpoint is found inside the
+main submarine.
+- Fixed a timing bug in the dedicated server which prevented clients from ever timing out, AI characters
+from fixing leaks and reactor usage from being logged.
+- Changed the format of the server log filenames to make them more easily sortable.
+- Increased assistant's skill levels.
+- Added oxygenite tanks.
+- Added a rearward facing variant of railgun controller.
+- Added railgun loader variants with 1 shell capacity.
+- Added railgun shell rack.
+- Decreased the skill level requirements for fixing docking ports.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.2
 ---------------------------------------------------------------------------------------------------------
 

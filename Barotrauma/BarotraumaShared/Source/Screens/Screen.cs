@@ -25,6 +25,7 @@
                 selected.Deselect();
 #if CLIENT
                 GUI.KeyboardDispatcher.Subscriber = null;
+                GUI.ScreenChanged = true;
 #endif
             }
             selected = this;

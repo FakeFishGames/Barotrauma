@@ -266,6 +266,7 @@ namespace Barotrauma.Items.Components
                 Vector2 hitPos = ConvertUnits.ToDisplayUnits(pickedPosition);
                 if (targetCharacter.Submarine != null) hitPos += targetCharacter.Submarine.Position;
 
+                targetCharacter.LastDamageSource = item;
                 targetCharacter.AddDamage(hitPos,
                     new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 #if CLIENT
@@ -280,6 +281,7 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
+                targetLimb.character.LastDamageSource = item;
                 targetLimb.character.DamageLimb(targetLimb.WorldPosition, targetLimb, 
                     new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(-LimbFixAmount * degreeOfSuccess) }, 0.0f, false, 0.0f, user);
 
@@ -391,7 +393,7 @@ namespace Barotrauma.Items.Components
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.UseTarget))
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(actionType, deltaTime, item, targets);
                 }

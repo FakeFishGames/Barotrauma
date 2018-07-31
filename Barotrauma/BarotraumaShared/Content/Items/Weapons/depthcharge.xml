@@ -39,7 +39,7 @@
     name="Depth Charge Shell"
     identifier="depthchargeshell"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -71,7 +71,7 @@
     name="Nuclear Depth Charge"
     identifier="nucleardepthcharge"
     category="Misc"
-    radarsize="5">
+    sonarsize="5">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
