@@ -95,6 +95,16 @@ namespace Barotrauma.Items.Components
                     foreach (WifiComponent wifiComp in receivers)
                     {
                         wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender);
+                        if (source != null)
+                        {
+                            foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
+                            {
+                                if (!source.LastSentSignalRecipients.Contains(receiverItem))
+                                {
+                                    source.LastSentSignalRecipients.Add(receiverItem);
+                                }
+                            }
+                        }
                     }
                     break;
             }

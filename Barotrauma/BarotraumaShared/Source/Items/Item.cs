@@ -268,7 +268,16 @@ namespace Barotrauma
                 return IsInWater();
             }
         }
-        
+
+        /// <summary>
+        /// A list of items the last signal sent by this item went through
+        /// </summary>
+        public List<Item> LastSentSignalRecipients
+        {
+            get;
+            private set;
+        } = new List<Item>();
+
         public ItemPrefab Prefab
         {
             get { return prefab; }
@@ -1011,9 +1020,10 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
         {
+            LastSentSignalRecipients.Clear();
             if (connections == null) return;
 
             stepsTaken++;
