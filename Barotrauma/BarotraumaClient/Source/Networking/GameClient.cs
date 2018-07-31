@@ -67,7 +67,12 @@ namespace Barotrauma.Networking
         {
             get { return fileReceiver; }
         }
-
+        
+        public bool MidRoundSyncing
+        {
+            get { return entityEventManager.MidRoundSyncing; }
+        }
+        
         public GameClient(string newName)
         {
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
@@ -1204,6 +1209,12 @@ namespace Barotrauma.Networking
                                 Entity e = ent as Entity;
                                 errorLines.Add(" - " + e.ToString());
                             }
+                        }
+
+                        errorLines.Add("Last console messages:");
+                        for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                        {
+                            errorLines.Add("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                         }
 
                         foreach (string line in errorLines)

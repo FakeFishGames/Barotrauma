@@ -283,7 +283,8 @@ namespace Barotrauma
                     {
                         int quantity = numberInput.IntValue - purchasedItem.Quantity;
                         //Cap the numberbox based on the amount we can afford.
-                        quantity = Math.Max((quantity * (priceInfo.BuyPrice / Campaign.Money)), quantity);
+                        quantity = campaign.Money <= 0 ? 
+                            0 : Math.Min((int)(Campaign.Money / (float)priceInfo.BuyPrice), quantity);
                         for (int i = 0; i < quantity; i++)
                         {
                             BuyItem(numberInput, purchasedItem);

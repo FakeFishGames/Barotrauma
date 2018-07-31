@@ -1,6 +1,10 @@
 ﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -47,6 +51,67 @@ namespace Barotrauma.Items.Components
             foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
+            }
+        }
+
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            if (GameMain.Client.MidRoundSyncing)
+            {
+                //delay reading the state until midround syncing is done
+                //because some of the wires connected to the panel may not exist yet
+                int bitsToRead = Connections.Count * Connection.MaxLinked * 16;
+                StartDelayedCorrection(type, msg.ExtractBits(bitsToRead), sendingTime, waitForMidRoundSync: true);
+            }
+            else
+            {
+                ApplyRemoteState(msg);
+            }
+        }
+
+        private void ApplyRemoteState(NetBuffer msg)
+        {
+            List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
+            List<Wire> newWires = new List<Wire>();
+
+            foreach (Connection connection in Connections)
+            {
+                connection.ClearConnections();
+            }
+
+            foreach (Connection connection in Connections)
+            {
+                for (int i = 0; i < Connection.MaxLinked; i++)
+                {
+                    ushort wireId = msg.ReadUInt16();
+
+                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
+                    if (wireItem == null) continue;
+
+                    Wire wireComponent = wireItem.GetComponent<Wire>();
+                    if (wireComponent == null) continue;
+
+                    newWires.Add(wireComponent);
+
+                    connection.SetWire(i, wireComponent);
+                    wireComponent.Connect(connection, false);
+                }
+            }
+
+            foreach (Wire wire in prevWires)
+            {
+                if (wire.Connections[0] == null && wire.Connections[1] == null)
+                {
+                    wire.Item.Drop(null);
+                }
+                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
+                // -> someone must have dropped the wire from the connection panel
+                else if (wire.Item.ParentInventory == null &&
+                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
+                {
+                    wire.Item.Drop(null);
+                }
             }
         }
     }

@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.10
+---------------------------------------------------------------------------------------------------------
+
+- Fixed bugs in wall hole creation logic and docking port syncing which caused entity ID mismatches and 
+"unknown object header" errors.
+- Fixed errors when attempting to buy too many items of a given type to fit in one container.
+- Fixed crashing when attempting to buy items that don't spawn in a container.
+- Fixed crashing when attempting to generate hulls with the "autohull" command when there are no walls 
+or doors in the sub.
+- Fixed docking ports creating duplicate hulls and gaps during loading.
+- Fixed missions resetting to the initial ones when loading a campaign.
+- Increased revolver ammo capacity.
+- Fires can break oxygen generators.
+- Oxygenite tanks can be contained in plasma cutters and oxygen generators.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.9
 ---------------------------------------------------------------------------------------------------------
 

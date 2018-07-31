@@ -11,11 +11,16 @@
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>
-    
+
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
+      <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
+      <sound file="Content/Items/OxygenGenerator/oxygengenerator.ogg" type="OnActive" range="1000.0" volume="CurrFlow" volumemultiplier="0.001f" loop="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-0.5"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Oxygen Tank" Condition="2.0"/>
-      <sound file="Content/Items/OxygenGenerator/oxygengenerator.ogg" type="OnActive" range="1000.0" volume="CurrFlow" volumemultiplier="0.001f" loop="true"/>
       <StatusEffect type="OnBroken" target="This" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="50" damage="0" stun="0" force="3.0" flames="false" shockwave="false" sparks="true"/>

@@ -379,7 +379,9 @@ namespace Barotrauma
                 return;
             }
 
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 2);
+            Vector2 escapeDir = Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition);
+            if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
+            SteeringManager.SteeringManual(deltaTime, escapeDir * 2);
             SteeringManager.SteeringWander(1.0f);
             if (Character.CurrentHull == null)
             {
@@ -704,8 +706,10 @@ namespace Barotrauma
             float desiredDist = colliderSize * 2.0f;
             if (dist < desiredDist)
             {
+                Vector2 attackDir = Vector2.Normalize(Character.SimPosition - attackPosition);
+                if (!MathUtils.IsValid(attackDir)) attackDir = Vector2.UnitY;
                 //steeringManager.SteeringSeek(attackPosition, -0.8f);
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / desiredDist)));
+                steeringManager.SteeringManual(deltaTime, attackDir * (1.0f - (dist / 500.0f)));
             }
 
             steeringManager.SteeringAvoid(deltaTime, colliderSize * 3.0f, 1.0f);

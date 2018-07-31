@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -90,6 +91,27 @@ namespace Barotrauma
 
             return wasPut;
         }
+
+        protected override void CreateNetworkEvent()
+        {
+            int componentIndex = container.Item.components.IndexOf(container);
+            if (componentIndex == -1)
+            {
+                DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
+                return;
+            }
+
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+            }
+#if CLIENT
+            else if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+            }
+#endif
+        }    
 
         public override void RemoveItem(Item item)
         {

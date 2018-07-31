@@ -517,8 +517,8 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            //ID of the launched projectile
-            msg.Write(((Item)extraData[2]).ID);
+            Item item = (Item)extraData[2];
+            msg.Write(item.Removed ? (ushort)0 : item.ID);
         }
     }
 }
