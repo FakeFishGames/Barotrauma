@@ -484,6 +484,12 @@ namespace Barotrauma
                 widgets.Values.ForEach(w => w.refresh?.Invoke());
                 return true;
             };
+            var saveAsButtonTest = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save As (Test)");
+            saveAsButtonTest.OnClicked += (b, obj) =>
+            {
+                character.AnimController.RagdollParams.Save("TestRagdoll");
+                return true;
+            };
         }
         #endregion
 

@@ -102,7 +102,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// The file name can be partial. If left null of fails, will select the default.
+        /// The file name can be partial. If left null, will select randomly. If fails, will select the default file.
         /// </summary>
         public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
         {
