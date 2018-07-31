@@ -136,6 +136,7 @@ namespace Barotrauma
         public EnemyAIController(Character c, string file, string seed) : base(c)
         {
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
+            steeringManager = outsideSteering;
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
@@ -152,6 +153,8 @@ namespace Barotrauma
             if (aiElements.Count == 0)
             {
                 DebugConsole.ThrowError("Error in file \"" + file + "\" - no AI element found.");
+                outsideSteering = new SteeringManager(this);
+                insideSteering = new IndoorsSteeringManager(this, false, false);
                 return;
             }
             
@@ -183,8 +186,6 @@ namespace Barotrauma
                 }
             }
 
-            outsideSteering = new SteeringManager(this);
-
             bool canBreakDoors = false;
             if (GetTargetingPriority("room")?.Priority > 0.0f)
             {
@@ -198,6 +199,7 @@ namespace Barotrauma
                 }
             }
 
+            outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false, canBreakDoors);
             steeringManager = outsideSteering;
             State = AIState.None;
@@ -218,12 +220,10 @@ namespace Barotrauma
         
         public TargetingPriority GetTargetingPriority(string targetTag)
         {
-            TargetingPriority priority = null;
-            if (targetingPriorities.TryGetValue(targetTag, out priority))
+            if (targetingPriorities.TryGetValue(targetTag, out TargetingPriority priority))
             {
                 return priority;
             }
-
             return null;
         }
 
@@ -374,7 +374,7 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            if (selectedAiTarget == null)
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
                 State = AIState.None;
                 return;
@@ -602,6 +602,11 @@ namespace Barotrauma
             Structure wall = closestBody.UserData as Structure;
             if (wall == null)
             {
+                if (wall.Submarine == null)
+                {
+                    wallAttackPos = Vector2.Zero;
+                    return;
+                }
                 wallAttackPos = Submarine.LastPickedPosition;
                 latchOntoAI?.SetAttachTarget(closestBody, selectedAiTarget.Entity.Submarine, wallAttackPos);
                 //if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
@@ -765,6 +770,7 @@ namespace Barotrauma
 
             foreach (AITarget target in AITarget.List)
             {
+                if (!target.Enabled) continue;
                 if (Level.Loaded != null && target.WorldPosition.Y > Level.Loaded.Size.Y)
                 {
                     continue;

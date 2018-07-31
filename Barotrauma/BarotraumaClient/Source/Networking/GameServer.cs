@@ -212,7 +212,7 @@ namespace Barotrauma.Networking
         {
             server.UPnP.ForwardPort(config.Port, "barotrauma");
 
-            upnpBox = new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] { "Cancel" });
+            upnpBox = new GUIMessageBox(TextManager.Get("PleaseWaitUPnP"), TextManager.Get("AttemptingUPnP"), new string[] { TextManager.Get("Cancel") });
             upnpBox.Buttons[0].OnClicked = upnpBox.Close;
         }
 
@@ -227,11 +227,11 @@ namespace Barotrauma.Networking
 
             if (server.UPnP.Status == UPnPStatus.NotAvailable)
             {
-                new GUIMessageBox("Error", "UPnP not available");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("UPnPUnavailable"));
             }
             else if (server.UPnP.Status == UPnPStatus.Discovering)
             {
-                new GUIMessageBox("Error", "UPnP discovery timed out");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("UPnPTimedOut"));
             }
         }
 

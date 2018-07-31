@@ -202,7 +202,7 @@ namespace Barotrauma
             get { return RectTransform.Rect; }
         }
 
-        public virtual bool ClampMouseRectToParent { get; set; } = true;
+        public bool ClampMouseRectToParent { get; set; } = false;
         public virtual Rectangle MouseRect
         {
             get
@@ -301,7 +301,7 @@ namespace Barotrauma
             GUI.AddToUpdateList(this);
             if (!ignoreChildren)
             {
-                RectTransform.Children.ForEach(c => c.GUIComponent.AddToGUIUpdateList(ignoreChildren, order));
+                RectTransform.AddChildrenToGUIUpdateList(ignoreChildren, order);
             }
             OnAddedToGUIUpdateList?.Invoke(this);
         }

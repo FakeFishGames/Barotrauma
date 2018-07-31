@@ -93,6 +93,26 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (attack != null && attack.DamageRange <= 0.0f && item.body != null)
+            {
+                switch (item.body.BodyShape)
+                {
+                    case PhysicsBody.Shape.Circle:
+                        attack.DamageRange = item.body.radius;
+                        break;
+                    case PhysicsBody.Shape.Capsule:
+                        attack.DamageRange = item.body.height / 2 + item.body.radius;
+                        break;
+                    case PhysicsBody.Shape.Rectangle:
+                        attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
+                        break;
+                }
+                attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
+            }
+        }
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character != null && !characterUsable) return false;
@@ -198,7 +218,6 @@ namespace Barotrauma.Items.Components
                 if (OnProjectileCollision(fixture, normal))
                 {
                     hitSomething = true;
-                    //Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero);
                     break;
                 }
             }
@@ -294,9 +313,9 @@ namespace Barotrauma.Items.Components
                         return true;
                     }
 
+                    limb.character.LastDamageSource = item;
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
-                    if (limb.character != null)
-                        character = limb.character;
+                    if (limb.character != null) character = limb.character;
                 }
                 else if (target.Body.UserData is Structure structure)
                 {
@@ -304,6 +323,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (character != null) character.LastDamageSource = item;
             ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
             ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
             
@@ -350,13 +370,12 @@ namespace Barotrauma.Items.Components
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
                     }
-                    //contained.Condition = 0.0f; //Let the freaking .xml handle it jeez
                 }
             }
 
             if (RemoveOnHit)
             {
-                Item.Spawner.AddToRemoveQueue(item);
+                Entity.Spawner.AddToRemoveQueue(item);
             }
 
             return true;
@@ -366,11 +385,12 @@ namespace Barotrauma.Items.Components
         {
             if (stickJoint != null) return;
 
-            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true);
-            stickJoint.MotorEnabled = true;
-            stickJoint.MaxMotorForce = 30.0f;
-
-            stickJoint.LimitEnabled = true;
+            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true)
+            {
+                MotorEnabled = true,
+                MaxMotorForce = 30.0f,
+                LimitEnabled = true
+            };
             if (item.Sprite != null)
             {
                 stickJoint.LowerLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * -0.3f);

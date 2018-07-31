@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
                     StopSounds(ActionType.OnActive);                    
                 }
 #endif
-
+                if (AITarget != null) AITarget.Enabled = value;
                 isActive = value; 
             }
         }
@@ -91,7 +91,7 @@ namespace Barotrauma.Items.Components
                 if (value == drawable) return;
                 if (!(this is IDrawableComponent))
                 {
-                    DebugConsole.ThrowError("Couldn't make \""+this+"\" drawable (the component doesn't implement the IDrawableComponent interface)");
+                    DebugConsole.ThrowError("Couldn't make \"" + this + "\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
                 }  
               
@@ -188,22 +188,19 @@ namespace Barotrauma.Items.Components
             get { return msg; }
             set { msg = value; }
         }
+
+        public AITarget AITarget
+        {
+            get;
+            private set;
+        }
         
         public ItemComponent(Item item, XElement element) 
         {
             this.item = item;
-
             name = element.Name.ToString();
-
-            properties = SerializableProperty.GetProperties(this);
-
-            //canBePicked = ToolBox.GetAttributeBool(element, "canbepicked", false);
-            //canBeSelected = ToolBox.GetAttributeBool(element, "canbeselected", false);
-            
-            //msg = ToolBox.GetAttributeString(element, "msg", "");
-            
+            properties = SerializableProperty.GetProperties(this);            
             requiredItems = new List<RelatedItem>();
-
             requiredSkills = new List<Skill>();
 
 #if CLIENT
@@ -267,6 +264,9 @@ namespace Barotrauma.Items.Components
 
                         effectList.Add(statusEffect);
 
+                        break;
+                    case "aitarget":
+                        AITarget = new AITarget(item, subElement);
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
@@ -332,10 +332,9 @@ namespace Barotrauma.Items.Components
 
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
-        
-        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f) 
-        {
-        
+
+        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f) 
+        {        
             switch (connection.Name)
             {
                 case "activate":
@@ -411,8 +410,13 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            RemoveComponentSpecific();
+            if (AITarget != null)
+            {
+                AITarget.Remove();
+                AITarget = null;
+            }
 
+            RemoveComponentSpecific();
         }
 
         /// <summary>
@@ -428,6 +432,11 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
+            if (AITarget != null)
+            {
+                AITarget.Remove();
+                AITarget = null;
+            }
 
             ShallowRemoveComponentSpecific();
         }
@@ -611,7 +620,7 @@ namespace Barotrauma.Items.Components
                 // Get the type of a specified class.                
                 t = Type.GetType("Barotrauma.Items.Components." + type + "", false, true);
                 if (t == null)
-                {
+                {                    
                     if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + file + ")");
                     return null;
                 }

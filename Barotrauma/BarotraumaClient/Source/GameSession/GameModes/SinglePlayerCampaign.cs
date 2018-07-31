@@ -195,6 +195,10 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                else
+                {
+                    Map.SelectLocation(-1);
+                }
                 Map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
@@ -321,6 +325,16 @@ namespace Barotrauma
             }
 
             campaign.Money = element.GetAttributeInt("money", 0);
+            campaign.CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            if (campaign.CheatsEnabled)
+            {
+                DebugConsole.CheatsEnabled = true;
+                if (GameMain.Config.UseSteam && !SteamAchievementManager.CheatsEnabled)
+                {
+                    SteamAchievementManager.CheatsEnabled = true;
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
+                }
+            }
 
             //backwards compatibility with older save files
             if (campaign.map == null)
@@ -337,10 +351,9 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("SinglePlayerCampaign");
-            
-            modeElement.Add(new XAttribute("money", Money));
-            
+            XElement modeElement = new XElement("SinglePlayerCampaign",
+                new XAttribute("money", Money),
+                new XAttribute("cheatsenabled", CheatsEnabled));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
 

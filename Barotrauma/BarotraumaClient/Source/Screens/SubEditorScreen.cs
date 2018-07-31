@@ -24,7 +24,6 @@ namespace Barotrauma
 
 
         private Camera cam;
-        private BlurEffect lightBlur;
 
         private bool lightingEnabled;
 
@@ -133,12 +132,6 @@ namespace Barotrauma
         public SubEditorScreen(ContentManager content)
         {
             cam = new Camera();
-#if LINUX || OSX
-            var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
-#else
-            var blurEffect = content.Load<Effect>("Effects/blurshader");
-#endif
-            lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
             
             topPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.04f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
             GUIFrame paddedTopPanel = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.55f), topPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.1f) }, 
@@ -161,7 +154,6 @@ namespace Barotrauma
 
             saveAssemblyFrame = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), topPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight) { MinSize = new Point(170, 30) }, "InnerFrame")
             {
-                ClampMouseRectToParent = false,
                 Visible = false
             };
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
@@ -301,7 +293,11 @@ namespace Barotrauma
 
             var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowLighting"))
             {
-                OnSelected = (GUITickBox obj) => { lightingEnabled = !lightingEnabled; return true; }
+                OnSelected = (GUITickBox obj) => 
+                {
+                    lightingEnabled = !lightingEnabled;
+                    return true;
+                }
             };
             tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
@@ -417,6 +413,8 @@ namespace Barotrauma
             }
 
             cam.UpdateTransform();
+
+            GameAnalyticsManager.SetCustomDimension01("editor");
         }
 
         public override void Deselect()
@@ -463,7 +461,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
-                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), Color.Red, 3.0f);
+                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), Color.Red);
 
                 nameBox.Flash();
                 return false;
@@ -473,7 +471,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -500,7 +498,7 @@ namespace Barotrauma
             Submarine.SaveCurrent(savePath, imgStream);
             Submarine.MainSub.CheckForErrors();
             
-            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green, 3.0f);
+            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green);
 
             Submarine.RefreshSavedSubs();
             linkedSubBox.ClearChildren();
@@ -754,7 +752,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
-                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red, 3.0f);
+                GUI.AddMessage(TextManager.Get("ItemAssemblyNameMissingWarning"), Color.Red);
 
                 nameBox.Flash();
                 return false;
@@ -764,7 +762,7 @@ namespace Barotrauma
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
-                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    GUI.AddMessage(TextManager.Get("ItemAssemblyNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red);
                     nameBox.Flash();
                     return false;
                 }
@@ -886,6 +884,32 @@ namespace Barotrauma
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
+            
+            //turn off lights that are inside an inventory (cabinet for example)
+            foreach (Item item in Item.ItemList)
+            {
+                var lightComponent = item.GetComponent<LightComponent>();
+                if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
+            }
+
+            if (selectedSub.GameVersion < new Version("0.8.1.2"))
+            {
+                var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                adjustLightsPrompt.Buttons[0].OnClicked += adjustLightsPrompt.Close;
+                adjustLightsPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.ParentInventory != null || item.body != null) continue;
+                        var lightComponent = item.GetComponent<LightComponent>();
+                        if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
+                    }
+                    new GUIMessageBox("", TextManager.Get("AdjustedLightsNotification"));
+                    return true;
+                };
+                adjustLightsPrompt.Buttons[1].OnClicked += adjustLightsPrompt.Close;
+            }
 
             return true;
         }
@@ -1237,6 +1261,12 @@ namespace Barotrauma
                     wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y));
                     wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
                 }
+            }
+
+            if (wallPoints.Count < 4)
+            {
+                DebugConsole.ThrowError("Generating hulls for the submarine failed. Not enough wall structures to generate hulls.");
+                return;
             }
 
             min = wallPoints[0];
@@ -1686,7 +1716,7 @@ namespace Barotrauma
             cam.UpdateTransform();
             if (lightingEnabled)
             {
-                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
+                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
@@ -1756,7 +1786,7 @@ namespace Barotrauma
                 MapEntity.DrawEditor(spriteBatch, cam);
             }
 
-            GUI.Draw((float)deltaTime, spriteBatch);
+            GUI.Draw(Cam, spriteBatch);
 
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
                                               

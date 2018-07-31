@@ -124,14 +124,12 @@ namespace Barotrauma
             };
 
             GUIListBox listBox = (GUIListBox)editingHUD;
-            new SerializableEntityEditor(editingHUD.RectTransform, this, inGame, showName: true, elementHeight: 20);
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, elementHeight: 20);
 
-            listBox.UpdateScrollBarSize();
+            int contentHeight = editingHUD.Children.Sum(c => c.Rect.Height) + (listBox.CountChildren - 1) * listBox.Spacing;
             editingHUD.RectTransform.NonScaledSize =
-                new Point(
-                    editingHUD.RectTransform.NonScaledSize.X, 
-                    MathHelper.Clamp(listBox.Content.Children.Sum(c => c.Rect.Height), 50, editingHUD.RectTransform.NonScaledSize.Y));
-            
+                new Point(editingHUD.RectTransform.NonScaledSize.X, MathHelper.Clamp(contentHeight, 50, editingHUD.RectTransform.NonScaledSize.Y));
+
             return editingHUD;
         }
 

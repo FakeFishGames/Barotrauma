@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private bool castShadows;
 
         private float blinkTimer;
-
+        
         public PhysicsBody ParentBody;
 
         [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
@@ -139,6 +139,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
+            if (AITarget != null) AITarget.Enabled = voltage > minVoltage || powerConsumption <= 0.0f;
 
 #if CLIENT
             light.ParentSub = item.Submarine;
@@ -185,7 +186,10 @@ namespace Barotrauma.Items.Components
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f && sparkSounds.Count > 0) sparkSounds[Rand.Int(sparkSounds.Count)].Play(1.0f, 400.0f, item.WorldPosition);
+                if (voltage > 0.1f && sparkSounds.Count > 0) 
+                {
+                    SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 400.0f, item.WorldPosition, item.CurrentHull);
+                }
 #endif
                 lightBrightness = 0.0f;
             }
@@ -196,7 +200,7 @@ namespace Barotrauma.Items.Components
 
             if (blinkFrequency > 0.0f)
             {
-                blinkTimer = (blinkTimer + deltaTime / blinkFrequency) % 1.0f;                
+                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;                
             }
 
             if (blinkTimer > 0.5f)
@@ -229,9 +233,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
 
             switch (connection.Name)
             {

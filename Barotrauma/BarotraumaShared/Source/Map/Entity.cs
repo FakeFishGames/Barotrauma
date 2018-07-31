@@ -2,11 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
     class Entity
     {
+        public const ushort NullEntityID = 0;
+
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static List<Entity> GetEntityList()
         {
@@ -19,10 +22,17 @@ namespace Barotrauma
 
         protected AITarget aiTarget;
 
+        private bool idFreed;
+
         public virtual bool Removed
         {
             get;
             private set;
+        }
+
+        public bool IdFreed
+        {
+            get { return idFreed; }
         }
 
         public ushort ID
@@ -31,16 +41,21 @@ namespace Barotrauma
             {                                
                 return id;             
             }
-            set 
+            set
             {
-                Entity thisEntity;
-                if (dictionary.TryGetValue(id, out thisEntity) && thisEntity == this)
+                if (value == NullEntityID)
+                {
+                    DebugConsole.ThrowError("Cannot set the ID of an entity to " + NullEntityID +
+                        "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace);
+                    return;
+                }
+
+                if (dictionary.TryGetValue(id, out Entity thisEntity) && thisEntity == this)
                 {
                     dictionary.Remove(id);
                 }
                 //if there's already an entity with the same ID, give it the old ID of this one
-                Entity existingEntity;
-                if (dictionary.TryGetValue(value, out existingEntity))
+                if (dictionary.TryGetValue(value, out Entity existingEntity))
                 {
                     System.Diagnostics.Debug.WriteLine(existingEntity + " had the same ID as " + this + " (" + value + ")");
                     DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
@@ -51,7 +66,8 @@ namespace Barotrauma
                     DebugConsole.Log("The id of " + this + " is now " + value);
                 }
 
-                id = value;                             
+                id = value;
+                idFreed = false;
                 dictionary.Add(id, this);
             }
         }
@@ -91,16 +107,29 @@ namespace Barotrauma
         {
             this.Submarine = submarine;
 
-            //give  an unique ID
+            //give a unique ID
+            id = FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
+
+            dictionary.Add(id, this);
+        }
+
+        public static ushort FindFreeID(ushort idOffset = 0)
+        {
+            //ushort.MaxValue - 1 because 0 is a reserved value
+            if (dictionary.Count >= ushort.MaxValue - 1)
+            {
+                throw new Exception("Maximum amount of entities (" + (ushort.MaxValue - 1) + ") reached!");
+            }
+
+            idOffset = Math.Max(idOffset, (ushort)1);
             bool IDfound;
-            id = submarine == null ? (ushort)1 : submarine.IdOffset;
+            ushort id = idOffset;
             do
             {
                 id += 1;
                 IDfound = dictionary.ContainsKey(id);
             } while (IDfound);
-
-            dictionary.Add(id, this);
+            return id;
         }
         
         /// <summary>
@@ -126,22 +155,27 @@ namespace Barotrauma
                 catch (Exception exception)
                 {
                     DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Entity.RemoveAll:Exception" + e.ToString(),
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Error while removing entity \"" + e.ToString() + "\"" + exception.Message);
                 }
             }
+            StringBuilder errorMsg = new StringBuilder();
             if (dictionary.Count > 0)
             {
-                DebugConsole.ThrowError("Some entities were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some entities were not removed in Entity.RemoveAll:");
                 foreach (Entity e in dictionary.Values)
                 {
-                    DebugConsole.ThrowError(" - " + e.ToString() + "(ID " + e.id + ")");
+                    errorMsg.AppendLine(" - " + e.ToString() + "(ID " + e.id + ")");
                 }
             }
             if (Item.ItemList.Count > 0)
             {
-                DebugConsole.ThrowError("Some items were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some items were not removed in Entity.RemoveAll:");
                 foreach (Item item in Item.ItemList)
                 {
-                    DebugConsole.ThrowError(" - " + item.Name + "(ID " + item.id + ")");
+                    errorMsg.AppendLine(" - " + item.Name + "(ID " + item.id + ")");
                 }
 
                 var items = new List<Item>(Item.ItemList);
@@ -153,17 +187,17 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing entity \"" + item.ToString() + "\"", exception);
+                        DebugConsole.ThrowError("Error while removing item \"" + item.ToString() + "\"", exception);
                     }
                 }
                 Item.ItemList.Clear();
             }
             if (Character.CharacterList.Count > 0)
             {
-                DebugConsole.ThrowError("Some characters were not removed in Entity.RemoveAll:");
+                errorMsg.AppendLine("Some characters were not removed in Entity.RemoveAll:");
                 foreach (Character character in Character.CharacterList)
                 {
-                    DebugConsole.ThrowError(" - " + character.Name + "(ID " + character.id + ")");
+                    errorMsg.AppendLine(" - " + character.Name + "(ID " + character.id + ")");
                 }
 
                 var characters = new List<Character>(Character.CharacterList);
@@ -175,27 +209,46 @@ namespace Barotrauma
                     }
                     catch (Exception exception)
                     {
-                        DebugConsole.ThrowError("Error while removing entity \"" + character.ToString() + "\"", exception);
+                        DebugConsole.ThrowError("Error while removing character \"" + character.ToString() + "\"", exception);
                     }
                 }
                 Character.CharacterList.Clear();
+            }
+
+            if (!string.IsNullOrEmpty(errorMsg.ToString()))
+            {
+                foreach (string errorLine in errorMsg.ToString().Split('\n'))
+                {
+                    DebugConsole.ThrowError(errorLine);
+                }
+                GameAnalyticsManager.AddErrorEventOnce("Entity.RemoveAll", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg.ToString());
             }
 
             dictionary.Clear();
             Hull.EntityGrids.Clear();
         }
 
-        public virtual void Remove()
+        /// <summary>
+        /// Removes the entity from the entity dictionary and frees up the ID it was using.
+        /// </summary>
+        public void FreeID()
         {
-            DebugConsole.Log("Removing entity " + this.ToString() + " (" + ID + ") from entity dictionary.");
-            Entity existingEntity;
-            if (!dictionary.TryGetValue(ID, out existingEntity))
+            DebugConsole.Log("Removing entity " + ToString() + " (" + ID + ") from entity dictionary.");
+            if (!dictionary.TryGetValue(ID, out Entity existingEntity))
             {
-                DebugConsole.Log("Entity " + this.ToString() + " (" + ID + ") not present in entity dictionary.");
+                DebugConsole.Log("Entity " + ToString() + " (" + ID + ") not present in entity dictionary.");
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Entity.FreeID:EntityNotFound" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Entity " + ToString() + " (" + ID + ") not present in entity dictionary.\n" + Environment.StackTrace);
             }
             else if (existingEntity != this)
             {
-                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID);
+                DebugConsole.Log("Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
+                GameAnalyticsManager.AddErrorEventOnce("Entity.FreeID:EntityMismatch" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Entity ID mismatch in entity dictionary. Entity " + existingEntity + " had the ID " + ID + " (expecting " + ToString() + ")");
+
                 foreach (var keyValuePair in dictionary.Where(kvp => kvp.Value == this).ToList())
                 {
                     dictionary.Remove(keyValuePair.Key);
@@ -203,6 +256,12 @@ namespace Barotrauma
             }
 
             dictionary.Remove(ID);
+            idFreed = true;
+        }
+
+        public virtual void Remove()
+        {
+            if (!idFreed) FreeID();
             Removed = true;
         }
 

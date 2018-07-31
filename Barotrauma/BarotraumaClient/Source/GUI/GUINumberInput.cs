@@ -150,7 +150,6 @@ namespace Barotrauma
                 return true;
             };
             plusButton.Visible = inputType == NumberType.Int;
-            plusButton.ClampMouseRectToParent = false;
 
             minusButton = new GUIButton(new RectTransform(buttonSize, rectT, Anchor.BottomRight)
             {
@@ -178,7 +177,6 @@ namespace Barotrauma
                 return true;
             };
             minusButton.Visible = inputType == NumberType.Int;
-            minusButton.ClampMouseRectToParent = false;
 
             if (inputType == NumberType.Int)
             {

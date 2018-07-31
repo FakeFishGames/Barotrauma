@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
+        public readonly string DisplayName;
+
         public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
@@ -28,8 +30,11 @@ namespace Barotrauma.Items.Components
             
             if (TargetItem == null)
             {
+                DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
                 return;
             }
+
+            DisplayName = element.GetAttributeString("displayname", name);
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
@@ -191,7 +196,7 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                GameServer.Log(user.LogName + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
 #if CLIENT
@@ -217,7 +222,7 @@ namespace Barotrauma.Items.Components
         {
             if (fabricatedItem != null && user != null)
             {
-                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
             IsActive = false;
@@ -294,7 +299,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //TODO: apply OutCondition
             if (containers[1].Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
@@ -308,7 +312,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {
-                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier);
+                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
             }
 

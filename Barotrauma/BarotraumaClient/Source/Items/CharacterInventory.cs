@@ -16,7 +16,7 @@ namespace Barotrauma
 
         //which slot is the toggle arrow drawn above
         private int toggleArrowSlotIndex;
-
+        
         public Vector2[] SlotPositions;
         
         private Alignment alignment;
@@ -134,6 +134,8 @@ namespace Barotrauma
             AssignQuickUseNumKeys();
 
             highlightedSubInventorySlots.Clear();
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         protected override bool HideSlot(int i)
@@ -256,6 +258,10 @@ namespace Barotrauma
         public override void Update(float deltaTime, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                SetSlotPositions(alignment);
+            }
 
             base.Update(deltaTime);
 
@@ -326,11 +332,6 @@ namespace Barotrauma
                 }
             }
             
-            if (doubleClickedItem != null)
-            {
-                QuickUseItem(doubleClickedItem, true, true);
-            }
-
             List<SlotReference> hideSubInventories = new List<SlotReference>();
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
@@ -361,6 +362,11 @@ namespace Barotrauma
                 {
                     highlightedSubInventorySlot.Inventory.HideTimer = 1.0f;
                 }
+            }
+
+            if (doubleClickedItem != null)
+            {
+                QuickUseItem(doubleClickedItem, true, true);
             }
 
             //make subinventories with one slot always visible

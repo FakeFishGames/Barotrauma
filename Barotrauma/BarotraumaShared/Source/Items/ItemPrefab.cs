@@ -132,7 +132,7 @@ namespace Barotrauma
         }
 
         [Serialize(0.0f, false)]
-        public float RadarSize
+        public float SonarSize
         {
             get;
             private set;

@@ -189,6 +189,7 @@ namespace Barotrauma
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
             this.level = level;
 
@@ -197,7 +198,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-
+            
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
@@ -227,22 +228,59 @@ namespace Barotrauma
             if (GameMode.Mission != null) Mission.Start(Level.Loaded);
 
             EventManager.StartRound(level);
+            SteamAchievementManager.OnStartRound();
 
-            if (GameMode != null) GameMode.MsgBox();
-
+            if (GameMode != null)
+            {
+                GameMode.MsgBox();
+                if (GameMode is MultiPlayerCampaign campaign && GameMain.Server != null)
+                {
+                    campaign.CargoManager.CreateItems();
+                }
+            }
+            
+            GameAnalyticsManager.AddDesignEvent("Submarine:" + submarine.Name);
+            GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level.Seed));
+            GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
+                    GameMode.Name, (Mission == null ? "None" : Mission.GetType().ToString()));
+            
+            
 #if CLIENT
+            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);            
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
-            SoundPlayer.SwitchMusic();
+
+            if (!(GameMode is TutorialMode))
+            {
+                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);   
+                GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);            
+                GUI.AddMessage(TextManager.Get("Destination") + ": " + EndLocation.Name, Color.CadetBlue, playSound: false);
+                GUI.AddMessage(TextManager.Get("Mission") + ": " + (Mission == null ? TextManager.Get("None") : Mission.Name), Color.CadetBlue, playSound: false);
+            }
 #endif
 
             RoundStartTime = Timing.TotalTime;
         }
 
+        public void Update(float deltaTime)
+        {
+            EventManager.Update(deltaTime);
+            GameMode?.Update(deltaTime);
+            Mission?.Update(deltaTime);
+
+            UpdateProjSpecific(deltaTime);
+        }
+
+        partial void UpdateProjSpecific(float deltaTime);
+
         public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
+            GameAnalyticsManager.AddProgressionEvent(
+                (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
+                GameMode.Name, 
+                (Mission == null ? "None" : Mission.GetType().ToString()));            
 
 #if CLIENT
             if (roundSummary != null)
@@ -258,6 +296,7 @@ namespace Barotrauma
 #endif
 
             EventManager.EndRound();
+            SteamAchievementManager.OnRoundEnded(this);
 
             currentMission = null;
 

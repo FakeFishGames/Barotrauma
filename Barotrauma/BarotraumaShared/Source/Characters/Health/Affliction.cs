@@ -20,7 +20,12 @@ namespace Barotrauma
         {
             return Prefab.Instantiate(Strength * multiplier);
         }
-        
+
+        public override string ToString()
+        {
+            return "Affliction (" + Prefab.Name + ")";
+        }
+
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
@@ -51,6 +56,32 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
+        public float GetRadialDistortStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxRadialDistortStrength - currentEffect.MinRadialDistortStrength <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinRadialDistortStrength,
+                currentEffect.MaxRadialDistortStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
+        public float GetChromaticAberrationStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            if (currentEffect.MaxChromaticAberrationStrength - currentEffect.MinChromaticAberrationStrength <= 0.0f) return 0.0f;
+
+            return MathHelper.Lerp(
+                currentEffect.MinChromaticAberrationStrength,
+                currentEffect.MaxChromaticAberrationStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
+
         public float GetScreenBlurStrength()
         {
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
@@ -72,15 +103,15 @@ namespace Barotrauma
             Strength += currentEffect.StrengthChange * deltaTime;
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
-                if (statusEffect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
                 }
-                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
                 }
-                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
                     statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                 }

@@ -223,6 +223,7 @@ namespace Barotrauma
                             return false;
                         }
                         propertyInfo.SetValue(obj, enumVal);
+                        return true;
                     }
                     else
                     {

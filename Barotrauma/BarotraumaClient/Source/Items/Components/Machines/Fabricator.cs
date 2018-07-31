@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
                 };
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.Zero, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(50, 0) },
-                    fi.TargetItem.Name)
+                    fi.DisplayName)
                 {
                     ToolTip = fi.TargetItem.Description
                 };

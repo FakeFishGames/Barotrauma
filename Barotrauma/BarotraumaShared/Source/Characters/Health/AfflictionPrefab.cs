@@ -2,11 +2,38 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public static class CPRSettings
+    {
+        public static float ReviveChancePerSkill { get; private set; }
+        public static float ReviveChanceExponent { get; private set; }
+        public static float ReviveChanceMin { get; private set; }
+        public static float ReviveChanceMax { get; private set; }
+        public static float StabilizationPerSkill { get; private set; }
+        public static float StabilizationMin { get; private set; }
+        public static float StabilizationMax { get; private set; }
+        public static float DamageSkillThreshold { get; private set; }
+        public static float DamageSkillMultiplier { get; private set; }
+
+        public static void Load(XElement element)
+        {
+            ReviveChancePerSkill = Math.Max(element.GetAttributeFloat("revivechanceperskill", 0.01f), 0.0f);
+            ReviveChanceExponent = Math.Max(element.GetAttributeFloat("revivechanceexponent", 2.0f), 0.0f);
+            ReviveChanceMin = MathHelper.Clamp(element.GetAttributeFloat("revivechancemin", 0.05f), 0.0f, 1.0f);
+            ReviveChanceMax = MathHelper.Clamp(element.GetAttributeFloat("revivechancemax", 0.9f), ReviveChanceMin, 1.0f);
+
+            StabilizationPerSkill = Math.Max(element.GetAttributeFloat("stabilizationperskill", 0.01f), 0.0f);
+            StabilizationMin = MathHelper.Max(element.GetAttributeFloat("stabilizationmin", 0.05f), 0.0f);
+            StabilizationMax = MathHelper.Max(element.GetAttributeFloat("stabilizationmax", 2.0f), StabilizationMin);
+
+            DamageSkillThreshold = MathHelper.Clamp(element.GetAttributeFloat("damageskillthreshold", 40.0f), 0.0f, 100.0f);
+            DamageSkillMultiplier = MathHelper.Clamp(element.GetAttributeFloat("damageskillmultiplier", 0.1f), 0.0f, 100.0f);
+        }
+    }
+
     class AfflictionPrefab
     {
         public class Effect
@@ -24,6 +51,8 @@ namespace Barotrauma
 
             public float MinScreenBlurStrength, MaxScreenBlurStrength;
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
+            public float MinRadialDistortStrength, MaxRadialDistortStrength;
+            public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -43,11 +72,18 @@ namespace Barotrauma
                 MaxScreenDistortStrength = element.GetAttributeFloat("maxscreendistort", 0.0f);
                 MaxScreenDistortStrength = Math.Max(MinScreenDistortStrength, MaxScreenDistortStrength);
 
+                MinRadialDistortStrength = element.GetAttributeFloat("minradialdistort", 0.0f);
+                MaxRadialDistortStrength = element.GetAttributeFloat("maxradialdistort", 0.0f);
+                MaxRadialDistortStrength = Math.Max(MinRadialDistortStrength, MaxRadialDistortStrength);
+
+                MinChromaticAberrationStrength = element.GetAttributeFloat("minchromaticaberration", 0.0f);
+                MaxChromaticAberrationStrength = element.GetAttributeFloat("maxchromaticaberration", 0.0f);
+                MaxChromaticAberrationStrength = Math.Max(MinChromaticAberrationStrength, MaxChromaticAberrationStrength);
+
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
-
-
+                
                 StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
                 foreach (XElement subElement in element.Elements())
@@ -93,9 +129,12 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown in the UI
         public readonly float ShowIconThreshold = 0.0f;
         public readonly float MaxStrength = 100.0f;
-
+        
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
+
+        //steam achievement given when the affliction is removed from the controlled character
+        public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
 
@@ -142,6 +181,9 @@ namespace Barotrauma
                         case "husk":
                             List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
                             break;
+                        case "cprsettings":
+                            CPRSettings.Load(element);
+                            break;
                         default:
                             List.Add(new AfflictionPrefab(element));
                             break;
@@ -177,6 +219,8 @@ namespace Barotrauma
 
             CauseOfDeathDescription     = element.GetAttributeString("causeofdeathdescription", "");
             SelfCauseOfDeathDescription = element.GetAttributeString("selfcauseofdeathdescription", "");
+
+            AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
 
             foreach (XElement subElement in element.Elements())
             {
@@ -221,6 +265,11 @@ namespace Barotrauma
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });
         }
 
+        public override string ToString()
+        {
+            return "AfflictionPrefab (" + Name + ")";
+        }
+
         public Affliction Instantiate(float strength)
         {
             object instance = null;
@@ -242,7 +291,20 @@ namespace Barotrauma
             {
                 if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
             }
-            return null;
+
+            //if above the strength range of all effects, use the highest strength effect
+            Effect strongestEffect = null;
+            float largestStrength = currentStrength;
+            foreach (Effect effect in effects)
+            {
+                if (currentStrength > effect.MaxStrength && 
+                    (strongestEffect == null || effect.MaxStrength > largestStrength))
+                {
+                    strongestEffect = effect;
+                    largestStrength = effect.MaxStrength;
+                }
+            }
+            return strongestEffect;
         }
 
         public float GetTreatmentSuitability(Item item)

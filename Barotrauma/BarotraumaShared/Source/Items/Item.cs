@@ -317,9 +317,9 @@ namespace Barotrauma
         public override string ToString()
         {
 #if CLIENT
-            return (GameMain.DebugDraw) ? Name + "(ID: " + ID + ")" : Name;
+            return (GameMain.DebugDraw) ? Name + " (ID: " + ID + ")" : Name;
 #elif SERVER
-            return Name + "(ID: " + ID + ")";
+            return Name + " (ID: " + ID + ")";
 #endif
         }
 
@@ -337,18 +337,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine, spawnCondition)
+            itemPrefab, submarine)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -363,7 +363,7 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = (float)(spawnCondition ?? prefab.Health);
+            condition = prefab.Health;
             lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
@@ -390,9 +390,7 @@ namespace Barotrauma
                     case "price":
                         break;
                     case "aitarget":
-                        aiTarget = new AITarget(this);
-                        aiTarget.MinSightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
-                        aiTarget.MinSoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
+                        aiTarget = new AITarget(this, subElement);
                         break;
                     case "fixrequirement":
                         FixRequirements.Add(new FixRequirement(subElement, this));
@@ -420,11 +418,8 @@ namespace Barotrauma
                 //and add them to the corresponding statuseffect list
                 foreach (List<StatusEffect> componentEffectList in ic.statusEffectLists.Values)
                 {
-
                     ActionType actionType = componentEffectList.First().type;
-
-                    List<StatusEffect> statusEffectList;
-                    if (!statusEffectLists.TryGetValue(actionType, out statusEffectList))
+                    if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffectList))
                     {
                         statusEffectList = new List<StatusEffect>();
                         statusEffectLists.Add(actionType, statusEffectList);
@@ -551,6 +546,20 @@ namespace Barotrauma
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
+            if (!MathUtils.IsValid(simPosition))
+            {
+                string errorMsg =
+                    "Attempted to move the item " + Name +
+                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace;
+
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Item.SetPosition:InvalidPosition" + ID,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    errorMsg);
+                return;
+            }
+
             if (body != null)
             {
 #if DEBUG
@@ -746,7 +755,7 @@ namespace Barotrauma
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
             if (containedItems != null)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     foreach (Item containedItem in containedItems)
                     {
@@ -773,12 +782,12 @@ namespace Barotrauma
 
             if (!hasTargets) return;
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Hull) && CurrentHull != null)
+            if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
             {
                 targets.Add(CurrentHull);
             }
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+            if (effect.HasTargetType(StatusEffect.TargetType.This))
             {
                 foreach (var pobject in AllPropertyObjects)
                 {
@@ -786,18 +795,18 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
+            if (effect.HasTargetType(StatusEffect.TargetType.Character)) targets.Add(character);
 
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
                 targets.Add(limb);
             }
-            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
                 targets.AddRange(character.AnimController.Limbs.ToList());
             }
 
-            if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
+            if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
         }
@@ -825,12 +834,6 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth)
-            {
-                Spawner.AddToRemoveQueue(this);
-                return;
-            }
-
             //aitarget goes silent/invisible if the components don't keep it active
             if (aiTarget != null)
             {
@@ -893,6 +896,11 @@ namespace Barotrauma
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
                 {
                     UpdateTransform();
+                    if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
+                    {
+                        Spawner.AddToRemoveQueue(this);
+                        return;
+                    }
                 }
 
                 UpdateNetPosition();
@@ -1109,33 +1117,32 @@ namespace Barotrauma
         }
 
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
+        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             if (connections == null) return;
 
             stepsTaken++;
 
-            Connection c = null;
-            if (!connections.TryGetValue(connectionName, out c)) return;
+            if (!connections.TryGetValue(connectionName, out Connection c)) return;
 
             if (stepsTaken > 10)
             {
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, c, sender, power));
+                CoroutineManager.StartCoroutine(SendSignal(signal, c, sender, power, signalStrength));
             }
             else
             {
-                c.SendSignal(stepsTaken, signal, this, sender, power);
+                c.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
             }            
         }
 
-        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f)
+        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            connection.SendSignal(0, signal, this, sender, power);
+            connection.SendSignal(0, signal, this, sender, power, signalStrength);
 
             yield return CoroutineStatus.Success;
         }
@@ -1233,8 +1240,6 @@ namespace Barotrauma
 
             if (!picked) return false;
 
-            System.Diagnostics.Debug.WriteLine("Item.Pick(" + picker + ", " + forceSelectKey + ")");
-
             if (picker.SelectedConstruction == this)
             {
                 if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
@@ -1247,10 +1252,11 @@ namespace Barotrauma
 #if CLIENT
             if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.SubEditorScreen)
             {
-                GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
                 if (requiredSkill != null)
                 {
-                    GUI.AddMessage("(" + requiredSkill.Name + " level " + requiredSkill.Level + " required)", Color.Red, 5.0f);
+                    GUI.AddMessage(TextManager.Get("InsufficientSkills")
+                        .Replace("[requiredskill]", requiredSkill.Name)
+                        .Replace("[requiredlevel]", ((int)requiredSkill.Level).ToString()), Color.Red);
                 }
             }
 #endif
@@ -1275,7 +1281,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnUse, WorldPosition);
+                    ic.PlaySound(ActionType.OnUse, WorldPosition, character);
 #endif
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
@@ -1304,7 +1310,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition);
+                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition, character);
 #endif
 
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
@@ -1580,6 +1586,10 @@ namespace Barotrauma
                     msg.Write(((Rectangle)value).Width);
                     msg.Write(((Rectangle)value).Height);
                 }
+                else if (value is Enum)
+                {
+                    msg.Write((int)value);
+                }
                 else
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
@@ -1636,6 +1646,24 @@ namespace Barotrauma
             else if (type == typeof(Rectangle))
             {
                 property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
+            }
+            else if (typeof(Enum).IsAssignableFrom(type))
+            {
+                int intVal = msg.ReadInt32();
+                try
+                {
+                    property.TrySetValue(Enum.ToObject(type, intVal));
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Failed to convert the int value \"" + intVal + "\" to " + type, e);
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Item.ReadPropertyChange:" + Name + ":" + type,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                        "Failed to convert the int value \"" + intVal + "\" to " + type + " (item " + Name + ")");
+                }
             }
             else
             {
@@ -1864,16 +1892,16 @@ namespace Barotrauma
                 rect.Height = (int)prefab.Size.Y;
             }
 
-            Item item = new Item(rect, prefab, submarine);
-            item.Submarine = submarine;
-            item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-
-            item.linkedToID = new List<ushort>();
+            Item item = new Item(rect, prefab, submarine)
+            {
+                Submarine = submarine,
+                ID = (ushort)int.Parse(element.Attribute("ID").Value),
+                linkedToID = new List<ushort>()
+            };
 
             foreach (XAttribute attribute in element.Attributes())
             {
-                SerializableProperty property = null;
-                if (!item.properties.TryGetValue(attribute.Name.ToString(), out property)) continue;
+                if (!item.properties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
 
                 bool shouldBeLoaded = false;
 

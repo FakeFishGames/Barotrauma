@@ -43,13 +43,24 @@ namespace Barotrauma
             private set;
         }
 
+        public List<int> LightSourceTriggerIndex
+        {
+            get;
+            private set;
+        }
+        public List<XElement> LightSourceConfigs
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             Sounds = new List<SoundConfig>();
-            LoadElements(element, -1);
+            LoadElementsProjSpecific(element, -1);
         }
 
-        private void LoadElements(XElement element, int parentTriggerIndex)
+        private void LoadElementsProjSpecific(XElement element, int parentTriggerIndex)
         {
             foreach (XElement subElement in element.Elements())
             {
@@ -57,7 +68,17 @@ namespace Barotrauma
                 {
                     case "leveltrigger":
                     case "trigger":
-                        LoadElements(subElement, 0);
+                        LoadElementsProjSpecific(subElement, LevelTriggerElements.IndexOf(subElement));
+                        break;
+                    case "lightsource":
+                        if (LightSourceConfigs == null)
+                        {
+                            LightSourceConfigs = new List<XElement>();
+                            LightSourceTriggerIndex = new List<int>();
+                        }
+
+                        LightSourceTriggerIndex.Add(parentTriggerIndex);
+                        LightSourceConfigs.Add(subElement);
                         break;
                     case "particleemitter":
                         if (ParticleEmitterPrefabs == null)

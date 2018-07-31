@@ -9,13 +9,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Radar : Powered, IServerSerializable, IClientSerializable
+    partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
         private GUITickBox isActiveTickBox;
 
         private float displayBorderSize;
 
-        private List<RadarBlip> radarBlips;
+        private List<SonarBlip> sonarBlips;
 
         private float prevPingRadius;
 
@@ -38,11 +38,16 @@ namespace Barotrauma.Items.Components
             new Color(255, 255, 255)
         };
 
+        public float DisplayRadius
+        {
+            get { return displayRadius; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
 
-            radarBlips = new List<RadarBlip>();
+            sonarBlips = new List<SonarBlip>();
             var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null)
             {
                 CanBeFocused = false
@@ -68,7 +73,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUICustomComponent(new RectTransform(new Point(GuiFrame.Rect.Height, GuiFrame.Rect.Width), GuiFrame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(10, 0) },
-                (spriteBatch, guiCustomComponent) => { DrawRadar(spriteBatch, guiCustomComponent.Rect); }, null);
+                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
             GuiFrame.CanBeFocused = false;
         }
@@ -80,62 +85,76 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime)
         {
-            for (int i = radarBlips.Count - 1; i >= 0; i--)
+            for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
-                radarBlips[i].FadeTimer -= deltaTime * 0.5f;
-                radarBlips[i].Position += radarBlips[i].Velocity * deltaTime;
+                sonarBlips[i].FadeTimer -= deltaTime * 0.5f;
+                sonarBlips[i].Position += sonarBlips[i].Velocity * deltaTime;
 
-                if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
+                if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
+            }
+            
+            if (UseTransducers && connectedTransducers.Count == 0)
+            {
+                return;
             }
 
-            Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
-            foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(item.WorldPosition, range * pingState))
-            {
-                //gather all nearby triggers that are causing the water to flow into the dictionary
-                foreach (LevelTrigger trigger in levelObject.Triggers)
-                {
-                    Vector2 flow = trigger.GetWaterFlowVelocity();
-                    //ignore ones that are barely doing anything (flow^2 < 1)
-                    if (flow.LengthSquared() > 1.0f) levelTriggerFlows.Add(trigger, flow);
-                }
-            }
+            Vector2 transducerCenter = UseTransducers ? GetTransducerCenter() : item.WorldPosition;
 
-            foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow in levelTriggerFlows)
+            if (Level.Loaded != null)
             {
-                LevelTrigger trigger = triggerFlow.Key;
-                Vector2 flow = triggerFlow.Value;
-                                
-                float flowMagnitude = flow.Length();
-                if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 1000.0f)
+                Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
+                foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * pingState))
                 {
-                    float edgeDist = Rand.Range(0.0f, 1.0f);
-                    Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
-                    Vector2 blipVel = flow * (1.0f - edgeDist);
-
-                    //go through other triggers in range and add the flows of the ones that the blip is inside
-                    foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
+                    //gather all nearby triggers that are causing the water to flow into the dictionary
+                    foreach (LevelTrigger trigger in levelObject.Triggers)
                     {
-                        LevelTrigger trigger2 = triggerFlow2.Key;
-                        if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
-                        {
-                            blipVel += triggerFlow2.Value * (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
-                        }
+                        Vector2 flow = trigger.GetWaterFlowVelocity();
+                        //ignore ones that are barely doing anything (flow^2 < 1)
+                        if (flow.LengthSquared() > 1.0f) levelTriggerFlows.Add(trigger, flow);
                     }
-                    var flowBlip = new RadarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
-                    {
-                        Velocity = blipVel * Rand.Range(1.0f, 5.0f),
-                        Size = new Vector2(MathHelper.Lerp(0.4f, 5f, flowMagnitude / 500.0f), 0.2f),
-                        Rotation = (float)Math.Atan2(-blipVel.Y, blipVel.X)
-                    };
-                    radarBlips.Add(flowBlip);
                 }
-            }
+
+                foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow in levelTriggerFlows)
+                {
+                    LevelTrigger trigger = triggerFlow.Key;
+                    Vector2 flow = triggerFlow.Value;
+
+                    float flowMagnitude = flow.Length();
+                    if (Rand.Range(0.0f, 1.0f) < flowMagnitude / 1000.0f)
+                    {
+                        float edgeDist = Rand.Range(0.0f, 1.0f);
+                        Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
+                        Vector2 blipVel = flow;
+                        if (trigger.ForceFalloff) flow *= (1.0f - edgeDist);
+
+                        //go through other triggers in range and add the flows of the ones that the blip is inside
+                        foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
+                        {
+                            LevelTrigger trigger2 = triggerFlow2.Key;
+                            if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
+                            {
+                                Vector2 trigger2flow = triggerFlow2.Value;
+                                if (trigger2.ForceFalloff) trigger2flow *= (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                                blipVel += trigger2flow;
+                            }
+                        }
+                        var flowBlip = new SonarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
+                        {
+                            Velocity = blipVel * Rand.Range(1.0f, 5.0f),
+                            Size = new Vector2(MathHelper.Lerp(0.4f, 5f, flowMagnitude / 500.0f), 0.2f),
+                            Rotation = (float)Math.Atan2(-blipVel.Y, blipVel.X)
+                        };
+                        sonarBlips.Add(flowBlip);
+                    }
+                }
+            }            
             
             if (IsActive)
             {
                 float pingRadius = displayRadius * pingState;
-                UpdateDisruptions(item.WorldPosition, pingRadius / displayScale, prevPingRadius / displayScale);
-                Ping(item.WorldPosition, pingRadius, prevPingRadius, displayScale, range, 2.0f);
+                UpdateDisruptions(transducerCenter, pingRadius / displayScale, prevPingRadius / displayScale);
+                Ping(transducerCenter, transducerCenter, 
+                    pingRadius, prevPingRadius, displayScale, range, 2.0f);
                 prevPingRadius = pingRadius;
                 return;
             }
@@ -146,19 +165,20 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f) continue;
+                    if (t.SoundRange <= 0.0f || !t.Enabled) continue;
 
-                    if (Vector2.DistanceSquared(t.WorldPosition, item.WorldPosition) < t.SoundRange * t.SoundRange)
+                    if (Vector2.DistanceSquared(t.WorldPosition, transducerCenter) < t.SoundRange * t.SoundRange)
                     {
-                        Ping(t.WorldPosition, t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
-                        radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
+                        Ping(t.WorldPosition, transducerCenter, 
+                            t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
+                        sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
                 }
             }
             prevPassivePingRadius = passivePingRadius;
         }
         
-        private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
+        private void DrawSonar(SpriteBatch spriteBatch, Rectangle rect)
         {
             displayBorderSize = 0.2f;
                center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
@@ -170,16 +190,30 @@ namespace Barotrauma.Items.Components
                 pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (displayRadius * 2 / pingCircle.size.X) * pingState);
             }
 
+            float signalStrength = 1.0f;
+            if (UseTransducers)
+            {
+                signalStrength = 0.0f;
+                foreach (ConnectedTransducer connectedTransducer in connectedTransducers)
+                {
+                    signalStrength = Math.Max(signalStrength, connectedTransducer.SignalStrength);
+                }
+            }
+
+            Vector2 transducerCenter = UseTransducers && connectedTransducers.Count > 0 ? GetTransducerCenter() : item.WorldPosition;
+
             if (item.Submarine != null && !DetectSubmarineWalls)
             {
                 float simScale = displayScale * Physics.DisplayToSimRation;
 
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    if (submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
+                    if (UseTransducers ?
+                        !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
+                        submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
                     if (submarine.HullVertices == null) continue;
 
-                    Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - item.WorldPosition);
+                    Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
 
                     for (int i = 0; i < submarine.HullVertices.Count; i++)
                     {
@@ -188,19 +222,22 @@ namespace Barotrauma.Items.Components
                         Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                         end.Y = -end.Y;
 
-                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue);
+                        if (start.LengthSquared() > displayRadius * displayRadius ||
+                            end.LengthSquared() > displayRadius * displayRadius) continue;
+
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue * signalStrength, width: 3);
                     }
                 }
             }
 
-            if (radarBlips.Count > 0)
+            if (sonarBlips.Count > 0)
             {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
-                foreach (RadarBlip radarBlip in radarBlips)
+                foreach (SonarBlip sonarBlip in sonarBlips)
                 {
-                    DrawBlip(spriteBatch, radarBlip, center, radarBlip.FadeTimer / 2.0f);
+                    DrawBlip(spriteBatch, sonarBlip, transducerCenter, center, sonarBlip.FadeTimer / 2.0f * signalStrength);
                 }
 
                 spriteBatch.End();
@@ -209,7 +246,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.DebugDraw)
             {
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), radarBlips.Count.ToString(), Color.White);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2(), sonarBlips.Count.ToString(), Color.White);
             }
 
             if (screenOverlay != null)
@@ -217,35 +254,58 @@ namespace Barotrauma.Items.Components
                 screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
             }
 
+            if (signalStrength <= 0.5f)
+            {
+                string signalWeakText = TextManager.Get(signalStrength <= 0.0f ? "SonarNoSignal" : "SonarSignalWeak");
+                GUI.DrawString(spriteBatch, 
+                    new Vector2(rect.Center.X, rect.Center.Y + rect.Height * 0.25f) - GUI.Font.MeasureString(signalWeakText) * 0.5f,
+                    signalWeakText, Color.Red, Color.Black * 0.8f);
+            }
+
             if (GameMain.GameSession == null) return;
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
-                (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
+                (Level.Loaded.StartPosition - transducerCenter), displayScale, center, (rect.Width * 0.5f));
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.EndLocation.Name,
-                (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
+                (Level.Loaded.EndPosition - transducerCenter), displayScale, center, (rect.Width * 0.5f));
 
+            foreach (AITarget aiTarget in AITarget.List)
+            {
+                if (!aiTarget.Enabled) continue;
+                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) continue;
+
+                if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
+                {
+                    DrawMarker(spriteBatch,
+                        aiTarget.SonarLabel,
+                        aiTarget.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                }
+            }
+            
             if (GameMain.GameSession.Mission != null)
             {
                 var mission = GameMain.GameSession.Mission;
 
-                if (!string.IsNullOrWhiteSpace(mission.RadarLabel) && mission.RadarPosition != Vector2.Zero)
+                if (!string.IsNullOrWhiteSpace(mission.SonarLabel) && mission.SonarPosition != Vector2.Zero)
                 {
                     DrawMarker(spriteBatch,
-                        mission.RadarLabel,
-                        mission.RadarPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.55f));
+                        mission.SonarLabel,
+                        mission.SonarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
                 }
             }
 
             foreach (Submarine sub in Submarine.Loaded)
             {
-                if (!sub.OnRadar) continue;
-                if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
+                if (!sub.OnSonar) continue;
+                if (UseTransducers ?
+                    connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
+                    sub == item.Submarine && sub.DockedTo.Contains(item.Submarine)) continue;
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
-
-                DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - item.WorldPosition, displayScale, center, (rect.Width * 0.45f));
+                             
+                DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
             }
 
             if (!GameMain.DebugDraw) return;
@@ -257,7 +317,7 @@ namespace Barotrauma.Items.Components
 
             foreach (WayPoint wp in steering.SteeringPath.Nodes)
             {
-                Vector2 pos = (wp.Position - item.WorldPosition) * displayScale;
+                Vector2 pos = (wp.Position - transducerCenter) * displayScale;
                 if (pos.Length() > displayRadius) continue;
 
                 pos.Y = -pos.Y;
@@ -300,8 +360,8 @@ namespace Barotrauma.Items.Components
                         {
                             for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
                             {
-                                var blip = new RadarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
-                                radarBlips.Add(blip);
+                                var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                                sonarBlips.Add(blip);
                             }
                         }
                     }
@@ -309,7 +369,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void Ping(Vector2 pingSource, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
+        private void Ping(Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
         {
             float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
             float pingRadiusSqr = pingRadius * pingRadius;
@@ -320,21 +380,25 @@ namespace Barotrauma.Items.Components
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y), 
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y), 
+                    transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    transducerPos,
                     pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
 
                 return;
@@ -342,9 +406,20 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                if (item.Submarine == submarine && !DetectSubmarineWalls) continue;
-                if (item.Submarine != null && item.Submarine.DockedTo.Contains(submarine)) continue;
                 if (submarine.HullVertices == null) continue;
+                if (!DetectSubmarineWalls)
+                {
+                    if (UseTransducers)
+                    {
+                        if (connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || 
+                            submarine.DockedTo.Contains(t.Transducer.Item.Submarine))) continue;
+                    }
+                    else
+                    {
+                        if (item.Submarine == submarine) continue;
+                        if (item.Submarine != null && item.Submarine.DockedTo.Contains(submarine)) continue;
+                    }
+                }
 
                 for (int i = 0; i < submarine.HullVertices.Count; i++)
                 {
@@ -360,6 +435,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         start + submarine.WorldPosition,
                         end + submarine.WorldPosition,
+                        transducerPos,
                         pingRadius, prevPingRadius,
                         200.0f, 2.0f, range, 1.0f);
                 }
@@ -372,6 +448,7 @@ namespace Barotrauma.Items.Components
                     CreateBlipsForLine(
                         new Vector2(pingSource.X - range, Level.Loaded.Size.Y),
                         new Vector2(pingSource.X + range, Level.Loaded.Size.Y),
+                        transducerPos,
                         pingRadius, prevPingRadius,
                         250.0f, 150.0f, range, pingStrength);
                 }
@@ -392,6 +469,7 @@ namespace Barotrauma.Items.Components
                         CreateBlipsForLine(
                             edge.Point1 + cell.Translation,
                             edge.Point2 + cell.Translation,
+                            transducerPos,
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength);
                     }
@@ -412,6 +490,7 @@ namespace Barotrauma.Items.Components
 
                             CreateBlipsForLine(
                                 wall.A, wall.B,
+                                transducerPos,
                                 pingRadius, prevPingRadius,
                                 100.0f, 1000.0f, range, pingStrength);
                         }
@@ -421,17 +500,17 @@ namespace Barotrauma.Items.Components
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.CurrentHull == null && item.Prefab.RadarSize > 0.0f)
+                if (item.CurrentHull == null && item.Prefab.SonarSize > 0.0f)
                 {
                     float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
-                        var blip = new RadarBlip(
-                            item.WorldPosition + Rand.Vector(item.Prefab.RadarSize),
-                            MathHelper.Clamp(item.Prefab.RadarSize, 0.1f, pingStrength),
-                            MathHelper.Clamp(item.Prefab.RadarSize * 0.1f, 0.1f, 10.0f));
-                        radarBlips.Add(blip);
+                        var blip = new SonarBlip(
+                            item.WorldPosition + Rand.Vector(item.Prefab.SonarSize),
+                            MathHelper.Clamp(item.Prefab.SonarSize, 0.1f, pingStrength),
+                            MathHelper.Clamp(item.Prefab.SonarSize * 0.1f, 0.1f, 10.0f));
+                        sonarBlips.Add(blip);
                     }
                 }
             }
@@ -449,21 +528,19 @@ namespace Barotrauma.Items.Components
 
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
-                        var blip = new RadarBlip(
+                        var blip = new SonarBlip(
                             limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 
                             MathHelper.Clamp(limb.Mass, 0.1f, pingStrength), 
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
-                        radarBlips.Add(blip);
+                        sonarBlips.Add(blip);
                     }
                 }
             }
         }
 
-        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, float pingRadius, float prevPingRadius,
+        private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 transducerPos, float pingRadius, float prevPingRadius,
             float lineStep, float zStep, float range, float pingStrength)
         {
-
-
             range *= displayScale;
             float length = (point1 - point2).Length();
             Vector2 lineDir = (point2 - point1) / length;
@@ -472,7 +549,7 @@ namespace Barotrauma.Items.Components
                 Vector2 point = point1 + lineDir * x;
                 //point += cell.Translation;
 
-                Vector2 pointDiff = point - item.WorldPosition;
+                Vector2 pointDiff = point - transducerPos;
                 float pointDist = pointDiff.Length();
                 float displayPointDist = pointDist * displayScale;
 
@@ -498,11 +575,11 @@ namespace Barotrauma.Items.Components
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
                     int minDist = 200;
-                    radarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
+                    sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new RadarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
+                    var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / displayRadius));
 
-                    radarBlips.Add(blip);
+                    sonarBlips.Add(blip);
                     zStep += 0.5f;
 
                     if (z == 0)
@@ -516,18 +593,17 @@ namespace Barotrauma.Items.Components
 
                     if (alpha < 0) break;
                 }
-
             }
         }
 
-        private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, float strength)
+        private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
             
             float scaledT = strength * (blipColorGradient.Length - 1);
             Color color = Color.Lerp(blipColorGradient[(int)scaledT], blipColorGradient[(int)Math.Min(scaledT + 1, blipColorGradient.Length - 1)], (scaledT - (int)scaledT));
 
-            Vector2 pos = (blip.Position - item.WorldPosition) * displayScale;
+            Vector2 pos = (blip.Position - transducerPos) * displayScale;
             pos.Y = -pos.Y;
 
             float posDist = pos.Length();
@@ -537,7 +613,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (radarBlip == null)
+            if (sonarBlip == null)
             {
                 GUI.DrawRectangle(spriteBatch, center + pos, Vector2.One * 4, Color.Magenta, true);
                 return;
@@ -548,12 +624,12 @@ namespace Barotrauma.Items.Components
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale;
 
-            radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
+            sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.04f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
-            radarBlip.Draw(spriteBatch, center + pos, color * 0.5f, radarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
+            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)
@@ -614,7 +690,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    class RadarBlip
+    class SonarBlip
     {
         public float FadeTimer;
         public Vector2 Position;
@@ -623,7 +699,7 @@ namespace Barotrauma.Items.Components
         public float? Rotation;
         public Vector2 Size;
 
-        public RadarBlip(Vector2 pos, float fadeTimer, float scale)
+        public SonarBlip(Vector2 pos, float fadeTimer, float scale)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);

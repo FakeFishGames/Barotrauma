@@ -168,7 +168,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     if (sparkSounds.Count > 0)
                     {
-                        sparkSounds[Rand.Int(sparkSounds.Count)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                        SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 600.0f, pt.item.WorldPosition, pt.item.CurrentHull);
                     }
 
                     Vector2 baseVel = Rand.Vector(300.0f);
@@ -289,7 +289,6 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in PowerConnections)
             {
                 var recipients = c.Recipients;
-
                 foreach (Connection recipient in recipients)
                 {
                     if (recipient == null) continue;
@@ -299,8 +298,9 @@ namespace Barotrauma.Items.Components
 
                     if (it.Condition <= 0.0f) continue;
 
-                    foreach (Powered powered in it.GetComponents<Powered>())
+                    foreach (ItemComponent ic in it.components)
                     {
+                        Powered powered = ic as Powered;
                         if (powered == null || !powered.IsActive) continue;
                         if (connectedList.Contains(powered)) continue;
 
@@ -348,8 +348,7 @@ namespace Barotrauma.Items.Components
                                 fullPower -= powered.CurrPowerConsumption;
                             }
                         }
-                    }
-
+                    }                    
                 }
             }
         }
@@ -382,7 +381,7 @@ namespace Barotrauma.Items.Components
             SetAllConnectionsDirty();
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             if (connection.IsPower) return;
 
@@ -390,7 +389,7 @@ namespace Barotrauma.Items.Components
 
             if (!connectedRecipients.ContainsKey(connection)) return;
 
-            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLowerInvariant() == "signal")
+            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6) == "signal")
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
@@ -401,7 +400,7 @@ namespace Barotrauma.Items.Components
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
                         if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
+                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
                     bool broken = recipient.Item.Condition <= 0.0f;

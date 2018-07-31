@@ -14,6 +14,7 @@ namespace Barotrauma
     {
         private GUIFrame menu;
         private GUIFrame infoFrame;
+        private GUIFrame myCharacterFrame;
         private GUIListBox playerList;
 
         private GUIListBox subList, modeList, chatBox;
@@ -141,6 +142,13 @@ namespace Barotrauma
             set { StartButton.Enabled = value; }
         }
 
+        public GUIFrame MyCharacterFrame
+        {
+            get { return myCharacterFrame; }
+        }
+
+        public bool MyCharacterFrameOpen;
+
         public GUIFrame InfoFrame
         {
             get { return infoFrame; }
@@ -200,8 +208,10 @@ namespace Barotrauma
                 if (levelSeed == value) return;
 
                 levelSeed = value;
-                backgroundSprite = LocationType.Random(levelSeed).Background;
+                backgroundSprite = LocationType.Random(levelSeed)?.Background;
                 seedBox.Text = levelSeed;
+
+                lastUpdateID++;
             }
         }
 
@@ -251,16 +261,26 @@ namespace Barotrauma
 
             //player info panel ------------------------------------------------------------
 
-            var myPlayerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
-            playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myPlayerFrame.RectTransform, Anchor.Center), style: null);
+            myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(0.3f - panelSpacing, 0.6f), menu.RectTransform, Anchor.TopRight));
+            playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
-            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myPlayerFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
+            playYourself = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
                 TextManager.Get("PlayYourself"))
             {
                 OnSelected = TogglePlayYourself,
                 UserData = "playyourself"
             };
-            clientHiddenElements.Add(playYourself);
+
+            var toggleMyPlayerFrame = new GUIButton(new RectTransform(new Point(25, 70), myCharacterFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight), "", style: "GUIButtonHorizontalArrow");
+            toggleMyPlayerFrame.OnClicked += (GUIButton btn, object userdata) =>
+            {
+                MyCharacterFrameOpen = !MyCharacterFrameOpen;
+                foreach (GUIComponent child in btn.Children)
+                {
+                    child.SpriteEffects = MyCharacterFrameOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
+                return true;
+            };
 
             //player list ------------------------------------------------------------------
 
@@ -518,6 +538,7 @@ namespace Barotrauma
         public override void Deselect()
         {
             textBox.Deselect();
+            myCharacterFrame.GetChild<GUIButton>().Visible = true;
         }
 
         public override void Select()
@@ -529,6 +550,9 @@ namespace Barotrauma
             textBox.Select();
             textBox.OnEnterPressed = GameMain.NetworkMember.EnterChatMessage;
             textBox.OnTextChanged = GameMain.NetworkMember.TypingChatMessage;
+
+            myCharacterFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
+            myCharacterFrame.GetChild<GUIButton>().Visible = false;
             
             subList.Enabled = AllowSubSelection || GameMain.Server != null;
             shuttleList.Enabled = AllowSubSelection || GameMain.Server != null;
@@ -591,12 +615,20 @@ namespace Barotrauma
                         shuttleList.Select(Math.Max(0, prevSelectedShuttle));
                     }
                 }
+
+                GameAnalyticsManager.SetCustomDimension01("multiplayer");
+                
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
             }
             else if (GameMain.Client != null)
             {
                 GameMain.Client.Voting.ResetVotes(GameMain.Client.ConnectedClients);
+                if (!playYourself.Selected)
+                {
+                    playYourself.Selected = true;
+                    TogglePlayYourself(playYourself);
+                }
                 spectateButton.OnClicked = GameMain.Client.SpectateClicked;
             }
 
@@ -739,7 +771,10 @@ namespace Barotrauma
         {
             if (tickBox.Selected)
             {
-                GameMain.NetworkMember.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, Gender.None, null);
+                GameMain.NetworkMember.CharacterInfo = 
+                    new CharacterInfo(Character.HumanConfigFile, GameMain.NetworkMember.Name, GameMain.Config.CharacterGender, null);
+                GameMain.NetworkMember.CharacterInfo.HeadSpriteId = GameMain.Config.CharacterHeadIndex; 
+
                 UpdatePlayerFrame(GameMain.NetworkMember.CharacterInfo);
             }
             else
@@ -847,8 +882,20 @@ namespace Barotrauma
             //hash will be null if opening the sub file failed -> don't select the sub
             if (string.IsNullOrWhiteSpace(hash))
             {
-                (component as GUITextBlock).TextColor = Color.DarkRed * 0.8f;
-                component.CanBeFocused = false;
+                if (component is GUITextBlock textBlock)
+                {
+                    textBlock.TextColor = Color.DarkRed * 0.8f;
+                    textBlock.CanBeFocused = false;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "NetLobbyScreen.SelectSub:InvalidComponent", 
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to select submarine. Selected GUIComponent was of the type \"" + (component == null ? "null" : component.GetType().ToString()) + "\".");
+                }
+
 
                 StartButton.Enabled = false;
 
@@ -900,8 +947,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
-            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
@@ -955,8 +1002,7 @@ namespace Barotrauma
         public bool VotableClicked(GUIComponent component, object userData)
         {
             if (GameMain.Client == null) return false;
-
-            //TODO: test voting
+            
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList.Content)
             {
@@ -1321,30 +1367,11 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.Black);
-            
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            if (backgroundSprite != null)
-            {
-                float scale = Math.Max((float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width, (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.2f;
-                
-                float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
-                float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
 
-                //TODO: blur the background
-
-                double noiseT = (Timing.TotalTime * 0.02f);
-                Vector2 pos = new Vector2((float)PerlinNoise.Perlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.Perlin(noiseT, noiseT, 0.5f) - 0.5f);
-                pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
-
-                spriteBatch.Draw(backgroundSprite.Texture, 
-                    new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos, 
-                    null, Color.White, 0.0f, backgroundSprite.size / 2,
-                    scale, SpriteEffects.None, 0.0f);
-            }
-            
-            GUI.Draw((float)deltaTime, spriteBatch);
-
+            spriteBatch.Begin(SpriteSortMode.Immediate, rasterizerState: GameMain.ScissorTestEnable);
+            GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
 
@@ -1378,9 +1405,11 @@ namespace Barotrauma
 
         private bool ToggleHead(GUIButton button, object userData)
         {
-            int dir = (int)userData;
             if (GameMain.NetworkMember.CharacterInfo == null) return true;
+
+            int dir = (int)userData;
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
+            GameMain.Config.CharacterHeadIndex = GameMain.NetworkMember.CharacterInfo.HeadSpriteId;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
@@ -1389,7 +1418,7 @@ namespace Barotrauma
         {
             Gender gender = (Gender)obj;
             GameMain.NetworkMember.CharacterInfo.Gender = gender;
-
+            GameMain.Config.CharacterGender = GameMain.NetworkMember.CharacterInfo.Gender;
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
             return true;
         }
@@ -1458,7 +1487,7 @@ namespace Barotrauma
             seedBox.Enabled = !enabled && GameMain.Server != null;
 
             if (campaignViewButton != null) campaignViewButton.Visible = enabled;
-            if (StartButton != null) StartButton.Visible = !enabled;            
+            if (StartButton != null) StartButton.Visible = !enabled && GameMain.Server != null;            
 
             if (enabled)
             {
@@ -1472,10 +1501,7 @@ namespace Barotrauma
                     };
 
                     var backButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.1f), campaignContainer.RectTransform),
-                        TextManager.Get("Back"))
-                    {
-                        ClampMouseRectToParent = false
-                    };
+                        TextManager.Get("Back"));
                     backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
 
                     var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.1f), campaignContainer.RectTransform) { RelativeOffset = new Vector2(0.3f, 0.0f) },
@@ -1489,10 +1515,7 @@ namespace Barotrauma
                     List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
                     foreach (CampaignUI.Tab tab in tabTypes)
                     {
-                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString())
-                        {
-                            ClampMouseRectToParent = false
-                        };
+                        var tabButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform), tab.ToString());
                         tabButton.OnClicked += (btn, obj) =>
                         {
                             campaignUI.SelectTab(tab);
@@ -1524,10 +1547,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return false;
             if (string.IsNullOrWhiteSpace(seed)) return false;
-
             LevelSeed = seed;
-            lastUpdateID++;
-
             return true;
         }
         
@@ -1608,15 +1628,22 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
-            if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+            Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
+            if (sub == null) sub = Submarine.SavedSubmarines.FirstOrDefault(m => m.Name == subName);
 
             var matchingListSub = subList.Content.GetChildByUserData(sub);
             if (matchingListSub != null)
             {
-                subList.OnSelected -= VotableClicked;
-                subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
-                subList.OnSelected += VotableClicked;
+                if (subList.Parent is GUIDropDown subDropDown)
+                {
+                    subDropDown.SelectItem(sub);
+                }
+                else
+                {
+                    subList.OnSelected -= VotableClicked;
+                    subList.Select(subList.Content.GetChildIndex(matchingListSub), true);
+                    subList.OnSelected += VotableClicked;
+                }
 
                 if (subList == SubList)
                     FailedSelectedSub = null;
@@ -1661,7 +1688,7 @@ namespace Barotrauma
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                 {
                     string[] fileInfo = (string[])userdata;
-                    GameMain.Client.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
                     return true;
                 };
                 requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;

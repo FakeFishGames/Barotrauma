@@ -1,10 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
-#if CLIENT
-using Barotrauma.Particles;
-#endif
 
 namespace Barotrauma
 {
@@ -19,10 +20,22 @@ namespace Barotrauma
 
         public LevelObjectPrefab ActivePrefab;
 
+        public PhysicsBody PhysicsBody
+        {
+            get;
+            private set;
+        }
+
         public List<LevelTrigger> Triggers
         {
             get;
             private set;
+        }
+
+        public bool NeedsNetworkSyncing
+        {
+            get { return Triggers.Any(t => t.NeedsNetworkSyncing); }
+            set { Triggers.ForEach(t => t.NeedsNetworkSyncing = false); }
         }
 
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
@@ -33,6 +46,11 @@ namespace Barotrauma
             Position = position;
             Scale = scale;
             Rotation = rotation;
+
+            if (prefab.PhysicsBodyElement != null)
+            {
+                PhysicsBody = new PhysicsBody(prefab.PhysicsBodyElement, ConvertUnits.ToSimUnits(new Vector2(position.X, position.Y)), Scale);
+            }
 
             foreach (XElement triggerElement in prefab.LevelTriggerElements)
             {
@@ -49,6 +67,8 @@ namespace Barotrauma
                 }
 
                 var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
+                int parentTriggerIndex = prefab.LevelTriggerElements.IndexOf(triggerElement.Parent);
+                if (parentTriggerIndex > -1) newTrigger.ParentTrigger = Triggers[parentTriggerIndex];
                 Triggers.Add(newTrigger);
             }
 
@@ -74,6 +94,26 @@ namespace Barotrauma
             }
             return new Vector2(Position.X, Position.Y) + emitterPos;
         }
-    }
 
+        public void Remove()
+        {
+            RemoveProjSpecific();
+        }
+
+        partial void RemoveProjSpecific();
+
+        public override string ToString()
+        {
+            return "LevelObject (" + ActivePrefab.Name + ")";
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c)
+        {
+            for (int j = 0; j < Triggers.Count; j++)
+            {
+                if (!Triggers[j].UseNetworkSyncing) continue;
+                Triggers[j].ServerWrite(msg, c);
+            }
+        }
+    }
 }

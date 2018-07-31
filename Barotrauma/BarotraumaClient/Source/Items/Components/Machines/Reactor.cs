@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
         private float graphTimer;
         private int updateGraphInterval = 500;
 
+        private Point screenResolution;
+
         private Sprite fissionRateMeter, turbineOutputMeter;
         private Sprite meterPointer;
         private Sprite sectorSprite;
@@ -37,6 +39,8 @@ namespace Barotrauma.Items.Components
         private GUITickBox lowTemperatureWarning;
         private GUITickBox criticalOutputWarning;
 
+        private GUIComponent leftHUDColumn;
+
         private Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
 
         private static string[] warningTexts = new string[]
@@ -46,8 +50,6 @@ namespace Barotrauma.Items.Components
             "ReactorWarningLowFuel", "ReactorWarningFuelOut",
             "ReactorWarningMeltdown","ReactorWarningSCRAM"
         };
-
-
 
         partial void InitProjSpecific(XElement element)
         {
@@ -89,6 +91,7 @@ namespace Barotrauma.Items.Components
             };
             
             GUIFrame columnLeft = new GUIFrame(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), style: null);
+            leftHUDColumn = columnLeft;
             GUIFrame columnMid = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), paddedFrame.RectTransform), style: null);
             GUIFrame columnRight = new GUIFrame(new RectTransform(new Vector2(0.35f, 1.0f), paddedFrame.RectTransform), style: null);
 
@@ -123,7 +126,7 @@ namespace Barotrauma.Items.Components
             fissionRateScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, 60) },
                 style: "GUISlider", barSize: 0.1f)
             {
-                BarScroll = 1.0f,
+                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -143,7 +146,7 @@ namespace Barotrauma.Items.Components
             turbineOutputScrollBar = new GUIScrollBar(new RectTransform(new Point(columnMid.Rect.Width, 30), columnMid.RectTransform, Anchor.BottomCenter),
                 style: "GUISlider", barSize: 0.1f, isHorizontal: true)
             {
-                BarScroll = 1.0f,
+                BarScroll = 0.0f,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -199,6 +202,7 @@ namespace Barotrauma.Items.Components
                 barSize: 0.5f, style: "OnOffSlider")
             {
                 IsBooleanSwitch = true,
+                BarScroll = 1.0f,
                 OnMoved = (scrollBar, scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -210,7 +214,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
+            
             onOffSwitch = new GUIScrollBar(new RectTransform(new Point(50, 80), columnRight.RectTransform, Anchor.TopRight),
                 barSize: 0.2f, style: "OnOffLever")
             {
@@ -228,7 +232,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
+            
             var lever = onOffSwitch.GetChild<GUIButton>();
             lever.RectTransform.NonScaledSize = new Point(lever.Rect.Width + 30, lever.Rect.Height);
 
@@ -248,10 +252,17 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            SetInventoryPos();
+        }
+
+        private void SetInventoryPos()
+        {
             Inventory inventory = item.GetComponent<ItemContainer>()?.Inventory;
             inventory.CenterPos = new Vector2(
-                GuiFrame.Children.First().Rect.Center.X / (float)GameMain.GraphicsWidth, 
-                (GuiFrame.Children.First().Rect.Y + GuiFrame.Children.First().Rect.Height * 0.75f) / GameMain.GraphicsHeight);
+                leftHUDColumn.Rect.Center.X / (float)GameMain.GraphicsWidth,
+                (leftHUDColumn.Rect.Y + leftHUDColumn.Rect.Height * 0.85f) / GameMain.GraphicsHeight);
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         private void DrawGraph(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -281,6 +292,21 @@ namespace Barotrauma.Items.Components
 
                 tempMeterBar.Draw(spriteBatch, meterBarPos, color);
                 meterBarPos.Y -= (tempMeterBar.size.Y + barPadding);
+            }
+
+            if (temperature > optimalTemperature.Y)
+            {
+                GUI.DrawRectangle(spriteBatch, 
+                    new Vector2(graphArea.X - 30, graphArea.Y), 
+                    new Vector2(tempMeterFrame.SourceRect.Width, (graphArea.Bottom - graphArea.Height * optimalTemperature.Y / 100.0f) - graphArea.Y), 
+                    Color.Red * (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.7f, isFilled: true);
+            }
+            if (temperature < optimalTemperature.X)
+            {
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(graphArea.X - 30, graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f),
+                    new Vector2(tempMeterFrame.SourceRect.Width, graphArea.Bottom - (graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f)),
+                    Color.Red * (float)Math.Sin(Timing.TotalTime * 5.0f) * 0.7f, isFilled: true);
             }
 
             tempRangeIndicator.Draw(spriteBatch, new Vector2(meterBarPos.X, graphArea.Bottom - graphArea.Height * optimalTemperature.X / 100.0f));
@@ -329,6 +355,11 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                SetInventoryPos();
+            }
+
             bool lightOn = Timing.TotalTime % 0.5f < 0.25f && onOffSwitch.BarScroll < 0.5f;
 
             fissionRateScrollBar.Enabled = !autoTemp;
@@ -346,13 +377,12 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && onOffSwitch.BarScroll > 0.5f;
-            
+                        
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
-            
-            if (onOffSwitch.BarScroll > 0.5f)
+            shutDown = onOffSwitch.BarScroll > 0.5f;
+
+            if (shutDown)
             {
-                targetFissionRate = 0.0f;
-                targetTurbineOutput = 0.0f;
                 fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
                 turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
             }            
@@ -488,6 +518,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
+            msg.Write(shutDown);
             msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
 
@@ -498,11 +529,12 @@ namespace Barotrauma.Items.Components
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(1 + 8 + 8 + 8 + 8), sendingTime);
+                StartDelayedCorrection(type, msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 
             AutoTemp = msg.ReadBoolean();
+            shutDown = msg.ReadBoolean();
             Temperature = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             targetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
@@ -510,6 +542,7 @@ namespace Barotrauma.Items.Components
 
             fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+            onOffSwitch.BarScroll = shutDown ? Math.Max(onOffSwitch.BarScroll, 0.55f) : Math.Min(onOffSwitch.BarScroll, 0.45f);
         }
     }
 }

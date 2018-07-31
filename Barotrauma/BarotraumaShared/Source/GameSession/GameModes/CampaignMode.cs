@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public readonly CargoManager CargoManager;
 
+        public bool CheatsEnabled;
+
         const int InitialMoney = 10000;
 
         protected Map map;

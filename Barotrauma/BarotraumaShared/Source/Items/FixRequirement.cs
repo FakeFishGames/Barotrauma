@@ -2,13 +2,14 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class FixRequirement
     {
-        public static float SkillIncreaseMultiplier = 0.1f;
+        public static float SkillIncreaseMultiplier = 0.8f;
 
         private string name;
 
@@ -128,7 +129,9 @@ namespace Barotrauma
             {
                 float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Name);
                 if (characterSkillLevel >= skill.Level) successFactor += 1.0f / RequiredSkills.Count;
-                CurrentFixer.Info.IncreaseSkillLevel(skill.Name, SkillIncreaseMultiplier * deltaTime / Math.Max(characterSkillLevel, 1.0f));
+                CurrentFixer.Info.IncreaseSkillLevel(skill.Name, 
+                    SkillIncreaseMultiplier * deltaTime / Math.Max(characterSkillLevel, 1.0f),
+                     CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
             }
 
             float fixDuration = MathHelper.Lerp(fixDurationLowSkill, fixDurationHighSkill, successFactor);
@@ -145,7 +148,12 @@ namespace Barotrauma
             {
                 lastSentProgress = FixProgress;
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Repair });
-            }            
+            }
+            
+            if (item.FixRequirements.All(f => f.Fixed))
+            {
+                SteamAchievementManager.OnItemRepaired(item, currentFixer);
+            }
         }
 
         private void UpdateFixAnimation(Character character)

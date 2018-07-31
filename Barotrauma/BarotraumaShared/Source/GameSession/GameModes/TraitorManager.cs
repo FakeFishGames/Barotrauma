@@ -108,10 +108,9 @@ namespace Barotrauma
             codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
             codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
-            while (traitorCount-- >= 0)
+            while (traitorCount-- > 0)
             {
-                if (traitorCandidates.Count <= 0)
-                    break;
+                if (traitorCandidates.Count <= 0) break;
 
                 int traitorIndex = Rand.Int(traitorCandidates.Count);
                 Character traitorCharacter = traitorCandidates[traitorIndex];

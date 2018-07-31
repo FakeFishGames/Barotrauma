@@ -183,6 +183,8 @@ namespace Barotrauma
             campaignSetupUI.UpdateSubList();
 
             SelectTab(null, 0);
+
+            GameAnalyticsManager.SetCustomDimension01("");
         }
 
         public bool SelectTab(GUIButton button, object obj)
@@ -384,14 +386,10 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
-            //Game1.GameScreen.DrawMap(graphics, spriteBatch);
-
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            GUI.Draw((float)deltaTime, spriteBatch);
-
-            //GUI.DrawString(spriteBatch, new Vector2(500, 100), "selected tab " + selectedTab, Color.White);
-
+            GUI.Draw(Cam, spriteBatch);
+            
 #if DEBUG
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (debug build)", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
 #else
@@ -424,7 +422,19 @@ namespace Barotrauma
                 Directory.CreateDirectory(SaveUtil.TempPath);
             }
 
-            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+            try
+            {
+                File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
+            }
+            catch (IOException e)
+            {
+                DebugConsole.ThrowError("Copying the file \"" + selectedSub.FilePath + "\" failed. The file may have been deleted or in use by another process. Try again or select another submarine.", e);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "MainMenuScreen.StartGame:IOException" + selectedSub.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace);
+                return;
+            }
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
 

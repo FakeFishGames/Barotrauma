@@ -104,12 +104,7 @@ namespace Barotrauma
         private List<ItemSpawnInfo> spawnItems;
 
         public readonly float FireSize;
-
-        public TargetType Targets
-        {
-            get { return targetTypes; }
-        }
-
+        
         public HashSet<string> TargetNames
         {
             get { return targetNames; }
@@ -318,6 +313,11 @@ namespace Barotrauma
             }
         }
 
+        public bool HasTargetType(TargetType targetType)
+        {
+            return (targetTypes & targetType) != 0;
+        }
+
         public virtual bool HasRequiredItems(Entity entity)
         {
             if (requiredItems == null) return true;
@@ -415,13 +415,22 @@ namespace Barotrauma
 
         protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
+            Hull hull = null;
+            if (entity is Character)
+            {
+                hull = ((Character)entity).AnimController.CurrentHull;
+            }
+            else if (entity is Item)
+            {
+                hull = ((Item)entity).CurrentHull;
+            }
 #if CLIENT
             if (sound != null)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
-                    soundChannel = sound.Play(entity.WorldPosition);
-                    soundChannel.Looping = loopSound;
+                    soundChannel = SoundPlayer.PlaySound(sound, 1.0f, sound.BaseFar, entity.WorldPosition, hull);
+                    if (soundChannel != null) soundChannel.Looping = loopSound;
                 }
             }
 #endif            
@@ -479,7 +488,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null) explosion.Explode(entity.WorldPosition);
+            if (explosion != null) explosion.Explode(entity.WorldPosition, entity);
 
             foreach (ISerializableEntity target in targets)
             {
@@ -488,9 +497,10 @@ namespace Barotrauma
                     Affliction multipliedAffliction = affliction;
                     if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
 
-                    if (target is Character)
+                    if (target is Character character)
                     {
-                        ((Character)target).CharacterHealth.ApplyAffliction(null, multipliedAffliction);
+                        character.LastDamageSource = entity;
+                        character.CharacterHealth.ApplyAffliction(null, multipliedAffliction);
                     }
                     else if (target is Limb limb)
                     {
@@ -510,16 +520,6 @@ namespace Barotrauma
                         limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAmount);
                     }
                 }
-            }
-
-            Hull hull = null;
-            if (entity is Character) 
-            {
-                hull = ((Character)entity).AnimController.CurrentHull;
-            }
-            else if (entity is Item)
-            {
-                hull = ((Item)entity).CurrentHull;
             }
 
             if (FireSize > 0.0f)

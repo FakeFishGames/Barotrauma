@@ -99,19 +99,14 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
-        public SoundChannel Play(float gain, float range, Vector2 position)
+        public SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
-            return new SoundChannel(this, gain, new Vector3(position.X,position.Y,0.0f), range * 0.4f, range, "default");
+            return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
         }
-
-        public SoundChannel Play(Vector2 position)
+        
+        public SoundChannel Play(Vector3? position, float gain, bool muffle = false)
         {
-            return new SoundChannel(this, BaseGain, new Vector3(position.X, position.Y, 0.0f), BaseNear, BaseFar, "default");
-        }
-
-        public SoundChannel Play(Vector3? position, float gain)
-        {
-            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default");
+            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
         }
 
         public SoundChannel Play(float gain)
@@ -124,9 +119,9 @@ namespace Barotrauma.Sounds
             return Play(BaseGain);
         }
 
-        public SoundChannel Play(float? gain,string category)
+        public SoundChannel Play(float? gain, string category)
         {
-            return new SoundChannel(this, gain.HasValue ? gain.Value : BaseGain, null, BaseNear, BaseFar, category);
+            return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
         }
 
         public abstract int FillStreamBuffer(int samplePos, short[] buffer);

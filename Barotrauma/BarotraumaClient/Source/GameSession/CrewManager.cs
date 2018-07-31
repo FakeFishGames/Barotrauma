@@ -17,8 +17,10 @@ namespace Barotrauma
         const float ConversationIntervalMin = 100.0f;
         const float ConversationIntervalMax = 180.0f;
         
-        private List<CharacterInfo> characterInfos;
-        private List<Character> characters;
+        private List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private List<Character> characters = new List<Character>();
+
+        private Point screenResolution;
 
         public int WinningTeam = 1;
         
@@ -70,9 +72,6 @@ namespace Barotrauma
 
         partial void InitProjectSpecific()
         {
-            characters = new List<Character>();
-            characterInfos = new List<CharacterInfo>();
-
             guiFrame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), null, Color.Transparent)
             {
                 CanBeFocused = false
@@ -85,7 +84,6 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             toggleCrewButton = new GUIButton(new RectTransform(new Point(25,70), crewArea.RectTransform, Anchor.CenterLeft), "", style: "GUIButtonHorizontalArrow");
-            toggleCrewButton.ClampMouseRectToParent = false;
             toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 toggleCrewAreaOpen = !toggleCrewAreaOpen;
@@ -105,13 +103,9 @@ namespace Barotrauma
 
             scrollButtonUp = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
             {
-                ClampMouseRectToParent = false,
                 Visible = false
             };
-            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                ClampMouseRectToParent = false
-            };
+            scrollButtonDown = new GUIButton(new RectTransform(new Point(characterListBox.Rect.Width, scrollButtonHeight), crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow");
             scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
             scrollButtonDown.Visible = false;
 
@@ -129,6 +123,8 @@ namespace Barotrauma
             {
                 chatBox = new ChatBox(guiFrame, true);
             }
+
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         #endregion
@@ -423,12 +419,9 @@ namespace Barotrauma
         {
             if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
             {
-                characterBlock.Color = Color.Transparent;
+                characterBlock.Parent.RemoveChild(characterBlock);
             }
-            else
-            {
-                AddCharacter(revivedCharacter);
-            }
+            if (characterInfos.Contains(revivedCharacter.Info)) AddCharacter(revivedCharacter);            
         }
 
         public void KillCharacter(Character killedCharacter)
@@ -673,6 +666,7 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) return;
             guiFrame.AddToGUIUpdateList();
             orderTargetFrame?.AddToGUIUpdateList();
 
@@ -681,7 +675,21 @@ namespace Barotrauma
 
         partial void UpdateProjectSpecific(float deltaTime)
         {
-            //guiFrame.UpdateManually(deltaTime);
+            if (GUI.DisableHUD) return;
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            {
+                var prevCharacterListBox = characterListBox;
+                InitProjectSpecific();
+
+                foreach (GUIComponent c in prevCharacterListBox.Content.Children)
+                {
+                    Character character = c.UserData as Character;
+                    if (character == null) continue;
+                    AddCharacter(character);
+                    DisplayCharacterOrder(character, character.CurrentOrder);
+                }
+            }
+
             if (chatBox != null) chatBox.Update(deltaTime);
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
@@ -712,7 +720,7 @@ namespace Barotrauma
 
             foreach (GUIComponent child in characterListBox.Content.Children)
             {
-                child.Visible = Character.Controlled != null && Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
+                child.Visible = Character.Controlled == null || Character.Controlled.TeamID == ((Character)child.UserData).TeamID;
             }
 
             crewAreaOffset.X = MathHelper.Lerp(

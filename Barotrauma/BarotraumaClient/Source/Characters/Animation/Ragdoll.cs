@@ -22,13 +22,13 @@ namespace Barotrauma
                     limb.LastImpactSoundTime = (float)Timing.TotalTime;
                     if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
-                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);
+                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
                     }
                     foreach (WearableSprite wearable in limb.WearingItems)
                     {
                         if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
                         {
-                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition, character.CurrentHull);
                         }
                     }
                 }
@@ -96,6 +96,9 @@ namespace Barotrauma
             if (Limbs == null)
             {
                 DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.Draw:LimbsRemoved", 
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
                 return;
             }
 

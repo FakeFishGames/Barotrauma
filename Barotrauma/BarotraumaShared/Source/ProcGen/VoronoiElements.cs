@@ -136,7 +136,7 @@ namespace Voronoi2
 
         public Vector2 Center
         {
-            get { return new Vector2((float)site.coord.x, (float)site.coord.y)+Translation; }
+            get { return new Vector2((float)site.coord.x, (float)site.coord.y) + Translation; }
         }
 
         public VoronoiCell(Vector2[] vertices)
@@ -235,6 +235,11 @@ namespace Voronoi2
                 normal = -normal;
             }
             return normal;
+        }
+
+        public override string ToString()
+        {
+            return "GraphEdge (" + Point1.ToString() + ", " + Point2.ToString() + ")";
         }
     }
     

@@ -87,7 +87,6 @@ namespace Barotrauma
                 IsFixedSize = false
             }, style: style)
             {
-                ClampMouseRectToParent = false,
                 OnSelected = SelectItem
             };
 
@@ -136,8 +135,7 @@ namespace Barotrauma
             }, text, style: "ListBoxElement")
             {
                 UserData = userData,
-                ToolTip = toolTip,
-                ClampMouseRectToParent = false
+                ToolTip = toolTip
             };
         }
 

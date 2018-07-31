@@ -68,6 +68,11 @@ namespace Barotrauma
             get { return Position.Y < DamageDepth; }
         }
 
+        public Submarine Submarine
+        {
+            get { return submarine; }
+        }
+
         public SubmarineBody(Submarine sub)
         {
             this.submarine = sub;
@@ -192,6 +197,11 @@ namespace Barotrauma
 
                 Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
                 Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
+                newVelocity = newVelocity.ClampLength(100.0f);
+                if (!MathUtils.IsValid(newVelocity))
+                {
+                    return;
+                }
 
                 List<Submarine> subsToMove = submarine.GetConnectedSubs();
                 foreach (Submarine dockedSub in subsToMove)
@@ -384,27 +394,22 @@ namespace Barotrauma
 
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            Limb limb = f2.Body.UserData as Limb;
-            if (limb != null)
+            if (f2.Body.UserData is Limb limb)
             {
                 bool collision = CheckLimbCollision(contact, limb);
                 if (collision) HandleLimbCollision(contact, limb);
                 return collision;
             }
 
-            VoronoiCell cell = f2.Body.UserData as VoronoiCell;
-            if (cell != null)
+            if (f2.UserData is VoronoiCell cell)
             {
                 HandleLevelCollision(contact, Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center));
                 return true;
             }
 
-            Structure structure = f2.Body.UserData as Structure;
-            if (structure != null)
+            if (f2.Body.UserData is Structure structure)
             {
-                Vector2 normal;
-                FixedArray2<Vector2> points;
-                contact.GetWorldManifold(out normal, out points);
+                contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
                 if (contact.FixtureA.Body == f1.Body)
                 {
                     normal = -normal;
@@ -414,8 +419,7 @@ namespace Barotrauma
                 return true;
             }
 
-            Submarine otherSub = f2.Body.UserData as Submarine;
-            if (otherSub != null)
+            if (f2.Body.UserData is Submarine otherSub)
             {
                 HandleSubCollision(contact, otherSub);
                 return true;
@@ -498,8 +502,8 @@ namespace Barotrauma
                 levelContact.GetWorldManifold(out contactNormal, out temp);
 
                 //if the contact normal is pointing from the limb towards the level cell it's touching, flip the normal
-                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ?
-                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+                VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ?
+                    ((VoronoiCell)levelContact.FixtureB.UserData) : ((VoronoiCell)levelContact.FixtureA.UserData);
 
                 var cellDiff = ConvertUnits.ToDisplayUnits(limb.body.SimPosition) - cell.Center;
                 if (Vector2.Dot(contactNormal, cellDiff) < 0)
@@ -524,6 +528,7 @@ namespace Barotrauma
                 Vector2 n;
                 FixedArray2<Vector2> contactPos;
                 contact.GetWorldManifold(out n, out contactPos);
+                limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 
@@ -616,8 +621,8 @@ namespace Barotrauma
                 levelContact.GetWorldManifold(out contactNormal, out temp);
 
                 //if the contact normal is pointing from the sub towards the level cell we collided with, flip the normal
-                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ? 
-                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+                VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ? 
+                    ((VoronoiCell)levelContact.FixtureB.UserData) : ((VoronoiCell)levelContact.FixtureA.UserData);
 
                 var cellDiff = ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center;
                 if (Vector2.Dot(contactNormal, cellDiff) < 0)

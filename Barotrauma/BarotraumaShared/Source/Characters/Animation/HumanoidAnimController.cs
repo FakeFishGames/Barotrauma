@@ -82,8 +82,10 @@ namespace Barotrauma
         private float cprAnimTimer;
         private float cprPump;
 
-        private float inWaterTimer;
         private bool swimming;
+        //time until the character can switch from walking to swimming or vice versa
+        //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
+        private float swimmingStateLockTimer;
 
         private float useItemTimer;
         
@@ -148,15 +150,9 @@ namespace Barotrauma
             if (!character.AllowInput)
             {
                 levitatingCollider = false;
+                Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
-                
-                if (Math.Abs(Collider.Rotation-GetLimb(LimbType.Torso).Rotation)>Math.PI*0.6f)
-                {
-                    Collider.SetTransform(Collider.SimPosition, MathHelper.WrapAngle(Collider.Rotation + (float)Math.PI));
-                }
-                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
-                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;           
-                
+                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                 return;
             }
 
@@ -247,21 +243,21 @@ namespace Barotrauma
                         DragCharacter(character.SelectedCharacter);
                     }
 
+                    swimmingStateLockTimer -= deltaTime;
+
                     if (forceStanding)
                     {
                         swimming = false;
                     }
-                    //0.5 second delay for switching between swimming and walking
-                    //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
-                    else if (inWater)
-                    {
-                        inWaterTimer = Math.Max(inWaterTimer + deltaTime, 0.5f);
-                        if (inWaterTimer >= 1.0f) swimming = true;
-                    }
                     else
                     {
-                        inWaterTimer = Math.Min(inWaterTimer - deltaTime, 0.5f);
-                        if (inWaterTimer <= 0.0f) swimming = false;
+                        //0.5 second delay for switching between swimming and walking
+                        //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
+                        if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
+                        {
+                            swimming = inWater;
+                            swimmingStateLockTimer = 0.5f;
+                        }
                     }
 
                     if (swimming)
@@ -631,9 +627,30 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
-            if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f))
+            if (currentHull != null)
             {
-                surfaceLimiter = (ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfaceY);
+                float surfacePos = currentHull.Surface;
+                //if the hull is almost full of water, check if there's a water-filled hull above it
+                //and use its water surface instead of the current hull's 
+                if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
+                {
+                    foreach (Gap gap in currentHull.ConnectedGaps)
+                    {
+                        if (gap.IsHorizontal || gap.Open <= 0.0f) continue;
+                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) continue;
+                        
+                        foreach (var linkedTo in gap.linkedTo)
+                        {
+                            if (linkedTo is Hull hull && hull != currentHull)
+                            {
+                                surfacePos = Math.Max(surfacePos, hull.Surface);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfacePos;
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 50.0f) return;
             }
@@ -1046,9 +1063,10 @@ namespace Barotrauma
                 if (GameMain.Client == null && target.Oxygen < -10.0f)
                 {
                     //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                    float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
-                    character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) target.Oxygen += cpr * deltaTime; //we didn't suffocate yet did we    
+                    float stabilizationAmount = skill * CPRSettings.StabilizationPerSkill;
+                    stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.StabilizationMin, CPRSettings.StabilizationMax);
+                    character.Oxygen -= (1.0f / stabilizationAmount) * deltaTime; //Worse skill = more oxygen required
+                    if (character.Oxygen > 0.0f) target.Oxygen += stabilizationAmount * deltaTime; //we didn't suffocate yet did we    
 
                     //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
                 }
@@ -1068,23 +1086,22 @@ namespace Barotrauma
                     targetTorso.body.ApplyForce(new Vector2(0, -1000f));
                     cprPump = 0;
 
-                    if (skill < 50.0f)
+                    if (skill < CPRSettings.DamageSkillThreshold)
                     {
-                        //10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        target.LastDamageSource = null;
                         target.DamageLimb(
                             targetTorso.WorldPosition, targetTorso, 
-                            new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
+                            new List<Affliction>()
+                            {
+                                AfflictionPrefab.InternalDamage.Instantiate((CPRSettings.DamageSkillThreshold - skill) * CPRSettings.DamageSkillMultiplier)
+                            },
                             0.0f, true, 0.0f, character);
                     }
                     if (GameMain.Client == null) //Serverside code
                     {
-                        //0.1% chance for 10 skill
-                        //1.5% chance for 25 skill
-                        //13% chance for 50 skill
-                        //42% chance for 75 skill
-                        //100% chance for 100 skill
-                        float reviveChance = skill / 100.0f;
-                        reviveChance *= reviveChance * reviveChance;
+                        float reviveChance = skill * CPRSettings.ReviveChancePerSkill;
+                        reviveChance = (float)Math.Pow(reviveChance, CPRSettings.ReviveChanceExponent);
+                        reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.ReviveChanceMin, CPRSettings.ReviveChanceMax);
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) <= reviveChance)
                         {
@@ -1102,11 +1119,18 @@ namespace Barotrauma
             //got the character back into a non-critical state, increase medical skill
             //BUT only if it has been more than 10 seconds since the character revived someone
             //otherwise it's easy to abuse the system by repeatedly reviving in a low-oxygen room 
-            target.CharacterHealth.CalculateVitality();
-            if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
+            if (!target.IsDead)
             {
-                character.Info.IncreaseSkillLevel("Medical", 0.5f);
-                lastReviveTime = (float)Timing.TotalTime;
+                target.CharacterHealth.CalculateVitality();
+                if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
+                {
+                    character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    SteamAchievementManager.OnCharacterRevived(target, character);
+                    lastReviveTime = (float)Timing.TotalTime;
+                    //reset attacker, we don't want the character to start attacking us
+                    //because we caused a bit of damage to them during CPR
+                    if (target.LastAttacker == character) target.LastAttacker = null;
+                }
             }
         }
         public override void DragCharacter(Character target)
@@ -1261,7 +1285,7 @@ namespace Barotrauma
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
-                Vector2 diff = (mousePos - AimSourceSimPos) * Dir;
+                Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
 

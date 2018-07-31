@@ -89,15 +89,17 @@ namespace Barotrauma.Items.Components
             {
                 TextGetter = () =>
                 {
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
+                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
                     return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
                 }
             };
             new GUITextBlock(new RectTransform(new Point(100, 15), textContainer.RectTransform), "")
             {
-                TextGetter = () => 
+                TextGetter = () =>
                 {
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f;
+                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
                     return steeringVelX.Replace("[kph]", ((int)realWorldVel).ToString());
                 }
             };
@@ -105,7 +107,8 @@ namespace Barotrauma.Items.Components
             {
                 TextGetter = () =>
                 {
-                    float realWorldDepth = Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
+                    float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                     return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
                 }
             };
@@ -121,13 +124,13 @@ namespace Barotrauma.Items.Components
             levelStartTickBox.Selected = false;
             levelEndTickBox.Selected = false;
 
-            if (item.Submarine == null)
+            if (controlledSub == null)
             {
                 posToMaintain = null;
             }
             else
             {
-                posToMaintain = item.Submarine.WorldPosition;
+                posToMaintain = controlledSub.WorldPosition;
             }
 
             tickBox.Selected = true;
@@ -165,6 +168,20 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 10, (int)steeringInputPos.Y - 10, 20, 20), Color.Red);
                 }
             }
+            else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
+            {
+                Sonar sonar = item.GetComponent<Sonar>();
+                if (sonar != null && controlledSub != null)
+                {
+                    Vector2 displayPosToMaintain = (posToMaintain.Value - controlledSub.WorldPosition) / sonar.Range * sonar.DisplayRadius;
+                    displayPosToMaintain.Y = -displayPosToMaintain.Y;
+                    displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width * 0.45f);
+
+                    displayPosToMaintain = velRect.Center.ToVector2() + displayPosToMaintain;
+                    
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)displayPosToMaintain.X - 5, (int)displayPosToMaintain.Y - 5, 10, 10), Color.Red);
+                }
+            }
 
             Vector2 steeringPos = new Vector2(velRect.Center.X + targetVelocity.X * 0.9f, velRect.Center.Y - targetVelocity.Y * 0.9f);
 
@@ -187,12 +204,20 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
-                    SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
-                    steeringInput.Y = -steeringInput.Y;
-
-                    steeringAdjustSpeed = character == null ? 
-                        0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
-
+                    if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
+                    {
+                        Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                        inputPos.Y = -inputPos.Y;
+                        posToMaintain = controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition
+                            + inputPos / sonar.DisplayRadius * sonar.Range;                        
+                    }
+                    else
+                    {
+                        SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
+                        steeringInput.Y = -steeringInput.Y;
+                        steeringAdjustSpeed = character == null ? 
+                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
+                    }
                     unsentChanges = true;
                 }
             }

@@ -172,7 +172,7 @@ namespace Barotrauma
                     };
                 }
             }
-            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
+            if (Submarine.SavedSubmarines.Any()) subList.Select(Submarine.SavedSubmarines.First());
         }
 
         public void UpdateLoadMenu()

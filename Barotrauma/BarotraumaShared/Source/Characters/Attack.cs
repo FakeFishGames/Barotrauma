@@ -6,12 +6,7 @@ using System.Xml.Linq;
 
 
 namespace Barotrauma
-{
-    enum CauseOfDeathType
-    {
-        Unknown, Pressure, Suffocation, Drowning, Affliction, Disconnected
-    }
-    
+{    
     public enum HitDetection
     {
         Distance,
@@ -60,7 +55,7 @@ namespace Barotrauma
         public float Range { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float DamageRange { get; private set; }
+        public float DamageRange { get; set; }
 
         [Serialize(0.0f, false)]
         public float Duration { get; private set; }
@@ -198,8 +193,7 @@ namespace Barotrauma
         {
             if (OnlyHumans)
             {
-                Character character = target as Character;
-                if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+                if (target is Character character && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
 
             DamageParticles(deltaTime, worldPosition);
@@ -210,21 +204,21 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
                 if (target is Character)
                 {
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                    if (effect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         effect.Apply(effectType, deltaTime, (Character)target, (Character)target);
                     }
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                    if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                     {
                         effect.Apply(effectType, deltaTime, (Character)target, attackResult.HitLimb);
                     }                    
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                    if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
                         effect.Apply(effectType, deltaTime, (Character)target, ((Character)target).AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                     }
@@ -251,19 +245,19 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
                 }
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb);
                 }
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                 }

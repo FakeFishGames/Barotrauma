@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,7 +14,6 @@ namespace Barotrauma
         {
             get
             {
-                if (instance == null) instance = new MapGenerationParams();
                 return instance;
             }
         }
@@ -30,12 +31,12 @@ namespace Barotrauma
         [Serialize(true, true), Editable]
         public bool ShowOverlay { get; set; }
 #else
-        public const bool ShowLocations = true;
-        public const bool ShowLevelTypeNames = false;
-        public const bool ShowOverlay = true;
+        public readonly bool ShowLocations = true;
+        public readonly bool ShowLevelTypeNames = false;
+        public readonly bool ShowOverlay = true;
 #endif
 
-        [Serialize(9, true)]        
+        [Serialize(6, true)]        
         public int DifficultyZones { get; set; } //Number of difficulty zones
         
         [Serialize(2000, true)]
@@ -114,6 +115,24 @@ namespace Barotrauma
         [Serialize(0.1f, true), Editable(0.0f, 10.0f, ToolTip = "ConnectionDisplacementMultiplier for the UI indicator lines between locations.")]
         public float ConnectionIndicatorDisplacementMultiplier { get; set; }
 
+        public Sprite ConnectionSprite { get; private set; }
+
+#if CLIENT
+        public SpriteSheet DecorativeMapSprite { get; private set; }
+        public SpriteSheet DecorativeGraphSprite { get; private set; }
+        public SpriteSheet DecorativeLineTop { get; private set; }
+        public SpriteSheet DecorativeLineBottom { get; private set; }
+        public SpriteSheet DecorativeLineCorner { get; private set; }
+
+        public SpriteSheet ReticleLarge { get; private set; }
+        public SpriteSheet ReticleMedium { get; private set; }
+        public SpriteSheet ReticleSmall { get; private set; }
+
+        public Sprite MapCircle { get; private set; }
+#endif
+
+        public List<Sprite> BackgroundTileSprites { get; private set; }
+
         public string Name
         {
             get { return GetType().ToString(); } 
@@ -124,9 +143,71 @@ namespace Barotrauma
             get; private set;
         }
 
-        private MapGenerationParams()
+        public static void Init()
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this);
+            var files = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.MapGenerationParameters);
+            if (!files.Any())
+            {
+                DebugConsole.ThrowError("No map generation parameters found in the selected content packages!");
+                return;
+            }
+
+            foreach (string file in files)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(file);
+                if (doc?.Root == null) return;
+
+                instance = new MapGenerationParams(doc.Root);
+                break;
+            }
+        }
+
+        private MapGenerationParams(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            BackgroundTileSprites = new List<Sprite>();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "connectionsprite":
+                        ConnectionSprite = new Sprite(subElement);
+                        break;
+                    case "backgroundtile":
+                        BackgroundTileSprites.Add(new Sprite(subElement));
+                        break;
+#if CLIENT
+                    case "mapcircle":
+                        MapCircle = new Sprite(subElement);
+                        break;
+                    case "decorativemapsprite":
+                        DecorativeMapSprite = new SpriteSheet(subElement);
+                        break;
+                    case "decorativegraphsprite":
+                        DecorativeGraphSprite = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinetop":
+                        DecorativeLineTop = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinebottom":
+                        DecorativeLineBottom = new SpriteSheet(subElement);
+                        break;
+                    case "decorativelinecorner":
+                        DecorativeLineCorner = new SpriteSheet(subElement);
+                        break;
+                    case "reticlelarge":
+                        ReticleLarge = new SpriteSheet(subElement);
+                        break;
+                    case "reticlemedium":
+                        ReticleMedium = new SpriteSheet(subElement);
+                        break;
+                    case "reticlesmall":
+                        ReticleSmall = new SpriteSheet(subElement);
+                        break;
+#endif
+                }
+            }
         }
     }
 }
