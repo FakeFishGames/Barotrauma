@@ -67,6 +67,9 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            //clients don't create items until the server says so
+            if (GameMain.Client != null) return;
+
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
@@ -79,7 +82,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                Entity.Spawner.AddToSpawnQueue(itemPrefab, this);
+                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this);
             }
         }
 
