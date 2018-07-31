@@ -418,7 +418,8 @@ namespace Barotrauma
                     (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientRead(type, msg, sendingTime);
+                    int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Repair:
                     for (int i = 0; i < FixRequirements.Count; i++)
@@ -458,6 +459,8 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
                     break;
+                case NetEntityEvent.Type.Invalid:
+                    break;
             }
         }
 
@@ -475,11 +478,12 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
                     msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-
                     (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
-                    ownInventory.ClientWrite(msg, extraData);
+                    int containerIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
+                    (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
                     break;
                 case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count > 0)

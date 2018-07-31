@@ -794,10 +794,13 @@ namespace Barotrauma
                 //this is preferable to the cost of using continuous collision detection for the character collider
                 if (newHull != null)
                 {
+                    Vector2 hullDiff = WorldPosition - newHull.WorldPosition;
+                    Vector2 moveDir = hullDiff.LengthSquared() < 0.001f ? Vector2.UnitY : Vector2.Normalize(hullDiff);
+
                     //find a position 32 units away from the hull
                     Vector2? intersection = MathUtils.GetLineRectangleIntersection(
                         newHull.WorldPosition, 
-                        newHull.WorldPosition + Vector2.Normalize(WorldPosition - newHull.WorldPosition) * Math.Max(newHull.Rect.Width, newHull.Rect.Height),
+                        newHull.WorldPosition + moveDir * Math.Max(newHull.Rect.Width, newHull.Rect.Height),
                         new Rectangle(newHull.WorldRect.X - 32, newHull.WorldRect.Y + 32, newHull.WorldRect.Width + 64, newHull.Rect.Height + 64));
 
                     if (intersection != null)
@@ -1554,7 +1557,7 @@ namespace Barotrauma
             Vector2 force = Vector2.Zero;
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.Open <= 0.0f || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce == Vector2.Zero) continue;
+                if (gap.Open <= 0.0f || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce.LengthSquared() < 0.01f) continue;
 
                 Vector2 gapPos = gap.SimPosition;
                 float dist = Vector2.Distance(limbPos, gapPos);

@@ -290,6 +290,7 @@ namespace Barotrauma.Items.Components
                         
                         //far enough -> ignore
                         if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y) continue;
+                        if (diff.LengthSquared() < 1.0f) diff = Vector2.UnitY;
 
                         float dot = controlledSub.Velocity == Vector2.Zero ?
                             0.0f : Vector2.Dot(controlledSub.Velocity, -Vector2.Normalize(diff));
@@ -318,16 +319,14 @@ namespace Barotrauma.Items.Components
                 float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
 
                 Vector2 diff = controlledSub.WorldPosition - sub.WorldPosition;
-
                 float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
 
                 //far enough -> ignore
                 if (dist > thisSize + otherSize) continue;
 
-                diff = Vector2.Normalize(diff);
-
+                Vector2 dir = dist <= 0.0001f ? Vector2.UnitY : diff / dist;
                 float dot = controlledSub.Velocity == Vector2.Zero ?
-                    0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -Vector2.Normalize(diff));
+                    0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -dir);
 
                 //heading away -> ignore
                 if (dot < 0.0f) continue;

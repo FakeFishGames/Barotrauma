@@ -87,7 +87,7 @@ namespace Barotrauma
         private HashSet<string> tags;
         
         private readonly float duration;
-        public static List<DurationListElement> DurationList = new List<DurationListElement>();
+        public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
         public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
@@ -440,16 +440,17 @@ namespace Barotrauma
                 Item item = serializableEntity as Item;
                 if (item == null) continue;
 
-                Character targetCharacter = targets.FirstOrDefault(t => t is Character) as Character;
+                Character targetCharacter = targets.FirstOrDefault(t => t is Character character && !character.Removed) as Character;
                 if (targetCharacter == null)
                 {
                     foreach (var target in targets)
                     {
-                        if (target is Limb) targetCharacter = ((Limb)target).character;
+                        if (target is Limb limb && limb.character != null && !limb.character.Removed) targetCharacter = ((Limb)target).character;
                     }
                 }
                 for (int i = 0; i < useItemCount; i++)
                 {
+                    if (item.Removed) continue;
                     item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
                 }
             }                     
@@ -478,11 +479,15 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    if (target is Entity targetEntity)
+                    {
+                        if (targetEntity.Removed) continue;
+                    }
+
                     for (int i = 0; i < propertyNames.Length; i++)
                     {
                         if (target == null || target.SerializableProperties == null || 
                             !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property)) continue;
-
                         ApplyToProperty(property, propertyEffects[i], deltaTime);
                     }
                 }                
@@ -688,6 +693,8 @@ namespace Barotrauma
         public static void StopAll()
         {
             CoroutineManager.StopCoroutines("statuseffect");
+            DelayedEffect.DelayList.Clear();
+            DurationList.Clear();
         }
 
         public void AddTag(string tag)
