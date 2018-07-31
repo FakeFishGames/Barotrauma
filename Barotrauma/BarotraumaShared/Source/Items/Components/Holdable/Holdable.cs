@@ -160,7 +160,18 @@ namespace Barotrauma.Items.Components
             if (item.body != null)
             {
                 item.body.ResetDynamics();
-                item.SetTransform(picker.SimPosition, 0.0f);
+                Limb heldHand;
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+
+                }
+                else
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                }
+
+                item.SetTransform(heldHand.SimPosition, 0.0f);
             }
 
             picker.DeselectItem(item);
