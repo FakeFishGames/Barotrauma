@@ -32,6 +32,7 @@ namespace Barotrauma
                 }
                 return _humanWalkParams;
             }
+            set { _humanWalkParams = value; }
         }
 
         private HumanRunParams _humanRunParams;
@@ -45,6 +46,7 @@ namespace Barotrauma
                 }
                 return _humanRunParams;
             }
+            set { _humanRunParams = value; }
         }
 
         private HumanSwimSlowParams _humanSwimSlowParams;
@@ -58,6 +60,7 @@ namespace Barotrauma
                 }
                 return _humanSwimSlowParams;
             }
+            set { _humanSwimSlowParams = value; }
         }
 
         private HumanSwimFastParams _humanSwimFastParams;
@@ -71,15 +74,35 @@ namespace Barotrauma
                 }
                 return _humanSwimFastParams;
             }
+            set { _humanSwimFastParams = value; }
         }
 
         public new HumanGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as HumanGroundedParams;
         public new HumanSwimParams CurrentSwimParams => base.CurrentSwimParams as HumanSwimParams;
 
-        public override GroundedMovementParams WalkParams => HumanWalkParams;
-        public override GroundedMovementParams RunParams => HumanRunParams;
-        public override SwimParams SwimSlowParams => HumanSwimSlowParams;
-        public override SwimParams SwimFastParams => HumanSwimFastParams;
+        public override GroundedMovementParams WalkParams
+        {
+            get { return HumanWalkParams; }
+            set { HumanWalkParams = value as HumanWalkParams; }
+        }
+
+        public override GroundedMovementParams RunParams
+        {
+            get { return HumanRunParams; }
+            set { HumanRunParams = value as HumanRunParams; }
+        }
+
+        public override SwimParams SwimSlowParams
+        {
+            get { return HumanSwimSlowParams; }
+            set { HumanSwimSlowParams = value as HumanSwimSlowParams; }
+        }
+
+        public override SwimParams SwimFastParams
+        {
+            get { return HumanSwimFastParams; }
+            set { HumanSwimFastParams = value as HumanSwimFastParams; }
+        }
 
         public bool Crouching;
 

@@ -459,14 +459,14 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var saveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animation");
-            saveAnimButton.OnClicked += (button, userData) =>
+            var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animation");
+            quickSaveAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Save());
                 return true;
             };
-            var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
-            saveRagdollButton.OnClicked += (button, userData) =>
+            var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
+            quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.SaveRagdoll();
                 return true;
@@ -489,8 +489,8 @@ namespace Barotrauma
             };
             int messageBoxWidth = GameMain.GraphicsWidth / 2;
             int messageBoxHeight = GameMain.GraphicsHeight / 2;
-            var saveRagdollAsButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
-            saveRagdollAsButton.OnClicked += (button, userData) =>
+            var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
+            saveRagdollButton.OnClicked += (button, userData) =>
             {
                 var box = new GUIMessageBox("Save Ragdoll as", "Please provide a name for the file:", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
                 var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name);
@@ -501,7 +501,7 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
-                    character.AnimController.RagdollParams.Save(inputField.Text);
+                    RagdollParams.Save(inputField.Text);
                     box.Close();
                     return true;
                 };
@@ -590,11 +590,114 @@ namespace Barotrauma
                 };
                 return true;
             };
+            var saveAnimationButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Animation");
+            saveAnimationButton.OnClicked += (button, userData) =>
+            {
+                var box = new GUIMessageBox("Save Animation as", "Please provide a name for the file:", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
+                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), CurrentAnimation.Name);
+                box.Buttons[0].OnClicked += (b, d) =>
+                {
+                    box.Close();
+                    return true;
+                };
+                box.Buttons[1].OnClicked += (b, d) =>
+                {
+                    CurrentAnimation.Save(inputField.Text);
+                    box.Close();
+                    return true;
+                };
+                return true;
+            };
+            var loadAnimationButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Load Animation");
+            loadAnimationButton.OnClicked += (button, userData) =>
+            {
+                var loadBox = new GUIMessageBox("Load Animation", "", new string[] { "Cancel", "Load", "Delete" }, messageBoxWidth, messageBoxHeight);
+                loadBox.Buttons[0].OnClicked += loadBox.Close;
+                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter));
+                var deleteButton = loadBox.Buttons[2];
+                deleteButton.Enabled = false;
+                void PopulateListBox()
+                {
+                    try
+                    {
+                        var filePaths = Directory.GetFiles(CurrentAnimation.Folder);
+                        foreach (var path in filePaths)
+                        {
+                            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform) { MinSize = new Point(0, 30) },
+                                ToolBox.LimitString(Path.GetFileNameWithoutExtension(path), GUI.Font, listBox.Rect.Width - 80))
+                            {
+                                UserData = path,
+                                ToolTip = path
+                            };
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Couldn't open directory \"" + CurrentAnimation.Folder + "\"!", e);
+                    }
+                }
+                PopulateListBox();
+                // Handle file selection
+                string selectedFile = null;
+                listBox.OnSelected += (component, data) =>
+                {
+                    selectedFile = data as string;
+                    // Don't allow to delete the animation that is currently in use, nor the default file.
+                    var fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    deleteButton.Enabled = fileName != CurrentAnimation.Name && fileName != AnimationParams.GetDefaultFileName(character.SpeciesName, CurrentAnimation.Type);
+                    return true;
+                };
+                deleteButton.OnClicked += (btn, data) =>
+                {
+                    if (selectedFile == null)
+                    {
+                        loadBox.Close();
+                        return false;
+                    }
+                    var msgBox = new GUIMessageBox(
+                        TextManager.Get("DeleteDialogLabel"),
+                        TextManager.Get("DeleteDialogQuestion").Replace("[file]", selectedFile),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") }, messageBoxWidth - 100, messageBoxHeight - 100);
+                    msgBox.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        try
+                        {
+                            File.Delete(selectedFile);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", selectedFile), e);
+                        }
+                        msgBox.Close();
+                        listBox.ClearChildren();
+                        PopulateListBox();
+                        selectedFile = null;
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        msgBox.Close();
+                        return true;
+                    };
+                    return true;
+                };
+                loadBox.Buttons[1].OnClicked += (btn, data) =>
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    //var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    //SpawnCharacter(currentCharacterConfig, ragdoll);
+                    //CurrentAnimation = character.IsHumanoid ? AnimationParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    loadBox.Close();
+                    return true;
+                };
+                return true;
+            };
         }
         #endregion
 
         #region Params
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
+        private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
         private RagdollParams RagdollParams => character.AnimController.RagdollParams;
 
         private void ResetParamsEditor()

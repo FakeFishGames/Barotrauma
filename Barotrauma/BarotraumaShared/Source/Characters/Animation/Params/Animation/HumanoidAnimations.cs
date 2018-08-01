@@ -4,33 +4,33 @@ namespace Barotrauma
 {
     class HumanWalkParams : HumanGroundedParams
     {
-        public static HumanWalkParams GetAnimParams()
+        public static HumanWalkParams GetAnimParams(string fileName = null)
         {
-            return GetAnimParams<HumanWalkParams>("human", AnimationType.Walk);
+            return GetAnimParams<HumanWalkParams>("human", AnimationType.Walk, fileName);
         }
     }
 
     class HumanRunParams : HumanGroundedParams
     {
-        public static HumanRunParams GetAnimParams()
+        public static HumanRunParams GetAnimParams(string fileName = null)
         {
-            return GetAnimParams<HumanRunParams>("human", AnimationType.Run);
+            return GetAnimParams<HumanRunParams>("human", AnimationType.Run, fileName);
         }
     }
 
     class HumanSwimFastParams: HumanSwimParams
     {
-        public static HumanSwimFastParams GetAnimParams()
+        public static HumanSwimFastParams GetAnimParams(string fileName = null)
         {
-            return GetAnimParams<HumanSwimFastParams>("human", AnimationType.SwimFast);
+            return GetAnimParams<HumanSwimFastParams>("human", AnimationType.SwimFast, fileName);
         }
     }
 
     class HumanSwimSlowParams : HumanSwimParams
     {
-        public static HumanSwimSlowParams GetAnimParams()
+        public static HumanSwimSlowParams GetAnimParams(string fileName = null)
         {
-            return GetAnimParams<HumanSwimSlowParams>("human", AnimationType.SwimSlow);
+            return GetAnimParams<HumanSwimSlowParams>("human", AnimationType.SwimSlow, fileName);
         }
     }
 

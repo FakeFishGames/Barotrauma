@@ -4,14 +4,14 @@ namespace Barotrauma
 {
     class FishWalkParams : FishGroundedParams
     {
-        public static FishWalkParams GetAnimParams(Character character)
+        public static FishWalkParams GetAnimParams(Character character, string fileName = null)
         {
             if (!character.AnimController.CanWalk)
             {
                 DebugConsole.ThrowError($"{character.SpeciesName} cannot use walk animations!");
                 return Empty;
             }
-            return GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk);
+            return GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
@@ -19,14 +19,14 @@ namespace Barotrauma
 
     class FishRunParams : FishGroundedParams
     {
-        public static FishRunParams GetAnimParams(Character character)
+        public static FishRunParams GetAnimParams(Character character, string fileName = null)
         {
             if (!character.AnimController.CanWalk)
             {
                 DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
                 return Empty;
             }
-            return GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run);
+            return GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName);
         }
 
         protected static FishRunParams Empty = new FishRunParams();
@@ -34,17 +34,17 @@ namespace Barotrauma
 
     class FishSwimFastParams : FishSwimParams
     {
-        public static FishSwimFastParams GetAnimParams(Character character)
+        public static FishSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
+            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
         }
     }
 
     class FishSwimSlowParams : FishSwimParams
     {
-        public static FishSwimSlowParams GetAnimParams(Character character)
+        public static FishSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
+            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
     }
 

@@ -8,10 +8,10 @@ namespace Barotrauma
 {
     abstract class AnimController : Ragdoll
     {
-        public abstract GroundedMovementParams WalkParams { get; }
-        public abstract GroundedMovementParams RunParams { get; }
-        public abstract SwimParams SwimSlowParams { get; }
-        public abstract SwimParams SwimFastParams { get; }
+        public abstract GroundedMovementParams WalkParams { get; set; }
+        public abstract GroundedMovementParams RunParams { get; set; }
+        public abstract SwimParams SwimSlowParams { get; set; }
+        public abstract SwimParams SwimFastParams { get; set; }
 
         public AnimationParams CurrentAnimationParams => (InWater || !CanWalk) ? (AnimationParams)CurrentSwimParams : CurrentGroundedParams;
         public GroundedMovementParams CurrentGroundedParams
