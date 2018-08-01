@@ -158,6 +158,7 @@ namespace Barotrauma
                 }
                 return ragdoll;
             }
+            set { ragdoll = value; }
         }
 
         public CharacterInfo(string file, string name = "", Gender gender = Gender.None, JobPrefab jobPrefab = null, HumanRagdollParams ragdoll = null)

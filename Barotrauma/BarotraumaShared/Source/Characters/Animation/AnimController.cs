@@ -86,7 +86,7 @@ namespace Barotrauma
 
         protected float walkPos;
 
-        public AnimController(Character character, string seed) : base(character, seed) { }
+        public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
         public virtual void UpdateAnim(float deltaTime) { }
 

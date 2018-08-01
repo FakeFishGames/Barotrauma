@@ -7,7 +7,11 @@ namespace Barotrauma
 {
     class FishAnimController : AnimController
     {
-        public override RagdollParams RagdollParams => FishRagdollParams;
+        public override RagdollParams RagdollParams
+        {
+            get { return FishRagdollParams; }
+            protected set { FishRagdollParams = value as FishRagdollParams; }
+        }
 
         private FishRagdollParams _ragdollParams;
         public FishRagdollParams FishRagdollParams
@@ -20,7 +24,7 @@ namespace Barotrauma
                 }
                 return _ragdollParams;
             }
-            set
+            protected set
             {
                 _ragdollParams = value;
             }
@@ -92,7 +96,7 @@ namespace Barotrauma
         // TODO: should this be defined in the character config or is it practically constant?
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, string seed) : base(character, seed) { }
+        public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
         public override void UpdateAnim(float deltaTime)
         {
