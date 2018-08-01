@@ -34,7 +34,7 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch,
                 new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
                 new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
-                Color.LightGreen);
+                Color.LightGreen * 0.5f, 0, 3);
 
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
@@ -42,7 +42,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
                     new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
-                    Color.LightGreen);
+                    Color.LightGreen * 0.5f, 0, 3);
 
                 GUI.SmallFont.DrawString(spriteBatch,
                     pathSteering.CurrentPath.Nodes[i].ID.ToString(),
