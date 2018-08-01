@@ -150,5 +150,22 @@ namespace Barotrauma
             }
             return GetSpeed(animType);
         }
+
+        public AnimationParams GetAnimationParamsFromType(AnimationType type)
+        {
+            switch (type)
+            {
+                case AnimationType.Walk:
+                    return WalkParams;
+                case AnimationType.Run:
+                    return RunParams;
+                case AnimationType.SwimSlow:
+                    return SwimSlowParams;
+                case AnimationType.SwimFast:
+                    return SwimFastParams;
+                default:
+                    throw new NotImplementedException(type.ToString());
+            }
+        }
     }
 }

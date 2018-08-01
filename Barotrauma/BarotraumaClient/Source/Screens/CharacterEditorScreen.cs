@@ -595,6 +595,22 @@ namespace Barotrauma
             {
                 var box = new GUIMessageBox("Save Animation as", "Please provide a name for the file:", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
                 var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), CurrentAnimation.Name);
+                // Type filtering
+                var typeSelectionArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.1f), box.Content.RectTransform) { MinSize = new Point(0, 30) }, style: null);
+                var typeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopRight), "Select Animation Type:");
+                var typeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), elementCount: 4);
+                foreach (object enumValue in Enum.GetValues(typeof(AnimationType)))
+                {
+                    typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                }
+                typeDropdown.SelectItem(AnimationType.Walk);
+                AnimationType selectedType = AnimationType.Walk;
+                typeDropdown.OnSelected = (component, data) =>
+                {
+                    selectedType = (AnimationType)data;
+                    inputField.Text = character.AnimController.GetAnimationParamsFromType(selectedType).Name;
+                    return true;
+                };
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
                     box.Close();
@@ -602,7 +618,7 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
-                    CurrentAnimation.Save(inputField.Text);
+                    character.AnimController.GetAnimationParamsFromType(selectedType).Save(inputField.Text);
                     box.Close();
                     return true;
                 };
@@ -613,15 +629,32 @@ namespace Barotrauma
             {
                 var loadBox = new GUIMessageBox("Load Animation", "", new string[] { "Cancel", "Load", "Delete" }, messageBoxWidth, messageBoxHeight);
                 loadBox.Buttons[0].OnClicked += loadBox.Close;
-                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter));
+                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform));
                 var deleteButton = loadBox.Buttons[2];
                 deleteButton.Enabled = false;
+                // Type filtering
+                var typeSelectionArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.1f), loadBox.Content.RectTransform) { MinSize = new Point(0, 30) }, style: null);
+                var typeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopRight), "Select Animation Type:");
+                var typeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1), typeSelectionArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), elementCount: 4);
+                foreach (object enumValue in Enum.GetValues(typeof(AnimationType)))
+                {
+                    typeDropdown.AddItem(enumValue.ToString(), enumValue);
+                }
+                typeDropdown.SelectItem(AnimationType.Walk);
+                AnimationType selectedType = AnimationType.Walk;
+                typeDropdown.OnSelected = (component, data) =>
+                {
+                    selectedType = (AnimationType)data;
+                    PopulateListBox();
+                    return true;
+                };
                 void PopulateListBox()
                 {
                     try
                     {
+                        listBox.ClearChildren();
                         var filePaths = Directory.GetFiles(CurrentAnimation.Folder);
-                        foreach (var path in filePaths)
+                        foreach (var path in filePaths.Where(p => p.ToLowerInvariant().Contains(selectedType.ToString().ToLowerInvariant())))
                         {
                             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform) { MinSize = new Point(0, 30) },
                                 ToolBox.LimitString(Path.GetFileNameWithoutExtension(path), GUI.Font, listBox.Rect.Width - 80))
@@ -669,7 +702,6 @@ namespace Barotrauma
                             DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", selectedFile), e);
                         }
                         msgBox.Close();
-                        listBox.ClearChildren();
                         PopulateListBox();
                         selectedFile = null;
                         return true;
@@ -684,9 +716,7 @@ namespace Barotrauma
                 loadBox.Buttons[1].OnClicked += (btn, data) =>
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    //var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
-                    //SpawnCharacter(currentCharacterConfig, ragdoll);
-                    //CurrentAnimation = character.IsHumanoid ? AnimationParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    //CurrentAnimation = character.IsHumanoid ? AnimationParams.GetAnimParams<AnimationParams>(fileName, CurrentAnimation.Type) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
                     loadBox.Close();
                     return true;
                 };
