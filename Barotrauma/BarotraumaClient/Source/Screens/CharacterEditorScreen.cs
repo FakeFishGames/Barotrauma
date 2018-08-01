@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
@@ -43,8 +44,8 @@ namespace Barotrauma
             Submarine.MainSub.Load(true);
             Submarine.MainSub.GodMode = true;
             CalculateMovementLimits();
-            SpawnCharacter(Character.HumanConfigFile);
-            ResetParamsEditor();
+            currentCharacterConfig = Character.HumanConfigFile;
+            SpawnCharacter(currentCharacterConfig);
             GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
         }
 
@@ -140,6 +141,7 @@ namespace Barotrauma
 
         #region Character spawning
         private int characterIndex = -1;
+        private string currentCharacterConfig;
         private List<string> allFiles;
         private List<string> AllFiles
         {
@@ -158,14 +160,16 @@ namespace Barotrauma
         {
             CheckAndGetIndex();
             IncreaseIndex();
-            return AllFiles[characterIndex];
+            currentCharacterConfig = AllFiles[characterIndex];
+            return currentCharacterConfig;
         }
 
         private string GetPreviousConfigFile()
         {
             CheckAndGetIndex();
             ReduceIndex();
-            return AllFiles[characterIndex];
+            currentCharacterConfig = AllFiles[characterIndex];
+            return currentCharacterConfig;
         }
 
         // Check if the index is not set, in which case we'll get the index from the current species name.
@@ -200,11 +204,11 @@ namespace Barotrauma
             return AllFiles.Find(c => c.EndsWith(speciesName + ".xml"));
         }
 
-        private Character SpawnCharacter(string configFile)
+        private Character SpawnCharacter(string configFile, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage($"Trying to spawn {configFile}", Color.HotPink);
             spawnPosition = WayPoint.GetRandom(sub: Submarine.MainSub).WorldPosition;
-            var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false);
+            var character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), hasAi: false, ragdoll: ragdoll);
             character.Submarine = Submarine.MainSub;
             character.AnimController.forceStanding = character.IsHumanoid;
             character.dontFollowCursor = true;
@@ -221,6 +225,7 @@ namespace Barotrauma
             CreateTextures();
             CreateGUI();
             widgets.Clear();
+            ResetParamsEditor();
             return character;
         }
         #endregion
@@ -306,14 +311,12 @@ namespace Barotrauma
             prevCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetPreviousConfigFile());
-                ResetParamsEditor();
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1), charButtons.RectTransform, Anchor.TopRight), "Next \nCharacter");
             nextCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetNextConfigFile());
-                ResetParamsEditor();
                 return true;
             };
             var animControlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Animation Controls") { Selected = showAnimControls };
@@ -456,27 +459,27 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var saveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Animation");
-            saveAnimButton.OnClicked += (b, obj) =>
+            var saveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animation");
+            saveAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Save());
                 return true;
             };
+            var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
+            saveRagdollButton.OnClicked += (button, userData) =>
+            {
+                character.AnimController.SaveRagdoll();
+                return true;
+            };
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animation");
-            resetAnimButton.OnClicked += (b, obj) =>
+            resetAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Reset());
                 ResetParamsEditor();
                 return true;
             };
-            var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
-            saveRagdollButton.OnClicked += (b, obj) =>
-            {
-                character.AnimController.SaveRagdoll();
-                return true;
-            };
             var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
-            resetRagdollButton.OnClicked += (b, obj) =>
+            resetRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.ResetRagdoll();
                 CreateCenterPanel();
@@ -484,10 +487,107 @@ namespace Barotrauma
                 widgets.Values.ForEach(w => w.refresh?.Invoke());
                 return true;
             };
-            var saveAsButtonTest = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save As (Test)");
-            saveAsButtonTest.OnClicked += (b, obj) =>
+            int messageBoxWidth = GameMain.GraphicsWidth / 2;
+            int messageBoxHeight = GameMain.GraphicsHeight / 2;
+            var saveRagdollAsButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Save Ragdoll");
+            saveRagdollAsButton.OnClicked += (button, userData) =>
             {
-                character.AnimController.RagdollParams.Save("TestRagdoll");
+                var box = new GUIMessageBox("Save Ragdoll as", "Please provide a name for the file:", new string[] { "Cancel", "Save" }, messageBoxWidth, messageBoxHeight);
+                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name);
+                box.Buttons[0].OnClicked += (b, d) =>
+                {
+                    box.Close();
+                    return true;
+                };
+                box.Buttons[1].OnClicked += (b, d) =>
+                {
+                    character.AnimController.RagdollParams.Save(inputField.Text);
+                    box.Close();
+                    return true;
+                };
+                return true;
+            };
+            var loadRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Load Ragdoll");
+            loadRagdollButton.OnClicked += (button, userData) =>
+            {
+                var loadBox = new GUIMessageBox("Load Ragdoll", "", new string[] { "Cancel", "Load", "Delete" }, messageBoxWidth, messageBoxHeight);
+                loadBox.Buttons[0].OnClicked += loadBox.Close;
+                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter));
+                var deleteButton = loadBox.Buttons[2];
+                deleteButton.Enabled = false;
+                void PopulateListBox()
+                {
+                    try
+                    {
+                        var filePaths = Directory.GetFiles(RagdollParams.Folder);
+                        foreach (var path in filePaths)
+                        {
+                            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform) { MinSize = new Point(0, 30) },
+                                ToolBox.LimitString(Path.GetFileNameWithoutExtension(path), GUI.Font, listBox.Rect.Width - 80))
+                            {
+                                UserData = path,
+                                ToolTip = path
+                            };
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Couldn't open directory \"" + RagdollParams.Folder + "\"!", e);
+                    }
+                }
+                PopulateListBox();
+                // Handle file selection
+                string selectedFile = null;
+                listBox.OnSelected += (component, data) =>
+                {
+                    selectedFile = data as string;
+                    // Don't allow to delete the ragdoll that is currently in use, nor the default file.
+                    var fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    deleteButton.Enabled = fileName != RagdollParams.Name && fileName != RagdollParams.GetDefaultFileName(character.SpeciesName);
+                    return true;
+                };
+                deleteButton.OnClicked += (btn, data) =>
+                {
+                    if (selectedFile == null)
+                    {
+                        loadBox.Close();
+                        return false;
+                    }
+                    var msgBox = new GUIMessageBox(
+                        TextManager.Get("DeleteDialogLabel"),
+                        TextManager.Get("DeleteDialogQuestion").Replace("[file]", selectedFile),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") }, messageBoxWidth - 100, messageBoxHeight - 100);
+                    msgBox.Buttons[0].OnClicked += (b, d) =>
+                    {
+                        try
+                        {
+                            File.Delete(selectedFile);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", selectedFile), e);
+                        }
+                        msgBox.Close();
+                        listBox.ClearChildren();
+                        PopulateListBox();
+                        selectedFile = null;
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked += (b, d) =>
+                    {
+                        msgBox.Close();
+                        return true;
+                    };
+                    return true;
+                };
+                loadBox.Buttons[1].OnClicked += (btn, data) =>
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(selectedFile);
+                    var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    SpawnCharacter(currentCharacterConfig, ragdoll);
+                    loadBox.Close();
+                    return true;
+                };
                 return true;
             };
         }

@@ -9,9 +9,17 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
-        public override RagdollParams RagdollParams => HumanRagdollParams;
+        public override RagdollParams RagdollParams
+        {
+            get { return HumanRagdollParams; }
+            protected set { HumanRagdollParams = value as HumanRagdollParams; }
+        }
 
-        public HumanRagdollParams HumanRagdollParams => character.Info.Ragdoll;
+        public HumanRagdollParams HumanRagdollParams
+        {
+            get { return character.Info.Ragdoll; }
+            protected set { character.Info.Ragdoll = value; }
+        }
 
         private HumanWalkParams _humanWalkParams;
         public HumanWalkParams HumanWalkParams
@@ -125,7 +133,7 @@ namespace Barotrauma
             }
         }
 
-        public HumanoidAnimController(Character character, string seed) : base(character, seed)
+        public HumanoidAnimController(Character character, string seed, HumanRagdollParams ragdollParams = null) : base(character, seed, ragdollParams)
         {
             // TODO: load from the character info file?
             movementLerp = RagdollParams.MainElement.GetAttributeFloat("movementlerp", 0.4f);

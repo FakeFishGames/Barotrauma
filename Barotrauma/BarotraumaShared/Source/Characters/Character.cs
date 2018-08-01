@@ -511,10 +511,12 @@ namespace Barotrauma
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true)
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi);
+            return Create(characterInfo.File, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
         }
+
         /// <summary>
         /// Create a new character
         /// </summary>
@@ -525,7 +527,8 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
-        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true)
+        /// <param name="ragdoll">Ragdoll configuration file. If null, will select randomly.</param>
+        public static Character Create(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
 #if LINUX
             if (!System.IO.File.Exists(file)) 
@@ -556,7 +559,7 @@ namespace Barotrauma
             Character newCharacter = null;
             if (file != humanConfigFile)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, file, seed);
                 aiCharacter.SetAI(ai);
 
@@ -566,7 +569,7 @@ namespace Barotrauma
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer);
+                var aiCharacter = new AICharacter(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
@@ -576,7 +579,7 @@ namespace Barotrauma
             }
             else
             {
-                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer);
+                newCharacter = new Character(file, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 //newCharacter.minVitality = -100.0f;
             }
 
@@ -588,7 +591,7 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
+        protected Character(string file, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
             ConfigPath = file;
@@ -638,13 +641,13 @@ namespace Barotrauma
 
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, seed);
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
                 AnimController.TargetDir = Direction.Right;
                 
             }
             else
             {
-                AnimController = new FishAnimController(this, seed);
+                AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
                 PressureProtection = 100.0f;
             }
 

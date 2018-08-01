@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class HumanRagdollParams : RagdollParams
     {
-        public static HumanRagdollParams GetRagdollParams() => GetRagdollParams<HumanRagdollParams>("human");
+        public static HumanRagdollParams GetRagdollParams(string fileName = null) => GetRagdollParams<HumanRagdollParams>("human", fileName);
     }
 
     class FishRagdollParams : RagdollParams { }
@@ -31,9 +31,9 @@ namespace Barotrauma
 
         public XElement MainElement => Doc.Root;
 
-        protected static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll.xml";
-        protected static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
-        protected static string GetDefaultFile(string speciesName) => GetDefaultFolder(speciesName) + GetDefaultFileName(speciesName);
+        public static string GetDefaultFileName(string speciesName) => $"{speciesName.CapitaliseFirstInvariant()}DefaultRagdoll";
+        public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Ragdolls/";
+        public static string GetDefaultFile(string speciesName) => $"{GetDefaultFolder(speciesName)}{GetDefaultFileName(speciesName)}.xml";
 
         protected static string GetFolder(string speciesName)
         {
@@ -46,7 +46,8 @@ namespace Barotrauma
         }   
 
         /// <summary>
-        /// The file name can be partial. If left null, will select randomly. If fails, will select the default file.
+        /// The file name can be partial. If left null, will select randomly. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
+        /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
         {
@@ -55,9 +56,7 @@ namespace Barotrauma
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            string defaultFileName = GetDefaultFileName(speciesName);
-            fileName = fileName ?? defaultFileName;
-            if (!ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
+            if (fileName == null || !ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
                 string selectedFile = null;
                 string folder = GetFolder(speciesName);
@@ -69,30 +68,30 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.");
                         selectedFile = GetDefaultFile(speciesName);
                     }
-                    else if (fileName != defaultFileName)
+                    else if (string.IsNullOrEmpty(fileName))
+                    {
+                        // Files found, but none specified
+                        selectedFile = files.GetRandom();
+                    }
+                    else
                     {
                         // First check if a file matches the name exactly
-                        selectedFile = files.FirstOrDefault(f => f == fileName);
+                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == fileName);
                         if (selectedFile == null)
                         {
                             // Then check if a file matches the name ignoring the case
-                            selectedFile = files.FirstOrDefault(f => f.ToLowerInvariant() == fileName.ToLowerInvariant());
+                            selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         }
                         if (selectedFile == null)
                         {
                             // Last, check if a file matches the name partially
-                            selectedFile = files.FirstOrDefault(f => f.ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
+                            selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
                         }
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");
                             selectedFile = GetDefaultFile(speciesName);
                         }
-                    }
-                    else
-                    {
-                        // Files found, but none specifided
-                        selectedFile = files.GetRandom();
                     }
                 }
                 else
@@ -108,13 +107,16 @@ namespace Barotrauma
                 T r = new T();
                 if (r.Load(selectedFile))
                 {
-                    ragdolls.Add(fileName, r);
+                    if (!ragdolls.ContainsKey(r.Name))
+                    {
+                        ragdolls.Add(r.Name, r);
+                    }
                 }
                 else
                 {
                     DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll params {r} at {selectedFile} for the character {speciesName}");
                 }
-                ragdoll = r;
+                return r;
             }
             return (T)ragdoll;
         }
