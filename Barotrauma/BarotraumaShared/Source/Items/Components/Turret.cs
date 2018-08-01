@@ -299,7 +299,8 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            var projectiles = GetLoadedProjectiles();
+
+
             if (GetAvailablePower() < powerConsumption)
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -323,7 +324,24 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
+
+            int projectileCount = 0;
+            int maxProjectileCount = 0;
+            foreach (MapEntity e in item.linkedTo)
+            {
+                var projectileContainer = e as Item;
+                if (projectileContainer == null) continue;
+                
+                var containedItems = projectileContainer.ContainedItems;
+                if (containedItems != null)
+                {
+                    var container = projectileContainer.GetComponent<ItemContainer>();
+                    if (containedItems != null) maxProjectileCount += container.Capacity;
+                    projectileCount += containedItems.Length;
+                }
+            }
+
+            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fire at will"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -339,7 +357,7 @@ namespace Barotrauma.Items.Components
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
-                containShellObjective.MinContainedAmount = projectiles.Count + 1;
+                containShellObjective.MinContainedAmount = projectileCount + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
                 objective.AddSubObjective(containShellObjective);
                 return false;
@@ -364,13 +382,13 @@ namespace Barotrauma.Items.Components
             if (closestEnemy == null) return false;
 
             character.CursorPosition = closestEnemy.WorldPosition;
-            if (item.Submarine!=null) character.CursorPosition -= item.Submarine.Position;
+            if (item.Submarine != null) character.CursorPosition -= item.Submarine.Position;
             character.SetInput(InputType.Aim, false, true);
 
-            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition-item.WorldPosition);
+            float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.01f) return false;
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.1f) return false;
 
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;

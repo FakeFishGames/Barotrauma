@@ -25,7 +25,7 @@ namespace Barotrauma
         public readonly Sprite SymbolSprite;
 
         public readonly Type ItemComponentType;
-        public readonly string ItemName;
+        public readonly string[] ItemNames;
 
         public readonly string AITag;
 
@@ -85,7 +85,7 @@ namespace Barotrauma
             }
 
             AITag = orderElement.GetAttributeString("aitag", "");
-            ItemName = orderElement.GetAttributeString("targetitemname", "");
+            ItemNames = orderElement.GetAttributeStringArray("targetitemname", new string[0]);
             Color = orderElement.GetAttributeColor("color", Color.White);
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
