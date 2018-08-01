@@ -3,6 +3,7 @@
   <Item
     name="Coilgun"
     identifier="coilgun"
+    Tags="turret"
     category="Machine"    
     spritecolor="1.0,0.0,0.0,1.0"
     focusonselected="true"

@@ -2,6 +2,7 @@
   <Item
     name="Railgun"
     identifier="railgun"
+    Tags="turret"
     category="Machine"
     focusonselected="true"
     offsetonselected="700"

@@ -26,13 +26,13 @@
     <ChatMessage option="Shutdown" msg="[name], shut down the reactor!"/>
   </Order>
 
-  <Order name="Operate Railgun" aitag="operaterailgun" doingtext="Operating Railgun" 
-         targetitemname="Railgun" targetitemtype="Turret" 
+  <Order name="Operate Weapons" aitag="operateweapons" doingtext="Operating Weapons" 
+         targetitemname="turret,Railgun,Coilgun" targetitemtype="Turret" 
          usecontroller="true" options="Fire at will, Hold fire" color="0.12,0.3,0.5,1.0"
          appropriatejobs="Security Officer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
-    <ChatMessage msg="[name], operate the railgun!"/>
-    <ChatMessage msg="[name], man the railgun!"/>
+    <ChatMessage msg="[name], operate the weapons!"/>
+    <ChatMessage msg="[name], man the weapons!"/>
     <ChatMessage option="Fire at will" msg="[name], fire at will!"/>
     <ChatMessage option="Hold fire" msg="[name], hold fire!"/>
   </Order>
