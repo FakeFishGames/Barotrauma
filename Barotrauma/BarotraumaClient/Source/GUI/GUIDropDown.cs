@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
         
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 3, string style = "") : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "") : base(style, rectT)
         {
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
             {
