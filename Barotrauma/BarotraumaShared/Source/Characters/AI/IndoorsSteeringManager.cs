@@ -323,12 +323,12 @@ namespace Barotrauma
                 }
             }
 
-            //non-humanoids can't traverse between the nodes if it requires climbing ladders
+            //non-humanoids can't climb up ladders
             if (!(character.AnimController is HumanoidAnimController))
             {
-                if (node.Waypoint.Ladders != null && 
-                    nextNode.Waypoint.Ladders != null &&
-                    Math.Abs(node.Position.Y - nextNode.Position.Y) > 1.0f)
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null &&
+                    nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
+                    nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y) //upper node not underwater
                 {
                     return null;
                 }
