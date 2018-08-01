@@ -41,6 +41,7 @@ namespace Barotrauma
                 }
                 return _fishWalkParams;
             }
+            set { _fishWalkParams = value; }
         }
 
         private FishRunParams _fishRunParams;
@@ -54,6 +55,7 @@ namespace Barotrauma
                 }
                 return _fishRunParams;
             }
+            set { _fishRunParams = value; }
         }
 
         private FishSwimSlowParams _fishSwimSlowParams;
@@ -67,6 +69,7 @@ namespace Barotrauma
                 }
                 return _fishSwimSlowParams;
             }
+            set { _fishSwimSlowParams = value; }
         }
 
         private FishSwimFastParams _fishSwimFastParams;
@@ -80,16 +83,36 @@ namespace Barotrauma
                 }
                 return _fishSwimFastParams;
             }
+            set { _fishSwimFastParams = value; }
         }
 
         public IFishAnimation CurrentFishAnimation => CurrentAnimationParams as IFishAnimation;
         public new FishGroundedParams CurrentGroundedParams => base.CurrentGroundedParams as FishGroundedParams;
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
-        public override GroundedMovementParams WalkParams => FishWalkParams;
-        public override GroundedMovementParams RunParams => FishRunParams;
-        public override SwimParams SwimSlowParams => FishSwimSlowParams;
-        public override SwimParams SwimFastParams => FishSwimFastParams;
+        public override GroundedMovementParams WalkParams
+        {
+            get { return FishWalkParams; }
+            set { FishWalkParams = value as FishWalkParams; }
+        }
+
+        public override GroundedMovementParams RunParams
+        {
+            get { return FishRunParams; }
+            set { FishRunParams = value as FishRunParams; }
+        }
+
+        public override SwimParams SwimSlowParams
+        {
+            get { return FishSwimSlowParams; }
+            set { FishSwimSlowParams = value as FishSwimSlowParams; }
+        }
+
+        public override SwimParams SwimFastParams
+        {
+            get { return FishSwimFastParams; }
+            set { FishSwimFastParams = value as FishSwimFastParams; }
+        }
 
         private float flipTimer;
 
