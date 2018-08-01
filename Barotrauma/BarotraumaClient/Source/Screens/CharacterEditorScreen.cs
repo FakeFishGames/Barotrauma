@@ -716,7 +716,48 @@ namespace Barotrauma
                 loadBox.Buttons[1].OnClicked += (btn, data) =>
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    //CurrentAnimation = character.IsHumanoid ? AnimationParams.GetAnimParams<AnimationParams>(fileName, CurrentAnimation.Type) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    if (character.IsHumanoid)
+                    {
+                        switch (selectedType)
+                        {
+                            case AnimationType.Walk:
+                                character.AnimController.WalkParams = HumanWalkParams.GetAnimParams(fileName);
+                            break;
+                            case AnimationType.Run:
+                                character.AnimController.RunParams = HumanRunParams.GetAnimParams(fileName);
+                                break;
+                            case AnimationType.SwimSlow:
+                                character.AnimController.SwimSlowParams = HumanSwimSlowParams.GetAnimParams(fileName);
+                                break;
+                            case AnimationType.SwimFast:
+                                character.AnimController.SwimFastParams = HumanSwimFastParams.GetAnimParams(fileName);
+                                break;
+                            default:
+                                DebugConsole.ThrowError($"Animation type {selectedType.ToString()} not implemented!");
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (selectedType)
+                        {
+                            case AnimationType.Walk:
+                                character.AnimController.WalkParams = FishWalkParams.GetAnimParams(character, fileName);
+                                break;
+                            case AnimationType.Run:
+                                character.AnimController.RunParams = FishRunParams.GetAnimParams(character, fileName);
+                                break;
+                            case AnimationType.SwimSlow:
+                                character.AnimController.SwimSlowParams = FishSwimSlowParams.GetAnimParams(character, fileName);
+                                break;
+                            case AnimationType.SwimFast:
+                                character.AnimController.SwimFastParams = FishSwimFastParams.GetAnimParams(character, fileName);
+                                break;
+                            default:
+                                DebugConsole.ThrowError($"Animation type {selectedType.ToString()} not implemented!");
+                                break;
+                        }
+                    }
                     loadBox.Close();
                     return true;
                 };
