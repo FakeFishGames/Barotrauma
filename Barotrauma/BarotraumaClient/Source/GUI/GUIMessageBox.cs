@@ -84,11 +84,11 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
-        /// <summary>
-        /// This is the new constructor.
-        /// TODO: for some reason the background does not prohibit input on the elements that are behind the box
-        /// TODO: allow providing buttons in the constructor
-        /// </summary>
+        ///// <summary>
+        ///// This is the new constructor.
+        ///// TODO: for some reason the background does not prohibit input on the elements that are behind the box
+        ///// TODO: allow providing buttons in the constructor
+        ///// </summary>
         /*public GUIMessageBox(RectTransform rectT, string headerText, string text, Alignment textAlignment = Alignment.TopCenter)
             : base(rectT, "")
         {
