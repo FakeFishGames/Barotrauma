@@ -161,17 +161,24 @@ namespace Barotrauma.Items.Components
             {
                 item.body.ResetDynamics();
                 Limb heldHand;
+                Limb arm;
                 if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+                    arm = picker.AnimController.GetLimb(LimbType.LeftArm);
 
                 }
                 else
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                    arm = picker.AnimController.GetLimb(LimbType.RightArm);
                 }
+                float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
+                float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
 
-                item.SetTransform(heldHand.SimPosition, 0.0f);
+
+                //DebugConsole.NewMessage("hand rot at " + heldHand.SimPosition + " and simpos at " + arm, Color.Green);
+                item.SetTransform(heldHand.SimPosition + new Vector2(xDif,yDif), 0.0f);
             }
 
             picker.DeselectItem(item);
