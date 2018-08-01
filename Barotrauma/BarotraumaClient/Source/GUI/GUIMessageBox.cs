@@ -19,7 +19,7 @@ namespace Barotrauma
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
 
-        public static GUIComponent VisibleBox => MessageBoxes.FirstOrDefault();
+        public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
         
         public GUIMessageBox(string headerText, string text)
             : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
