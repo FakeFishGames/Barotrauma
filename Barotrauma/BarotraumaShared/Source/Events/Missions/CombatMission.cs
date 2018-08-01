@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace Barotrauma
                     descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", locations[n].Name);
                 }
             }
-
+            
             teamNames = new string[]
             {
                 prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
@@ -145,6 +146,23 @@ namespace Barotrauma
             subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
             subs[1].FlipX();
 
+            //prevent wifi components from communicating between subs
+            List<WifiComponent> wifiComponents = new List<WifiComponent>();
+            foreach (Item item in Item.ItemList)
+            {
+                wifiComponents.AddRange(item.GetComponents<WifiComponent>());
+            }
+            foreach (WifiComponent wifiComponent in wifiComponents)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    if (wifiComponent.Item.Submarine == subs[i] || subs[i].DockedTo.Contains(wifiComponent.Item.Submarine))
+                    {
+                        wifiComponent.TeamID = subs[i].TeamID;
+                    }
+                }
+            }
+
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
 
             foreach (Submarine submarine in Submarine.Loaded)
@@ -208,7 +226,7 @@ namespace Barotrauma
             }
             else
             {
-                if (winner>=0 && subs[winner] != null && 
+                if (winner >= 0 && subs[winner] != null &&
                     (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
                     crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
                 {
