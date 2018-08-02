@@ -173,11 +173,10 @@ namespace Barotrauma.Items.Components
                     heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
                     arm = picker.AnimController.GetLimb(LimbType.RightArm);
                 }
+                
                 float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
                 float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
-
-
-                //DebugConsole.NewMessage("hand rot at " + heldHand.SimPosition + " and simpos at " + arm, Color.Green);
+                //hand simPosition is actually in the wrist so need to move the item out from it slightly
                 item.SetTransform(heldHand.SimPosition + new Vector2(xDif,yDif), 0.0f);
             }
 
