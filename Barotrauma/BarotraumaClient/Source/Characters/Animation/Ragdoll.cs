@@ -100,7 +100,6 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-
                 if (limb.pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
@@ -135,6 +134,16 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
                     GUI.DrawLine(spriteBatch, pos, new Vector2(limb.WorldPosition.X, -limb.WorldPosition.Y), Color.Cyan);
                 }
+            }
+
+            if (outsideCollisionBlocker.Enabled && currentHull.Submarine != null)
+            {
+                var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;
+                Vector2 startPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex1)) + currentHull.Submarine.Position;
+                Vector2 endPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex2)) + currentHull.Submarine.Position;                
+                startPos.Y = -startPos.Y;
+                endPos.Y = -endPos.Y;
+                GUI.DrawLine(spriteBatch, startPos, endPos, Color.Gray, 0, 5);
             }
 
             if (character.MemState.Count > 1)
