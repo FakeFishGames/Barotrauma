@@ -438,7 +438,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            bool isAttached = msg.ReadBoolean();
+            bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
             if (!attachable)
@@ -447,7 +447,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (isAttached)
+            if (shouldBeAttached)
             {
                 Drop(false, null);
                 item.SetTransform(simPosition, 0.0f);
@@ -455,16 +455,19 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                DropConnectedWires(null);
-
-                if (body != null)
+                if (attached)
                 {
-                    item.body = body;
-                    item.body.Enabled = true;
-                }
-                IsActive = false;
+                    DropConnectedWires(null);
 
-                DeattachFromWall();
+                    if (body != null)
+                    {
+                        item.body = body;
+                        item.body.Enabled = true;
+                    }
+                    IsActive = false;
+
+                    DeattachFromWall();
+                }
             }
         }
     }
