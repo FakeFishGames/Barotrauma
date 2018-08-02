@@ -487,13 +487,18 @@ namespace Barotrauma
             }
             else
             {
+                if (syncItemsCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                    syncItemsCoroutine = null;
+                }
                 ApplyReceivedState();
             }
         }
 
         private IEnumerable<object> SyncItemsAfterDelay()
         {
-            while (syncItemsDelay > 0.0f && GameMain.Client != null && GameMain.Client.MidRoundSyncing)
+            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
             {
                 syncItemsDelay -= CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
@@ -511,19 +516,21 @@ namespace Barotrauma
 
         private void ApplyReceivedState()
         {
-            if (receivedItemIDs == null) return;
-
             for (int i = 0; i < capacity; i++)
             {
-                if (receivedItemIDs[i] == 0)
+                if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
-                else
+            }
+            
+            for (int i = 0; i < capacity; i++)
+            {
+                if (receivedItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
-                    if (item == null) continue;
-
+                    if (item == null || item == Items[i]) continue;
                     TryPutItem(item, i, true, true, null, false);
                 }
             }
