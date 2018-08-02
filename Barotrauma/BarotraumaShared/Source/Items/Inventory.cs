@@ -202,20 +202,22 @@ namespace Barotrauma
             {
                 newItemIDs[i] = msg.ReadUInt16();
             }
-
-            if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
-            {
-                return;
-            }
+            
+            if (c == null || c.Character == null || !c.Character.CanAccessInventory(this)) return;            
 
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == 0)
+                if (newItemIDs[i] == 0 || (Entity.FindEntityByID(newItemIDs[i]) as Item != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(c.Character);
-                    System.Diagnostics.Debug.Assert(Items[i]==null);
+                    if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
-                else
+            }
+
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (newItemIDs[i] > 0)
                 {
                     var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
                     if (item == null || item == Items[i]) continue;
