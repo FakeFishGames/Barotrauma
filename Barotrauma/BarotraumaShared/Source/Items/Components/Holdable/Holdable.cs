@@ -124,6 +124,17 @@ namespace Barotrauma.Items.Components
             }    
         }
 
+        public override void Load(XElement componentElement)
+        {
+            base.Load(componentElement);
+            if (attachable)
+            {
+                prevMsg = Msg;
+                prevPickKey = PickKey;
+                prevRequiredItems = new List<RelatedItem>(requiredItems);
+            }
+        }
+
         public override void Drop(Character dropper)
         {
             Drop(true, dropper);
