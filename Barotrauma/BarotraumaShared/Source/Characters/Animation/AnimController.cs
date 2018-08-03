@@ -50,23 +50,22 @@ namespace Barotrauma
             }
         }
 
-        private List<AnimationParams> _allAnimParams;
+        /// <summary>
+        /// Note: creates a new list every time, because the params might have changed. If there is a need to access the property frequently, change the implementation to an array, where the slot is updated when the param is updated(?)
+        /// Currently it's not simple to implement, since the properties are not implemented here, but in the derived classes. Would require to change the params virtual and to call the base property getter/setter or something.
+        /// </summary>
         public List<AnimationParams> AllAnimParams
         {
             get
             {
-                if (_allAnimParams == null)
+                if (CanWalk)
                 {
-                    if (CanWalk)
-                    {
-                        _allAnimParams = new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
-                    }
-                    else
-                    {
-                        _allAnimParams = new List<AnimationParams> { SwimSlowParams, SwimFastParams };
-                    }
+                    return new List<AnimationParams> { WalkParams, RunParams, SwimSlowParams, SwimFastParams };
                 }
-                return _allAnimParams;
+                else
+                {
+                    return new List<AnimationParams> { SwimSlowParams, SwimFastParams };
+                }
             }
         }
 
