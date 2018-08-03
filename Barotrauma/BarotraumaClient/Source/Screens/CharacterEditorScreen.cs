@@ -760,6 +760,7 @@ namespace Barotrauma
                                 break;
                         }
                     }
+                    ResetParamsEditor();
                     loadBox.Close();
                     return true;
                 };
