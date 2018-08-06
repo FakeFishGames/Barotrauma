@@ -384,7 +384,7 @@ namespace Barotrauma.Networking
                         c.InGame && !c.NeedsMidRoundSync && 
                         c.Name == character.OwnerClientName && 
                         c.Connection.RemoteEndPoint.Address.ToString() == character.OwnerClientIP);
-                    if (owner != null)
+                    if (owner != null && (!AllowSpectating || !owner.SpectateOnly))
                     {
                         SetClientCharacter(owner, character);
                     }
