@@ -165,9 +165,8 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Connections.Count; i++)
             {
                 wires[i] = new List<Wire>();
-
-                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
-                for (int j = 0; j < wireCount; j++)
+                
+                for (int j = 0; j < Connection.MaxLinked; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
