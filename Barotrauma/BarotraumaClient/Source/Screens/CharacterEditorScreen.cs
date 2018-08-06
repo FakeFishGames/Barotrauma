@@ -43,6 +43,8 @@ namespace Barotrauma
             Submarine.MainSub = Submarine.SavedSubmarines.First(s => s.Name.Contains("AnimEditor"));
             Submarine.MainSub.Load(true);
             Submarine.MainSub.GodMode = true;
+            originalWall = new WallGroup(new List<Structure>(Structure.WallList));
+            CloneWalls();
             CalculateMovementLimits();
             currentCharacterConfig = Character.HumanConfigFile;
             SpawnCharacter(currentCharacterConfig);
@@ -65,77 +67,100 @@ namespace Barotrauma
         private int max;
         private void CalculateMovementLimits()
         {
-            min = CurrentWalls.Select(w => w.Rect.Left).OrderBy(p => p).First();
-            max = CurrentWalls.Select(w => w.Rect.Right).OrderBy(p => p).Last();
+            min = CurrentWall.walls.Select(w => w.Rect.Left).OrderBy(p => p).First();
+            max = CurrentWall.walls.Select(w => w.Rect.Right).OrderBy(p => p).Last();
         }
 
-        private List<Structure> _originalWalls;
-        private List<Structure> OriginalWalls
+        private WallGroup originalWall;
+        private WallGroup[] clones = new WallGroup[3];
+        private IEnumerable<Structure> AllWalls => originalWall.walls.Concat(clones.SelectMany(c => c.walls));
+
+        private WallGroup _currentWall;
+        private WallGroup CurrentWall
         {
             get
             {
-                if (_originalWalls == null)
+                if (_currentWall == null)
                 {
-                    _originalWalls = Structure.WallList;
+                    _currentWall = originalWall;
                 }
-                return _originalWalls;
-            }
-        }
-
-        private List<Structure> clones = new List<Structure>();
-        private List<Structure> previousWalls;
-
-        private List<Structure> _currentWalls;
-        private List<Structure> CurrentWalls
-        {
-            get
-            {
-                if (_currentWalls == null)
-                {
-                    _currentWalls = OriginalWalls;
-                }
-                return _currentWalls;
+                return _currentWall;
             }
             set
             {
-                _currentWalls = value;
+                _currentWall = value;
             }
         }
 
-        private IEnumerable<Structure> AllWalls => clones.Concat(_originalWalls);
-
-        private void CloneWalls(bool right)
+        private class WallGroup
         {
-            previousWalls = CurrentWalls;
-            if (previousWalls == null)
+            public readonly List<Structure> walls;
+            
+            public WallGroup(List<Structure> walls)
             {
-                previousWalls = OriginalWalls;
+                this.walls = walls;
             }
-            if (clones.None())
-            {
-                OriginalWalls.ForEachMod(w => clones.Add(w.Clone() as Structure));
-                CurrentWalls = clones;
-            }
-            else
-            {
-                // Select by position
-                var lastWall = right ?
-                    previousWalls.OrderBy(w => w.Rect.Right).Last() :
-                    previousWalls.OrderBy(w => w.Rect.Left).First();
 
-                CurrentWalls = clones.Contains(lastWall) ? clones : OriginalWalls;
-            }
-            if (CurrentWalls != OriginalWalls)
+            public WallGroup Clone()
             {
-                // Move the clones
-                for (int i = 0; i < CurrentWalls.Count; i++)
+                var clones = new List<Structure>();
+                walls.ForEachMod(w => clones.Add(w.Clone() as Structure));
+                return new WallGroup(clones);
+            }     
+        }
+
+        private void CloneWalls()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                clones[i] = originalWall.Clone();
+                for (int j = 0; j < originalWall.walls.Count; j++)
                 {
-                    int amount = right ? previousWalls[i].Rect.Width : -previousWalls[i].Rect.Width;
-                    CurrentWalls[i].Move(new Vector2(amount, 0));
+                    if (i == 1)
+                    {
+                        clones[i].walls[j].Move(new Vector2(originalWall.walls[j].Rect.Width, 0));
+                    }
+                    else if (i == 2)
+                    {
+                        clones[i].walls[j].Move(new Vector2(-originalWall.walls[j].Rect.Width, 0));
+                    }      
                 }
             }
-            GameMain.World.ProcessChanges();
+        }
+
+        private WallGroup SelectClosestWallGroup(Vector2 pos)
+        {
+            var closestWall = clones.SelectMany(c => c.walls).OrderBy(w => Vector2.Distance(pos, w.Position)).First();
+            return clones.Where(c => c.walls.Contains(closestWall)).FirstOrDefault();
+        }
+
+        private WallGroup SelectLastClone(bool right)
+        {
+            var lastWall = right 
+                ? clones.SelectMany(c => c.walls).OrderBy(w => w.Rect.Right).Last() 
+                : clones.SelectMany(c => c.walls).OrderBy(w => w.Rect.Left).First();
+            return clones.Where(c => c.walls.Contains(lastWall)).FirstOrDefault();
+        }
+
+        private void UpdateWalls(bool right)
+        {
+            CurrentWall = SelectClosestWallGroup(character.Position);
             CalculateMovementLimits();
+            var lastClone = SelectLastClone(!right);
+            for (int i = 0; i < lastClone.walls.Count; i++)
+            {
+                var amount = right ? lastClone.walls[i].Rect.Width : -lastClone.walls[i].Rect.Width;
+                var distance = CurrentWall.walls[i].Position.X - lastClone.walls[i].Position.X;
+                lastClone.walls[i].Move(new Vector2(amount + distance, 0));
+            }
+            GameMain.World.ProcessChanges();
+        }
+
+        private void SetWallCollisions(bool enabled)
+        {
+            var collisionCategory = enabled ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
+            AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
+            GameMain.World.ProcessChanges();
         }
         #endregion
 
@@ -215,7 +240,7 @@ namespace Barotrauma
             Character.Controlled = character;
             float size = ConvertUnits.ToDisplayUnits(character.AnimController.Collider.radius * 2);
             float margin = 100;
-            float distance = Vector2.Distance(spawnPosition, new Vector2(spawnPosition.X, OriginalWalls.First().WorldPosition.Y)) - margin;
+            float distance = Vector2.Distance(spawnPosition, new Vector2(spawnPosition.X, originalWall.walls.First().WorldPosition.Y)) - margin;
             if (size > distance)
             {
                 character.AnimController.Teleport(ConvertUnits.ToSimUnits(new Vector2(0, size * 1.5f)), Vector2.Zero);
@@ -858,11 +883,11 @@ namespace Barotrauma
                 character.AnimController.Update((float)deltaTime, Cam);
                 if (character.Position.X < min)
                 {
-                    CloneWalls(false);
+                    UpdateWalls(false);
                 }
                 else if (character.Position.X > max)
                 {
-                    CloneWalls(true);
+                    UpdateWalls(true);
                 }
                 GameMain.World.Step((float)deltaTime);
             }
@@ -914,8 +939,8 @@ namespace Barotrauma
                 DrawSpritesheetEditor(spriteBatch, (float)deltaTime);
             }
             //widgets.Values.ForEach(w => w.Draw(spriteBatch, (float)deltaTime));
-            Structure wall = clones.FirstOrDefault();
-            Vector2 indicatorPos = wall == null ? OriginalWalls.First().DrawPosition : wall.DrawPosition;
+            Structure wall = CurrentWall.walls.FirstOrDefault();
+            Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw(Cam, spriteBatch);
 
@@ -945,9 +970,9 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 220), $"Submarine Sim Pos: {Submarine.MainSub.Position}", Color.White, font: GUI.SmallFont);
                 //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 240), $"Submarine Draw Pos: {Submarine.MainSub.DrawPosition}", Color.White, font: GUI.SmallFont);
 
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Count}", Color.White, font: GUI.SmallFont);
-                //GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 280), $"Movement Limits: MIN: {min} MAX: {max}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 300), $"Clones: {clones.Length}", Color.White, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 320), $"Total amount of walls: {Structure.WallList.Count}", Color.White, font: GUI.SmallFont);
 
                 // Collider
                 var collider = character.AnimController.Collider;
@@ -971,13 +996,6 @@ namespace Barotrauma
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p));
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
         private Vector2 SimToScreen(Vector2 p) => Cam.WorldToScreen(ConvertUnits.ToDisplayUnits(p));
-
-        private void SetWallCollisions(bool enabled)
-        {
-            var collisionCategory = enabled ? FarseerPhysics.Dynamics.Category.Cat1 : FarseerPhysics.Dynamics.Category.None;
-            AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
-            GameMain.World.ProcessChanges();
-        }
         #endregion
 
         #region Animation Controls
