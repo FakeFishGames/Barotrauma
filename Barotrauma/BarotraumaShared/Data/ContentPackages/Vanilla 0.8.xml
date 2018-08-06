@@ -13,7 +13,6 @@
   <Item file="Content/Items/Diving/divinggear.xml" />
   <Item file="Content/Items/Door/doors.xml" />
   <Item file="Content/Items/Electricity/lights.xml" />
-  <Item file="Content/Items/Electricity/monitors.xml" />
   <Item file="Content/Items/Electricity/poweritems.xml" />
   <Item file="Content/Items/Electricity/signalitems.xml" />
   <Item file="Content/Items/Engine/engine.xml" />
