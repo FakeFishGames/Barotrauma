@@ -252,6 +252,11 @@ namespace Barotrauma
             get { return prefab.FireProof; }
         }
 
+        public bool WaterProof
+        {
+            get { return prefab.WaterProof; }
+        }
+
         public bool CanUseOnSelf
         {
             get { return prefab.CanUseOnSelf; }
@@ -662,7 +667,6 @@ namespace Barotrauma
             if (Container == null) return null;
 
             Item rootContainer = Container;
-
             while (rootContainer.Container != null)
             {
                 rootContainer = rootContainer.Container;
@@ -882,8 +886,17 @@ namespace Barotrauma
             }
 
             inWater = IsInWater();
-
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            if (inWater)
+            {
+                bool waterProof = WaterProof;
+                Item container = this.Container;
+                while (!waterProof && container != null)
+                {
+                    waterProof = container.WaterProof;
+                    container = container.Container;
+                }
+                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 
