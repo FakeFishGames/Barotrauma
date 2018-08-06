@@ -484,7 +484,14 @@ namespace Barotrauma
 
                 if (element.Parent.CheckConditionalAlways && !element.Parent.HasRequiredConditions(element.Targets))
                 {
-                    DurationList.Remove(element);
+                    DurationList.RemoveAt(i);
+                    continue;
+                }
+
+                element.Targets.RemoveAll(t => t is Entity entity && entity.Removed);
+                if (element.Targets.Count == 0)
+                {
+                    DurationList.RemoveAt(i);
                     continue;
                 }
 
@@ -492,9 +499,7 @@ namespace Barotrauma
                 {
                     for (int n = 0; n < element.Parent.propertyNames.Length; n++)
                     {
-                        SerializableProperty property;
-
-                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out property)) continue;
+                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out SerializableProperty property)) continue;
 
                         element.Parent.ApplyToProperty(property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
                     }
