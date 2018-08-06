@@ -523,7 +523,7 @@ namespace Barotrauma
             simPosition = null;
             normal = null;
 
-            if (IsRoomToRoom || Submarine == null || open <= 0.0f) return false;
+            if (IsRoomToRoom || Submarine == null || open <= 0.0f || linkedTo.Count == 0 || !(linkedTo[0] is Hull)) return false;
 
             if (outsideColliderRaycastTimer <= 0.0f)
             {
