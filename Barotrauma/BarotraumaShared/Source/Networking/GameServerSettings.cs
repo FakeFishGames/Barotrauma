@@ -220,7 +220,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(30.0f, true)]
-        public bool KillDisconnectedTime
+        public float KillDisconnectedTime
         {
             get;
             private set;
