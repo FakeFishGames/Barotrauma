@@ -2044,6 +2044,9 @@ namespace Barotrauma
 
             base.Remove();
 
+            if (selectedItems[0] != null) selectedItems[0].Drop(this);
+            if (selectedItems[1] != null) selectedItems[1].Drop(this);
+
             if (info != null) info.Remove();
 
             CharacterList.Remove(this);
@@ -2053,9 +2056,6 @@ namespace Barotrauma
             if (aiTarget != null) aiTarget.Remove();            
 
             if (AnimController != null) AnimController.Remove();
-
-            if (selectedItems[0] != null) selectedItems[0].Drop(this);
-            if (selectedItems[1] != null) selectedItems[1].Drop(this);
 
             foreach (Character c in CharacterList)
             {

@@ -30,6 +30,9 @@ namespace Barotrauma.Items.Components
         const float nodeDistance = 32.0f;
         const float heightFromFloor = 128.0f;
 
+        const int MaxNodeCount = 255;
+        const int MaxNodesPerNetworkEvent = 30;
+
         private List<Vector2> nodes;
         private List<WireSection> sections;
 
@@ -179,7 +182,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Server != null)
                 {
-                    item.CreateServerEvent(this);
+                    CreateNetworkEvent();
                 }
                 //the wire is active if only one end has been connected
                 IsActive = connections[0] == null ^ connections[1] == null;
@@ -262,9 +265,10 @@ namespace Barotrauma.Items.Components
                         Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
                         user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f);
                         user.AnimController.UpdateUseItem(true, user.SimPosition + pullBackDir * 2.0f);
-                        if (currLength > MaxLength * 1.5f)
+                        if (currLength > MaxLength * 1.5f && GameMain.Client == null)
                         {
                             ClearConnections();
+                            CreateNetworkEvent();
                             return;
                         }
                     }
@@ -284,14 +288,20 @@ namespace Barotrauma.Items.Components
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
+                if (nodes.Count >= MaxNodeCount)
+                {
+                    nodes.RemoveAt(nodes.Count - 1);
+                }
+
                 nodes.Add(newNodePos);
+                CleanNodes();
                 UpdateSections();
                 Drawable = true;
                 newNodePos = Vector2.Zero;
 
                 if (GameMain.Server != null)
                 {
-                    item.CreateServerEvent(this);
+                    CreateNetworkEvent();
                 }
             }
             return true;
@@ -434,26 +444,20 @@ namespace Barotrauma.Items.Components
 
         private void CleanNodes()
         {
-            for (int i = nodes.Count - 2; i > 0; i--)
-            {
-                if ((nodes[i - 1].X == nodes[i].X || nodes[i - 1].Y == nodes[i].Y) &&
-                    (nodes[i + 1].X == nodes[i].X || nodes[i + 1].Y == nodes[i].Y))
-                {
-                    if (Vector2.Distance(nodes[i - 1], nodes[i]) == Vector2.Distance(nodes[i + 1], nodes[i]))
-                    {
-                        nodes.RemoveAt(i);
-                    }
-                }
-            }
-
             bool removed;
             do
             {
                 removed = false;
                 for (int i = nodes.Count - 2; i > 0; i--)
                 {
-                    if ((nodes[i - 1].X == nodes[i].X && nodes[i + 1].X == nodes[i].X)
-                        || (nodes[i - 1].Y == nodes[i].Y && nodes[i + 1].Y == nodes[i].Y))
+                    if (Math.Abs(nodes[i - 1].X - nodes[i].X) < 1.0f && Math.Abs(nodes[i + 1].X - nodes[i].X) < 1.0f &&
+                        Math.Sign(nodes[i - 1].Y - nodes[i].Y) != Math.Sign(nodes[i + 1].Y - nodes[i].Y))
+                    {
+                        nodes.RemoveAt(i);
+                        removed = true;
+                    }
+                    else if (Math.Abs(nodes[i - 1].Y - nodes[i].Y) < 1.0f && Math.Abs(nodes[i + 1].Y - nodes[i].Y) < 1.0f &&
+                            Math.Sign(nodes[i - 1].X - nodes[i].X) != Math.Sign(nodes[i + 1].X - nodes[i].X))
                     {
                         nodes.RemoveAt(i);
                         removed = true;
@@ -585,11 +589,28 @@ namespace Barotrauma.Items.Components
 
             base.RemoveComponentSpecific();
         }
-        
+
+        private void CreateNetworkEvent()
+        {
+            if (GameMain.Server == null) return;
+            //split into multiple events because one might not be enough to fit all the nodes
+            int eventCount = Math.Max((int)Math.Ceiling(nodes.Count / (float)MaxNodesPerNetworkEvent), 1);
+            for (int i = 0; i < eventCount; i++)
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), i });
+            }
+
+        }
+                
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            msg.Write((byte)Math.Min(nodes.Count, 255));
-            for (int i = 0; i < Math.Min(nodes.Count, 255); i++)
+            int eventIndex = (int)extraData[2];
+            int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
+            int nodeCount = MathHelper.Clamp(nodes.Count - nodeStartIndex, 0, MaxNodesPerNetworkEvent);
+
+            msg.WriteRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent), eventIndex);
+            msg.WriteRangedInteger(0, MaxNodesPerNetworkEvent, nodeCount);
+            for (int i = nodeStartIndex; i < nodeStartIndex + nodeCount; i++)
             {
                 msg.Write(nodes[i].X);
                 msg.Write(nodes[i].Y);
@@ -598,20 +619,28 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            nodes.Clear();
+            int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
+            int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
+            int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
 
-            int nodeCount = msg.ReadByte();
-            Vector2[] nodePositions = new Vector2[nodeCount];
+            Vector2[] nodePositions = new Vector2[nodeStartIndex + nodeCount];
+            for (int i = 0; i < nodes.Count && i < nodePositions.Length; i++)
+            {
+                nodePositions[i] = nodes[i];
+            }
 
             for (int i = 0; i < nodeCount; i++)
             {
-                nodePositions[i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
-            
-            if (nodePositions.Any(n => !MathUtils.IsValid(n))) return;
+
+            if (nodePositions.Any(n => !MathUtils.IsValid(n)))
+            {
+                nodes.Clear();
+                return;
+            }
 
             nodes = nodePositions.ToList();
-
             UpdateSections();
             Drawable = nodes.Any();
         }
