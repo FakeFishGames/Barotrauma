@@ -872,11 +872,10 @@ namespace Barotrauma.Networking
             else
             {                
                 //if 30 seconds have passed since the round started and the client isn't ingame yet,
-                //kill the client's character
+                //consider the client's character disconnected (causing it to die if the client does not join soon)
                 if (gameStarted && c.Character != null && (DateTime.Now - roundStartTime).Seconds > 30.0f)
                 {
-                    c.Character.Kill(CauseOfDeath.Disconnected);
-                    c.Character = null;
+                    c.Character.ClientDisconnected = true;
                 }
 
                 ClientWriteLobby(c);
