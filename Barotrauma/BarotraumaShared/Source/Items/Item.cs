@@ -492,7 +492,12 @@ namespace Barotrauma
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
+                for (int j = 0; j < components[i].requiredItems.Count; j++)
+                {
+                    clone.components[i].requiredItems[j].JoinedNames = components[i].requiredItems[j].JoinedNames;
+                }
             }
+            
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
