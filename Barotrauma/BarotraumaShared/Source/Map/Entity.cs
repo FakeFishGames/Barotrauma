@@ -138,7 +138,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Entity.RemoveAll:Exception" + e.ToString(),
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Error while removing entity \"" + e.ToString() + "\"" + exception.Message);
+                        "Error while removing entity \"" + e.ToString() + " (" + exception.Message + ")\n" + exception.StackTrace);
                 }
             }
             StringBuilder errorMsg = new StringBuilder();
