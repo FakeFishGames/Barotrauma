@@ -219,6 +219,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(30.0f, true)]
+        public bool KillDisconnectedTime
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, true)]
         public bool TraitorUseRatio
         {
