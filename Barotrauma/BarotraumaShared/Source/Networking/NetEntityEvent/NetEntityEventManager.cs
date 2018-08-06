@@ -55,6 +55,13 @@ namespace Barotrauma.Networking
                     GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:TooLong" + e.Entity.ToString(),
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                         "Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes");
+
+                    //write an empty event breaking the event syncing
+                    tempBuffer.Write((UInt16)0);
+                    tempBuffer.WritePadBits();
+                    eventCount++;
+                    continue;
+
                 }
                 
                 //the ID has been taken by another entity (the original entity has been removed) -> write an empty event

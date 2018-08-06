@@ -168,6 +168,17 @@ namespace Barotrauma.Items.Components
             }    
         }
 
+        public override void Load(XElement componentElement)
+        {
+            base.Load(componentElement);
+            if (attachable)
+            {
+                prevMsg = Msg;
+                prevPickKey = PickKey;
+                prevRequiredItems = new List<RelatedItem>(requiredItems);
+            }
+        }
+
         public override void Drop(Character dropper)
         {
             Drop(true, dropper);
@@ -205,7 +216,24 @@ namespace Barotrauma.Items.Components
             if (item.body != null)
             {
                 item.body.ResetDynamics();
-                item.SetTransform(picker.SimPosition, 0.0f);
+                Limb heldHand;
+                Limb arm;
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+                    arm = picker.AnimController.GetLimb(LimbType.LeftArm);
+
+                }
+                else
+                {
+                    heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                    arm = picker.AnimController.GetLimb(LimbType.RightArm);
+                }
+                
+                float xDif = (heldHand.SimPosition.X - arm.SimPosition.X) / 2f;
+                float yDif = (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f;
+                //hand simPosition is actually in the wrist so need to move the item out from it slightly
+                item.SetTransform(heldHand.SimPosition + new Vector2(xDif,yDif), 0.0f);
             }
 
             picker.DeselectItem(item);
@@ -467,12 +495,16 @@ namespace Barotrauma.Items.Components
         public override void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             base.ClientRead(type, msg, sendingTime);
-            if (!attachable) return;
-
-            bool isAttached = msg.ReadBoolean();
+            bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
-            if (isAttached)
+            if (!attachable)
+            {
+                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
+                return;
+            }
+
+            if (shouldBeAttached)
             {
                 if (!attached)
                 {

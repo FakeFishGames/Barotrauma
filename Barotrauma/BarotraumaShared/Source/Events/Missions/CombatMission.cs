@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -149,6 +150,23 @@ namespace Barotrauma
             subs[0].TeamID = 1; subs[1].TeamID = 2;
             subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
             subs[1].FlipX();
+
+            //prevent wifi components from communicating between subs
+            List<WifiComponent> wifiComponents = new List<WifiComponent>();
+            foreach (Item item in Item.ItemList)
+            {
+                wifiComponents.AddRange(item.GetComponents<WifiComponent>());
+            }
+            foreach (WifiComponent wifiComponent in wifiComponents)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    if (wifiComponent.Item.Submarine == subs[i] || subs[i].DockedTo.Contains(wifiComponent.Item.Submarine))
+                    {
+                        wifiComponent.TeamID = subs[i].TeamID;
+                    }
+                }
+            }
 
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
 

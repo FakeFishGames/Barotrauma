@@ -13,10 +13,12 @@ namespace Barotrauma.Items.Components
         private float range;
 
         private int channel;
-
+        
         private float chatMsgCooldown;
 
         private string prevSignal;
+
+        public byte TeamID;
 
         [Serialize(20000.0f, false)]
         public float Range
@@ -81,7 +83,7 @@ namespace Barotrauma.Items.Components
         {
             if (!HasRequiredContainedItems(false)) return false;
 
-            if (sender == null || sender.channel != channel) return false;
+            if (sender == null || sender.channel != channel || sender.TeamID != TeamID) return false;
 
             return Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) <= sender.range * sender.range;
         }
