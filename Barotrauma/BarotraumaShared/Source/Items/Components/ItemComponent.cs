@@ -632,11 +632,22 @@ namespace Barotrauma.Items.Components
                 return null;
             }
 
-            object[] lobject = new object[] { item, element };
-            object component = constructor.Invoke(lobject);
+            ItemComponent ic = null;
+            try
+            {
+                object[] lobject = new object[] { item, element };
+                object component = constructor.Invoke(lobject);
 
-            ItemComponent ic = (ItemComponent)component;
-            ic.name = element.Name.ToString();
+                ic = (ItemComponent)component;
+                ic.name = element.Name.ToString();
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
+                GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace);
+            }
 
             return ic;
         }
