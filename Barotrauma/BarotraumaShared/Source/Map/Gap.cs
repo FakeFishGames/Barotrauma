@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,12 +14,14 @@ namespace Barotrauma
 
         public static bool ShowGaps = true;
 
+        const float OutsideColliderRaycastInterval = 0.1f;
+
         public bool IsHorizontal
         {
             get;
             private set;
         }
-        
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;           
 
@@ -30,12 +33,18 @@ namespace Barotrauma
         private float lowerSurface;
         
         private Vector2 lerpedFlowForce;
-
+        
         //if set to true, hull connections of this gap won't be updated when changes are being done to hulls
         public bool DisableHullRechecks;
         
         //can ambient light get through the gap even if it's not open
         public bool PassAmbientLight;
+        
+        //position of a collider outside the gap (for example an ice wall next to the sub)
+        //used by ragdolls to prevent them from ending up inside colliders when teleporting out of the sub
+        private Vector2? outsideColliderPos;
+        private Vector2? outsideColliderNormal;
+        private float outsideColliderRaycastTimer;
 
         public float Open
         {
@@ -228,6 +237,8 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             flowForce = Vector2.Zero;
+
+            outsideColliderRaycastTimer -= deltaTime;
 
             if (open == 0.0f || linkedTo.Count == 0)
             {
@@ -543,7 +554,51 @@ namespace Barotrauma
                     hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
                 }
             }
+        }
 
+        public bool GetOutsideCollider(out Vector2? simPosition, out Vector2? normal)
+        {
+            simPosition = null;
+            normal = null;
+
+            if (IsRoomToRoom || Submarine == null || open <= 0.0f || linkedTo.Count == 0 || !(linkedTo[0] is Hull)) return false;
+
+            if (outsideColliderRaycastTimer <= 0.0f)
+            {
+                UpdateOutsideColliderPos((Hull)linkedTo[0]);
+                outsideColliderRaycastTimer = OutsideColliderRaycastInterval;
+            }
+
+            simPosition = outsideColliderPos;
+            normal = outsideColliderNormal;
+            return simPosition != null;
+        }
+
+        private void UpdateOutsideColliderPos(Hull hull)
+        {
+            outsideColliderNormal = null;
+            outsideColliderPos = null;
+
+            if (Submarine == null) return;
+
+            Vector2 rayDir;
+            if (IsHorizontal)
+            {
+                rayDir = new Vector2(Math.Sign(rect.Center.X - hull.Rect.Center.X), 0);
+            }
+            else
+            {
+                rayDir = new Vector2(0, Math.Sign((rect.Y - rect.Height / 2) - (hull.Rect.Y - hull.Rect.Height / 2)));
+            }
+
+            Vector2 rayStart = ConvertUnits.ToSimUnits(WorldPosition);
+            Vector2 rayEnd = rayStart + rayDir * 500.0f;
+
+            if (Submarine.CheckVisibility(rayStart, rayEnd) != null)
+            {
+                outsideColliderNormal = -rayDir;
+                outsideColliderPos = Submarine.LastPickedPosition;
+            }
         }
 
         private void UpdateOxygen()

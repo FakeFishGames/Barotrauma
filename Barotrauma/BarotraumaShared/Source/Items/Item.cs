@@ -507,9 +507,15 @@ namespace Barotrauma
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
                 }
+                for (int j = 0; j < components[i].requiredItems.Count; j++)
+                {
+                    clone.components[i].requiredItems[j].JoinedNames = components[i].requiredItems[j].JoinedNames;
+                }
             }
+
             if (FlippedX) clone.FlipX(false);
             if (FlippedY) clone.FlipY(false);
+
             if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
@@ -1790,7 +1796,15 @@ namespace Barotrauma
                 int index = ParentInventory.FindIndex(this);
                 msg.Write(index < 0 ? (byte)255 : (byte)index);
             }
-            
+
+            byte teamID = 0;
+            foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())
+            {
+                teamID = wifiComponent.TeamID;
+                break;
+            }
+
+            msg.Write(teamID);
             bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
             msg.Write(tagsChanged);
             if (tagsChanged)
@@ -1836,6 +1850,7 @@ namespace Barotrauma
                 }
             }
 
+            byte teamID = msg.ReadByte();
             bool tagsChanged = msg.ReadBoolean();
             string tags = "";
             if (tagsChanged)
@@ -1869,15 +1884,22 @@ namespace Barotrauma
                 }
             }
 
-            var item = new Item(itemPrefab, pos, sub);
-            item.ID = itemId;
+            var item = new Item(itemPrefab, pos, sub)
+            {
+                ID = itemId
+            };
+
+            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+            {
+                wifiComponent.TeamID = teamID;
+            }
             if (descriptionChanged) item.Description = itemDesc;
             if (tagsChanged) item.Tags = tags;
 
             if (sub != null)
             {
                 item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
-                item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+                item.Submarine = item.CurrentHull?.Submarine;
             }
 
             if (inventory != null)

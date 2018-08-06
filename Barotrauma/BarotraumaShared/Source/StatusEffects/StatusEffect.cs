@@ -646,7 +646,16 @@ namespace Barotrauma
 
                 if (element.Parent.CheckConditionalAlways && !element.Parent.HasRequiredConditions(element.Targets))
                 {
-                    DurationList.Remove(element);
+                    DurationList.RemoveAt(i);
+                    continue;
+                }
+
+                element.Targets.RemoveAll(t => 
+                    (t is Entity entity && entity.Removed) || 
+                    (t is Limb limb && (limb.character == null || limb.character.Removed)));
+                if (element.Targets.Count == 0)
+                {
+                    DurationList.RemoveAt(i);
                     continue;
                 }
 
@@ -670,7 +679,7 @@ namespace Barotrauma
                         }
                     }
 
-                    foreach (Pair<string,float> reduceAffliction in element.Parent.ReduceAffliction)
+                    foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
                     {
                         if (target is Character)
                         {

@@ -705,13 +705,18 @@ namespace Barotrauma
             }
             else
             {
+                if (syncItemsCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(syncItemsCoroutine);
+                    syncItemsCoroutine = null;
+                }
                 ApplyReceivedState();
             }
         }
 
         private IEnumerable<object> SyncItemsAfterDelay()
         {
-            while (syncItemsDelay > 0.0f && GameMain.Client != null && GameMain.Client.MidRoundSyncing)
+            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
             {
                 syncItemsDelay -= CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
@@ -736,6 +741,7 @@ namespace Barotrauma
                 if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
                 {
                     if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }
 

@@ -521,7 +521,7 @@ namespace Barotrauma
             avgContactNormal /= levelContacts.Count;
             
             float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
-            if (contactDot > 0.0f)
+            if (contactDot > 0.001f)
             {
                 Vector2 velChange = Vector2.Normalize(Body.LinearVelocity) * contactDot;
                 if (!MathUtils.IsValid(velChange))

@@ -83,10 +83,12 @@ namespace Barotrauma
 
             locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
 
+            campaign.Map.SelectLocation(-1);
+
             bottomPanel.ClearChildren();
             campaignUI = new CampaignUI(campaign, bottomPanel);
             campaignUI.StartRound = StartRound;
-            campaignUI.OnLocationSelected = SelectLocation;            
+            campaignUI.OnLocationSelected = SelectLocation;
             campaignUI.UpdateCharacterLists();
 
             GameAnalyticsManager.SetCustomDimension01("singleplayer");
