@@ -123,7 +123,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// The file name can be partial. If left null, will select randomly. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, a random file is selected. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
@@ -158,18 +158,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        // First check if a file matches the name exactly
-                        selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == fileName);
-                        if (selectedFile == null)
-                        {
-                            // Then check if a file matches the name ignoring the case
-                            selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
-                        }
-                        if (selectedFile == null)
-                        {
-                            // Last, check if a file matches the name partially and the type ignoring the case.
-                            selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
-                        }
+                        // Then check if a file matches the name ignoring the case
+                        selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");
