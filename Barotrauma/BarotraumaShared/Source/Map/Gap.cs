@@ -225,7 +225,7 @@ namespace Barotrauma
 
             EmitParticles(deltaTime);
 
-            if (flowTargetHull != null && lerpedFlowForce != Vector2.Zero)
+            if (flowTargetHull != null && lerpedFlowForce.LengthSquared() > 0.0001f)
             {
                 foreach (Character character in Character.CharacterList)
                 {
@@ -249,11 +249,25 @@ namespace Barotrauma
                         if (!IsHorizontal)
                         {
                             float xDist = Math.Abs(limb.WorldPosition.X - WorldPosition.X);
-                            if (xDist > rect.Width || rect.Width == 0) return;
+                            if (xDist > rect.Width || rect.Width == 0) break;
 
                             force *= 1.0f - xDist / rect.Width;
                         }
 
+                        if (!MathUtils.IsValid(force))
+                        {
+                            string errorMsg = "Attempted to apply invalid flow force to the character \"" + character.Name +
+                                "\", gap pos: " + WorldPosition +
+                                ", limb pos: " + limb.WorldPosition +
+                                ", flowforce: " + flowForce + ", lerpedFlowForce:" + lerpedFlowForce +
+                                ", dist: " + dist;
+
+                            DebugConsole.Log(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Gap.Update:InvalidFlowForce:" + character.Name,
+                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                                errorMsg);
+                            continue;
+                        }
                         character.AnimController.Collider.ApplyForce(force * limb.body.Mass);
                     }
                 }
