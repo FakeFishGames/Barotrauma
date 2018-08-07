@@ -681,10 +681,9 @@ namespace Barotrauma
                     {
                         listBox.ClearChildren();
                         var filePaths = Directory.GetFiles(CurrentAnimation.Folder);
-                        foreach (var path in filePaths.Where(p => p.ToLowerInvariant().Contains(selectedType.ToString().ToLowerInvariant())))
+                        foreach (var path in AnimationParams.FilterFilesByType(filePaths, selectedType))
                         {
-                            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform) { MinSize = new Point(0, 30) },
-                                ToolBox.LimitString(Path.GetFileNameWithoutExtension(path), GUI.Font, listBox.Rect.Width - 80))
+                            GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform) { MinSize = new Point(0, 30) }, ToolBox.LimitString(Path.GetFileNameWithoutExtension(path), GUI.Font, listBox.Rect.Width - 80))
                             {
                                 UserData = path,
                                 ToolTip = path
@@ -704,7 +703,7 @@ namespace Barotrauma
                     selectedFile = data as string;
                     // Don't allow to delete the animation that is currently in use, nor the default file.
                     var fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    deleteButton.Enabled = fileName != CurrentAnimation.Name && fileName != AnimationParams.GetDefaultFileName(character.SpeciesName, CurrentAnimation.Type);
+                    deleteButton.Enabled = fileName != CurrentAnimation.Name && fileName != AnimationParams.GetDefaultFileName(character.SpeciesName, CurrentAnimation.AnimationType);
                     return true;
                 };
                 deleteButton.OnClicked += (btn, data) =>

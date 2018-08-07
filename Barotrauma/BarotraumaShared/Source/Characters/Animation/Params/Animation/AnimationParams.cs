@@ -7,9 +7,9 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    // Note, the types are used in file parsing -> cannot have e.g. Swim, because there are SwimSlow and SwimFast.
     public enum AnimationType
     {
+        NotDefined,
         Walk,
         Run,
         SwimSlow,
@@ -40,18 +40,16 @@ namespace Barotrauma
 
     abstract class AnimationParams : EditableParams
     {
-        public virtual AnimationType Type { get; private set; }
-        public bool IsGroundedAnimation => Type == AnimationType.Walk || Type == AnimationType.Run;
-        public bool IsSwimAnimation => Type == AnimationType.SwimSlow || Type == AnimationType.SwimFast;
+        public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
+        public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> animations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
+        [Serialize(AnimationType.NotDefined, true)]
+        public virtual AnimationType AnimationType { get; protected set; }
+
         [Serialize(1.0f, true), Editable]
-        public float Speed
-        {
-            get;
-            set;
-        }
+        public float Speed { get; set; }
 
         /// <summary>
         /// In degrees.
@@ -102,6 +100,29 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Selects a random filepath from multiple paths, matching the specified animation type.
+        /// </summary>
+        public static string GetRandomFilePath(IEnumerable<string> filePaths, AnimationType type)
+        {
+            return filePaths.GetRandom(f => AnimationPredicate(f, type));
+        }
+
+        /// <summary>
+        /// Selects all file paths that match the specified animation type.
+        /// </summary>
+        public static IEnumerable<string> FilterFilesByType(IEnumerable<string> filePaths, AnimationType type)
+        {
+            return filePaths.Where(f => AnimationPredicate(f, type));
+        }
+
+        private static bool AnimationPredicate(string filePath, AnimationType type)
+        {
+            var doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null) { return false; }
+            return Enum.TryParse(doc.Root.GetAttributeString("AnimationType", "NotDefined"), out AnimationType fileType) && fileType == type;
+        }
+
+        /// <summary>
         /// The file name can be partial. If left null, will select randomly. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
@@ -124,28 +145,30 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"[AnimationParams] Could not find any animation files from the folder: {folder}. Using the default animation.");
                         selectedFile = GetDefaultFile(speciesName, animType);
                     }
+                    var filteredFiles = FilterFilesByType(files, animType);
+                    if (filteredFiles.None())
+                    {
+                        DebugConsole.ThrowError($"[AnimationParams] Could not find any animation files that match the animation type {animType} from the folder: {folder}. Using the default animation.");
+                        selectedFile = GetDefaultFile(speciesName, animType);
+                    }
                     else if (string.IsNullOrEmpty(fileName))
                     {
-                        // Files found, but none specified
-                        selectedFile = files.GetRandom(f => f.ToLowerInvariant().Contains(animType.ToString().ToLowerInvariant()));
+                        // Files found, but none specified.
+                        selectedFile = filteredFiles.GetRandom();
                     }
                     else
                     {
                         // First check if a file matches the name exactly
-                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == fileName);
+                        selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == fileName);
                         if (selectedFile == null)
                         {
                             // Then check if a file matches the name ignoring the case
-                            selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
+                            selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         }
                         if (selectedFile == null)
                         {
                             // Last, check if a file matches the name partially and the type ignoring the case.
-                            selectedFile = files.FirstOrDefault(f =>
-                            {
-                                string fName = Path.GetFileNameWithoutExtension(f).ToLowerInvariant();
-                                return fName.Contains(fileName.ToLowerInvariant()) && fName.Contains(animType.ToString().ToLowerInvariant());
-                            });
+                            selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
                         }
                         if (selectedFile == null)
                         {
@@ -165,7 +188,7 @@ namespace Barotrauma
                 }
                 DebugConsole.NewMessage($"[AnimationParams] Loading animations from {selectedFile}.", Color.Yellow);
                 T a = new T();
-                if (a.Load(selectedFile, animType))
+                if (a.Load(selectedFile))
                 {
                     if (!anims.ContainsKey(a.Name))
                     {
@@ -179,12 +202,6 @@ namespace Barotrauma
                 return a;
         }
             return (T)anim;
-        }
-
-        protected bool Load(string file, AnimationType type)
-        {
-            Type = type;
-            return Load(file);
         }
     }
 }
