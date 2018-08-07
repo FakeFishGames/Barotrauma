@@ -24,6 +24,7 @@
   traitoruseratio="True"
   traitorratio="0.2"
   karmaenabled="False"
+  KillDisconnectedTime="30"
   SubSelection="Manual"
   ModeSelection="Manual"
   GameMode="SandBox"
