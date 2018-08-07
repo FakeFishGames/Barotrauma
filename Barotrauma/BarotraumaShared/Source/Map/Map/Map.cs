@@ -446,6 +446,7 @@ namespace Barotrauma
             for (int i = 0; i < connections.Count; i++)
             {
                 if (!connections[i].Passed) continue;
+                connections[i].CheckMissionCompleted();
 
                 var connectionElement = new XElement("connection", new XAttribute("i", i));
                 if (connections[i].MissionsCompleted > 0) connectionElement.Add(new XAttribute("m", connections[i].MissionsCompleted));
@@ -523,6 +524,15 @@ namespace Barotrauma
         {
             locations = new Location[] { location1, location2 };
             MissionsCompleted = 0;
+        }
+
+        public void CheckMissionCompleted()
+        {
+            if (mission != null && mission.Completed)
+            {
+                MissionsCompleted++;
+                mission = null;
+            }
         }
 
         public Location OtherLocation(Location location)
