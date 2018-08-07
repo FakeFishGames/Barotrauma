@@ -1,4 +1,5 @@
 ﻿<CarrierSwimSlow
+  AnimationType="SwimSlow"
   speed="4"
   waveamplitude="0"
   wavelength ="0"

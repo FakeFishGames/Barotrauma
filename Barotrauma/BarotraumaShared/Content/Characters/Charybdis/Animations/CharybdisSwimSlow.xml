@@ -1,4 +1,5 @@
 ﻿<CharybdisSwimSlow
+  AnimationType="SwimSlow"
   speed="3"
   waveamplitude="1"
   wavelength="60"

@@ -1,4 +1,5 @@
 ﻿<CoelanthSwimSlow
+  AnimationType="SwimSlow"
   waveamplitude="0.2"
   wavelength="50"
   steertorque="300"

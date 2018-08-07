@@ -1,4 +1,5 @@
-﻿<Fractalguardian2SwimFast
+﻿<Fractalguardian2SwimSlow
+  AnimationType="SwimSlow"
   speed ="1"
   waveamplitude="0"
   rotatetowardsmovement="false"

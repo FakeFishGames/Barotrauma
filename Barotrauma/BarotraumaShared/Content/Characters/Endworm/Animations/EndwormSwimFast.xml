@@ -1,4 +1,5 @@
 ﻿<EndwormSwimFast
+  AnimationType="SwimFast"
   speed ="3"
   waveamplitude="1"
   wavelength="10"

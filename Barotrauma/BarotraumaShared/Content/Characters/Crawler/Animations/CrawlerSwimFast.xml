@@ -1,4 +1,5 @@
 ﻿<CrawlerSwimFast
+  AnimationType="SwimFast"
   speed="4"
   steertorque="20"
   waveamplitude="0.08"

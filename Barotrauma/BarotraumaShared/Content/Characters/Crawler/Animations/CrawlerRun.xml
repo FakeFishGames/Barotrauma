@@ -1,4 +1,5 @@
 ﻿<CrawlerRun
+  AnimationType="Run"
   speed="4"
   stepsize="0.15,0.25"
   legtorque="10"

@@ -1,4 +1,5 @@
 ﻿<SeamantisRun
+  AnimationType="Run"
   speed="5.98"
   stepsize="0.95,0.06000016"
   legtorque="10"

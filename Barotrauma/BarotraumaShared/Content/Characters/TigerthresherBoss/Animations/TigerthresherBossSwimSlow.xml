@@ -1,4 +1,5 @@
 ﻿<TigerthresherBossSwimSlow
+  AnimationType="SwimSlow"
   speed="3"
   wavelength="25"
   waveamplitude="0.3"

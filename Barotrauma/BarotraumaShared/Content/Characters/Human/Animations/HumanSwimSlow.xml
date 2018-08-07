@@ -1,4 +1,5 @@
 ﻿<HumanSwimSlow
+  AnimationType="SwimSlow"
   speed="1"
   steertorque="25"
   headangle="42.5"

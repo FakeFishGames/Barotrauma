@@ -1,4 +1,5 @@
 ﻿<HumanoidRun
+  AnimationType="Run"
   getupspeed="0.3"
   cyclespeed="9"
   footmovestrength="15"

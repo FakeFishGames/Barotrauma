@@ -1,4 +1,5 @@
 ﻿<CrawlerWalk
+  AnimationType="Walk"
   speed="2"
   stepsize="0.12,0.2"
   legtorque="10"

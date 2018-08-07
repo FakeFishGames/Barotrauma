@@ -1,4 +1,5 @@
 ﻿<FractalguardianSwimFast
+  AnimationType="SwimFast"
   speed ="4.5"
   waveamplitude="0.5"
   wavelength="5"

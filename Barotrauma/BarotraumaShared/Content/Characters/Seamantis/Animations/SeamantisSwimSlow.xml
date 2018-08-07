@@ -1,4 +1,5 @@
 ﻿<SeamantisSwimSlow
+  AnimationType="SwimSlow"
   speed="3"
   waveamplitude="0.7199997"
   wavelength="42.5"

@@ -1,4 +1,5 @@
 ﻿<SeamantisWalk
+  AnimationType="Walk"
   speed="2.400001"
   stepsize="0.1500002,0.3700003"
   legtorque="10"

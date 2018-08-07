@@ -1,4 +1,5 @@
 ﻿<MolochSwimSlow
+  AnimationType="SwimSlow"
   speed ="2"
   waveamplitude="0"
   mirror="true"
