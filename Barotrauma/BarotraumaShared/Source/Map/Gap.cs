@@ -641,7 +641,7 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
-            FindHulls();
+            if (!DisableHullRechecks) FindHulls();
         }
         
         public static void Load(XElement element, Submarine submarine)

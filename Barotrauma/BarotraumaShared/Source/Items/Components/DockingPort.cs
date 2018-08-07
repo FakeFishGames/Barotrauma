@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
                 if (joint != null)
                 {
                     CreateJoint(joint is WeldJoint);
-                    LinkHullsToGap();
+                    LinkHullsToGaps();
                 }
                 else if (dockingTarget.joint != null)
                 {
@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
                     {
                         dockingTarget.CreateJoint(dockingTarget.joint is WeldJoint);
                     }
-                    dockingTarget.LinkHullsToGap();
+                    dockingTarget.LinkHullsToGaps();
                 }
             }
         }
@@ -435,7 +435,7 @@ namespace Barotrauma.Items.Components
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
             }
 
-            LinkHullsToGap();
+            LinkHullsToGaps();
             
             hulls[0].ShouldBeSaved = false;
             hulls[1].ShouldBeSaved = false;
@@ -457,7 +457,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void LinkHullsToGap()
+        private void LinkHullsToGaps()
         {
             if (gap == null || hulls == null || hulls[0] == null || hulls[1] == null)
             {
@@ -494,6 +494,35 @@ namespace Barotrauma.Items.Components
                     gap.linkedTo.Add(hulls[1]);
                     gap.linkedTo.Add(hulls[0]);
                 }
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Gap gap = i == 0 ? door?.LinkedGap : dockingTarget?.door?.LinkedGap;
+                if (gap == null || gap.linkedTo.Count == 2) continue;
+                
+                if (IsHorizontal)
+                {
+                    if (item.WorldPosition.X < dockingTarget.item.WorldPosition.X)
+                    {
+                        if (!gap.linkedTo.Contains(hulls[0])) gap.linkedTo.Add(hulls[0]);
+                    }
+                    else
+                    {
+                        if (!gap.linkedTo.Contains(hulls[1])) gap.linkedTo.Add(hulls[1]);
+                    }
+                }
+                else
+                {
+                    if (item.WorldPosition.Y < dockingTarget.item.WorldPosition.Y)
+                    {
+                        if (!gap.linkedTo.Contains(hulls[0])) gap.linkedTo.Add(hulls[0]);
+                    }
+                    else
+                    {
+                        if (!gap.linkedTo.Contains(hulls[1])) gap.linkedTo.Add(hulls[1]);
+                    }
+                }                
             }
         }
 
