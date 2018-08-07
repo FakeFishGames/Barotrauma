@@ -1457,7 +1457,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, c.Character);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
