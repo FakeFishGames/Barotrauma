@@ -43,10 +43,10 @@ namespace Barotrauma
                 folder = GetDefaultFolder(speciesName);
             }
             return folder;
-        }   
+        }
 
         /// <summary>
-        /// The file name can be partial. If left null, will select randomly. If fails, will select the default file. Note: Use the filename without the extensions, don't use the full path!
+        /// If the file name is left null, a random file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
         /// If a custom folder is used, it's defined in the character info file.
         /// </summary>
         public static T GetRagdollParams<T>(string speciesName, string fileName = null) where T : RagdollParams, new()
@@ -75,18 +75,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        // First check if a file matches the name exactly
-                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == fileName);
-                        if (selectedFile == null)
-                        {
-                            // Then check if a file matches the name ignoring the case
-                            selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
-                        }
-                        if (selectedFile == null)
-                        {
-                            // Last, check if a file matches the name partially
-                            selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant().Contains(fileName.ToLowerInvariant()));
-                        }
+                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");
