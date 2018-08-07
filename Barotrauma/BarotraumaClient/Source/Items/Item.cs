@@ -402,7 +402,8 @@ namespace Barotrauma
                     ushort targetID = msg.ReadUInt16();
 
                     Character target = FindEntityByID(targetID) as Character;
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, true);
+                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
+                    ApplyStatusEffects(actionType, 1.0f, target, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
