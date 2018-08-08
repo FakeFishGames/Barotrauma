@@ -253,6 +253,11 @@ namespace Barotrauma
             ResetParamsEditor();
             return character;
         }
+
+        private void TeleportTo(Vector2 position)
+        {
+            character.AnimController.SetPosition(ConvertUnits.ToSimUnits(position), false);
+        }
         #endregion
 
         #region GUI
@@ -478,8 +483,7 @@ namespace Barotrauma
                     SetWallCollisions(character.AnimController.forceStanding);
                     if (character.AnimController.forceStanding)
                     {
-                        // Teleport
-                        character.AnimController.SetPosition(ConvertUnits.ToSimUnits(spawnPosition), false);
+                        TeleportTo(spawnPosition);
                     }
                     return true;
                 }
@@ -610,7 +614,9 @@ namespace Barotrauma
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
-                    SpawnCharacter(currentCharacterConfig, ragdoll);
+                    character.AnimController.Recreate(ragdoll);
+                    TeleportTo(spawnPosition);
+                    ResetParamsEditor();
                     loadBox.Close();
                     return true;
                 };
@@ -918,7 +924,10 @@ namespace Barotrauma
             // Character
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: Cam.Transform);
             character.Draw(spriteBatch);
-            //character.AnimController.Collider.DebugDraw(spriteBatch, Color.LightGreen);
+            if (GameMain.DebugDraw)
+            {
+                character.AnimController.Collider.DebugDraw(spriteBatch, Color.LightGreen);
+            }
             spriteBatch.End();
 
             // GUI
