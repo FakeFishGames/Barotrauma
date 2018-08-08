@@ -1618,9 +1618,7 @@ namespace Barotrauma
             }
 
             if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
-            if (!IsDead) LockHands = false;
-
+            
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
@@ -1652,6 +1650,8 @@ namespace Barotrauma
             {
                 selectedConstruction = null;
             }
+
+            if (!IsDead) LockHands = false;
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
