@@ -65,7 +65,7 @@
     </Deconstruct>
 
     <Wearable slots="Any,Torso+Legs">
-      <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>
+      <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02" hidelimb="true"/>
 
       <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true"/>
       <sprite texture="clownshirt.png" limb="LeftHand" sourcerect="47,0,15,49" origin="0.45,0.6" depth="0.14" hidelimb="true"/>
