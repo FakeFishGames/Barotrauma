@@ -136,9 +136,8 @@ namespace Barotrauma
             for (int i = 0 ; i < amount; i++)
             {
                 BackgroundSpritePrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
-                GraphEdge selectedEdge = null;
                 Vector2 edgeNormal = Vector2.One;
-                Vector2? pos = FindSpritePosition(level, prefab, out selectedEdge, out edgeNormal);
+                Vector2? pos = FindSpritePosition(level, prefab, out GraphEdge selectedEdge, out edgeNormal);
 
                 if (pos == null) continue;
 
@@ -148,7 +147,8 @@ namespace Barotrauma
                     rotation = MathUtils.VectorToAngle(new Vector2(edgeNormal.Y, edgeNormal.X));
                 }
 
-                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
+                float randomRot = Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.Server);
+                rotation += level.Mirrored ? -randomRot : randomRot;
 
                 var newSprite = new BackgroundSprite(prefab,
                     new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.Server), rotation);
@@ -231,6 +231,8 @@ namespace Barotrauma
                 Rand.Range(0.0f, level.Size.X, Rand.RandSync.Server), 
                 Rand.Range(0.0f, level.Size.Y, Rand.RandSync.Server));
 
+            if (level.Mirrored) randomPos.X = level.Size.X - randomPos.X;
+
             if (prefab.SpawnPos == BackgroundSpritePrefab.SpawnPosType.None) return randomPos;
 
             List<GraphEdge> edges = new List<GraphEdge>();
@@ -241,6 +243,9 @@ namespace Barotrauma
 
             if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
             if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
+
+            //make sure the cells are in the same order regardless of whether the level is mirrored or not
+            cells.Sort((c1, c2) => { return level.Mirrored ? Math.Sign(c1.Center.X - c2.Center.X) : -Math.Sign(c1.Center.X - c2.Center.X); });
             
             if (cells.Any())
             {
@@ -305,10 +310,12 @@ namespace Barotrauma
             edgeNormal = normals[index];
 
             float length = Vector2.Distance(closestEdge.point1, closestEdge.point2);
-            Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
-            Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, Rand.RandSync.Server);
 
-            return pos;
+            Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
+            float normalizedPos = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+            if (level.Mirrored) normalizedPos = 1.0f - normalizedPos;
+
+            return Vector2.Lerp(closestEdge.point2 + dir * prefab.Sprite.size.X / 2.0f, closestEdge.point1 - dir * prefab.Sprite.size.X / 2.0f, normalizedPos);
         }
 
         public void Update(float deltaTime)
