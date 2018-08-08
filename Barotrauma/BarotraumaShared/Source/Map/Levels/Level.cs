@@ -199,7 +199,7 @@ namespace Barotrauma
             return new Level(seed, Rand.Range(30.0f, 80.0f, Rand.RandSync.Server), LevelGenerationParams.GetRandom(seed));
         }
 
-        public void Generate(bool mirror = true)
+        public void Generate(bool mirror)
         {
             Mirrored = mirror;
 
