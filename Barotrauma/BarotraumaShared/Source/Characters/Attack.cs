@@ -87,6 +87,11 @@ namespace Barotrauma
         [Serialize(0.0f, false)]
         public float Priority { get; private set; }
 
+        public IEnumerable<StatusEffect> StatusEffects
+        {
+            get { return statusEffects; }
+        }
+
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ApplyForceOnLimbs;

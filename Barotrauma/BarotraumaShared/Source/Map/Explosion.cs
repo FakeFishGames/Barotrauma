@@ -164,6 +164,9 @@ namespace Barotrauma
                 Vector2 explosionPos = worldPosition;
                 if (c.Submarine != null) explosionPos -= c.Submarine.Position;
 
+                Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
+                bool underWater = hull == null || explosionPos.Y < hull.Surface;
+
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
                 Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
@@ -199,6 +202,14 @@ namespace Barotrauma
                     }
                     c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
 
+                    var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                    foreach (StatusEffect statusEffect in attack.StatusEffects)
+                    {
+                        statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
+                        statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
+                        if (underWater) statusEffect.Apply(ActionType.InWater, 1.0f, damageSource, statusEffectTargets);
+                    }
+                    
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
@@ -232,7 +243,7 @@ namespace Barotrauma
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure,float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
         {
             List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
