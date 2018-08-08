@@ -306,10 +306,12 @@ namespace Barotrauma
 
             if (Character.Submarine == null)
             {
+                if (steeringManager != outsideSteering) outsideSteering.Reset();
                 steeringManager = outsideSteering;
             }
             else
             {
+                if (steeringManager != insideSteering) insideSteering.Reset();
                 steeringManager = insideSteering;
             }
 
