@@ -222,42 +222,45 @@ namespace Barotrauma
         {
             for (int i = 0; i < 2; i++)
             {
-                WayPoint node = null;
-                WayPoint nextNode = null;
-
-                if (i == 0)
-                {
-                    node = currentPath.CurrentNode;
-                    nextNode = currentPath.NextNode;
-                }
-                else
-                {
-                    node = currentPath.PrevNode;
-                    nextNode = currentPath.CurrentNode;
-                }
-
-                if (node?.ConnectedDoor == null) continue;
-
-                if (nextNode == null) continue;
-
-                var door = node.ConnectedGap.ConnectedDoor;
-
+                Door door = null;
                 bool shouldBeOpen = false;
 
-                if (door.LinkedGap.IsHorizontal)
+                if (currentPath.Nodes.Count == 1)
                 {
-                    int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
-
-                    shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                    door = currentPath.Nodes.First().ConnectedDoor;
+                    shouldBeOpen = door != null;
                 }
                 else
                 {
-                    int currentDir = Math.Sign(nextNode.WorldPosition.Y - door.Item.WorldPosition.Y);
+                    WayPoint node = null;
+                    WayPoint nextNode = null;
+                    if (i == 0)
+                    {
+                        node = currentPath.CurrentNode;
+                        nextNode = currentPath.NextNode;
+                    }
+                    else
+                    {
+                        node = currentPath.PrevNode;
+                        nextNode = currentPath.CurrentNode;
+                    }
+                    if (node?.ConnectedDoor == null || nextNode == null) continue;
 
-                    shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                    door = node.ConnectedGap.ConnectedDoor;
+                    if (door.LinkedGap.IsHorizontal)
+                    {
+                        int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
+                        shouldBeOpen = (door.Item.WorldPosition.X - character.WorldPosition.X) * currentDir > -50.0f;
+                    }
+                    else
+                    {
+                        int currentDir = Math.Sign(nextNode.WorldPosition.Y - door.Item.WorldPosition.Y);
+                        shouldBeOpen = (door.Item.WorldPosition.Y - character.WorldPosition.Y) * currentDir > -80.0f;
+                    }
                 }
-                
 
+                if (door == null) return;
+                
                 //toggle the door if it's the previous node and open, or if it's current node and closed
                 if (door.IsOpen != shouldBeOpen)
                 {

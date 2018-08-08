@@ -453,8 +453,9 @@ namespace Barotrauma
 
                     Character target = FindEntityByID(targetID) as Character;
                     Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+                    //ignore deltatime - using an item with the useOnSelf buttons is instantaneous
+                    ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
 
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, targetLimb, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);

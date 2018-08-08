@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (voltage / minVoltage)); }
+            get { return Math.Abs((force / 100.0f) * Math.Min(voltage / minVoltage, 1.0f)); }
         }
 
         public Engine(Item item, XElement element)
@@ -86,7 +86,7 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
-                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * (voltage / minVoltage), 0.0f);
+                Vector2 currForce = new Vector2((force / 100.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
                 if (item.IsOptimized("mechanical")) currForce *= 1.5f;
 
                 item.Submarine.ApplyForce(currForce);

@@ -590,6 +590,8 @@ namespace Barotrauma
                 var connection = connections[i];
                 if (!connection.Passed) continue;
 
+                connection.CheckMissionCompleted();
+
                 var connectionElement = new XElement("connection", new XAttribute("i", i));
                 if (connection.MissionsCompleted > 0)
                 {
@@ -598,7 +600,7 @@ namespace Barotrauma
 
                 mapElement.Add(connectionElement);
             }
-
+            
             element.Add(mapElement);
         }
     }

@@ -205,7 +205,7 @@ namespace Barotrauma
                 Color wearableColor = wearable.WearableComponent.Item.GetSpriteColor();
                 wearable.Sprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    new Color((color.R * wearableColor.R) / 255.0f, (color.G * wearableColor.G) / 255.0f, (color.B * wearableColor.B) / 255.0f, (color.A * wearableColor.A) / 255.0f),
+                    new Color((color.R * wearableColor.R) / (255.0f * 255.0f), (color.G * wearableColor.G) / (255.0f * 255.0f), (color.B * wearableColor.B) / (255.0f * 255.0f)) * ((color.A * wearableColor.A) / (255.0f * 255.0f)),
                     origin, -body.DrawRotation,
                     Scale, spriteEffect, depth);
             }

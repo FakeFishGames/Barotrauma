@@ -571,6 +571,8 @@ namespace Barotrauma.Networking
                     else
                     {
                         clients[i].Character = character;
+                        character.OwnerClientIP = clients[i].Connection.RemoteEndPoint.Address.ToString();
+                        character.OwnerClientName = clients[i].Name;
                         GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                     }
                 }
