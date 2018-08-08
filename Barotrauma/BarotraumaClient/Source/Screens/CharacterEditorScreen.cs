@@ -526,7 +526,7 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
-                    RagdollParams.Save(inputField.Text);
+                    character.AnimController.SaveRagdoll(inputField.Text);
                     ResetParamsEditor();
                     box.Close();
                     return true;
