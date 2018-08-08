@@ -99,22 +99,22 @@ namespace Barotrauma.Sounds
             return Owner.IsPlaying(this);
         }
 
-        public SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
+        public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
             return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
         }
-        
-        public SoundChannel Play(Vector3? position, float gain, bool muffle = false)
+
+        public virtual SoundChannel Play(Vector3? position, float gain, bool muffle = false)
         {
             return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
         }
 
-        public SoundChannel Play(float gain)
+        public virtual SoundChannel Play(float gain)
         {
             return Play(null, gain);
         }
 
-        public SoundChannel Play()
+        public virtual SoundChannel Play()
         {
             return Play(BaseGain);
         }

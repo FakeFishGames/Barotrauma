@@ -1,12 +1,14 @@
 ﻿using System;
 using OpenTK.Audio.OpenAL;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
     public class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 65536;
+        private short[] streamShortBuffer;
 
         private Vector3? position;
         public Vector3? Position
@@ -143,6 +145,8 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public bool FilledByNetwork;
+        
         private bool muffled;
         public bool Muffled
         {
@@ -232,6 +236,7 @@ namespace Barotrauma.Sounds
         private bool startedPlaying;
         private bool reachedEndSample;
         private uint[] streamBuffers;
+        private List<uint> emptyBuffers;
 
         private object mutex;
 
@@ -310,7 +315,10 @@ namespace Barotrauma.Sounds
                         throw new Exception("Failed to set stream looping state: " + AL.GetErrorString(alError));
                     }
 
+                    streamShortBuffer = new short[STREAM_BUFFER_SIZE];
+
                     streamBuffers = new uint[4];
+                    emptyBuffers = new List<uint>();
                     for (int i=0;i<4;i++)
                     {
                         AL.GenBuffer(out streamBuffers[i]);
@@ -432,11 +440,12 @@ namespace Barotrauma.Sounds
                     {
                         throw new Exception("Failed to determine playing state from streamed source: " + AL.GetErrorString(alError));
                     }
-
+                    
                     int buffersToUnqueue = 0;
                     int[] unqueuedBuffers = null;
                     if (!startedPlaying)
                     {
+                        emptyBuffers.Clear();
                         buffersToUnqueue = 0;
                         AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToUnqueue);
                         alError = AL.GetError();
@@ -445,8 +454,14 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to determine processed buffers from streamed source: " + AL.GetErrorString(alError));
                         }
 
-                        unqueuedBuffers = new int[buffersToUnqueue];
+                        unqueuedBuffers = new int[buffersToUnqueue+emptyBuffers.Count];
                         AL.SourceUnqueueBuffers((int)alSource, buffersToUnqueue, unqueuedBuffers);
+                        for (int i=0;i<emptyBuffers.Count;i++)
+                        {
+                            unqueuedBuffers[buffersToUnqueue + i] = (int)emptyBuffers[i];
+                        }
+                        buffersToUnqueue += emptyBuffers.Count;
+                        emptyBuffers.Clear();
                         alError = AL.GetError();
                         if (alError != ALError.NoError)
                         {
@@ -461,23 +476,27 @@ namespace Barotrauma.Sounds
                         unqueuedBuffers = (int[])streamBuffers.Clone();
                         System.Diagnostics.Debug.WriteLine("startedplaying, " + buffersToUnqueue + ", " + unqueuedBuffers.Length);
                     }
-
+                    
                     for (int i = 0; i < buffersToUnqueue; i++)
                     {
-                        short[] buffer = new short[STREAM_BUFFER_SIZE];
+                        short[] buffer = streamShortBuffer;
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
-                        streamSeekPos += readSamples;
-                        if (readSamples < STREAM_BUFFER_SIZE)
+                        if (!FilledByNetwork)
                         {
-                            if (looping)
+                            streamSeekPos += readSamples;
+                            if (readSamples < STREAM_BUFFER_SIZE)
                             {
-                                streamSeekPos = 0;
-                            }
-                            else
-                            {
-                                reachedEndSample = true;
+                                if (looping)
+                                {
+                                    streamSeekPos = 0;
+                                }
+                                else
+                                {
+                                    reachedEndSample = true;
+                                }
                             }
                         }
+                        
                         if (readSamples > 0)
                         {
                             AL.BufferData<short>(unqueuedBuffers[i], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
@@ -494,6 +513,10 @@ namespace Barotrauma.Sounds
                             {
                                 throw new Exception("Failed to queue buffer[" + i.ToString() + "] to stream: " + AL.GetErrorString(alError));
                             }
+                        }
+                        else
+                        {
+                            emptyBuffers.Add((uint)unqueuedBuffers[i]);
                         }
                     }
 
