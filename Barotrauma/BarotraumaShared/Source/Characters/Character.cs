@@ -1611,12 +1611,22 @@ namespace Barotrauma
             //Health effects
             if (needsAir) UpdateOxygen(deltaTime);
 
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            if (DoesBleed)
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            }
 
             if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
 
             if (!IsDead) LockHands = false;
+
+            UpdateSightRange();
+            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
+
+            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
+
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
 
             //ragdoll button
             if (IsRagdolled)
@@ -1642,22 +1652,6 @@ namespace Barotrauma
             {
                 selectedConstruction = null;
             }
-
-            UpdateSightRange();
-            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
-
-            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
-
-            if (DoesBleed)
-            {
-                Health -= bleeding * deltaTime;
-                Bleeding -= BleedingDecreaseSpeed * deltaTime;
-            }
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
-            if (!IsDead) LockHands = false;
-            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
