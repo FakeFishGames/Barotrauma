@@ -492,12 +492,14 @@ namespace Barotrauma
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Save());
+                GUI.AddMessage($"All animations saved", Color.Green, font: GUI.Font);
                 return true;
             };
             var quickSaveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Ragdoll");
             quickSaveRagdollButton.OnClicked += (button, userData) =>
             {
                 character.AnimController.SaveRagdoll();
+                GUI.AddMessage($"Ragdoll saved", Color.Green, font: GUI.Font);
                 return true;
             };
             var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animation");
@@ -505,6 +507,7 @@ namespace Barotrauma
             {
                 AnimParams.ForEach(p => p.Reset());
                 ResetParamsEditor();
+                GUI.AddMessage($"All animations reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
             var resetRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Ragdoll");
@@ -514,6 +517,7 @@ namespace Barotrauma
                 CreateCenterPanel();
                 ResetParamsEditor();
                 widgets.Values.ForEach(w => w.refresh?.Invoke());
+                GUI.AddMessage($"Ragdoll reset", Color.WhiteSmoke, font: GUI.Font);
                 return true;
             };
             int messageBoxWidth = GameMain.GraphicsWidth / 2;
@@ -532,6 +536,7 @@ namespace Barotrauma
                 {
                     character.AnimController.SaveRagdoll(inputField.Text);
                     ResetParamsEditor();
+                    GUI.AddMessage($"Ragdoll saved to {RagdollParams.FullPath}", Color.Green, font: GUI.Font);
                     box.Close();
                     return true;
                 };
@@ -592,6 +597,7 @@ namespace Barotrauma
                         try
                         {
                             File.Delete(selectedFile);
+                            GUI.AddMessage($"Ragdoll deleted from {selectedFile}", Color.Red, font: GUI.Font);
                         }
                         catch (Exception e)
                         {
@@ -614,6 +620,7 @@ namespace Barotrauma
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
                     var ragdoll = character.IsHumanoid ? HumanRagdollParams.GetRagdollParams(fileName) as RagdollParams : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, fileName);
+                    GUI.AddMessage($"Ragdoll loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
                     character.AnimController.Recreate(ragdoll);
                     TeleportTo(spawnPosition);
                     ResetParamsEditor();
@@ -652,7 +659,9 @@ namespace Barotrauma
                 };
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
-                    character.AnimController.GetAnimationParamsFromType(selectedType).Save(inputField.Text);
+                    var animParams = character.AnimController.GetAnimationParamsFromType(selectedType);
+                    animParams.Save(inputField.Text);
+                    GUI.AddMessage($"Animation of type {animParams.AnimationType} saved to {animParams.FullPath}", Color.Green, font: GUI.Font);
                     ResetParamsEditor();
                     box.Close();
                     return true;
@@ -730,6 +739,7 @@ namespace Barotrauma
                         try
                         {
                             File.Delete(selectedFile);
+                            GUI.AddMessage($"Animation of type {selectedType} at {selectedFile} deleted", Color.Red, font: GUI.Font);
                         }
                         catch (Exception e)
                         {
@@ -792,6 +802,7 @@ namespace Barotrauma
                                 break;
                         }
                     }
+                    GUI.AddMessage($"Animation of type {selectedType} loaded from {selectedFile}", Color.WhiteSmoke, font: GUI.Font);
                     ResetParamsEditor();
                     loadBox.Close();
                     return true;
