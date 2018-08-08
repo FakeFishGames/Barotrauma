@@ -390,12 +390,12 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Saves all serializable data in the currently selected ragdoll params.
+        /// Saves all serializable data in the currently selected ragdoll params. This method should properly handle character flipping.
         /// </summary>
-        public void SaveRagdoll()
+        public void SaveRagdoll(string fileNameWithoutExtension = null)
         {
             SaveJoints();
-            RagdollParams.Save();
+            RagdollParams.Save(fileNameWithoutExtension);
         }
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Saves the current joint values to the serializable joint params.
+        /// Saves the current joint values to the serializable joint params. This method should properly handle character flipping.
         /// </summary>
         public void SaveJoints()
         {
