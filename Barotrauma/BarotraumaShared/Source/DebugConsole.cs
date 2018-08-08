@@ -2179,7 +2179,7 @@ namespace Barotrauma
 #endif
             }
 #endif
-
+            
             bool commandFound = false;
             foreach (Command c in commands)
             {
