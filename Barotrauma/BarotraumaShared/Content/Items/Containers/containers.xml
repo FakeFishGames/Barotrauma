@@ -3,11 +3,25 @@
     name="Steel Cabinet"    
     identifier="steelcabinet"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150">
 
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <Containable name="smallitem"/>
+    </ItemContainer>
+  </Item>
+  
+  <Item
+    name="Secure Steel Cabinet"
+    identifier="securesteelcabinet"
+    linkable="true"
+    pickdistance="150">
+
+    <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
       <Containable name="smallitem"/>
     </ItemContainer>
   </Item>
@@ -92,6 +106,30 @@
     </ItemContainer>
   </Item>
 
+  <Item
+    name="Secure Metal Crate"
+    identifier="securemetalcrate"
+    linkable="true"
+    pickdistance="150">
+
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
+    <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
+
+    <Body width="77" height="34" density="50"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
+
+    <ItemContainer capacity="20" canbeselected="true" hideitems="true">
+      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <Containable name="smallitem,Spear"/>
+    </ItemContainer>
+  </Item>
+  
   <Item
    name="Explosive Crate"   
    identifier="explosivecrate"
