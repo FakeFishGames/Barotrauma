@@ -1210,16 +1210,15 @@ namespace Barotrauma.Networking
                                 errorLines.Add(" - " + e.ToString());
                             }
                         }
-
-                        errorLines.Add("Last console messages:");
-                        for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
-                        {
-                            errorLines.Add("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
-                        }
-
+                        
                         foreach (string line in errorLines)
                         {
                             DebugConsole.ThrowError(line);
+                        }
+                        errorLines.Add("Last console messages:");
+                        for (int i = DebugConsole.Messages.Count - 1; i > Math.Max(0, DebugConsole.Messages.Count - 20); i--)
+                        {
+                            errorLines.Add("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
                         }
                         GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadInGameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, string.Join("\n", errorLines));
 

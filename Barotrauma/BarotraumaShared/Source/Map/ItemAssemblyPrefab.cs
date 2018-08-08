@@ -54,7 +54,7 @@ namespace Barotrauma
                 if (wire != null) wire.MoveNodes(rect.Location.ToVector2() - Submarine.MainSub.HiddenSubPosition);
             }
 
-            MapEntity.MapLoaded(entities);
+            MapEntity.MapLoaded(entities, true);
 #if CLIENT
             MapEntity.SelectedList.Clear();
             MapEntity.SelectedList.AddRange(entities);

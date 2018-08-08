@@ -554,7 +554,7 @@ namespace Barotrauma
             }
             
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
-            MapEntity.MapLoaded(MapEntity.mapEntityList.FindAll(me => me.Submarine == null));
+            MapEntity.MapLoaded(MapEntity.mapEntityList.FindAll(me => me.Submarine == null), false);
 
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();

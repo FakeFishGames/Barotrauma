@@ -401,6 +401,28 @@ namespace Barotrauma.Networking
 
                 entityEventManager.Update(connectedClients);
 
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.IsDead || !character.ClientDisconnected) continue;
+                    
+                    character.KillDisconnectedTimer += deltaTime;
+                    character.SetStun(1.0f);
+                    if (character.KillDisconnectedTimer > KillDisconnectedTime)
+                    {
+                        character.Kill(CauseOfDeathType.Disconnected, null);
+                        continue;
+                    }
+                        
+                    Client owner = connectedClients.Find(c => 
+                        c.InGame && !c.NeedsMidRoundSync && 
+                        c.Name == character.OwnerClientName && 
+                        c.Connection.RemoteEndPoint.Address.ToString() == character.OwnerClientIP);
+                    if (owner != null && (!AllowSpectating || !owner.SpectateOnly))
+                    {
+                        SetClientCharacter(owner, character);
+                    }
+                }
+
                 bool isCrewDead =
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious) &&
                     (myCharacter == null || myCharacter.IsDead || myCharacter.IsUnconscious);
@@ -906,11 +928,10 @@ namespace Barotrauma.Networking
             else
             {                
                 //if 30 seconds have passed since the round started and the client isn't ingame yet,
-                //kill the client's character
+                //consider the client's character disconnected (causing it to die if the client does not join soon)
                 if (gameStarted && c.Character != null && (DateTime.Now - roundStartTime).Seconds > 30.0f)
                 {
-                    c.Character.Kill(CauseOfDeathType.Disconnected, null);
-                    c.Character = null;
+                    c.Character.ClientDisconnected = true;
                 }
 
                 ClientWriteLobby(c);
@@ -1428,6 +1449,8 @@ namespace Barotrauma.Networking
                     spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
 
                     teamClients[i].Character = spawnedCharacter;
+                    spawnedCharacter.OwnerClientIP = teamClients[i].Connection.RemoteEndPoint.Address.ToString();
+                    spawnedCharacter.OwnerClientName = teamClients[i].Name;
 
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
@@ -1747,8 +1770,8 @@ namespace Barotrauma.Networking
 
             if (gameStarted && client.Character != null)
             {
+                client.Character.ClientDisconnected = true;
                 client.Character.ClearInputs();
-                client.Character.Kill(CauseOfDeathType.Disconnected, null);
             }
 
             client.Character = null;
@@ -2214,6 +2237,8 @@ namespace Barotrauma.Networking
             if (client.Character != null)
             {
                 client.Character.IsRemotePlayer = false;
+                client.Character.OwnerClientIP = null;
+                client.Character.OwnerClientName = null;
             }
             
             if (newCharacter == null)
@@ -2223,16 +2248,19 @@ namespace Barotrauma.Networking
                     CreateEntityEvent(client.Character, new object[] { NetEntityEvent.Type.Control, null });
                     client.Character = null;
                 }
-
             }
             else //taking control of a new character
             {
+                newCharacter.ClientDisconnected = false;
+                newCharacter.KillDisconnectedTimer = 0.0f;
                 newCharacter.ResetNetState();
                 if (client.Character != null)
                 {
                     newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
                 }
 
+                newCharacter.OwnerClientIP = client.Connection.RemoteEndPoint.Address.ToString();
+                newCharacter.OwnerClientName = client.Name;
                 newCharacter.IsRemotePlayer = true;
                 newCharacter.Enabled = true;
                 client.Character = newCharacter;

@@ -69,6 +69,15 @@ namespace Barotrauma
             MissionsCompleted = 0;
         }
 
+        public void CheckMissionCompleted()
+        {
+            if (mission != null && mission.Completed)
+            {
+                MissionsCompleted++;
+                mission = null;
+            }
+        }
+
         public Location OtherLocation(Location location)
         {
             if (locations[0] == location)

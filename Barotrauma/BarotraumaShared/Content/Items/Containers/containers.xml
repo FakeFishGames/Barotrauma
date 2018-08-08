@@ -29,7 +29,8 @@
     name="Medicine Cabinet" 
     identifier="medcabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
@@ -44,7 +45,8 @@
     name="Toxic Cabinet"
     identifier="toxcabinet"
     linkable="true"
-    pickdistance="150">
+    pickdistance="150"
+    waterproof="true">
 
     <Sprite texture="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
 
@@ -71,7 +73,7 @@
     name="Metal Crate"    
     identifier="metalcrate"
     linkable="true"
-    pickdistance ="150">
+    pickdistance="150">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -94,7 +96,7 @@
    name="Explosive Crate"   
    identifier="explosivecrate"
    linkable="true"
-   pickdistance ="150">
+   pickdistance="150">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
