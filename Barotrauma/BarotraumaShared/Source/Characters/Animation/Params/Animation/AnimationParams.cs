@@ -40,10 +40,11 @@ namespace Barotrauma
 
     abstract class AnimationParams : EditableParams
     {
+        public string SpeciesName { get; private set; }
         public bool IsGroundedAnimation => AnimationType == AnimationType.Walk || AnimationType == AnimationType.Run;
         public bool IsSwimAnimation => AnimationType == AnimationType.SwimSlow || AnimationType == AnimationType.SwimFast;
 
-        protected static Dictionary<string, Dictionary<string, AnimationParams>> animations = new Dictionary<string, Dictionary<string, AnimationParams>>();
+        protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
         [Serialize(AnimationType.NotDefined, true)]
         public virtual AnimationType AnimationType { get; protected set; }
@@ -128,10 +129,10 @@ namespace Barotrauma
         /// </summary>
         public static T GetAnimParams<T>(string speciesName, AnimationType animType, string fileName = null) where T : AnimationParams, new()
         {
-            if (!animations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> anims))
+            if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> anims))
             {
                 anims = new Dictionary<string, AnimationParams>();
-                animations.Add(speciesName, anims);
+                allAnimations.Add(speciesName, anims);
             }
             if (fileName == null || !anims.TryGetValue(fileName, out AnimationParams anim))
             {
@@ -154,11 +155,11 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified.
+                        DebugConsole.NewMessage($"[AnimationParams] Selecting random animation of type {animType} for {speciesName}", Color.White);
                         selectedFile = filteredFiles.GetRandom();
                     }
                     else
                     {
-                        // Then check if a file matches the name ignoring the case
                         selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         if (selectedFile == null)
                         {
@@ -178,7 +179,7 @@ namespace Barotrauma
                 }
                 DebugConsole.NewMessage($"[AnimationParams] Loading animations from {selectedFile}.", Color.Yellow);
                 T a = new T();
-                if (a.Load(selectedFile))
+                if (a.Load(selectedFile, speciesName))
                 {
                     if (!anims.ContainsKey(a.Name))
                     {
@@ -190,8 +191,42 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} at {selectedFile} of type {animType} for the character {speciesName}");
                 }
                 return a;
-        }
+            }
             return (T)anim;
+        }
+
+        protected bool Load(string file, string speciesName)
+        {
+            if (Load(file))
+            {
+                SpeciesName = speciesName;
+                return true;
+            }
+            return false;
+        }
+
+        protected override void UpdatePath(string newPath)
+        {
+            if (SpeciesName == null)
+            {
+                base.UpdatePath(newPath);
+            }
+            else
+            {
+                // Update the key by removing and re-adding the animation.
+                if (allAnimations.TryGetValue(SpeciesName, out Dictionary<string, AnimationParams> animations))
+                {
+                    animations.Remove(Name);
+                }
+                base.UpdatePath(newPath);
+                if (animations != null)
+                {
+                    if (!animations.ContainsKey(Name))
+                    {
+                        animations.Add(Name, this);
+                    }
+                }
+            }
         }
     }
 }
