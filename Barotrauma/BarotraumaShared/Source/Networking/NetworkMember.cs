@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
 
+        VOICE,
+
         FILE_TRANSFER,
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
