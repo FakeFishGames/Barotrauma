@@ -39,7 +39,7 @@ namespace Barotrauma.Sounds
 
             using (VorbisReader reader = new VorbisReader(oggFile))
             {
-                int bufferSize = (int)reader.TotalSamples;
+                int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
                 float[] buffer = new float[bufferSize];
                 sound.castBuffer = new short[bufferSize];
@@ -51,6 +51,8 @@ namespace Barotrauma.Sounds
 
                 sound.format = reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16;
                 sound.sampleRate = reader.SampleRate;
+
+                ALHelper.Check();
 
                 //alSourceId = AL.GenSource();
                 AL.BufferData(sound.alBufferId, reader.Channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16, sound.castBuffer,
