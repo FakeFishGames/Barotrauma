@@ -48,8 +48,8 @@ namespace Barotrauma
         {
             if (ragdoll.IsFlipped)
             {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y)) / jointParams.Ragdoll.JointScale;
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y)) / jointParams.Ragdoll.JointScale;
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorA.X, LocalAnchorA.Y) / jointParams.Ragdoll.JointScale);
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(new Vector2(-LocalAnchorB.X, LocalAnchorB.Y) / jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.LowerLimit))
                 {
                     jointParams.UpperLimit = MathHelper.ToDegrees(-LowerLimit);
@@ -61,8 +61,8 @@ namespace Barotrauma
             }
             else
             {
-                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA) / jointParams.Ragdoll.JointScale;
-                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB) / jointParams.Ragdoll.JointScale;
+                jointParams.Limb1Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorA / jointParams.Ragdoll.JointScale);
+                jointParams.Limb2Anchor = ConvertUnits.ToDisplayUnits(LocalAnchorB / jointParams.Ragdoll.JointScale);
                 if (!float.IsNaN(jointParams.UpperLimit))
                 {
                     jointParams.UpperLimit = MathHelper.ToDegrees(UpperLimit);
