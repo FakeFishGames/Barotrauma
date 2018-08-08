@@ -527,6 +527,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
                     RagdollParams.Save(inputField.Text);
+                    ResetParamsEditor();
                     box.Close();
                     return true;
                 };
@@ -646,6 +647,7 @@ namespace Barotrauma
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
                     character.AnimController.GetAnimationParamsFromType(selectedType).Save(inputField.Text);
+                    ResetParamsEditor();
                     box.Close();
                     return true;
                 };
