@@ -349,16 +349,16 @@ namespace Barotrauma
                 SpawnCharacter(GetNextConfigFile());
                 return true;
             };
-            var animControlsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Animation Controls") { Selected = showAnimControls };
             var paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Parameters") { Selected = showParamsEditor };
+            var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
+            var editAnimsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Animations") { Selected = showAnimControls };
             var spriteDimensionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Sprite Dimensions") { Selected = editSpriteDimensions };
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
-            var spritesheetToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Show Spritesheet") { Selected = showSpritesheet };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
-            animControlsToggle.OnSelected = box =>
+            editAnimsToggle.OnSelected = box =>
             {
                 showAnimControls = box.Selected;
                 if (showAnimControls)
@@ -385,7 +385,7 @@ namespace Barotrauma
                 if (editSpriteDimensions)
                 {
                     ragdollToggle.Selected = false;
-                    animControlsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
                     spritesheetToggle.Selected = true;
                     ResetParamsEditor();
                 }
@@ -397,7 +397,7 @@ namespace Barotrauma
                 if (editRagdoll)
                 {
                     spriteDimensionsToggle.Selected = false;
-                    animControlsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
                     ResetParamsEditor();
                 }
                 else
@@ -434,7 +434,7 @@ namespace Barotrauma
                 showSpritesheet = box.Selected;
                 if (showSpritesheet)
                 {
-                    animControlsToggle.Selected = false;
+                    editAnimsToggle.Selected = false;
                     paramsToggle.Selected = false;
                 }
                 return true;
@@ -488,7 +488,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animation");
+            var quickSaveAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Quick Save Animations");
             quickSaveAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Save());
@@ -502,7 +502,7 @@ namespace Barotrauma
                 GUI.AddMessage($"Ragdoll saved", Color.Green, font: GUI.Font);
                 return true;
             };
-            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animation");
+            var resetAnimButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), "Reset Animations");
             resetAnimButton.OnClicked += (button, userData) =>
             {
                 AnimParams.ForEach(p => p.Reset());
