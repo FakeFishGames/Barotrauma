@@ -200,7 +200,7 @@ namespace Barotrauma.Networking
 
                     catch (Exception e)
                     {
-                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\"! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace;
+                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\" (" + e.Message + ")! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace;
                         errorMsg += "\nPrevious entities:";
                         for (int j = entities.Count - 2; j >= 0; j--)
                         {

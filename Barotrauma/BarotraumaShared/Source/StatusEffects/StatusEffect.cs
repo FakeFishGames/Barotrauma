@@ -323,7 +323,11 @@ namespace Barotrauma
             if (requiredItems == null) return true;
             foreach (RelatedItem requiredItem in requiredItems)
             {
-                if (entity is Item item)
+                if (entity == null)
+                {
+                    return false;
+                }
+                else if (entity is Item item)
                 {
                     if (!requiredItem.CheckRequirements(null, item)) return false;
                 }
@@ -425,7 +429,7 @@ namespace Barotrauma
                 hull = ((Item)entity).CurrentHull;
             }
 #if CLIENT
-            if (sound != null)
+            if (sound != null && entity != null)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
@@ -493,7 +497,7 @@ namespace Barotrauma
                 }                
             }
 
-            if (explosion != null) explosion.Explode(entity.WorldPosition, entity);
+            if (explosion != null && entity != null) explosion.Explode(entity.WorldPosition, entity);
 
             foreach (ISerializableEntity target in targets)
             {
@@ -527,7 +531,7 @@ namespace Barotrauma
                 }
             }
 
-            if (FireSize > 0.0f)
+            if (FireSize > 0.0f && entity != null)
             {
                 var fire = new FireSource(entity.WorldPosition, hull);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
@@ -587,18 +591,21 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            foreach (ParticleEmitter emitter in particleEmitters)
+            if (entity != null)
             {
-                float angle = 0.0f;
-                if (emitter.Prefab.CopyEntityAngle)
+                foreach (ParticleEmitter emitter in particleEmitters)
                 {
-                    if (entity is Item it)
+                    float angle = 0.0f;
+                    if (emitter.Prefab.CopyEntityAngle)
                     {
-                        angle = it.body == null ? 0.0f : it.body.Rotation;
+                        if (entity is Item it)
+                        {
+                            angle = it.body == null ? 0.0f : it.body.Rotation;
+                        }
                     }
-                }
 
-                emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
+                    emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
+                }
             }
 #endif
         }

@@ -179,7 +179,8 @@ namespace Barotrauma
                             List.Add(Stun = new AfflictionPrefab(element, typeof(Affliction)));
                             break;
                         case "husk":
-                            List.Add(Husk = new AfflictionPrefab(element, typeof(Affliction)));
+                        case "afflictionhusk":
+                            List.Add(Husk = new AfflictionPrefab(element, typeof(AfflictionHusk)));
                             break;
                         case "cprsettings":
                             CPRSettings.Load(element);
@@ -190,6 +191,15 @@ namespace Barotrauma
                     }
                 }
             }
+
+            if (InternalDamage == null) DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs.");
+            if (Bleeding == null) DebugConsole.ThrowError("Affliction \"Bleeding\" not defined in the affliction prefabs.");
+            if (Burn == null) DebugConsole.ThrowError("Affliction \"Burn\" not defined in the affliction prefabs.");
+            if (OxygenLow == null) DebugConsole.ThrowError("Affliction \"OxygenLow\" not defined in the affliction prefabs.");
+            if (Bloodloss == null) DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs.");
+            if (Pressure == null) DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs.");
+            if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
+            if (Husk == null) DebugConsole.ThrowError("Affliction \"Husk\" not defined in the affliction prefabs.");
         }
 
         public AfflictionPrefab(XElement element, Type type = null)

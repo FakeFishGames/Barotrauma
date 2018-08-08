@@ -254,6 +254,11 @@ namespace Barotrauma
             get { return prefab.FireProof; }
         }
 
+        public bool WaterProof
+        {
+            get { return prefab.WaterProof; }
+        }
+
         public bool CanUseOnSelf
         {
             get { return prefab.CanUseOnSelf; }
@@ -681,7 +686,6 @@ namespace Barotrauma
             if (Container == null) return null;
 
             Item rootContainer = Container;
-
             while (rootContainer.Container != null)
             {
                 rootContainer = rootContainer.Container;
@@ -922,8 +926,17 @@ namespace Barotrauma
             }
 
             inWater = IsInWater();
-
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            if (inWater)
+            {
+                bool waterProof = WaterProof;
+                Item container = this.Container;
+                while (!waterProof && container != null)
+                {
+                    waterProof = container.WaterProof;
+                    container = container.Container;
+                }
+                if (!waterProof) ApplyStatusEffects(ActionType.InWater, deltaTime);
+            }
 
             if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
 
@@ -1581,7 +1594,7 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
-
+                    
                     UInt16 characterID = msg.ReadUInt16();
                     byte limbIndex = msg.ReadByte();
 
@@ -1590,7 +1603,7 @@ namespace Barotrauma
                     if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
 
                     Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, targetCharacter, targetLimb);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {

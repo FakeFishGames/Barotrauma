@@ -245,6 +245,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
+                if (item.LastSentSignalRecipients[i].Condition <= 0.0f) continue;
                 if (item.LastSentSignalRecipients[i].Prefab.FocusOnSelected)
                 {
                     return item.LastSentSignalRecipients[i];

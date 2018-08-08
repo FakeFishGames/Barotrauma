@@ -21,6 +21,8 @@ namespace Barotrauma
         private float crouchRaycastTimer;
         const float CrouchRaycastInterval = 1.0f;
 
+        private SteeringManager outsideSteering, insideSteering;
+
         public override AIObjectiveManager ObjectiveManager
         {
             get { return objectiveManager; }
@@ -40,7 +42,8 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            steeringManager = new IndoorsSteeringManager(this, true, false);
+            insideSteering = new IndoorsSteeringManager(this, true, false);
+            outsideSteering = new SteeringManager(this);
 
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));
@@ -55,6 +58,17 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
+            
+            if (Character.Submarine != null || selectedAiTarget?.Entity?.Submarine != null)
+            {
+                if (steeringManager != insideSteering) insideSteering.Reset();
+                steeringManager = insideSteering;
+            }
+            else
+            {
+                if (steeringManager != outsideSteering) outsideSteering.Reset();
+                steeringManager = outsideSteering;
+            }
 
             (Character.AnimController as HumanoidAnimController).Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
@@ -91,7 +105,7 @@ namespace Barotrauma
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
-            var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
+            var currPath = (steeringManager as IndoorsSteeringManager)?.CurrentPath;
             if (currPath != null && currPath.CurrentNode != null)
             {
                 if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
