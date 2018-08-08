@@ -286,6 +286,10 @@ namespace Barotrauma
         /// </summary>
         public void Recreate(RagdollParams ragdollParams)
         {
+            if (IsFlipped)
+            {
+                Flip();
+            }
             dir = Direction.Right;
             RagdollParams = ragdollParams;
             XElement element = RagdollParams.MainElement;
@@ -299,8 +303,7 @@ namespace Barotrauma
             //}
             ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
             CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
-            colliderHeightFromFloor = element.GetAttributeFloat("colliderheightfromfloor", 45.0f);
-            colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
+            colliderHeightFromFloor = ConvertUnits.ToSimUnits(element.GetAttributeFloat("colliderheightfromfloor", 45.0f));
             Draggable = element.GetAttributeBool("draggable", false);
             CreateColliders();
             CreateLimbs();
