@@ -51,7 +51,7 @@ namespace Barotrauma
             return IsLoaded;
         }
 
-        private void UpdatePath(string newPath)
+        protected virtual void UpdatePath(string newPath)
         {
             FullPath = newPath;
             Name = Path.GetFileNameWithoutExtension(FullPath);

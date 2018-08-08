@@ -17,6 +17,8 @@ namespace Barotrauma
 
     class RagdollParams : EditableParams
     {
+        public string SpeciesName { get; private set; }
+
         [Serialize(1.0f, true), Editable(0.5f, 2f)]
         public float LimbScale { get; set; }
 
@@ -71,6 +73,7 @@ namespace Barotrauma
                     else if (string.IsNullOrEmpty(fileName))
                     {
                         // Files found, but none specified
+                        DebugConsole.NewMessage($"[RagdollParams] Selecting random ragdoll for {speciesName}", Color.White);
                         selectedFile = files.GetRandom();
                     }
                     else
@@ -94,7 +97,7 @@ namespace Barotrauma
                 }
                 DebugConsole.NewMessage($"[RagdollParams] Loading ragdoll from {selectedFile}.", Color.Orange);
                 T r = new T();
-                if (r.Load(selectedFile))
+                if (r.Load(selectedFile, speciesName))
                 {
                     if (!ragdolls.ContainsKey(r.Name))
                     {
@@ -103,17 +106,42 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll params {r} at {selectedFile} for the character {speciesName}");
+                    DebugConsole.ThrowError($"[RagdollParams] Failed to load ragdoll {r} at {selectedFile} for the character {speciesName}");
                 }
                 return r;
             }
             return (T)ragdoll;
         }
 
-        protected override bool Load(string file)
+        protected override void UpdatePath(string newPath)
         {
-            if (base.Load(file))
+            if (SpeciesName == null)
             {
+                base.UpdatePath(newPath);
+            }
+            else
+            {
+                // Update the key by removing and re-adding the ragdoll.
+                if (allRagdolls.TryGetValue(SpeciesName, out Dictionary<string, RagdollParams> ragdolls))
+                {
+                    ragdolls.Remove(Name);
+                }
+                base.UpdatePath(newPath);
+                if (ragdolls != null)
+                {
+                    if (!ragdolls.ContainsKey(Name))
+                    {
+                        ragdolls.Add(Name, this);
+                    }
+                }
+            }
+        }
+
+        protected bool Load(string file, string speciesName)
+        {
+            if (Load(file))
+            {
+                SpeciesName = speciesName;
                 CreateLimbs();
                 CreateJoints();
                 return true;
