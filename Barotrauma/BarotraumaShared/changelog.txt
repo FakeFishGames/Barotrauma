@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.12
+---------------------------------------------------------------------------------------------------------
+
+- Fixed connectionpanel syncing (wires dropping client-side during rewiring).
+- Characters stay alive for 30 seconds after a client disconnects, and if the client rejoins during that 
+time they regain control of the character. 
+- Changing the sprite color of an item also affects the color when the item is being worn.
+- Cloned items keep the value of the "required items" field of the original item.
+- Fixed crashes caused by gaps that are not connected to anything.
+- Removed the unused and non-functional monitor item.
+- Made medical and toxic cabinets waterproof (= potassium and other water-sensitive items inside them 
+are not affected by water).
+- Fixed docking ports causing flooding in some custom subs.
+- Fixed medical items with an immediate effect (such as calyxanide) not working when a player uses them
+on themselves in multiplayer.
+- Made calyxanide more effective and usable without a medical syringe.
+- Fixed engines trying to apply infinite force to the submarine if MinVoltage is set to zero.
+- Fixed levels resetting their mission to the previous one if the game is exited after completing a mission
+without selecting the level first.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.1.11
 ---------------------------------------------------------------------------------------------------------
 

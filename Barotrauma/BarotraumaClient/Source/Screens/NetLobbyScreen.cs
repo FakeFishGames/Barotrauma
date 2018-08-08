@@ -882,10 +882,11 @@ namespace Barotrauma
             //hash will be null if opening the sub file failed -> don't select the sub
             if (string.IsNullOrWhiteSpace(hash))
             {
-                if (component is GUITextBlock textBlock)
+                GUITextBlock submarineTextBlock = component.GetChild<GUITextBlock>();
+                if (submarineTextBlock != null)
                 {
-                    textBlock.TextColor = Color.DarkRed * 0.8f;
-                    textBlock.CanBeFocused = false;
+                    submarineTextBlock.TextColor = Color.DarkRed * 0.8f;
+                    submarineTextBlock.CanBeFocused = false;
                 }
                 else
                 {

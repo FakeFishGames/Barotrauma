@@ -1671,8 +1671,11 @@ namespace Barotrauma
             else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
             
-            if (!IsDead) LockHands = false;
+            UpdateSightRange();
+            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
+            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
+            
             //ragdoll button
             if (IsRagdolled)
             {
@@ -1697,14 +1700,8 @@ namespace Barotrauma
             {
                 SelectedConstruction = null;
             }
-
-            UpdateSightRange();
-            if (aiTarget != null) aiTarget.SoundRange = 0.0f;
-
-            lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
             
             if (!IsDead) LockHands = false;
-            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);

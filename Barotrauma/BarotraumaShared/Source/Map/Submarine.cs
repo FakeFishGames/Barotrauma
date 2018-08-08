@@ -1147,7 +1147,7 @@ namespace Barotrauma
 
             Loading = false;
 
-            MapEntity.MapLoaded(newEntities);
+            MapEntity.MapLoaded(newEntities, true);
 
             foreach (Hull hull in matchingHulls)
             {

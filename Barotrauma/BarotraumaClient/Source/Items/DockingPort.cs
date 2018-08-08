@@ -62,6 +62,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (!GameMain.DebugDraw) return;
+
             if (bodies != null)
             {
                 for (int i = 0; i < bodies.Length; i++)
