@@ -202,7 +202,6 @@ namespace Barotrauma.Items.Components
             foreach (Item contained in Inventory.Items)
             {
                 if (contained == null) continue;
-
                 if (contained.body != null)
                 {
                     try
@@ -211,9 +210,10 @@ namespace Barotrauma.Items.Components
                     }
                     catch (Exception e)
                     {
-#if DEBUG
-                        DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
-#endif
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions ("+e.Message+")\n"+e.StackTrace);
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:"+contained.Name,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
                     }
                 }
 
