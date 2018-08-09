@@ -381,8 +381,7 @@ namespace Barotrauma
                     (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
-                    condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
-
+                    condition = msg.ReadSingle();
                     if (FixRequirements.Count > 0)
                     {
                         if (Condition <= 0.0f)
