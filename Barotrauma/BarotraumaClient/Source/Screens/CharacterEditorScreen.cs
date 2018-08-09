@@ -267,6 +267,7 @@ namespace Barotrauma
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
         private GUITickBox freezeToggle;
+        private GUITickBox swimToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
 
@@ -474,7 +475,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
+            swimToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Swim")
             {
                 Enabled = character.AnimController.CanWalk,
                 Selected = character.AnimController is FishAnimController,
@@ -891,6 +892,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            if (PlayerInput.KeyHit(Keys.E))
+            {
+                swimToggle.Selected = !swimToggle.Selected;
+            }
             if (PlayerInput.KeyHit(Keys.F))
             {
                 freezeToggle.Selected = !freezeToggle.Selected;
