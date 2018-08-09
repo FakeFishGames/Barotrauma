@@ -1434,6 +1434,63 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                if (afflictionPrefab == null)
+                {
+                    ThrowError("Affliction \"" + args[0] + "\" not found.");
+                    return;
+                }
+
+                if (!float.TryParse(args[1], out float afflictionStrength))
+                {
+                    ThrowError("\"" + args[1] + "\" is not a valid affliction strength.");
+                    return;
+                }
+
+                Character targetCharacter = (args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
+                if (targetCharacter != null)
+                {
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                }
+            },
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                if (afflictionPrefab == null)
+                {
+                    GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
+                    return;
+                }
+
+                if (!float.TryParse(args[1], out float afflictionStrength))
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[1] + "\" is not a valid affliction strength.", client);
+                    return;
+                }
+
+                Character targetCharacter = (args.Length <= 2) ? client.Character : FindMatchingCharacter(args.Skip(2).ToArray());
+                if (targetCharacter != null)
+                {
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    AfflictionPrefab.List.Select(a => a.Name).ToArray(),
+                    new string[] { "1" },
+                    Character.CharacterList.Select(c => c.Name).ToArray()
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("heal", "heal [character name]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed.", (string[] args) =>
             {
                 Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
