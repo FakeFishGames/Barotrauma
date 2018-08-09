@@ -1375,10 +1375,7 @@ namespace Barotrauma
                     (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
                 case NetEntityEvent.Type.Status:
-                    //clamp to (MaxHealth / 255.0f) if condition > 0.0f
-                    //to prevent condition from being rounded down to 0.0 even if the item is not broken
-                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, prefab.Health / 255.0f) : 0.0f, 0.0f, prefab.Health, 8);
-
+                    msg.Write(condition);
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
