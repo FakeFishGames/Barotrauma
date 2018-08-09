@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
@@ -890,6 +891,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            if (PlayerInput.KeyHit(Keys.F))
+            {
+                freezeToggle.Selected = !freezeToggle.Selected;
+            }
             if (!freeze)
             {
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
