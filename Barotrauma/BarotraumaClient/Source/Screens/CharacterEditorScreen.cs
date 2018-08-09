@@ -1349,8 +1349,8 @@ namespace Barotrauma
 
         private void DrawRagdollEditor(SpriteBatch spriteBatch, float deltaTime)
         {
-            bool ctrlDown = PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt);
-            if (!ctrlDown && editJointPositions)
+            bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
+            if (!altDown && editJointPositions)
             {
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 150, 20), "PRESS Left Alt TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
@@ -1397,11 +1397,11 @@ namespace Barotrauma
                     }
                     if (editJointPositions)
                     {
-                        if (ctrlDown && joint.BodyA == limb.body.FarseerBody)
+                        if (altDown && joint.BodyA == limb.body.FarseerBody)
                         {
                             continue;
                         }
-                        if (!ctrlDown && joint.BodyB == limb.body.FarseerBody)
+                        if (!altDown && joint.BodyB == limb.body.FarseerBody)
                         {
                             continue;
                         }
