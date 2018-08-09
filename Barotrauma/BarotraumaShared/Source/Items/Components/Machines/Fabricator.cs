@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
+        //TODO: refactor this (maybe make it a struct)
         public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
