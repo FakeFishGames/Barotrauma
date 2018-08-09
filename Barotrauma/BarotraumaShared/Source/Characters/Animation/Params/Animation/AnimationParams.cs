@@ -49,12 +49,6 @@ namespace Barotrauma
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
-        [Serialize(AnimationType.NotDefined, true)]
-        public virtual AnimationType AnimationType { get; protected set; }
-
-        [Serialize(1.0f, true), Editable]
-        public float Speed { get; set; }
-
         /// <summary>
         /// In degrees.
         /// </summary>
@@ -88,6 +82,12 @@ namespace Barotrauma
             }
         }
         public float TorsoAngleInRadians { get; private set; } = float.NaN;
+
+        [Serialize(1.0f, true), Editable]
+        public float Speed { get; set; }
+
+        [Serialize(AnimationType.NotDefined, true), Editable]
+        public virtual AnimationType AnimationType { get; protected set; }
 
         public static string GetDefaultFileName(string speciesName, AnimationType animType) => $"{speciesName.CapitaliseFirstInvariant()}{animType.ToString()}";
         public static string GetDefaultFolder(string speciesName) => $"Content/Characters/{speciesName.CapitaliseFirstInvariant()}/Animations/";
