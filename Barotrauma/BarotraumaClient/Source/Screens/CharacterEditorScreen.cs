@@ -34,7 +34,7 @@ namespace Barotrauma
         private bool editJointLimits;
         private bool showParamsEditor;
         private bool showSpritesheet;
-        private bool freeze;
+        private bool isFreezed;
         private bool autoFreeze = true;
 
         public override void Select()
@@ -357,7 +357,7 @@ namespace Barotrauma
             var ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Ragdoll") { Selected = editRagdoll };
             var jointPositionsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joint Positions") { Selected = editJointPositions };
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
-            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = freeze };
+            freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
             editAnimsToggle.OnSelected = box =>
             {
@@ -442,7 +442,7 @@ namespace Barotrauma
             };
             freezeToggle.OnSelected = box =>
             {
-                freeze = box.Selected;
+                isFreezed = box.Selected;
                 return true;
             };
             autoFreezeToggle.OnSelected = box =>
@@ -895,7 +895,7 @@ namespace Barotrauma
             {
                 freezeToggle.Selected = !freezeToggle.Selected;
             }
-            if (!freeze)
+            if (!isFreezed)
             {
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
@@ -969,7 +969,10 @@ namespace Barotrauma
             Vector2 indicatorPos = wall == null ? originalWall.walls.First().DrawPosition : wall.DrawPosition;
             GUI.DrawIndicator(spriteBatch, indicatorPos, Cam, 700, GUI.SubmarineIcon, Color.White);
             GUI.Draw(Cam, spriteBatch);
-
+            if (isFreezed)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 50, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
             // Debug
             if (GameMain.DebugDraw)
             {
@@ -1352,7 +1355,7 @@ namespace Barotrauma
             bool altDown = PlayerInput.KeyDown(Keys.LeftAlt);
             if (!altDown && editJointPositions)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 150, 20), "PRESS Left Alt TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 200, 20), "HOLD \"Left Alt\" TO MANIPULATE THE OTHER END OF THE JOINT", Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
             foreach (Limb limb in character.AnimController.Limbs)
             {
@@ -1422,7 +1425,7 @@ namespace Barotrauma
                             {
                                 if (autoFreeze)
                                 {
-                                    freeze = true;
+                                    isFreezed = true;
                                 }
                                 Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed) / Cam.Zoom;
                                 input.Y = -input.Y;
@@ -1440,7 +1443,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                freeze = freezeToggle.Selected;
+                                isFreezed = freezeToggle.Selected;
                             }
                         }
                     }
@@ -1799,13 +1802,13 @@ namespace Barotrauma
                 {
                     if (autoFreeze)
                     {
-                        freeze = true;
+                        isFreezed = true;
                     }
                     onPressed();
                 }
                 else
                 {
-                    freeze = freezeToggle.Selected;
+                    isFreezed = freezeToggle.Selected;
                 }
             }
         }
