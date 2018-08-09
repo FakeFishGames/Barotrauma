@@ -30,6 +30,9 @@ namespace Barotrauma
 
         [Serialize(float.NaN, true), Editable]
         public float TorsoPosition { get; set; }
+
+        [Serialize(0.75f, true), Editable]
+        public float BackwardsMovementMultiplier { get; set; }
     }
 
     abstract class SwimParams : AnimationParams

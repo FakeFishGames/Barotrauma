@@ -32,6 +32,8 @@ namespace Barotrauma
         public SwimParams CurrentSwimParams => IsMovingFast ? SwimFastParams : SwimSlowParams;
 
         public bool CanWalk => CanEnterSubmarine;
+        public bool IsMovingBackwards => Math.Sign(targetMovement.X) == -Math.Sign(Dir);
+
         // TODO: Presupposes that the slow speed is lower than the high speed. 
         // This is how it should be, but when the parameters are modified in the anim editor, it may be vice versa. 
         // How should we solve this? Restrict the slow speed value or refactor how the current params are handled?
@@ -97,6 +99,7 @@ namespace Barotrauma
 
         public float GetSpeed(AnimationType type)
         {
+            GroundedMovementParams movementParams;
             switch (type)
             {
                 case AnimationType.Walk:
@@ -105,14 +108,16 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
                         return 0;
                     }
-                    return WalkParams.Speed;
+                    movementParams = WalkParams;
+                    break;
                 case AnimationType.Run:
                     if (!CanWalk)
                     {
                         DebugConsole.ThrowError($"{character.SpeciesName} cannot run!");
                         return 0;
                     }
-                    return RunParams.Speed;
+                    movementParams = RunParams;
+                    break;
                 case AnimationType.SwimSlow:
                     return SwimSlowParams.Speed;
                 case AnimationType.SwimFast:
@@ -120,6 +125,7 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException(type.ToString());
             }
+            return IsMovingBackwards ? movementParams.Speed * movementParams.BackwardsMovementMultiplier : movementParams.Speed;
         }
 
         public float GetCurrentSpeed(bool useMaxSpeed)
