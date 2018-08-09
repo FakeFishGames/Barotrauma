@@ -885,7 +885,7 @@ namespace Barotrauma
                 //  - moving backwards
                 run = (SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
-                    Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir);
+                    !AnimController.IsMovingBackwards;
             }
             
             targetMovement *= AnimController.GetCurrentSpeed(run) * SpeedMultiplier;
