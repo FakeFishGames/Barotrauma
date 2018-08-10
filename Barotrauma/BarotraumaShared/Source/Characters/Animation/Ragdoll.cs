@@ -384,11 +384,11 @@ namespace Barotrauma
                 startDepth += increment;
             }
             //make sure each limb has a distinct depth value 
-            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.sprite == null ? 0.0f : l.sprite.Depth).ToList();
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.ActiveSprite == null ? 0.0f : l.ActiveSprite.Depth).ToList();
             foreach (Limb limb in Limbs)
             {
-                if (limb.sprite != null)
-                    limb.sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
+                if (limb.ActiveSprite != null)
+                    limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
         }
 
@@ -744,11 +744,11 @@ namespace Barotrauma
                 
                 limb.Dir = Dir;
 
-                if (limb.sprite != null)
+                if (limb.ActiveSprite != null)
                 {
-                    Vector2 spriteOrigin = limb.sprite.Origin;
-                    spriteOrigin.X = limb.sprite.SourceRect.Width - spriteOrigin.X;
-                    limb.sprite.Origin = spriteOrigin;
+                    Vector2 spriteOrigin = limb.ActiveSprite.Origin;
+                    spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
+                    limb.ActiveSprite.Origin = spriteOrigin;
                 }
 
                 

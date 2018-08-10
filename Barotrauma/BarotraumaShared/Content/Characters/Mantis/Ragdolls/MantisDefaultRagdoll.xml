@@ -30,7 +30,13 @@
 
   <!-- tail -->
   <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3"/>
+    <DeformableSprite texture="Content/Characters/Mantis/mantis.png" subdivisions="5,5" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3">
+      <SpriteDeformation type="noise" resolution="5,5" frequency="5" amplitude="0.25" changespeed="0.1"/>
+      <SpriteDeformation type="custom" resolution="5,5" frequency="0.0" blendmode="multiply"
+                         row0="1,0.5 1,0.5 1.0,0.5"
+                         row1="0,0 0,0 0,0"/>
+    </DeformableSprite>
+    <!--<sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3"/> -->
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
   </limb>
