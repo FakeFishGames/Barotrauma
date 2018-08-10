@@ -133,8 +133,12 @@ namespace Barotrauma
         public PhysicsBody body;
                         
         protected readonly Vector2 stepOffset;
-        
-        public Sprite sprite, damagedSprite;
+
+        public Sprite Sprite { get; protected set; }
+        public DeformableSprite DeformSprite { get; protected set; }
+        public Sprite ActiveSprite => DeformSprite != null ? DeformSprite.Sprite : Sprite;
+
+        public Sprite DamagedSprite { get; set; }
 
         public bool inWater;
 
@@ -319,11 +323,10 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    // DeformableSprites handled by client only
                     case "sprite":
                         string spritePath = subElement.Attribute("texture").Value;
-
                         string spritePathWithTags = spritePath;
-
                         if (character.Info != null)
                         {
                             spritePath = spritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
@@ -339,28 +342,23 @@ namespace Barotrauma
                                     Path.GetFileNameWithoutExtension(spritePath) + tags + Path.GetExtension(spritePath));
                             }
                         }
-
                         if (File.Exists(spritePathWithTags))
                         {
-                            sprite = new Sprite(subElement, "", spritePathWithTags);
+                            Sprite = new Sprite(subElement, "", spritePathWithTags);
                         }
                         else
                         {
-
-                            sprite = new Sprite(subElement, "", spritePath);
+                            Sprite = new Sprite(subElement, "", spritePath);
                         }
-
                         break;
                     case "damagedsprite":
                         string damagedSpritePath = subElement.Attribute("texture").Value;
-
                         if (character.Info != null)
                         {
                             damagedSpritePath = damagedSpritePath.Replace("[GENDER]", (character.Info.Gender == Gender.Female) ? "f" : "");
                             damagedSpritePath = damagedSpritePath.Replace("[HEADID]", character.Info.HeadSpriteId.ToString());
                         }
-
-                        damagedSprite = new Sprite(subElement, "", damagedSpritePath);
+                        DamagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
                         attack = new Attack(subElement);
@@ -587,16 +585,22 @@ namespace Barotrauma
         
         public void Remove()
         {
-            if (sprite != null)
+            if (Sprite != null)
             {
-                sprite.Remove();
-                sprite = null;
+                Sprite.Remove();
+                Sprite = null;
             }
             
-            if (damagedSprite != null)
+            if (DamagedSprite != null)
             {
-                damagedSprite.Remove();
-                damagedSprite = null;
+                DamagedSprite.Remove();
+                DamagedSprite = null;
+            }
+
+            if (DeformSprite != null)
+            {
+                DeformSprite.Sprite?.Remove();
+                DeformSprite = null;
             }
 
             if (body != null)
@@ -616,8 +620,9 @@ namespace Barotrauma
         public void LoadParams()
         {
             bool isFlipped = dir == Direction.Left;
-            sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
-            damagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+            Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(limbParams.normalSpriteParams, isFlipped);
         }
     }
 }

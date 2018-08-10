@@ -82,9 +82,9 @@ namespace Barotrauma
             texturePaths = new List<string>();
             foreach (Limb limb in editingCharacter.AnimController.Limbs)
             {
-                if (limb.sprite==null || texturePaths.Contains(limb.sprite.FilePath)) continue;
-                textures.Add(limb.sprite.Texture);
-                texturePaths.Add(limb.sprite.FilePath);
+                if (limb.ActiveSprite==null || texturePaths.Contains(limb.ActiveSprite.FilePath)) continue;
+                textures.Add(limb.ActiveSprite.Texture);
+                texturePaths.Add(limb.ActiveSprite.FilePath);
             }
         }
 
@@ -141,7 +141,7 @@ namespace Barotrauma
             //Entity.DrawSelecting(spriteBatch, cam);
 
             if (editingCharacter!=null)
-                editingCharacter.Draw(spriteBatch);
+                editingCharacter.Draw(spriteBatch, Cam);
 
             spriteBatch.End();
 
@@ -162,16 +162,16 @@ namespace Barotrauma
 
                 foreach (Limb limb in editingCharacter.AnimController.Limbs)
                 {
-                    if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
-                    Rectangle rect = limb.sprite.SourceRect;
+                    if (limb.ActiveSprite == null || limb.ActiveSprite.FilePath != texturePaths[i]) continue;
+                    Rectangle rect = limb.ActiveSprite.SourceRect;
                     rect.X += x;
                     rect.Y += y;
 
                     GUI.DrawRectangle(spriteBatch, rect, Color.Red);
 
                     Vector2 limbBodyPos = new Vector2(
-                        rect.X + limb.sprite.Origin.X,
-                        rect.Y + limb.sprite.Origin.Y);
+                        rect.X + limb.ActiveSprite.Origin.X,
+                        rect.Y + limb.ActiveSprite.Origin.Y);
                     
                     DrawJoints(spriteBatch, limb, limbBodyPos);
 
@@ -187,7 +187,7 @@ namespace Barotrauma
 
                     if (Vector2.Distance(PlayerInput.MousePosition, limbBodyPos)<5.0f && PlayerInput.LeftButtonHeld())
                     {
-                        limb.sprite.Origin += PlayerInput.MouseSpeed;
+                        limb.ActiveSprite.Origin += PlayerInput.MouseSpeed;
                     }
                 }
 

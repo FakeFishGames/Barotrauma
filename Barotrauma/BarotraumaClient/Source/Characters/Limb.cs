@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.SpriteDeformations;
 
 namespace Barotrauma
 {
@@ -18,6 +19,8 @@ namespace Barotrauma
 
         private float wetTimer;
         private float dripParticleTimer;
+
+        public List<SpriteDeformation> Deformations { get; set; } = new List<SpriteDeformation>();
         
         public LightSource LightSource
         {
@@ -47,6 +50,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "deformablesprite":
+                        DeformSprite = new DeformableSprite(subElement);
+                        foreach (XElement animationElement in subElement.Elements())
+                        {
+                            var newDeformation = SpriteDeformation.Load(animationElement);
+                            if (newDeformation != null) Deformations.Add(newDeformation);
+                        }
+                        break;
                     case "lightsource":
                         LightSource = new LightSource(subElement);
                         break;
@@ -142,9 +153,17 @@ namespace Barotrauma
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
             }
+
+            if (Deformations != null && Deformations.Count > 0)
+            {
+                for (int i = 0; i < Deformations.Count; i++)
+                {
+                    Deformations[i].Update(deltaTime);
+                }
+            }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
@@ -168,7 +187,23 @@ namespace Barotrauma
 
             if (!hideLimb)
             {
-                body.Draw(spriteBatch, sprite, color, null, Scale);
+                if (DeformSprite != null)
+                {
+                    if (Deformations != null && Deformations.Any())
+                    {
+                        var deformation = SpriteDeformation.GetDeformation(Deformations, DeformSprite.Size);
+                        DeformSprite.Deform(deformation);
+                    }
+                    else
+                    {
+                        DeformSprite.Reset();
+                    }
+                    body.Draw(DeformSprite, cam, Vector2.One * Scale);
+                }
+                else
+                {
+                    body.Draw(spriteBatch, Sprite, color, null, Scale);
+                }
             }
 
             if (LightSource != null)
@@ -191,13 +226,13 @@ namespace Barotrauma
 
                 if (wearable.InheritLimbDepth)
                 {
-                    depth = sprite.Depth - 0.000001f;
+                    depth = ActiveSprite.Depth - 0.000001f;
                     if (wearable.DepthLimb != LimbType.None)
                     {
                         Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
                         if (depthLimb != null)
                         {
-                            depth = depthLimb.sprite.Depth - 0.000001f;
+                            depth = depthLimb.ActiveSprite.Depth - 0.000001f;
                         }
                     }
                 }
@@ -209,25 +244,26 @@ namespace Barotrauma
                     Scale, spriteEffect, depth);
             }
 
-            if (damageOverlayStrength > 0.0f && damagedSprite != null && !hideLimb)
+            if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-                float depth = sprite.Depth - 0.0000015f;
+                float depth = ActiveSprite.Depth - 0.0000015f;
 
-                damagedSprite.Draw(spriteBatch,
+                DamagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), sprite.Origin,
+                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), ActiveSprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }
 
-            if (!GameMain.DebugDraw) return;
-
-            if (pullJoint != null)
+            if (GameMain.DebugDraw)
             {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                if (pullJoint != null)
+                {
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                }
             }
         }
     }

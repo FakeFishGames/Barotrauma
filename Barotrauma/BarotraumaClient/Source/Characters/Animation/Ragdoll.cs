@@ -87,7 +87,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             if (simplePhysicsEnabled) return;
 
@@ -104,7 +104,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                limb.Draw(spriteBatch);
+                limb.Draw(spriteBatch, cam);
             }
         }
 

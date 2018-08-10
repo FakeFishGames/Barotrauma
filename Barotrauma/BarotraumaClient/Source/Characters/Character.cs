@@ -290,11 +290,11 @@ namespace Barotrauma
             }
         }
         
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
 
-            AnimController.Draw(spriteBatch);
+            AnimController.Draw(spriteBatch, cam);
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
