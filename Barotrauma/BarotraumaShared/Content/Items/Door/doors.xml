@@ -122,14 +122,8 @@
         <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
       </StatusEffect>
     </DockingPort>
-    
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-    
-    <PowerTransfer/>
+
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
     
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
@@ -164,13 +158,7 @@
       </StatusEffect>
     </DockingPort>
 
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
-
-    <PowerTransfer/>
+    <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
 
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">

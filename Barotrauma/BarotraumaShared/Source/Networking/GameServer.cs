@@ -1365,7 +1365,10 @@ namespace Barotrauma.Networking
 #if CLIENT
                 if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
 #endif
-                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, teamCount > 1);
+                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, 
+                    reloadSub: true, 
+                    loadSecondSub: teamCount > 1,
+                    mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
             else
             {

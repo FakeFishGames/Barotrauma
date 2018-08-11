@@ -935,7 +935,10 @@ namespace Barotrauma.Networking
             else
             {
                 if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
-                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
+                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, 
+                    reloadSub: true, 
+                    loadSecondSub: false,
+                    mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
             
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);

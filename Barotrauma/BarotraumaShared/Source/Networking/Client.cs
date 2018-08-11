@@ -137,13 +137,19 @@ namespace Barotrauma.Networking
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
         }
 
-        public static bool IsValidName(string name)
+        public static bool IsValidName(string name, GameServer server)
         {
-            if (name.Contains("\n") || name.Contains("\r")) return false;
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            return !name.Any(c => disallowedChars.Contains(c));
+            if (name.Any(c => disallowedChars.Contains(c))) return false;
+
+            foreach (char character in name)
+            {
+                if (!server.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+            }
+
+            return true;
         }
-        
+
         public static string SanitizeName(string name)
         {
             name = name.Trim();
@@ -154,16 +160,8 @@ namespace Barotrauma.Networking
             string rName = "";
             for (int i = 0; i < name.Length; i++)
             {
-                if (name[i] < 32)
-                {
-                    rName += '?';
-                }
-                else
-                {
-                    rName += name[i];
-                }
+                rName += name[i] < 32 ? '?' : name[i];
             }
-
             return rName;
         }
 
@@ -215,6 +213,11 @@ namespace Barotrauma.Networking
         public void RemoveKickVote(Client voter)
         {
             kickVoters.Remove(voter);
+        }
+        
+        public bool HasKickVoteFrom(Client voter)
+        {
+            return kickVoters.Contains(voter);
         }
 
         public bool HasKickVoteFromID(int id)

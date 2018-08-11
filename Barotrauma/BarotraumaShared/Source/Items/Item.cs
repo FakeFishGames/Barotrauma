@@ -1513,10 +1513,7 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.Status:
-                    //clamp to (MaxHealth / 255.0f) if condition > 0.0f
-                    //to prevent condition from being rounded down to 0.0 even if the item is not broken
-                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, prefab.Health / 255.0f) : 0.0f, 0.0f, prefab.Health, 8);
-
+                    msg.Write(condition);
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
                         for (int i = 0; i < FixRequirements.Count; i++)
@@ -1806,8 +1803,25 @@ namespace Barotrauma
             {
                 msg.Write(ParentInventory.Owner.ID);
 
-                int index = ParentInventory.FindIndex(this);
-                msg.Write(index < 0 ? (byte)255 : (byte)index);
+                //find the index of the ItemContainer this item is inside to get the item to
+                //spawn in the correct inventory in multi-inventory items like fabricators
+                byte containerIndex = 0;
+                if (Container != null)
+                {
+                    for (int i = 0; i < Container.components.Count; i++)
+                    {
+                        if (Container.components[i] is ItemContainer container && 
+                            container.Inventory == ParentInventory)
+                        {
+                            containerIndex = (byte)i;
+                            break;
+                        }
+                    }
+                }
+                msg.Write(containerIndex);
+
+                int slotIndex = ParentInventory.FindIndex(this);
+                msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
             }
 
             byte teamID = 0;
@@ -1846,10 +1860,12 @@ namespace Barotrauma
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
+            int itemContainerIndex = -1;
             int inventorySlotIndex = -1;
 
             if (inventoryId > 0)
             {
+                itemContainerIndex = msg.ReadByte();
                 inventorySlotIndex = msg.ReadByte();
             }
             else
@@ -1889,10 +1905,9 @@ namespace Barotrauma
                 }
                 else if (inventoryOwner is Item)
                 {
-                    var containers = (inventoryOwner as Item).GetComponents<Items.Components.ItemContainer>();
-                    if (containers != null && containers.Any())
+                    if ((inventoryOwner as Item).components[itemContainerIndex] is ItemContainer container)
                     {
-                        inventory = containers.Last().Inventory;
+                        inventory = container.Inventory;
                     }
                 }
             }
