@@ -73,5 +73,6 @@
   <Jobs file="Content/Jobs.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
+  <LoadingScreenTips file="Content/LoadingScreenTips.xml" />
   <Executable file="Barotrauma.exe" />
 </contentpackage>
