@@ -178,7 +178,7 @@ namespace Barotrauma
                 if (GUI.LargeFont != null)
                 {
                     GUI.LargeFont.DrawString(spriteBatch, loadText,
-                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.75f),
+                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
                         Color.White);
                 }
 
@@ -189,7 +189,7 @@ namespace Barotrauma
                     for (int i = 0; i < lines.Length; i++)
                     {
                         GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.2f + i * 15), Color.White);
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f, GameMain.GraphicsHeight * 0.78f + i * 15), Color.White);
                     }
                 }
 
