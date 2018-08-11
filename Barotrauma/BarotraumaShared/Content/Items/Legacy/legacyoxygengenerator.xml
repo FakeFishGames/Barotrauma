@@ -7,7 +7,7 @@
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,128,128"/>
 
     <fixrequirement name="Mechanical repairs">
-      <skill name="Construction" level="30"/>
+      <skill name="Mechanical Engineering" level="30"/>
       <item name="Welding Tool"/>
       <item name="Wrench"/>
     </fixrequirement>

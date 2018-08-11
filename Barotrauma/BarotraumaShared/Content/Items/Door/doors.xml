@@ -127,7 +127,7 @@
     <Wire/>
     
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Construction" level="50"/>
+      <skill name="Mechanical Engineering" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
@@ -162,7 +162,7 @@
     <Wire/>
 
     <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Construction" level="50"/>
+      <skill name="Mechanical Engineering" level="50"/>
       <item name="Welding Tool"/>
     </fixrequirement>
 
