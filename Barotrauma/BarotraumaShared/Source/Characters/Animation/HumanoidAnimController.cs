@@ -1281,7 +1281,24 @@ namespace Barotrauma
             Vector2 currItemPos = (character.SelectedItems[0] == item) ?
                 rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0] :
                 leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
-            
+
+            if (!MathUtils.IsValid(currItemPos))
+            {
+                string errorMsg = "Attempted to move the item \"" + item + "\" to an invalid position in HumanidAnimController.HoldItem: " +
+                    currItemPos + ", rightHandPos: " + rightHand.pullJoint.WorldAnchorA + ", leftHandPos: " + leftHand.pullJoint.WorldAnchorA +
+                    ", handlePos[0]: " + handlePos[0] + ", handlePos[1]: " + handlePos[1] +
+                    ", transformedHandlePos[0]: " + transformedHandlePos[0] + ", transformedHandlePos[1]:" + transformedHandlePos[1] +
+                    ", item pos: " + item.SimPosition + ", itemAngle: " + itemAngle +
+                    ", collider pos: " + character.SimPosition;
+                DebugConsole.Log(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "HumanoidAnimController.HoldItem:InvalidPos:" + character.Name + item.Name,
+                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
+                    errorMsg);
+
+                return;
+            }
+
             if (holdable.Pusher != null)
             {
                 if (!holdable.Pusher.Enabled)
@@ -1289,7 +1306,7 @@ namespace Barotrauma
                     holdable.Pusher.Enabled = true;
                     holdable.Pusher.ResetDynamics();
                     holdable.Pusher.SetTransform(currItemPos, itemAngle);
-                    foreach (Character character in  Character.CharacterList)
+                    foreach (Character character in Character.CharacterList)
                     {
                         holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
                     }
@@ -1306,9 +1323,8 @@ namespace Barotrauma
                     itemAngle = holdable.Pusher.Rotation;
                 }
             }
-            item.SetTransform(currItemPos, itemAngle);
 
-            //item.SetTransform(MathUtils.SmoothStep(item.body.SimPosition, transformedHoldPos + bodyVelocity, 0.5f), itemAngle);
+            item.SetTransform(currItemPos, itemAngle);
 
             if (Anim == Animation.Climbing) return;
 

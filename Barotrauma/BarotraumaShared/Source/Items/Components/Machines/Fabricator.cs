@@ -11,9 +11,10 @@ namespace Barotrauma.Items.Components
     class FabricableItem
     {
         public readonly ItemPrefab TargetItem;
-
+        
         public readonly string DisplayName;
-
+        
+        //TODO: refactor this (maybe make it a struct)
         public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
