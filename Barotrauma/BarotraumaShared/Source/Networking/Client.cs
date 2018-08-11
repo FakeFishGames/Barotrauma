@@ -211,6 +211,11 @@ namespace Barotrauma.Networking
         {
             kickVoters.Remove(voter);
         }
+        
+        public bool HasKickVoteFrom(Client voter)
+        {
+            return kickVoters.Contains(voter);
+        }
 
         public bool HasKickVoteFromID(int id)
         {
