@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
             ComponentState, 
             InventoryState,
             Status,
-            Repair,
+            CPR,
             ApplyStatusEffect,
             ChangeProperty,
             Control

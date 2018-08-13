@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -172,11 +173,11 @@ namespace Barotrauma.Items.Components
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
 
-                float maxOverVoltage = OverloadVoltage;
-                if (pt.item.IsOptimized("electrical")) maxOverVoltage *= 2.0f;
+                //items in a bad condition are more sensitive to overvoltage
+                float maxOverVoltage = MathHelper.Lerp(Math.Min(OverloadVoltage, 1.0f), OverloadVoltage, item.Condition / 100.0f);
 
                 //if the item can't be fixed, don't allow it to break
-                if (item.FixRequirements.Count == 0 || !CanBeOverloaded) continue;
+                if (!item.Repairables.Any() || !CanBeOverloaded) continue;
 
                 //relays don't blow up if the power is higher than load, only if the output is high enough 
                 //(i.e. enough power passing through the relay)
@@ -210,7 +211,7 @@ namespace Barotrauma.Items.Components
                     
                     //higher probability for fires if the current intensity is low
                     if (FireProbability > 0.0f && 
-                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbability, FireProbability * 0.1f, currentIntensity) && !pt.item.IsOptimized("electrical"))
+                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbability, FireProbability * 0.1f, currentIntensity))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }

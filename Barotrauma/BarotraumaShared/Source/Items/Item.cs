@@ -59,10 +59,10 @@ namespace Barotrauma
                 
         private Inventory parentInventory;
         private Inventory ownInventory;
-
-        private Dictionary<string, Optimizable> optimizables;
-
+        
         private Dictionary<string, Connection> connections;
+
+        private List<Repairable> repairables;
 
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
@@ -114,9 +114,7 @@ namespace Barotrauma
                 return parentInventory == null && (body == null || body.Enabled);
             }
         }
-
-        public List<FixRequirement> FixRequirements;
-
+        
         public override string Name
         {
             get { return prefab.Name; }
@@ -209,9 +207,9 @@ namespace Barotrauma
                 if (condition == 0.0f && prev > 0.0f)
                 {
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
-                    foreach (FixRequirement req in FixRequirements)
+                    foreach (Repairable repairable in GetComponents<Repairable>())
                     {
-                        req.FixProgress = 0.0f;
+                        repairable.RepairProgress = 0.0f;
                     }
                 }
 
@@ -323,6 +321,11 @@ namespace Barotrauma
             }
         }
 
+        public IEnumerable<Repairable> Repairables
+        {
+            get { return repairables; }
+        }
+
         public override bool Linkable
         {
             get { return prefab.Linkable; }
@@ -372,8 +375,8 @@ namespace Barotrauma
             linkedTo            = new ObservableCollection<MapEntity>();
             components          = new List<ItemComponent>();
             drawableComponents  = new List<IDrawableComponent>();
-            FixRequirements     = new List<FixRequirement>();
             tags                = new HashSet<string>();
+            repairables         = new List<Repairable>();
                        
             rect = newRect;
                         
@@ -406,9 +409,6 @@ namespace Barotrauma
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
                         break;
-                    case "fixrequirement":
-                        FixRequirements.Add(new FixRequirement(subElement, this));
-                        break;
                     default:
                         ItemComponent ic = ItemComponent.Load(subElement, this, prefab.ConfigFile);
                         if (ic == null) break;
@@ -416,7 +416,7 @@ namespace Barotrauma
                         components.Add(ic);
 
                         if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
-                        
+                        if (ic is Repairable) repairables.Add((Repairable)ic);
                         break;
                 }
             }
@@ -474,20 +474,7 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
-
-            optimizables = new Dictionary<string, Optimizable>();
-            foreach (Optimizable optimizable in GetComponents<Optimizable>())
-            {
-                if (optimizables.ContainsKey(optimizable.OptimizationType.ToLowerInvariant()))
-                {
-                    DebugConsole.ThrowError("Error in item prefab \"" + itemPrefab.Name + "\" - multiple available optimizations with the same type.");
-                }
-                else
-                {
-                    optimizables.Add(optimizable.OptimizationType.ToLowerInvariant(), optimizable);
-                }
-            }
-
+            
             InsertToList();
             ItemList.Add(this);
 
@@ -726,17 +713,7 @@ namespace Barotrauma
             }
             return false;
         }
-
-        public bool IsOptimized(string optimizationType)
-        {
-            Optimizable optimizable;
-            if (optimizables.TryGetValue(optimizationType.ToLowerInvariant(),out optimizable))
-            {
-                return optimizable.IsOptimized;
-            }
-            return false;
-        }
-
+        
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
@@ -893,7 +870,7 @@ namespace Barotrauma
                 }
             }
 
-            if (condition <= 0.0f && FixRequirements.Count > 0)
+            /*if (condition <= 0.0f && FixRequirements.Count > 0)
             {
                 bool isFixed = true;
                 foreach (FixRequirement fixRequirement in FixRequirements)
@@ -906,7 +883,7 @@ namespace Barotrauma
                     GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                     condition = prefab.Health;
                 }
-            }
+            }*/
             
             if (body != null && body.Enabled)
             {
@@ -1505,20 +1482,8 @@ namespace Barotrauma
                     msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
-                case NetEntityEvent.Type.Repair:
-                    for (int i = 0; i < FixRequirements.Count; i++)
-                    {
-                        msg.Write(FixRequirements[i].CurrentFixer == null ? (ushort)0 : FixRequirements[i].CurrentFixer.ID);
-                        msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
-                    }
-                    break;
                 case NetEntityEvent.Type.Status:
                     msg.Write(condition);
-                    if (condition <= 0.0f && FixRequirements.Count > 0)
-                    {
-                        for (int i = 0; i < FixRequirements.Count; i++)
-                            msg.WriteRangedSingle(FixRequirements[i].FixProgress, 0.0f, 1.0f, 8);
-                    }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)extraData[1];
@@ -1573,21 +1538,6 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
                     (components[containerIndex] as ItemContainer).Inventory.ServerRead(type, msg, c);
-                    break;
-                case NetEntityEvent.Type.Repair:
-                    if (FixRequirements.Count == 0) return;
-
-                    int requirementIndex = FixRequirements.Count == 1 ?
-                        0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
-
-                    if (c.Character == null || !c.Character.CanInteractWith(this)) return;
-                    if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
-
-                    FixRequirements[requirementIndex].CurrentFixer = c.Character;
-
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Repair });
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;

@@ -159,7 +159,7 @@ namespace Barotrauma
 
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                    GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.CPR });
                 }
 
                 return true;

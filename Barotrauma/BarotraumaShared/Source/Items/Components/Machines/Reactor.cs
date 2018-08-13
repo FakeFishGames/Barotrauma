@@ -309,7 +309,8 @@ namespace Barotrauma.Items.Components
             if (temperature > allowedTemperature.Y)
             {
                 item.SendSignal(0, "1", "meltdown_warning", null);
-                meltDownTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                //faster meltdown if the item is in a bad condition
+                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (meltDownTimer > MeltdownDelay)
                 {
@@ -326,7 +327,7 @@ namespace Barotrauma.Items.Components
             if (temperature > optimalTemperature.Y)
             {
                 float prevFireTimer = fireTimer;
-                fireTimer += item.IsOptimized("mechanical") ? deltaTime * 0.5f : deltaTime;
+                fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / 100.0f);
 
                 if (fireTimer >= FireDelay && prevFireTimer < fireDelay)
                 {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Items.Components;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -42,10 +43,10 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Condition > 0.0f) continue;
-                foreach (FixRequirement fixRequirement in item.FixRequirements)
+                foreach (Repairable repairable in item.Repairables)
                 {
-                    //ignore fix requirements that are already fixed or can't be fixed by this character
-                    if (fixRequirement.Fixed || !fixRequirement.HasRequiredSkills(character)) continue;
+                    //ignore ones that are already fixed
+                    if (repairable.Fixed) continue;
 
                     AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;

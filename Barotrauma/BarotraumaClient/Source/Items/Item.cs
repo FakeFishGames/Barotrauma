@@ -316,12 +316,6 @@ namespace Barotrauma
         
         public virtual void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.UpdateHud(this, character);
-                return;
-            }
-
             if (HasInGameEditableProperties)
             {
                 UpdateEditing(cam);
@@ -330,19 +324,20 @@ namespace Barotrauma
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
-            ItemComponent maxPriorityHUD = null;            
+            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();            
             foreach (ItemComponent ic in components)
             {
                 if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
-                    (maxPriorityHUD == null || ic.HudPriority > maxPriorityHUD.HudPriority))
+                    (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
                 {
-                    maxPriorityHUD = ic;
+                    if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) maxPriorityHUDs.Clear();
+                    maxPriorityHUDs.Add(ic);
                 }
             }
 
-            if (maxPriorityHUD != null)
+            if (maxPriorityHUDs.Count > 0)
             {
-                activeHUDs.Add(maxPriorityHUD);
+                activeHUDs.AddRange(maxPriorityHUDs);                
             }
             else
             {
@@ -387,12 +382,6 @@ namespace Barotrauma
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction == this)
             {
-                if (condition <= 0.0f)
-                {
-                    FixRequirement.AddToGUIUpdateList();
-                    return;
-                }
-
                 foreach (ItemComponent ic in activeHUDs)
                 {
                     if (ic.CanBeSelected) ic.AddToGUIUpdateList();
@@ -421,29 +410,8 @@ namespace Barotrauma
                     int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
                     (components[containerIndex] as ItemContainer).Inventory.ClientRead(type, msg, sendingTime);
                     break;
-                case NetEntityEvent.Type.Repair:
-                    for (int i = 0; i < FixRequirements.Count; i++)
-                    {
-                        ushort fixerID = msg.ReadUInt16();
-                        FixRequirements[i].CurrentFixer = fixerID == 0 ? null : FindEntityByID(fixerID) as Character;
-                        FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                    }
-                    break;
                 case NetEntityEvent.Type.Status:
                     condition = msg.ReadSingle();
-                    if (FixRequirements.Count > 0)
-                    {
-                        if (Condition <= 0.0f)
-                        {
-                            for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].FixProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                        }
-                        else
-                        {
-                            for (int i = 0; i < FixRequirements.Count; i++)
-                                FixRequirements[i].FixProgress = 1.0f;
-                        }
-                    }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
@@ -484,13 +452,6 @@ namespace Barotrauma
                     int containerIndex = (int)extraData[1];
                     msg.WriteRangedInteger(0, components.Count - 1, containerIndex);
                     (components[containerIndex] as ItemContainer).Inventory.ClientWrite(msg, extraData);
-                    break;
-                case NetEntityEvent.Type.Repair:
-                    if (FixRequirements.Count > 0)
-                    {
-                        int requirementIndex = (int)extraData[1];
-                        msg.WriteRangedInteger(0, FixRequirements.Count - 1, requirementIndex);
-                    }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     UInt16 characterID = (UInt16)extraData[1];
