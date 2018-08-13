@@ -621,7 +621,7 @@ namespace Barotrauma
             bool isFlipped = dir == Direction.Left;
             Sprite?.LoadParams(limbParams.normalSpriteParams, isFlipped);
             DamagedSprite?.LoadParams(limbParams.damagedSpriteParams, isFlipped);
-            DeformSprite?.Sprite.LoadParams(limbParams.normalSpriteParams, isFlipped);
+            DeformSprite?.Sprite.LoadParams(limbParams.deformSpriteParams, isFlipped);
         }
     }
 }
