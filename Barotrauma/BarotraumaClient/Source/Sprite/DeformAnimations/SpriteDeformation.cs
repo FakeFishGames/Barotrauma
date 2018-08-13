@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.SpriteDeformations
 {
@@ -18,7 +19,12 @@ namespace Barotrauma.SpriteDeformations
         protected Point resolution;
 
         protected BlendMode blendMode;
-        
+
+        /// <summary>
+        /// Defined in the shader.
+        /// </summary>
+        public static readonly Point shaderMaxResolution = new Point(15, 15);
+
         public static SpriteDeformation Load(XElement element)
         {
             string typeName = element.GetAttributeString("type", "");
@@ -57,6 +63,7 @@ namespace Barotrauma.SpriteDeformations
             }
 
             resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
+            resolution = resolution.Clamp(new Point(1, 1), shaderMaxResolution);
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
