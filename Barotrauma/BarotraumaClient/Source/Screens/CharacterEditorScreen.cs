@@ -893,6 +893,10 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
+            if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
+            {
+                character.AnimController.AnimationTestPose = !character.AnimController.AnimationTestPose;
+            }
             if (PlayerInput.KeyHit(Keys.E))
             {
                 swimToggle.Selected = !swimToggle.Selected;
