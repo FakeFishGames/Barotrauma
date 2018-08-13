@@ -81,6 +81,13 @@ namespace Barotrauma
             get;
             set;
         }
+        [Serialize(0.65f, true), Editable]
+        public float CrouchingTorsoPos { get; set; }
+        /// <summary>
+        /// In degrees
+        /// </summary>
+        [Serialize(-10f, true), Editable]
+        public float CrouchingTorsoAngle { get; set; }
 
         [Serialize(0.25f, true), Editable]
         public float HeadLeanAmount

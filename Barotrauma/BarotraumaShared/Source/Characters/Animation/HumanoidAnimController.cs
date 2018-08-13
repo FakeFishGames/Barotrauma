@@ -124,7 +124,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? base.TorsoPosition - base.HeadPosition * 0.3f : base.TorsoPosition;
+                return Crouching ? CurrentGroundedParams.CrouchingTorsoPos : base.TorsoPosition;
             }
         }
 
@@ -132,7 +132,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? base.TorsoAngle + 0.5f : base.TorsoAngle;
+                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
             }
         }
 
@@ -427,12 +427,12 @@ namespace Barotrauma
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + CurrentGroundedParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + CurrentGroundedParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition.Value - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
@@ -440,13 +440,23 @@ namespace Barotrauma
             {
                 if (!onGround) movement = Vector2.Zero;
 
+                float y = colliderPos.Y;
+                if (TorsoPosition.HasValue)
+                {
+                    y += TorsoPosition.Value;
+                }
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, colliderPos.Y + CurrentGroundedParams.TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.TorsoLeanAmount, y), getUpSpeed);
 
+                y = colliderPos.Y;
+                if (HeadPosition.HasValue)
+                {
+                    y += HeadPosition.Value;
+                }
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, colliderPos.Y + CurrentGroundedParams.HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * CurrentGroundedParams.HeadLeanAmount, y), getUpSpeed * 1.2f);
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
