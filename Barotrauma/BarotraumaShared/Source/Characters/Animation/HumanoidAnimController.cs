@@ -240,6 +240,30 @@ namespace Barotrauma
                 HandIK(rightHand, midPos);
                 HandIK(leftHand, midPos);
             }
+            else if (character.AnimController.AnimationTestPose)
+            {
+                var leftHand = GetLimb(LimbType.LeftHand);
+                var rightHand = GetLimb(LimbType.RightHand);
+                var waist = GetLimb(LimbType.Waist);
+                rightHand.Disabled = true;
+                leftHand.Disabled = true;
+                Vector2 midPos = waist.SimPosition;
+                HandIK(rightHand, midPos + new Vector2(-1, -0.2f) * Dir);
+                HandIK(leftHand, midPos + new Vector2(1, -0.2f) * Dir);
+
+                var leftFoot = GetLimb(LimbType.LeftFoot);
+                var rightFoot = GetLimb(LimbType.RightFoot);
+                rightFoot.Disabled = true;
+                leftFoot.Disabled = true;
+                // The code here is a bit obscure, but it's pretty much copy-pasted from the block that is used for crouching.
+                for (int i = -1; i < 2; i += 2)
+                {
+                    Vector2 footPos = GetColliderBottom();
+                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(CurrentGroundedParams.StepSize.X * i) * Dir * 0.3f, footPos.Y - 0.1f);
+                    var foot = i == -1 ? rightFoot : leftFoot;
+                    MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
+                }
+            }
             else
             {
                 if (Anim != Animation.UsingConstruction) ResetPullJoints();
@@ -503,8 +527,11 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    MoveLimb(foot, footPos + colliderPos, CurrentGroundedParams.FootMoveStrength, true);
-                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
+                    if (!foot.Disabled)
+                    {
+                        MoveLimb(foot, footPos + colliderPos, CurrentGroundedParams.FootMoveStrength, true);
+                        foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, CurrentGroundedParams.FootRotateStrength);
+                    }
                 }
 
                 if (CurrentGroundedParams.LegCorrectionTorque > 0.0f)
@@ -570,11 +597,20 @@ namespace Barotrauma
 
                     var foot = i == -1 ? rightFoot : leftFoot;
 
-                    MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
+                    if (!foot.Disabled)
+                    {
+                        MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
+                    }
                 }
 
-                leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
-                rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                if (!leftFoot.Disabled)
+                {
+                    leftFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                }
+                if(!leftFoot.Disabled)
+                {
+                    rightFoot.body.SmoothRotate(Dir * MathHelper.PiOver2, 50.0f);
+                }
 
                 if (!rightHand.Disabled)
                 {
@@ -1434,6 +1470,8 @@ namespace Barotrauma
             Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
 
             Limb arm = (hand.type == LimbType.LeftHand) ? GetLimb(LimbType.LeftArm) : GetLimb(LimbType.RightArm);
+
+            // TODO: the lengths are not constant?
 
             //hand length
             float a = 37.0f;
