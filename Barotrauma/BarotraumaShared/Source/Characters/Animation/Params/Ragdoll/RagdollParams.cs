@@ -257,10 +257,17 @@ namespace Barotrauma
                 damagedSpriteParams = new SpriteParams(damagedElement, ragdoll);
                 SubParams.Add(damagedSpriteParams);
             }
+            var deformElement = element.Element("deformablesprite");
+            if (deformElement != null)
+            {
+                deformSpriteParams = new SpriteParams(deformElement, ragdoll);
+                SubParams.Add(deformSpriteParams);
+            }
         }
 
         public readonly SpriteParams normalSpriteParams;
         public readonly SpriteParams damagedSpriteParams;
+        public readonly SpriteParams deformSpriteParams;
 
         // TODO: decide which properties should be editable in the editor and which only via xml
 
