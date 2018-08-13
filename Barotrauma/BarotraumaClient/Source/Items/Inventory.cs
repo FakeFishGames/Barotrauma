@@ -77,6 +77,7 @@ namespace Barotrauma
         {
             if (BorderHighlightCoroutine != null)
             {
+                CoroutineManager.StopCoroutines(BorderHighlightCoroutine);
                 BorderHighlightCoroutine = null;
             }
 
@@ -192,7 +193,7 @@ namespace Barotrauma
 
             if (selectedSlot != null && selectedSlot.ParentInventory == this)
             {
-                selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
+                selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot, selectedSlot.Inventory);
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -250,7 +251,7 @@ namespace Barotrauma
 
                 if (selectedSlot == null || (!selectedSlot.IsSubSlot && isSubSlot))
                 {
-                    selectedSlot = new SlotReference(this, slot, slotIndex, isSubSlot);
+                    selectedSlot = new SlotReference(this, slot, slotIndex, isSubSlot, Items[slotIndex]?.GetComponent<ItemContainer>()?.Inventory);
                 }
 
                 if (draggingItem == null)
@@ -606,6 +607,11 @@ namespace Barotrauma
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
             
+            if (slot.BorderHighlightColor.A > 0)
+            {
+                rect.Inflate(rect.Width * (slot.BorderHighlightColor.A / 500.0f), rect.Height * (slot.BorderHighlightColor.A / 500.0f));
+            }
+
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -620,6 +626,7 @@ namespace Barotrauma
             else
             {
                 Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
+
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slot.IsHighlighted ? Color.White : Color.White * 0.8f);
 
                 if (item != null && drawItem)
@@ -656,7 +663,7 @@ namespace Barotrauma
             if (item != null && drawItem)
             {
                 Sprite sprite = item.Prefab.InventoryIcon ?? item.Sprite;
-                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 2.0f);
+                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 3.0f);
                 Vector2 itemPos = rect.Center.ToVector2();
                 if (itemPos.Y > GameMain.GraphicsHeight)
                 {
