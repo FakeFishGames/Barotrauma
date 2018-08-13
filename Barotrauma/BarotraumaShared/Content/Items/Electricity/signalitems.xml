@@ -311,9 +311,12 @@
       <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 
-    <fixrequirement name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5">
-      <skill name="Electrical Engineering" level="30"/>
-    </fixrequirement>
+
+    <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredItem name="Screwdriver" type="equipped"/>
+    </Repairable>
 
     <Body width="16" height="16" density="30"/>
 

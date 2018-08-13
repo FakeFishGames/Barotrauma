@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +25,9 @@ namespace Barotrauma
         public override bool IsCompleted()
         {
             if (item.Condition > 0.0f) return true;
-            foreach (FixRequirement fixRequirement in item.FixRequirements)
+            foreach (Repairable repairable in item.GetComponents<Repairable>())
             {
-                if (fixRequirement.Fixed || !fixRequirement.HasRequiredSkills(character)) continue;
-                return false;
+                if (!repairable.Fixed || !repairable.HasRequiredSkills(character)) return false;
             }
 
             return true;
@@ -41,7 +41,8 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            foreach (FixRequirement fixRequirement in item.FixRequirements)
+            //TODO: reimplement
+            /*foreach (FixRequirement fixRequirement in item.FixRequirements)
             {
                 if (fixRequirement.Fixed || !fixRequirement.HasRequiredSkills(character)) continue;
                 
@@ -74,7 +75,7 @@ namespace Barotrauma
             else
             {
                 AddSubObjective(new AIObjectiveGoTo(item, character));
-            }
+            }*/
         }
     }
 }

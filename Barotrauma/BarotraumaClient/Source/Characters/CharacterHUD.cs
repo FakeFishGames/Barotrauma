@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -102,8 +103,7 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Condition > 0.0f || item.FixRequirements.Count == 0 || item.CurrentHull == null) continue;
-                    if (item.CurrentHull == character.CurrentHull)
+                    if (item.CurrentHull == character.CurrentHull && item.Condition < 100.0f && item.Repairables.Any())
                     {
                         brokenItems.Add(item);
                     }
@@ -131,7 +131,7 @@ namespace Barotrauma
                 }                
             }
 
-            foreach (Optimizable optimizable in Optimizable.CurrentlyOptimizable)
+            /*foreach (Repairable optimizable in Repairable.CurrentlyOptimizable)
             {
                 if (optimizable.DegreeOfSuccess(character) < 0.5f) continue;
 
@@ -145,7 +145,7 @@ namespace Barotrauma
 
                     GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.SubmarineIcon, Color.Yellow * alpha);
                 }
-            }
+            }*/
 
             foreach (Item brokenItem in brokenItems)
             {

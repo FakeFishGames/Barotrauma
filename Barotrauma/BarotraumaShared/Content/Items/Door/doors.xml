@@ -21,10 +21,11 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
   
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
@@ -57,10 +58,11 @@
 
     <AiTarget sightrange="1500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
@@ -93,10 +95,11 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
@@ -125,11 +128,12 @@
 
     <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
-    
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="50"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
@@ -161,10 +165,11 @@
     <PowerTransfer CanBeOverloaded="false" FireProbability="0.0"/>
     <Wire/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="50"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
@@ -198,10 +203,11 @@
 
     <AiTarget sightrange="500.0"/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="3" fixDurationLowSkill="20">
-      <skill name="Mechanical Engineering" level="30"/>
-      <item name="Welding Tool"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Welding Tool" type="equipped"/>
+    </Repairable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>

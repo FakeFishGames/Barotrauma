@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
             containers[1].Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
-            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
+            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / 100.0f);
         }
 
         private void CancelFabricating(Character user = null)

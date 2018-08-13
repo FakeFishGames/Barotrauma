@@ -6,11 +6,11 @@
 
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,128,128"/>
 
-    <fixrequirement name="Mechanical repairs">
-      <skill name="Mechanical Engineering" level="30"/>
-      <item name="Welding Tool"/>
-      <item name="Wrench"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10">
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredItem name="Wrench" type="equipped"/>
+    </Repairable>
 
     <OxygenGenerator powerconsumption="1000.0" minvoltage="0.5" canbeselected = "true">
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="1500" loop="false"/>

@@ -9,11 +9,11 @@
 
     <trigger x="20" y ="0" width="590" height="464"/>
 
-    <fixrequirement name="Mechanical repairs">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-      <item name="Wrench"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10">
+      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredItem name="Wrench" type="equipped"/>
+    </Repairable>
 
     <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected = "true">
       <StatusEffect type="InWater" target="This" condition="-2.0"/>

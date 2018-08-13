@@ -7,11 +7,11 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredItem name="Screwdriver" type="equipped"/>
+    </Repairable>
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>
@@ -43,11 +43,11 @@
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
-    <fixrequirement name="Electrical repairs">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredItem name="Screwdriver" type="equipped"/>
+    </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
       <StatusEffect type="InWater" target="This" condition="-1.0"/>

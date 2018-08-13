@@ -99,7 +99,7 @@ namespace Barotrauma
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
                     if (powered == null || !powered.VulnerableToEMP) continue;
-                    if (item.FixRequirements.Count > 0)
+                    if (item.Repairables.Any())
                     {
                         item.Condition -= 100 * empStrength * distFactor;
                     }

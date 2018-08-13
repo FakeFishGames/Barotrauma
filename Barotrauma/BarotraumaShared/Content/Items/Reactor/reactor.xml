@@ -8,17 +8,17 @@
     
     <trigger/>
 
-    <fixrequirement name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
-      <skill name="Mechanical Engineering" level="40"/>
-      <item name="Welding Tool"/>
-      <item name="Wrench"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60" msg="Repair [Wrench]" hudpriority="10">
+      <GuiFrame rect="-200,290,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredItem name="Wrench" type="equipped"/>
+    </Repairable>
 
-    <fixrequirement name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60">
-      <skill name="Electrical Engineering" level="40"/>
-      <item name="Wire"/>
-      <item name="Screwdriver"/>
-    </fixrequirement>
+    <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="Repair [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="200,290,400,180" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredItem name="Screwdriver" type="Equipped"/>
+    </Repairable>
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 

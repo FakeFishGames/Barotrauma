@@ -11,12 +11,11 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Optimizable : ItemComponent
+    partial class Repairable : ItemComponent
     {
         private GUIButton optimizeButton;
         private GUIProgressBar progressBar;
-
-
+        
         [Serialize("", false)]
         public string Description
         {
@@ -24,6 +23,40 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        /*public bool CanBeFixed(Character character, GUIComponent reqFrame = null)
+        {
+            foreach (string itemName in requiredItems)
+            {
+                Item item = character.Inventory.FindItem(itemName);
+                bool itemFound = (item != null);
+
+                if (reqFrame != null)
+                {
+                    GUIComponent component = reqFrame.GetChildByUserData(itemName);
+                    if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
+                }
+            }
+
+            foreach (Skill skill in RequiredSkills)
+            {
+                float characterSkill = character.GetSkillLevel(skill.Name);
+                bool sufficientSkill = characterSkill >= skill.Level;
+
+                if (reqFrame != null)
+                {
+                    GUIComponent component = reqFrame.GetChildByUserData(skill);
+                    GUITextBlock text = component as GUITextBlock;
+                    if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Orange;
+                }
+            }
+
+            return CanBeFixed(character);
+        }*/
+
+        public override bool ShouldDrawHUD(Character character)
+        {
+            return item.Condition < 80.0f && HasRequiredItems(character, false);
+        }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -34,7 +67,7 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                TextManager.Get("OptimizableLabel"), textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
+                name, textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 Description, font: GUI.SmallFont, wrap: true);
@@ -58,30 +91,24 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, obj) =>
                 {
-                    currentOptimizer = Character.Controlled;
+                    currentFixer = Character.Controlled;
                     item.CreateClientEvent(this);
                     return true;
                 }
             };
         }
-
+        
         public override void AddToGUIUpdateList()
         {
-            if (!currentlyOptimizable.Contains(this) || Character.Controlled == null || DegreeOfSuccess(Character.Controlled) < 0.5f) return;
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character, float deltaTime)
-        {
-            if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
-        }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (!currentlyOptimizable.Contains(this) || character == null || DegreeOfSuccess(character) < 0.5f) return;
             IsActive = true;
 
-            progressBar.BarSize = optimizationProgress;
+            progressBar.BarSize = repairProgress;
 
             optimizeButton.Enabled = true;
             foreach (GUIComponent c in GuiFrame.Children)
@@ -98,39 +125,6 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     textBlock.TextColor = Color.White;
-                }
-            }
-        }
-
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
-        {
-            msg.Write(
-                currentOptimizer == Character.Controlled && 
-                Character.Controlled != null &&
-                Character.Controlled.SelectedConstruction == item);
-        }
-
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            isOptimized = msg.ReadBoolean();
-            if (isOptimized)
-            {
-                optimizedTimer = msg.ReadRangedSingle(0.0f, OptimizationDuration, 16);
-                currentlyOptimizable.Remove(this);
-            }
-            else
-            {
-                bool isCurrentlyOptimizable = msg.ReadBoolean();
-                if (isCurrentlyOptimizable)
-                {
-                    currentlyOptimizable.Add(this);
-                    optimizableTimer = msg.ReadRangedSingle(0.0f, OptimizableDuration, 16);
-                    optimizationProgress = msg.ReadRangedSingle(0.0f, 1.0f, 8);
-                }
-                else
-                {
-                    currentlyOptimizable.Remove(this);
                 }
             }
         }
