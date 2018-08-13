@@ -626,6 +626,7 @@ namespace Barotrauma
                     character.AnimController.Recreate(ragdoll);
                     TeleportTo(spawnPosition);
                     ResetParamsEditor();
+                    CreateCenterPanel();
                     loadBox.Close();
                     return true;
                 };
