@@ -84,6 +84,7 @@ namespace Barotrauma
         static HUDLayoutSettings()
         {
             GameMain.Instance.OnResolutionChanged += CreateAreas;
+            GameMain.Config.OnHUDScaleChanged += CreateAreas;
             CreateAreas();
         }
         

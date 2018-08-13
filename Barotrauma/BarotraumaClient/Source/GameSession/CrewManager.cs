@@ -43,6 +43,8 @@ namespace Barotrauma
 
         private ChatBox chatBox;
 
+        private float prevUIScale;
+
         //listbox for report buttons that appear at the corner of the screen 
         //when there's something to report in the hull the character is currently in
         private GUIListBox reportButtonContainer;
@@ -125,6 +127,8 @@ namespace Barotrauma
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            prevUIScale = GUI.Scale;
         }
 
         #endregion
@@ -667,16 +671,8 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             if (GUI.DisableHUD) return;
-            guiFrame.AddToGUIUpdateList();
-            orderTargetFrame?.AddToGUIUpdateList();
-
-            reportButtonContainer.Visible = reportButtonContainer.Content.CountChildren > 0 && ReportButtonsVisible();
-        }
-
-        partial void UpdateProjectSpecific(float deltaTime)
-        {
-            if (GUI.DisableHUD) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
+                prevUIScale != GUI.Scale)
             {
                 var prevCharacterListBox = characterListBox;
                 InitProjectSpecific();
@@ -690,6 +686,15 @@ namespace Barotrauma
                 }
             }
 
+            guiFrame.AddToGUIUpdateList();
+            orderTargetFrame?.AddToGUIUpdateList();
+
+            reportButtonContainer.Visible = reportButtonContainer.Content.CountChildren > 0 && ReportButtonsVisible();
+        }
+
+        partial void UpdateProjectSpecific(float deltaTime)
+        {
+            if (GUI.DisableHUD) return;
             if (chatBox != null) chatBox.Update(deltaTime);
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
