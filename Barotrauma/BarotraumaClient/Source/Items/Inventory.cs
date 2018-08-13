@@ -107,7 +107,7 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return GameMain.GraphicsHeight / 1080.0f; }
+            get { return GameMain.GraphicsHeight / 1080.0f * 0.8f; }
         }
                 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
@@ -298,7 +298,7 @@ namespace Barotrauma
             int itemCapacity = subInventory.Items.Length;
             var slot = slots[slotIndex];
             int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
-            if (itemCapacity == 1)
+            if (itemCapacity == 1 && false)
             {
                 Point slotSize = (slotSpriteRound.size * UIScale).ToPoint();
                 subInventory.slots[0].Rect = 
@@ -432,7 +432,7 @@ namespace Barotrauma
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
 
-            Point topLeft =
+            /*Point topLeft =
                 container.Inventory.slots[0].Rect.Location +
                 container.Inventory.slots[0].DrawOffset.ToPoint();
             Point bottomRight = 
@@ -451,21 +451,21 @@ namespace Barotrauma
             if (container.InventoryTopSprite != null)
             {
                 topLeft.Y -= (int)container.InventoryTopSprite.Origin.Y;
-            }
+            }*/
 
             int dir = Math.Sign(GameMain.GraphicsHeight * 0.5f - slots[slotIndex].Rect.Center.Y);
 
             if (dir > 0)
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
-                    new Point(slots[slotIndex].Rect.X, slots[slotIndex].Rect.Bottom),
-                    new Point(bottomRight.X - topLeft.X, (int)Math.Max(bottomRight.Y - slots[slotIndex].Rect.Bottom, 0)));
+                    new Point(0, slots[slotIndex].Rect.Bottom),
+                    new Point(GameMain.GraphicsWidth, (int)Math.Max(GameMain.GraphicsHeight - slots[slotIndex].Rect.Bottom, 0)));
             }
             else
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
-                    topLeft,
-                    new Point(bottomRight.X - topLeft.X, (int)Math.Max((slots[slotIndex].Rect.Y + slots[slotIndex].DrawOffset.Y) - topLeft.Y, 0)));
+                    new Point(0, 0),
+                    new Point(GameMain.GraphicsWidth, slots[slotIndex].Rect.Y));
             }
 
             container.Inventory.Draw(spriteBatch, true);
@@ -513,6 +513,14 @@ namespace Barotrauma
                     {
                         if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                         GUI.PlayUISound(GUISoundType.PickItemFail);
+                    }
+                    selectedInventory.HideTimer = 1.0f;
+                    if (selectedSlot.ParentInventory?.Owner is Item parentItem)
+                    {
+                        highlightedSubInventorySlots.Add(new SlotReference(
+                            parentItem.ParentInventory, parentItem.ParentInventory.slots[Array.IndexOf(parentItem.ParentInventory.Items, parentItem)],
+                            Array.IndexOf(parentItem.ParentInventory.Items, parentItem),
+                            false, selectedSlot.ParentInventory));
                     }
                     draggingItem = null;
                     draggingSlot = null;
