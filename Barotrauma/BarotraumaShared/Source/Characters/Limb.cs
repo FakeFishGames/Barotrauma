@@ -252,8 +252,7 @@ namespace Barotrauma
             dir = Direction.Right;
             var element = limbParams.Element;
             // TODO: reduce (or get rid of) parsing here and use the LimbParams directly
-            // Note using a custom scale here makes the ragdoll unsteady.
-            body = new PhysicsBody(element, 1); //limbParams.Ragdoll.LimbScale
+            body = new PhysicsBody(element, Scale);
             if (element.GetAttributeBool("ignorecollisions", false))
             {
                 body.CollisionCategories = Category.None;
