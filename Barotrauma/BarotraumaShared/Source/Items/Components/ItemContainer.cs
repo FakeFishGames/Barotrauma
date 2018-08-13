@@ -269,6 +269,7 @@ namespace Barotrauma.Items.Components
             inventoryTopSprite?.Remove();
             inventoryBackSprite?.Remove();
             inventoryBottomSprite?.Remove();
+            ContainedStateIndicator?.Remove();
 #endif
         }
 

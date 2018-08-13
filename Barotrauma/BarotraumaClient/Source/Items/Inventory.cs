@@ -518,7 +518,7 @@ namespace Barotrauma
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
                     selectedInventory.HideTimer = 1.0f;
-                    if (selectedSlot.ParentInventory?.Owner is Item parentItem)
+                    if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
                         highlightedSubInventorySlots.Add(new SlotReference(
                             parentItem.ParentInventory, parentItem.ParentInventory.slots[Array.IndexOf(parentItem.ParentInventory.Items, parentItem)],
@@ -641,13 +641,37 @@ namespace Barotrauma
                             Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f) * 0.8f, true);
                     }
 
-                    var containedItems = item.ContainedItems;
-                    if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < item.Prefab.Health)
+                    if (itemContainer != null)
                     {
-                        GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, rect.Width, 8), Color.Black * 0.8f, true);
-                        GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Y, (int)(rect.Width * containedItems[0].Condition / 100.0f), 8),
-                            Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / item.Prefab.Health) * 0.8f, true);
+                        float containedState = itemContainer.Inventory.Capacity == 1 ?
+                            (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
+                            itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
+
+                        int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 3);
+                        Rectangle containedIndicatorArea = new Rectangle(rect.X,
+                            dir > 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - 10, rect.Width, 10);
+                        containedIndicatorArea.Inflate(-4, 0);
+                        
+                        if (itemContainer.ContainedStateIndicator == null)
+                        {
+                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.8f, true);
+                            GUI.DrawRectangle(spriteBatch,
+                                new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
+                                Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f, true);
+                        }
+                        else
+                        {
+                            itemContainer.ContainedStateIndicator.Draw(spriteBatch, containedIndicatorArea.Location.ToVector2(),
+                                Color.DarkGray * 0.8f, 
+                                origin: Vector2.Zero,
+                                rotate: 0.0f,
+                                scale: new Vector2(containedIndicatorArea.Width / (float)itemContainer.ContainedStateIndicator.SourceRect.Width, containedIndicatorArea.Height / (float)itemContainer.ContainedStateIndicator.SourceRect.Height));
+                     
+                            spriteBatch.Draw(itemContainer.ContainedStateIndicator.Texture,
+                                new Rectangle(containedIndicatorArea.Location, new Point((int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height)),
+                                new Rectangle(itemContainer.ContainedStateIndicator.SourceRect.Location, new Point((int)(itemContainer.ContainedStateIndicator.SourceRect.Width * containedState), itemContainer.ContainedStateIndicator.SourceRect.Height)),
+                                Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f);
+                        }
                     }
                 }
             }
