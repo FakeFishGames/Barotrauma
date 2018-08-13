@@ -64,6 +64,7 @@
 
     <!-- one welding fuel or oxygen tank can be contained inside the welding tool -->    
     <ItemContainer capacity="1" hideitems="false" itempos="-17,-21">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
       <Containable name="Oxygenite Tank"/>
@@ -124,6 +125,7 @@
     </RepairTool>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygen Tank"/>
       <Containable name="Oxygenite Tank"/>
@@ -308,6 +310,7 @@
     </Sonar>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
       <Containable name="Battery Cell, Fulgurium Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -344,6 +347,7 @@
     </LightComponent>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
       <Containable name="Battery Cell, Fulgurium Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>
@@ -380,6 +384,7 @@
     </LightComponent>
     
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
       <Containable name="Battery Cell, Fulgurium Battery Cell">
         <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true"/>
       </Containable>

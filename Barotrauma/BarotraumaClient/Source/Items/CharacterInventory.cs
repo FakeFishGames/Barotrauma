@@ -173,7 +173,7 @@ namespace Barotrauma
                 x2 = x;
             }
 
-            int offsetFromBottom = (int)((slotSpriteSmall.size.Y + spacing) * UIScale);
+            int offsetFromBottom = (int)((slotSpriteSmall.size.Y + spacing * 2) * UIScale);
 
             for (int i = 0; i < SlotPositions.Length; i++)
             {

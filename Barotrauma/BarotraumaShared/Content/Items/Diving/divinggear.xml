@@ -99,6 +99,7 @@
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygenite Shard"/>
@@ -183,6 +184,7 @@
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="8,67,86,25"/>
       <Containable name="Oxygen Tank"/>
       <Containable name="Welding Fuel Tank"/>
       <Containable name="Oxygenite Shard"/>
@@ -230,6 +232,7 @@
     </Propulsion>
 
     <ItemContainer capacity="1" hideitems="true">
+      <ContainedStateIndicator texture="Content/UI/inventoryAtlas.png" sourcerect="3,14,93,29"/>
       <Containable name="Battery Cell"/>
       <Containable name="Fulgurium Battery Cell"/>
     </ItemContainer>
