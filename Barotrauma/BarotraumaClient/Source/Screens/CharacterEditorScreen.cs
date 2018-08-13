@@ -267,6 +267,7 @@ namespace Barotrauma
         private GUIFrame ragdollControls;
         private GUIFrame animationControls;
         private GUITickBox freezeToggle;
+        private GUITickBox animTestPoseToggle;
         private GUITickBox swimToggle;
         private GUIScrollBar jointScaleBar;
         private GUIScrollBar limbScaleBar;
@@ -360,6 +361,7 @@ namespace Barotrauma
             var jointLimitsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Edit Joints Limits") { Selected = editJointLimits };
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Freeze") { Selected = isFreezed };
             var autoFreezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Freeze") { Selected = autoFreeze };
+            animTestPoseToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Animation Test Pose") { Selected = character.AnimController.AnimationTestPose };
             editAnimsToggle.OnSelected = box =>
             {
                 showAnimControls = box.Selected;
@@ -449,6 +451,11 @@ namespace Barotrauma
             autoFreezeToggle.OnSelected = box =>
             {
                 autoFreeze = box.Selected;
+                return true;
+            };
+            animTestPoseToggle.OnSelected = box =>
+            {
+                character.AnimController.AnimationTestPose = box.Selected;
                 return true;
             };
             new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), "Auto Move")
@@ -895,7 +902,7 @@ namespace Barotrauma
             base.Update(deltaTime);
             if (PlayerInput.KeyHit(Keys.T) || PlayerInput.KeyHit(Keys.X))
             {
-                character.AnimController.AnimationTestPose = !character.AnimController.AnimationTestPose;
+                animTestPoseToggle.Selected = !animTestPoseToggle.Selected;
             }
             if (PlayerInput.KeyHit(Keys.E))
             {
@@ -982,7 +989,11 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
             if (isFreezed)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 50, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 35, 100), "FREEZED", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
+            }
+            if (animTestPoseToggle.Selected)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 100, 150), "Animation Test Pose Enabled", Color.Blue, Color.White * 0.5f, 10, GUI.Font);
             }
             // Debug
             if (GameMain.DebugDraw)
