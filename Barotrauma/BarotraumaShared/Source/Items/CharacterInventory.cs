@@ -11,7 +11,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Pack = 256
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
     };
 
     partial class CharacterInventory : Inventory
@@ -59,7 +59,6 @@ namespace Barotrauma
                     case InvSlotType.OuterClothes:
                     case InvSlotType.LeftHand:
                     case InvSlotType.RightHand:
-                    case InvSlotType.Pack:
                         hideEmptySlot[i] = true;
                         break;
                 }               
