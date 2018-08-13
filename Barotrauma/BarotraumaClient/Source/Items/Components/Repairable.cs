@@ -109,6 +109,9 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             progressBar.BarSize = repairProgress;
+            progressBar.Color = repairProgress < 0.5f ?
+                Color.Lerp(Color.Red, Color.Orange, repairProgress * 2.0f) :
+                Color.Lerp(Color.Orange, Color.Green, (repairProgress - 0.5f) * 2.0f);
 
             optimizeButton.Enabled = true;
             foreach (GUIComponent c in GuiFrame.Children)
