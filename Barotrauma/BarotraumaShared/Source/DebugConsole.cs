@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -1413,6 +1414,20 @@ namespace Barotrauma
                     ThrowError("Failed to dump ids", e);
                 }
             }));
+
+#if CLIENT && WINDOWS
+            commands.Add(new Command("copyitemnames", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (MapEntityPrefab mp in MapEntityPrefab.List)
+                {
+                    if (!(mp is ItemPrefab)) continue;
+                    sb.AppendLine(mp.Name);
+                }
+                System.Windows.Clipboard.SetText(sb.ToString());
+            }));
+#endif
+
 
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
