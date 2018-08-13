@@ -108,8 +108,10 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return GameMain.GraphicsHeight / 1080.0f * 0.8f; }
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.InventoryScale; }
         }
+
+        protected float prevUIScale = UIScale;
                 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
         public static Sprite EquipIndicator, EquipIndicatorOn;

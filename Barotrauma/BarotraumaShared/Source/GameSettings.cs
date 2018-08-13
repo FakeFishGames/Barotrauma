@@ -198,6 +198,12 @@ namespace Barotrauma
             set { losMode = value; }
         }
 
+        private static float minUIScale = 0.5f;
+        private static float maxUIScale = 1.5f;
+
+        public static float HUDScale { get; set; } = 1.0f;
+        public static float InventoryScale { get; set; } = 1.0f;
+
         public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
@@ -273,6 +279,8 @@ namespace Barotrauma
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", 1500);
             ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", true);
+            HUDScale = graphicsSettings.GetAttributeFloat("hudscale", 1.0f);
+            InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", 1.0f);
 
             var losModeStr = graphicsSettings.GetAttributeString("losmode", "Transparent");
             if (!Enum.TryParse<LosMode>(losModeStr, out losMode))
@@ -463,6 +471,8 @@ namespace Barotrauma
             gSettings.ReplaceAttributes(new XAttribute("particlelimit", ParticleLimit));
             gSettings.ReplaceAttributes(new XAttribute("chromaticaberration", ChromaticAberrationEnabled));
             gSettings.ReplaceAttributes(new XAttribute("losmode", LosMode));
+            gSettings.ReplaceAttributes(new XAttribute("hudscale", HUDScale));
+            gSettings.ReplaceAttributes(new XAttribute("inventoryscale", InventoryScale));
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
