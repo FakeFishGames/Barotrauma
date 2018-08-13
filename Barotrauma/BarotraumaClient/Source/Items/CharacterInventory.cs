@@ -156,7 +156,6 @@ namespace Barotrauma
             if (alignment == Alignment.Center)
             {
                 x = GameMain.GraphicsWidth - HUDLayoutSettings.Padding - (int)(SlotTypes.Count(s => s == InvSlotType.Any) * (slotSpriteVertical.size.X + spacing) * UIScale);
-
             }
             else if (alignment == Alignment.Right)
             {
@@ -259,10 +258,6 @@ namespace Barotrauma
         public override void Update(float deltaTime, bool isSubInventory = false)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
-            {
-                SetSlotPositions(alignment);
-            }
 
             base.Update(deltaTime);
 
@@ -572,9 +567,15 @@ namespace Barotrauma
         public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (!AccessibleWhenAlive && !character.IsDead) return;
-
             if (slots == null) CreateSlots();
-            
+            if (GameMain.GraphicsWidth != screenResolution.X ||
+                GameMain.GraphicsHeight != screenResolution.Y ||
+                prevUIScale != UIScale)
+            {
+                SetSlotPositions(alignment);
+                prevUIScale = UIScale;
+            }
+
             base.Draw(spriteBatch);
 
             /*if (character == Character.Controlled)
