@@ -70,8 +70,8 @@ namespace Barotrauma.SpriteDeformations
             {
                 if (animation.resolution != resolution)
                 {
-                    DebugConsole.ThrowError("Could not merge sprite deformation animations - all animations must have the same resolution.");
-                    return null;
+                    DebugConsole.ThrowError("All animations must have the same resolution! Using the resolution of the first animation.");
+                    animation.resolution = resolution;
                 }
             }
 
