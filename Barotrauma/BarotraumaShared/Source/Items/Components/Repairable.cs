@@ -75,8 +75,21 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            repairProgress = Math.Max(item.Condition / 100.0f, repairProgress);
-            if (CurrentFixer == null) return;
+            if (CurrentFixer == null)
+            {
+                if (item.Condition <= 0.0f)
+                {
+                    repairProgress = 0.0f;
+                }
+                else
+                {
+                    float targetProgress = item.Condition / 100.0f;
+                    repairProgress = targetProgress < repairProgress ? 
+                        Math.Max(targetProgress, repairProgress - deltaTime * 0.1f) :
+                        Math.Min(targetProgress, repairProgress + deltaTime * 0.1f);
+                }
+                return;
+            }
 
             if (CurrentFixer.SelectedConstruction != item || !currentFixer.CanInteractWith(item))
             {

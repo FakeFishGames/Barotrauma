@@ -11,47 +11,60 @@ namespace Barotrauma
     {
         private Item item;
 
+        private Character character;
+
         public AIObjectiveRepairItem(Character character, Item item)
             : base(character, "")
         {
             this.item = item;
+            this.character = character;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
         {
-            return 100.0f / Math.Max(Vector2.DistanceSquared(character.WorldPosition, item.WorldPosition), 1.0f);
+            //the worse the condition of the item, the higher the priority to repair
+            float priority = 100.0f - item.Condition;
+            foreach (Repairable repairable in item.Repairables)
+            {
+                if (repairable.Fixed) continue;
+                //preference over items this character is good at fixing
+                priority *= Math.Max(repairable.DegreeOfSuccess(character), 0.1f);
+            }
+
+            //prefer nearby items
+            priority /= Math.Max(Vector2.DistanceSquared(character.WorldPosition, item.WorldPosition), 1.0f);
+
+            return priority;
         }
 
         public override bool IsCompleted()
         {
-            if (item.Condition > 0.0f) return true;
             foreach (Repairable repairable in item.GetComponents<Repairable>())
             {
-                if (!repairable.Fixed || !repairable.HasRequiredSkills(character)) return false;
+                if (!repairable.Fixed) return false;
             }
 
+            character?.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
             return true;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
         {
-            AIObjectiveRepairItem repairObjective = otherObjective as AIObjectiveRepairItem;
-            return repairObjective != null && repairObjective.item == item;
+            return otherObjective is AIObjectiveRepairItem repairObjective && repairObjective.item == item;
         }
 
         protected override void Act(float deltaTime)
         {
-            //TODO: reimplement
-            /*foreach (FixRequirement fixRequirement in item.FixRequirements)
+            foreach (Repairable fixRequirement in item.Repairables)
             {
-                if (fixRequirement.Fixed || !fixRequirement.HasRequiredSkills(character)) continue;
+                if (fixRequirement.Fixed) continue;
                 
                 //make sure we have all the items required to fix the target item
-                foreach (string requiredItem in fixRequirement.RequiredItems)
+                foreach (RelatedItem requiredItem in fixRequirement.requiredItems)
                 {
-                    if (character.Inventory.FindItem(requiredItem) == null)
+                    if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
                     {
-                        AddSubObjective(new AIObjectiveGetItem(character, requiredItem));
+                        AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Names));
                         return;
                     }
                 }
@@ -59,23 +72,18 @@ namespace Barotrauma
 
             if (character.CanInteractWith(item))
             {
-                foreach (FixRequirement fixRequirement in item.FixRequirements)
+                foreach (Repairable fixRequirement in item.Repairables)
                 {
-                    if (fixRequirement.CanBeFixed(character))
-                    {
-                        fixRequirement.CurrentFixer = character;
-                        if (item.FixRequirements.All(fr => fr.Fixed))
-                        {
-                            character.Speak(TextManager.Get("DialogItemRepaired").Replace("[itemname]", item.Name), null, 0.0f, "itemrepaired", 10.0f);
-                            item.Condition = item.Prefab.Health;
-                        }
-                    }
+                    if (fixRequirement.Fixed) continue;
+                    if (character.SelectedConstruction != item) item.TryInteract(character, true, true);
+                    fixRequirement.CurrentFixer = character;
+                    break;
                 }
             }
             else
             {
                 AddSubObjective(new AIObjectiveGoTo(item, character));
-            }*/
+            }
         }
     }
 }

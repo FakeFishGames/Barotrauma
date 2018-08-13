@@ -70,6 +70,7 @@ namespace Barotrauma
 
         private void CheckInventory()
         {
+            //TODO: check items inside items (tool inside a toolbox etc)
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;

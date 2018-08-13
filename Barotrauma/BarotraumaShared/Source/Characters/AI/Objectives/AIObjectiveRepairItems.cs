@@ -42,7 +42,8 @@ namespace Barotrauma
         {
             foreach (Item item in Item.ItemList)
             {
-                if (item.Condition > 0.0f) continue;
+                //ignore items that are almost in full condition
+                if (item.Condition > 80.0f) continue;
                 foreach (Repairable repairable in item.Repairables)
                 {
                     //ignore ones that are already fixed
