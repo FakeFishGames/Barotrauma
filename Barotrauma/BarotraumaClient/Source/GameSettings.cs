@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private GUIFrame[] tabs;
 
+        public Action OnHUDScaleChanged;
+
         public GUIFrame SettingsFrame
         {
             get
@@ -41,6 +43,7 @@ namespace Barotrauma
         {
             UnsavedSettings = true;
             HUDScale = MathHelper.Lerp(minUIScale, maxUIScale, barScroll);
+            OnHUDScaleChanged?.Invoke();
             return true;
         }
 

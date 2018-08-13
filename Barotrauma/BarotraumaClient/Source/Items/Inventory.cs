@@ -611,7 +611,7 @@ namespace Barotrauma
             
             if (slot.BorderHighlightColor.A > 0)
             {
-                rect.Inflate(rect.Width * (slot.BorderHighlightColor.A / 500.0f), rect.Height * (slot.BorderHighlightColor.A / 500.0f));
+                rect.Inflate(rect.Width * (slot.BorderHighlightColor.A / 700.0f), rect.Height * (slot.BorderHighlightColor.A / 700.0f));
             }
 
             var itemContainer = item?.GetComponent<ItemContainer>();
