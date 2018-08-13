@@ -934,7 +934,9 @@ namespace Barotrauma
         {
             base.Draw(deltaTime, graphics, spriteBatch);
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
-            graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
+            float brightness = 2f;
+            var color = new Color(0.051f, 0.149f, 0.271f, 1.0f);
+            graphics.Clear(color * brightness);
             Cam.UpdateTransform(true);
 
             // Submarine
