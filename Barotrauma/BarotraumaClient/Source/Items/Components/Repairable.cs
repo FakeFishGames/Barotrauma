@@ -22,37 +22,7 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
-        /*public bool CanBeFixed(Character character, GUIComponent reqFrame = null)
-        {
-            foreach (string itemName in requiredItems)
-            {
-                Item item = character.Inventory.FindItem(itemName);
-                bool itemFound = (item != null);
-
-                if (reqFrame != null)
-                {
-                    GUIComponent component = reqFrame.GetChildByUserData(itemName);
-                    if (component is GUITextBlock text) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
-                }
-            }
-
-            foreach (Skill skill in RequiredSkills)
-            {
-                float characterSkill = character.GetSkillLevel(skill.Name);
-                bool sufficientSkill = characterSkill >= skill.Level;
-
-                if (reqFrame != null)
-                {
-                    GUIComponent component = reqFrame.GetChildByUserData(skill);
-                    GUITextBlock text = component as GUITextBlock;
-                    if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Orange;
-                }
-            }
-
-            return CanBeFixed(character);
-        }*/
-
+        
         public override bool ShouldDrawHUD(Character character)
         {
             return item.Condition < ShowRepairUIThreshold && HasRequiredItems(character, false);
@@ -67,13 +37,13 @@ namespace Barotrauma.Items.Components
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                name, textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
+                header, textAlignment: Alignment.TopCenter, font: GUI.LargeFont);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 Description, font: GUI.SmallFont, wrap: true);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                TextManager.Get("OptimizableRequiredSkills"));
+                TextManager.Get("RequiredRepairSkills"));
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
@@ -87,7 +57,7 @@ namespace Barotrauma.Items.Components
                 color: Color.Green, barSize: 0.0f);
 
             optimizeButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter),
-                TextManager.Get("OptimizableOptimize"))
+                TextManager.Get("RepairButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -102,7 +72,6 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.AddToGUIUpdateList();
         }
-
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {

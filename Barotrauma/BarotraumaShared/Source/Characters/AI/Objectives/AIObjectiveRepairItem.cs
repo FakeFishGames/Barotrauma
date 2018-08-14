@@ -1,23 +1,18 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
         private Item item;
-
-        private Character character;
-
+        
         public AIObjectiveRepairItem(Character character, Item item)
             : base(character, "")
         {
             this.item = item;
-            this.character = character;
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)

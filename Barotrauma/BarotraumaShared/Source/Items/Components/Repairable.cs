@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
     {
         public static float SkillIncreaseMultiplier = 0.8f;
 
-        private string name;
+        private string header;
         
         private float lastSentProgress;
 
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             canBeSelected = true;
 
             this.item = item;
-            name = element.GetAttributeString("name", "");
+            header = element.GetAttributeString("name", "");
             fixDurationLowSkill = element.GetAttributeFloat("fixdurationlowskill", 100.0f);
             fixDurationHighSkill = element.GetAttributeFloat("fixdurationhighskill", 5.0f);
 
