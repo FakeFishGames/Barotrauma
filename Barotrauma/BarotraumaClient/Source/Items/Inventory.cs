@@ -111,6 +111,11 @@ namespace Barotrauma
             get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.InventoryScale; }
         }
 
+        public static int ContainedIndicatorHeight
+        {
+            get { return (int)(15 * GameSettings.InventoryScale); }
+        }
+
         protected float prevUIScale = UIScale;
                 
         protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
@@ -649,7 +654,7 @@ namespace Barotrauma
 
                         int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 3);
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,
-                            dir > 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - 10, rect.Width, 10);
+                            dir > 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
                         containedIndicatorArea.Inflate(-4, 0);
                         
                         if (itemContainer.ContainedStateIndicator == null)
