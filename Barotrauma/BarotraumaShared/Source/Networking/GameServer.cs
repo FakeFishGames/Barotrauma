@@ -140,8 +140,6 @@ namespace Barotrauma.Networking
 
             log = new ServerLog(name);
 
-            voipServer = new VoipServer(server);
-
             InitProjSpecific();
 
             entityEventManager = new ServerEntityEventManager(this);
@@ -175,6 +173,12 @@ namespace Barotrauma.Networking
                 fileSender.OnStarted += FileTransferChanged;
                 
                 server.Start();
+                
+                voipServer = new VoipServer(server);
+#if CLIENT
+                voipCapture = new VoipCapture(0);
+                voipServer.RegisterQueue(voipCapture);
+#endif
             }
             catch (Exception e)
             {

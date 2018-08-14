@@ -480,6 +480,7 @@ namespace Barotrauma.Sounds
                     for (int i = 0; i < buffersToUnqueue; i++)
                     {
                         short[] buffer = streamShortBuffer;
+                        DebugConsole.NewMessage("Filling " + Sound.Filename, Color.Lime);
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         if (!FilledByNetwork)
                         {
@@ -524,6 +525,10 @@ namespace Barotrauma.Sounds
                     {
                         AL.SourcePlay(alSource);
                     }
+                }
+                else
+                {
+                    DebugConsole.NewMessage("oof", Color.Yellow);
                 }
             }
         }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -11,7 +12,7 @@ namespace Barotrauma.Networking
         public const int BUFFER_COUNT = 5;
         protected int[] bufferLengths;
         protected byte[][] buffers;
-        protected int newestBuffer;
+        protected int newestBufferInd;
 
         public byte[] BufferToQueue
         {
@@ -46,7 +47,7 @@ namespace Barotrauma.Networking
         public VoipQueue(byte id, bool canSend, bool canReceive)
         {
             BufferToQueue = new byte[VoipConfig.MAX_COMPRESSED_SIZE];
-            newestBuffer = BUFFER_COUNT - 1;
+            newestBufferInd = BUFFER_COUNT - 1;
             bufferLengths = new int[BUFFER_COUNT];
             buffers = new byte[BUFFER_COUNT][];
             for (int i = 0; i < BUFFER_COUNT; i++)
@@ -63,22 +64,25 @@ namespace Barotrauma.Networking
         {
             if (length > byte.MaxValue) return;
 
-            newestBuffer = (newestBuffer + 1) % BUFFER_COUNT;
+            newestBufferInd = (newestBufferInd + 1) % BUFFER_COUNT;
 
-            bufferLengths[newestBuffer] = length;
-            BufferToQueue.CopyTo(buffers[newestBuffer], 0);
+            bufferLengths[newestBufferInd] = length;
+            BufferToQueue.CopyTo(buffers[newestBufferInd], 0);
 
             LatestBufferID++;
         }
 
         public void RetrieveBuffer(int id,out int outSize,out byte[] outBuf)
         {
-            if (id>=LatestBufferID-(BUFFER_COUNT-1) && id<=LatestBufferID)
+            lock (buffers)
             {
-                int index = ((newestBuffer+1)+(LatestBufferID-(BUFFER_COUNT-1)))%BUFFER_COUNT;
-                outSize = bufferLengths[index];
-                outBuf = buffers[index];
-                return;
+                if (id >= LatestBufferID - (BUFFER_COUNT - 1) && id <= LatestBufferID)
+                {
+                    int index = (newestBufferInd - (LatestBufferID - id)); if (index < 0) index += BUFFER_COUNT;
+                    outSize = bufferLengths[index];
+                    outBuf = buffers[index];
+                    return;
+                }
             }
             outSize = -1;
             outBuf = null;
@@ -91,7 +95,7 @@ namespace Barotrauma.Networking
             msg.Write((UInt16)LatestBufferID);
             for (int i = 0; i < BUFFER_COUNT; i++)
             {
-                int index = (newestBuffer + i + 1) % BUFFER_COUNT;
+                int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
 
                 msg.Write((byte)bufferLengths[index]);
                 msg.Write(buffers[index], 0, bufferLengths[index]);
@@ -103,6 +107,7 @@ namespace Barotrauma.Networking
             if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
 
             UInt16 incLatestBufferID = msg.ReadUInt16();
+            DebugConsole.NewMessage(incLatestBufferID.ToString(), Color.Red);
             if (incLatestBufferID > LatestBufferID)
             {
                 for (int i = 0; i < BUFFER_COUNT; i++)
@@ -110,7 +115,7 @@ namespace Barotrauma.Networking
                     bufferLengths[i] = msg.ReadByte();
                     msg.ReadBytes(buffers[i], 0, bufferLengths[i]);
                 }
-                newestBuffer = BUFFER_COUNT - 1;
+                newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;
             }
             else

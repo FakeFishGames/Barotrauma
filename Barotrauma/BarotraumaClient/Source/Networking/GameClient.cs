@@ -507,6 +507,8 @@ namespace Barotrauma.Networking
 
         public override void Update(float deltaTime)
         {
+            DebugConsole.NewMessage(voipSound.bufferID.ToString(), Color.Yellow);
+
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif

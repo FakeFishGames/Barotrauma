@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using OpenTK.Audio.OpenAL;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -20,9 +21,7 @@ namespace Barotrauma.Networking
 
         private bool capturing;
 
-        private short[] uncompressedBuffer;
-        
-        private VoipCapture(GameClient client) : base(client.ID,true,false) {
+        public VoipCapture(byte id) : base(id,true,false) { //TODO: receive GameClient as parameter?
             if (instance!=null)
             {
                 throw new Exception("Tried to instance more than one VoipCapture object");
@@ -44,17 +43,24 @@ namespace Barotrauma.Networking
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
 
+            Alc.CaptureStart(captureDevice);
+            alcError = Alc.GetError(captureDevice);
+            if (alcError != AlcError.NoError)
+            {
+                throw new Exception("Failed to start capturing: " + alcError.ToString());
+            }
+
             VoipConfig.SetupEncoding();
 
             capturing = true;
-            uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
             captureThread = new Thread(UpdateCapture);
             captureThread.Start();
         }
 
         void UpdateCapture()
         {
-            while (!capturing)
+            short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+            while (capturing)
             {
                 int sampleCount = 0;
                 AlcError alcError;
@@ -67,6 +73,7 @@ namespace Barotrauma.Networking
 
                 if (sampleCount < VoipConfig.BUFFER_SIZE)
                 {
+                    DebugConsole.NewMessage(sampleCount.ToString(), Color.Lime);
                     int sleepMs = (VoipConfig.BUFFER_SIZE - sampleCount) * 800 / VoipConfig.FREQUENCY;
                     if (sleepMs < 5) sleepMs = 5;
                     Thread.Sleep(sleepMs);
@@ -88,7 +95,7 @@ namespace Barotrauma.Networking
                 {
                     throw new Exception("Failed to capture samples: " + alcError.ToString());
                 }
-
+                
                 //encode audio and enqueue it
                 lock (buffers)
                 {

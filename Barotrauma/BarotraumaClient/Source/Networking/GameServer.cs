@@ -13,6 +13,8 @@ namespace Barotrauma.Networking
 
         private GUIScrollBar clientListScrollBar;
 
+        private VoipCapture voipCapture; //TODO: remove
+
         void InitProjSpecific()
         {
             var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, inGameHUD.RectTransform),
