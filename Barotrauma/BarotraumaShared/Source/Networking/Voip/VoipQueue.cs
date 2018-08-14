@@ -6,9 +6,9 @@ using System.Text;
 namespace Barotrauma.Networking
 {
 
-    public class VoipQueue
+    public class VoipQueue : IDisposable
     {
-        protected const int BUFFER_COUNT = 5;
+        public const int BUFFER_COUNT = 5;
         protected int[] bufferLengths;
         protected byte[][] buffers;
         protected int newestBuffer;
@@ -71,6 +71,19 @@ namespace Barotrauma.Networking
             LatestBufferID++;
         }
 
+        public void RetrieveBuffer(int id,out int outSize,out byte[] outBuf)
+        {
+            if (id>=LatestBufferID-(BUFFER_COUNT-1) && id<=LatestBufferID)
+            {
+                int index = ((newestBuffer+1)+(LatestBufferID-(BUFFER_COUNT-1)))%BUFFER_COUNT;
+                outSize = bufferLengths[index];
+                outBuf = buffers[index];
+                return;
+            }
+            outSize = -1;
+            outBuf = null;
+        }
+
         public virtual void Write(NetBuffer msg)
         {
             if (!CanSend) throw new Exception("Called Write on a VoipQueue not set up for sending");
@@ -98,6 +111,7 @@ namespace Barotrauma.Networking
                     msg.ReadBytes(buffers[i], 0, bufferLengths[i]);
                 }
                 newestBuffer = BUFFER_COUNT - 1;
+                LatestBufferID = incLatestBufferID;
             }
             else
             {
@@ -108,5 +122,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        public virtual void Dispose() { }
     }
 }

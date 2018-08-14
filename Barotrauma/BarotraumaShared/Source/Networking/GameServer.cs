@@ -48,7 +48,7 @@ namespace Barotrauma.Networking
         private ServerEntityEventManager entityEventManager;
 
         private FileSender fileSender;
-
+        
         public override List<Client> ConnectedClients
         {
             get
@@ -394,8 +394,10 @@ namespace Barotrauma.Networking
 
             unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
 
-            fileSender.Update(deltaTime);         
-            
+            fileSender.Update(deltaTime);
+
+            voipServer.SendToClients(connectedClients);
+
             if (gameStarted)
             {
 #if CLIENT

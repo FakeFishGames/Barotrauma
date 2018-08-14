@@ -1,4 +1,5 @@
-﻿using Barotrauma.Steam;
+﻿using Barotrauma.Sounds;
+using Barotrauma.Steam;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
@@ -28,6 +29,10 @@ namespace Barotrauma.Networking
         private byte myID;
 
         private List<Client> otherClients;
+
+        //TODO: add VoipClient class?
+        private VoipSound voipSound;
+        private VoipQueue voipQueue;
 
         private string serverIP;
 
@@ -112,6 +117,9 @@ namespace Barotrauma.Networking
             fileReceiver = new FileReceiver();
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
+
+            voipQueue = new VoipQueue(0, false, true);
+            voipSound = new VoipSound(GameMain.SoundManager, voipQueue);
 
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
             {
@@ -647,6 +655,10 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
+                                break;
+                            case ServerPacketHeader.VOICE:
+                                UInt16 queueId = inc.ReadUInt16();
+                                voipQueue.Read(inc);
                                 break;
                         }
                         break;
