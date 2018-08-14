@@ -661,7 +661,25 @@ namespace Barotrauma
                 }
             }
             
-            if (CharacterHealth == null) CharacterHealth = new CharacterHealth(this);
+            List<XElement> healthElements = new List<XElement>();
+            List<float> healthCommonness = new List<float>();
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() != "health") continue;
+                healthElements.Add(element);
+                healthCommonness.Add(element.GetAttributeFloat("commonness", 1.0f));
+            }
+
+            if (healthElements.Count == 0)
+            {
+                CharacterHealth = new CharacterHealth(this);
+            }
+            else
+            {
+                CharacterHealth = new CharacterHealth(
+                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random), 
+                    this);
+            }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
                         
