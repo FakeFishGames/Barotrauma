@@ -102,9 +102,14 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (Limb limb in Limbs)
+            //foreach (Limb limb in Limbs)
+            //{
+            //    limb.Draw(spriteBatch, cam);
+            //}
+
+            for (int i = 0; i < limbs.Length; i++)
             {
-                limb.Draw(spriteBatch, cam);
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam);
             }
         }
 
