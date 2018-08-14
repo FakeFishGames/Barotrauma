@@ -55,7 +55,7 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
-            return item.Condition < 80.0f && HasRequiredItems(character, false);
+            return item.Condition < ShowRepairUIThreshold && HasRequiredItems(character, false);
         }
 
         partial void InitProjSpecific(XElement element)

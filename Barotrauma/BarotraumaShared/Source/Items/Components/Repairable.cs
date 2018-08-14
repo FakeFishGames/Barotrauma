@@ -24,6 +24,27 @@ namespace Barotrauma.Items.Components
 
         private float fixDurationLowSkill, fixDurationHighSkill;
 
+        [Serialize(0.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "How fast the condition of the item deteriorates per second.")]
+        public float DeteriorationSpeed
+        {
+            get;
+            set;
+        }
+
+        [Serialize(50.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The minimum condition of the item for it to spontaneously deteriorate.")]
+        public float MinDeteriorationCondition
+        {
+            get;
+            set;
+        }
+
+        [Serialize(80.0f, false), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f, ToolTip = "The condition of the item has to be below this before the repair UI becomes usable.")]
+        public float ShowRepairUIThreshold
+        {
+            get;
+            set;
+        }
+
         private float repairProgress;
         public float RepairProgress
         {
@@ -83,6 +104,11 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    if (item.Condition > MinDeteriorationCondition)
+                    {
+                        item.Condition -= DeteriorationSpeed * deltaTime;
+                    }
+
                     float targetProgress = item.Condition / 100.0f;
                     repairProgress = targetProgress < repairProgress ? 
                         Math.Max(targetProgress, repairProgress - deltaTime * 0.1f) :
