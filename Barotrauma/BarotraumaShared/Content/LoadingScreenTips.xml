@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Tips>
   <!-- Gameplay tips -->
-  <Tip text="You will not paid for delivering cargo if any of the cargo goes missing or gets damaged during the transport."/>
+  <Tip text="You will not get paid for delivering cargo if any of the cargo goes missing or gets damaged during the transport."/>
   <Tip text="Generating more power than the devices in the submarine are consuming may damage junction boxes or cause fires."/>
   <Tip text="Junction boxes and other electrical devices may get damaged if they stay submerged too long."/>  
   <Tip text="Breaking down alien artifacts in a deconstructor may provide you with exotic raw materials."/>
