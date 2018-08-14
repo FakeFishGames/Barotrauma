@@ -6,7 +6,8 @@
 
     <Sprite texture="oxygengenerator.png" depth="0.8" sourcerect="0,0,128,128"/>
 
-    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10">
+    <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10"
+                DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
       <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <RequiredItem name="Wrench" type="equipped"/>
