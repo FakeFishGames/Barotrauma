@@ -144,6 +144,10 @@ namespace Barotrauma
         {
             get
             {
+                if (GameMain.Server != null && !GameMain.Server.AllowDisguises) return Name;
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises) return Name;
+#endif
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
             }
         }

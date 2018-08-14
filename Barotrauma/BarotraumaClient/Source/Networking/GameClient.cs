@@ -69,6 +69,12 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager.MidRoundSyncing; }
         }
+
+        public bool AllowDisguises
+        {
+            get;
+            private set;
+        }
         
         public GameClient(string newName)
         {
@@ -705,6 +711,7 @@ namespace Barotrauma.Networking
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
 
+            bool disguisesAllowed   = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
             
@@ -742,6 +749,8 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
+
+            AllowDisguises = disguisesAllowed;
 
             if (campaign == null)
             {

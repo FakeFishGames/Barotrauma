@@ -177,6 +177,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, true)]
+        public bool AllowDisguises
+        {
+            get;
+            set;
+        }
+
         public YesNoMaybe TraitorsEnabled
         {
             get;

@@ -1456,6 +1456,8 @@ namespace Barotrauma.Networking
             msg.Write(AllowRespawn && missionAllowRespawn);
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
+            msg.Write(AllowDisguises);
+
             Traitor traitor = null;
             if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
                 traitor = TraitorManager.TraitorList.Find(t => t.Character == client.Character);
