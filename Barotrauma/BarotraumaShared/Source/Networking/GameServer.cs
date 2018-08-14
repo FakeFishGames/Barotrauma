@@ -38,6 +38,8 @@ namespace Barotrauma.Networking
 
         private ServerLog log;
 
+        private VoipServer voipServer;
+
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -137,6 +139,8 @@ namespace Barotrauma.Networking
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
             log = new ServerLog(name);
+
+            voipServer = new VoipServer(server);
 
             InitProjSpecific();
 
