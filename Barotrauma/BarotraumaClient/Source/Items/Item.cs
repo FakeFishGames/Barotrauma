@@ -425,7 +425,7 @@ namespace Barotrauma
 
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg);
+                    ReadPropertyChange(msg, false);
                     break;
                 case NetEntityEvent.Type.Invalid:
                     break;
@@ -463,7 +463,7 @@ namespace Barotrauma
                     msg.Write(targetCharacter == null ? (byte)255 : (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb));               
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    WritePropertyChange(msg, extraData);
+                    WritePropertyChange(msg, extraData, true);
                     break;
             }
             msg.WritePadBits();

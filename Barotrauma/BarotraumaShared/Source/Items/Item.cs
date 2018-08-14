@@ -46,6 +46,8 @@ namespace Barotrauma
         public List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
+
+        public readonly XElement staticBodyConfig;
         
         private Vector2 lastSentPos;
         private bool prevBodyAwake;
@@ -405,6 +407,9 @@ namespace Barotrauma
                     case "deconstruct":
                     case "brokensprite":
                     case "price":
+                        break;
+                    case "staticbody":
+                        staticBodyConfig = subElement;
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this, subElement);
@@ -1500,7 +1505,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ChangeProperty:
                     try
                     {
-                        WritePropertyChange(msg, extraData);
+                        WritePropertyChange(msg, extraData, false);
                     }
                     catch (Exception e)
                     {
@@ -1567,14 +1572,14 @@ namespace Barotrauma
                     
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg);
+                    ReadPropertyChange(msg, true);
                     break;
             }
         }
 
-        private void WritePropertyChange(NetBuffer msg, object[] extraData)
+        private void WritePropertyChange(NetBuffer msg, object[] extraData, bool inGameEditableOnly)
         {
-            var allProperties = GetProperties<InGameEditable>();
+            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
@@ -1648,9 +1653,9 @@ namespace Barotrauma
             }
         }
 
-        private void ReadPropertyChange(NetBuffer msg)
+        private void ReadPropertyChange(NetBuffer msg, bool inGameEditableOnly)
         {
-            var allProperties = GetProperties<InGameEditable>();
+            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
             if (allProperties.Count == 0) return;
 
             int propertyIndex = 0;
