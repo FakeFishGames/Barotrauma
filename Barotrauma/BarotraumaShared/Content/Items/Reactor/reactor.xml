@@ -9,13 +9,13 @@
     <trigger/>
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60" msg="Repair [Wrench]" hudpriority="10">
-      <GuiFrame rect="-200,290,400,180" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="40"/>
       <RequiredItem name="Wrench" type="equipped"/>
     </Repairable>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="Repair [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="200,290,400,180" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
       <RequiredItem name="Screwdriver" type="Equipped"/>
     </Repairable>
@@ -23,7 +23,7 @@
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
     <Reactor canbeselected="true" firedelay="10" meltdowndelay="30" maxpoweroutput="10000" fuelconsumptionrate="0.2" vulnerabletoemp="false">
-      <GuiFrame rect="50,0,860,400" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.45,0.38" minsize="860,400" maxsize="1030,480" anchor="Center" style="ItemUI"/>
       <GraphLine texture="Content/Items/Reactor/graphLine.png"/>
       <FissionRateMeter texture="Content/Items/MachineInterface.png" sourcerect="0,335,252,177" origin="0.5,0.65"/>
       <TurbineOutputMeter texture="Content/Items/MachineInterface.png" sourcerect="252,335,252,177" origin="0.5,0.65"/>
@@ -47,7 +47,7 @@
     </Reactor>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="power_out"/>
       <output name="temperature_out"/>

@@ -8,7 +8,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10"
                 DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
-      <GuiFrame rect="0,0,400,180" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
       <RequiredItem name="Wrench" type="equipped"/>
     </Repairable>
@@ -36,7 +36,7 @@
     </ItemContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>

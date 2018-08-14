@@ -211,36 +211,17 @@ namespace Barotrauma.Items.Components
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
-                    string rectStr = subElement.GetAttributeString("rect", "0.0,0.0,0.5,0.5");
-
-                    string[] components = rectStr.Split(',');
-                    if (components.Length < 4) break;
-
-                    Vector4 rect = subElement.GetAttributeVector4("rect", Vector4.One);
-                    if (components[0].Contains(".")) rect.X *= GameMain.GraphicsWidth;
-                    if (components[1].Contains(".")) rect.Y *= GameMain.GraphicsHeight;
-                    if (components[2].Contains(".")) rect.Z *= GameMain.GraphicsWidth;
-                    if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
-
-                    string style = subElement.GetAttributeString("style", "");
-                    
-                    Alignment alignment = Alignment.Center;
-                    try
+                    if (subElement.Attribute("rect") !=null)
                     {
-                        alignment = (Alignment)Enum.Parse(typeof(Alignment),
-                            subElement.GetAttributeString("alignment", "Center"), true);
-                    }
-                    catch
-                    {
-                        DebugConsole.ThrowError("Error in " + subElement.Parent + "! \"" + subElement.Parent.Attribute("type").Value + "\" is not a valid alignment");
+                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - GUIFrame defined as rect, use RectTransform instead.");
+                        break;
                     }
 
-                    Color? color = null;                        
+                    Color? color = null;
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
+                    string style = subElement.GetAttributeString("style", "");
 
-                    guiFrame = new GUIFrame(new RectTransform(new Point((int)rect.Z, (int)rect.W), GUI.Canvas, Anchor.Center)
-                        { AbsoluteOffset = new Point((int)rect.X, (int)rect.Y) }, style, color);
-
+                    guiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas), style, color);
                     break;
                 case "sound":
                     string filePath = subElement.GetAttributeString("file", "");

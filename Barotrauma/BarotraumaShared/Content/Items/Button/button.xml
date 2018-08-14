@@ -27,7 +27,7 @@
     </Controller>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem name="Screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -65,7 +65,7 @@
     </Controller>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <RequiredItem name="Screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>

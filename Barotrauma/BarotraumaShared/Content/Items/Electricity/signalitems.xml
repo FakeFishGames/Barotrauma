@@ -165,7 +165,7 @@
     </Holdable>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -239,7 +239,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -279,7 +279,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -308,12 +308,11 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
     <RelayComponent canbeselected="true" vulnerabletoemp="false">
-      <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.15" minsize="350,160" maxsize="420,190" anchor="Center" style="ItemUI"/>
     </RelayComponent>
 
-
     <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="Repair [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,260,400,180" alignment="Center" style="ItemUI"/>
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
       <RequiredItem name="Screwdriver" type="equipped"/>
     </Repairable>
@@ -326,7 +325,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="signal_in1"/>
@@ -372,7 +371,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -411,7 +410,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -451,7 +450,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -488,7 +487,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -525,7 +524,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
@@ -562,7 +561,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <input name="set_output"/>
@@ -602,7 +601,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -641,7 +640,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="set_frequency"/>
       <input name="set_outputtype"/>
@@ -680,7 +679,7 @@
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
@@ -719,7 +718,7 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -758,7 +757,7 @@
     </ItemComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
@@ -784,7 +783,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
-      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="control_in"/>
     </ConnectionPanel>
