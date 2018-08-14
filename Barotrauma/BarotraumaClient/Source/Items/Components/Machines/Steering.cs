@@ -60,9 +60,9 @@ namespace Barotrauma.Items.Components
                 Enabled = false,
                 OnSelected = ToggleMaintainPosition
             };
-
+            
             levelStartTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,
@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Point(20, 20), tickBoxContainer.RectTransform),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
+                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 font: GUI.SmallFont)
             {
                 Enabled = false,

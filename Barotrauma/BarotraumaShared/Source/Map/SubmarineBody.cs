@@ -137,8 +137,38 @@ namespace Barotrauma
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
                         farseerBody, this);
                 }
-            }
+                
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.staticBodyConfig == null) continue;
 
+                    float radius = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("radius", 0.0f));
+                    float width   = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("width", 0.0f));
+                    float height   = ConvertUnits.ToSimUnits(item.staticBodyConfig.GetAttributeFloat("height", 0.0f));
+
+                    if (width != 0.0f && height != 0.0f)
+                    {
+                        FixtureFactory.AttachRectangle(width, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
+                    }
+                    else if (radius != 0.0f && width != 0.0f)
+                    {
+                        FixtureFactory.AttachRectangle(width, radius * 2, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitX * width / 2, this);
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * width / 2, this);
+                    }
+                    else if (radius != 0.0f && height != 0.0f)
+                    {
+                        FixtureFactory.AttachRectangle(radius * 2, height, 5.0f, ConvertUnits.ToSimUnits(item.Position), farseerBody, this);
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) - Vector2.UnitY * height / 2, this);
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position) + Vector2.UnitX * height / 2, this);
+                    }
+                    else if (radius != 0.0f)
+                    {
+                        FixtureFactory.AttachCircle(radius, 5.0f, farseerBody, ConvertUnits.ToSimUnits(item.Position), this);
+                    }
+                }
+            }
+            
             farseerBody.BodyType = BodyType.Dynamic;
             farseerBody.CollisionCategories = Physics.CollisionWall;
             farseerBody.CollidesWith = 

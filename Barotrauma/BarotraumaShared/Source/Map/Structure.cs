@@ -249,8 +249,18 @@ namespace Barotrauma
             prefab = sp;
 
             spriteColor = prefab.SpriteColor;
-
-            isHorizontal = (rect.Width > rect.Height);
+            if (ResizeHorizontal && !ResizeVertical)
+            {
+                isHorizontal = true;
+            }
+            else if (ResizeVertical && !ResizeHorizontal)
+            {
+                isHorizontal = false;
+            }
+            else
+            {
+                isHorizontal = (rect.Width > rect.Height);
+            }
 
             StairDirection = prefab.StairDirection;
 
