@@ -309,7 +309,6 @@ namespace Barotrauma
             CreateLimbs();
             CreateJoints();
             UpdateCollisionCategories();
-            SetupDrawOrder();
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
             MainLimb = torso ?? head;
@@ -370,6 +369,7 @@ namespace Barotrauma
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.MainElement.Elements("limb").Count()];
             RagdollParams.Limbs.ForEach(l => AddLimb(l));
+            SetupDrawOrder();
         }
 
         protected void SetupDrawOrder()
@@ -390,7 +390,14 @@ namespace Barotrauma
                 if (limb.ActiveSprite != null)
                     limb.ActiveSprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
+            depthSortedLimbs.Reverse();
+            inversedLimbDrawOrder = depthSortedLimbs.ToArray();
         }
+
+        /// <summary>
+        /// Inversed draw order, which is used for drawing the limbs in 3d (deformable sprites).
+        /// </summary>
+        protected Limb[] inversedLimbDrawOrder;
 
         /// <summary>
         /// Saves all serializable data in the currently selected ragdoll params. This method should properly handle character flipping.
@@ -486,7 +493,7 @@ namespace Barotrauma
             LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
-        public void AddLimb(LimbParams limbParams)
+        protected void AddLimb(LimbParams limbParams)
         {
             byte ID = Convert.ToByte(limbParams.ID);
             Limb limb = new Limb(character, limbParams);
@@ -504,6 +511,7 @@ namespace Barotrauma
             Limbs[Limbs.Length - 1] = limb;
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+            SetupDrawOrder();
         }
 
         public void RemoveLimb(Limb limb)
@@ -523,6 +531,9 @@ namespace Barotrauma
             limbs = newLimbs;
             if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
 
+            // TODO: this could be optimized if needed, but at least we need to remove the limb from the inversedDrawOrder array.
+            SetupDrawOrder();
+
             //remove all joints that were attached to the removed limb
             LimbJoint[] attachedJoints = Array.FindAll(LimbJoints, lj => lj.LimbA == limb || lj.LimbB == limb);
             if (attachedJoints.Length > 0)
@@ -537,7 +548,6 @@ namespace Barotrauma
                 }
                 LimbJoints = newJoints;
             }
-
 
             limb.Remove();
             foreach (LimbJoint limbJoint in attachedJoints)
