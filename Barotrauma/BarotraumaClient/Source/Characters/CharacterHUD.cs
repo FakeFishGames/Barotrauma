@@ -248,6 +248,7 @@ namespace Barotrauma
             if (character.Inventory != null && !character.LockHands && character.Stun <= 0.1f)
             {
                 character.Inventory.DrawOwn(spriteBatch);
+                character.Inventory.CurrentLayout = CharacterInventory.Layout.Default;
             }
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
@@ -256,13 +257,13 @@ namespace Barotrauma
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
                     {
-                        character.Inventory.Alignment = Alignment.Left;
-                        character.SelectedCharacter.Inventory.Alignment = Alignment.Right;
+                        ///character.Inventory.CurrentLayout = Alignment.Left;
+                        character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Center;
                         character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     }
                     else
                     {
-                        character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
+                        //character.Inventory.CurrentLayout = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                     }
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
@@ -272,7 +273,7 @@ namespace Barotrauma
                 }
                 else if (character.Inventory != null)
                 {
-                    character.Inventory.Alignment = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
+                    //character.Inventory.CurrentLayout = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                 }
             }
         }

@@ -113,25 +113,26 @@ namespace Barotrauma
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, InventoryAreaUpper.Height);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
-            int healthBarWidth = (int)Math.Max(20 * GUI.Scale, 15);
-            int afflictionAreaWidth = (int)(60 * GUI.Scale);
-            int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.35f, 280);
-            HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, healthBarWidth, lowerAreaHeight - Padding);
-            AfflictionAreaLeft = new Rectangle(HealthBarAreaLeft.Right + (int)(5 * GUI.Scale), GameMain.GraphicsHeight - lowerAreaHeight, afflictionAreaWidth, lowerAreaHeight - Padding);
+            int healthBarWidth = (int)Math.Max(500 * GUI.Scale, 100);
+            int healthBarHeight = (int)Math.Max(20 * GUI.Scale, 15);
+            int afflictionAreaHeight = (int)(60 * GUI.Scale);
+            HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
+            AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
             
             HealthBarAreaRight = new Rectangle(GameMain.GraphicsWidth - Padding - healthBarWidth, HealthBarAreaLeft.Y, healthBarWidth, HealthBarAreaLeft.Height);
-            AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X - afflictionAreaWidth - (int)(5 * GUI.Scale), GameMain.GraphicsHeight - lowerAreaHeight, afflictionAreaWidth, lowerAreaHeight - Padding);
+            AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, AfflictionAreaLeft.Y, healthBarWidth, afflictionAreaHeight);
             
-            //entire bottom side of the screen for inventory, minus health and affliction areas at the sides
-            InventoryAreaLower = new Rectangle(AfflictionAreaLeft.Right + Padding, GameMain.GraphicsHeight - lowerAreaHeight, AfflictionAreaRight.X - AfflictionAreaLeft.Right - Padding * 2, lowerAreaHeight);
-
             //chatbox between upper and lower inventory areas, can be on either side depending on the alignment
             ChatBoxAlignment = Alignment.Left;
-            int chatBoxWidth = (int)Math.Min(300 * GUI.Scale, 300);
-            int chatBoxHeight = Math.Min(InventoryAreaLower.Y - InventoryAreaUpper.Bottom - Padding * 2, 450);
+            int chatBoxWidth = (int)(500 * GUI.Scale);
+            int chatBoxHeight = Math.Min((int)(250 * GUI.Scale), AfflictionAreaLeft.Y - InventoryAreaUpper.Bottom - Padding * 2);
             ChatBoxArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(Padding, InventoryAreaUpper.Bottom + Padding, chatBoxWidth, chatBoxHeight) :
-                new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, InventoryAreaUpper.Bottom + Padding, chatBoxWidth, chatBoxHeight);
+                new Rectangle(Padding, AfflictionAreaLeft.Y - chatBoxHeight - Padding, chatBoxWidth, chatBoxHeight) :
+                new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, AfflictionAreaLeft.Y - chatBoxHeight - Padding, chatBoxWidth, chatBoxHeight);
+
+            int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.35f, 280);
+            //entire bottom side of the screen for inventory, minus health and affliction areas at the sides
+            InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2 - ChatBoxArea.Right, lowerAreaHeight);
 
             int healthWindowY = (int)(MessageAreaTop.Bottom + 10 * GUI.Scale);
             Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
