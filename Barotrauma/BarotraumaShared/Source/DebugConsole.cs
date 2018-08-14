@@ -1399,7 +1399,7 @@ namespace Barotrauma
             commands.Add(new Command("locky", "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
-                NewMessage((Submarine.LockX ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
+                NewMessage((Submarine.LockY ? "Vertical submarine movement locked." : "Vertical submarine movement unlocked."), Color.White);
             }, null, null, isCheat: true));
 
             commands.Add(new Command("dumpids", "", (string[] args) =>
