@@ -305,7 +305,7 @@ namespace Barotrauma.Networking
             else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 2.0f);
+                midRoundSyncTimeOut = Math.Max(10.0f, midRoundSyncTimeOut * 2.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.FirstNewEventID = 0;
