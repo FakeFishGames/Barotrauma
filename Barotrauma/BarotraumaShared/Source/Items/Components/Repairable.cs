@@ -1,17 +1,15 @@
 ﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static float SkillIncreaseMultiplier = 0.8f;
+        public static float SkillIncreaseMultiplier = 0.4f;
 
         private string header;
         
@@ -84,7 +82,7 @@ namespace Barotrauma.Items.Components
         
         partial void InitProjSpecific(XElement element);
         
-        public void StartFixing(Character character)
+        public void StartRepairing(Character character)
         {
             CurrentFixer = character;
         }
@@ -183,11 +181,13 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
-
+            //no need to write anything, just letting the server know we started repairing
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
+            if (c.Character == null) return;
+            StartRepairing(c.Character);
         }
     }
 }
