@@ -8,36 +8,50 @@ namespace Barotrauma.Networking
     class VoipServer
     {
         private NetServer netServer;
-        private TimeSpan sendIntervalTimeSpan;
-        private Dictionary<Client,DateTime> lastSendTime;
+        private List<VoipQueue> queues;
+        private Dictionary<VoipQueue,DateTime> lastSendTime;
 
         public VoipServer(NetServer server)
         {
             this.netServer = server;
-            sendIntervalTimeSpan = new TimeSpan(0,0,0,0,VoipConfig.SEND_INTERVAL_MS);
-            lastSendTime = new Dictionary<Client, DateTime>();
+            queues = new List<VoipQueue>();
+            lastSendTime = new Dictionary<VoipQueue, DateTime>();
         }
-        
-        public void SendToClients(VoipQueue queue,List<Client> clients)
+
+        public void RegisterQueue(VoipQueue queue)
         {
-            foreach (Client client in clients)
-            {
-                if (lastSendTime.ContainsKey(client))
+            if (!queues.Contains(queue)) queues.Add(queue);
+        }
+
+        public void UnregisterQueue(VoipQueue queue)
+        {
+            if (queues.Contains(queue)) queues.Remove(queue);
+        }
+
+        public void SendToClients(List<Client> clients)
+        {
+            foreach (VoipQueue queue in queues) {
+                if (lastSendTime.ContainsKey(queue))
                 {
-                    if ((lastSendTime[client] + sendIntervalTimeSpan) > DateTime.Now) continue;
-                    lastSendTime[client] = DateTime.Now;
+                    if ((lastSendTime[queue] + VoipConfig.SEND_INTERVAL) > DateTime.Now) continue;
+                    lastSendTime[queue] = DateTime.Now;
                 }
                 else
                 {
-                    lastSendTime.Add(client, DateTime.Now);
+                    lastSendTime.Add(queue, DateTime.Now);
                 }
 
-                NetOutgoingMessage msg = netServer.CreateMessage();
+                foreach (Client client in clients)
+                {
+                    //TODO: use character states to determine whether to send or not
+                    NetOutgoingMessage msg = netServer.CreateMessage();
 
-                msg.Write((byte)ServerPacketHeader.VOICE);
-                queue.Write(msg);
+                    msg.Write((byte)ServerPacketHeader.VOICE);
+                    msg.Write((UInt16)queue.QueueID);
+                    queue.Write(msg);
 
-                netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
+                    netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
+                }
             }
         }
     }

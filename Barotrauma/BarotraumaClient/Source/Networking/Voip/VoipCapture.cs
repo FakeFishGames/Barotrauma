@@ -113,9 +113,11 @@ namespace Barotrauma.Networking
             throw new Exception("Called Read on a VoipCapture object");
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             instance = null;
+            captureThread.Join();
+            captureThread = null;
         }
     }
 }

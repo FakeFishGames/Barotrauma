@@ -9,6 +9,6 @@ namespace Barotrauma.Networking
     {
         public const int MAX_COMPRESSED_SIZE = 120; //amount of bytes we expect each 60ms of audio to fit in
 
-        public const int SEND_INTERVAL_MS = 120;
+        public static readonly TimeSpan SEND_INTERVAL = new TimeSpan(0,0,0,0,120);
     }
 }
