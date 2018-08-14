@@ -42,12 +42,12 @@ namespace Barotrauma
         {
             foreach (Item item in Item.ItemList)
             {
-                //ignore items that are almost in full condition
-                if (item.Condition > 80.0f) continue;
+                //ignore items that are in full condition
+                if (item.Condition >= 100.0f) continue;
                 foreach (Repairable repairable in item.Repairables)
                 {
                     //ignore ones that are already fixed
-                    if (repairable.Fixed) continue;
+                    if (repairable.Fixed || item.Condition > repairable.ShowRepairUIThreshold) continue;
 
                     AddSubObjective(new AIObjectiveRepairItem(character, item));
                     break;
