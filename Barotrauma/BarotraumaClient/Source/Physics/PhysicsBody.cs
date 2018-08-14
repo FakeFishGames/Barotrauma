@@ -19,8 +19,7 @@ namespace Barotrauma
         {
             if (!Enabled) return;
             UpdateDrawPosition();
-            // TODO: flip horizontally, if dir < 0
-            deformSprite?.Draw(cam, new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), deformSprite.Origin, -DrawRotation, scale);
+            deformSprite?.Draw(cam, new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), deformSprite.Origin, -DrawRotation, scale, flip: Dir < 0);
         }
 
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
