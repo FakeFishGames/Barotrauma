@@ -70,14 +70,30 @@ namespace Barotrauma
 
         private void CheckInventory()
         {
-            //TODO: check items inside items (tool inside a toolbox etc)
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
-                if (!itemNames.Any(name => character.Inventory.Items[i].Prefab.NameMatches(name) || character.Inventory.Items[i].HasTag(name))) continue;
-
-                targetItem = character.Inventory.Items[i];
-                currItemPriority = 100.0f;
+                if (itemNames.Any(name => character.Inventory.Items[i].Prefab.NameMatches(name) || character.Inventory.Items[i].HasTag(name)))
+                {
+                    targetItem = character.Inventory.Items[i];
+                    currItemPriority = 100.0f;
+                    break;
+                }
+                //check items inside items (tool inside a toolbox etc)
+                var containedItems = character.Inventory.Items[i].ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item containedItem in containedItems)
+                    {
+                        if (containedItem == null) continue;
+                        if (itemNames.Any(name => containedItem.Prefab.NameMatches(name) || containedItem.HasTag(name)))
+                        {
+                            targetItem = containedItem;
+                            currItemPriority = 100.0f;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
