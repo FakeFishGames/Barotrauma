@@ -36,6 +36,8 @@ namespace Barotrauma.Networking
 
                 msg.Write((byte)ServerPacketHeader.VOICE);
                 queue.Write(msg);
+
+                netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
             }
         }
     }
