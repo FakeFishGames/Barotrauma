@@ -7,18 +7,18 @@ namespace Barotrauma.Networking
 {
     class VoipServer
     {
-        private NetServer server;
+        private NetServer netServer;
         private TimeSpan sendIntervalTimeSpan;
         private Dictionary<Client,DateTime> lastSendTime;
 
         public VoipServer(NetServer server)
         {
-            this.server = server;
+            this.netServer = server;
             sendIntervalTimeSpan = new TimeSpan(0,0,0,0,VoipConfig.SEND_INTERVAL_MS);
             lastSendTime = new Dictionary<Client, DateTime>();
         }
         
-        public void SendToClients(List<Client> clients)
+        public void SendToClients(VoipQueue queue,List<Client> clients)
         {
             foreach (Client client in clients)
             {
@@ -32,24 +32,17 @@ namespace Barotrauma.Networking
                     lastSendTime.Add(client, DateTime.Now);
                 }
 
-                NetOutgoingMessage msg = server.CreateMessage();
+                NetOutgoingMessage msg = netServer.CreateMessage();
 
                 msg.Write((byte)ServerPacketHeader.VOICE);
-
-                msg.Write((byte)(clients.Count - 1));
-                foreach (Client c in clients)
-                {
-                    if (c == client) continue;
-                    msg.Write(c.ID);
-                    c.voipQueue.Write(msg);
-                }
+                queue.Write(msg);
             }
         }
     }
 
     partial class Client
     {
-        public VoipConfig.VoipQueue voipQueue
+        public VoipQueue VoipQueue
         {
             get;
             private set;
