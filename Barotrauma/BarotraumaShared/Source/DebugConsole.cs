@@ -1513,6 +1513,13 @@ namespace Barotrauma
             {
                 Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
                 killedCharacter?.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);                
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("killmonsters", "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
