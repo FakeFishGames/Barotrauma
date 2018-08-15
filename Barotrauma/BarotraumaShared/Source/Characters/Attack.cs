@@ -141,7 +141,7 @@ namespace Barotrauma
             StructureDamage = structureDamage;
         }
 
-        public Attack(XElement element)
+        public Attack(XElement element, string parentDebugName)
         {
             SerializableProperty.DeserializeProperties(this, element);
                                                             
@@ -172,7 +172,7 @@ namespace Barotrauma
                         {
                             statusEffects = new List<StatusEffect>();
                         }
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                         break;
                     case "affliction":
                         string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
@@ -181,7 +181,7 @@ namespace Barotrauma
                         AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
                         if (afflictionPrefab == null)
                         {
-                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                            DebugConsole.ThrowError("Error in \"" + parentDebugName + "\" - affliction prefab \"" + afflictionName + "\" not found.");
                         }
                         else
                         {

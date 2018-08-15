@@ -660,7 +660,7 @@ namespace Barotrauma
                         CharacterHealth = new CharacterHealth(subElement, this);
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement));
+                        statusEffects.Add(StatusEffect.Load(subElement, Name));
                         break;
                 }
             }
