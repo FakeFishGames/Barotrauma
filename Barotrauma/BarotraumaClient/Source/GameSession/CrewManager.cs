@@ -291,7 +291,7 @@ namespace Barotrauma
                 {
                     if (Character.Controlled == null || !Character.Controlled.CanSpeak) return false;
 
-                    if (order.ItemComponentType != null || order.ItemNames.Length > 0 || order.Options.Length > 1)
+                    if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
                     {
                         CreateOrderTargetFrame(button, character, order);
                     }
@@ -623,10 +623,10 @@ namespace Barotrauma
         private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
         {
             List<Item> matchingItems = new List<Item>();
-            if (order.ItemComponentType != null || order.ItemNames.Length > 0)
+            if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0)
             {
-                matchingItems = order.ItemNames.Length > 0 ?
-                    Item.ItemList.FindAll(it => it.Prefab.NameMatches(order.ItemNames) || it.HasTag(order.ItemNames)) :
+                matchingItems = order.ItemIdentifiers.Length > 0 ?
+                    Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
                     Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
             }
             else

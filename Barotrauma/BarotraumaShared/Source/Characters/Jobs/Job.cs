@@ -128,7 +128,7 @@ namespace Barotrauma
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
-            if (item.Prefab.NameMatches("ID Card") && spawnPoint != null)
+            if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
             {
                 foreach (string s in spawnPoint.IdCardTags)
                 {

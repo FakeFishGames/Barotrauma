@@ -1126,15 +1126,14 @@ namespace Barotrauma
             return false;
         }
 
-        public bool HasEquippedItem(string itemName, bool allowBroken = true)
+        public bool HasEquippedItem(string itemIdentifier, bool allowBroken = true)
         {
             if (Inventory == null) return false;
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) continue;
                 if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) continue;
-                if (Inventory.Items[i].Prefab.NameMatches(itemName) || Inventory.Items[i].HasTag(itemName)) return true;
-                if (!string.IsNullOrEmpty(Inventory.Items[i].Prefab.Identifier) && Inventory.Items[i].Prefab.Identifier == itemName) return true;
+                if (Inventory.Items[i].Prefab.Identifier == itemIdentifier || Inventory.Items[i].HasTag(itemIdentifier)) return true;
             }
 
             return false;

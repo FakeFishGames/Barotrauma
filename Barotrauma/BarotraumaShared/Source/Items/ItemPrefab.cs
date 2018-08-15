@@ -159,8 +159,8 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("", false)]
-        public string CargoContainerName
+        [Serialize("", false)]        
+        public string CargoContainerName //TODO: use identifier instead of name
         {
             get;
             private set;
