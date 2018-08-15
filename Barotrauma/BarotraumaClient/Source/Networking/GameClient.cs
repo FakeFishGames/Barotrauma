@@ -30,9 +30,7 @@ namespace Barotrauma.Networking
 
         private List<Client> otherClients;
 
-        //TODO: add VoipClient class?
-        private VoipSound voipSound;
-        private VoipQueue voipQueue;
+        private VoipCapture voipCapture;
 
         private string serverIP;
 
@@ -118,8 +116,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            voipQueue = new VoipQueue(0, false, true);
-            voipSound = new VoipSound(GameMain.SoundManager, voipQueue);
+            voipCapture = null;
 
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
             {
@@ -655,10 +652,6 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
-                                break;
-                            case ServerPacketHeader.VOICE:
-                                UInt16 queueId = inc.ReadUInt16();
-                                voipQueue.Read(inc);
                                 break;
                         }
                         break;

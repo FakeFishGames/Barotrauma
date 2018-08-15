@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
+        VOICE,
+
         FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
