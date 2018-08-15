@@ -57,7 +57,7 @@
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
-      <RequiredItems name="Spear" type="Contained" msg="Spear required to shoot"/>
+      <RequiredItems identifier="spear" type="Contained" msg="Spear required to shoot"/>
       <RequiredSkill name="Weapons" level="30"/>
     </RangedWeapon>
 
@@ -92,7 +92,7 @@
     
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
       <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse"/>
-      <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
+      <RequiredItems identifier="medicalsyringe" type="Contained" msg="Please load a Syringe"/>
       <RequiredSkill name="Weapons" level="15"/>
       <RequiredSkill name="Medical" level="30"/>
     </RangedWeapon>
@@ -155,7 +155,7 @@
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
-      <RequiredItems name="Revolver Round" type="Contained" msg="Out of ammo"/>
+      <RequiredItems identifier="revolverround" type="Contained" msg="Out of ammo"/>
       <RequiredSkill name="Weapons" level="40"/>
     </RangedWeapon>
 
@@ -271,12 +271,12 @@
       </Attack>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton.ogg"/>
-        <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
+        <RequiredItem identifier="batterycell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" camerashake="5.0"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton.ogg"/>
-        <RequiredItem name="Fulgurium Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
+        <RequiredItem identifier="fulguriumbatterycell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.5" shockwave="false" flames="false" camerashake="5.0"/>
       </StatusEffect>      
     </MeleeWeapon>

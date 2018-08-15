@@ -14,7 +14,7 @@
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
     </Repairable>
 
     <PowerTransfer canbeselected = "true">
@@ -31,7 +31,7 @@
         <Explosion range="50.0" damage="0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true"/>
       </StatusEffect>
 
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power"/>
       <output name="signal_0"/>
       <output name="signal_1"/>
@@ -62,7 +62,7 @@
           <affliction name="Stun" strength="10"/>
         </Explosion>
       </StatusEffect>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_out"/>
       <input name="power_in"/>      
     </ConnectionPanel>
@@ -93,7 +93,7 @@
           <affliction name="Stun" strength="10"/>
         </Explosion>
       </StatusEffect>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_out"/>
       <input name="power_in"/>
     </ConnectionPanel>
@@ -170,7 +170,7 @@
           <affliction name="Stun" strength="10"/>
         </Explosion>
       </StatusEffect>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>
 

@@ -11,13 +11,13 @@
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60" msg="Repair [Wrench]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="40"/>
-      <RequiredItem name="Wrench" type="equipped"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
     </Repairable>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
     </Repairable>
 
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
@@ -48,7 +48,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="power_out"/>
       <output name="temperature_out"/>
       <input name="shutdown"/>

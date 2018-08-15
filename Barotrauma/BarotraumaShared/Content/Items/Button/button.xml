@@ -22,19 +22,19 @@
     <Body width="32" height="32" density="40"/>
 
     <Controller direction ="None" canbepicked = "true" msg="Press [E]">
-      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <RequiredItem identifier="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
       <sound file="Content/Items/Button/beep.ogg" type="OnUse" range="500.0"/>
     </Controller>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="10.0"
               aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <requireditem identifier="wrench" type="Equipped"/>
     </Holdable>
   </Item>
 
@@ -66,13 +66,13 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="10.0"
               aimpos="35,-10" handle1="0,0" attachable="true" attachedbydefault="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <requireditem identifier="wrench" type="Equipped"/>
     </Holdable>
   </Item>
 </Items>

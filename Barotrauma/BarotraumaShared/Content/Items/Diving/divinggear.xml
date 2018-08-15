@@ -85,16 +85,16 @@
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Oxygen Tank"/>
+        <RequiredItem identifier="oxygentank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+        <RequiredItem identifier="weldingfueltank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem identifier="oxygeniteshard" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Tank"/>
+        <RequiredItem identifier="oxygenitetank" type="Contained"/>
       </StatusEffect>
     </Wearable>
 
@@ -161,16 +161,16 @@
       
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygen Tank"/>
+        <RequiredItem identifier="oxygentank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-20.0" Condition="-0.5">
-        <RequiredItem type="Contained" name="Welding Fuel Tank"/>
+        <RequiredItem identifier="weldingfueltank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" SpeedMultiplier="1.2" Condition="-0.3">
-        <RequiredItem type="Contained" name="Oxygenite Shard"/>
+        <RequiredItem identifier="oxygeniteshard" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
-        <RequiredItem type="Contained" name="Oxygenite Tank"/>
+        <RequiredItem identifier="oxygenitetank" type="Contained"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
 
@@ -182,7 +182,7 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank"/>
       <StatusEffect type="OnWearing" target="Contained">
-        <RequiredItem type="Contained" name="oxygensource"/>
+        <RequiredItem identifier="oxygensource" type="Contained"/>
         <Conditional condition="lt 5.0"/>
         <Sound file="Content/Items/warningBeep.ogg" range="500"/>
       </StatusEffect>
@@ -216,7 +216,7 @@
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="4,10" handle2="6,10"/>
 
     <Propulsion force="80" usablein="water" particles="bubbles">
-      <RequiredItems name="Battery Cell,Fulgurium Battery Cell" type="Contained" msg="Battery Cell required"/>
+      <RequiredItems identifier="batterycell,fulguriumbatterycell" type="Contained" msg="Battery Cell required"/>
       <StatusEffect type="OnUse" target="Contained" Condition="-1.0"/>
       <sound file="Content/Items/Diving/scooter.ogg" type="OnUse" range="500.0" loop="true"/>
       <LightComponent LightColor="1.0,1.0,1.0,0.8" range="800">

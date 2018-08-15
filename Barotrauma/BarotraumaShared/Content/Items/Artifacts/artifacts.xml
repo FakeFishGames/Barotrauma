@@ -176,7 +176,7 @@
     <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
 
     <RepairTool structurefixamount="-3.0" limbfixamount="-1.0" range="600" barrelpos="30,15">
-      <RequiredItems name="Sulphurite Shard,Oxygenite Shard" type="Contained"/>
+      <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained"/>
       <Fixable name="structure"/>
 
       <ParticleEmitter particle="largeplasma" particlespersecond="50"/>
@@ -198,7 +198,7 @@
     </RepairTool>
 
     <Propulsion force="-40" usablein="both">
-      <RequiredItems name="Sulphurite Shard,Oxygenite Shard" type="Contained"/>
+      <RequiredItems identifier="sulphuriteshard,oxygeniteshard" type="Contained"/>
     </Propulsion>
 
     <Projectile characterusable="false" launchimpulse="80.0">      

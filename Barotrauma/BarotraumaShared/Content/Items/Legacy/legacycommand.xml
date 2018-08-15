@@ -10,7 +10,7 @@
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
-      <RequiredItem name="Screwdriver" type="equipped"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
     <Steering minvoltage="0.5" canbeselected = "true" powerconsumption="10">
@@ -28,7 +28,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="velocity_in"/>
       <output name="velocity_x_out"/>
@@ -46,7 +46,7 @@
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="10" fixDurationLowSkill="20" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
-      <RequiredItem name="Screwdriver" type="equipped"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
     <Sonar canbeselected = "true" powerconsumption="100" displaybordersize="0.2">
@@ -59,7 +59,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
     </ConnectionPanel>
   </Item>
@@ -78,7 +78,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="water_data_in"/>
       <input name="oxygen_data_in"/>

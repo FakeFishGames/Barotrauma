@@ -207,12 +207,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <input name="set_output"/>
@@ -243,11 +243,11 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <output name="signal_out"/>
@@ -281,12 +281,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
       <input name="set_output"/>
@@ -321,12 +321,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -360,19 +360,19 @@
     <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Electrical Engineering" level="40"/>
-      <RequiredItem name="Screwdriver" type="equipped"/>
+      <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 
     <Body width="16" height="16" density="30"/>
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="power_in"/>
       <input name="signal_in1"/>
       <input name="signal_in2"/>
@@ -413,12 +413,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -452,12 +452,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
       <input name="set_color"/>
@@ -492,12 +492,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
@@ -529,12 +529,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
@@ -566,12 +566,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <output name="state_out"/>
     </ConnectionPanel>
   </Item>
@@ -603,12 +603,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <input name="set_output"/>
       <input name="set_targetsignal"/>
@@ -643,12 +643,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
               slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -682,12 +682,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="set_frequency"/>
       <input name="set_outputtype"/>
       <output name="signal_out"/>
@@ -721,12 +721,12 @@
 
     <Holdable selectkey="Select" pickkey="Use" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true" PickingTime="5.0"
         slots="Any,RightHand,LeftHand" msg="Detach [Wrench]">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="signal_in"/>
       <output name="signal_out"/>
     </ConnectionPanel>
@@ -756,7 +756,7 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ItemComponent>
@@ -765,7 +765,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
     </ConnectionPanel>
@@ -795,7 +795,7 @@
 
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
-      <requireditem name="Wrench" type="Equipped"/>
+      <RequiredItem identifier="wrench" type="Equipped"/>
     </Holdable>
 
     <ItemComponent>
@@ -804,7 +804,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>
     </ConnectionPanel>
@@ -830,7 +830,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <RequiredItem identifier="screwdriver,Wire" type="Equipped"/>
       <input name="control_in"/>
     </ConnectionPanel>
   </Item>

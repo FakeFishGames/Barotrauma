@@ -13,7 +13,7 @@
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
-      <RequiredItem name="Wrench" type="equipped"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
     </Repairable>
 
     <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected = "true">
@@ -34,7 +34,7 @@
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="set_force"/>
     </ConnectionPanel>
@@ -53,7 +53,7 @@
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="Repair [Wrench]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill name="Mechanical Engineering" level="30"/>
-      <RequiredItem name="Wrench" type="equipped"/>
+      <RequiredItem identifier="wrench" type="equipped"/>
     </Repairable>
 
     <Engine minvoltage="0.5" powerconsumption="500.0" maxforce="300" canbeselected = "true">
@@ -63,7 +63,7 @@
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <requireditem name="Screwdriver" type="Equipped"/>
+      <RequiredItem identifier="screwdriver" type="Equipped"/>
       <input name="power_in"/>
       <input name="set_force"/>
     </ConnectionPanel>

@@ -31,7 +31,7 @@
 
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
-      <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
+      <RequiredItems identifier="weldingfueltank" type="Contained" msg="Welding fuel required"/>
 
       <ParticleEmitter particle="weld" particlespersecond="50"/>
       <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
@@ -95,7 +95,7 @@
               aimpos="50,0" handle1="-12,4"/>
 
     <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
-      <RequiredItems name="Oxygen Tank,Oxygenite Tank" type="Contained" msg="Oxygen tank required"/>
+      <RequiredItems identifier="oxygentank,oxygenitetank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-1.0"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygenite Tank" Condition="-0.5"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door,Hatch,Duct Block,Alien Door,Alien Hatch" Stuck="-20.0" Condition="-3.0"/>

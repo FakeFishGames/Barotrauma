@@ -31,10 +31,10 @@
     linkable="true"
     pickdistance ="150">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
+    <Sprite texture="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem,chem,medical"/>
+      <Containable identifiers="smallitem,chem,medical"/>
     </ItemContainer>
   </Item>
 </Items>
