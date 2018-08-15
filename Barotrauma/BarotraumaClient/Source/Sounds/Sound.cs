@@ -24,6 +24,12 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
+        public bool FilledByNetwork
+        {
+            get;
+            protected set;
+        }
+
         private uint alBuffer;
         public uint ALBuffer
         {
@@ -52,11 +58,12 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
         
-        public Sound(SoundManager owner,string filename,bool stream)
+        public Sound(SoundManager owner,string filename,bool stream,bool filledByNetwork)
         {
             Owner = owner;
             Filename = filename;
             Stream = stream;
+            FilledByNetwork = filledByNetwork;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;

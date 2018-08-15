@@ -28,7 +28,7 @@ namespace Barotrauma.Sounds
 
         SoundChannel soundChannel;
 
-        public InputPlaybackSound(SoundManager owner) : base(owner, "input", true)
+        public InputPlaybackSound(SoundManager owner) : base(owner, "input", true, true)
         {
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(null, FREQUENCY, ALFormat.Mono16, BUFFER_SIZE * 5);
@@ -66,7 +66,6 @@ namespace Barotrauma.Sounds
                 throw new Exception("Failed to start capturing: " + alcError.ToString());
             }
             SoundChannel chn = new SoundChannel(this, 1.0f, null, 0.4f, 1.0f, "inputPlayback", false);
-            chn.FilledByNetwork = true;
             soundChannel = chn;
         }
 
