@@ -43,6 +43,7 @@
   <Item
     name="Battery"
     identifier="battery"
+    tags="battery"
     category="Electrical"
     linkable="true"    
     description="Generally used for storing backup power in case of a reactor failure.">
