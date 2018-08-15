@@ -379,13 +379,13 @@ namespace Barotrauma
             showLogButton.UserData = "showlog";
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
-                if (GameMain.Server.ServerLog.LogFrame == null)
+                if (GameMain.NetworkMember.ServerLog.LogFrame == null)
                 {
-                    GameMain.Server.ServerLog.CreateLogFrame();
+                    GameMain.NetworkMember.ServerLog.CreateLogFrame();
                 }
                 else
                 {
-                    GameMain.Server.ServerLog.LogFrame = null;
+                    GameMain.NetworkMember.ServerLog.LogFrame = null;
                     GUIComponent.KeyboardDispatcher.Subscriber = null;
                 }
                 return true;
@@ -435,7 +435,9 @@ namespace Barotrauma
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
-            InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
+            InfoFrame.FindChild("showlog").Visible = 
+                GameMain.Server != null || 
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
             
             if (campaignViewButton == null)
             {

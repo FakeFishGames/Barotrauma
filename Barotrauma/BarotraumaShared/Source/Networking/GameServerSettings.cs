@@ -151,11 +151,11 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return log.LinesPerFile;
+                return ServerLog.LinesPerFile;
             }
             set
             {
-                log.LinesPerFile = value;
+                ServerLog.LinesPerFile = value;
             }
         }
 

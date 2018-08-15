@@ -113,6 +113,8 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
+            ServerLog = new ServerLog("");
+
             ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
@@ -470,6 +472,9 @@ namespace Barotrauma.Networking
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif
+#if CLIENT
+            if (ServerLog.LogFrame != null) ServerLog.LogFrame.Update(deltaTime);
+#endif
 
             base.Update(deltaTime);
 
@@ -670,9 +675,11 @@ namespace Barotrauma.Networking
                     new GUITextBlock(new Rectangle(0, 0, 0, 15), permittedCommand, "", commandList, GUI.SmallFont).CanBeFocused = false;
                 }
             }
-
+            
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
+            GameMain.NetLobbyScreen.InfoFrame.FindChild("showlog").Visible = HasPermission(ClientPermissions.ServerLog);
+            showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
 
             endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);      
         }
@@ -928,6 +935,8 @@ namespace Barotrauma.Networking
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
+
+                                ServerLog.ServerName = serverName;
 
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
@@ -1398,6 +1407,12 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             client.Shutdown("");
+
+            if (HasPermission(ClientPermissions.ServerLog))
+            {
+                ServerLog?.Save();
+            }
+
             GameMain.NetworkMember = null;
         }
         

@@ -32,9 +32,7 @@ namespace Barotrauma.Networking
         private RestClient restClient;
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
-
-        private ServerLog log;
-
+        
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
@@ -57,12 +55,7 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager; }
         }
-
-        public ServerLog ServerLog
-        {
-            get { return log; }
-        }
-
+        
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -115,7 +108,7 @@ namespace Barotrauma.Networking
 
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
-            log = new ServerLog(name);
+            ServerLog = new ServerLog(name);
 
             InitProjSpecific();
 
@@ -342,9 +335,9 @@ namespace Barotrauma.Networking
 #if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
-            if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
+            if (ServerLog.LogFrame != null) ServerLog.LogFrame.Update(deltaTime);
 #endif
-            
+
             if (!started) return;
             
             base.Update(deltaTime);
@@ -1503,7 +1496,7 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.LastUpdateID++;
             }
 
-            if (SaveServerLogs) log.Save();
+            if (SaveServerLogs) ServerLog.Save();
             
             Character.Controlled = null;
             
@@ -1951,7 +1944,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)transfer.SequenceChannel);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
         }
-
+        
         public void UpdateVoteStatus()
         {
             if (server.Connections.Count == 0|| connectedClients.Count == 0) return;
@@ -2260,7 +2253,15 @@ namespace Barotrauma.Networking
         {
             if (GameMain.Server == null || !GameMain.Server.SaveServerLogs) return;
 
-            GameMain.Server.log.WriteLine(line, messageType);
+            GameMain.Server.ServerLog.WriteLine(line, messageType);
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                if (!client.HasPermission(ClientPermissions.ServerLog)) continue;
+                //use sendername as the message type
+                GameMain.Server.SendChatMessage(
+                    ChatMessage.Create(messageType.ToString(), line, ChatMessageType.ServerLog, null), client);
+            }
         }
 
         public override void Disconnect()
@@ -2281,7 +2282,7 @@ namespace Barotrauma.Networking
             if (SaveServerLogs)
             {
                 Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
-                log.Save();
+                ServerLog.Save();
             }
             
             GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");            
