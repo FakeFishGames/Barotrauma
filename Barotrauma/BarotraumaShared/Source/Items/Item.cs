@@ -506,7 +506,7 @@ namespace Barotrauma
                 }
                 for (int j = 0; j < components[i].requiredItems.Count; j++)
                 {
-                    clone.components[i].requiredItems[j].JoinedNames = components[i].requiredItems[j].JoinedNames;
+                    clone.components[i].requiredItems[j].JoinedIdentifiers = components[i].requiredItems[j].JoinedIdentifiers;
                 }
             }
 
@@ -749,7 +749,7 @@ namespace Barotrauma
             {
                 foreach (string s in effect.OnContainingNames)
                 {
-                    if (!containedItems.Any(x => x != null && x.Name == s && x.Condition > 0.0f)) return;
+                    if (!containedItems.Any(it => it != null && (it.Name == s || it.Prefab.Identifier == s) && it.Condition > 0.0f)) return;
                 }
             }
 
@@ -761,7 +761,9 @@ namespace Barotrauma
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
-                        if (effect.TargetNames != null && !effect.TargetNames.Contains(containedItem.Name))
+                        if (effect.TargetNames != null && 
+                            !effect.TargetNames.Contains(containedItem.Name) && 
+                            !effect.TargetNames.Contains(containedItem.prefab.Identifier))
                         {
                             bool tagFound = false;
                             foreach (string targetName in effect.TargetNames)

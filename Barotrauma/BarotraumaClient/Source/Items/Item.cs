@@ -289,19 +289,19 @@ namespace Barotrauma
                     GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
                     {
                         Font = GUI.SmallFont,
-                        Text = relatedItem.JoinedNames
+                        Text = relatedItem.JoinedIdentifiers
                     };
 
                     namesBox.OnDeselected += (textBox, key) =>
                     {
-                        relatedItem.JoinedNames = textBox.Text;
-                        textBox.Text = relatedItem.JoinedNames;
+                        relatedItem.JoinedIdentifiers = textBox.Text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
                     };
 
                     namesBox.OnEnterPressed += (textBox, text) =>
                     {
-                        relatedItem.JoinedNames = text;
-                        textBox.Text = relatedItem.JoinedNames;
+                        relatedItem.JoinedIdentifiers = text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
                         return true;
                     };
                 }
