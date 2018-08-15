@@ -85,9 +85,10 @@ namespace Barotrauma
             set
             {
                 isSevered = value;
+                if (!isSevered) severedFadeOutTimer = 0.0f;
 #if CLIENT
                 if (isSevered) damage = 100.0f;
-#endif                
+#endif
             }
         }
 

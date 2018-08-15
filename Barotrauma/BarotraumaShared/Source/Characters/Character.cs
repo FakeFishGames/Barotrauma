@@ -2022,6 +2022,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+                limb.body.Enabled = true;
                 limb.IsSevered = false;
             }
 
