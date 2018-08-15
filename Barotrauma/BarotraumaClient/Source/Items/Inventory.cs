@@ -325,7 +325,7 @@ namespace Barotrauma
 
                 int spacing = (int)(10 * UIScale);
 
-                int columns = Math.Max(slot.Rect.Width / subRect.Width, 1);
+                int columns = (int)Math.Max(Math.Floor(Math.Sqrt(itemCapacity)), 1);
                 while (itemCapacity / columns * (subRect.Height + spacing) > GameMain.GraphicsHeight * 0.5f)
                 {
                     columns++;
@@ -333,22 +333,22 @@ namespace Barotrauma
 
                 int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing * ((columns - 1) / 2.0f));
                 subRect.X = startX;
-                int startY = dir < 0 ? 
-                    slot.EquipButtonRect.Y - subRect.Height - (int)(20 * UIScale) : 
+                int startY = dir < 0 ?
+                    slot.EquipButtonRect.Y - subRect.Height - (int)(20 * UIScale) :
                     slot.EquipButtonRect.Bottom + (int)(10 * UIScale);
                 subRect.Y = startY;
 
                 float totalHeight = itemCapacity / columns * (subRect.Height + spacing);
-                openState = Math.Min(openState + deltaTime, 1.0f);
+                subInventory.openState = subInventory.HideTimer >= 0.5f ?
+                    Math.Min(subInventory.openState + deltaTime * 5.0f, 1.0f) :
+                    Math.Max(subInventory.openState - deltaTime * 3.0f, 0.0f);
 
                 for (int i = 0; i < itemCapacity; i++)
                 { 
                     subInventory.slots[i].Rect = subRect;
                     subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * -dir);
 
-                    subInventory.slots[i].DrawOffset = Vector2.Lerp(subInventory.slots[i].DrawOffset, 
-                        subInventory.HideTimer >= 0.5f ? new Vector2(0, totalHeight * dir) : new Vector2(0, -50 * dir), 
-                        deltaTime * 10.0f);
+                    subInventory.slots[i].DrawOffset = Vector2.SmoothStep( new Vector2(0, -50 * dir), new Vector2(0, totalHeight * dir), subInventory.openState);
 
                     subInventory.slots[i].InteractRect = subInventory.slots[i].Rect;
                     subInventory.slots[i].InteractRect.Inflate((int)(5 * UIScale), (int)(5 * UIScale));
@@ -427,41 +427,6 @@ namespace Barotrauma
 #else
             if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
-
-
-
-            /*var slot = slots[slotIndex];
-            Rectangle containerRect = container.Inventory.slots[0].InteractRect;
-            for (int i = 1; i< container.Inventory.slots.Length; i++)
-            {
-                containerRect = Rectangle.Union(containerRect, container.Inventory.slots[i].InteractRect);
-            }
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - slot.Rect.Height - 5), Color.Black * 0.8f, true);
-            GUI.DrawRectangle(spriteBatch, containerRect, Color.White);*/
-
-            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-
-            /*Point topLeft =
-                container.Inventory.slots[0].Rect.Location +
-                container.Inventory.slots[0].DrawOffset.ToPoint();
-            Point bottomRight = 
-                container.Inventory.slots[0].Rect.Location + 
-                container.Inventory.slots[0].Rect.Size +
-                container.Inventory.slots[0].DrawOffset.ToPoint();
-
-            for (int i = 1; i < container.Inventory.slots.Length; i++)
-            {
-                topLeft.X = (int)Math.Min(topLeft.X, container.Inventory.slots[i].Rect.X + container.Inventory.slots[i].DrawOffset.X);
-                topLeft.Y = (int)Math.Min(topLeft.Y, container.Inventory.slots[i].Rect.Y + container.Inventory.slots[i].DrawOffset.Y);
-                bottomRight.X = (int)Math.Max(bottomRight.X, container.Inventory.slots[i].Rect.Right + container.Inventory.slots[i].DrawOffset.X);
-                bottomRight.Y = (int)Math.Min(bottomRight.Y, container.Inventory.slots[i].Rect.Bottom + container.Inventory.slots[i].DrawOffset.Y);
-            }
-
-            if (container.InventoryTopSprite != null)
-            {
-                topLeft.Y -= (int)container.InventoryTopSprite.Origin.Y;
-            }*/
 
             if (slots[slotIndex].SubInventoryDir > 0)
             {
