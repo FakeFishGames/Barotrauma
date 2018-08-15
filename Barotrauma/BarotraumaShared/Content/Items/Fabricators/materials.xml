@@ -6,7 +6,7 @@
     category="Material"
     Tags="smallitem"   
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -32,7 +32,7 @@
     Tags="smallitem"
     spritecolor="0.2,0.35,0.06,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="100"/>
     <Price locationtype="Military" buyprice="100"/>
@@ -57,7 +57,7 @@
     Tags="smallitem"
     spritecolor="0.78,0.55,0.2,1.0"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -78,7 +78,7 @@
     Tags="smallitem"   
     spritecolor="0.9,0.9,1.0,0.9"
     canbepicked="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="Military" buyprice="50"/>
@@ -98,7 +98,7 @@
     category="Material"
     Tags="smallitem"
     spritecolor="0.5,0.0,0.0,1.0"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>
@@ -125,7 +125,7 @@
     category="Material"
     Tags="smallitem"
     spritecolor="1.0,0.7,0.05,1.0"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     canbepicked="true">
 
     <Price locationtype="Research" buyprice="200"/>

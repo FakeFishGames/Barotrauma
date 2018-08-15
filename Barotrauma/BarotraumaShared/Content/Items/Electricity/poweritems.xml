@@ -106,7 +106,7 @@
     identifier="batterycell"
     category="Equipment,Electrical"
     tags="smallitem,loadable"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
 
     <Price locationtype="City" buyprice="50"/>
@@ -132,7 +132,7 @@
     identifier="fulguriumbatterycell"
     category="Equipment,Electrical"
     tags="smallitem,loadable"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
 
     <Deconstruct time="10">

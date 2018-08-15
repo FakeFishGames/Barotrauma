@@ -5,7 +5,7 @@
     identifier="oxygentank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="50"/>
     <Price locationtype="City" buyprice="50"/>
@@ -65,7 +65,7 @@
     identifier="divingmask"
     category="Equipment"
     Tags="smallitem,diving"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
     <Price locationtype="Research" buyprice="50"/>
@@ -194,7 +194,7 @@
     identifier="underwaterscooter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="A battery-powered underwater propulsion device.">
 
     <Price locationtype="Research" buyprice="50"/>

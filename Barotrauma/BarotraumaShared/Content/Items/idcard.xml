@@ -4,7 +4,7 @@
   identifier="idcard"
   category="Equipment"
   Tags="smallitem"
-  cargocontainername="Metal Crate">
+  cargocontaineridentifier="metalcrate">
 
 	<Sprite texture ="idcard.png" depth="0.8" sourcerect="0,0,16,16"/>
 

@@ -5,7 +5,7 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
     
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="City" buyprice="20"/>
@@ -44,7 +44,7 @@
     category="Electrical"
     linkable="true"
     tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Research" buyprice="10"/>
     <Price locationtype="City" buyprice="20"/>

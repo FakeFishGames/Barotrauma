@@ -5,7 +5,7 @@
     identifier="c4block"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
     
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="City" buyprice="200"/>
@@ -29,7 +29,7 @@
     identifier="compoundn"
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     spritecolor="1.0,0.5,1.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
@@ -51,7 +51,7 @@
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
@@ -78,7 +78,7 @@
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     spritecolor="1.0,0.0,0.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
@@ -101,7 +101,7 @@
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Explosive Crate">
+    cargocontaineridentifier="explosivecrate">
     
     <Price locationtype="Military" buyprice="50"/>
     <Price locationtype="City" buyprice="100"/>

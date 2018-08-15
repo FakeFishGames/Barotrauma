@@ -5,7 +5,7 @@
     category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
     
     <Price locationtype="Research" buyprice="20"/>
     <Price locationtype="Military" buyprice="20"/>
@@ -34,7 +34,7 @@
     name="Clown Mask"
     identifier="clownmask"
     category="Equipment"
-    cargocontainername="Metal Crate"    
+    cargocontaineridentifier="metalcrate"    
     tags="smallitem"
     description="Praise the honkmother.">
 
@@ -56,7 +56,7 @@
     name="Clown Costume"
     identifier="clowncostume"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     tags="smallitem"
     description="Praise the honkmother.">
 

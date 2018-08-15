@@ -5,7 +5,7 @@
     identifier="weldingtool"
     category="Equipment"
     Tags="smallitem,weldingtool"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -73,7 +73,7 @@
     identifier="plasmacutter"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -131,7 +131,7 @@
     identifier="weldingfueltank"
     category="Equipment"
     Tags="smallitem,weldingfueltank"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -162,7 +162,7 @@
     identifier="extinguisher"
     category="Equipment"
     Tags="smallitem,extinguisher"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="A handheld carbon dioxide extinguisher.">
 
     <Price locationtype="City" buyprice="100"/>
@@ -197,7 +197,7 @@
     identifier="screwdriver"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Research" buyprice="10"/>
@@ -221,7 +221,7 @@
     identifier="wrench"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="10"/>
     <Price locationtype="Research" buyprice="10"/>
@@ -247,7 +247,7 @@
     identifier="crowbar"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="15"/>
     <Price locationtype="Research" buyprice="15"/>
@@ -273,7 +273,7 @@
     identifier="handheldsonar"
     category="Equipment"
     Tags="smallitem,sonar"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -315,7 +315,7 @@
     identifier="sonarbeacon"
     category="Equipment"
     Tags="smallitem,sonar"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="50"/>
     <Price locationtype="Research" buyprice="50"/>
@@ -351,7 +351,7 @@
     identifier="flashlight"
     category="Equipment"
     Tags="smallitem"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="City" buyprice="20"/>
     <Price locationtype="Research" buyprice="20"/>
@@ -386,7 +386,7 @@
     name="Flare"
     identifier="flare"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
 

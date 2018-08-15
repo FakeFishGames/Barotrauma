@@ -5,7 +5,7 @@
     identifier="spear"
     category="Equipment"
     interactthroughwalls="true"
-    cargocontainername="Metal Crate">
+    cargocontaineridentifier="metalcrate">
 
     <Price locationtype="Military" buyprice="30"/>
     <Price locationtype="City" buyprice="50"/>
@@ -32,7 +32,7 @@
     name="Harpoon Gun"
     identifier="harpoongun"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     tags="weapon">
 
     <Price locationtype="Military" buyprice="400"/>
@@ -70,7 +70,7 @@
     name="Syringe Gun"
     identifier="syringegun"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     tags="weapon">
 
     <Price locationtype="Research" buyprice="700"/>
@@ -107,7 +107,7 @@
     identifier="revolverround"
     category="Equipment"
     interactthroughwalls="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     tags="smallitem">
 
     <Price locationtype="Military" buyprice="30"/>
@@ -131,7 +131,7 @@
     name="Revolver"
     identifier="revolver"
     category="Equipment"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     tags="smallitem,weapon">
 
     <Price locationtype="Military" buyprice="800"/>
@@ -168,7 +168,7 @@
     name="Stun Grenade"
     identifier="stungrenade"
     category="Equipment"
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     tags="smallitem,weapon,explosive">
 
     <Price locationtype="Military" buyprice="200"/>
@@ -209,7 +209,7 @@
     name="Incendium Grenade"
     identifier="incendiumgrenade"
     category="Equipment"    
-    cargocontainername="Explosive Crate"
+    cargocontaineridentifier="explosivecrate"
     tags="smallitem,weapon,explosive">
 
     <Deconstruct time="10">
@@ -248,7 +248,7 @@
     identifier="stunbaton"
     category="Equipment"
     Tags="smallitem,weapon"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
     <Price locationtype="Military" buyprice="200"/>
@@ -291,7 +291,7 @@
     identifier="bikehorn"
     category="Equipment"
     tags="weapon,smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="HONK">
 
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55"/>

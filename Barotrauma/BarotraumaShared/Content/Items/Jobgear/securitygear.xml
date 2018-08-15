@@ -4,7 +4,7 @@
     identifier="bodyarmor"
     category="Equipment"
     tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
     <Deconstruct time="40">
@@ -31,7 +31,7 @@
     identifier="ballistichelmet"
     category="Equipment"
     tags="smallitem"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
     <Deconstruct time="10">
@@ -54,7 +54,7 @@
     name="Handcuffs"
     identifier="handcuffs"
     category="Equipment"
-    cargocontainername="Metal Crate"    
+    cargocontaineridentifier="metalcrate"    
     tags="smallitem" >
 
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>

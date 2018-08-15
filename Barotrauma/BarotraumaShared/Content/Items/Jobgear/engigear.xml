@@ -5,7 +5,7 @@
     category="Equipment"    
     tags="smallitem"
     fireproof="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="The fire-resistant fabric offers some protection against fires.">
 
     <Sprite texture="engigear.png" sourcerect="0,52,50,25" depth="0.6"/>
@@ -33,7 +33,7 @@
     category="Equipment"
     tags="smallitem"
     fireproof="true"
-    cargocontainername="Metal Crate"
+    cargocontaineridentifier="metalcrate"
     description="The fire-resistant fabric offers some protection against fires.">
 
     <Sprite texture="engigear.png" sourcerect="53,50,51,25" depth="0.6"/>
