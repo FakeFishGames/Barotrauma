@@ -118,17 +118,17 @@ namespace Barotrauma
                     cargoRoom.Rect.Y - cargoRoom.Rect.Height + pi.ItemPrefab.Size.Y / 2);
 
                 ItemContainer itemContainer = null;
-                if (!string.IsNullOrEmpty(pi.ItemPrefab.CargoContainerName))
+                if (!string.IsNullOrEmpty(pi.ItemPrefab.CargoContainerIdentifier))
                 {
                     itemContainer = availableContainers.Keys.ToList().Find(ac => 
-                        ac.Item.Prefab.NameMatches(pi.ItemPrefab.CargoContainerName) || 
-                        ac.Item.Prefab.Tags.Contains(pi.ItemPrefab.CargoContainerName.ToLowerInvariant()));
+                        ac.Item.Prefab.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
+                        ac.Item.Prefab.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant()));
 
                     if (itemContainer == null)
                     {
                         containerPrefab = MapEntityPrefab.List.Find(ep => 
-                            ep.NameMatches(pi.ItemPrefab.CargoContainerName) || 
-                            (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
+                            ep.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
+                            (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant()))) as ItemPrefab;
 
                         if (containerPrefab == null)
                         {

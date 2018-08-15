@@ -160,7 +160,7 @@ namespace Barotrauma
         }
 
         [Serialize("", false)]        
-        public string CargoContainerName //TODO: use identifier instead of name
+        public string CargoContainerIdentifier
         {
             get;
             private set;
@@ -305,8 +305,7 @@ namespace Barotrauma
                 Aliases = aliases.Split(',');
             }
 
-            MapEntityCategory category;
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
             }
@@ -322,6 +321,11 @@ namespace Barotrauma
             foreach (string tag in joinedTags.Split(','))
             {
                 Tags.Add(tag.Trim().ToLowerInvariant());
+            }
+
+            if (element.Attribute("cargocontainername") != null)
+            {
+                DebugConsole.ThrowError("Error in item prefab \"" + name + "\" - cargo container should be configured using the item's identifier, not the name.");
             }
 
             SerializableProperty.DeserializeProperties(this, element);
