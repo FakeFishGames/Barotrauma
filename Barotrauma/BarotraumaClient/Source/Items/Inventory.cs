@@ -428,6 +428,7 @@ namespace Barotrauma
             if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
 
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (slots[slotIndex].SubInventoryDir > 0)
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
