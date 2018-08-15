@@ -85,7 +85,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Pick up one of the fuel rods either by double-clicking or dragging and dropping it into your inventory.");
 
-            while (!HasItem("Fuel Rod"))
+            while (!HasItem("fuelrod"))
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -192,7 +192,7 @@ namespace Barotrauma.Tutorials
                 + " going into the to the power connection - that's why the monitor isn't working."
                 + " You should find a piece of wire to connect it. Try searching some of the cabinets scattered around the sub.");
 
-            while (!HasItem("Wire"))
+            while (!HasItem("wire"))
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -390,7 +390,7 @@ namespace Barotrauma.Tutorials
 
             bool divingMaskSelected = false;
 
-            while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
+            while (!HasItem("divingmask") && !HasItem("divingsuit"))
             {
                 if (!divingMaskSelected &&
                     Controlled.FocusedItem != null && Controlled.FocusedItem.Prefab.Identifier == "divingsuit")
@@ -404,20 +404,20 @@ namespace Barotrauma.Tutorials
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
-            if (HasItem("Diving Mask"))
+            if (HasItem("divingmask"))
             {
                 infoBox = CreateInfoFrame("The diving mask will let you breathe underwater, but it won't protect from the water pressure outside the sub. " +
                     "It should be fine for the situation at hand, but you still need to find an oxygen tank and drag it into the same slot as the mask." +
                     "You should grab one or two from one of the cabinets.");
             }
-            else if (HasItem("Diving Suit"))
+            else if (HasItem("divingsuit"))
             {
                 infoBox = CreateInfoFrame("In addition to letting you breathe underwater, the suit will protect you from the water pressure outside the sub " +
                     "(unlike the diving mask). However, you still need to drag an oxygen tank into the same slot as the suit to supply oxygen. " +
                     "You should grab one or two from one of the cabinets.");
             }
 
-            while (!HasItem("Oxygen Tank"))
+            while (!HasItem("oxygentank"))
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -493,7 +493,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("The creature has died. Now you should fix the damages in the control room: " +
                 "Grab a welding tool from the closet in the railgun room.");
 
-            while (!HasItem("Welding Tool"))
+            while (!HasItem("weldingtool"))
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -629,11 +629,11 @@ namespace Barotrauma.Tutorials
             yield return CoroutineStatus.Success;
         }
 
-        private bool HasItem(string itemName)
+        private bool HasItem(string itemIdentifier)
         {
             if (Character.Controlled == null) return false;
 
-            return Character.Controlled.Inventory.FindItem(itemName) != null;
+            return Character.Controlled.Inventory.FindItemByIdentifier(itemIdentifier) != null;
         }
         
         protected IEnumerable<object> KeepReactorRunning(Reactor reactor)

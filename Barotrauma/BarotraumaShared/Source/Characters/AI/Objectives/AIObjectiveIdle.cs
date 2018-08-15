@@ -138,15 +138,16 @@ namespace Barotrauma
 
         private AITarget FindRandomTarget()
         {
-            if (Rand.Int(5)==1)
+            //random chance of navigating back to the room where the character spawned
+            if (Rand.Int(5) == 1)
             {
-                var idCard = character.Inventory.FindItem("ID Card");
-                if (idCard==null) return null;
+                var idCard = character.Inventory.FindItemByIdentifier("idcard");
+                if (idCard == null) return null;
 
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull==null) continue;
-                 
+                    if (wp.SpawnType != SpawnType.Human || wp.CurrentHull == null) continue;
+
                     foreach (string tag in wp.IdCardTags)
                     {
                         if (idCard.HasTag(tag)) return wp.CurrentHull.AiTarget;

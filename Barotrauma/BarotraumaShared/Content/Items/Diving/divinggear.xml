@@ -110,7 +110,7 @@
     name="Diving Suit"    
     identifier="divingsuit"
     category="Equipment"
-    tags="diving"
+    tags="diving,divingsuit"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 

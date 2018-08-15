@@ -4,7 +4,7 @@
     name="Welding Tool"
     identifier="weldingtool"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,weldingtool"
     cargocontainername="Metal Crate"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
@@ -134,7 +134,7 @@
     name="Welding Fuel Tank"
     identifier="weldingfueltank"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,weldingfueltank"
     cargocontainername="Metal Crate">
 
     <Price locationtype="City" buyprice="50"/>
@@ -165,7 +165,7 @@
     name="Fire Extinguisher"
     identifier="extinguisher"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,extinguisher"
     cargocontainername="Metal Crate"
     description="A handheld carbon dioxide extinguisher.">
 
