@@ -146,7 +146,7 @@ namespace Barotrauma
                 "", frame, GUI.SmallFont);
 
             new GUITextBlock(new Rectangle(246, 100, 100, 20),
-                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
+                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience)),
                 "", frame, GUI.SmallFont);
 
             new GUITextBlock(new Rectangle(246, 120, 0, 20),
