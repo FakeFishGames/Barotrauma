@@ -1995,7 +1995,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific();
 
-        public void Revive(bool isNetworkMessage)
+        public void Revive()
         {
             if (Removed)
             {
