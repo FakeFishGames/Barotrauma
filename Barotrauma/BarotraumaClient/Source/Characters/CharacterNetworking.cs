@@ -343,8 +343,8 @@ namespace Barotrauma
             }
             else
             {
-                this.IsDead = false;
-
+                if (IsDead) Revive();
+                
                 CharacterHealth.ClientRead(msg);
                 
                 bool ragdolled = msg.ReadBoolean();

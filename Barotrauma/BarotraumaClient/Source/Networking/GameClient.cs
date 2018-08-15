@@ -72,6 +72,12 @@ namespace Barotrauma.Networking
         {
             get { return entityEventManager.MidRoundSyncing; }
         }
+
+        public bool AllowDisguises
+        {
+            get;
+            private set;
+        }
         
         public GameClient(string newName)
         {
@@ -99,6 +105,24 @@ namespace Barotrauma.Networking
                 OnSelected = ToggleEndRoundVote,
                 Visible = false
             };
+            
+            showLogButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("ServerLog"))
+            {
+                OnClicked = (GUIButton button, object userData) =>
+                {
+                    if (ServerLog.LogFrame == null)
+                    {
+                        ServerLog.CreateLogFrame();
+                    }
+                    else
+                    {
+                        ServerLog.LogFrame = null;
+                        GUI.KeyboardDispatcher.Subscriber = null;
+                    }
+                    return true;
+                }
+            };
 
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
@@ -119,6 +143,8 @@ namespace Barotrauma.Networking
             };
 
             otherClients = new List<Client>();
+
+            ServerLog = new ServerLog("");
 
             ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen = new NetLobbyScreen();
@@ -502,7 +528,6 @@ namespace Barotrauma.Networking
 #if DEBUG
             if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.P)) return;
 #endif
-
             if (gameStarted) SetRadioButtonColor();
 
             base.Update(deltaTime);
@@ -829,9 +854,11 @@ namespace Barotrauma.Networking
                     };
                 }
             }
-
+            
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
+            GameMain.NetLobbyScreen.ShowLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
+            showLogButton.Visible = HasPermission(ClientPermissions.ServerLog);
 
             endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);      
         }
@@ -873,6 +900,7 @@ namespace Barotrauma.Networking
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
 
+            bool disguisesAllowed   = inc.ReadBoolean();
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
             
@@ -911,6 +939,8 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
             GameMain.LightManager.LosMode = (LosMode)losMode;
+
+            AllowDisguises = disguisesAllowed;
 
             if (campaign == null)
             {
@@ -1088,6 +1118,9 @@ namespace Barotrauma.Networking
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
+
+                                ServerLog.ServerName = serverName;
+
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
@@ -1545,6 +1578,12 @@ namespace Barotrauma.Networking
         {
             client.Shutdown("");
             steamAuthTicket?.Cancel();
+
+            if (HasPermission(ClientPermissions.ServerLog))
+            {
+                ServerLog?.Save();
+            }
+
             GameMain.NetworkMember = null;
         }
         

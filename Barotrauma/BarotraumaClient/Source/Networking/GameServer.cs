@@ -9,8 +9,6 @@ namespace Barotrauma.Networking
     {
         private NetStats netStats;
 
-        private GUIButton showLogButton;
-
         private GUIScrollBar clientListScrollBar;
 
         void InitProjSpecific()
@@ -32,13 +30,13 @@ namespace Barotrauma.Networking
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (log.LogFrame == null)
+                    if (ServerLog.LogFrame == null)
                     {
-                        log.CreateLogFrame();
+                        ServerLog.CreateLogFrame();
                     }
                     else
                     {
-                        log.LogFrame = null;
+                        ServerLog.LogFrame = null;
                         GUI.KeyboardDispatcher.Subscriber = null;
                     }
                     return true;
@@ -55,16 +53,14 @@ namespace Barotrauma.Networking
 
         public override void AddToGUIUpdateList()
         {
-            if (started) base.AddToGUIUpdateList();
+            base.AddToGUIUpdateList();
 
             settingsFrame?.AddToGUIUpdateList();
-            log.LogFrame?.AddToGUIUpdateList();
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            
             if (!ShowNetStats) return;
 
             GUI.Font.DrawString(spriteBatch, "Unique Events: " + entityEventManager.UniqueEvents.Count, new Vector2(10, 50), Color.White);

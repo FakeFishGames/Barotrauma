@@ -167,11 +167,11 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return log.LinesPerFile;
+                return ServerLog.LinesPerFile;
             }
             set
             {
-                log.LinesPerFile = value;
+                ServerLog.LinesPerFile = value;
             }
         }
 
@@ -217,6 +217,13 @@ namespace Barotrauma.Networking
         {
             get { return selectedLevelDifficulty; }
             set { selectedLevelDifficulty = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        [Serialize(true, true)]
+        public bool AllowDisguises
+        {
+            get;
+            set;
         }
 
         public YesNoMaybe TraitorsEnabled
