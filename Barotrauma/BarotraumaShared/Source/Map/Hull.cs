@@ -584,7 +584,19 @@ namespace Barotrauma
 
             foreach (Gap g in ConnectedGaps)
             {
-                if (g.Open <= 0.0f && (g.ConnectedDoor == null || !g.ConnectedDoor.IsOpen)) continue;
+                if (g.ConnectedDoor != null)
+                {
+                    //gap blocked if the door is not open or the predicted state is not open
+                    if (!g.ConnectedDoor.IsOpen || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    {
+                        if (g.ConnectedDoor.OpenState < 0.1f) continue;
+                    }
+                }
+                else if (g.Open <= 0.0f)
+                {
+                    continue;
+                }
+
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
