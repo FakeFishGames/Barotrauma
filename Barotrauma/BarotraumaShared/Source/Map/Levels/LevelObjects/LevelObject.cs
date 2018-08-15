@@ -66,7 +66,7 @@ namespace Barotrauma
                         -sa * triggerPosition.X + ca * triggerPosition.Y);
                 }
 
-                var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
+                var newTrigger = new LevelTrigger(triggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale, prefab.Name);
                 int parentTriggerIndex = prefab.LevelTriggerElements.IndexOf(triggerElement.Parent);
                 if (parentTriggerIndex > -1) newTrigger.ParentTrigger = Triggers[parentTriggerIndex];
                 Triggers.Add(newTrigger);

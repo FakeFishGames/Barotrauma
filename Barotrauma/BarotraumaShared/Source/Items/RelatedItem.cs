@@ -119,18 +119,34 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace("msg")) element.Add(new XAttribute("msg", Msg));
         }
 
-        public static RelatedItem Load(XElement element)
+        public static RelatedItem Load(XElement element, string parentDebugName)
         {
             string[] identifiers;
             if (element.Attribute("name") != null)
             {
                 //backwards compatibility + a console warning
-                DebugConsole.ThrowError("Error in RelatedItem config ("+element.ToString()+") - use item identifiers or tags instead of names.");
-                identifiers = element.GetAttributeStringArray("name", new string[0]); 
+                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item identifiers or tags instead of names.");
+                string[] itemNames = element.GetAttributeStringArray("name", new string[0]);
+                //attempt to convert to identifiers and tags
+                List<string> convertedIdentifiers = new List<string>();
+                foreach (string itemName in itemNames)
+                {
+                    if (MapEntityPrefab.List.Find(me => me.Name == itemName) is ItemPrefab matchingItem)
+                    {
+                        convertedIdentifiers.Add(matchingItem.Identifier);
+                    }
+                    else
+                    {
+                        //no matching item found, this must be a tag
+                        convertedIdentifiers.Add(itemName);
+                    }
+                }
+                identifiers = convertedIdentifiers.ToArray();
             }
             else
             {
                 identifiers = element.GetAttributeStringArray("identifiers", new string[0]);
+                if (identifiers.Length == 0) identifiers = element.GetAttributeStringArray("identifier", new string[0]);
             }
             
             if (identifiers.Length == 0) return null;
@@ -150,7 +166,7 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "statuseffect") continue;
-                ri.statusEffects.Add(StatusEffect.Load(subElement));
+                ri.statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
             }
             
             return ri;

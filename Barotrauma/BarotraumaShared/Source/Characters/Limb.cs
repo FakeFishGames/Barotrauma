@@ -293,7 +293,7 @@ namespace Barotrauma
                         damagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
                     case "attack":
-                        attack = new Attack(subElement);
+                        attack = new Attack(subElement, (character == null ? "null" : character.Name) + ", limb " + type);
                         break;
                     case "damagemodifier":
                         damageModifiers.Add(new DamageModifier(subElement));

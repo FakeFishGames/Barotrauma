@@ -114,8 +114,12 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
-                        RelatedItem containable = RelatedItem.Load(subElement);
-                        if (containable == null) continue;                        
+                        RelatedItem containable = RelatedItem.Load(subElement, item.Name);
+                        if (containable == null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                            continue;
+                        }
                         containableItems.Add(containable);
                         break;
                 }

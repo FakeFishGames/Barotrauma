@@ -57,7 +57,7 @@ namespace Barotrauma
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
-            public Effect(XElement element)
+            public Effect(XElement element, string parentDebugName)
             {
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
@@ -91,7 +91,7 @@ namespace Barotrauma
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "statuseffect":
-                            StatusEffects.Add(StatusEffect.Load(subElement));
+                            StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                             break;
                     }
                 }
@@ -240,7 +240,7 @@ namespace Barotrauma
                         Icon = new Sprite(subElement);
                         break;
                     case "effect":
-                        effects.Add(new Effect(subElement));
+                        effects.Add(new Effect(subElement, Name));
                         break;
                     case "suitabletreatment":
                         if (subElement.Attribute("name") != null)

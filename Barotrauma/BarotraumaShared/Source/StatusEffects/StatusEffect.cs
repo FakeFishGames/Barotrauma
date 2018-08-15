@@ -43,11 +43,25 @@ namespace Barotrauma
 
             public ItemSpawnInfo(XElement element)
             {
-                string itemPrefabName = element.GetAttributeString("name", "");
-                ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.NameMatches(itemPrefabName)) as ItemPrefab;
-                if (ItemPrefab == null)
+                if (element.Attribute("name") != null)
                 {
-                    DebugConsole.ThrowError("Error in StatusEffect config - item prefab \"" + itemPrefabName + "\" not found.");
+                    //backwards compatibility
+                    DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
+                    string itemPrefabName = element.GetAttributeString("name", "");
+                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && (m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName))) as ItemPrefab;
+                    if (ItemPrefab == null)
+                    {
+                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab \"" + itemPrefabName + "\" not found.");
+                    }
+                }
+                else
+                {
+                    string itemPrefabIdentifier = element.GetAttributeString("identifier", "");
+                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.Identifier == itemPrefabIdentifier) as ItemPrefab;
+                    if (ItemPrefab == null)
+                    {
+                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.");
+                    }
                 }
 
                 Speed = element.GetAttributeFloat("speed", 0.0f);
@@ -56,7 +70,7 @@ namespace Barotrauma
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
                 if (!Enum.TryParse(spawnTypeStr, out SpawnPosition))
                 {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \""+spawnTypeStr+"\" is not a valid spawn position.");
+                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
                 }
             }
         }
@@ -141,17 +155,17 @@ namespace Barotrauma
             }
         }
 
-        public static StatusEffect Load(XElement element)
+        public static StatusEffect Load(XElement element, string parentDebugName)
         {
-            if (element.Attribute("delay")!=null)
+            if (element.Attribute("delay") != null)
             {
-                return new DelayedEffect(element);
+                return new DelayedEffect(element, parentDebugName);
             }
-                
-            return new StatusEffect(element);
+
+            return new StatusEffect(element, parentDebugName);
         }
-                
-        protected StatusEffect(XElement element)
+
+        protected StatusEffect(XElement element, string parentDebugName)
         {
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
@@ -249,7 +263,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "explosion":
-                        explosion = new Explosion(subElement);
+                        explosion = new Explosion(subElement, parentDebugName);
                         break;
                     case "fire":
                         FireSize = subElement.GetAttributeFloat("size",10.0f);
@@ -264,10 +278,12 @@ namespace Barotrauma
                         break;
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement);
-
-                        if (newRequiredItem == null) continue;
-                        
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, parentDebugName);
+                        if (newRequiredItem == null)
+                        {
+                            DebugConsole.ThrowError("Error in StatusEffect config - requires an item with no identifiers.");
+                            continue;
+                        }
                         requiredItems.Add(newRequiredItem);
                         break;
                     case "conditional":

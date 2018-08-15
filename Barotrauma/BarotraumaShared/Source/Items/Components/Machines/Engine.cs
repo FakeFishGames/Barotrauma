@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "propellerdamage":
-                        propellerDamage = new Attack(subElement);
+                        propellerDamage = new Attack(subElement, item.Name + ", Engine");
                         break;
                 }
             }

@@ -17,8 +17,8 @@ namespace Barotrauma
 
         private float delay;
 
-        public DelayedEffect(XElement element)
-            : base(element)
+        public DelayedEffect(XElement element, string parentDebugName)
+            : base(element, parentDebugName)
         {
             delay = element.GetAttributeFloat("delay", 1.0f);
         }

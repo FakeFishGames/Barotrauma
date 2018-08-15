@@ -38,9 +38,9 @@ namespace Barotrauma
             flames = true;
         }
 
-        public Explosion(XElement element)
+        public Explosion(XElement element, string parentDebugName)
         {
-            attack = new Attack(element);
+            attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
 
