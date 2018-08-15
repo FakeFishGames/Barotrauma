@@ -344,7 +344,7 @@ namespace Barotrauma
             }
             else
             {
-                this.isDead = false;
+                if (this.isDead) Revive();
 
                 health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
 

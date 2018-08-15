@@ -1334,7 +1334,7 @@ namespace Barotrauma
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
                 if (revivedCharacter == null) return;
                 
-                revivedCharacter.Revive(false);
+                revivedCharacter.Revive();
                 if (GameMain.Server != null)
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
@@ -1353,7 +1353,7 @@ namespace Barotrauma
                 Character revivedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
                 if (revivedCharacter == null) return;
 
-                revivedCharacter.Revive(false);
+                revivedCharacter.Revive();
                 if (GameMain.Server != null)
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
