@@ -54,7 +54,7 @@ namespace Barotrauma
                 toggleArrow.Origin = toggleArrow.size / 2;
             }
 
-            toggleArrowSlotIndex = MathHelper.Clamp( element.GetAttributeInt("arrowslot", 0), 0, capacity - 1);
+            toggleArrowSlotIndex = MathHelper.Clamp(element.GetAttributeInt("arrowslot", 0), 0, capacity - 1);
 
             hidden = true;
 
@@ -111,6 +111,7 @@ namespace Barotrauma
 
                 slots[i] = new InventorySlot(slotRect)
                 {
+                    SubInventoryDir = Math.Sign(HUDLayoutSettings.InventoryAreaUpper.Bottom - slotRect.Center.Y),
                     Disabled = false,
                     SlotSprite = slotSprite,
                     Color = SlotTypes[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f
@@ -174,22 +175,22 @@ namespace Barotrauma
                                 case InvSlotType.Headset:
                                     SlotPositions[i] = new Vector2(
                                         HUDLayoutSettings.InventoryAreaUpper.Right - (slotSize.X + spacing),
-                                        HUDLayoutSettings.InventoryAreaUpper.Y);
+                                        HUDLayoutSettings.InventoryAreaUpper.Y + ContainedIndicatorHeight);
                                     break;
                                 case InvSlotType.Card:
                                     SlotPositions[i] = new Vector2(
                                         HUDLayoutSettings.InventoryAreaUpper.Right - (slotSize.X + spacing) * 2,
-                                        HUDLayoutSettings.InventoryAreaUpper.Y);
+                                        HUDLayoutSettings.InventoryAreaUpper.Y + ContainedIndicatorHeight);
                                     break;
                                 case InvSlotType.InnerClothes:
                                     SlotPositions[i] = new Vector2(
                                         HUDLayoutSettings.InventoryAreaUpper.Right - (slotSize.X + spacing) * 3,
-                                        HUDLayoutSettings.InventoryAreaUpper.Y);
+                                        HUDLayoutSettings.InventoryAreaUpper.Y + ContainedIndicatorHeight);
                                     break;
                                 case InvSlotType.Head:
                                     SlotPositions[i] = new Vector2(
                                         HUDLayoutSettings.InventoryAreaUpper.Right - (slotSize.X + spacing) * 4,
-                                        HUDLayoutSettings.InventoryAreaUpper.Y);
+                                        HUDLayoutSettings.InventoryAreaUpper.Y + ContainedIndicatorHeight);
                                     break;
                                 case InvSlotType.OuterClothes:
                                     SlotPositions[i] = new Vector2(GameMain.GraphicsWidth / 2 - 200 * UIScale, GameMain.GraphicsHeight - bottomOffset);
@@ -486,6 +487,16 @@ namespace Barotrauma
                         subSlotRect.Location += slot.DrawOffset.ToPoint();
                         hoverArea = Rectangle.Union(hoverArea, subSlotRect);
                     }
+                    if (highlightedSubInventorySlot.Slot.SubInventoryDir < 0)
+                    {
+                        hoverArea.Height -= hoverArea.Bottom - highlightedSubInventorySlot.Slot.Rect.Bottom;
+                    }
+                    else
+                    {
+                        int over = highlightedSubInventorySlot.Slot.Rect.Y - hoverArea.Y;
+                        hoverArea.Y += over;
+                        hoverArea.Height -= over;
+                    }
                 }
                 hoverArea.Inflate(10, 10);
 
@@ -715,7 +726,57 @@ namespace Barotrauma
                 prevUIScale = UIScale;
             }
 
+            if (layout == Layout.Center)
+            {
+                Rectangle backgroundFrame = Rectangle.Empty;
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (HideSlot(i)) continue;
+                    if (backgroundFrame == Rectangle.Empty)
+                    {
+                        backgroundFrame = slots[i].Rect;
+                        continue;
+                    }
+                    backgroundFrame = Rectangle.Union(backgroundFrame, slots[i].Rect);
+                }
+                backgroundFrame.Inflate(10, 20);
+                backgroundFrame.Location -= new Point(0, 10);
+                GUI.DrawRectangle(spriteBatch, backgroundFrame, Color.Black * 0.8f, true);
+                GUI.DrawString(spriteBatch,
+                    new Vector2((int)(backgroundFrame.Center.X - GUI.Font.MeasureString(character.Name).X / 2), (int)backgroundFrame.Y + 5),
+                    character.Name, Color.White * 0.9f);
+            }
+
             base.Draw(spriteBatch);
+
+            foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
+            {
+                Rectangle hoverArea = highlightedSubInventorySlot.Slot.Rect;
+                hoverArea.Location += highlightedSubInventorySlot.Slot.DrawOffset.ToPoint();
+                hoverArea = Rectangle.Union(hoverArea, highlightedSubInventorySlot.Slot.EquipButtonRect);
+                if (highlightedSubInventorySlot.Inventory?.slots != null)
+                {
+                    foreach (InventorySlot slot in highlightedSubInventorySlot.Inventory.slots)
+                    {
+                        Rectangle subSlotRect = slot.InteractRect;
+                        subSlotRect.Location += slot.DrawOffset.ToPoint();
+                        hoverArea = Rectangle.Union(hoverArea, subSlotRect);
+                    }
+                    if (highlightedSubInventorySlot.Slot.SubInventoryDir < 0)
+                    {
+                        hoverArea.Height -= hoverArea.Bottom - highlightedSubInventorySlot.Slot.Rect.Bottom;
+                    }
+                    else
+                    {
+                        int over = highlightedSubInventorySlot.Slot.Rect.Y - hoverArea.Y;
+                        hoverArea.Y += over;
+                        hoverArea.Height -= over;
+                    }
+                }
+                hoverArea.Inflate(10, 10);
+
+                GUI.DrawRectangle(spriteBatch, hoverArea, Color.White * 0.6f, true);
+            }
 
             /*if (character == Character.Controlled)
             {
