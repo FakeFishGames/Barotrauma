@@ -301,10 +301,10 @@ namespace Barotrauma
 
 #if DEBUG
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = false;//doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #else
             useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", true);
-            requireSteamAuthentication = false;//doc.Root.GetAttributeBool("requiresteamauthentication", true);
+            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", true);
 #endif
 
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
