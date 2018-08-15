@@ -13,6 +13,7 @@ namespace Barotrauma.Networking
         protected int[] bufferLengths;
         protected byte[][] buffers;
         protected int newestBufferInd;
+        protected bool firstRead;
 
         public byte[] BufferToQueue
         {
@@ -58,6 +59,7 @@ namespace Barotrauma.Networking
             CanSend = canSend;
             CanReceive = canReceive;
             LatestBufferID = BUFFER_COUNT-1;
+            firstRead = true;
         }
 
         public void EnqueueBuffer(int length)
@@ -108,8 +110,9 @@ namespace Barotrauma.Networking
 
             UInt16 incLatestBufferID = msg.ReadUInt16();
             DebugConsole.NewMessage(incLatestBufferID.ToString(), Color.Red);
-            if (incLatestBufferID > LatestBufferID)
+            if (firstRead || NetIdUtils.IdMoreRecent(incLatestBufferID,LatestBufferID))
             {
+                firstRead = false;
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     bufferLengths[i] = msg.ReadByte();

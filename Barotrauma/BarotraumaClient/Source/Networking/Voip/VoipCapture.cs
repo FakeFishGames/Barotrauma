@@ -54,6 +54,7 @@ namespace Barotrauma.Networking
 
             capturing = true;
             captureThread = new Thread(UpdateCapture);
+            captureThread.IsBackground = true;
             captureThread.Start();
         }
 
