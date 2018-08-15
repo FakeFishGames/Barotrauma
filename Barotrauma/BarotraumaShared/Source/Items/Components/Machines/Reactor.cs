@@ -426,8 +426,8 @@ namespace Barotrauma.Items.Components
                 //we need more fuel
                 if (-currPowerConsumption < load * 0.5f && prevAvailableFuel <= 0.0f)
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
-                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>());
+                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1;
                     containFuelObjective.GetItemPriority = (Item fuelItem) =>
                     {
                         if (fuelItem.ParentInventory?.Owner is Item)

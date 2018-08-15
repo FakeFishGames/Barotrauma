@@ -88,10 +88,12 @@ namespace Barotrauma
 
         private void GiveTreatment(float deltaTime)
         {
+            //TODO: reimplement AIObjectiveRescue using SuitableTreatments from the afflictions the patient has
+
             //target is bleeding -> try to fix it before doing anything else
-            if (targetCharacter.Bleeding > 0.5f)
+            /*if (targetCharacter.Bleeding > 0.5f)
             {
-                Item bandage = character.Inventory.FindItem("Bandage");
+                Item bandage = character.Inventory.FindItem("bandage");
                 if (bandage != null)
                 {
                     if (bandage.Condition <= 0.0f)
@@ -120,7 +122,7 @@ namespace Barotrauma
                 }
 
                 syringe.Use(deltaTime, character);
-            }
+            }*/
 
             character.AnimController.Anim = AnimController.Animation.CPR;
         }

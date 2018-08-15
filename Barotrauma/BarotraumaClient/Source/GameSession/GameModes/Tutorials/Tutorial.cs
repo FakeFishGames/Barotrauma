@@ -156,7 +156,7 @@ namespace Barotrauma.Tutorials
             Character.Controlled = character;
             character.GiveJobItems(null);
 
-            var idCard = character.Inventory.FindItem("ID Card");
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
             if (idCard == null)
             {
                 DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");

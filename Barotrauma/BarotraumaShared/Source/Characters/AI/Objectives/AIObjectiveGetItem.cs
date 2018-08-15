@@ -10,7 +10,8 @@ namespace Barotrauma
     {
         public Func<Item, float> GetItemPriority;
 
-        private string[] itemNames;
+        //can be either tags or identifiers
+        private string[] itemIdentifiers;
 
         private Item targetItem, moveToTarget;
 
@@ -52,18 +53,18 @@ namespace Barotrauma
             CheckInventory();
         }
 
-        public AIObjectiveGetItem(Character character, string itemName, bool equip = false)
-            : this(character, new string[] { itemName }, equip)
+        public AIObjectiveGetItem(Character character, string itemIdentifier, bool equip = false)
+            : this(character, new string[] { itemIdentifier }, equip)
         {
         }
 
-        public AIObjectiveGetItem(Character character, string[] itemNames, bool equip = false)
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, bool equip = false)
             : base(character, "")
         {
             canBeCompleted = true;
             currSearchIndex = -1;
             this.equip = equip;
-            this.itemNames = itemNames;
+            this.itemIdentifiers = itemIdentifiers;
 
             CheckInventory();
         }
@@ -73,7 +74,7 @@ namespace Barotrauma
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
-                if (itemNames.Any(name => character.Inventory.Items[i].Prefab.NameMatches(name) || character.Inventory.Items[i].HasTag(name)))
+                if (itemIdentifiers.Any(id => character.Inventory.Items[i].Prefab.Identifier == id || character.Inventory.Items[i].HasTag(id)))
                 {
                     targetItem = character.Inventory.Items[i];
                     currItemPriority = 100.0f;
@@ -86,7 +87,7 @@ namespace Barotrauma
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
-                        if (itemNames.Any(name => containedItem.Prefab.NameMatches(name) || containedItem.HasTag(name)))
+                        if (itemIdentifiers.Any(id => containedItem.Prefab.Identifier == id || containedItem.HasTag(id)))
                         {
                             targetItem = containedItem;
                             currItemPriority = 100.0f;
@@ -154,8 +155,8 @@ namespace Barotrauma
                 if (goToObjective == null || moveToTarget != goToObjective.Target)
                 {
                     //check if we're already looking for a diving gear
-                    bool gettingDivingGear = (targetItem != null && targetItem.Prefab.NameMatches("Diving Gear") || targetItem.HasTag("diving")) ||
-                                            (itemNames != null && (itemNames.Contains("diving") || itemNames.Contains("Diving Gear")));
+                    bool gettingDivingGear = (targetItem != null && targetItem.Prefab.Identifier == "divingsuit" || targetItem.HasTag("diving")) ||
+                                            (itemIdentifiers != null && (itemIdentifiers.Contains("diving") || itemIdentifiers.Contains("divingsuit")));
 
                     //don't attempt to get diving gear to reach the destination if the item we're trying to get is diving gear
                     goToObjective = new AIObjectiveGoTo(moveToTarget, character, false, !gettingDivingGear);
@@ -172,7 +173,7 @@ namespace Barotrauma
         /// </summary>
         private void FindTargetItem()
         {
-            if (itemNames == null)
+            if (itemIdentifiers == null)
             {
                 if (targetItem == null) canBeCompleted = false;
                 return;
@@ -188,7 +189,7 @@ namespace Barotrauma
 
                 if (item.CurrentHull == null || item.Condition <= 0.0f) continue;
                 if (IgnoreContainedItems && item.Container != null) continue;
-                if (!itemNames.Any(name => item.Prefab.NameMatches(name) || item.HasTag(name))) continue;
+                if (!itemIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) continue;
 
                 //if the item is inside a character's inventory, don't steal it unless the character is dead
                 if (item.ParentInventory is CharacterInventory)
@@ -234,16 +235,16 @@ namespace Barotrauma
             AIObjectiveGetItem getItem = otherObjective as AIObjectiveGetItem;
             if (getItem == null) return false;
             if (getItem.equip != equip) return false;
-            if (getItem.itemNames != null && itemNames != null)
+            if (getItem.itemIdentifiers != null && itemIdentifiers != null)
             {
-                if (getItem.itemNames.Length != itemNames.Length) return false;
-                for (int i = 0; i < getItem.itemNames.Length; i++)
+                if (getItem.itemIdentifiers.Length != itemIdentifiers.Length) return false;
+                for (int i = 0; i < getItem.itemIdentifiers.Length; i++)
                 {
-                    if (getItem.itemNames[i] != itemNames[i]) return false;
+                    if (getItem.itemIdentifiers[i] != itemIdentifiers[i]) return false;
                 }
                 return true;
             }
-            else if (getItem.itemNames == null && itemNames == null)
+            else if (getItem.itemIdentifiers == null && itemIdentifiers == null)
             {
                 return getItem.targetItem == targetItem;
             }
@@ -253,11 +254,11 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            if (itemNames != null)
+            if (itemIdentifiers != null)
             {
-                foreach (string itemName in itemNames)
+                foreach (string itemName in itemIdentifiers)
                 {
-                    var matchingItem = character.Inventory.FindItem(itemName);
+                    var matchingItem = character.Inventory.FindItemByTag(itemName) ?? character.Inventory.FindItemByIdentifier(itemName);
                     if (matchingItem != null && (!equip || character.HasEquippedItem(matchingItem))) return true;
                 }
                 return false;
