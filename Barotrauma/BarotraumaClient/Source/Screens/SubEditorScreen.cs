@@ -17,9 +17,9 @@ namespace Barotrauma
     {
         private static string[] crewExperienceLevels = new string[] 
         {
-            TextManager.Get("CrewExperienceLow"),
-            TextManager.Get("CrewExperienceMid"),
-            TextManager.Get("CrewExperienceHigh")
+            "CrewExperienceLow",
+            "CrewExperienceMid",
+            "CrewExperienceHigh"
         };
 
 
@@ -655,23 +655,26 @@ namespace Barotrauma
             var experienceText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), crewExpArea.RectTransform), crewExperienceLevels[0], textAlignment: Alignment.Center);
             var toggleExpRight = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), crewExpArea.RectTransform), ">");
 
+
             toggleExpLeft.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex--;
                 if (currentIndex < 0) currentIndex = crewExperienceLevels.Length - 1;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
             toggleExpRight.OnClicked += (btn, userData) =>
             {
-                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                int currentIndex = Array.IndexOf(crewExperienceLevels, (string)experienceText.UserData);
                 currentIndex++;
                 if (currentIndex >= crewExperienceLevels.Length) currentIndex = 0;
-                experienceText.Text = crewExperienceLevels[currentIndex];
-                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                experienceText.UserData = crewExperienceLevels[currentIndex];
+                experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
+                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
@@ -681,8 +684,9 @@ namespace Barotrauma
                 int max = Submarine.MainSub.RecommendedCrewSizeMax;
                 crewSizeMin.IntValue = min;
                 crewSizeMax.IntValue = max;
-                experienceText.Text = string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
+                experienceText.UserData =  string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
                     crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
+                experienceText.Text = TextManager.Get((string)experienceText.UserData);
             }
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedSaveFrame.RectTransform, Anchor.BottomCenter),

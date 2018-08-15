@@ -1250,25 +1250,29 @@ namespace Barotrauma
 
             if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
             {
-                if (character.SelectedItems[1] == item)
-                {
-                    transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
-                    itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
-                }
                 if (character.SelectedItems[0] == item)
                 {
+                    if (rightHand.IsSevered) return;
                     transformedHoldPos = rightHand.pullJoint.WorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
+                }
+                if (character.SelectedItems[1] == item)
+                {
+                    if (leftHand.IsSevered) return;
+                    transformedHoldPos = leftHand.pullJoint.WorldAnchorA - transformedHandlePos[1];
+                    itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
             }
             else
             {
                 if (character.SelectedItems[0] == item)
                 {
+                    if (rightHand.IsSevered) return;
                     rightHand.Disabled = true;
                 }
                 if (character.SelectedItems[1] == item)
                 {
+                    if (leftHand.IsSevered) return;
                     leftHand.Disabled = true;
                 }
 

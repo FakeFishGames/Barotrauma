@@ -303,6 +303,15 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
+
+                    //backwards compatibility (use text tags instead of the actual text)
+                    if (RecommendedCrewExperience == "Beginner")
+                        RecommendedCrewExperience = "CrewExperienceLow";
+                    else if (RecommendedCrewExperience == "Intermediate")
+                        RecommendedCrewExperience = "CrewExperienceMid";
+                    else if (RecommendedCrewExperience == "Experienced")
+                        RecommendedCrewExperience = "CrewExperienceHigh";
+                    
                     string[] contentPackageNames = doc.Root.GetAttributeStringArray("requiredcontentpackages", new string[0]);
                     foreach (string contentPackageName in contentPackageNames)
                     {

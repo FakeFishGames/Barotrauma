@@ -208,18 +208,18 @@ namespace Barotrauma
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1), upperPart.RectTransform, Anchor.TopRight));
 
             new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
-                $"{TextManager.Get("Dimensions")}: {dimensionsStr}", 
+                $"{TextManager.Get("Dimensions")}: {dimensionsStr}",
                 font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
-                $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}", 
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("RecommendedCrewSize")}: {(RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax)}",
                 font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
-                $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience)}", 
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("RecommendedCrewExperience")}: {(string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : TextManager.Get(RecommendedCrewExperience))}",
                 font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), 
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
                 $"{TextManager.Get("RequiredContentPackages")}: {string.Join(", ", RequiredContentPackages)}", 
                 font: GUI.SmallFont, wrap: true);
 

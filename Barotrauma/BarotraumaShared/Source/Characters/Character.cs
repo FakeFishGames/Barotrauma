@@ -140,6 +140,10 @@ namespace Barotrauma
         {
             get
             {
+                if (GameMain.Server != null && !GameMain.Server.AllowDisguises) return Name;
+#if CLIENT
+                if (GameMain.Client != null && !GameMain.Client.AllowDisguises) return Name;
+#endif
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
             }
         }
@@ -2132,7 +2136,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific();
 
-        public void Revive(bool isNetworkMessage)
+        public void Revive()
         {
             if (Removed)
             {
@@ -2160,6 +2164,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
+                limb.body.Enabled = true;
                 limb.IsSevered = false;
             }
 

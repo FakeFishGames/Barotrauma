@@ -62,7 +62,7 @@ namespace Barotrauma
         private GUIFrame playerFrame;
 
         private GUITickBox autoRestartBox;
-
+        
         private GUIDropDown shuttleList;
         private GUITickBox shuttleTickBox;
 
@@ -98,6 +98,12 @@ namespace Barotrauma
         {
             get { return serverMessage.Text; }
             set { serverMessage.Text = value; }
+        }
+
+        public GUIButton ShowLogButton
+        {
+            get;
+            private set;
         }
 
         public GUIListBox SubList
@@ -337,24 +343,24 @@ namespace Barotrauma
                 TextManager.Get("ServerSettingsButton"));
             clientHiddenElements.Add(settingsButton);
 
-            var showLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
+            ShowLogButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), topButtonContainer.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerLog"))
             {
                 OnClicked = (GUIButton button, object userData) =>
                 {
-                    if (GameMain.Server.ServerLog.LogFrame == null)
+                    if (GameMain.NetworkMember.ServerLog.LogFrame == null)
                     {
-                        GameMain.Server.ServerLog.CreateLogFrame();
+                        GameMain.NetworkMember.ServerLog.CreateLogFrame();
                     }
                     else
                     {
-                        GameMain.Server.ServerLog.LogFrame = null;
+                        GameMain.NetworkMember.ServerLog.LogFrame = null;
                         GUI.KeyboardDispatcher.Subscriber = null;
                     }
                     return true;
                 }
             };
-            clientHiddenElements.Add(showLogButton);
+            clientHiddenElements.Add(ShowLogButton);
 
             //submarine list ------------------------------------------------------------------
             
@@ -566,6 +572,10 @@ namespace Barotrauma
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = GameMain.Server != null);
             clientHiddenElements.ForEach(c => c.Visible = GameMain.Server != null);
+            
+            ShowLogButton.Visible =
+                GameMain.Server != null ||
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ServerLog));
 
             spectateButton.Visible = GameMain.Client != null && GameMain.Client.GameStarted;            
             if (GameMain.NetworkMember.CharacterInfo != null)
