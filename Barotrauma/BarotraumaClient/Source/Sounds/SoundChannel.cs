@@ -145,7 +145,11 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public bool FilledByNetwork;
+        public bool FilledByNetwork
+        {
+            get;
+            private set;
+        }
         
         private bool muffled;
         public bool Muffled
@@ -261,6 +265,7 @@ namespace Barotrauma.Sounds
             Sound = sound;
 
             IsStream = sound.Stream;
+            FilledByNetwork = sound.FilledByNetwork;
             streamSeekPos = 0; reachedEndSample = false;
             startedPlaying = true;
 
@@ -445,7 +450,6 @@ namespace Barotrauma.Sounds
                     int[] unqueuedBuffers = null;
                     if (!startedPlaying)
                     {
-                        emptyBuffers.Clear();
                         buffersToUnqueue = 0;
                         AL.GetSource(alSource, ALGetSourcei.BuffersProcessed, out buffersToUnqueue);
                         alError = AL.GetError();
@@ -480,7 +484,6 @@ namespace Barotrauma.Sounds
                     for (int i = 0; i < buffersToUnqueue; i++)
                     {
                         short[] buffer = streamShortBuffer;
-                        DebugConsole.NewMessage("Filling " + Sound.Filename, Color.Lime);
                         int readSamples = Sound.FillStreamBuffer(streamSeekPos, buffer);
                         if (!FilledByNetwork)
                         {
@@ -525,10 +528,6 @@ namespace Barotrauma.Sounds
                     {
                         AL.SourcePlay(alSource);
                     }
-                }
-                else
-                {
-                    DebugConsole.NewMessage("oof", Color.Yellow);
                 }
             }
         }
