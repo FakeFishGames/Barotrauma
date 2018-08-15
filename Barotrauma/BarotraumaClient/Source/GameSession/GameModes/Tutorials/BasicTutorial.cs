@@ -78,7 +78,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("The reactor requires fuel rods to generate power. You can grab one from the steel cabinet by walking next to it and pressing E.");
 
-            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Name != "Steel Cabinet")
+            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Prefab.Identifier != "steelcabinet")
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -182,7 +182,7 @@ namespace Barotrauma.Tutorials
             + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then use it on the terminal by left clicking.");
 
             while (Controlled.SelectedConstruction != steering.Item ||
-                Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
+                Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Prefab.Identifier == "screwdriver") == null)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -203,7 +203,7 @@ namespace Barotrauma.Tutorials
 
             while ((Controlled.SelectedConstruction != junctionBox.Item &&
                 Controlled.SelectedConstruction != steering.Item) ||
-            Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
+            Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Prefab.Identifier == "screwdriver") == null)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -393,7 +393,7 @@ namespace Barotrauma.Tutorials
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
                 if (!divingMaskSelected &&
-                    Controlled.FocusedItem != null && Controlled.FocusedItem.Name == "Diving Suit")
+                    Controlled.FocusedItem != null && Controlled.FocusedItem.Prefab.Identifier == "divingsuit")
                 {
                     infoBox = CreateInfoFrame("There can only be one item in each inventory slot, so you need to take off "
                         + "the jumpsuit if you wish to wear a diving suit.");
@@ -445,7 +445,7 @@ namespace Barotrauma.Tutorials
                 "time to head to the room below and load some shells for the railgun.");
 
 
-            var loader = Item.ItemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();
+            var loader = Item.ItemList.Find(i => i.Prefab.Identifier == "railgunloader").GetComponent<ItemContainer>();
 
             while (Math.Abs(Controlled.Position.Y - loader.Item.Position.Y) > 80)
             {
@@ -455,7 +455,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("Grab one of the shells. You can load it by selecting the railgun loader and dragging the shell to. "
                 + "one of the free slots. You need two hands to carry a shell, so make sure you don't have anything else in either hand.");
 
-            while (loader.Item.ContainedItems.FirstOrDefault(i => i != null && i.Name == "Railgun Shell") == null)
+            while (loader.Item.ContainedItems.FirstOrDefault(i => i != null && i.Prefab.Identifier == "railgunshell") == null)
             {
                 //TODO: reimplement
                 //moloch.Health = 50.0f;
@@ -467,7 +467,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
-            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Name != "Railgun Controller")
+            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Prefab.Identifier != "railguncontroller")
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -503,9 +503,9 @@ namespace Barotrauma.Tutorials
 
             do
             {
-                var weldingTool = Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
+                var weldingTool = Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == "weldingtool");
                 if (weldingTool != null &&
-                    weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Name == "Welding Fuel Tank") != null) break;
+                    weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Prefab.Identifier == "weldingfueltank") != null) break;
 
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             } while (true);

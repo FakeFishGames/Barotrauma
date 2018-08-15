@@ -63,10 +63,10 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Morphine" suitability="100"/>
-    <SuitableTreatment name="Fentanyl" suitability="80"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antidama1" suitability="100"/>
+    <SuitableTreatment identifier="antidama2" suitability="80"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="50"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"            
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -82,9 +82,9 @@
     limbspecific="true"
     maxstrength="100"
     damageoverlayalpha="1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="80"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"
@@ -101,9 +101,9 @@
     limbspecific="true"
     maxstrength="100"
     burnoverlayalpha="1">
-    <SuitableTreatment name="Fentanyl" suitability="100"/>
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antidama2" suitability="100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="1"/>
@@ -120,12 +120,12 @@
     indicatorlimb="Torso"
     activationthreshold="1"
     maxstrength="200">
-    <SuitableTreatment name="Erythrozine" suitability="100"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="50"/>
-    <SuitableTreatment name="Liquid Oxygenite" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="erythrozine" suitability="100"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="50"/>
+    <SuitableTreatment identifier="Liquid Oxygenite" suitability="50"/>
+    <SuitableTreatment identifier="antidama2" suitability="-100"/>
+    <SuitableTreatment identifier="antidama1" suitability="-100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"/>
@@ -142,10 +142,10 @@
     indicatorlimb="Torso"
     activationthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Plasma" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="10"/>
-    <SuitableTreatment name="Auxiliorizine" suitability="20"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="antibloodloss1" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="10"/>
+    <SuitableTreatment identifier="auxiliorizine" suitability="20"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="5" maxstrength="100" multiplybymaxvitality="true"
       minvitalitydecrease="0"
       maxvitalitydecrease="2"
@@ -197,8 +197,8 @@
     showiconthreshold="100"
     maxstrength="100"
     achievementonremoved="healhusk">
-    <SuitableTreatment name="Calyxanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="calyxanide" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       maxvitalitydecrease="0"
       strengthchange="0.3"/>
@@ -269,9 +269,9 @@
     indicatorlimb="Head"
     showiconthreshold="20"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="50"/>
-    <SuitableTreatment name="Fentanyl" suitability="50"/>    
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antidama1" suitability="50"/>
+    <SuitableTreatment identifier="antidama2" suitability="50"/>    
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <!-- Slow down the character and slightly decrease vitality -->
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
@@ -320,9 +320,9 @@
     indicatorlimb="Head"
     showiconthreshold="50"
     maxstrength="100">
-    <SuitableTreatment name="Morphine" suitability="-100"/>
-    <SuitableTreatment name="Fentanyl" suitability="-100"/>
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antidama1" suitability="-100"/>
+    <SuitableTreatment identifier="antidama2" suitability="-100"/>
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <!-- No effects except slight distortion at this level -->
     <Effect minstrength="0" maxstrength="50"
       strengthchange="-1"
@@ -357,7 +357,7 @@
     showiconthreshold="20"
     maxstrength="100"
     achievementonremoved="healopiateaddiction">
-    <SuitableTreatment name="Naloxone" suitability="100"/>
+    <SuitableTreatment identifier="antinarc" suitability="100"/>
     <Effect minstrength="0" maxstrength="20" strengthchange="-0.05"/>
     
     <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
@@ -393,9 +393,9 @@
     maxstrength="100"
     damageoverlayalpha="1"
     strengthchange="-0.1">
-    <SuitableTreatment name="Bandage" suitability="100"/>
-    <SuitableTreatment name="Hemostop" suitability="80"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="bandage" suitability="100"/>
+    <SuitableTreatment identifier="antibleeding1" suitability="80"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <Effect minstrength="0" maxstrength="100"
       minvitalitydecrease="0"
       maxvitalitydecrease="10"/>
@@ -403,7 +403,7 @@
   </AfflictionBleeding>
 
   <Affliction
-    name="Morbusine poisoning"
+    name="morbusine poisoning"
     description="Acute morbusine poisoning quickly leads to respiratory failure if left untreated."
     type="poison"
     causeofdeathdescription="Died of morbusine poisoning."
@@ -412,8 +412,8 @@
     indicatorlimb="Torso"
     showiconthreshold="5"
     maxstrength="100">
-    <SuitableTreatment name="Morbusanide" suitability="100"/>
-    <SuitableTreatment name="Morbusine" suitability="-100"/>
+    <SuitableTreatment identifier="morbusanide" suitability="100"/>
+    <SuitableTreatment identifier="morbusine" suitability="-100"/>
     <!-- Slow down the character and decrease vitality -->
     <!-- Becomes lethal in ~50 seconds -->
     <Effect minstrength="0" maxstrength="100"

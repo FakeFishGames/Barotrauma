@@ -243,13 +243,18 @@ namespace Barotrauma
                         effects.Add(new Effect(subElement));
                         break;
                     case "suitabletreatment":
-                        string treatmentName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                        if (treatmentSuitability.ContainsKey(treatmentName))
+                        if (subElement.Attribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentName + "\" defined multiple times");
+                            DebugConsole.ThrowError("Error in Affliction prefab \"" + Name + "\" - suitable treatments should be defined using item identifiers, not item names.");
+                        }
+
+                        string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
+                        if (treatmentSuitability.ContainsKey(treatmentIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in affliction \"" + Name + "\" - treatment \"" + treatmentIdentifier + "\" defined multiple times");
                             continue;
                         }
-                        treatmentSuitability.Add(treatmentName, subElement.GetAttributeFloat("suitability", 0.0f));
+                        treatmentSuitability.Add(treatmentIdentifier, subElement.GetAttributeFloat("suitability", 0.0f));
                         break;
                 }
             }
@@ -319,8 +324,11 @@ namespace Barotrauma
 
         public float GetTreatmentSuitability(Item item)
         {
-            if (item == null || !treatmentSuitability.ContainsKey(item.Name.ToLowerInvariant())) return 0.0f;
-            return treatmentSuitability[item.Name.ToLowerInvariant()];
+            if (item == null || !treatmentSuitability.ContainsKey(item.Prefab.Identifier.ToLowerInvariant()))
+            {
+                return 0.0f;
+            }
+            return treatmentSuitability[item.Prefab.Identifier.ToLowerInvariant()];
         }
     }
 }
