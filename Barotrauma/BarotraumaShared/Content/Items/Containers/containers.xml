@@ -8,7 +8,7 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
   
@@ -21,8 +21,8 @@
     <Sprite texture="FF_Locker3.png" depth="0.84" sourcerect="0,0,148,160"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
-      <Containable name="smallitem"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 
@@ -33,9 +33,8 @@
 
     <Sprite texture="Content/Items/Weapons/railgunetc2.png" depth="0.84" sourcerect="57,97,72,110"/>
 
-    <ItemContainer  hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Railgun Shell"/>
-      <Containable name="Nuclear Shell"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="3" slotsperrow="3" itempos="17,-49.5" iteminterval="19,0" itemrotation="90" canbeselected = "true">
+      <Containable identifiers="railgunshell,nuclearshell"/>
     </ItemContainer>
   </Item>
 
@@ -49,9 +48,7 @@
     <Sprite texture="FF_MedicalCabinette.png" depth="0.84" sourcerect="0,0,138,188" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="smallitem,chem,medical"/>
     </ItemContainer>
   </Item>
   
@@ -65,9 +62,7 @@
     <Sprite texture="FF_poisonCabinette.png" depth="0.84" sourcerect="0,0,159,190" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="smallitem,chem,medical"/>
     </ItemContainer>
   </Item>
    
@@ -78,8 +73,8 @@
 
     <Sprite texture="containers.png" depth="0.84" sourcerect="48,0,54,169"/>
 
-    <ItemContainer  hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
-      <Containable name="Diving Suit"/>
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="27,-90" iteminterval="0,0" itemrotation="0" canbeselected = "true">
+      <Containable identifiers="divingsuit"/>
     </ItemContainer>
   </Item>
 
@@ -102,7 +97,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem,Spear"/>
+      <Containable identifiers="smallitem,spear"/>
     </ItemContainer>
   </Item>
 
@@ -125,8 +120,8 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
-      <Containable name="smallitem,Spear"/>
+      <RequiredItem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS"/>
+      <Containable identifiers="smallitem,spear"/>
     </ItemContainer>
   </Item>
   
@@ -148,7 +143,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 
@@ -170,7 +165,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 
@@ -180,10 +175,10 @@
     linkable="true"
     pickdistance="75">
 
-    <Sprite texture ="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
+    <Sprite texture="containers.png" depth="0.84" sourcerect="4,2,40,102" canflipx="false"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected = "true">
-      <Containable name="Fire Extinguisher"/>
+      <Containable identifiers="extinguisher"/>
     </ItemContainer>
   </Item>
   
@@ -196,7 +191,7 @@
     <Sprite texture="containers.png" depth="0.54" sourcerect="4,110,38,38" canflipx="false"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="25,-13" iteminterval="0,0" itemrotation="-90" canbeselected = "true">
-      <Containable name="Fire Extinguisher"/>
+      <Containable identifiers="extinguisher"/>
     </ItemContainer>
   </Item>
 

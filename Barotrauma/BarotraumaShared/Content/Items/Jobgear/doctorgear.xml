@@ -47,8 +47,7 @@
     </Wearable>
 
     <ItemContainer capacity="3">
-      <Containable name="chem"/>
-      <Containable name="medical"/>
+      <Containable identifiers="chem,medical"/>
     </ItemContainer>
   </Item>
 </Items>

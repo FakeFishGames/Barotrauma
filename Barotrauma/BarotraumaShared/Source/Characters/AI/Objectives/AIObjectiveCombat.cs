@@ -76,7 +76,7 @@ namespace Barotrauma
                         if (containedItem == null)
                         {
                             //TODO: fix, requiredItem can use item names while AIObjectiveContainItem requires identifiers or tags
-                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Names, weapon.GetComponent<ItemContainer>());
+                            var newReloadWeaponObjective = new AIObjectiveContainItem(character, requiredItem.Identifiers, weapon.GetComponent<ItemContainer>());
                             if (!newReloadWeaponObjective.IsDuplicate(reloadWeaponObjective))
                             {
                                 reloadWeaponObjective = newReloadWeaponObjective;

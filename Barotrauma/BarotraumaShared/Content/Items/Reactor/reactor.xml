@@ -56,14 +56,12 @@
     </ConnectionPanel>
 
     <ItemContainer capacity="4" canbeselected="true" hudpos="0.5,0.15" slotsperrow="2" uilabel="Fuel Rods">
-      <Containable name="Fuel Rod">
+      <Containable identifiers="fuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="80.0" disabledeltatime="true"/>
       </Containable>
-      <Containable name="Incendium Fuel Rod">
+      <Containable identifiers="incendiumfuelrod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true"/>
       </Containable>
-      <Containable name="Heat Absorber"/>
-      <Containable name="Temperature Control Circuit"/>  
     </ItemContainer>
   </Item>
 

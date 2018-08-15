@@ -218,8 +218,8 @@
     </Projectile>
 
     <ItemContainer capacity="1" hideitems="false" itempos="9,-15">
-      <Containable name="Oxygenite Shard"/>
-      <Containable name="Sulphurite Shard"/>
+      <Containable identifiers="oxygeniteshard"/>
+      <Containable identifiers="sulphuriteshard"/>
     </ItemContainer>
   </Item>
 
@@ -291,11 +291,11 @@
     <Sprite texture="artifactholder.png" depth="0.8" sourcerect="0,0,256,256"/>
 
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128">
-      <Containable name="Alien"/>
-      <Containable name="Thermal Artifact">
+      <Containable identifiers="alien"/>
+      <Containable identifiers="thermalartifact">
         <StatusEffect type="OnContaining" target="This" Charge="1000.0"/>        
       </Containable>
-      <Containable name="Faraday Artifact">
+      <Containable identifiers="faradayartifact">
         <StatusEffect type="OnContaining" target="This" Charge="10.0"/>
       </Containable>
     </ItemContainer>

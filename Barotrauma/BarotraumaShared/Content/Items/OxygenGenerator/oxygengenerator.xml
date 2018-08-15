@@ -31,8 +31,7 @@
     <trigger/>
 
     <ItemContainer capacity="5" canbeselected = "true" msg="Insert oxygen tank to refill it">
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Oxygenite Tank"/>
+      <Containable identifiers="oxygentank,oxygenitetank"/>
     </ItemContainer>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">

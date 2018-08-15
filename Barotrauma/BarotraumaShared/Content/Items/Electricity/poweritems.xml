@@ -68,7 +68,7 @@
     </ConnectionPanel>
 
     <ItemContainer capacity="3" canbeselected="true" hideitems="true" hudpos="0.5, 0.6">
-      <Containable name="loadable"/>      
+      <Containable identifiers="loadable"/>      
     </ItemContainer>
   </Item>
 
@@ -175,7 +175,7 @@
     </ConnectionPanel>
 
     <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="9,9" iteminterval="14,0" itemrotation="90">
-      <Containable name="loadable"/>
+      <Containable identifiers="loadable"/>
     </ItemContainer>
   </Item>
 </Items>

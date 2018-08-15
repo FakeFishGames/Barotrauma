@@ -30,8 +30,7 @@
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="30,-55" iteminterval="26,0" itemrotation="-90" canbeselected = "true">
-      <Containable name="Depth Charge Shell"/>
-      <Containable name="Nuclear Depth Charge"/>      
+      <Containable identifiers="depthchargeshell,nucleardepthcharge"/>      
     </ItemContainer>
   </Item>
 
@@ -62,8 +61,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
 
@@ -103,8 +101,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
-      <Containable name="explosive"/>
+      <Containable identifiers="smallitem,explosive"/>
     </ItemContainer>
   </Item>
   

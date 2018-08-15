@@ -21,8 +21,7 @@
     </WifiComponent>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-      <Containable name="Fulgurium Battery Cell"/>
+      <Containable identifiers="batterycell,fulguriumbatterycell"/>
     </ItemContainer>
 
     <Wearable limbtype="Head" slots="Any,Headset">

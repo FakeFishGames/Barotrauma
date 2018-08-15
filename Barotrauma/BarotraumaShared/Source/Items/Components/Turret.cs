@@ -355,7 +355,7 @@ namespace Barotrauma.Items.Components
 
                 if (container == null || container.ContainableItems.Count == 0) return true;
 
-                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
+                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container);
                 character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
                 containShellObjective.MinContainedAmount = projectileCount + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;

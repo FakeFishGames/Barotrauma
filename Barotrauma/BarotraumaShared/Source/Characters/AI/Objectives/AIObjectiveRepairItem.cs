@@ -60,7 +60,7 @@ namespace Barotrauma
                     if (!character.Inventory.Items.Any(it => it != null && requiredItem.MatchesItem(it)))
                     {
                         //TODO: fix, requiredItem can use item names while AIObjectiveGetItem requires identifiers or tags
-                        AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Names));
+                        AddSubObjective(new AIObjectiveGetItem(character, requiredItem.Identifiers));
                         return;
                     }
                 }

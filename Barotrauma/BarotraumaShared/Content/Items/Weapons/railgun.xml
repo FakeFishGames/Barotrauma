@@ -103,10 +103,8 @@
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Railgun Shell"/>
-      <Containable name="Nuclear Shell"/>
-      <Containable name="Ancient Weapon"/>
-    </ItemContainer>      
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
+    </ItemContainer>
   </Item>
 
   <Item
@@ -118,9 +116,7 @@
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="131,2,46,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="23,-76" iteminterval="0,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Railgun Shell"/>
-      <Containable name="Nuclear Shell"/>
-      <Containable name="Ancient Weapon"/>
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>
   
@@ -133,9 +129,7 @@
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,2,128,46"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="49.5,-22.7" iteminterval="0,0" itemrotation="0" canbeselected = "true">
-      <Containable name="Railgun Shell"/>
-      <Containable name="Nuclear Shell"/>
-      <Containable name="Ancient Weapon"/>
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>
   
@@ -148,9 +142,7 @@
     <Sprite texture ="railgunetc2.png" depth="0.8" sourcerect="1,50,128,46"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="76,-22.7" iteminterval="0,0" itemrotation="180" canbeselected = "true">
-      <Containable name="Railgun Shell"/>
-      <Containable name="Nuclear Shell"/>
-      <Containable name="Ancient Weapon"/>
+      <Containable identifiers="railgunshell,nuclearshell,ancientweapon"/>
     </ItemContainer>      
   </Item>
   
@@ -191,7 +183,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>    
   </Item>
 
@@ -240,7 +232,7 @@
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item> 
   

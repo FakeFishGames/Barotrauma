@@ -30,14 +30,14 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="chem"/>
+      <Containable identifiers="chem"/>
     </ItemContainer>
 
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack bleedingdamage="1" structuredamage="1" stun="0.1" targetforce="5"/>
       <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-50.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
-        <RequiredItem name="chem" type="Contained"/>
+        <RequiredItem identifiers="chem" type="Contained"/>
         <Use/>
       </StatusEffect>
     </Projectile>

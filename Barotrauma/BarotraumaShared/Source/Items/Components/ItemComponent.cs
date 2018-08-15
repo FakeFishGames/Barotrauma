@@ -588,7 +588,7 @@ namespace Barotrauma.Items.Components
                         
                         if (newRequiredItem == null) continue;
 
-                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedNames == newRequiredItem.JoinedNames);
+                        var prevRequiredItem = prevRequiredItems.Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers);
                         if (prevRequiredItem!=null)
                         {
                             newRequiredItem.statusEffects = prevRequiredItem.statusEffects;

@@ -2,7 +2,7 @@
 <Items>
   <Item
     name="Oxygen Tank"    
-    identifier="oxytank"
+    identifier="oxygentank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
     cargocontainername="Metal Crate">
@@ -99,10 +99,7 @@
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
-      <Containable name="Oxygenite Tank"/>
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank"/>
     </ItemContainer>  
   </Item>
 
@@ -183,9 +180,7 @@
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Oxygen Tank"/>
-      <Containable name="Welding Fuel Tank"/>
-      <Containable name="Oxygenite Shard"/>
+      <Containable identifiers="oxygentank,weldingfueltank,oxygeniteshard,oxygenitetank"/>
       <StatusEffect type="OnWearing" target="Contained">
         <RequiredItem type="Contained" name="oxygensource"/>
         <Conditional condition="lt 5.0"/>
@@ -230,8 +225,7 @@
     </Propulsion>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-      <Containable name="Fulgurium Battery Cell"/>
+      <Containable identifiers="batterycell,fulguriumbatterycell"/>
     </ItemContainer>
   </Item>
 </Items>

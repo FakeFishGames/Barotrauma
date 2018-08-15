@@ -52,10 +52,10 @@
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
-      <Containable name="Coilgun Ammunition Box"/>
+      <Containable identifiers="coilgunammobox"/>
       <!-- when the coilgun is fired, it triggers this statuseffect, causing contained ammunition boxes to spawn new ammo -->
       <StatusEffect type="OnUse" target="Contained">
-        <RequiredItem name="Coilgun Ammunition Box" type="Contained"/>
+        <RequiredItem identifiers="coilgunammobox" type="Contained"/>
         <Use/>        
       </StatusEffect>
     </ItemContainer>
@@ -77,9 +77,9 @@
       of the item, and when the condition is 0, the box is considered empty. -->      
       <!--  -0.5 per usage = 200 shots per box -->
       <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
-        <SpawnItem name="Coilgun Bolt" spawnposition="ThisInventory"/>
+        <SpawnItem name="coilgunbolt" spawnposition="ThisInventory"/>
       </StatusEffect>
-      <Containable name="Coilgun Bolt"/>
+      <Containable identifiers="coilgunbolt"/>
     </ItemContainer>
   </Item>
 

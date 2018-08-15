@@ -73,7 +73,7 @@
       <BackSprite texture="Content/UI/inventoryAtlas.png" sourcerect="475,492,183,450" origin="0.0,0.0"/>
       <TopSprite texture="Content/UI/inventoryAtlas.png" sourcerect="181,790,252,111" origin="0.5,0.71"/>
       <BottomSprite texture="Content/UI/inventoryAtlas.png" sourcerect="182,908,245,107" origin="0.5,0.0"/>
-      <Containable name="smallitem"/>
+      <Containable identifiers="smallitem"/>
     </ItemContainer>
   </Item>
 </Items>

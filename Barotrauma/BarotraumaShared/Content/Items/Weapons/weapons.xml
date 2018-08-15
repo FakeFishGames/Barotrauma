@@ -62,7 +62,7 @@
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
-      <Containable name="Spear"/>
+      <Containable identifiers="spear"/>
     </ItemContainer>
   </Item>
 
@@ -98,7 +98,7 @@
     </RangedWeapon>
 
     <ItemContainer capacity="1" itempos="0,10" hideitems="false">
-      <Containable name="Medical Syringe"/>
+      <Containable identifiers="medicalsyringe"/>
     </ItemContainer>
   </Item>
 
@@ -160,7 +160,7 @@
     </RangedWeapon>
 
     <ItemContainer capacity="6" hideitems="true">
-      <Containable name="Revolver Round"/>
+      <Containable identifiers="revolverround"/>
     </ItemContainer>
   </Item>
 
@@ -282,8 +282,7 @@
     </MeleeWeapon>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell"/>
-      <Containable name="Fulgurium Battery Cell"/>      
+      <Containable identifiers="batterycell,fulguriumcatterycell"/>      
     </ItemContainer>
   </Item>
 
