@@ -106,12 +106,12 @@ namespace Barotrauma
 
             bool horizontal = HUDLayoutSettings.HealthBarAreaLeft.Width > HUDLayoutSettings.HealthBarAreaLeft.Height;
             healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBarHorizontal" : "GUIProgressBarVertical")
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
                 IsHorizontal = horizontal
             };
             healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBarHorizontal" : "GUIProgressBarVertical")
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
                 IsHorizontal = horizontal
             };
@@ -217,7 +217,10 @@ namespace Barotrauma
 
             if (alignment == Alignment.Left)
             {
-                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaLeft.Location;
+                healthBar.RectTransform.SetPosition(Anchor.BottomLeft);
+                healthBarShadow.RectTransform.SetPosition(Anchor.BottomLeft);
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = 
+                    new Point(HUDLayoutSettings.HealthBarAreaLeft.X, GameMain.GraphicsHeight - HUDLayoutSettings.HealthBarAreaLeft.Bottom);
                 healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaLeft.Size;
                 healthWindow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthWindowAreaLeft.Location;
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaLeft.Width / 2, HUDLayoutSettings.HealthWindowAreaLeft.Height);
@@ -238,7 +241,10 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarAreaRight.Location;
+                healthBar.RectTransform.SetPosition(Anchor.BottomRight);
+                healthBarShadow.RectTransform.SetPosition(Anchor.BottomRight);
+                healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset =
+                    new Point(GameMain.GraphicsWidth - HUDLayoutSettings.HealthBarAreaLeft.Right, GameMain.GraphicsHeight - HUDLayoutSettings.HealthBarAreaLeft.Bottom);
                 healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarAreaRight.Size;
                 healthWindow.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.HealthWindowAreaRight.Center.X, HUDLayoutSettings.HealthWindowAreaRight.Location.Y);
                 healthWindow.RectTransform.NonScaledSize = new Point(HUDLayoutSettings.HealthWindowAreaRight.Width / 2, HUDLayoutSettings.HealthWindowAreaRight.Height);
@@ -390,7 +396,7 @@ namespace Barotrauma
                     //0-1
                     float pulsateAmount = (float)(Math.Sin(healthBarPulsatePhase) + 1.0f) / 2.0f;
 
-                    healthBar.RectTransform.LocalScale = healthBarShadow.RectTransform.LocalScale = new Vector2(1.0f + pulsateAmount * Math.Min(healthBarPulsateTimer, 0.5f), 1.0f);
+                    healthBar.RectTransform.LocalScale = healthBarShadow.RectTransform.LocalScale = Vector2.One * (1.0f + pulsateAmount * healthBarPulsateTimer * 0.25f);
                     healthBarPulsatePhase += deltaTime * 5.0f;
                     healthBarPulsateTimer -= deltaTime;
                 }
@@ -463,7 +469,7 @@ namespace Barotrauma
                 healthWindowHealthBarShadow.AddToGUIUpdateList();
                 healthWindowHealthBar.AddToGUIUpdateList();
             }
-            else
+            else if (Character.Controlled == character)
             {
                 healthBarShadow.AddToGUIUpdateList();
                 healthBar.AddToGUIUpdateList();

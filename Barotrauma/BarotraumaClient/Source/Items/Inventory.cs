@@ -30,6 +30,8 @@ namespace Barotrauma
         public Sprite SlotSprite;
 
         public Keys QuickUseKey;
+
+        public int SubInventoryDir = -1;
         
         public bool IsHighlighted
         {
@@ -44,7 +46,7 @@ namespace Barotrauma
         {
             get
             {
-                int buttonDir = Math.Sign(GameMain.GraphicsHeight / 2 - Rect.Center.Y);
+                int buttonDir = Math.Sign(SubInventoryDir);
 
                 Vector2 equipIndicatorPos = new Vector2(
                     Rect.Center.X - Inventory.EquipIndicator.size.X / 2 * Inventory.UIScale,
@@ -305,7 +307,7 @@ namespace Barotrauma
 
             int itemCapacity = subInventory.Items.Length;
             var slot = slots[slotIndex];
-            int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 2);
+            int dir = slot.SubInventoryDir;
             if (itemCapacity == 1 && false)
             {
                 Point slotSize = (slotSpriteRound.size * UIScale).ToPoint();
@@ -331,7 +333,7 @@ namespace Barotrauma
 
                 int startX = slot.Rect.Center.X - (int)(subRect.Width * (columns / 2.0f) + spacing * ((columns - 1) / 2.0f));
                 subRect.X = startX;
-                int startY = dir > 0 ? 
+                int startY = dir < 0 ? 
                     slot.EquipButtonRect.Y - subRect.Height - (int)(20 * UIScale) : 
                     slot.EquipButtonRect.Bottom + (int)(10 * UIScale);
                 subRect.Y = startY;
@@ -342,10 +344,10 @@ namespace Barotrauma
                 for (int i = 0; i < itemCapacity; i++)
                 { 
                     subInventory.slots[i].Rect = subRect;
-                    subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * dir);
+                    subInventory.slots[i].Rect.Location += new Point(0, (int)totalHeight * -dir);
 
                     subInventory.slots[i].DrawOffset = Vector2.Lerp(subInventory.slots[i].DrawOffset, 
-                        subInventory.HideTimer >= 0.5f ? new Vector2(0, -totalHeight * dir) : new Vector2(0, 50 * dir), 
+                        subInventory.HideTimer >= 0.5f ? new Vector2(0, totalHeight * dir) : new Vector2(0, -50 * dir), 
                         deltaTime * 10.0f);
 
                     subInventory.slots[i].InteractRect = subInventory.slots[i].Rect;
@@ -354,8 +356,8 @@ namespace Barotrauma
                     if ((i + 1) % columns == 0)
                     {
                         subRect.X = startX;
-                        subRect.Y -= subRect.Height * dir;
-                        subRect.Y -= spacing * dir;
+                        subRect.Y += subRect.Height * dir;
+                        subRect.Y += spacing * dir;
                     }
                     else
                     {
@@ -461,9 +463,7 @@ namespace Barotrauma
                 topLeft.Y -= (int)container.InventoryTopSprite.Origin.Y;
             }*/
 
-            int dir = Math.Sign(GameMain.GraphicsHeight * 0.5f - slots[slotIndex].Rect.Center.Y);
-
-            if (dir > 0)
+            if (slots[slotIndex].SubInventoryDir > 0)
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(
                     new Point(0, slots[slotIndex].Rect.Bottom),
@@ -652,9 +652,9 @@ namespace Barotrauma
                             (itemContainer.Inventory.Items[0] == null ? 0.0f : itemContainer.Inventory.Items[0].Condition / 100.0f) :
                             itemContainer.Inventory.Items.Count(i => i != null) / (float)itemContainer.Inventory.capacity;
 
-                        int dir = Math.Sign(slot.Rect.Y - GameMain.GraphicsHeight / 3);
+                        int dir = slot.SubInventoryDir;
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,
-                            dir > 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
+                            dir < 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
                         containedIndicatorArea.Inflate(-4, 0);
                         
                         if (itemContainer.ContainedStateIndicator == null)

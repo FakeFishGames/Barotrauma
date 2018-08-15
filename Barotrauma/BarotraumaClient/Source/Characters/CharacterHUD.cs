@@ -69,7 +69,7 @@ namespace Barotrauma
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.CanInventoryBeAccessed && CharacterHealth.OpenHealthWindow == null)
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime);
                     }
