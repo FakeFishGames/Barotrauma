@@ -25,46 +25,35 @@ namespace Barotrauma.Items.Components
 
         public FabricableItem(XElement element)
         {
-            string name = element.GetAttributeString("name", "");
-
-            TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
-            
-            if (TargetItem == null)
+            if (element.Attribute("name") != null)
             {
-                DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
-                return;
+                string name = element.Attribute("name").Value;
+                DebugConsole.ThrowError("Error in fabricable item config (" + name + ") - use item identifiers instead of names");
+                TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
+                    return;
+                }
+            }
+            else
+            {
+                string identifier = element.GetAttributeString("identifier", "");
+                TargetItem = MapEntityPrefab.Find(null, identifier) as ItemPrefab;
+                if (TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + identifier + "\" not found.");
+                    return;
+                }
             }
 
-            DisplayName = element.GetAttributeString("displayname", name);
+            string displayName = element.GetAttributeString("displayname", "");
+            DisplayName = string.IsNullOrEmpty(displayName) ? TargetItem.Name : TextManager.Get(displayName);
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             RequiredItems = new List<Tuple<ItemPrefab, int, float, bool>>();
-            //Backwards compatibility for string lists
-            string[] requiredItemNames = element.GetAttributeString("requireditems", "").Split(',');
-            foreach (string requiredItemName in requiredItemNames)
-            {
-                if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
-
-                ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
-                if (requiredItem == null)
-                {
-                    DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
-                    continue;
-                }
-
-                var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
-                if (existing == null)
-                {
-                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, 1, 1.0f, false));
-                }
-                else
-                {
-                    RequiredItems.Remove(existing);
-                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + 1, 1.0f, false));
-                }
-            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -75,19 +64,25 @@ namespace Barotrauma.Items.Components
                             subElement.GetAttributeString("name", ""), 
                             subElement.GetAttributeInt("level", 0)));
                         break;
-                    case "item": //New system allowing for setting minimal item condition
-                        string requiredItemName = subElement.GetAttributeString("name", "");
+                    case "item":
+                    case "requireditem":
+                        string requiredItemIdentifier = subElement.GetAttributeString("identifier", "");
+                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier))
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! One of the required items has no identifier.");
+                            continue;
+                        }
+
                         float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
 
-                        if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
 
-                        ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
+                        ItemPrefab requiredItem = MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) as ItemPrefab;
                         if (requiredItem == null)
                         {
-                            DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
                             continue;
                         }
 

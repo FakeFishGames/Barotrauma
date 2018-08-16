@@ -9,14 +9,14 @@ namespace Barotrauma
 {
     struct DeconstructItem
     {
-        public readonly string ItemPrefabName;
+        public readonly string ItemIdentifier;
         public readonly float MinCondition;
         public readonly float MaxCondition;
         public readonly float OutCondition;
 
-        public DeconstructItem(string itemPrefabName, float minCondition, float maxCondition, float outCondition)
+        public DeconstructItem(string itemIdentifier, float minCondition, float maxCondition, float outCondition)
         {
-            ItemPrefabName = itemPrefabName;
+            ItemIdentifier = itemIdentifier;
             MinCondition = minCondition;
             MaxCondition = maxCondition;
             OutCondition = outCondition;
@@ -396,7 +396,13 @@ namespace Barotrauma
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
-                            string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
+                            if (deconstructItem.Attribute("name") != null)
+                            {
+                                DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
+                                continue;
+                            }
+
+                            string deconstructItemIdentifier = deconstructItem.GetAttributeString("identifier", "notfound");
                             //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
                             float minCondition = deconstructItem.GetAttributeFloat("mincondition", -0.1f);
                             //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
@@ -404,8 +410,7 @@ namespace Barotrauma
                             //Condition of item on creation
                             float outCondition = deconstructItem.GetAttributeFloat("outcondition", 1.0f);
 
-                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, minCondition, maxCondition, outCondition));
-
+                            DeconstructItems.Add(new DeconstructItem(deconstructItemIdentifier, minCondition, maxCondition, outCondition));
                         }
 
                         break;
