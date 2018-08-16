@@ -2293,9 +2293,9 @@ namespace Barotrauma.Networking
             int count = message.ReadByte();
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
-                string jobName = message.ReadString();
+                string jobIdentifier = message.ReadString();
 
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier == jobIdentifier);
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 

@@ -9,7 +9,7 @@
   <PersonalityTrait name="Fearful" alloweddialogtags="fearful,none" commonness="0.5"/>
   <PersonalityTrait name="Crazy" alloweddialogtags="crazy,none" commonness="0.5"/>
   
-  <Conversation line="Alright folks, let's take her out for a spin!" flags="Initial" allowedjobs="Captain" speaker="0">
+  <Conversation line="Alright folks, let's take her out for a spin!" flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line=""/>
     <Conversation line="Aye aye." speaker="1">
       <Conversation line="Aye, sir!" speaker="2"/>
@@ -17,7 +17,7 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="They that go down to the sea in ships;" flags="Initial" allowedjobs="Captain" speaker="0">
+  <Conversation line="They that go down to the sea in ships;" flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line="That do business in great waters;">
       <Conversation line="These see the works of the Lord, and His wonders in the deep.">
         <Conversation line="Off we go! Good luck, crew!"/>
@@ -26,32 +26,32 @@
     </Conversation>
   </Conversation>
 
-  <Conversation line="Buckle down, we've got a long road ahead of us!" flags="Initial" allowedjobs="Captain" speaker="0">
+  <Conversation line="Buckle down, we've got a long road ahead of us!" flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
   </Conversation>
 
-  <Conversation line="Welcome on board! Please keep your hands and arms inside the vehicle at all times." flags="Initial" speakertags="joker" allowedjobs="Captain" speaker="0">
+  <Conversation line="Welcome on board! Please keep your hands and arms inside the vehicle at all times." flags="Initial" speakertags="joker" allowedjobs="captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
   </Conversation>
 
-  <Conversation line="Ready crew, we got long way to go!" flags="Initial" speakertags="brokenenglish" allowedjobs="Captain" speaker="0">
+  <Conversation line="Ready crew, we got long way to go!" flags="Initial" speakertags="brokenenglish" allowedjobs="captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye!" speaker="1"/>
     <Conversation line="Honkmother have mercy on our souls." speakertags="crazy" speaker="1"/>
   </Conversation>
 
-  <Conversation line="Is captain speaking! Ready for mission crew and good luck!" flags="Initial" speakertags="brokenenglish" allowedjobs="Captain" speaker="0">
+  <Conversation line="Is captain speaking! Ready for mission crew and good luck!" flags="Initial" speakertags="brokenenglish" allowedjobs="captain" speaker="0">
     <Conversation line="Aye, sir!" speaker="1"/>
     <Conversation line="Aye aye." speaker="1">
       <Conversation line="Aye, sir!" speaker="2"/>
     </Conversation>
   </Conversation>
   
-  <Conversation line="Let's see what the Ocean has in store for us this time!" flags="Initial" allowedjobs="Captain" speaker="0"/>
+  <Conversation line="Let's see what the Ocean has in store for us this time!" flags="Initial" allowedjobs="captain" speaker="0"/>
   
-  <Conversation line="Everyone ready? You better be, ain't no turning back anymore." flags="Initial" allowedjobs="Captain" speaker="0">
+  <Conversation line="Everyone ready? You better be, ain't no turning back anymore." flags="Initial" allowedjobs="captain" speaker="0">
     <Conversation line=""/>
     <Conversation line="Aye, sir!." speaker="1">
       <Conversation line="Let's do this!" speaker="2"/>
@@ -82,7 +82,7 @@
     <Conversation line="Cadmus fish piss. I like it stronger." speakertags="brokenenglish" speaker="1"/>
   </Conversation>
   
-  <Conversation line="Back in the Earth Navy they had this saying..." maxintensity="0.3" allowedjobs="Captain" speakertags="professional,tough" speaker="0">
+  <Conversation line="Back in the Earth Navy they had this saying..." maxintensity="0.3" allowedjobs="captain" speakertags="professional,tough" speaker="0">
     <Conversation line="There are two ways to do things; the right way, and again." speaker="0">
       <Conversation line="That don't apply here. No second chances on Europa." speaker="0">
         <Conversation line="So everyone, focus on the task at hand." speaker="0"/>
@@ -90,14 +90,14 @@
     </Conversation>
   </Conversation>
   
-  <Conversation line="I'm Popeye the sailor man!" maxintensity="0.2" allowedjobs="Medical Doctor" speakertags="laid-back,joker" speaker="0">
+  <Conversation line="I'm Popeye the sailor man!" maxintensity="0.2" allowedjobs="medicaldoctor" speakertags="laid-back,joker" speaker="0">
     <Conversation line="I'm strong to the finich, cause I eats me spinach!" speaker="0">
       <Conversation line="Doc, have you been at the ethanol stash again?" speaker="1">
         <Conversation line="Okay, I'll stop." speaker="0"/>
         <Conversation line="Sorry for trying to lighten the mood." speaker="0"/>
       </Conversation>
     </Conversation>
-    <Conversation line="No singing on my boat." allowedjobs="Captain" speakertags="professional,tough" speaker="1"/>
+    <Conversation line="No singing on my boat." allowedjobs="captain" speakertags="professional,tough" speaker="1"/>
   </Conversation>
   
   <Conversation line="I miss the sun." maxintensity="0.2" speaker="0">
@@ -113,13 +113,13 @@
   <Conversation line="Husks creep me out." maxintensity="0.2" speakertags="fearful" speaker="0">
     <Conversation line="" flags="Casual"/>
     <Conversation line="Me too. Promise to put a spear through my head if I ever get infected." speaker="1">
-      <Conversation line="I'd rather give you a shot of calyxanide." allowedjobs="Medical Doctor" speaker="2"/>
-      <Conversation line="I would've gone with calyxanide, but a spear will do too." allowedjobs="Medical Doctor" speakertags="rude" speaker="2"/>
+      <Conversation line="I'd rather give you a shot of calyxanide." allowedjobs="medicaldoctor" speaker="2"/>
+      <Conversation line="I would've gone with calyxanide, but a spear will do too." allowedjobs="medicaldoctor" speakertags="rude" speaker="2"/>
     </Conversation>
   </Conversation>
   
   <Conversation line="Has any of you heard of labor unions?" maxintensity="0.2" speaker="0">
-    <Conversation line="That's communist talk. The Coalition is the only union we need." allowedjobs="Captain" speakertags="professional,tough,rude" speaker="1"/>
+    <Conversation line="That's communist talk. The Coalition is the only union we need." allowedjobs="captain" speakertags="professional,tough,rude" speaker="1"/>
     <Conversation line="Yes, what about it?" speaker="1">
       <Conversation line="I think we should establish one." speaker="0">
         <Conversation line="We could use some better safety standards, proper wages, retirement benefits..." speaker="0">
@@ -149,7 +149,7 @@
     <Conversation line="Take her where the fishes sleep!">
       <Conversation line="Damn the depth, damn the pressure...">
         <Conversation line="Take her down just like the Thresher!">
-          <Conversation line="No singing on my boat." allowedjobs="Captain" speakertags="professional,tough" speaker="1">
+          <Conversation line="No singing on my boat." allowedjobs="captain" speakertags="professional,tough" speaker="1">
             <Conversation line="" speaker="0"/>
             <Conversation line="Okay okay, I won't try to lighten the mood again!" speaker="0"/>
           </Conversation>
@@ -357,7 +357,7 @@
   <Conversation line="At times I feel like we're just puppets on a string." maxintensity="0.3" speakertags="crazy">
     <Conversation line="Dancing and dying for the amusement of the thing beyond the curtain.">
       <Conversation line="" speaker="1"/>
-      <Conversation line="No dancing or dying on my boat, please." allowedjobs="Captain" speaker="1"/>
+      <Conversation line="No dancing or dying on my boat, please." allowedjobs="captain" speaker="1"/>
       <Conversation line="I don't find any of this amusing at all." speakertags="professional" speaker="1"/>
       <Conversation line="*sigh*" speaker="1"/>
     </Conversation>  
@@ -375,8 +375,8 @@
   <Conversation line="No good!" speakertags="brokenenglish" minintensity="0.5"/>
   <Conversation line="Join the fleet they said! It'll be an exciting experience they said!" minintensity="0.5" speakertags="joker"/>
   <Conversation line="I'm gonna need a drink after this!" minintensity="0.5" speakertags="joker,laid-back"/>
-  <Conversation line="Alright crew, show me what you've got!" speakertags="professional,tough,laid-back" allowedjobs="Captain" minintensity="0.5" speaker="0"/>
-  <Conversation line="We're not out of the woods yet!" allowedjobs="Captain" minintensity="0.5" speaker="0"/>
+  <Conversation line="Alright crew, show me what you've got!" speakertags="professional,tough,laid-back" allowedjobs="captain" minintensity="0.5" speaker="0"/>
+  <Conversation line="We're not out of the woods yet!" allowedjobs="captain" minintensity="0.5" speaker="0"/>
   <Conversation line="I don't want to die!" minintensity="0.6" speakertags="fearful"/>
   <Conversation line="Should've become a botanist instead!" minintensity="0.6" speakertags="joker"/>
   <Conversation line="Hang in there everyone! We can do it!" minintensity="0.6" speakertags="tough">
