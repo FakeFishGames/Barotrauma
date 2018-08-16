@@ -49,7 +49,7 @@
       <StatusEffect type="OnUse" target="UseTarget" targetidentifiers="door,windoweddoor,hatch,ductblock" Stuck="20.0" Condition="3.0"/>
 
       <!-- the tool can fix structures, i.e. walls and windows -->
-      <Fixable name="structure"/>
+      <Fixable identifier="structure"/>
 
       <!-- mechanic skill 20 required to use the item -->
       <RequiredSkill name="Mechanical Engineering" level="20"/>
@@ -109,7 +109,7 @@
 
       <sound file="Content/Items/Tools/plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
-      <Fixable name="structure"/>
+      <Fixable identifier="structure"/>
 
       <RequiredSkill name="Mechanical Engineering" level="30"/>
 
