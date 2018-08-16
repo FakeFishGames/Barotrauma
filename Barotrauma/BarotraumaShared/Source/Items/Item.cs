@@ -126,7 +126,7 @@ namespace Barotrauma
         [Editable, Serialize("", true)]
         public string Description
         {
-            get { return description == null ? prefab.Description : description; }
+            get { return description ?? prefab.Description; }
             set { description = value; }
         }
 
@@ -743,17 +743,9 @@ namespace Barotrauma
             if (effect.type != type) return;
             
             bool hasTargets = (effect.TargetIdentifiers == null);
+            List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
             Item[] containedItems = ContainedItems;  
-            if (effect.OnContainingNames != null)
-            {
-                foreach (string s in effect.OnContainingNames)
-                {
-                    if (!containedItems.Any(it => it != null && (it.Name == s || it.Prefab.Identifier == s) && it.Condition > 0.0f)) return;
-                }
-            }
-
-            List<ISerializableEntity> targets = new List<ISerializableEntity>();
             if (containedItems != null)
             {
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
