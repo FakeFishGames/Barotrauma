@@ -96,8 +96,7 @@ namespace Barotrauma
         private bool setValue;
         
         private bool disableDeltaTime;
-
-        private HashSet<string> onContainingNames;
+        
         private HashSet<string> tags;
         
         private readonly float duration;
@@ -123,12 +122,7 @@ namespace Barotrauma
         {
             get { return targetIdentifiers; }
         }
-
-        public HashSet<string> OnContainingNames
-        {
-            get { return onContainingNames; }
-        }
-
+        
         public List<Affliction> Afflictions
         {
             get;
@@ -193,17 +187,8 @@ namespace Barotrauma
 
                         catch
                         {
-                            string[] split = attribute.Value.Split('=');
-                            type = (ActionType)Enum.Parse(typeof(ActionType), split[0], true);
-
-                            string[] containingNames = split[1].Split(',');
-                            onContainingNames = new HashSet<string>();
-                            for (int i = 0; i < containingNames.Length; i++)
-                            {
-                                onContainingNames.Add(containingNames[i].Trim());
-                            }
+                            DebugConsole.ThrowError("Invalid action type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
-
                         break;
                     case "target":
                         string[] Flags = attribute.Value.Split(',');
