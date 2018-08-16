@@ -269,6 +269,7 @@
     <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\NoiseDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\PositionalDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\BezierDeformation.cs" />
     <Compile Include="Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
