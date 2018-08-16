@@ -984,7 +984,7 @@ namespace Barotrauma
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them                
             }
            
-            int skill = (int)character.GetSkillLevel("Medical");
+            int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
             if (cprAnimTimer > 15.0f && targetHead != null && head != null)
             {
@@ -1059,7 +1059,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info.IncreaseSkillLevel("Medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    character.Info.IncreaseSkillLevel("medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
                     //reset attacker, we don't want the character to start attacking us

@@ -52,7 +52,7 @@
       <Fixable identifier="structure"/>
 
       <!-- mechanic skill 20 required to use the item -->
-      <RequiredSkill name="Mechanical Engineering" level="20"/>
+      <RequiredSkill identifier="mechanical" level="20"/>
 
       <!-- if the skill requirement isn't met the welding fuel will be used 3 times as fast -->
       <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0"/>
@@ -111,7 +111,7 @@
 
       <Fixable identifier="structure"/>
 
-      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
 
       <StatusEffect type="OnFailure" target="Contained" targetidentifiers="weldingfueltank,oxygentank" Condition="-3.0"/>
       <StatusEffect type="OnFailure" target="Contained" targetidentifiers="oxygenitetank" Condition="-1.5"/>

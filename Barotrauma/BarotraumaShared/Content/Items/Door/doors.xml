@@ -23,7 +23,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
   
@@ -60,7 +60,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
 
@@ -97,7 +97,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
 
@@ -131,7 +131,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
 
@@ -167,7 +167,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
 
@@ -205,7 +205,7 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="Repair [Welding Tool]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="weldingtool" type="equipped"/>
     </Repairable>
 

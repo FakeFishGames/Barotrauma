@@ -58,7 +58,7 @@
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
       <RequiredItems identifier="spear" type="Contained" msg="Spear required to shoot"/>
-      <RequiredSkill name="Weapons" level="30"/>
+      <RequiredSkill identifier="weapons" level="30"/>
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
@@ -93,8 +93,8 @@
     <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
       <Sound file="Content/Items/Weapons/syringegun.ogg" type="OnUse"/>
       <RequiredItems identifier="medicalsyringe" type="Contained" msg="Please load a Syringe"/>
-      <RequiredSkill name="Weapons" level="15"/>
-      <RequiredSkill name="Medical" level="30"/>
+      <RequiredSkill identifier="weapons" level="15"/>
+      <RequiredSkill identifier="medical" level="30"/>
     </RangedWeapon>
 
     <ItemContainer capacity="1" itempos="0,10" hideitems="false">
@@ -156,7 +156,7 @@
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
       </StatusEffect>
       <RequiredItems identifier="revolverround" type="Contained" msg="Out of ammo"/>
-      <RequiredSkill name="Weapons" level="40"/>
+      <RequiredSkill identifier="weapons" level="40"/>
     </RangedWeapon>
 
     <ItemContainer capacity="6" hideitems="true">

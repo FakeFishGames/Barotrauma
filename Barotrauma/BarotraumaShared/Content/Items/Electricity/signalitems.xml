@@ -359,7 +359,7 @@
 
     <Repairable selectkey="Action" name="Reset fuse" fixDurationHighSkill="1" fixDurationLowSkill="5" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="equipped"/>
     </Repairable>
 

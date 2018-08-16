@@ -662,7 +662,7 @@ namespace Barotrauma
                 if (CharacterHealth.OpenHealthWindow != null)
                 {
                     float treatmentSuitability = CharacterHealth.OpenHealthWindow.GetTreatmentSuitability(item);
-                    float skill = Character.Controlled.GetSkillLevel("Medical");
+                    float skill = Character.Controlled.GetSkillLevel("medical");
                     if (skill > 50.0f)
                     {
                         Rectangle highlightRect = rect;

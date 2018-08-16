@@ -31,7 +31,7 @@
       <MoveSound file="Content/Items/Weapons/railgunloop.ogg"/>
       <StartMoveSound file="Content/Items/Weapons/railgunstart.ogg"/>
       <EndMoveSound file="Content/Items/Weapons/railgunstop.ogg"/>
-      <RequiredSkill name="Weapons" level="50"/>
+      <RequiredSkill identifier="weapons" level="50"/>
     </Turret>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">

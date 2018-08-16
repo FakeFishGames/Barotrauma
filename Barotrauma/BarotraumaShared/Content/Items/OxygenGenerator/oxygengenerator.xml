@@ -9,7 +9,7 @@
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="5" fixDurationLowSkill="30" msg="Repair [Wrench]" hudpriority="10"
                 DeteriorationSpeed="0.05" MinDeteriorationCondition="20">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="wrench" type="equipped"/>
     </Repairable>
   

@@ -10,13 +10,13 @@
 
     <Repairable selectkey="Action" name="Mechanical repairs" fixDurationHighSkill="10" fixDurationLowSkill="60" msg="Repair [Wrench]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI"/>
-      <RequiredSkill name="Mechanical Engineering" level="40"/>
+      <RequiredSkill identifier="mechanical" level="40"/>
       <RequiredItem identifier="wrench" type="equipped"/>
     </Repairable>
 
     <Repairable selectkey="Action" name="Electrical repairs" fixDurationHighSkill="3" fixDurationLowSkill="10" msg="Repair [Screwdriver]" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
-      <RequiredSkill name="Electrical Engineering" level="40"/>
+      <RequiredSkill identifier="electrical" level="40"/>
       <RequiredItem identifier="screwdriver" type="Equipped"/>
     </Repairable>
 
@@ -33,7 +33,7 @@
       <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
       <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
       
-      <RequiredSkill name="Mechanical Engineering" level="30"/>
+      <RequiredSkill identifier="mechanical" level="30"/>
 
       <sound file="Content/Items/Reactor/reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">

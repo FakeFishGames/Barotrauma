@@ -16,7 +16,7 @@
       <poweronsound file="Content/Items/Electricity/powerOn.ogg" range="600" loop="false"/>
 
       <fabricableitem identifier="harpoongun" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill identifier="mechanical" level="30"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
         <RequiredItem identifier="aluminium"/>        
@@ -30,48 +30,48 @@
       </fabricableitem>
 
       <fabricableitem identifier="plasmacutter" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill identifier="mechanical" level="30"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
         <RequiredItem identifier="aluminium"/>
       </fabricableitem>
       <fabricableitem identifier="weldingtool" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill identifier="mechanical" level="30"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
         <RequiredItem identifier="aluminium"/>
       </fabricableitem>
 
       <fabricableitem identifier="railgunshell" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
       </fabricableitem>
       <fabricableitem identifier="nuclearshell" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill identifier="mechanical" level="40"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="uraniumbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
       </fabricableitem>
       <fabricableitem identifier="depthchargeshell" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="steelbar"/>
       </fabricableitem>
       <fabricableitem identifier="nucleardepthcharge" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill identifier="mechanical" level="40"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="uraniumbar"/>
       </fabricableitem>
       <fabricableitem identifier="divingmask" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="25"/>
+        <RequiredSkill identifier="mechanical" level="25"/>
         <RequiredItem identifier="polycarbonatebar"/>
       </fabricableitem>
       <fabricableitem identifier="divingsuit" requiredtime="30">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill identifier="mechanical" level="40"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="polycarbonatebar"/>
         <RequiredItem identifier="polycarbonatebar"/>
@@ -180,14 +180,14 @@
       </fabricableitem>
 
       <fabricableitem identifier="stungrenade" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="30"/>
+        <RequiredSkill identifier="mechanical" level="30"/>
         <RequiredItem identifier="flashpowder" mincondition="0.75"/>
         <RequiredItem identifier="chloralhydrate" mincondition="0.75"/>
         <RequiredItem identifier="steelbar"/>
       </fabricableitem>
 
       <fabricableitem identifier="incendiumgrenade" requiredtime="20">
-        <RequiredSkill name="Mechanical Engineering" level="40"/>
+        <RequiredSkill identifier="mechanical" level="40"/>
         <RequiredItem identifier="flashpowder" mincondition="0.75"/>
         <RequiredItem identifier="steelbar"/>
         <RequiredItem identifier="incendiumbar"/>
@@ -264,91 +264,91 @@
         <RequiredItem identifier="steelbar"/>
       </fabricableitem>
       <fabricableitem identifier="chloralhydrate" requiredtime="20">
-        <RequiredSkill name="Medical" level="30"/>
+        <RequiredSkill identifier="medical" level="30"/>
         <RequiredItem identifier="chlorine"/>
         <RequiredItem identifier="ethanol"/>
       </fabricableitem>
       <fabricableitem identifier="compoundn" requiredtime="20">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="potassium"/>
         <RequiredItem identifier="sulphuricacid"/>
       </fabricableitem>
       <fabricableitem identifier="volatilecompoundn" requiredtime="20">
-        <RequiredSkill name="Medical" level="40"/>
+        <RequiredSkill identifier="medical" level="40"/>
         <RequiredItem identifier="compoundn"/>
         <RequiredItem identifier="flashpowder"/>
       </fabricableitem>
             
       <fabricableitem identifier="antidama1" requiredtime="10">
-        <RequiredSkill name="Medical" level="50"/>
+        <RequiredSkill identifier="medical" level="50"/>
         <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="chloralhydrate"/>
       </fabricableitem>
       <fabricableitem identifier="antidama2" requiredtime="20">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="antidama1"/>
       </fabricableitem>
 
       <fabricableitem identifier="erythrozine" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
+        <RequiredSkill identifier="medical" level="50"/>
         <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="ironpowder"/>
       </fabricableitem>
 
       <fabricableitem identifier="antibleeding1" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
+        <RequiredSkill identifier="medical" level="50"/>
         <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="phosphorus"/>
       </fabricableitem>
 
       <fabricableitem identifier="chloromydride" requiredtime="20">
-        <RequiredSkill name="Medical" level="50"/>
+        <RequiredSkill identifier="medical" level="50"/>
         <RequiredItem identifier="stabilozine"/>
         <RequiredItem identifier="erythrozine"/>
         <RequiredItem identifier="chloralhydrate"/>
       </fabricableitem>
 
       <fabricableitem identifier="flashpowder" requiredtime="25">
-        <RequiredSkill name="Medical" level="40"/>
+        <RequiredSkill identifier="medical" level="40"/>
         <RequiredItem identifier="aluminium"/>
         <RequiredItem identifier="potassium"/>
       </fabricableitem>
 
       <fabricableitem identifier="auxiliorizine" requiredtime="25">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="antidama2"/>
         <RequiredItem identifier="erythrozine"/>
         <RequiredItem identifier="flashpowder"/>
       </fabricableitem>
 
       <fabricableitem identifier="hyperzine" requiredtime="25">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="phosphorus"/>
         <RequiredItem identifier="uraniumpowder"/>
       </fabricableitem>
 
       <fabricableitem identifier="morbusine" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="sulphuricacid"/>
         <RequiredItem identifier="auxiliorizine"/>
       </fabricableitem>
 
       <fabricableitem identifier="morbusanide" outcondition="0.25" requiredtime="10">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="morbusine" mincondition="0.25"/>
         <RequiredItem identifier="stabilozine" mincondition="0.25"/>
       </fabricableitem>
 
       <fabricableitem identifier="calyxanide" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="huskeggs" mincondition="0.25"/>
         <RequiredItem identifier="antidama1" mincondition="0.25"/>
       </fabricableitem>
 
       <fabricableitem identifier="sufforin" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
+        <RequiredSkill identifier="medical" level="60"/>
         <RequiredItem identifier="erythrozine"/>
         <RequiredItem identifier="flashpowder"/>
         <RequiredItem identifier="sulphuricacid"/>
