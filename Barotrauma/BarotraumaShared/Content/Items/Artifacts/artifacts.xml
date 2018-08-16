@@ -10,10 +10,10 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
     <Deconstruct time="30">
-      <Item name="Steel Bar"/>
-      <Item name="Copper Bar"/>
-      <Item name="Uranium Bar"/>
-      <Item name="Uranium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="uraniumbar"/>
+      <Item identifier="uraniumbar"/>
     </Deconstruct>
         
     <Body width="60" height="61" density="50" friction="0.95"/>
@@ -33,10 +33,10 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
     <Deconstruct time="30">
-      <Item name="Steel Bar"/>
-      <Item name="Incendium Bar"/>
-      <Item name="Incendium Bar"/>
-      <Item name="Incendium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="incendiumbar"/>
+      <Item identifier="incendiumbar"/>
+      <Item identifier="incendiumbar"/>
     </Deconstruct>
     
     <Body radius="28" density="50" friction="0.95"/>
@@ -58,10 +58,10 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
     <Deconstruct time="30">
-      <Item name="Steel Bar"/>
-      <Item name="Fulgurium Bar"/>
-      <Item name="Fulgurium Bar"/>
-      <Item name="Fulgurium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fulguriumbar"/>
+      <Item identifier="fulguriumbar"/>
+      <Item identifier="fulguriumbar"/>
     </Deconstruct>
 
     <Body radius="25" density="50" friction="0.95"/>
@@ -81,10 +81,10 @@
     <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
 
     <Deconstruct time="30">
-      <Item name="Steel Bar"/>
-      <Item name="Fulgurium Bar"/>
-      <Item name="Fulgurium Bar"/>
-      <Item name="Fulgurium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fulguriumbar"/>
+      <Item identifier="fulguriumbar"/>
+      <Item identifier="fulguriumbar"/>
     </Deconstruct>
 
     <AiTarget sightrange="10000.0" soundrange="10000"/>
@@ -102,10 +102,10 @@
     impacttolerance="8">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Liquid Oxygenite" mincondition="0.1"/>
-      <Item name="Liquid Oxygenite" mincondition="0.5"/>
-      <Item name="Liquid Oxygenite" mincondition="0.9"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="liquidoxygenite" mincondition="0.1"/>
+      <Item identifier="liquidoxygenite" mincondition="0.5"/>
+      <Item identifier="liquidoxygenite" mincondition="0.9"/>
     </Deconstruct>
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="119,0,9,32"/>
@@ -138,10 +138,10 @@
     spritecolor="1.0,0.0,0.0,1.0">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Sulphuric Acid" mincondition="0.1"/>
-      <Item name="Sulphuric Acid" mincondition="0.5"/>
-      <Item name="Sulphuric Acid" mincondition="0.9"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="sulphuricacid" mincondition="0.1"/>
+      <Item identifier="sulphuricacid" mincondition="0.5"/>
+      <Item identifier="sulphuricacid" mincondition="0.9"/>
     </Deconstruct>
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="119,0,9,32"/>
@@ -164,9 +164,9 @@
    Tags="alien,smallitem">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Fulgurium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fulguriumbar"/>
     </Deconstruct>
 
     <Sprite texture ="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4"/>

@@ -3,7 +3,7 @@
   <!-- Medical items -->
   <Item
     name="Medical Syringe"
-    identifier="medsyringe"
+    identifier="medicalsyringe"
     category="Equipment"
     Tags="smallitem,medical"
     canuseonself="true"

@@ -41,8 +41,8 @@
     sonarsize="5">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
@@ -72,9 +72,9 @@
     sonarsize="5">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Uranium Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="uraniumbar"/>
     </Deconstruct>
 
     <Sprite texture="railgunetc.png" sourcerect="187,210,68,47" depth="0.55"/>

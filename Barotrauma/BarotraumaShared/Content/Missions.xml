@@ -260,12 +260,12 @@
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Compound N" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="compoundn" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Detonator" amount="10">
-          <Item name="Compound N"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="detonator" amount="10">
+          <Item identifier="compoundn"/>
         </Item>
       </Item>
     </Items>
@@ -293,15 +293,15 @@
     achievementidentifier="cargomission"
     successmessage="The explosives have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Compound N" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="compoundn" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Detonator" amount="9">
-          <Item name="Compound N"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="detonator" amount="9">
+          <Item identifier="compoundn"/>
         </Item>
-        <Item name="Detonator">
-          <Item name="Volatile Compound N"/>
+        <Item identifier="detonator">
+          <Item identifier="colatilecompoundn"/>
         </Item>
       </Item>
     </Items>
@@ -330,14 +330,14 @@
     successmessage="The chemicals have been successfully delivered."
     requireddeliveryamount="20">
     <Items>
-      <Item name="Chemical Crate">
-        <Item name="Auxiliorizine" amount="5"/>
-        <Item name="Sulphuric Acid" amount="5"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="auxiliorizine" amount="5"/>
+        <Item identifier="sulphuricacid" amount="5"/>
       </Item>
-      <Item name="Chemical Crate">
-        <Item name="Morbusine" amount="5"/>
-        <Item name="Flash Powder" amount="3"/>
-        <Item name="Chloral Hydrate" amount="2"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="morbusine" amount="5"/>
+        <Item identifier="flashpowder" amount="3"/>
+        <Item identifier="chloralhydrate" amount="2"/>
       </Item>
     </Items>
 
@@ -360,8 +360,8 @@
     achievementidentifier="cargomission"
     successmessage="The husk eggs have been successfully delivered.">
     <Items>
-      <Item name="Chemical Crate">
-        <Item name="Velonaceps Calyx Eggs" amount="10"/>
+      <Item identifier="chemicalcrate">
+        <Item identifier="huskeggs" amount="10"/>
       </Item>
     </Items>
     
@@ -384,11 +384,11 @@
     achievementidentifier="cargomission"
     successmessage="The chemicals have been successfully delivered.">
     <Items>
-      <Item name="Explosive Crate">
-        <Item name="Nitroglycerin" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="nitroglycerin" amount="10"/>
       </Item>
-      <Item name="Explosive Crate">
-        <Item name="Nitroglycerin" amount="10"/>
+      <Item identifier="explosivecrate">
+        <Item identifier="nitroglycerin" amount="10"/>
       </Item>
     </Items>
     
@@ -415,13 +415,13 @@
    achievementidentifier="cargomission"
    successmessage="The clown gear has been successfully delivered."
    requireddeliveryamount="35">
-    <Items >
-      <Item name="Metal Crate">
-        <Item name="Clown Mask" amount="10"/>
-        <Item name="Clown Costume" amount="10"/>        
+    <Items>
+      <Item identifier="metalcrate">
+        <Item identifier="clownmask" amount="10"/>
+        <Item identifier="clowncostume" amount="10"/>        
       </Item>
-      <Item name="Metal Crate">
-        <Item name="Bike Horn" amount="20"/>
+      <Item identifier="metalcrate">
+        <Item identifier="bikehorn" amount="20"/>
       </Item>
     </Items>
     

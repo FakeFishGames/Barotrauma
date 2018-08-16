@@ -17,9 +17,9 @@
 
     <!-- the item takes 10 seconds to break down in a deconstructor and turns into a polycarbonate bar, steel bar and aluminium -->
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
 
     <!-- physics body -->
@@ -82,9 +82,9 @@
     <Price locationtype="Outpost" buyprice="200"/>
     
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Aluminium"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="aluminium"/>
     </Deconstruct>
     
     <Sprite texture ="tools.png" sourcerect="0,0,41,16" depth="0.55"/>
@@ -139,7 +139,7 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="52,31,12,33" depth="0.55"/>
@@ -171,8 +171,8 @@
     <Price locationtype="Outpost" buyprice="200"/>
 
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="polycarbonatebar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
@@ -205,7 +205,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
@@ -229,7 +229,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
@@ -255,7 +255,7 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
@@ -281,8 +281,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
@@ -323,8 +323,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <!-- TODO: sonar beacon sprite -->
@@ -359,8 +359,8 @@
     <Price locationtype="Outpost" buyprice="40"/>
 
     <Deconstruct time="15">
-      <Item name="Copper Bar"/>
-      <Item name="Polycarbonate Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="polycarbonatebar"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,36,27,11" depth="0.55"/>
@@ -396,10 +396,10 @@
     <Price locationtype="Outpost" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
-      <Item name="Aluminium" mincondition="0.9" outcondition="0.25"/>
-      <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
-      <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item identifier="phosphorus" mincondition="0.9" outcondition="0.25"/>
+      <Item identifier="aluminium" mincondition="0.9" outcondition="0.25"/>
+      <Item identifier="phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item identifier="aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
     <Sprite texture ="tools.png" sourcerect="0,38,21,7" depth="0.55"/>

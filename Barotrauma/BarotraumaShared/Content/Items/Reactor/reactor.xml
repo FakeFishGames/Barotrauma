@@ -77,10 +77,10 @@
     <Price locationtype="Outpost" buyprice="800"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Uranium Powder" mincondition="0.1" maxcondition="0.5"/>
-      <Item name="Uranium Powder" mincondition="0.1" maxcondition="0.9"/>
-      <Item name="Uranium Bar" mincondition="0.9"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="uraniumpowder" mincondition="0.1" maxcondition="0.5"/>
+      <Item identifier="uraniumpowder" mincondition="0.1" maxcondition="0.9"/>
+      <Item identifier="uraniumbar" mincondition="0.9"/>
     </Deconstruct>
 
     <Sprite texture="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>
@@ -98,8 +98,8 @@
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="Incendium Bar" mincondition="0.95"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="incendiumbar" mincondition="0.95"/>
     </Deconstruct>
 
     <Sprite texture ="fuelrod.png" depth="0.55" sourcerect="0,0,8,39"/>

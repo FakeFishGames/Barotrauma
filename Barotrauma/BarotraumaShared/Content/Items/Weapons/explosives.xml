@@ -47,7 +47,7 @@
 
   <Item
     name="Volatile Compound N"
-    identifier="volcompoundn"
+    identifier="volatilecompoundn"
     category="Equipment"
     Tags="smallitem,explosive"
     spritecolor="1.0,0.5,1.0,1.0"    

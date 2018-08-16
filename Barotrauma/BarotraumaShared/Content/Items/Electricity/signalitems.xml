@@ -15,7 +15,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -43,7 +43,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -70,7 +70,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -97,7 +97,7 @@
     <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -120,7 +120,7 @@
     price="10">
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -143,7 +143,7 @@
     price="10">
 
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
@@ -169,8 +169,8 @@
     <Price locationtype="Military" buyprice="100"/>
     
     <Deconstruct time="5">
-      <Item name="Copper Bar"/>
-      <Item name="Copper Bar"/>
+      <Item identifier="copperbar"/>
+      <Item identifier="copperbar"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
@@ -195,8 +195,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/> 
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/> 
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,0,16,16"/>
@@ -231,8 +231,8 @@
     description="Outputs the sum of the received signals.">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,80,16,16"/>
@@ -269,8 +269,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,0,16,16"/>
@@ -309,8 +309,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,0,16,16"/>
@@ -347,8 +347,8 @@
     <Price locationtype="Military" buyprice="20"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
@@ -401,8 +401,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,32,16,8"/>
@@ -438,8 +438,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,0,16,16"/>
@@ -467,7 +467,7 @@
 
   <Item
     name="Oxygen Detector"    
-    identifier="oxydetector"
+    identifier="oxygendetector"
     category="Electrical"
     Tags="smallitem"
     linkable="true"
@@ -480,8 +480,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
@@ -517,8 +517,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
@@ -554,8 +554,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
@@ -591,8 +591,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,16,16,16"/>
@@ -631,8 +631,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="16,16,16,16"/>
@@ -670,8 +670,8 @@
     <Price locationtype="Military" buyprice="20"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="17,64,16,16"/>
@@ -709,8 +709,8 @@
     <Price locationtype="Military" buyprice="40"/>
     
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,32,15,19"/>
@@ -746,8 +746,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,32,32,32"/>
@@ -785,8 +785,8 @@
     <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,16"/>
@@ -822,8 +822,8 @@
     description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="0,64,16,32"/>

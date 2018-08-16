@@ -85,9 +85,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
@@ -108,9 +108,9 @@
     pickdistance="150">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
@@ -132,8 +132,8 @@
    pickdistance="150">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
@@ -154,8 +154,8 @@
    pickdistance ="150">
 
     <Deconstruct time="20">
-      <Item name="Steel Bar"/>
-      <Item name="Steel Bar"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="steelbar"/>
     </Deconstruct>
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>

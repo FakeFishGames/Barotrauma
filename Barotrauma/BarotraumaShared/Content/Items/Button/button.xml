@@ -15,8 +15,8 @@
     <Sprite texture ="button.png" sourcerect="0,0,24,27" depth="0.8"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Body width="32" height="32" density="40"/>
@@ -54,8 +54,8 @@
     <Sprite texture ="button.png" sourcerect="24,0,12,16" depth="0.79"/>
 
     <Deconstruct time="10">
-      <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
+      <Item identifier="steelbar"/>
+      <Item identifier="fpgacircuit"/>
     </Deconstruct>
 
     <Body width="12" height="16" density="20"/>

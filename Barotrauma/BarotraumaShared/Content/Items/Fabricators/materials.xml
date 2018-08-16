@@ -14,8 +14,8 @@
     <Price locationtype="Outpost" buyprice="100"/>
     
     <Deconstruct time="5">
-      <Item name="Iron Powder"/>
-      <Item name="Iron Powder"/>     
+      <Item identifier="ironpowder"/>
+      <Item identifier="ironpowder"/>     
     </Deconstruct>
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>
@@ -39,8 +39,8 @@
     <Price locationtype="City" buyprice="500"/>
 
     <Deconstruct time="5">
-      <Item name="Uranium Powder"/>
-      <Item name="Uranium Powder"/>
+      <Item identifier="uraniumpowder"/>
+      <Item identifier="uraniumpowder"/>
     </Deconstruct>
 
     <Sprite texture ="materials.png" sourcerect="0,0,24,12" depth="0.55"/>

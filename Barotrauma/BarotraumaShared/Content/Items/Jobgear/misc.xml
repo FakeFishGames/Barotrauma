@@ -43,7 +43,7 @@
     <Body width="10" radius="10"  density="10"/>
 
     <Deconstruct time="10">
-      <Item name="Bike Horn"/>
+      <Item identifier="bikehorn"/>
     </Deconstruct>
 
     <Wearable limbtype="Head" slots="Any,Head">
@@ -65,9 +65,9 @@
     <Body width="53" height="18" density="30"/>
 
     <Deconstruct time="40">
-      <Item name="Bike Horn"/>
-      <Item name="Bike Horn"/>
-      <Item name="Bike Horn"/>
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
+      <Item identifier="bikehorn"/>
     </Deconstruct>
 
     <Wearable slots="Any,InnerClothes">

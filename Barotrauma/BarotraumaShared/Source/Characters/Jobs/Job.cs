@@ -100,14 +100,27 @@ namespace Barotrauma
 
         private void InitializeJobItem(Character character, WayPoint spawnPoint, XElement itemElement, Item parentItem = null)
         {
-            string itemName = itemElement.GetAttributeString("name", "");
-              
-            //TODO: use identifiers
-            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-            if (itemPrefab == null)
+            ItemPrefab itemPrefab;
+            if (itemElement.Attribute("name") != null)
             {
-                DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
-                return;
+                string itemName = itemElement.Attribute("name").Value;
+                DebugConsole.ThrowError("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
+                    return;
+                }
+            }
+            else
+            {
+                string itemIdentifier = itemElement.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                    return;
+                }
             }
 
             Item item = new Item(itemPrefab, character.Position, null);

@@ -11,16 +11,16 @@
       <Skill name="Medical" level="10,30"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Captain's Cap" equip="true"/>
-      <Item name="Captain's Uniform" equip="true"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="captainscap" equip="true"/>
+      <Item identifier="captainsuniform" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>
-      <Item name="Revolver" equip="false">
-        <Item name="Revolver Round"/>
-        <Item name="Revolver Round"/>
-        <Item name="Revolver Round"/>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
       </Item>
     </Items>
   </Job>
@@ -35,17 +35,17 @@
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Toolbox">
-        <Item name="Wrench"/>
-        <Item name="Screwdriver"/>
-        <Item name="Red Wire"/>
-        <Item name="Blue Wire"/>
-        <Item name="Orange Wire"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="toolbox">
+        <Item identifier="wrench"/>
+        <Item identifier="screwdriver"/>
+        <Item identifier="redwire"/>
+        <Item identifier="bluewire"/>
+        <Item identifier="orangewire"/>
       </Item>
-      <Item name="Orange Jumpsuit" equip="true"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="orangejumpsuit" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>
     </Items>
   </Job>
@@ -60,17 +60,17 @@
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Toolbox">
-        <Item name="Wrench"/>   
-        <Item name="Welding Tool">
-          <Item name="Welding Fuel Tank"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="toolbox">
+        <Item identifier="wrench"/>   
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
         </Item>     
       </Item>
-      <Item name="Crowbar"/>
-      <Item name="Blue Jumpsuit" equip="true"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="crowbar"/>
+      <Item identifier="bluejumpsuit" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>
     </Items>
   </Job>
@@ -85,14 +85,15 @@
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Stun Baton"/>
-      <Item name="Battery Cell"/>
-      <Item name="Handcuffs"/>
-      <Item name="Body Armor" equip="true"/>
-      <Item name="Ballistic Helmet" equip="true"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="stunbaton">
+        <Item identifier="batterycell"/>
+      </Item>
+      <Item identifier="handcuffs"/>
+      <Item identifier="bodyarmor" equip="true"/>
+      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>      
     </Items>
   </Job>
@@ -107,12 +108,12 @@
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Doctor's Uniform" equip="true"/>
-      <Item name="Health Scanner HUD"/>
-      <Item name="Medical Syringe"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="doctorsuniform" equip="true"/>
+      <Item identifier="healthscanner"/>
+      <Item identifier="medicalsyringe"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>      
     </Items>
   </Job>
@@ -127,11 +128,11 @@
       <Skill name="Medical" level="10,22"/>
     </Skills>
     <Items>
-      <Item name="ID Card" equip="true"/>
-      <Item name="Wrench"/>
-      <Item name="Screwdriver"/>
-      <Item name="Headset" equip="true">
-        <Item name="Battery Cell"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="wrench"/>
+      <Item identifier="screwdriver"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
       </Item>      
     </Items>
   </Job>
