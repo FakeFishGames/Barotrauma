@@ -5,7 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -493,6 +495,34 @@ namespace Barotrauma
                 }
             }));
 #endif
+
+            commands.Add(new Command("dumptexts", "", (string[] args) =>
+            {
+                string filePath = "Content/Texts.xml";
+                var doc = XMLExtensions.TryLoadXml(filePath);
+                List<string> lines = new List<string>();
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    lines.Add(element.ElementInnerText());
+                }
+                File.WriteAllLines("Content/Texts.txt", lines);
+            }));
+
+            commands.Add(new Command("loadtexts", "", (string[] args) =>
+            {
+                string filePath = "Content/Texts.xml";
+                var doc = XMLExtensions.TryLoadXml(filePath);
+                string[] lines = File.ReadAllLines("Content/Texts.txt");
+                int i = 0;
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    element.Value = lines[i];
+                    i++;
+                }
+                doc.Save(filePath);
+            }));
+
+
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;
