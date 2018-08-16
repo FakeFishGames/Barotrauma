@@ -582,11 +582,11 @@ namespace Barotrauma
             msg.Write((byte)Info.HeadSpriteId);
             if (info.Job != null)
             {
-                msg.Write(Info.Job.Name);
+                msg.Write(Info.Job.Prefab.Identifier);
                 msg.Write((byte)info.Job.Skills.Count);
                 foreach (Skill skill in info.Job.Skills)
                 {
-                    msg.Write(skill.Name);
+                    msg.Write(skill.Identifier);
                     msg.WriteRangedInteger(0, 100, (int)MathHelper.Clamp(skill.Level, 0, 100));
                 }
             }

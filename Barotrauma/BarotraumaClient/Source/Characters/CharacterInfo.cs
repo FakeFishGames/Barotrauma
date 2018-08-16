@@ -45,7 +45,7 @@ namespace Barotrauma
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(x, y) },
-                        skill.Name, textColor: textColor, font: font);
+                        TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font);
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(x, y) },
                         ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.TopRight);
                     y += 20;

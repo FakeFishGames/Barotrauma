@@ -729,8 +729,11 @@
   <LoadingScreenTip>The Europa Coalition started off as a trade and co-operation agreement between the two largest Europan settlements and a handful of private paramilitary groups, but gradually grew to become what is essentially the Europan government.</LoadingScreenTip>
   <LoadingScreenTip>The much-ridiculed initiative to help submariners cope in a high-stress environment by including professional entertainers in the crews was promptly deemed a failure and discontinued.</LoadingScreenTip>
 
-  
-  
+  <SkillName.helm>Helm</SkillName.helm>
+  <SkillName.weapons>Weapons</SkillName.weapons>
+  <SkillName.mechanical>Mechanical Engineering</SkillName.mechanical>
+  <SkillName.electrical>Electrical Engineering</SkillName.electrical>
+  <SkillName.medical>Medical</SkillName.medical>  
   
   <!-- Entity names and descriptions -->
   <hull.Name>Hull</hull.Name>
@@ -753,6 +756,8 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
+
 
 
 

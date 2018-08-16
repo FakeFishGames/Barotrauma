@@ -682,6 +682,10 @@
   <JobDescription.medicaldoctor>Hoitaa vammautuneita yms.</JobDescription.medicaldoctor>
   <JobName.assistant>Avustaja</JobName.assistant>
   <JobDescription.assistant>Antaa apu apustusta</JobDescription.assistant>
-  
-  
+
+  <SkillName.helm>Ruori</SkillName.helm>
+  <SkillName.weapons>Aseet</SkillName.weapons>
+  <SkillName.mechanical>Mekaaninen Insinööri</SkillName.mechanical>
+  <SkillName.electrical>Sähkötekniikka</SkillName.electrical>
+  <SkillName.medical>Lääketiede</SkillName.medical>  
 </infotexts>

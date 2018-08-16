@@ -253,8 +253,14 @@ namespace Barotrauma.Items.Components
                         break;
                     case "requiredskill":
                     case "requiredskills":
-                        string skillName = subElement.GetAttributeString("name", "");
-                        requiredSkills.Add(new Skill(skillName, subElement.GetAttributeInt("level", 0)));
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - skill requirement in component " + GetType().ToString() + " should use a skill identifier instead of the name of the skill.");
+                            continue;
+                        }
+
+                        string skillIdentifier = subElement.GetAttributeString("identifier", "");
+                        requiredSkills.Add(new Skill(skillIdentifier, subElement.GetAttributeInt("level", 0)));
                         break;
                     case "statuseffect":
                         var statusEffect = StatusEffect.Load(subElement, item.Name);
@@ -464,7 +470,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Skill skill in requiredSkills)
             {
-                float characterLevel = character.GetSkillLevel(skill.Name);
+                float characterLevel = character.GetSkillLevel(skill.Identifier);
                 if (characterLevel < skill.Level)
                 {
                     insufficientSkill = skill;
@@ -486,7 +492,7 @@ namespace Barotrauma.Items.Components
             float skillSuccessSum = 0.0f;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                float characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
+                float characterLevel = character.GetSkillLevel(requiredSkills[i].Identifier);
                 skillSuccessSum += (characterLevel - requiredSkills[i].Level);
             }
             float average = skillSuccessSum / requiredSkills.Count;
