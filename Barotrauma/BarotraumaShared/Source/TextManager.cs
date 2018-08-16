@@ -42,7 +42,7 @@ namespace Barotrauma
             }
         }
 
-        public static string Get(string textTag)
+        public static string Get(string textTag, bool returnNull = false)
         {
             if (string.IsNullOrWhiteSpace(Language))
             {
@@ -62,8 +62,15 @@ namespace Barotrauma
                 if (text != null) return text;
             }
 
-            DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
-            return textTag;
+            if (returnNull)
+            {
+                return null;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
+                return textTag;
+            }
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)

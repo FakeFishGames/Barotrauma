@@ -296,6 +296,9 @@ namespace Barotrauma
             name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
             identifier = element.GetAttributeString("identifier", "");
+            
+            string translatedName = TextManager.Get(identifier + ".Name", true);
+            if (!string.IsNullOrEmpty(translatedName)) name = translatedName;
 
             DebugConsole.Log("    " + name);
 
@@ -329,6 +332,9 @@ namespace Barotrauma
             }
 
             SerializableProperty.DeserializeProperties(this, element);
+
+            string translatedDescription = TextManager.Get(identifier + ".Description", true);
+            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
             {

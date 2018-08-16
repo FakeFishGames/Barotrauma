@@ -392,8 +392,8 @@ namespace Barotrauma.RuinGeneration
 
             //generate doors & sensors that close them -------------------------------------------------------------
 
-            var sensorPrefab = MapEntityPrefab.Find("Alien Motion Sensor") as ItemPrefab;
-            var wirePrefab = MapEntityPrefab.Find("Wire") as ItemPrefab;
+            var sensorPrefab = MapEntityPrefab.Find(null, "alienmotionsensor") as ItemPrefab;
+            var wirePrefab = MapEntityPrefab.Find(null, "wire") as ItemPrefab;
 
             foreach (Corridor corridor in corridors)
             {

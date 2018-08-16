@@ -104,32 +104,34 @@ namespace Barotrauma
         public static void Init()
         {
             MapEntityPrefab ep = new MapEntityPrefab();
-            ep.name = "Hull";
-            ep.identifier = "Hull";
-            ep.Description = "Hulls determine which parts are considered to be \"inside the sub\". Generally every room should be enclosed by a hull.";
+            ep.identifier = "hull";
+            ep.name = TextManager.Get("hull.Name");
+            ep.Description = TextManager.Get("hull.Description");
             ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.ResizeHorizontal = true;
             ep.ResizeVertical = true;
             List.Add(ep);
 
             ep = new MapEntityPrefab();
-            ep.name = "Gap";
-            ep.identifier = "Gap";
-            ep.Description = "Gaps allow water and air to flow between two hulls. ";
+            ep.identifier = "gap";
+            ep.name = TextManager.Get("gap.Name");
+            ep.Description = TextManager.Get("gap.Description");
             ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.ResizeHorizontal = true;
             ep.ResizeVertical = true;
             List.Add(ep);
 
             ep = new MapEntityPrefab();
-            ep.name = "Waypoint";
-            ep.identifier = "Waypoint";
+            ep.identifier = "waypoint";
+            ep.name = TextManager.Get("waypoint.Name");
+            ep.Description = TextManager.Get("waypoint.Description");
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             List.Add(ep);
 
             ep = new MapEntityPrefab();
-            ep.name = "Spawnpoint";
-            ep.name = "Spawnpoint";
+            ep.identifier = "spawnpoint";
+            ep.name = TextManager.Get("spawnpoint.Name");
+            ep.Description = TextManager.Get("spawnpoint.Description");
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             List.Add(ep);
         }
