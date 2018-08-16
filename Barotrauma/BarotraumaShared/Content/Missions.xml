@@ -10,7 +10,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Skyholder Artifact">
+    itemidentifier="skyholderartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -38,7 +38,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Thermal Artifact">
+    itemidentifier="thermalartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -66,7 +66,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
-    itemname="Thermal Artifact">
+    itemidentifier="thermalartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -94,7 +94,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
-    itemname="Nasonov Artifact">
+    itemidentifier="nasonovartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -122,7 +122,7 @@
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="cave"
-    itemname="Nasonov Artifact">
+    itemidentifier="nasonovartifact">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
