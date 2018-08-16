@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                         SteeringInput = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                         steeringInput.Y = -steeringInput.Y;
                         steeringAdjustSpeed = character == null ? 
-                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("Helm") / 100.0f);
+                            0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                     }
                     unsentChanges = true;
                 }
