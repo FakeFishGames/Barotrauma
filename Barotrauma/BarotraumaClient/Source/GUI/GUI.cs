@@ -810,7 +810,6 @@ namespace Barotrauma
         /// </summary>
         public static void DrawBezierWithDots(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Vector2 control, int pointCount, Color color, int dotSize = 2)
         {
-            Vector2 dir = end - start;
             for (int i = 0; i < pointCount; i++)
             {
                 float t = (float)i / (pointCount - 1);
