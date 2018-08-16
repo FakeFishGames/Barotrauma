@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < requiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                    "   - " + requiredSkills[i].Name + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
+                    "   - " + TextManager.Get("SkillName." + requiredSkills[i].Identifier) + ": " + ((int)requiredSkills[i].Level), font: GUI.SmallFont)
                 {
                     UserData = requiredSkills[i]
                 };
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
                 if (skill == null) continue;
 
                 GUITextBlock textBlock = (GUITextBlock)c;
-                if (character.GetSkillLevel(skill.Name) < skill.Level)
+                if (character.GetSkillLevel(skill.Identifier) < skill.Level)
                 {
                     textBlock.TextColor = Color.Red;
                     optimizeButton.Enabled = false;

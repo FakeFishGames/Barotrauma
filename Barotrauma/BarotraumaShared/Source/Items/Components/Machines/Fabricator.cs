@@ -60,8 +60,14 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requiredskill":
+                        if (subElement.Attribute("name") != null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + TargetItem.Name + "! Use skill identifiers instead of names.");
+                            continue;
+                        }
+
                         RequiredSkills.Add(new Skill(
-                            subElement.GetAttributeString("name", ""), 
+                            subElement.GetAttributeString("identifier", ""), 
                             subElement.GetAttributeInt("level", 0)));
                         break;
                     case "item":
@@ -308,7 +314,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Skill skill in fabricatedItem.RequiredSkills)
                 {
-                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    user.Info.IncreaseSkillLevel(skill.Identifier, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
             }
 
@@ -320,7 +326,7 @@ namespace Barotrauma.Items.Components
             if (fabricableItem == null) return false;
 
             if (user != null && 
-                fabricableItem.RequiredSkills.Any(skill => user.GetSkillLevel(skill.Name) < skill.Level))
+                fabricableItem.RequiredSkills.Any(skill => user.GetSkillLevel(skill.Identifier) < skill.Level))
             {
                 return false;
             }

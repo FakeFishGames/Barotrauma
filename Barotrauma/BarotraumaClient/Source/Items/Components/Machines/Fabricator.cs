@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             List<Skill> inadequateSkills = new List<Skill>();
             if (Character.Controlled != null)
             {
-                inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
+                inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Identifier) < skill.Level);
             }
 
             Color textColor = Color.White;
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                 text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                 foreach (Skill skill in inadequateSkills)
                 {
-                    text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
+                    text += "   - " + TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
                 }
 
                 textColor = Color.Red;

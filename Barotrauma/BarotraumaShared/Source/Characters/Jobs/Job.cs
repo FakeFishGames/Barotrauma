@@ -43,7 +43,7 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                skills.Add(skillPrefab.Name, new Skill(skillPrefab));
+                skills.Add(skillPrefab.Identifier, new Skill(skillPrefab));
             }
         }
 
@@ -68,11 +68,11 @@ namespace Barotrauma
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
-                string skillName = subElement.GetAttributeString("name", "");
-                if (string.IsNullOrEmpty(skillName)) continue;
+                string skillIdentifier = subElement.GetAttributeString("identifier", "");
+                if (string.IsNullOrEmpty(skillIdentifier)) continue;
                 skills.Add(
-                    skillName,
-                    new Skill(skillName, subElement.GetAttributeFloat("level", 0)));
+                    skillIdentifier,
+                    new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
         
@@ -83,18 +83,16 @@ namespace Barotrauma
             return new Job(prefab);
         }
 
-        public float GetSkillLevel(string skillName)
+        public float GetSkillLevel(string skillIdentifier)
         {
-            Skill skill = null;
-            skills.TryGetValue(skillName, out skill);
+            skills.TryGetValue(skillIdentifier, out Skill skill);
 
             return (skill == null) ? 0.0f : skill.Level;
         }
 
-        public void IncreaseSkillLevel(string skillName, float increase)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase)
         {
-            Skill skill = null;
-            if (skills.TryGetValue(skillName, out skill))
+            if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
                 skill.Level += increase;
             }
@@ -187,7 +185,7 @@ namespace Barotrauma
 
             foreach (KeyValuePair<string, Skill> skill in skills)
             {
-                jobElement.Add(new XElement("skill", new XAttribute("name", skill.Value.Name), new XAttribute("level", skill.Value.Level)));
+                jobElement.Add(new XElement("skill", new XAttribute("identifier", skill.Value.Identifier), new XAttribute("level", skill.Value.Level)));
             }
             
             parentElement.Add(jobElement);

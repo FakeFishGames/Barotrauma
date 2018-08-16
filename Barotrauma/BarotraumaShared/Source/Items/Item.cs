@@ -1251,7 +1251,7 @@ namespace Barotrauma
                 if (requiredSkill != null)
                 {
                     GUI.AddMessage(TextManager.Get("InsufficientSkills")
-                        .Replace("[requiredskill]", requiredSkill.Name)
+                        .Replace("[requiredskill]", TextManager.Get("SkillName." + requiredSkill.Identifier))
                         .Replace("[requiredlevel]", ((int)requiredSkill.Level).ToString()), Color.Red);
                 }
             }

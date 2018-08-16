@@ -129,9 +129,9 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : 0.0f;
             foreach (Skill skill in requiredSkills)
             {
-                float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Name);
+                float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                 if (characterSkillLevel >= skill.Level) successFactor += 1.0f / requiredSkills.Count;
-                CurrentFixer.Info.IncreaseSkillLevel(skill.Name,
+                CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
                     SkillIncreaseMultiplier * deltaTime / Math.Max(characterSkillLevel, 1.0f),
                      CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
             }
