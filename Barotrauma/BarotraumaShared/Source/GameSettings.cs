@@ -169,6 +169,12 @@ namespace Barotrauma
             }
         }
 
+        public string Language
+        {
+            get { return TextManager.Language; }
+            set { TextManager.Language = value; }
+        }
+
         public HashSet<ContentPackage> SelectedContentPackages { get; set; }
 
         public string   MasterServerUrl { get; set; }
@@ -228,6 +234,8 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             
+            Language = doc.Root.GetAttributeString("language", "English");
+
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
