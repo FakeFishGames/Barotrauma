@@ -137,6 +137,11 @@ namespace Barotrauma
             }
         }
 
+        public StructurePrefab Prefab
+        {
+            get { return prefab; }
+        }
+
         public HashSet<string> Tags
         {
             get { return prefab.Tags; }
