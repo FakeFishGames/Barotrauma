@@ -632,6 +632,13 @@
   <HuskCantSpeak>Tunnet jotain liikkeestä kurkussa. Yrität huutaa, mutta mitään ääntä ei tule ulos.</HuskCantSpeak>
   <HuskActivate>Outoinen kitininen liite puhkeaa suustasi. Käytä sitä injektoimaan munat eläväksi elimistäksi painamalla [Attack] -painiketta.</HuskActivate>
 
+  <!-- Gameplay tips -->
+  <LoadingScreenTip>Et voi maksaa rahdin toimittamisesta, jos jokin rahdista puuttuu tai vahingoittaa kuljetuksen aikana.</LoadingScreenTip>
+  <LoadingScreenTip>Jupiterin ympärillä olevat säteilyhihnat tekevät siitä epäkäytännöllistä luoda pysyviä siirtokuntia Euroopan pinnan yläpuolelle, ja sinällään lähes kaikki Europanin etuvartiot sijaitsevat sen jäisen kuoren alapuolella.</LoadingScreenTip>
+  <LoadingScreenTip>Euroopan vedenalaisen ekosysteemin dynamiikkaa ei vieläkään täysin ymmärretä, mutta uskotaan, että elintarvikeketjun perusta muodostuu useimmiten kemosynteettisistä bakteereista.</LoadingScreenTip>
+  <LoadingScreenTip>Eurooppa-koalitio alkoi kauppa- ja yhteistyösopimuksena kahden suurimman europanelakohteen ja kourallisen yksityisten puolisotilaallisten ryhmien välillä, mutta vähitellen kasvoi siitä, mikä on lähinnä euroopan hallitus.</LoadingScreenTip>
+  <LoadingScreenTip>Hyvin laiskannut aloite, jolla autetaan ajajat menestymään jännittävään ympäristöön sisällyttämällä ammattiviihdyttäjiä miehistöihin, pidettiin viivytyksettä epäonnistuneeksi ja lopetettiin.</LoadingScreenTip>
+  
   <!-- Entity names and descriptions -->
   <hull.Name>Runko</hull.Name>
   <hull.Description>Rungot määrittävät, mitkä osat katsotaan "osaston sisällä". Yleensä jokaisen huoneen on oltava rungon mukana.</hull.Description>
@@ -675,5 +682,6 @@
   <JobDescription.medicaldoctor>Hoitaa vammautuneita yms.</JobDescription.medicaldoctor>
   <JobName.assistant>Avustaja</JobName.assistant>
   <JobDescription.assistant>Antaa apu apustusta</JobDescription.assistant>
+  
   
 </infotexts>
