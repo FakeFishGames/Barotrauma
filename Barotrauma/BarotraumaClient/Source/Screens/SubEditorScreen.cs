@@ -225,7 +225,8 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform), category.ToString())
+                var catButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
+                    TextManager.Get("MapEntityCategory." + category.ToString()))
                 {
                     UserData = category,
                     OnClicked = (btn, userdata) => { entityMenuOpen = true; OpenEntityMenu((MapEntityCategory)userdata); return true; }
