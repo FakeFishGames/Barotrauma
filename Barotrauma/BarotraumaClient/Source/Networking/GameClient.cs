@@ -3,7 +3,6 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -826,9 +825,7 @@ namespace Barotrauma.Networking
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
-                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                    msg += "   - " + attributes[0].Description + "\n";
+                    msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
                 }
             }
 

@@ -17,7 +17,26 @@ namespace Barotrauma
         {
             get { return availableLanguages; }
         }
-                
+
+        public static List<string> GetTextFiles()
+        {
+            var list = new List<string>();
+            GetTextFilesRecursive(Path.Combine("Content", "Texts"), ref list);
+            return list;
+        }
+
+        private static void GetTextFilesRecursive(string directory, ref List<string> list)
+        {
+            foreach (string file in Directory.GetFiles(directory))
+            {
+                list.Add(file);
+            }
+            foreach (string subDir in Directory.GetDirectories(directory))
+            {
+                GetTextFilesRecursive(subDir, ref list);
+            }
+        }
+       
         public static void LoadTextPacks(string directory)
         {
             foreach (string file in Directory.GetFiles(directory))

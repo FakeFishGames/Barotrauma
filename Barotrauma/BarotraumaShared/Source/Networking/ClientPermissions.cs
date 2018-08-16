@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Xml.Linq;
 
@@ -10,22 +9,15 @@ namespace Barotrauma.Networking
     enum ClientPermissions
     {
         None = 0,
-        [Description("End round")]
         EndRound = 1,
-        [Description("Kick")]
         Kick = 2,
-        [Description("Ban")]
         Ban = 4,
-        [Description("Select submarine")]
         SelectSub = 8,
-        [Description("Select game mode")]
         SelectMode = 16,
-        [Description("Manage campaign")]
         ManageCampaign = 32,
-        [Description("Console commands")]
         ConsoleCommands = 64,
-        [Description("Access server log")]
         ServerLog = 128
+        //If you add more permissions, change how servers send the permissions to client (atm written as one byte)
     }
 
     class PermissionPreset
