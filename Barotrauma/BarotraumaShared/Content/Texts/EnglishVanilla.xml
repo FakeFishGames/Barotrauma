@@ -18,7 +18,6 @@
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
 -->
 
-<!-- Note to modders/translators: the text file must be encoded using UTF-8! -->
 <infotexts language="English">    
   <!-- Loading screen -->
   <Loading>Loading...</Loading>
@@ -73,7 +72,7 @@
   <SoundVolume>Sound volume</SoundVolume>
   <MusicVolume>Music volume</MusicVolume>
   <Controls>Controls</Controls>
-  <Language>Language</Language>
+  <Language>Language</Language>  
   <ContentPackage>Content package</ContentPackage>
   <ContentPackages>Content packages</ContentPackages>
   <CorePackageRequiredWarning>You cannot deselect the content package because it's a core package required for the game to work. You may switch it by selecting another core package.</CorePackageRequiredWarning>
@@ -83,8 +82,25 @@
   <ApplySettingsYes>Apply</ApplySettingsYes>
   <ApplySettingsNo>Discard</ApplySettingsNo>
   <RestartRequiredLabel>Restart required</RestartRequiredLabel>
-  <RestartRequiredText>You need to restart the game for the resolution changes to take effect.</RestartRequiredText>
+  <RestartRequiredResolution>You need to restart the game for the resolution changes to take effect.</RestartRequiredResolution>
+  <RestartRequiredLanguage>You need to restart the game for the language change to take effect.</RestartRequiredLanguage>
 
+  <InputType.Select>Select</InputType.Select>
+  <InputType.Use>Use</InputType.Use>
+  <InputType.Aim>Aim</InputType.Aim>
+  <InputType.Up>Up</InputType.Up>
+  <InputType.Down>Down</InputType.Down>
+  <InputType.Left>Left</InputType.Left>
+  <InputType.Right>Right</InputType.Right>
+  <InputType.Attack>Attack</InputType.Attack>
+  <InputType.Run>Run</InputType.Run>
+  <InputType.Crouch>Crouch</InputType.Crouch>
+  <InputType.Chat>Chat</InputType.Chat>
+  <InputType.RadioChat>Radio chat</InputType.RadioChat>
+  <InputType.CrewOrders>Crew orders</InputType.CrewOrders>
+  <InputType.Ragdoll>Ragdoll</InputType.Ragdoll>
+  <InputType.Health>Health</InputType.Health>
+  
   <!-- Server settings menu -->
   <ServerSettingsRoundsTab>Rounds</ServerSettingsRoundsTab>
   <ServerSettingsServerTab>Server</ServerSettingsServerTab>
