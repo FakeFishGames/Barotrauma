@@ -742,7 +742,7 @@ namespace Barotrauma
             }
             if (effect.type != type) return;
             
-            bool hasTargets = (effect.TargetNames == null);
+            bool hasTargets = (effect.TargetIdentifiers == null);
 
             Item[] containedItems = ContainedItems;  
             if (effect.OnContainingNames != null)
@@ -761,24 +761,15 @@ namespace Barotrauma
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
-                        if (effect.TargetNames != null && 
-                            !effect.TargetNames.Contains(containedItem.Name) && 
-                            !effect.TargetNames.Contains(containedItem.prefab.Identifier))
+                        if (effect.TargetIdentifiers != null &&
+                            !effect.TargetIdentifiers.Contains(containedItem.prefab.Identifier) &&
+                            !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id)))
                         {
-                            bool tagFound = false;
-                            foreach (string targetName in effect.TargetNames)
-                            {
-                                if (!containedItem.HasTag(targetName)) continue;
-                                tagFound = true;
-                                break;
-                            }
-                            if (!tagFound) continue;
+                            continue;
                         }
 
                         hasTargets = true;
                         targets.Add(containedItem);
-                        //effect.Apply(type, deltaTime, containedItem);
-                        //containedItem.ApplyStatusEffect(effect, type, deltaTime, containedItem);
                     }
                 }
             }

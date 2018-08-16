@@ -421,6 +421,7 @@ namespace Barotrauma
             }
 
             doc.Root.Add(
+                new XAttribute("language", TextManager.Language),
                 new XAttribute("masterserverurl", MasterServerUrl),
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),

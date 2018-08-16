@@ -76,7 +76,7 @@ namespace Barotrauma
         }
 
         private TargetType targetTypes;
-        protected HashSet<string> targetNames;
+        protected HashSet<string> targetIdentifiers;
 
         private List<RelatedItem> requiredItems;
 
@@ -119,9 +119,9 @@ namespace Barotrauma
 
         public readonly float FireSize;
         
-        public HashSet<string> TargetNames
+        public HashSet<string> TargetIdentifiers
         {
-            get { return targetNames; }
+            get { return targetIdentifiers; }
         }
 
         public HashSet<string> OnContainingNames
@@ -213,18 +213,21 @@ namespace Barotrauma
                         }
 
                         break;
-                    case "disabledeltatime":                        
+                    case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
                         break;
                     case "setvalue":
                         setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
-                        string[] names = attribute.Value.Split(',');
-                        targetNames = new HashSet<string>();
-                        for (int i=0; i < names.Length; i++ )
+                        DebugConsole.ThrowError("Error in StatusEffect config (" + parentDebugName + ") - use identifiers or tags to define the targets instead of names.");
+                        break;
+                    case "targetidentifiers":
+                        string[] identifiers = attribute.Value.Split(',');
+                        targetIdentifiers = new HashSet<string>();
+                        for (int i = 0; i < identifiers.Length; i++)
                         {
-                            targetNames.Add(names[i].Trim());
+                            targetIdentifiers.Add(identifiers[i].Trim());
                         }
                         break;
                     case "duration":
@@ -369,11 +372,30 @@ namespace Barotrauma
             return false;
         }
 
+        protected bool IsValidTarget(ISerializableEntity entity)
+        {
+            if (entity is Item item)
+            {
+                if (item.HasTag(targetIdentifiers)) return true;
+                if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
+            }
+            else if (entity is Structure structure)
+            {
+                if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
+            }
+            else if (entity is Character character)
+            {
+                if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
+            }
+
+            return targetIdentifiers.Any(id => id == entity.Name);
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
-            if (targetNames != null && !targetNames.Contains(target.Name)) return;
+            if (targetIdentifiers != null && !IsValidTarget(target)) return;
             
             if (duration > 0.0f && !Stackable)
             {
@@ -398,22 +420,9 @@ namespace Barotrauma
             if (this.type != type) return;
 
             //remove invalid targets
-            if (targetNames != null)
+            if (targetIdentifiers != null)
             {
-                targets.RemoveAll(t => 
-                {
-                    Item item = t as Item;
-                    if (item == null)
-                    {
-                        return !targetNames.Contains(t.Name);
-                    }
-                    else
-                    {
-                        if (item.HasTag(targetNames)) return false;
-                        if (item.Prefab.NameMatches(targetNames)) return false;
-                    }
-                    return true;
-                });
+                targets.RemoveAll(t => !IsValidTarget(t));
                 if (targets.Count == 0) return;
             }
 
