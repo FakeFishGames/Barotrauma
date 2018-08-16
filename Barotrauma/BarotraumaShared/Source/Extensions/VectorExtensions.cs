@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 
-namespace Barotrauma
+namespace Barotrauma.Extensions
 {
     public static class VectorExtensions
     {
