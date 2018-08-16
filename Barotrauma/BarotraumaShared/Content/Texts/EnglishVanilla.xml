@@ -308,121 +308,132 @@
   <DisconnectMessage.IncompatibleContentPackage>You must disable the content package [incompatiblecontentpackage] before joining.</DisconnectMessage.IncompatibleContentPackage>
   <DisconnectMessage.IncompatibleContentPackages>You must disable the content packages [incompatiblecontentpackages] before joining.</DisconnectMessage.IncompatibleContentPackages>
   
-    <!-- Server lobby -->
-    <RestartingIn>Restarting in</RestartingIn>
-    <Votes>Votes</Votes>
-    <GameMode>Game mode</GameMode>
-    <MissionType>Mission type</MissionType>
-    <Random>Random</Random>
-    <LevelSeed>Level seed</LevelSeed>
-    <LevelDifficulty>Level difficulty</LevelDifficulty>
-    <Traitors>Traitors</Traitors>
-    <BotCount>Bot count</BotCount>
-    <BotSpawnMode>Bot spawn mode</BotSpawnMode>
-    <AutoRestart>Automatic restart</AutoRestart>
-    <ServerLog>Server log</ServerLog>
-    <CampaignView>Campaign view</CampaignView>
-    <PlayYourself>Play yourself</PlayYourself>
-    <StartGameButton>Start</StartGameButton>
-    <ServerSettingsButton>Settings</ServerSettingsButton>
-    <SpectateButton>Spectate</SpectateButton>
-    <Gender>Gender</Gender>
-    <JobPreferences>Job preferences</JobPreferences>
-    <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
-    <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
-    <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
-    <Rank>Rank</Rank>
-    <CustomRank>Custom</CustomRank>
-    <Permissions>Permissions</Permissions>
-    <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
-    <Kick>Kick</Kick>
-    <VoteToKick>Vote to kick</VoteToKick>
-    <Ban>Ban</Ban>
-    <BanRange>Ban range</BanRange>
-    <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
-    <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
-    <PrivateMessageTag>[PM]</PrivateMessageTag>
-    <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
-    <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
-    <SubDoesntMatchError>Your version of the submarine file [subname] does not match the server's version!\nYour MD5 hash: [myhash]\nServer's MD5 hash: [serverhash]\n</SubDoesntMatchError>
-    <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
-    <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
-    <WaitForFileTransfers>Waiting for file transfers to finish before starting the round...</WaitForFileTransfers>
-    <StartNow>Start now</StartNow>
-    <ServerInitFailed>Starting the server failed.</ServerInitFailed>
-    <ServerInitFailedAddressAlreadyInUse>[errormsg]. Are you trying to run multiple servers on the same port?</ServerInitFailedAddressAlreadyInUse>
-    <PermissionsRemoved>The host has removed all your special permissions.</PermissionsRemoved>
-    <CurrentPermissions>Current permissions:</CurrentPermissions>
-    <PermissionsChanged>Permissions changed</PermissionsChanged>
-    <PermittedConsoleCommands>Permitted console commands:</PermittedConsoleCommands>
-    <PleaseWaitRoundRunning>Please wait</PleaseWaitRoundRunning>
-    <RoundRunningSpectateDisabled>A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.</RoundRunningSpectateDisabled>
-    <RoundRunningSpectateEnabled>A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round.</RoundRunningSpectateEnabled>
-    <ServerDownloadFinished>Download finished</ServerDownloadFinished>
-    <DownloadingFile>Downloading [filename]</DownloadingFile>
-    <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
+  <!-- Server lobby -->
+  <RestartingIn>Restarting in</RestartingIn>
+  <Votes>Votes</Votes>
+  <GameMode>Game mode</GameMode>
+  <MissionType>Mission type</MissionType>
+  <Random>Random</Random>
+  <LevelSeed>Level seed</LevelSeed>
+  <LevelDifficulty>Level difficulty</LevelDifficulty>
+  <Traitors>Traitors</Traitors>
+  <BotCount>Bot count</BotCount>
+  <BotSpawnMode>Bot spawn mode</BotSpawnMode>
+  <AutoRestart>Automatic restart</AutoRestart>
+  <ServerLog>Server log</ServerLog>
+  <CampaignView>Campaign view</CampaignView>
+  <PlayYourself>Play yourself</PlayYourself>
+  <StartGameButton>Start</StartGameButton>
+  <ServerSettingsButton>Settings</ServerSettingsButton>
+  <SpectateButton>Spectate</SpectateButton>
+  <Gender>Gender</Gender>
+  <JobPreferences>Job preferences</JobPreferences>
+  <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
+  <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
+  <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
+  <Rank>Rank</Rank>
+  <CustomRank>Custom</CustomRank>
+  <Permissions>Permissions</Permissions>
+  <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
+  <Kick>Kick</Kick>
+  <VoteToKick>Vote to kick</VoteToKick>
+  <Ban>Ban</Ban>
+  <BanRange>Ban range</BanRange>
+  <BanReasonPrompt>Reason for the ban?</BanReasonPrompt>
+  <KickReasonPrompt>Reason for kicking?</KickReasonPrompt>
+  <PrivateMessageTag>[PM]</PrivateMessageTag>
+  <SubNotFoundError>Submarine [subname] was selected by the server. Matching file not found in your submarine folder.</SubNotFoundError>
+  <SubLoadError>Could not load submarine [subname]. The file may be corrupted.</SubLoadError>
+  <SubDoesntMatchError>Your version of the submarine file [subname] does not match the server's version!\nYour MD5 hash: [myhash]\nServer's MD5 hash: [serverhash]\n</SubDoesntMatchError>
+  <DownloadSubLabel>Submarine not found!</DownloadSubLabel>
+  <DownloadSubQuestion>Do you want to download the file from the server host?</DownloadSubQuestion>
+  <WaitForFileTransfers>Waiting for file transfers to finish before starting the round...</WaitForFileTransfers>
+  <StartNow>Start now</StartNow>
+  <ServerInitFailed>Starting the server failed.</ServerInitFailed>
+  <ServerInitFailedAddressAlreadyInUse>[errormsg]. Are you trying to run multiple servers on the same port?</ServerInitFailedAddressAlreadyInUse>
+  <PermissionsRemoved>The host has removed all your special permissions.</PermissionsRemoved>
+  <CurrentPermissions>Current permissions:</CurrentPermissions>
+  <PermissionsChanged>Permissions changed</PermissionsChanged>
+  <PermittedConsoleCommands>Permitted console commands:</PermittedConsoleCommands>
+  <PleaseWaitRoundRunning>Please wait</PleaseWaitRoundRunning>
+  <RoundRunningSpectateDisabled>A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.</RoundRunningSpectateDisabled>
+  <RoundRunningSpectateEnabled>A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round.</RoundRunningSpectateEnabled>
+  <ServerDownloadFinished>Download finished</ServerDownloadFinished>
+  <DownloadingFile>Downloading [filename]</DownloadingFile>
+  <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
 
-    <!-- Ingame UI -->
-    <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
-    <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
-    <RespawningIn>Respawning players in [time]</RespawningIn>
-    <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
+  <!-- Ingame UI -->
+  <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
+  <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>
+  <RespawningIn>Respawning players in [time]</RespawningIn>
+  <RespawnShuttleLeavingIn>Respawn Shuttle leaving in [time]</RespawnShuttleLeavingIn>
 
-    <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
-    <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
+  <InsufficientSkills>Your skills may be insufficient to use the item! [requiredskill] level [requiredlevel] required.</InsufficientSkills>
+  <SkillIncreased>[name]'s [skillname] skill increased to [newlevel]!</SkillIncreased>
 
-    <!-- Sub editor -->
-    <Items>Items</Items>
-    <Structures>Structures</Structures>
-    <TotalHullVolume>Total hull volume</TotalHullVolume>
-    <SelectedHullVolume>Selected hull volume</SelectedHullVolume>
-    <OptimalBallastLevel>optimal neutral ballast level is [value]</OptimalBallastLevel>
-    <SaveItemAssembly>Save as item assembly</SaveItemAssembly>
-    <InsufficientBallast>insufficient volume for buoyancy control</InsufficientBallast>
-    <PhysicsBodies>Physics bodies</PhysicsBodies>
-    <OpenSubButton>Open...</OpenSubButton>
-    <SaveSubButton>Save</SaveSubButton>
-    <AddSubButton>Add submarine</AddSubButton>
-    <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
-    <HoldToLink>Hold space to link to another item</HoldToLink>
-    <FilterMapEntities>Filter</FilterMapEntities>
-    <CharacterModeButton>Character mode</CharacterModeButton>
-    <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
-    <WiringModeButton>Wiring mode</WiringModeButton>
-    <WiringModeToolTip>Allows you to connect wires between items.</WiringModeToolTip>
-    <GenerateWaypointsButton>Generate waypoints</GenerateWaypointsButton>
-    <GenerateWaypointsToolTip>AI controlled crew members require waypoints to navigate around the sub.</GenerateWaypointsToolTip>
-    <ShowEntitiesLabel>Show</ShowEntitiesLabel>
-    <ShowLighting>Lighting</ShowLighting>
-    <ShowWaypoints>Waypoints</ShowWaypoints>
-    <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
-    <ShowLinks>Links</ShowLinks>
-    <ShowHulls>Hulls</ShowHulls>
-    <ShowGaps>Gaps</ShowGaps>
-    <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
-    <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
-    <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>
-    <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
-    <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
-    <SaveSubDialogName>Name</SaveSubDialogName>
-    <SaveSubDialogDescription>Description</SaveSubDialogDescription>
-    <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
-    <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
-    <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
-    <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
-    <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
-    <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
-    <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
-    <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>
-    <DisconnectedTurretsWarning>The submarine contains [itemname]s which haven't been linked to an ammunition loader. Select the item and click a loader while holding space to link them.</DisconnectedTurretsWarning>
-    <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
-    <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
-    <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
-    <AdjustLightsPrompt>This submarine was saved using an older version of Barotrauma, which used a different formula to calculate lighting. The lighting in the submarine may now appear too bright. Do you want to automatically readjust the lighting for the new lighting formula?</AdjustLightsPrompt>
-    <AdjustedLightsNotification>The brightness of the lights has been adjusted. Areas with multiple light sources may still appear too bright and require reducing the range or brightness of the lights manually. You may also use the console command "multiplylights" to adjust the brightness of all the lights as once. For example, "multiplylights 1,1,1,0.5" would decrease the brightness by 50%.</AdjustedLightsNotification>
-    <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
-    <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>
+  <!-- Sub editor -->
+  <Items>Items</Items>
+  <Structures>Structures</Structures>
+  <TotalHullVolume>Total hull volume</TotalHullVolume>
+  <SelectedHullVolume>Selected hull volume</SelectedHullVolume>
+  <OptimalBallastLevel>optimal neutral ballast level is [value]</OptimalBallastLevel>
+  <SaveItemAssembly>Save as item assembly</SaveItemAssembly>
+  <InsufficientBallast>insufficient volume for buoyancy control</InsufficientBallast>
+  <PhysicsBodies>Physics bodies</PhysicsBodies>
+  <OpenSubButton>Open...</OpenSubButton>
+  <SaveSubButton>Save</SaveSubButton>
+  <AddSubButton>Add submarine</AddSubButton>
+  <AddSubToolTip>Places another submarine into the current submarine file. Can be used for adding things such as smaller vessels, escape pods or detachable sections into the main submarine.</AddSubToolTip>
+  <HoldToLink>Hold space to link to another item</HoldToLink>
+  <FilterMapEntities>Filter</FilterMapEntities>
+  <CharacterModeButton>Character mode</CharacterModeButton>
+  <CharacterModeToolTip>Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.</CharacterModeToolTip>
+  <WiringModeButton>Wiring mode</WiringModeButton>
+  <WiringModeToolTip>Allows you to connect wires between items.</WiringModeToolTip>
+  <GenerateWaypointsButton>Generate waypoints</GenerateWaypointsButton>
+  <GenerateWaypointsToolTip>AI controlled crew members require waypoints to navigate around the sub.</GenerateWaypointsToolTip>
+  <ShowEntitiesLabel>Show</ShowEntitiesLabel>
+  <ShowLighting>Lighting</ShowLighting>
+  <ShowWaypoints>Waypoints</ShowWaypoints>
+  <ShowSpawnpoints>Spawnpoints</ShowSpawnpoints>
+  <ShowLinks>Links</ShowLinks>
+  <ShowHulls>Hulls</ShowHulls>
+  <ShowGaps>Gaps</ShowGaps>
+  <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
+  <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
+  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>
+  <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
+  <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
+  <SaveSubDialogName>Name</SaveSubDialogName>
+  <SaveSubDialogDescription>Description</SaveSubDialogDescription>
+  <SaveSubDialogSettings>Settings</SaveSubDialogSettings>
+  <SaveItemAssemblyDialogHeader>Save assembly</SaveItemAssemblyDialogHeader>
+  <SaveItemAssemblyDialogName>Name</SaveItemAssemblyDialogName>
+  <SaveItemAssemblyDialogDescription>Description</SaveItemAssemblyDialogDescription>
+  <ItemAssemblyNameMissingWarning>Name your item assembly before saving it.</ItemAssemblyNameMissingWarning>
+  <ItemAssemblyNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</ItemAssemblyNameIllegalCharsWarning>
+  <NoHullsWarning>No hulls found in the submarine. Hulls determine the "borders" of an individual room and are required for water and air distribution to work correctly.</NoHullsWarning>
+  <DisconnectedVentsWarning>The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.</DisconnectedVentsWarning>
+  <DisconnectedTurretsWarning>The submarine contains [itemname]s which haven't been linked to an ammunition loader. Select the item and click a loader while holding space to link them.</DisconnectedTurretsWarning>
+  <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
+  <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
+  <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
+  <AdjustLightsPrompt>This submarine was saved using an older version of Barotrauma, which used a different formula to calculate lighting. The lighting in the submarine may now appear too bright. Do you want to automatically readjust the lighting for the new lighting formula?</AdjustLightsPrompt>
+  <AdjustedLightsNotification>The brightness of the lights has been adjusted. Areas with multiple light sources may still appear too bright and require reducing the range or brightness of the lights manually. You may also use the console command "multiplylights" to adjust the brightness of all the lights as once. For example, "multiplylights 1,1,1,0.5" would decrease the brightness by 50%.</AdjustedLightsNotification>
+  <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
+  <NoHullNamesWarning>No names given to any of the hulls, using autogenerated names. Characters use the names to refer to different rooms when reporting things such as hull breaches.</NoHullNamesWarning>
 
+  <!-- Entity categories -->
+  <MapEntityCategory.Structure>Structure</MapEntityCategory.Structure>
+  <MapEntityCategory.Machine>Machine</MapEntityCategory.Machine>
+  <MapEntityCategory.Equipment>Equipment</MapEntityCategory.Equipment>
+  <MapEntityCategory.Electrical>Electrical</MapEntityCategory.Electrical>
+  <MapEntityCategory.Material>Material</MapEntityCategory.Material>
+  <MapEntityCategory.Misc>Misc</MapEntityCategory.Misc>
+  <MapEntityCategory.Alien>Alien</MapEntityCategory.Alien>
+  <MapEntityCategory.ItemAssembly>ItemAssembly</MapEntityCategory.ItemAssembly>
+  <MapEntityCategory.Legacy>Legacy</MapEntityCategory.Legacy>
+  
     <!-- Particle editor -->
     <ParticleEditorSaveAll>Save all</ParticleEditorSaveAll>
     <ParticleEditorCopyToClipboard>Copy to clipboard</ParticleEditorCopyToClipboard>
@@ -689,5 +700,9 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
+
+
+
 
 </infotexts>
