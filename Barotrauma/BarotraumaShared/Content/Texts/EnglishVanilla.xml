@@ -397,6 +397,17 @@
   <DownloadingFile>Downloading [filename]</DownloadingFile>
   <FileDownloadedNotification>File "[filename]" was downloaded successfully.</FileDownloadedNotification>
 
+  <!-- Client permissions -->
+  <ClientPermission.None>None</ClientPermission.None>
+  <ClientPermission.EndRound>End round</ClientPermission.EndRound>
+  <ClientPermission.Kick>Kick</ClientPermission.Kick>
+  <ClientPermission.Ban>Ban</ClientPermission.Ban>
+  <ClientPermission.SelectSub>Select sub</ClientPermission.SelectSub>
+  <ClientPermission.SelectMode>Select mode</ClientPermission.SelectMode>
+  <ClientPermission.ManageCampaign>Manage campaign</ClientPermission.ManageCampaign>
+  <ClientPermission.ConsoleCommands>Console commands</ClientPermission.ConsoleCommands>
+  <ClientPermission.ServerLog>Server log</ClientPermission.ServerLog>
+  
   <!-- Ingame UI -->
   <EndRoundVotes>Votes to end the round (y/n) [y]/[n]</EndRoundVotes>
   <RespawnShuttleDispatching>Respawn Shuttle dispatching in [time]</RespawnShuttleDispatching>

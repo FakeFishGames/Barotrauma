@@ -4,9 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 
 namespace Barotrauma
 {
@@ -1175,18 +1173,13 @@ namespace Barotrauma
                 {
                     UserData = selectedClient
                 };
-                
+
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
                     if (permission == ClientPermissions.None) continue;
 
-                    FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-                    string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
-
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
-                        permissionStr, font: GUI.SmallFont)
+                        TextManager.Get("ClientPermission." + permission), font: GUI.SmallFont)
                     {
                         UserData = permission,
                         Selected = selectedClient.HasPermission(permission),
