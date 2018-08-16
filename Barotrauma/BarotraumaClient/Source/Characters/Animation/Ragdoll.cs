@@ -87,6 +87,14 @@ namespace Barotrauma
             }
         }
 
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            foreach (var joint in LimbJoints)
+            {
+                joint.UpdateDeformations();
+            }
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch, Camera cam)
         {
             if (simplePhysicsEnabled) return;

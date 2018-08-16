@@ -358,12 +358,12 @@ namespace Barotrauma
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null)
             {
-                walkPos -= movement.Length();
+                WalkPos -= movement.Length();
                 var waveLength = Math.Abs(CurrentSwimParams.WaveLength);
                 var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
                 if (waveLength > 0 && waveAmplitude > 0)
                 {
-                    float waveRotation = (float)Math.Sin(walkPos / waveLength);
+                    float waveRotation = (float)Math.Sin(WalkPos / waveLength);
                     tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
                 }
             }
@@ -430,11 +430,11 @@ namespace Barotrauma
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             
-            walkPos -= MainLimb.LinearVelocity.X * 0.05f;
+            WalkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
-                (float)Math.Cos(walkPos) * CurrentGroundedParams.StepSize.X * 3.0f,
-                (float)Math.Sin(walkPos) * CurrentGroundedParams.StepSize.Y * 2.0f);
+                (float)Math.Cos(WalkPos) * CurrentGroundedParams.StepSize.X * 3.0f,
+                (float)Math.Sin(WalkPos) * CurrentGroundedParams.StepSize.Y * 2.0f);
 
             foreach (Limb limb in Limbs)
             {
@@ -483,17 +483,17 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(walkPos)) * 10.0f);
-            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (float)Math.Sin(walkPos)) * 10.0f);
+            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(WalkPos)) * 10.0f);
+            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (float)Math.Sin(WalkPos)) * 10.0f);
 
-            walkPos += deltaTime * 5.0f;
+            WalkPos += deltaTime * 5.0f;
 
             Vector2 centerOfMass = GetCenterOfMass();
 
             foreach (Limb limb in Limbs)
             {
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
-                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
+                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(WalkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
             }
         }
 

@@ -1220,7 +1220,10 @@ namespace Barotrauma
                     }
                 }
             }
+            UpdateProjSpecific(deltaTime);
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         partial void Splash(Limb limb, Hull limbHull);
 

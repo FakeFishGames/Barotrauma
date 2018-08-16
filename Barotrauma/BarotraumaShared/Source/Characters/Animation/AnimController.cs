@@ -87,7 +87,7 @@ namespace Barotrauma
 
         public bool AnimationTestPose { get; set; }
 
-        protected float walkPos;
+        public float WalkPos { get; protected set; }
 
         public AnimController(Character character, string seed, RagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 

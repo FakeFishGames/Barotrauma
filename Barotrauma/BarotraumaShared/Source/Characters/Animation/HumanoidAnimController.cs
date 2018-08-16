@@ -387,8 +387,8 @@ namespace Barotrauma
                 TargetMovement = Vector2.Normalize(TargetMovement) * maxSpeed;
             }
 
-            float walkPosX = (float)Math.Cos(walkPos);
-            float walkPosY = (float)Math.Sin(walkPos);
+            float walkPosX = (float)Math.Cos(WalkPos);
+            float walkPosY = (float)Math.Sin(WalkPos);
 
 
             Vector2 stepSize = CurrentGroundedParams.StepSize;
@@ -506,7 +506,7 @@ namespace Barotrauma
             {
                 //progress the walking animation
                 //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
-                walkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * Math.Sign(movement.X);
+                WalkPos -= MathHelper.ToRadians(CurrentGroundedParams.CycleSpeed) * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -553,7 +553,7 @@ namespace Barotrauma
 
                 float lowerY = CurrentGroundedParams.HandClampY;
 
-                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * CurrentGroundedParams.HandMoveAmount.Y));
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(WalkPos - Math.PI * 1.5f) * CurrentGroundedParams.HandMoveAmount.Y));
 
                 Vector2 posAddition = new Vector2(Math.Sign(movement.X) * CurrentGroundedParams.HandMoveOffset.X, CurrentGroundedParams.HandMoveOffset.Y);
 
@@ -807,7 +807,7 @@ namespace Barotrauma
                     //pull head above water
                     head.body.SmoothRotate(0.0f, 5.0f);
 
-                    walkPos += 0.05f;
+                    WalkPos += 0.05f;
                 }
                 else
                 {
@@ -828,7 +828,7 @@ namespace Barotrauma
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, movementLerp);
             }
 
-            walkPos += movement.Length();
+            WalkPos += movement.Length();
             //float handCyclePos = walkPos / 2.0f * -Dir;
             //float waveRotation = (float)Math.Sin(walkPos / waveLength);
             //walkPos -= movement.Length();
@@ -1524,7 +1524,7 @@ namespace Barotrauma
         {
             base.Flip();
 
-            walkPos = -walkPos;
+            WalkPos = -WalkPos;
 
             Limb torso = GetLimb(LimbType.Torso);
 
