@@ -21,13 +21,13 @@ namespace Barotrauma.Networking
         private List<Client> disconnectedClients = new List<Client>();
 
         private int roundStartSeed;
-        
+
         //is the server running
         private bool started;
 
         private NetServer server;
         private NetPeerConfiguration config;
-       
+
         private DateTime refreshMasterTimer;
 
         private DateTime roundStartTime;
@@ -38,7 +38,11 @@ namespace Barotrauma.Networking
 
         private ServerLog log;
 
-        private VoipServer voipServer;
+        public VoipServer VoipServer
+        {
+            get;
+            private set;
+        }
 
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
@@ -174,11 +178,7 @@ namespace Barotrauma.Networking
                 
                 server.Start();
                 
-                voipServer = new VoipServer(server);
-#if CLIENT
-                voipCapture = new VoipCapture(0);
-                voipServer.RegisterQueue(voipCapture);
-#endif
+                VoipServer = new VoipServer(server);
             }
             catch (Exception e)
             {
@@ -400,7 +400,7 @@ namespace Barotrauma.Networking
 
             fileSender.Update(deltaTime);
 
-            voipServer.SendToClients(connectedClients);
+            VoipServer.SendToClients(connectedClients);
 
             if (gameStarted)
             {
@@ -656,6 +656,16 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.SERVER_COMMAND:
                     ClientReadServerCommand(inc);
+                    break;
+                case ClientPacketHeader.VOICE:
+                    byte id = inc.ReadByte();
+                    if (connectedClient.ID != id)
+                    {
+                        DebugConsole.ThrowError(
+                            "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+                        return;
+                    }
+                    connectedClient.VoipQueue.Read(inc);
                     break;
                 case ClientPacketHeader.FILE_REQUEST:
                     if (AllowFileTransfers)
