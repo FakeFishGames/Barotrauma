@@ -19,7 +19,7 @@ namespace Barotrauma
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
     };
     
-    class LimbJoint : RevoluteJoint
+    partial class LimbJoint : RevoluteJoint
     {
         public bool IsSevered;
         public bool CanBeSevered => jointParams.CanBeSevered;

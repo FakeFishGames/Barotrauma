@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Lights;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,6 +12,57 @@ using Barotrauma.SpriteDeformations;
 
 namespace Barotrauma
 {
+    partial class LimbJoint : RevoluteJoint
+    {
+        public void UpdateDeformations()
+        {
+            //var start = LimbA.WorldPosition;
+            //var end = LimbB.WorldPosition;
+            //var forward = end - start;
+            //var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
+            //var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
+            void UpdateBezier(Limb limb)
+            {
+                foreach (var deformation in limb.Deformations)
+                {
+                    if (deformation is BezierDeformation bezierDeformation)
+                    {
+                        bezierDeformation.flipX = limb.character.AnimController.IsFlipped;
+                        if ((limb.character.AnimController is FishAnimController fishController))
+                        {
+                            var waveLength = fishController.CurrentSwimParams.WaveLength;
+                            var waveAmplitude = fishController.CurrentSwimParams.WaveAmplitude;
+                            var lag = 0;
+                            if (waveLength > 0 && waveAmplitude > 0)
+                            {
+                                float waveRotation = (float)Math.Sin((fishController.WalkPos - lag) / waveLength);
+                                float v = waveRotation * waveAmplitude;
+                                bezierDeformation.start.X = v;
+                                bezierDeformation.start.Y = v;
+                                bezierDeformation.end.X = v;
+                                bezierDeformation.end.Y = v;
+                                bezierDeformation.control.X = v;
+                                bezierDeformation.control.Y = v;
+                            }
+                        }
+                    }
+                }
+            }
+            UpdateBezier(LimbA);
+            UpdateBezier(LimbB);
+            //start.Y = -start.Y;
+            //end.Y = -end.Y;
+            //control.Y = -control.Y;
+            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.Blue, true);
+            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Green, true);
+            //GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
+            //GUI.DrawLine(spriteBatch, start, end, Color.Black);
+            //GUI.DrawLine(spriteBatch, start, control, Color.Gray);
+            //GUI.DrawLine(spriteBatch, control, end, Color.Gray);
+            //GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
+        }
+    }
+
     partial class Limb
     {
         //minimum duration between hit/attack sounds
