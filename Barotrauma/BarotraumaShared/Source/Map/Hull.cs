@@ -262,7 +262,7 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Hull(MapEntityPrefab.Find("Hull"), rect, Submarine);
+            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
         }
         
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
@@ -864,10 +864,11 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            Hull h = new Hull(MapEntityPrefab.Find("Hull"), rect, submarine);
-            h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
-            h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-            return h;
+            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
+            {
+                waterVolume = element.GetAttributeFloat("pressure", 0.0f),
+                ID = (ushort)int.Parse(element.Attribute("ID").Value)
+            };
         }
 
         public override XElement Save(XElement parentElement)

@@ -585,7 +585,7 @@
 
     <GiveInButton>Give in</GiveInButton>
     <GiveInHelpMultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</GiveInHelpMultiplayer>
-    <GiveInHelpSingleplayer>"The character can no longer be revived if you give in."</GiveInHelpSingleplayer>
+    <GiveInHelpSingleplayer>The character can no longer be revived if you give in.</GiveInHelpSingleplayer>
     <DeathChatNotification>Your chat messages will only be visible to other dead players.</DeathChatNotification>
 
     <!-- Character dialogue -->
@@ -668,17 +668,22 @@
     <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
     <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
 
+  <!-- Entity names and descriptions -->
+  <hull.Name>Hull</hull.Name>
+  <hull.Description>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</hull.Description>
 
-
-
-
-
-
+  <gap.Name>Gap</gap.Name>
+  <gap.Description>Gaps allow water and air to flow between two hulls.</gap.Description>
   
+  <waypoint.Name>Waypoint</waypoint.Name>
+  <waypoint.Description>Used by AI characters to navigate inside the submarine.</waypoint.Description>
+  
+  <spawnpoint.Name>Spawnpoint</spawnpoint.Name>
+  <spawnpoint.Description>Determines which rooms the crew spawns inside.</spawnpoint.Description>
 
-
-
-
-
+  <!-- the names and descriptions of items and structures can be translated by including them in a text file, for example:  
+  <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
+  <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
+  -->
 
 </infotexts>

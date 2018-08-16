@@ -498,21 +498,21 @@ namespace Barotrauma
 
             commands.Add(new Command("dumptexts", "", (string[] args) =>
             {
-                string filePath = "Content/Texts.xml";
+                string filePath = "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
                 List<string> lines = new List<string>();
                 foreach (XElement element in doc.Root.Elements())
                 {
                     lines.Add(element.ElementInnerText());
                 }
-                File.WriteAllLines("Content/Texts.txt", lines);
+                File.WriteAllLines("Content/Texts/EnglishVanilla.txt", lines);
             }));
 
             commands.Add(new Command("loadtexts", "", (string[] args) =>
             {
-                string filePath = "Content/Texts.xml";
+                string filePath = "Content/Texts/EnglishVanilla.xml";
                 var doc = XMLExtensions.TryLoadXml(filePath);
-                string[] lines = File.ReadAllLines("Content/Texts.txt");
+                string[] lines = File.ReadAllLines("Content/Texts/EnglishVanilla.txt");
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
@@ -520,6 +520,18 @@ namespace Barotrauma
                     i++;
                 }
                 doc.Save(filePath);
+            }));
+
+            commands.Add(new Command("dumpentitytexts", "", (string[] args) =>
+            {
+                string filePath = "Content/Texts/EntityTexts.txt";
+                List<string> lines = new List<string>();
+                foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                {
+                    lines.Add("<" + me.Identifier + ".Name>" + me.Name + "</" + me.Identifier + ".Name>");
+                    lines.Add("<" + me.Identifier + ".Description>" + me.Description + "</" + me.Identifier + ".Description>");
+                }
+                File.WriteAllLines(filePath, lines);
             }));
 
 

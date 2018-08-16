@@ -113,7 +113,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
-            : base (MapEntityPrefab.Find("Gap"), submarine)
+            : base (MapEntityPrefab.Find(null, "gap"), submarine)
         {
             rect = newRect;
             linkedTo = new ObservableCollection<MapEntity>();

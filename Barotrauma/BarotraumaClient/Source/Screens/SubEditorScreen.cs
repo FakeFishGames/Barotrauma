@@ -1029,7 +1029,7 @@ namespace Barotrauma
             if (wiringMode)
             {
                 CreateDummyCharacter();
-                var item = new Item(MapEntityPrefab.Find("Screwdriver") as ItemPrefab, Vector2.Zero, null);
+                var item = new Item(MapEntityPrefab.Find(null, "screwdriver") as ItemPrefab, Vector2.Zero, null);
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
                 wiringToolPanel = CreateWiringPanel();
             }
@@ -1503,7 +1503,7 @@ namespace Barotrauma
             {
                 Rectangle hullRect = rect;
                 hullRect.Y = -hullRect.Y;
-                Hull newHull = new Hull(MapEntityPrefab.Find("Hull"),
+                Hull newHull = new Hull(MapEntityPrefab.Find(null, "hull"),
                                         hullRect,
                                         Submarine.MainSub);
             }
@@ -1516,7 +1516,7 @@ namespace Barotrauma
                 Rectangle gapRect = e.WorldRect;
                 gapRect.Y -= 8;
                 gapRect.Height = 16;
-                Gap newGap = new Gap(MapEntityPrefab.Find("Gap"),
+                Gap newGap = new Gap(MapEntityPrefab.Find(null, "gap"),
                                         gapRect);
             }
         }

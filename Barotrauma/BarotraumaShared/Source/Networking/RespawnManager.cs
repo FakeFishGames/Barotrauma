@@ -529,10 +529,10 @@ namespace Barotrauma.Networking
             //(in order to give them appropriate ID card tags)
             var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
 
-            ItemPrefab divingSuitPrefab = MapEntityPrefab.Find("Diving Suit") as ItemPrefab;
-            ItemPrefab oxyPrefab        = MapEntityPrefab.Find("Oxygen Tank") as ItemPrefab;
-            ItemPrefab scooterPrefab    = MapEntityPrefab.Find("Underwater Scooter") as ItemPrefab;
-            ItemPrefab batteryPrefab    = MapEntityPrefab.Find("Battery Cell") as ItemPrefab;
+            ItemPrefab divingSuitPrefab = MapEntityPrefab.Find(null, "divingsuit") as ItemPrefab;
+            ItemPrefab oxyPrefab        = MapEntityPrefab.Find(null, "oxygentank") as ItemPrefab;
+            ItemPrefab scooterPrefab    = MapEntityPrefab.Find(null, "underwaterscooter") as ItemPrefab;
+            ItemPrefab batteryPrefab    = MapEntityPrefab.Find(null, "batterycell") as ItemPrefab;
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnSub && wp.SpawnType == SpawnType.Cargo);
 

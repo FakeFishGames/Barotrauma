@@ -102,6 +102,7 @@ namespace Barotrauma
         {
             string itemName = itemElement.GetAttributeString("name", "");
               
+            //TODO: use identifiers
             ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
             {
