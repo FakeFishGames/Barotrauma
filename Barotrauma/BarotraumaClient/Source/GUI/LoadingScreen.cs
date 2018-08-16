@@ -15,8 +15,7 @@ namespace Barotrauma
         private RenderTarget2D renderTarget;
 
         private float state;
-
-        private List<string> tips;
+        
         private string selectedTip;
 
         public Vector2 CenterPosition;
@@ -91,6 +90,7 @@ namespace Barotrauma
             };
 
             DrawLoadingText = true;
+            selectedTip = TextManager.Get("LoadingScreenTip", true);
         }
 
         
@@ -242,10 +242,7 @@ namespace Barotrauma
         {
             drawn = false;
             LoadState = null;
-            if (tips != null && tips.Count > 0)
-            {
-                selectedTip = tips[Rand.Int(tips.Count)];
-            }
+            selectedTip = TextManager.Get("LoadingScreenTip", true);
             
             while (!drawn)
             {
@@ -264,25 +261,6 @@ namespace Barotrauma
             loadState = 100.0f;
 
             yield return CoroutineStatus.Success;
-        }
-
-        public void LoadTips()
-        {
-            tips = new List<string>();
-            foreach (string file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.LoadingScreenTips))
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
-                if (doc?.Root == null) continue;
-
-                foreach (XElement tip in doc.Root.Elements())
-                {
-                    tips.Add(tip.GetAttributeString("text", ""));
-                }
-            }
-            if (tips != null && tips.Count > 0)
-            {
-                selectedTip = tips[Rand.Int(tips.Count)];
-            }
         }
     }
 }
