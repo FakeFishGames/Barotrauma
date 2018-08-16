@@ -69,9 +69,9 @@ namespace Barotrauma
 
             AllowedJobs = new List<JobPrefab>();
             string allowedJobsStr = element.GetAttributeString("allowedjobs", "");
-            foreach (string allowedJobName in allowedJobsStr.Split(','))
+            foreach (string allowedJobIdentifier in allowedJobsStr.Split(','))
             {
-                var jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == allowedJobName.ToLowerInvariant());
+                var jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == allowedJobIdentifier.ToLowerInvariant());
                 if (jobPrefab != null) AllowedJobs.Add(jobPrefab);
             }
 

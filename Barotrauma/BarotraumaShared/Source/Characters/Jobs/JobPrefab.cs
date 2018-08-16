@@ -15,6 +15,12 @@ namespace Barotrauma
         //the number of these characters in the crew the player starts with
         public readonly int InitialCount;
 
+        public string Identifier
+        {
+            get;
+            private set;
+        }
+
         public string Name
         {
             get;
@@ -26,7 +32,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
 
         //if set to true, a client that has chosen this as their preferred job will get it no matter what
         public bool AllowAlways
@@ -71,9 +76,13 @@ namespace Barotrauma
 
         public JobPrefab(XElement element)
         {
-            Name = element.GetAttributeString("name", "name not found");
+            Identifier = element.GetAttributeString("identifier", "notfound");
 
-            Description = element.GetAttributeString("description", "");
+            string translatedName = TextManager.Get("JobName."+Identifier, true);
+            Name = string.IsNullOrEmpty(translatedName) ? element.GetAttributeString("name", "name not found") : translatedName;
+            
+            string translatedDescription = TextManager.Get("JobDescription." + Identifier, true);
+            Description = string.IsNullOrEmpty(translatedDescription) ? element.GetAttributeString("description", "") : translatedDescription;
 
             VitalityModifier = element.GetAttributeFloat("vitalitymodifier", 0.0f);
 

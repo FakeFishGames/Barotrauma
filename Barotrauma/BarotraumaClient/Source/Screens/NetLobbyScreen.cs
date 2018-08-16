@@ -728,9 +728,9 @@ namespace Barotrauma
             };
 
             int i = 1;
-            foreach (string jobName in GameMain.Config.JobNamePreferences)
+            foreach (string jobIdentifier in GameMain.Config.JobPreferences)
             {
-                JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
+                JobPrefab job = JobPrefab.List.Find(j => j.Identifier == jobIdentifier);
                 if (job == null) continue;
 
                 var jobFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), jobList.Content.RectTransform), style: "ListBoxElement")
@@ -1616,12 +1616,12 @@ namespace Barotrauma
 
                 (child.GetChild<GUITextBlock>()).Text = (i + 1) + ". " + (child.UserData as JobPrefab).Name;
 
-                jobNamePreferences.Add((child.UserData as JobPrefab).Name);
+                jobNamePreferences.Add((child.UserData as JobPrefab).Identifier);
             }
 
-            if (!GameMain.Config.JobNamePreferences.SequenceEqual(jobNamePreferences))
+            if (!GameMain.Config.JobPreferences.SequenceEqual(jobNamePreferences))
             {
-                GameMain.Config.JobNamePreferences = jobNamePreferences;
+                GameMain.Config.JobPreferences = jobNamePreferences;
                 GameMain.Config.Save();
             }
         }

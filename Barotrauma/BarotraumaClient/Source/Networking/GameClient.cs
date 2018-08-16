@@ -1600,7 +1600,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)count);
             for (int i = 0; i < count; i++)
             {
-                msg.Write(jobPreferences[i].Name);
+                msg.Write(jobPreferences[i].Identifier);
             }
         }
 

@@ -90,11 +90,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "hireable":
-                        string jobName = subElement.GetAttributeString("name", "");
-                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
+                        string jobIdentifier = subElement.GetAttributeString("identifier", "");
+                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier.ToLowerInvariant());
                         if (jobPrefab == null)
                         {
-                            DebugConsole.ThrowError("Invalid job name (" + jobName + ") in location type " + Name);
+                            DebugConsole.ThrowError("Invalid job name (" + jobIdentifier + ") in location type " + Name);
                             continue;
                         }
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
