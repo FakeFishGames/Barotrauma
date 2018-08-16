@@ -183,8 +183,14 @@ namespace Barotrauma
             languageDD.SelectItem(TextManager.Language);
             languageDD.OnSelected = (guiComponent, obj) =>
             {
+                string newLanguage = obj as string;
+                if (newLanguage == Language) return true;
+
                 UnsavedSettings = true;
-                TextManager.Language = obj as string;
+                Language = newLanguage;
+
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredLanguage"));
+
                 return true;
             };
 
@@ -236,11 +242,11 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            var inputNames = Enum.GetNames(typeof(InputType));
+            var inputNames = Enum.GetValues(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), inputFrame.RectTransform), style: null);
-                new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform), inputNames[i] + ": ", font: GUI.SmallFont);
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform), TextManager.Get("InputType." + ((InputType)i)) + ": ", font: GUI.SmallFont);
                 var keyBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopRight),
                     text: keyMapping[i].ToString(), font: GUI.SmallFont)
                 {
@@ -389,7 +395,7 @@ namespace Barotrauma
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredText"));
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredResolution"));
             }
 
             if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;

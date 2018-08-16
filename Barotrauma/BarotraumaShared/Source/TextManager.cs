@@ -8,16 +8,16 @@ namespace Barotrauma
 {
     public static class TextManager
     {
-        //key = language
-        private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
+        private static List<TextPack> textPacks = new List<TextPack>();
 
         public static string Language;
 
+        private static HashSet<string> availableLanguages = new HashSet<string>();
         public static IEnumerable<string> AvailableLanguages
         {
-            get { return textPacks.Keys; }
+            get { return availableLanguages; }
         }
-        
+                
         public static void LoadTextPacks(string directory)
         {
             foreach (string file in Directory.GetFiles(directory))
@@ -25,11 +25,8 @@ namespace Barotrauma
                 try
                 {
                     var textPack = new TextPack(file);
-                    if (!textPacks.ContainsKey(textPack.Language))
-                    {
-                        textPacks.Add(textPack.Language, new List<TextPack>());
-                    }
-                    textPacks[textPack.Language].Add(textPack);
+                    availableLanguages.Add(textPack.Language);
+                    if (textPack.Language == Language) textPacks.Add(textPack);
                 }
                 catch (Exception e)
                 {
@@ -44,19 +41,7 @@ namespace Barotrauma
 
         public static string Get(string textTag, bool returnNull = false)
         {
-            if (string.IsNullOrWhiteSpace(Language))
-            {
-                DebugConsole.ThrowError("Failed to get text \"" + textTag + "\" (language not set)!");
-                return textTag;
-            }
-
-            if (!textPacks.ContainsKey(Language))
-            {
-                DebugConsole.ThrowError("Failed to get text \"" + textTag + "\" (no text files configured for the language \"" + Language + "\")!");
-                return textTag;
-            }
-
-            foreach (TextPack textPack in textPacks[Language])
+            foreach (TextPack textPack in textPacks)
             {
                 string text = textPack.Get(textTag);
                 if (text != null) return text;
