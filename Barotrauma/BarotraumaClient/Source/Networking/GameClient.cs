@@ -30,7 +30,7 @@ namespace Barotrauma.Networking
 
         private List<Client> otherClients;
 
-        private VoipCapture voipCapture;
+        private VoipClient voipClient;
 
         private string serverIP;
 
@@ -116,8 +116,6 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            voipCapture = null;
-
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name, Gender.None, null)
             {
                 Job = null
@@ -174,7 +172,7 @@ namespace Barotrauma.Networking
             client = new NetClient(config);
             NetPeer = client;
             client.Start();
-
+            
             System.Net.IPEndPoint IPEndPoint = null;
             try
             {
@@ -535,7 +533,7 @@ namespace Barotrauma.Networking
 #endif
 
 
-                if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && HasSpawned;
 
@@ -552,6 +550,7 @@ namespace Barotrauma.Networking
                 if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
+            voipClient.SendToServer();
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -610,6 +609,9 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.UPDATE_INGAME:
                                 ReadIngameUpdate(inc);
+                                break;
+                            case ServerPacketHeader.VOICE:
+                                voipClient.Read(inc);
                                 break;
                             case ServerPacketHeader.QUERY_STARTGAME:
                                 string subName = inc.ReadString();
@@ -990,6 +992,7 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(NetIncomingMessage inc)
         {
             myID = inc.ReadByte();
+            voipClient = new VoipClient(this, client);
 
             UInt16 subListCount = inc.ReadUInt16();
             List<Submarine> submarines = new List<Submarine>();

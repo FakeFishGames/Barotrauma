@@ -43,25 +43,17 @@ namespace Barotrauma.Networking
 
                 foreach (Client client in clients)
                 {
+                    if (client.VoipQueue == queue) continue;
                     //TODO: use character states to determine whether to send or not
                     NetOutgoingMessage msg = netServer.CreateMessage();
 
                     msg.Write((byte)ServerPacketHeader.VOICE);
-                    msg.Write((UInt16)queue.QueueID);
+                    msg.Write((byte)queue.QueueID);
                     queue.Write(msg);
 
                     netServer.SendMessage(msg, client.Connection, NetDeliveryMethod.Unreliable);
                 }
             }
-        }
-    }
-
-    partial class Client
-    {
-        public VoipQueue VoipQueue
-        {
-            get;
-            private set;
         }
     }
 }

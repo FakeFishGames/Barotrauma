@@ -55,6 +55,12 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
+
+        public VoipQueue VoipQueue
+        {
+            get;
+            private set;
+        }
         
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
@@ -135,6 +141,12 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
+
+            VoipQueue = new VoipQueue(ID, true, GameMain.Server!=null);
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
+            }
         }
 
         public static bool IsValidName(string name)
