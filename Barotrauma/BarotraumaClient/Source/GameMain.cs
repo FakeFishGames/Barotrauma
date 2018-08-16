@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -143,6 +144,8 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save();
             }
+
+            TextManager.LoadTextPacks(Path.Combine("Content", "Texts"));
             
             ApplyGraphicsSettings();
 

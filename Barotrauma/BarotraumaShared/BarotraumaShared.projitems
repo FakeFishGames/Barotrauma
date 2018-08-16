@@ -11,6 +11,7 @@
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Content\Fonts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\BackgroundCreatures\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Content\Texts\" />
     <Folder Include="$(MSBuildThisFileDirectory)Content\Tutorials\" />
     <Folder Include="$(MSBuildThisFileDirectory)Data\Saves\" />
   </ItemGroup>
@@ -568,7 +569,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Particles\ParticleAtlas.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\EnglishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Artifacts\alientools.png">
@@ -2040,6 +2041,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\XMLExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\TextPack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Timing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Homoglyphs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MathUtils.cs" />
