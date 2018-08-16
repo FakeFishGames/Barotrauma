@@ -16,7 +16,18 @@ namespace Barotrauma.SpriteDeformations
             Override
         }
 
-        protected Point resolution;
+        protected Vector2[,] Deformation { get; private set; }
+        private Point _resolution;
+        public Point Resolution
+        {
+            get { return _resolution;}
+            set
+            {
+                if (_resolution == value) { return; }
+                _resolution = value.Clamp(new Point(2, 2), shaderMaxResolution);
+                Deformation = new Vector2[_resolution.X, _resolution.Y];
+            }
+        }
 
         protected BlendMode blendMode;
 
@@ -36,6 +47,8 @@ namespace Barotrauma.SpriteDeformations
                     return new CustomDeformation(element);
                 case "noise":
                     return new NoiseDeformation(element);
+                case "bezier":
+                    return new BezierDeformation(element);
                 case "reacttotriggerers":
                 default:
                     if (Enum.TryParse(typeName, out PositionalDeformation.ReactionType reactionType))
@@ -61,9 +74,7 @@ namespace Barotrauma.SpriteDeformations
                 DebugConsole.ThrowError("Error in SpriteDeformation - \""+blendModeStr+"\" is not a valid blend mode");
                 blendMode = BlendMode.Add;
             }
-
-            resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
-            resolution = resolution.Clamp(new Point(1, 1), shaderMaxResolution);
+            Resolution = element.GetAttributeVector2("resolution", Vector2.One * 2).ToPoint();
         }
 
         protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
@@ -72,14 +83,12 @@ namespace Barotrauma.SpriteDeformations
 
         public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale)
         {
-            Point resolution = animations.First().resolution;
-            foreach (SpriteDeformation animation in animations)
+            Point resolution = animations.First().Resolution;
+            if (animations.Any(a => a.Resolution != resolution))
             {
-                if (animation.resolution != resolution)
-                {
-                    DebugConsole.ThrowError("All animations must have the same resolution! Using the resolution of the first animation.");
-                    animation.resolution = resolution;
-                }
+                DebugConsole.ThrowError("All animations must have the same resolution! Using the lowest resolution.");
+                resolution = animations.OrderBy(anim => anim.Resolution.X + anim.Resolution.Y).First().Resolution;
+                animations.ForEach(a => a.Resolution = resolution);
             }
 
             Vector2[,] deformation = new Vector2[resolution.X, resolution.Y];
