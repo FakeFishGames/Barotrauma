@@ -170,7 +170,24 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Language"));
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+            foreach (string language in TextManager.AvailableLanguages)
+            {
+                languageDD.AddItem(language, language);
+            }
+            languageDD.SelectItem(TextManager.Language);
+            languageDD.OnSelected = (guiComponent, obj) =>
+            {
+                UnsavedSettings = true;
+                TextManager.Language = obj as string;
+                return true;
+            };
+
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform), style: null);
             
