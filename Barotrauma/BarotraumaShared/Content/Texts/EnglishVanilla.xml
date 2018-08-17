@@ -8,14 +8,22 @@
     - dumptexts writes all of the texts in this file into Content/Texts/EnglishVanilla.txt, removing all the xml tags
     - loadtexts reads the lines from Content/Texts/EnglishVanilla.txt and inserts them back to this xml file.
     - dumpentitytexts writes all the vanilla entity names and descriptions into Content/Texts/EntityTexts.txt along with the correct xml tags.
+    - updatetextfile takes a text xml file, compares it to another one, and adds all the elements that are only present in the first one into the second one.
+      Can be used to update old translation text files without having to manually check what's new in the updated text file.
     
-  - Item names and descriptions can be translated using the identifier of the item:
-    <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
-    <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
+  - Item/structure names and descriptions can be translated using the identifier of the item:
+    <EntityName.weldingtool>Eldingway Ooltay</ItemName.weldingtool>
+    <EntityDescription.weldingtool>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</ItemDescription.weldingtool>
   
   - Job names and descriptions can be translated using the identifier of the job:
     <JobName.captain>капитан</JobName.captain>
     <JobDescription.captain>Командир отвечает за командование всей командой. Я виню google translate за грамматические ошибки.</JobDescription.captain>
+    
+  - Affliction texts can be translated using the identifier of the affliction:  
+    <AfflictionName.internaldamage>Interizzle daizzle</AfflictionName.internaldamage>
+    <AfflictionDescription.internaldamage>Dizzle to interizzle oizzle interizzle bleedizzle or broizzle boizzle.</AfflictionDescription.internaldamage>
+    <AfflictionCauseOfDeath.internaldamage>Died of interizzle injurizzle</AfflictionCauseOfDeath.internaldamage>
+    <AfflictionCauseOfDeathSelf.internaldamage>You have succizzle to your interizzle injurizzle </AfflictionCauseOfDeathSelf.internaldamage>
 -->
 
 <infotexts language="English">    
@@ -716,7 +724,7 @@
   <NotBreathing>Not breathing</NotBreathing>
 
   <NoAvailableMedicalItems>No medical items available</NoAvailableMedicalItems>
-
+  
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>
@@ -763,19 +771,18 @@
   <SkillName.medical>Medical</SkillName.medical>  
   
   <!-- Entity names and descriptions -->
-  <hull.Name>Hull</hull.Name>
-  <hull.Description>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</hull.Description>
+  <EntityName.hull>Hull</EntityName.hull>
+  <EntityDescription.Hull>Hulls determine which parts are considered to be "inside the sub". Generally every room should be enclosed by a hull.</EntityDescription.Hull>
 
-  <gap.Name>Gap</gap.Name>
-  <gap.Description>Gaps allow water and air to flow between two hulls.</gap.Description>
-  
-  <waypoint.Name>Waypoint</waypoint.Name>
-  <waypoint.Description>Used by AI characters to navigate inside the submarine.</waypoint.Description>
-  
-  <spawnpoint.Name>Spawnpoint</spawnpoint.Name>
-  <spawnpoint.Description>Determines which rooms the crew spawns inside.</spawnpoint.Description>
+  <EntityName.gap>Gap</EntityName.gap>
+  <EntityDescription.gap>Gaps allow water and air to flow between two hulls.</EntityDescription.gap>
 
-  
+  <EntityName.waypoint>Waypoint</EntityName.waypoint>
+  <EntityDescription.waypoint>Used by AI characters to navigate inside the submarine.</EntityDescription.waypoint>
+
+  <EntityName.spawnpoint>Spawnpoint</EntityName.spawnpoint>
+  <EntityDescription.spawnpoint>Determines which rooms the crew spawns inside.</EntityDescription.spawnpoint>
+
   <OxygenTankEmpty>Oxygen Tank (empty)</OxygenTankEmpty>
   <WeldingFuelTankEmpty>Welding Fuel Tank (empty)</WeldingFuelTankEmpty>
 
@@ -783,6 +790,10 @@
   <weldingtool.Name>Eldingway Ooltay</weldingtool.Name>
   <weldingtool.Description>Oneway ofway ethay ostmay ucialcray oolstay onway oardbay ethay ubmarinesay. Alsoway orksway underwaterway.</weldingtool.Description>
   -->
+
+
+
+
 
 
 

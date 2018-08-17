@@ -558,6 +558,13 @@
   <GiveInHelpMultiplayer>Pudota hahmosi ja päästä katsojamoodiin (muut pelaajat eivät enää voi elvyttää sinua)</GiveInHelpMultiplayer>
   <GiveInHelpSingleplayer>Merkkiä ei voi enää elvyttää, jos annat sisään.</GiveInHelpSingleplayer>
   <DeathChatNotification>Chat-viestit näkyvät vain toisille kuolleille pelaajille.</DeathChatNotification>
+
+  <!-- Afflictions -->
+  <AfflictionName.internaldamage>Sisäinen vamma</AfflictionName.internaldamage>
+  <AfflictionDescription.internaldamage>Esdfkgnsdkfjgnkdgawekjfnsadkjfn</AfflictionDescription.internaldamage>
+  <AfflictionCauseOfDeath.internaldamage>Kuoli vammoihinsa</AfflictionCauseOfDeath.internaldamage>
+  <AfflictionCauseOfDeathSelf.internaldamage>Kuolit vammoihisi</AfflictionCauseOfDeathSelf.internaldamage>
+
   <!-- Character dialogue -->
   <DialogAffirmative>Aye aye!</DialogAffirmative>
   <DialogAffirmative>Kyllä herra!</DialogAffirmative>
@@ -640,21 +647,21 @@
   <LoadingScreenTip>Hyvin laiskannut aloite, jolla autetaan ajajat menestymään jännittävään ympäristöön sisällyttämällä ammattiviihdyttäjiä miehistöihin, pidettiin viivytyksettä epäonnistuneeksi ja lopetettiin.</LoadingScreenTip>
   
   <!-- Entity names and descriptions -->
-  <hull.Name>Runko</hull.Name>
-  <hull.Description>Rungot määrittävät, mitkä osat katsotaan "osaston sisällä". Yleensä jokaisen huoneen on oltava rungon mukana.</hull.Description>
+  <EntityName.hull>Runko</EntityName.hull>
+  <EntityDescription.hull>Rungot määrittävät, mitkä osat katsotaan "osaston sisällä". Yleensä jokaisen huoneen on oltava rungon mukana.</EntityDescription.hull>
 
-  <gap.Name>Aukko</gap.Name>
-  <gap.Description>Aukot antavat veden ja ilman virrata kahden rungon väliin.</gap.Description>
+  <EntityName.gap>Aukko</EntityName.gap>
+  <EntityDescription.gap>Aukot antavat veden ja ilman virrata kahden rungon väliin.</EntityDescription.gap>
 
-  <waypoint.Name>Reittipiste</waypoint.Name>
-  <waypoint.Description>Käytetään AI-merkkien avulla navigoida sukellusveneen sisällä.</waypoint.Description>
+  <EntityName.waypoint>Reittipiste</EntityName.waypoint>
+  <EntityDescription.waypoint>Käytetään AI-merkkien avulla navigoida sukellusveneen sisällä.</EntityDescription.waypoint>
 
-  <spawnpoint.Name>Kutupiste</spawnpoint.Name>
-  <spawnpoint.Description>Määrittää, mitkä huoneet miehistö kutsuvat sisälle.</spawnpoint.Description>
+  <EntityName.spawnpoint>Kutupiste</EntityName.spawnpoint>
+  <EntityDescription.spawnpoint>Määrittää, mitkä huoneet miehistö kutsuvat sisälle.</EntityDescription.spawnpoint>
 
   <OxygenTankEmpty>Happipullo (tyhjä)</OxygenTankEmpty>
   <WeldingFuelTankEmpty>Hitsauskaasupullo (tyhjä)</WeldingFuelTankEmpty>
-  
+
   <weldingtool.Name>Hitsausväline</weldingtool.Name>
   <weldingtool.Description>Tärkeä verme sukellusveneessä. Toimii myös veden alla.</weldingtool.Description>
   <plasmacutter.Name>Plasmaleikkuri</plasmacutter.Name>
@@ -687,5 +694,9 @@
   <SkillName.weapons>Aseet</SkillName.weapons>
   <SkillName.mechanical>Mekaaninen Insinööri</SkillName.mechanical>
   <SkillName.electrical>Sähkötekniikka</SkillName.electrical>
-  <SkillName.medical>Lääketiede</SkillName.medical>  
+  <SkillName.medical>Lääketiede</SkillName.medical>
+
+
+
+
 </infotexts>

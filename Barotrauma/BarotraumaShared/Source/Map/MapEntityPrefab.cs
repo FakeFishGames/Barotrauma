@@ -103,36 +103,44 @@ namespace Barotrauma
 
         public static void Init()
         {
-            MapEntityPrefab ep = new MapEntityPrefab();
-            ep.identifier = "hull";
-            ep.name = TextManager.Get("hull.Name");
-            ep.Description = TextManager.Get("hull.Description");
-            ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
-            ep.ResizeHorizontal = true;
-            ep.ResizeVertical = true;
+            MapEntityPrefab ep = new MapEntityPrefab
+            {
+                identifier = "hull",
+                name = TextManager.Get("EntityName.hull"),
+                Description = TextManager.Get("EntityDescription.hull"),
+                constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                ResizeHorizontal = true,
+                ResizeVertical = true
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.identifier = "gap";
-            ep.name = TextManager.Get("gap.Name");
-            ep.Description = TextManager.Get("gap.Description");
-            ep.constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
-            ep.ResizeHorizontal = true;
-            ep.ResizeVertical = true;
+            ep = new MapEntityPrefab
+            {
+                identifier = "gap",
+                name = TextManager.Get("EntityName.gap"),
+                Description = TextManager.Get("EntityDescription.gap"),
+                constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                ResizeHorizontal = true,
+                ResizeVertical = true
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.identifier = "waypoint";
-            ep.name = TextManager.Get("waypoint.Name");
-            ep.Description = TextManager.Get("waypoint.Description");
-            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
+            ep = new MapEntityPrefab
+            {
+                identifier = "waypoint",
+                name = TextManager.Get("EntityName.waypoint"),
+                Description = TextManager.Get("EntityDescription.waypoint"),
+                constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
+            };
             List.Add(ep);
 
-            ep = new MapEntityPrefab();
-            ep.identifier = "spawnpoint";
-            ep.name = TextManager.Get("spawnpoint.Name");
-            ep.Description = TextManager.Get("spawnpoint.Description");
-            ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
+            ep = new MapEntityPrefab
+            {
+                identifier = "spawnpoint",
+                name = TextManager.Get("EntityName.spawnpoint"),
+                Description = TextManager.Get("EntityDescription.spawnpoint"),
+                constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
+            };
             List.Add(ep);
         }
 

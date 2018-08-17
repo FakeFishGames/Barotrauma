@@ -293,12 +293,10 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            name = element.GetAttributeString("name", "");
-            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
             identifier = element.GetAttributeString("identifier", "");
-            
-            string translatedName = TextManager.Get(identifier + ".Name", true);
-            if (!string.IsNullOrEmpty(translatedName)) name = translatedName;
+
+            name = TextManager.Get("EntityName." + identifier, true) ?? element.GetAttributeString("name", "");
+            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
 
             DebugConsole.Log("    " + name);
 
@@ -333,7 +331,7 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedDescription = TextManager.Get(identifier + ".Description", true);
+            string translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
             if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
