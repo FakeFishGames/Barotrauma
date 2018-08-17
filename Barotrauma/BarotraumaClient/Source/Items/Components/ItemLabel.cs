@@ -54,23 +54,21 @@ namespace Barotrauma.Items.Components
             {
                 if (textBlock == null)
                 {
-                    textBlock = new GUITextBlock(new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height), "",
-                        Color.Transparent, textColor,
-                        Alignment.TopLeft, Alignment.Center,
-                        null, null, true);
-                    textBlock.Font = GUI.SmallFont;
-                    textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                    textBlock.TextDepth = item.Sprite.Depth - 0.0001f;
-                    textBlock.TextScale = TextScale;
+                    textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
+                        textColor: textColor, font: GUI.SmallFont, textAlignment: Alignment.Center, wrap: true, style: null)
+                    {
+                        TextDepth = item.Sprite.Depth - 0.0001f,
+                        TextScale = TextScale
+                    };
                 }
                 return textBlock;
             }
         }
 
-        public override void Move(Vector2 amount)
+        /*public override void Move(Vector2 amount)
         {
             textBlock.Rect = new Rectangle(item.Rect.X, -item.Rect.Y, item.Rect.Width, item.Rect.Height);
-        }
+        }*/
 
         public ItemLabel(Item item, XElement element)
             : base(item, element)
@@ -82,8 +80,18 @@ namespace Barotrauma.Items.Components
             var drawPos = new Vector2(
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
-
-            textBlock.Draw(spriteBatch, drawPos - textBlock.Rect.Location.ToVector2());
+            
+            Rectangle worldRect = item.WorldRect;
+            if (worldRect.X > Screen.Selected.Cam.WorldView.Right || 
+                worldRect.Right < Screen.Selected.Cam.WorldView.X ||
+                worldRect.Y < Screen.Selected.Cam.WorldView.Y - Screen.Selected.Cam.WorldView.Height || 
+                worldRect.Y - worldRect.Height > Screen.Selected.Cam.WorldView.Y)
+            {
+                return;
+            }
+            
+            textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2();
+            textBlock.DrawManually(spriteBatch);
         }
     }
 }

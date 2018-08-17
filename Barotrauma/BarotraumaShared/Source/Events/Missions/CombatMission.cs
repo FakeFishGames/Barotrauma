@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,9 @@ namespace Barotrauma
         {
             get
             {
-                if (GameMain.NetworkMember==null || GameMain.NetworkMember.Character==null)
+                if (descriptions == null) return "";
+                
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.Character == null)
                 {
                     //non-team-specific description
                     return descriptions[0];
@@ -47,20 +50,20 @@ namespace Barotrauma
             {
                 if (winner == -1) return "";
 
-                return successMessage
+                return base.SuccessMessage
                     .Replace("[loser]", teamNames[1 - winner])
                     .Replace("[winner]", teamNames[winner]);
             }
         }
 
-        public CombatMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public CombatMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
             descriptions = new string[]
             {
-                element.GetAttributeString("descriptionneutral", ""),
-                element.GetAttributeString("description1", ""),
-                element.GetAttributeString("description2", "")
+                prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
+                prefab.ConfigElement.GetAttributeString("description1", ""),
+                prefab.ConfigElement.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -73,8 +76,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                element.GetAttributeString("teamname1", "Team A"),
-                element.GetAttributeString("teamname2", "Team B")
+                prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
+                prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
             };
         }
 
@@ -89,6 +92,11 @@ namespace Barotrauma
             }
 
             return teamNames[teamID];
+        }
+
+        public bool IsInWinningTeam(Character character)
+        {
+            return character != null && winner > -1 && character.TeamID - 1 == winner;
         }
 
         public override bool AssignTeamIDs(List<Client> clients, out byte hostTeam)
@@ -143,12 +151,29 @@ namespace Barotrauma
             subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
             subs[1].FlipX();
 
+            //prevent wifi components from communicating between subs
+            List<WifiComponent> wifiComponents = new List<WifiComponent>();
+            foreach (Item item in Item.ItemList)
+            {
+                wifiComponents.AddRange(item.GetComponents<WifiComponent>());
+            }
+            foreach (WifiComponent wifiComponent in wifiComponents)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    if (wifiComponent.Item.Submarine == subs[i] || subs[i].DockedTo.Contains(wifiComponent.Item.Submarine))
+                    {
+                        wifiComponent.TeamID = subs[i].TeamID;
+                    }
+                }
+            }
+
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                //hide all subs from radar to make sneak attacks possible
-                submarine.OnRadar = false;
+                //hide all subs from sonar to make sneak attacks possible
+                submarine.OnSonar = false;
             }
         }
 
@@ -189,10 +214,10 @@ namespace Barotrauma
             {
                 for (int i = 0; i < teamDead.Length; i++)
                 {
-                    if (!teamDead[i] && teamDead[1-i])
+                    if (!teamDead[i] && teamDead[1 - i])
                     {
                         //make sure nobody in the other team can be revived because that would be pretty weird
-                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); });
+                        crews[1 - i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
                         winner = i;
 
@@ -206,12 +231,10 @@ namespace Barotrauma
             }
             else
             {
-                if (winner>=0 && subs[winner] != null && 
-                    (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
-                    crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
+                if (winner >= 0)
                 {
 #if CLIENT
-                    GameMain.GameSession.CrewManager.WinningTeam = winner+1;
+                    GameMain.GameSession.CrewManager.WinningTeam = winner + 1;
 #endif
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }

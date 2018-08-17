@@ -9,6 +9,8 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+[Dd]ebug*/
+[Rr]elease*/
 
 *.v12.suo
 *.suo

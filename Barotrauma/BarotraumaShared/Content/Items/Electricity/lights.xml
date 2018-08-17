@@ -1,20 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-
-<Items>
-  
+<Items>  
   <Item
-    name="Lamp"
+    name="Lamp"    
+    identifier="lamp"
     category="Electrical"
-    Tags="smallitem"
-    >
+    Tags="smallitem,light">
 
     <Sprite texture="lamp.png" sourcerect="0,0,16,32" depth="0.8"/>
 
-    <LightComponent lightcolor="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="5">
+    <LightComponent lightcolor="1.0,1.0,1.0,0.5" range ="800.0" powerconsumption="5">
+      <sparksound file="Content/Items/Electricity/zap1.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap2.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap3.ogg" range="500" loop="false"/>
+      <sparksound file="Content/Items/Electricity/zap4.ogg" range="500" loop="false"/>
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0"/>
     </LightComponent>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <AITarget/>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="power"/>
       <input name="toggle"/>
@@ -23,18 +28,21 @@
   </Item>
 
   <Item
-    name="Emergency Light"
+    name="Emergency Light"    
+    identifier="emergencylight"
     category="Electrical"
-    Tags="smallitem"
-    >
+    Tags="smallitem,light">
 
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8"/>
 
-    <LightComponent lightcolor="1.0,0.0,0.0,0.2" range="500.0" IsOn="true">
+    <LightComponent lightcolor="1.0,0.0,0.0,0.1" range="500.0" IsOn="true">
       <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16" alpha="1.0"/>
     </LightComponent>
+
+    <AITarget/>
     
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]" hudpriority="10">
+      <GuiFrame rect="0,0,400,350" alignment="Center" style="ConnectionPanel"/>
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <input name="toggle"/>
       <input name="set_state"/>

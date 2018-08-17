@@ -5,13 +5,11 @@ namespace Barotrauma
 {
     class TutorialMode : GameMode
     {
-        public TutorialType tutorialType;
+        public Tutorial tutorial;
         
-        public static void StartTutorial(TutorialType tutorialType)
-        {
-            Submarine.MainSub = Submarine.Load("Content/Map/TutorialSub.sub", "", true);
-            
-            tutorialType.Initialize();
+        public static void StartTutorial(Tutorial tutorial)
+        {     
+            tutorial.Initialize();
         }
 
         public TutorialMode(GameModePreset preset, object param)
@@ -22,32 +20,18 @@ namespace Barotrauma
         public override void Start()
         {
             base.Start();
-
-            tutorialType.Start();
-
+            tutorial.Start();
         }
 
         public override void AddToGUIUpdateList()
         {
-            tutorialType.AddToGUIUpdateList();
+            tutorial.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-
-            tutorialType.Update(deltaTime);
-
+            tutorial.Update(deltaTime);
         }
-
-
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);
-
-            //CrewManager.Draw(spriteBatch);
-            tutorialType.Draw(spriteBatch);
-        }
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -20,14 +21,20 @@ namespace Barotrauma
         public float SoundRange
         {
             get { return soundRange; }
-            set { soundRange = Math.Max(value, 0.0f); }
+            set { soundRange = Math.Max(value, MinSoundRange); }
         }
 
         public float SightRange
         {
             get { return sightRange; }
-            set { sightRange = Math.Max(value, 0.0f); }
+            set { sightRange = Math.Max(value, MinSightRange); }
         }
+
+        public string SonarLabel;
+
+        public bool Enabled = true;
+
+        public float MinSoundRange, MinSightRange;
 
         public Vector2 WorldPosition
         {
@@ -38,6 +45,9 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
 #endif
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to access a removed AITarget\n" + Environment.StackTrace);
                     return Vector2.Zero;
                 }
 
@@ -54,11 +64,21 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
 #endif
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Attempted to access a removed AITarget\n" + Environment.StackTrace);
                     return Vector2.Zero;
                 }
 
                 return Entity.SimPosition;
             }
+        }
+
+        public AITarget(Entity e, XElement element) : this(e)
+        {
+            SightRange = MinSightRange = element.GetAttributeFloat("sightrange", 0.0f);
+            SoundRange = MinSoundRange = element.GetAttributeFloat("soundrange", 0.0f);
+            SonarLabel = element.GetAttributeString("sonarlabel", "");
         }
 
         public AITarget(Entity e)

@@ -1,5 +1,7 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +11,9 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static Wire HighlightedWire;
-
         public List<Connection> Connections;
 
-        Character user;
+        private Character user;
 
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
@@ -34,7 +34,10 @@ namespace Barotrauma.Items.Components
             }
 
             IsActive = true;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void OnMapLoaded()
         {
@@ -46,7 +49,24 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (user != null && user.SelectedConstruction != item) user = null;
+            if (user == null || user.SelectedConstruction != item)
+            {
+                user = null;
+                return;
+            }
+
+            Vector2 itemPos = item.SimPosition;
+            if (user.Submarine == null)
+            {
+                itemPos = ConvertUnits.ToSimUnits(item.WorldPosition);
+            }
+            user.AnimController.UpdateUseItem(true, itemPos + Vector2.UnitY * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+
+            if (user.IsKeyHit(InputType.Aim))
+            {
+                user.DeselectItem(item);
+                user = null;
+            }
         }
 
         public override bool Select(Character picker)
@@ -65,7 +85,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character!=user) return false;
+            if (character == null || character != user) return false;
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
@@ -74,7 +94,7 @@ namespace Barotrauma.Items.Components
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 50.0f) < degreeOfSuccess) return false;
+            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
 
             character.SetStun(5.0f);
 
@@ -149,11 +169,9 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection connection in Connections)
             {
-                Wire[] wires = Array.FindAll(connection.Wires, w => w != null);
-                msg.WriteRangedInteger(0, Connection.MaxLinked, wires.Length);
-                for (int i = 0; i < wires.Length; i++)
+                foreach (Wire wire in connection.Wires)
                 {
-                    msg.Write(wires[i].Item.ID);
+                    msg.Write(wire.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
         }
@@ -165,10 +183,8 @@ namespace Barotrauma.Items.Components
             //read wire IDs for each connection
             for (int i = 0; i < Connections.Count; i++)
             {
-                wires[i] = new List<Wire>();
-
-                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
-                for (int j = 0; j < wireCount; j++)
+                wires[i] = new List<Wire>();                
+                for (int j = 0; j < Connection.MaxLinked; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -204,9 +220,10 @@ namespace Barotrauma.Items.Components
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                for (int j = 0; j < Connection.MaxLinked; j++)
+                int j = -1;
+                foreach (Wire existingWire in Connections[i].Wires)
                 {
-                    Wire existingWire = Connections[i].Wires[j];
+                    j++;
                     if (existingWire == null) continue;
                     
                     //existing wire not in the list of new wires -> disconnect it
@@ -255,9 +272,8 @@ namespace Barotrauma.Items.Components
                             }
                         }
                         
-                        Connections[i].Wires[j] = null;
-                    }
-                    
+                        Connections[i].SetWire(j, null);
+                    }                    
                 }
             }
 
@@ -294,52 +310,6 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             ClientWrite(msg, extraData);
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
-            List<Wire> newWires = new List<Wire>();
-
-            foreach (Connection connection in Connections)
-            {
-                connection.ClearConnections();
-            }
-
-            foreach (Connection connection in Connections)
-            {
-                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
-                for (int i = 0; i < wireCount; i++)
-                {
-                    ushort wireId = msg.ReadUInt16();
-
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
-
-                    Wire wireComponent = wireItem.GetComponent<Wire>();
-                    if (wireComponent == null) continue;
-
-                    newWires.Add(wireComponent);
-
-                    connection.Wires[i] = wireComponent;
-                    wireComponent.Connect(connection, false);
-                }
-            }
-
-            foreach (Wire wire in prevWires)
-            {
-                if (wire.Connections[0] == null && wire.Connections[1] == null)
-                {
-                    wire.Item.Drop(null);
-                }
-                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
-                // -> someone must have dropped the wire from the connection panel
-                else if (wire.Item.ParentInventory == null && 
-                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
-                {
-                    wire.Item.Drop(null);
-                }
-            }
         }        
     }
 }

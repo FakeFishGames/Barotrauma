@@ -13,19 +13,18 @@ namespace Barotrauma
 
         private int requiredDeliveryAmount;
 
-        public CargoMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public CargoMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            itemConfig = element.Element("Items");
-
-            requiredDeliveryAmount = element.GetAttributeInt("requireddeliveryamount", 0);
+            itemConfig = prefab.ConfigElement.Element("Items");
+            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
         }
 
         private void InitItems()
         {
             items = new List<Item>();
 
-            if (itemConfig==null)
+            if (itemConfig == null)
             {
                 DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)");
                 return;
@@ -96,7 +95,7 @@ namespace Barotrauma
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
             {
-                int deliveredItemCount = items.Count(i => i.CurrentHull != null && i.Condition > 0.0f);
+                int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
 
                 if (deliveredItemCount >= requiredDeliveryAmount)
                 {
@@ -106,7 +105,10 @@ namespace Barotrauma
                 }
             }
 
-            items.ForEach(i => i.Remove());
+            foreach (Item item in items)
+            {
+                if (!item.Removed) item.Remove();
+            }
         }
     }
 }

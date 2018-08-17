@@ -7,12 +7,13 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-        static float fullPower;
-        static float fullLoad;
+        private static float fullPower;
+        private static float fullLoad;
 
         private int updateCount;
 
-        const float FireProbability = 0.15f;
+        const float FireProbabilityMin = 0.05f;
+        const float FireProbabilityMax = 0.5f;
 
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
@@ -83,7 +84,11 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             canTransfer = true;
+
+            InitProjectSpecific(element);
         }
+        
+        partial void InitProjectSpecific(XElement element);
 
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
@@ -147,10 +152,13 @@ namespace Barotrauma.Items.Components
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
 
+                float maxOverVoltage = 2.0f;
+                if (pt.item.IsOptimized("electrical")) maxOverVoltage *= 2.0f;
+
                 //relays don't blow up if the power is higher than load, only if the output is high enough 
                 //(i.e. enough power passing through the relay)
                 if (this is RelayComponent) continue;
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f, 2.1f), 200.0f)) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * maxOverVoltage, 200.0f)) continue;
 
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;
@@ -158,7 +166,10 @@ namespace Barotrauma.Items.Components
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
+                    if (sparkSounds.Count > 0)
+                    {
+                        SoundPlayer.PlaySound(sparkSounds[Rand.Int(sparkSounds.Count)], 1.0f, 600.0f, pt.item.WorldPosition, pt.item.CurrentHull);
+                    }
 
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
@@ -169,8 +180,12 @@ namespace Barotrauma.Items.Components
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
 #endif
+                    
+                    float currentIntensity = GameMain.GameSession?.EventManager != null ? 
+                        GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
 
-                    if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                    //higher probability for fires if the current intensity is low
+                    if (Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbabilityMax, FireProbabilityMin, currentIntensity) && !pt.item.IsOptimized("electrical"))
                     {
                         new FireSource(pt.item.WorldPosition);
                     }
@@ -274,7 +289,6 @@ namespace Barotrauma.Items.Components
             foreach (Connection c in PowerConnections)
             {
                 var recipients = c.Recipients;
-
                 foreach (Connection recipient in recipients)
                 {
                     if (recipient == null) continue;
@@ -284,8 +298,9 @@ namespace Barotrauma.Items.Components
 
                     if (it.Condition <= 0.0f) continue;
 
-                    foreach (Powered powered in it.GetComponents<Powered>())
+                    foreach (ItemComponent ic in it.components)
                     {
+                        Powered powered = ic as Powered;
                         if (powered == null || !powered.IsActive) continue;
                         if (connectedList.Contains(powered)) continue;
 
@@ -333,8 +348,7 @@ namespace Barotrauma.Items.Components
                                 fullPower -= powered.CurrPowerConsumption;
                             }
                         }
-                    }
-
+                    }                    
                 }
             }
         }
@@ -367,7 +381,7 @@ namespace Barotrauma.Items.Components
             SetAllConnectionsDirty();
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             if (connection.IsPower) return;
 
@@ -375,7 +389,7 @@ namespace Barotrauma.Items.Components
 
             if (!connectedRecipients.ContainsKey(connection)) return;
 
-            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLowerInvariant() == "signal")
+            if (connection.Name.Length > 5 && connection.Name.Substring(0, 6) == "signal")
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
@@ -383,19 +397,20 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemComponent ic in recipient.Item.components)
                     {
-                        //powertransfer components don't need to receive the signal because we relay it straight 
-                        //to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer) continue;
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
+                        //powertransfer components don't need to receive the signal in the pass-through signal connections
+                        //because we relay it straight to the connected items without going through the whole chain of junction boxes
+                        if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
+                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
+                    bool broken = recipient.Item.Condition <= 0.0f;
                     foreach (StatusEffect effect in recipient.effects)
                     {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                        if (broken && effect.type != ActionType.OnBroken) continue;
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                     }
                 }
             }
         }
-
     }
 }

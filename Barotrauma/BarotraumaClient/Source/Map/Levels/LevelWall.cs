@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -16,6 +17,14 @@ namespace Barotrauma
         public VertexBuffer BodyVertices
         {
             get { return bodyVertices; }
+        }
+
+        public Matrix GetTransform()
+        {
+            return body.BodyType == FarseerPhysics.Dynamics.BodyType.Static ?
+                Matrix.Identity :
+                Matrix.CreateRotationZ(body.Rotation) *
+                Matrix.CreateTranslation(new Vector3(ConvertUnits.ToDisplayUnits(body.Position), 0.0f));
         }
 
         public void SetWallVertices(VertexPositionTexture[] vertices, Color color)

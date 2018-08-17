@@ -12,23 +12,30 @@ namespace Barotrauma
         {
             get { return sourceRects.Length; }
         }
+
+        public Point FrameSize
+        {
+            get;
+            private set;
+        }
         
         public SpriteSheet(XElement element, string path = "", string file = "")
             : base(element, path, file)
         {
             int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);
             int rowCount = Math.Max(element.GetAttributeInt("rows", 1), 1);
-
+            
             sourceRects = new Rectangle[rowCount * columnCount];
 
-            int cellWidth = SourceRect.Width / columnCount;
-            int cellHeight = SourceRect.Height / rowCount;
+            float cellWidth = SourceRect.Width / columnCount;
+            float cellHeight = SourceRect.Height / rowCount;
+            FrameSize = new Point((int)cellWidth, (int)cellHeight);
 
             for (int x = 0; x < columnCount; x++)
             {
                 for (int y = 0; y < rowCount; y++)
                 {
-                    sourceRects[x + y * columnCount] = new Rectangle(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+                    sourceRects[x + y * columnCount] = new Rectangle((int)(SourceRect.X + x * cellWidth), (int)(SourceRect.Y + y * cellHeight), (int)cellWidth, (int)cellHeight);
                 }
             }
 

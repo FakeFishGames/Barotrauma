@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public float rotation;
 
-        public SpriteEffects effects;
+        public SpriteEffects effects = SpriteEffects.None;
 
         protected float depth;
 
@@ -58,9 +58,10 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
-        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn);
+        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool premultiplyAlpha = true);
         partial void CalculateSourceRect();
 
+        // TODO: use the Init method below?
         public Sprite(XElement element, string path = "", string file = "")
         {
             if (file == "")
@@ -104,52 +105,43 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        public Sprite(string newFile, Vector2 newOrigin)
+        public Sprite(string newFile, Vector2 newOrigin, bool preMultiplyAlpha = true)
         {
-            file = newFile;
-
-            Vector4 sourceVector = Vector4.Zero;
-            bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn);
-            if (shouldReturn) return;
-
-            CalculateSourceRect();
-
-            size = new Vector2(sourceRect.Width, sourceRect.Height);
-
-            origin = new Vector2((float)sourceRect.Width * newOrigin.X, (float)sourceRect.Height * newOrigin.Y);
-
-            effects = SpriteEffects.None;
-
-            list.Add(this);
+            Init(newFile, newOrigin: newOrigin, preMultiplyAlpha: preMultiplyAlpha);
         }
         
-        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f)
+        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset = null, float newRotation = 0, bool preMultiplyAlpha = true)
+        {
+            Init(newFile, sourceRectangle: sourceRectangle, newOffset: newOffset, newRotation: newRotation, preMultiplyAlpha: preMultiplyAlpha);
+        }
+        
+        private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0, 
+            bool preMultiplyAlpha = true)
         {
             file = newFile;
             Vector4 sourceVector = Vector4.Zero;
             bool shouldReturn = false;
-            LoadTexture(ref sourceVector, ref shouldReturn);
+            LoadTexture(ref sourceVector, ref shouldReturn, preMultiplyAlpha);
             if (shouldReturn) return;
-
-            if (sourceRectangle != null)
+            if (sourceRectangle.HasValue)
             {
-                sourceRect = (Rectangle)sourceRectangle;
+                sourceRect = sourceRectangle.Value;
             }
             else
             {
                 CalculateSourceRect();
             }
-            
-            offset = newOffset ?? Vector2.Zero; 
-            
+            offset = newOffset ?? Vector2.Zero;
+            if (newOrigin.HasValue)
+            {
+                origin = new Vector2(sourceRect.Width * newOrigin.Value.X, sourceRect.Height * newOrigin.Value.Y);
+            }
             size = new Vector2(sourceRect.Width, sourceRect.Height);
-
-            origin = Vector2.Zero;
-                        
             rotation = newRotation;
-
-            list.Add(this);
+            if (!list.Contains(this))
+            {
+                list.Add(this);
+            }
         }
         
         public void Remove()

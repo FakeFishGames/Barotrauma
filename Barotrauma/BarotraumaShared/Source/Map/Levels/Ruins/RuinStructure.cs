@@ -56,7 +56,7 @@ namespace Barotrauma.RuinGeneration
         private static void Load()
         {
             list = new List<RuinStructure>();
-            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RuinConfig))
+            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null || doc.Root == null) continue;

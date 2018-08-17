@@ -1,4 +1,246 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.1.12
+---------------------------------------------------------------------------------------------------------
+
+- Fixed connectionpanel syncing (wires dropping client-side during rewiring).
+- Characters stay alive for 30 seconds after a client disconnects, and if the client rejoins during that 
+time they regain control of the character. 
+- Changing the sprite color of an item also affects the color when the item is being worn.
+- Cloned items keep the value of the "required items" field of the original item.
+- Fixed crashes caused by gaps that are not connected to anything.
+- Removed the unused and non-functional monitor item.
+- Made medical and toxic cabinets waterproof (= potassium and other water-sensitive items inside them 
+are not affected by water).
+- Fixed docking ports causing flooding in some custom subs.
+- Fixed medical items with an immediate effect (such as calyxanide) not working when a player uses them
+on themselves in multiplayer.
+- Made calyxanide more effective and usable without a medical syringe.
+- Fixed engines trying to apply infinite force to the submarine if MinVoltage is set to zero.
+- Fixed levels resetting their mission to the previous one if the game is exited after completing a mission
+without selecting the level first.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.11
+---------------------------------------------------------------------------------------------------------
+
+Networking fixes:
+	- More error logging to diagnose "unknown object header" errors.
+	- Fixed output inventory of fabricators and deconstructors not being synced between clients.
+	- Fixed servers failing to write network events for wires with an excessive number of nodes, causing
+	clients to get kicked due to desync.
+	- Fixed client-side error messages when respawning without a respawn shuttle.
+	- Fixed some issues in inventory and connection panel syncing when joining mid-round.
+	- Fixed fabricated items always appearing to be in full condition client-side (e.g. oxygen tanks which 
+	should be empty after being fabricated).
+	- Fixed attachable items dropping on the ground client-side when deattaching them (but still staying 
+	in the inventory of the character detaching them).
+	- Fixed items occasionally dropping instead of being moved to another inventory client-side.
+	- The "traitorlist" command is usable by clients who have the permission to use it.
+
+Misc bugfixes:
+	- Fixed characters occasionally going inside/through obstacle when leaving a submarine that's right 
+	next to another submarine or a level wall.
+	- More physics error checks and logging.
+	- Railgun controllers can be used over wifi components.
+	- Characters attach items to the walls at the position of their hand, not at the center of the body.
+	- Wifi components can't communicate with the enemy sub in combat missions.
+	- Fixed the previously selected location staying selected but start button staying disabled when 
+	returning to the lobby screen in the single player campaign. Made it impossible to progress without 
+	restarting if there were no other selectable locations.
+	- Fixed holdable components reverting their RequiredItems back to the prefab values during loading.
+	- Fixed wall-attached sections of a wire not rendering when the item is being rewired outside the sub.
+    - Fixed artifacts occasionally spawning under the sea floor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.10
+---------------------------------------------------------------------------------------------------------
+
+- Fixed bugs in wall hole creation logic and docking port syncing which caused entity ID mismatches and 
+"unknown object header" errors.
+- Fixed errors when attempting to buy too many items of a given type to fit in one container.
+- Fixed crashing when attempting to buy items that don't spawn in a container.
+- Fixed crashing when attempting to generate hulls with the "autohull" command when there are no walls 
+or doors in the sub.
+- Fixed docking ports creating duplicate hulls and gaps during loading.
+- Fixed missions resetting to the initial ones when loading a campaign.
+- Increased revolver ammo capacity.
+- Fires can break oxygen generators.
+- Oxygenite tanks can be contained in plasma cutters and oxygen generators.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.9
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a bug in docking port syncing that caused entity ID mismatches and "unknown object header" errors.
+- Fixed a bug that occasionally caused entity ID mismatches and "unknown object header" errors when 
+a respawn shuttle got damaged before returning back to the starting location.
+- Fixed error messages when attempting to use the console commands "\" or "\n".
+- Fixed clients not syncing the position of their controlled character with the server when dead/unconscious.
+- Fixed swimming ragdolls "dropping down" if the server freezes them due to a connection error.
+- Fixed excessive "attempted to apply invalid velocity to a physics body" console errors.
+- Fixed crashing when selecting a level seed that has no background portrait defined.
+- Fixed crashing if the player clicks yes on the "download sub from the server" prompt after 
+returning to the main menu.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.8
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "invalid cursor position" errors when a client attempts to use console commands in the server lobby.
+- Fixed crashing if a character takes damage during the first frame of a round.
+- Fixed crashing if suitable prop items are not found when generating alien ruins.
+- Some ragdoll and physics optimization.
+- More automatic error logging to help with debugging.
+- Fixed errors when attempting to change the output type of an oscillator in multiplayer.
+- Campaign store menu includes a quantity field which lets the player select how many items to buy instead
+of showing each item individually.
+- Fixed clients not seeing vote counts on submarines that the client doesn't have.
+- Fixed crashing if a player attempts to use an item on themselves and the item has a status effect that
+causes the item to be removed.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.7
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashes when trying to load submarines in the sub editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.6
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a memory leak in submarine preview images which caused crashes in the server lobby screen and
+submarine editor.
+- Fixed clients not seeing the "vote to end the round" tickbox if they don't have a character assigned to
+them (despite the server allowing voting if the client has had a character earlier during the round).
+- Fixed clients being able to crash servers if they had the permission to use console commands that
+use the position of the client's cursor.
+- Fixed crashing if a wire is used by a statuseffect (for example if a detonator tries to trigger a wire
+contained inside it).
+- Fixed GameAnalytics being stopped if the dedicated server is restarted with the "restart" console command.- 
+- Fixed wiring items outside the submarine.
+- Fixed chatbox discarding the second chat message instead of the first one when the maximum number of
+chat messages is reached.
+- Some error checking and debug logging to diagnose and prevent a crash caused by doors pushing characters away.
+- The spawnitem command doesn't require multi-word item names to be surrounded with quotes anymore.
+- Added the option to make powered items immune to electromagnetic pulses.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.5
+---------------------------------------------------------------------------------------------------------
+
+- Added the option to automatically send crash reports and anonymous usage statistics to the developers.
+The usage statistics include information such as the selected game mode, selected submarine, causes of
+death and mission outcomes. When the game is started for the first time, a message box prompts you to
+select whether you want to send the information or not.
+- Fixed a bug that caused clients to get desynced when purchasing items in the multiplayer campaign.
+- Added a signal component that adds the received signals together.
+- Devices outside the submarine can be rewired in-game (not just in the sub editor).
+- Fixed a crash caused by vision obstruction logic.
+- Fixed clients being unable to give non-permanent or range bans.
+- Clients are allowed to vote to end the round if they have spawned at some point during the round, 
+even if the character they controlled doesn't exist anymore.
+- Dedicated servers can give clients the permission to use console commands that aren't available in
+for dedicated server (e.g. los, lights, control)
+- Banip, banid & kickid commands can be used by clients now (if they have the permission to do so).
+- Spawnitem [item] inventory, ragdoll and kill commands target the character of the client using
+the command instead of the host's character.
+- Spawnitem can be used to spawn items in the inventory of a specific character.
+- Fixed explosions with an EMP value only damaging reactors (when they should only ignore reactors).
+- Fire can only explode oxygen tanks that are >25% full (otherwise the condition of the tank just drops 
+to 0). Prevents infinite explosions when an oxygen generator is on fire with oxygen tanks inside.
+- Fixed projectiles with a damage range of 0 not applying their structuredamage value to structures.
+- Items with a physics body can be used as pumps, so now it's possible to make portable items that remove
+water from inside the sub.
+- Fixed traitor ratio setting being ignored and the minimum number of traitors being 2.
+- Fixed crashes caused by custom characters with no AI configuration.
+- Character head and gender settings are saved.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.4
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients getting assigned random jobs regardless of job preferences.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed server-side crashes during job assignment if a client hasn't sent any job preferences.
+- Fixed crashing if the selected respawn shuttle doesn't have a navigation terminal or any other item 
+with a Steering component.
+- Fixed InWater status effects triggering when an item is fabricated, causing issues such as 
+water-sensitive items to breaking/exploding immediately after being fabricated.
+- Fixed motion sensors sending out signals even if the output is set to nothing.
+- Fixed crashing when a round starts if the sub has been saved while a fabricator was running. 
+- Fixed explosives not detonating inside railgun shells.
+- Fixed characters spawning inside the respawn shuttle if no suitable spawnpoint is found inside the
+main submarine.
+- Fixed a timing bug in the dedicated server which prevented clients from ever timing out, AI characters
+from fixing leaks and reactor usage from being logged.
+- Changed the format of the server log filenames to make them more easily sortable.
+- Increased assistant's skill levels.
+- Added oxygenite tanks.
+- Added a rearward facing variant of railgun controller.
+- Added railgun loader variants with 1 shell capacity.
+- Added railgun shell rack.
+- Decreased the skill level requirements for fixing docking ports.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed medicines not having an effect when injected with a medical syringe.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed explosives going off when a character holds them in their hand and left clicks, causing a crash 
+if done in the submarine editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.8.1.0
+---------------------------------------------------------------------------------------------------------
+
+Items:
+	- Added searchlights.
+	- Explosives, chemicals and medical items disappear when their condition falls to 0 
+	(i.e. when they're fully used).
+	- Railguns cannot be fired when not being aimed.
+	- Removed the need for batteries in diving suits. The light stays on as long as the suit is worn 
+	by a living character.
+	- Junction boxes only take damage underwater when they're powered up.
+
+Bugfixes:
+	- Fixed a bug that occasionally caused some characters to not be removed at the end of a round, causing 
+	various bugs and crashes on successive rounds (the most common ones being server-side crashes and 
+	constant "attempted to access a potentially removed ragdoll" console errors). 
+	- Fixed camera shake continuing indefinitely if a character falls unconscious due to impact damage.
+	- Fixed item removal by right clicking not being synced with clients.
+	- Fixed being able to gain karma by welding fixed walls.
+	- Fixed crashing caused by IndoorSteeringManager.
+	- Fixed all loose items disappearing from respawn subs between respawns.
+	- Fixed items in cloned/copypasted inventories not being saved.
+	- Option to edit structure texture scales and offsets.
+	- Fixed new log messages appearing in the server log even if the type of message has been filtered out.
+	- Fixed the EndRound music clip occasionally looping forever after a round ends.
+	- Fixed player-controlled creatures being able to damage themselves.
+	- Fixed repair tools causing damage to the user regardless of the character's skills.
+	- Attempt to fix characters occasionally getting launched out of the sub at lightspeed when the sub 
+	crashes into something.
+	- Fixed StatusEffects not working on child ItemComponents.
+	- Wearables apply OnWearing StatusEffects in all the components of an item, not just the Wearable component.
+	- Fixed Equals/NotEquals conditional comparisons.
+
+Misc additions:
+	- Added console commands for giving the clients ranks, showing their current permissions and 
+	giving/revoking the permission to use specific console commands.
+	- Option to set an automatic ban duration for vote kicked players.
+	- Option to log debug console output into a text file.
+	- Ladders can be climbed by holding up/down while standing next to them without having to select them first.
+	- Name tags and healthbars are clamped inside the room a character is inside.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.5
 ---------------------------------------------------------------------------------------------------------
 

@@ -1,17 +1,25 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class ItemInventory : Inventory
+    partial class ItemInventory : Inventory
     {
-        ItemContainer container;
+        private ItemContainer container;
+        public ItemContainer Container
+        {
+            get { return container; }
+        }
 
         public ItemInventory(Item owner, ItemContainer container, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
             : base(owner, capacity, centerPos, slotsPerRow)
         {
             this.container = container;
+#if CLIENT
+            screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+#endif
         }
 
         public override int FindAllowedSlot(Item item)
@@ -83,6 +91,27 @@ namespace Barotrauma
 
             return wasPut;
         }
+
+        protected override void CreateNetworkEvent()
+        {
+            int componentIndex = container.Item.components.IndexOf(container);
+            if (componentIndex == -1)
+            {
+                DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
+                return;
+            }
+
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+            }
+#if CLIENT
+            else if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+            }
+#endif
+        }    
 
         public override void RemoveItem(Item item)
         {

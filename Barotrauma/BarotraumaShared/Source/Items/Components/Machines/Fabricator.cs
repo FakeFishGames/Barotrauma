@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
+        public readonly string DisplayName;
+
         public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
@@ -28,8 +30,11 @@ namespace Barotrauma.Items.Components
             
             if (TargetItem == null)
             {
+                DebugConsole.ThrowError("Error in fabricable item config - item prefab \"" + name + "\" not found.");
                 return;
             }
+
+            DisplayName = element.GetAttributeString("displayname", name);
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
@@ -105,6 +110,8 @@ namespace Barotrauma.Items.Components
 
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
+        public const float SkillIncreaseMultiplier = 0.5f;
+
         private List<FabricableItem> fabricableItems;
 
         private FabricableItem fabricatedItem;
@@ -113,6 +120,8 @@ namespace Barotrauma.Items.Components
         //used for checking if contained items have changed 
         //(in which case we need to recheck which items can be fabricated)
         private Item[] prevContainedItems;
+
+        private Character user;
         
         public Fabricator(Item item, XElement element) 
             : base(item, element)
@@ -148,8 +157,6 @@ namespace Barotrauma.Items.Components
                 SelectItem(itemList.Selected, itemList.Selected.UserData);                
             }
 #endif
-
-
             return base.Select(character);
         }
 
@@ -165,7 +172,7 @@ namespace Barotrauma.Items.Components
         private void CheckFabricableItems(Character character)
         {
 #if CLIENT
-            foreach (GUIComponent child in itemList.children)
+            foreach (GUIComponent child in itemList.Content.Children)
             {
                 var itemPrefab = child.UserData as FabricableItem;
                 if (itemPrefab == null) continue;
@@ -175,7 +182,6 @@ namespace Barotrauma.Items.Components
 
                 child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
                 child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
-
             }
 #endif
 
@@ -190,17 +196,17 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                GameServer.Log(user.LogName + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
 #if CLIENT
             itemList.Enabled = false;
-
             activateButton.Text = "Cancel";
 #endif
 
             fabricatedItem = selectedItem;
             IsActive = true;
+            this.user = user;
 
             timeUntilReady = fabricatedItem.RequiredTime;
 
@@ -209,17 +215,19 @@ namespace Barotrauma.Items.Components
             containers[1].Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
+            if (item.IsOptimized("electrical")) currPowerConsumption *= 0.5f;
         }
 
         private void CancelFabricating(Character user = null)
         {
             if (fabricatedItem != null && user != null)
             {
-                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
             IsActive = false;
             fabricatedItem = null;
+            this.user = null;
 
             currPowerConsumption = 0.0f;
 
@@ -241,6 +249,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (fabricatedItem == null)
+            {
+                CancelFabricating();
+                return;
+            }
+
 #if CLIENT
             if (progressBar != null)
             {
@@ -285,7 +299,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //TODO: apply OutCondition
             if (containers[1].Inventory.Items.All(i => i != null))
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
@@ -293,6 +306,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+            }
+
+            if (GameMain.Client == null && user != null)
+            {
+                foreach (Skill skill in fabricatedItem.RequiredSkills)
+                {
+                    user.Info.IncreaseSkillLevel(skill.Name, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                }
             }
 
             CancelFabricating(null);

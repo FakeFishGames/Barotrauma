@@ -37,7 +37,7 @@
     <Optimize>true</Optimize>
     <OutputPath>ReleaseWindows\</OutputPath>
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseLinux|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,14 +45,22 @@
     <Optimize>true</Optimize>
     <OutputPath>ReleaseLinux\</OutputPath>
     <DefineConstants>TRACE;LINUX</DefineConstants>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseMac|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>ReleaseMac\</OutputPath>
+    <DefineConstants>TRACE;OSX</DefineConstants>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugWindows|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <OutputPath>DebugWindows\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WINDOWS</DefineConstants>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugLinux|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -61,7 +69,16 @@
     <OutputPath>DebugLinux\</OutputPath>
     <DefineConstants>TRACE;DEBUG;LINUX</DefineConstants>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMac|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>DebugMac\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;OSX</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Collision\Collision.cs" />
@@ -187,7 +204,7 @@
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
       <HintPath>..\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
     </Reference>
-    <Reference Condition="$(DefineConstants.Contains('LINUX'))" Include="MonoGame.Framework.DesktopGL">
+    <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
       <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>

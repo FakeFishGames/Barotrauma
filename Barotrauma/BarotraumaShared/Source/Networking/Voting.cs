@@ -26,7 +26,7 @@ namespace Barotrauma
                 var existingVotable = voteList.Find(v => v.First == vote || v.First.Equals(vote));
                 if (existingVotable == null)
                 {
-                    voteList.Add(Pair<object, int>.Create(vote, 1));
+                    voteList.Add(new Pair<object, int>(vote, 1));
                 }
                 else
                 {
@@ -93,7 +93,7 @@ namespace Barotrauma
             {
                 case VoteType.Sub:
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                    Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
 #if CLIENT
                     UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
@@ -111,11 +111,11 @@ namespace Barotrauma
 #endif
                     break;
                 case VoteType.EndRound:
-                    if (sender.Character == null) return;
+                    if (!sender.HasSpawned) return;
                     sender.SetVote(voteType, inc.ReadBoolean());
 
-                    GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.Character != null && c.GetVote<bool>(VoteType.EndRound));
-                    GameMain.NetworkMember.EndVoteMax = GameMain.Server.ConnectedClients.Count(c => c.Character != null);
+                    GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound));
+                    GameMain.NetworkMember.EndVoteMax = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned);
 
                     break;
                 case VoteType.Kick:

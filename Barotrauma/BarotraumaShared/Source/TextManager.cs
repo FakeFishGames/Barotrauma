@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    static class TextManager
+    public static class TextManager
     {
         private static Dictionary<string, List<string>> texts;
 
@@ -38,22 +38,13 @@ namespace Barotrauma
 
         public static string Get(string textTag)
         {
-            List<string> textList = null;
-            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out textList) || !textList.Any())
+            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out List<string> textList) || !textList.Any())
             {
                 DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
                 return textTag;
             }
 
             string text = textList[Rand.Int(textList.Count)].Replace(@"\n", "\n");
-
-            //todo: get rid of these and only do where needed?
-#if CLIENT
-            foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-            {
-                text = text.Replace("[" + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
-            }
-#endif
             return text;
         }
 

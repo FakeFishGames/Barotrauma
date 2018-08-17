@@ -30,6 +30,7 @@ namespace Barotrauma.Particles
         private Vector2 sizeChange;
 
         private Color color;
+        private Vector4 colorChange;
         private float alpha;
 
         private int spriteIndex;
@@ -47,11 +48,14 @@ namespace Barotrauma.Particles
 
         private List<Gap> hullGaps;
 
+        private bool hasSubEmitters;
         private List<ParticleEmitter> subEmitters = new List<ParticleEmitter>();
 
         private float animState;
         private int animFrame;
-        
+
+        private float collisionUpdateTimer;
+                
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
@@ -67,28 +71,15 @@ namespace Barotrauma.Particles
             get { return size; }
             set { size = value; }
         }
-
-        public Vector2 VelocityChange
-        {
-            get { return velocityChange; }
-            set { velocityChange = value; }
-        }
-
-        public Vector2 VelocityChangeWater
-        {
-            get { return velocityChangeWater; }
-            set { velocityChangeWater = value; }
-        }
-
-        public Vector2 Velocity
-        {
-            get { return velocity; }
-            set { velocity = value; }
-        }
-
+        
         public Hull CurrentHull
         {
             get { return currentHull; }
+        }
+
+        public ParticlePrefab Prefab
+        {
+            get { return prefab; }
         }
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
@@ -129,6 +120,7 @@ namespace Barotrauma.Particles
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
             color = new Color(prefab.StartColor, 1.0f);
+            colorChange = prefab.ColorChange;
             alpha = prefab.StartAlpha;
             
             velocityChange = prefab.VelocityChangeDisplay;
@@ -137,12 +129,14 @@ namespace Barotrauma.Particles
             OnChangeHull = null;
 
             subEmitters.Clear();
+            hasSubEmitters = false;
             foreach (ParticleEmitterPrefab emitterPrefab in prefab.SubEmitters)
             {
                 subEmitters.Add(new ParticleEmitter(emitterPrefab));
+                hasSubEmitters = true;
             }
 
-            if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
+            if (prefab.UseCollision)
             {
                 hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
             }
@@ -154,7 +148,7 @@ namespace Barotrauma.Particles
                 prevRotation = rotation;
             }
         }
-
+        
         public bool Update(float deltaTime)
         {
             prevPosition = position;
@@ -221,13 +215,29 @@ namespace Barotrauma.Particles
             lifeTime -= deltaTime;
             if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
-            foreach (ParticleEmitter emitter in subEmitters)
+            if (hasSubEmitters)
             {
-                emitter.Emit(deltaTime, position, currentHull);
+                foreach (ParticleEmitter emitter in subEmitters)
+                {
+                    emitter.Emit(deltaTime, position, currentHull);
+                }
             }
 
-            if (!prefab.DeleteOnCollision && !prefab.CollidesWithWalls) return true;
+            if (!prefab.UseCollision) return true;
+
+            collisionUpdateTimer -= deltaTime;
+            if (collisionUpdateTimer <= 0.0f)
+            {
+                //more frequent collision updates if the particle is moving fast
+                collisionUpdateTimer = 0.5f - Math.Min((Math.Abs(velocity.X) + Math.Abs(velocity.Y)) * 0.001f, 0.4f);
+                return CollisionUpdate();
+            }
             
+            return true;
+        }
+
+        private bool CollisionUpdate()
+        {
             if (currentHull == null)
             {
                 Hull collidedHull = Hull.FindHull(position);
@@ -239,23 +249,24 @@ namespace Barotrauma.Particles
             }
             else
             {
+                Rectangle hullRect = currentHull.WorldRect;
                 Vector2 collisionNormal = Vector2.Zero;
-                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
+                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
-                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
+                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
-                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
+                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
-                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
+                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
                     if (prefab.DeleteOnCollision) return false;
                     collisionNormal = new Vector2(-1.0f, 0.0f);
@@ -292,7 +303,7 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        Hull newHull = Hull.FindHull(position,currentHull);
+                        Hull newHull = Hull.FindHull(position, currentHull);
                         if (newHull != currentHull)
                         {
                             currentHull = newHull;
@@ -373,28 +384,33 @@ namespace Barotrauma.Particles
         private void OnWallCollisionOutside(Hull collisionHull)
         {
             Rectangle hullRect = collisionHull.WorldRect;
-            
-            if (position.Y < hullRect.Y - hullRect.Height)
+
+            Vector2 center = new Vector2(hullRect.X + hullRect.Width /2, hullRect.Y - hullRect.Height / 2);
+
+            if (position.Y < center.Y)
             {
                 position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
-            else if (position.Y > hullRect.Y)
+            else if (position.Y > center.Y)
             {
                 position.Y = hullRect.Y + prefab.CollisionRadius;
-                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
-                velocity.Y = -velocity.Y;
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = -velocity.Y * prefab.Restitution;
             }
 
-            if (position.X < hullRect.X)
+            if (position.X < center.X)
             {
                 position.X = hullRect.X - prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
-            else if (position.X > hullRect.X + hullRect.Width)
+            else if (position.X > center.X)
             {
                 position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                velocity.X = -velocity.X * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
 
             velocity *= prefab.Restitution;

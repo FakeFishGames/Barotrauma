@@ -9,13 +9,11 @@ namespace Barotrauma
 
         protected Alignment textAlignment;
 
-        private float textScale;
+        private float textScale = 1;
 
         protected Vector2 textPos;
         protected Vector2 origin;
-
-        protected Vector2 caretPos;
-
+        
         protected Color textColor;
 
         private string wrappedText;
@@ -30,7 +28,10 @@ namespace Barotrauma
 
         private float textDepth;
 
-        public override Vector4 Padding
+        public Vector2 TextOffset { get; set; }
+
+        private Vector4 padding;
+        public Vector4 Padding
         {
             get { return padding; }
             set 
@@ -57,35 +58,7 @@ namespace Barotrauma
         {
             get { return wrappedText; }
         }
-
-        public override Rectangle Rect
-        {
-            get
-            {
-                return base.Rect;
-            }
-            set
-            {
-                if (base.Rect == value) return;
-                foreach (GUIComponent child in children)
-                {
-                    child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
-                }
-
-                Point moveAmount = value.Location - rect.Location;
-
-                rect = value;
-                if (value.Width != rect.Width || value.Height != rect.Height)
-                {
-                    SetTextPos();
-                }
-                else if (moveAmount != Point.Zero)
-                {
-                    caretPos += moveAmount.ToVector2();
-                }
-            }
-        }
-
+        
         public float TextDepth
         {
             get { return textDepth; }
@@ -120,84 +93,51 @@ namespace Barotrauma
             get { return textColor; }
             set { textColor = value; }
         }
-
-        public Vector2 CaretPos
+                
+        /// <summary>
+        /// This is the new constructor.
+        /// If the rectT height is set 0, the height is calculated from the text.
+        /// </summary>
+        public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
+            : base(style, rectT)
         {
-            get { return caretPos; }
+            if (color.HasValue)
+            {
+                this.color = color.Value;
+            }
+            if (textColor.HasValue)
+            {
+                this.textColor = textColor.Value;
+            }
+            this.Font = font ?? GUI.Font;
+            this.textAlignment = textAlignment;
+            this.Wrap = wrap;
+            this.Text = text ?? "";
+            if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
+            {
+                rectT.Resize(new Point(rectT.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+            }
+            SetTextPos();
+
+            RectTransform.ScaleChanged += SetTextPos;
+            RectTransform.SizeChanged += SetTextPos;
         }
         
-        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent, ScalableFont font)
-            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
-        {
-        }
-
-
-        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
-        {
-        }
-
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
-            : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
-        {
-        }
-
-        protected override void UpdateDimensions(GUIComponent parent = null)
-        {
-            base.UpdateDimensions(parent);
-
-            SetTextPos();
-        }
-
         public override void ApplyStyle(GUIComponentStyle style)
         {
             if (style == null) return;
             base.ApplyStyle(style);
+            padding = style.Padding;
 
             textColor = style.textColor;
         }
-
-
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
-            : this (rect, text, style, alignment, textAlignment, parent, wrap, font)
-        {
-            if (color != null) this.color = (Color)color;
-            if (textColor != null) this.textColor = (Color)textColor;
-        }
-
-        public GUITextBlock(Rectangle rect, string text, string style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
-            : base(style)        
-        {
-            this.Font = font == null ? GUI.Font : font;
-
-            this.rect = rect;
-
-            this.text = text;
-
-            this.alignment = alignment;
-
-            this.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-
-            this.textAlignment = textAlignment;
-            
-            if (parent != null)
-                parent.AddChild(this);
-
-            this.Wrap = wrap;
-
-            SetTextPos();
-
-            TextScale = 1.0f;
-
-            if (rect.Height == 0 && !string.IsNullOrEmpty(Text))
-            {
-                this.rect.Height = (int)Font.MeasureString(wrappedText).Y;
-            }
-        }
-
+        
         public void SetTextPos()
         {
             if (text == null) return;
+
+            var rect = Rect;
 
             overflowClipActive = false;
 
@@ -212,7 +152,7 @@ namespace Barotrauma
             }
             else if (OverflowClip)
             {
-                overflowClipActive = size.X > rect.Width;
+                overflowClipActive = size.X > rect.Width - padding.X - padding.Z;
             }
                      
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
@@ -235,17 +175,6 @@ namespace Barotrauma
 
             textPos.X = (int)textPos.X;
             textPos.Y = (int)textPos.Y;
-
-            if (wrappedText.Contains("\n"))
-            {
-                string[] lines = wrappedText.Split('\n');
-                Vector2 lastLineSize = MeasureText(lines[lines.Length-1]);
-                caretPos = new Vector2(rect.X + lastLineSize.X, rect.Y + size.Y - lastLineSize.Y) + textPos - origin;
-            }
-            else
-            {
-                caretPos = new Vector2(rect.X + size.X, rect.Y) + textPos - origin;
-            }
         }
 
         private Vector2 MeasureText(string text) 
@@ -268,12 +197,7 @@ namespace Barotrauma
             textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
-        public override void Draw(SpriteBatch spriteBatch)
-        {
-            Draw(spriteBatch, Vector2.Zero);
-        }
-
-        public void Draw(SpriteBatch spriteBatch, Vector2 offset)
+        protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
@@ -281,24 +205,24 @@ namespace Barotrauma
             if (state == ComponentState.Hover) currColor = hoverColor;
             if (state == ComponentState.Selected) currColor = selectedColor;
 
-            Rectangle drawRect = rect;
-            if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
-            
+            var rect = Rect;
+
             base.Draw(spriteBatch);
-            
+
             if (TextGetter != null) Text = TextGetter();
-            
+
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
-                spriteBatch.GraphicsDevice.ScissorRectangle = rect;
+                Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
+                spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
             }
 
             if (!string.IsNullOrEmpty(text))
             {
                 Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
-                    new Vector2(rect.X, rect.Y) + textPos + offset,
+                    rect.Location.ToVector2() + textPos + TextOffset,
                     textColor * (textColor.A / 255.0f),
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
@@ -308,8 +232,6 @@ namespace Barotrauma
             {
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             }
-
-            DrawChildren(spriteBatch);
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);
         }

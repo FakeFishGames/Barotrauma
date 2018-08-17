@@ -11,7 +11,7 @@ namespace Barotrauma
         public readonly List<string> ItemNames;
 
         public List<SkillPrefab> Skills;
-
+        
         //the number of these characters in the crew the player starts with
         public readonly int InitialCount;
 
@@ -62,11 +62,20 @@ namespace Barotrauma
             private set;
         }
 
+        //how much the vitality of the character is increased/reduced from the default value
+        public float VitalityModifier
+        {
+            get;
+            private set;
+        }
+
         public JobPrefab(XElement element)
         {
             Name = element.GetAttributeString("name", "name not found");
 
             Description = element.GetAttributeString("description", "");
+
+            VitalityModifier = element.GetAttributeFloat("vitalitymodifier", 0.0f);
 
             MinNumber = element.GetAttributeInt("minnumber", 0);
             MaxNumber = element.GetAttributeInt("maxnumber", 10);
@@ -111,7 +120,7 @@ namespace Barotrauma
             return List[Rand.Int(List.Count)];
         }
 
-        public static void LoadAll(List<string> filePaths)
+        public static void LoadAll(IEnumerable<string> filePaths)
         {
             List = new List<JobPrefab>();
 

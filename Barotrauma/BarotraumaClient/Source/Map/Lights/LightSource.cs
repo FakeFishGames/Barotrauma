@@ -32,7 +32,12 @@ namespace Barotrauma.Lights
 
         public Submarine ParentSub;
 
-        public bool CastShadows;
+        private bool castShadows;
+        public bool CastShadows
+        {
+            get { return castShadows && !IsBackground; }
+            set { castShadows = value; }
+        }
 
         //what was the range of the light when lightvolumes were last calculated
         private float prevCalculatedRange;
@@ -139,6 +144,15 @@ namespace Barotrauma.Lights
             }
         }
 
+        /// <summary>
+        /// Background lights are drawn behind submarines and they don't cast shadows.
+        /// </summary>        
+        public bool IsBackground
+        {
+            get;
+            set;
+        }
+
         public bool Enabled = true;
 
         public LightSource (XElement element)
@@ -148,7 +162,6 @@ namespace Barotrauma.Lights
             color = new Color(element.GetAttributeVector4("color", Vector4.One));
 
             CastShadows = element.GetAttributeBool("castshadows", true);
-
             
             foreach (XElement subElement in element.Elements())
             {
@@ -520,10 +533,12 @@ namespace Barotrauma.Lights
             Vector2? closestIntersection = null;
             int segment = -1;
 
-            for (int i=0;i<segments.Count;i++)
+            for (int i = 0; i < segments.Count; i++)
             {
                 Segment s = segments[i];
-                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal);
+                Vector2? intersection = (s.Start.WorldPos.X == s.End.WorldPos.X || s.Start.WorldPos.Y == s.End.WorldPos.Y) ?
+                    MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
+                    MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
 
                 if (intersection != null)
                 {
@@ -536,10 +551,8 @@ namespace Barotrauma.Lights
                     }
                 }
             }
-
-            Pair<int,Vector2> retVal = new Pair<int,Vector2>();
-            retVal.Second = closestIntersection == null ? rayEnd : (Vector2)closestIntersection;
-            retVal.First = segment;
+            
+            Pair<int, Vector2> retVal = new Pair<int, Vector2>(segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
             return retVal;
         }
 
@@ -687,14 +700,8 @@ namespace Barotrauma.Lights
                 CheckHullsInRange();
             }
 
-            Vector3 offset = ParentSub == null ? Vector3.Zero :
-            new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
-
-            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
-
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-
             drawPos.Y = -drawPos.Y;
             
             if (LightSprite != null)
@@ -721,6 +728,10 @@ namespace Barotrauma.Lights
                 spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
                 return;
             }
+
+            Vector3 offset = ParentSub == null ?
+                Vector3.Zero : new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
+            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
 
             if (NeedsRecalculation)
             {

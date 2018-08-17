@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(10.0f, false), Editable(ToolTip = "How fast the device can be recharged. "+
+        [Serialize(10.0f, true), Editable(ToolTip = "How fast the device can be recharged. "+
             "For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
         {
@@ -87,10 +87,6 @@ namespace Barotrauma.Items.Components
         public PowerContainer(Item item, XElement element)
             : base(item, element)
         {
-            //capacity = ToolBox.GetAttributeFloat(element, "capacity", 10.0f);
-            //maxRechargeSpeed = ToolBox.GetAttributeFloat(element, "maxinput", 10.0f);
-            //maxOutput = ToolBox.GetAttributeFloat(element, "maxoutput", 10.0f);
-            
             IsActive = true;
 
             InitProjSpecific();
@@ -100,11 +96,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (picker == null) return false;
-
-            //picker.SelectedConstruction = (picker.SelectedConstruction == item) ? null : item;
-            
-            return true;
+            return picker != null;
         }
 
         public override void Update(float deltaTime, Camera cam) 
@@ -175,12 +167,35 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            RechargeSpeed = maxRechargeSpeed * 0.5f;
+            if (GameMain.Client != null) return false;
+
+            if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
+            {
+                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
+                {
+                    item.CreateServerEvent(this);
+                    RechargeSpeed = maxRechargeSpeed * 0.5f;
+                    character.Speak(TextManager.Get("DialogChargeBatteries")
+                        .Replace("[itemname]", item.Name)
+                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                }
+            }
+            else
+            {
+                if (rechargeSpeed > 0.0f)
+                {
+                    item.CreateServerEvent(this);
+                    RechargeSpeed = 0.0f;
+                    character.Speak(TextManager.Get("DialogStopChargingBatteries")
+                        .Replace("[itemname]", item.Name)
+                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                }
+            }
 
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
             if (!connection.IsPower) return;
 
@@ -193,15 +208,15 @@ namespace Barotrauma.Items.Components
                 outputVoltage = power;
             }
         }
-        
+                
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            float newRechargeSpeed = msg.ReadRangedInteger(0,10) / 10.0f * maxRechargeSpeed;
+            float newRechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
 
             if (item.CanClientAccess(c))
             {
                 RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character.LogName + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(c.Character.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
             }
 
             item.CreateServerEvent(this);

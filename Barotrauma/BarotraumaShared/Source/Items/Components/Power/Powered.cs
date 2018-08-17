@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
+#if CLIENT
+using Barotrauma.Sounds;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -33,8 +37,7 @@ namespace Barotrauma.Items.Components
             get { return powerConsumption; }
             set { powerConsumption = value; }
         }
-
-
+        
         [Serialize(false, true)]
         public override bool IsActive
         {
@@ -60,30 +63,25 @@ namespace Barotrauma.Items.Components
             set { voltage = Math.Max(0.0f, value); }
         }
 
+        [Editable(ToolTip = "Can the item be damaged by electomagnetic pulses."), Serialize(true, true)]
+        public bool VulnerableToEMP
+        {
+            get;
+            set;
+        }
+
         public Powered(Item item, XElement element)
             : base(item, element)
         {
-#if CLIENT
-            if (powerOnSound == null)
-            {
-                powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg", false);
-            }
-
-            if (sparkSounds == null)
-            {
-                sparkSounds = new Sound[4];
-                for (int i = 0; i < 4; i++)
-                {
-                    sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
-                }
-            }
-#endif
+            InitProjectSpecific(element);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
+        partial void InitProjectSpecific(XElement element);
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
             if (currPowerConsumption == 0.0f) voltage = 0.0f;
-            if (connection.IsPower) voltage = power;                
+            if (connection.IsPower) voltage = Math.Max(0.0f, power);                
         }
 
         protected void UpdateOnActiveEffects(float deltaTime)
@@ -103,9 +101,12 @@ namespace Barotrauma.Items.Components
             if (voltage > minVoltage)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-                if (!powerOnSoundPlayed)
+                if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
+                    if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition.X, item.WorldPosition.Y, 0.0f)) < powerOnSound.BaseFar * powerOnSound.BaseFar)
+                    {
+                        SoundPlayer.PlaySound(powerOnSound, 1.0f, powerOnSound.BaseFar, item.WorldPosition, item.CurrentHull);
+                    }
                     powerOnSoundPlayed = true;
                 }
             }

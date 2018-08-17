@@ -12,6 +12,9 @@
     <AssemblyName>Barotrauma</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <ReleaseVersion>0.7.0.1</ReleaseVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,48 +29,66 @@
     <ApplicationVersion>0.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <ReleaseVersion>0.7.0.1</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseLinux|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
     <OutputPath>..\bin\ReleaseLinux\</OutputPath>
     <DefineConstants>TRACE;LINUX;CLIENT</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugLinux|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\bin\DebugLinux\</OutputPath>
     <DefineConstants>TRACE;LINUX;CLIENT;DEBUG</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWindows|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMac|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
+    <OutputPath>..\bin\ReleaseMac\</OutputPath>
+    <DefineConstants>TRACE;OSX;CLIENT</DefineConstants>
     <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMac|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\DebugMac\</OutputPath>
+    <DefineConstants>TRACE;OSX;CLIENT;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x64'">
+    <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\ReleaseWindows\</OutputPath>
     <DefineConstants>TRACE;WINDOWS;CLIENT</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugWindows|x86' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\bin\DebugWindows\</OutputPath>
     <DefineConstants>TRACE;WINDOWS;CLIENT;DEBUG</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -75,23 +96,38 @@
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
-    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Events\EventManager.cs" />
+    <Compile Include="Source\Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="Source\Extensions\PointExtensions.cs" />
+    <Compile Include="Source\Extensions\RectangleExtensions.cs" />
+    <Compile Include="Source\GUI\ChatBox.cs" />
+    <Compile Include="Source\GUI\ShapeExtensions.cs" />
+    <Compile Include="Source\GUI\Graph.cs" />
+    <Compile Include="Source\Characters\CharacterHealth.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
+    <Compile Include="Source\GUI\GUICanvas.cs" />
+    <Compile Include="Source\GUI\GUICustomComponent.cs" />
+    <Compile Include="Source\GUI\GUILayoutGroup.cs" />
+    <Compile Include="Source\GUI\HUDLayoutSettings.cs" />
+    <Compile Include="Source\GUI\RectTransform.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreaturePrefab.cs" />
+    <Compile Include="Source\Items\Components\Optimizable.cs" />
+    <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
+    <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
+    <Compile Include="Source\Items\ItemInventory.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreature.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreatureManager.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundCreatures\BackgroundCreaturePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
     <Compile Include="Source\Characters\CharacterHUD.cs" />
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\Characters\CharacterSound.cs" />
     <Compile Include="Source\Characters\HUDProgressBar.cs" />
-    <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\Limb.cs" />
     <Compile Include="Source\DebugConsole.cs" />
@@ -107,7 +143,7 @@
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\Tutorial.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
     <Compile Include="Source\GameSession\HireManager.cs" />
     <Compile Include="Source\GameSession\RoundSummary.cs" />
@@ -141,7 +177,7 @@
     <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
     <Compile Include="Source\Items\Components\Machines\MiniMap.cs" />
     <Compile Include="Source\Items\Components\Machines\Pump.cs" />
-    <Compile Include="Source\Items\Components\Machines\Radar.cs" />
+    <Compile Include="Source\Items\Components\Machines\Sonar.cs" />
     <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
     <Compile Include="Source\Items\Components\Machines\Steering.cs" />
     <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
@@ -162,10 +198,12 @@
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Gap.cs" />
     <Compile Include="Source\Map\Hull.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundSpriteManager.cs" />
-    <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundSpritePrefab.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObject.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectManager.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelObjectPrefab.cs" />
     <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="Source\Map\Levels\Level.cs" />
+    <Compile Include="Source\Map\Levels\LevelObjects\LevelTrigger.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\Ruins\RuinGenerator.cs" />
     <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
@@ -184,6 +222,7 @@
     <Compile Include="Source\Map\WayPoint.cs" />
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
+    <Compile Include="Source\Networking\Client.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
@@ -193,7 +232,12 @@
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\OrderChatMessage.cs" />
+    <Compile Include="Source\Networking\ServerInfo.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\Voip\VoipCapture.cs" />
+    <Compile Include="Source\Networking\Voip\VoipClient.cs" />
+    <Compile Include="Source\Networking\Voip\VoipConfig.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
@@ -206,10 +250,12 @@
     <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
+    <Compile Include="Source\Screens\AnimationEditorScreen.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
     <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="Source\Screens\SteamWorkshopScreen.cs" />
     <Compile Include="Source\Screens\SubEditorScreen.cs" />
     <Compile Include="Source\Screens\GameScreen.cs" />
     <Compile Include="Source\Screens\LobbyScreen.cs" />
@@ -219,11 +265,19 @@
     <Compile Include="Source\Screens\Screen.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Serialization\SerializableEntityEditor.cs" />
+    <Compile Include="Source\Sounds\InputPlaybackSound.cs" />
+    <Compile Include="Source\Sounds\VoipSound.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
-    <Compile Include="Source\Sounds\OggStream.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
+    <Compile Include="Source\Sounds\SoundChannel.cs" />
     <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
+    <Compile Include="Source\Sprite\DeformableSprite.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\CustomDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\Inflate.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\NoiseDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\PositionalDeformation.cs" />
+    <Compile Include="Source\Sprite\DeformAnimations\SpriteDeformation.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
     <Compile Include="Source\Utils\MathUtils.cs" />
@@ -231,12 +285,20 @@
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Concentus, Version=1.1.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\Concentus.1.1.7\lib\portable-net45+win+wpa81+wp80\Concentus.dll</HintPath>
+    </Reference>
+    <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\lib\net45\GameAnalytics.Mono.dll</HintPath>
+    </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="MonoGame.Framework.WindowsDX">
       <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\NLog.4.3.8\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="PresentationCore" />
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="NVorbis">
@@ -247,15 +309,25 @@
       <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Data.SQLite, Version=1.0.102.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\lib\net45\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\System.Runtime.InteropServices.RuntimeInformation.4.0.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.XML" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Condition="$(DefineConstants.Contains('LINUX')) OR $(DefineConstants.Contains('OSX'))" Include="MonoGame.Framework.DesktopGL">
+      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Condition="$(DefineConstants.Contains('LINUX'))" Include="MonoGame.Framework.DesktopGL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -301,6 +373,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
+      <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
+      <Name>Facepunch.Steamworks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
       <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
       <Name>Hyper.ComponentModel</Name>
@@ -324,6 +400,13 @@
   <ItemGroup />
   <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets" Condition="Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.1.1.12\build\net45\GameAnalytics.Mono.SDK.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

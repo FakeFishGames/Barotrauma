@@ -23,13 +23,18 @@ namespace Barotrauma
 
         private float? footRotation;
 
+        //the angle of the collider when standing (i.e. out of water)
+        private float colliderStandAngle;
+
         private float deathAnimTimer, deathAnimDuration = 5.0f;
 
-        public FishAnimController(Character character, XElement element)
-            : base(character, element)
+        public FishAnimController(Character character, XElement element, string seed)
+            : base(character, element, seed)
         {
             waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
             waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
+
+            colliderStandAngle = MathHelper.ToRadians(element.GetAttributeFloat("colliderstandangle", 0.0f));
 
             steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
             
@@ -55,19 +60,10 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
+                Collider.Enabled = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                if (character.IsRemotePlayer)
-                {
-                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                    MainLimb.pullJoint.Enabled = true;
-                }
-                else
-                {
-                    Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
-                    Collider.SmoothRotate(MainLimb.Rotation);
-                }
-
+                Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
@@ -106,10 +102,11 @@ namespace Barotrauma
             }
             else if (currentHull != null && CanEnterSubmarine)
             {
-                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
+                //rotate collider back upright
+                float standAngle = dir == Direction.Right ? colliderStandAngle : -colliderStandAngle;
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                 {
-                    //rotate collider back upright
-                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 60.0f;
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
                     Collider.FarseerBody.FixedRotation = false;
                 }
                 else
@@ -164,8 +161,28 @@ namespace Barotrauma
             {
                 if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
-                    Flip();
-                    if (mirror || !inWater) Mirror();
+                    Limb head = GetLimb(LimbType.Head);
+                    Limb tail = GetLimb(LimbType.Tail);
+                    bool wrongway = false;
+                    if (head != null && tail != null)
+                    {
+                        wrongway = 
+                            (Dir > 0.0f && head.SimPosition.X < MainLimb.SimPosition.X && tail.SimPosition.X > MainLimb.SimPosition.X) ||
+                            (Dir < 0.0f && head.SimPosition.X > MainLimb.SimPosition.X && tail.SimPosition.X < MainLimb.SimPosition.X);
+                    }
+
+                    if (wrongway)
+                    {
+                        base.Flip();
+                    }
+                    else
+                    {
+                        Flip();
+                        if (mirror || !inWater)
+                        {
+                            Mirror();
+                        }
+                    }
                     flipTimer = 0.0f;
                 }
             }
@@ -188,20 +205,9 @@ namespace Barotrauma
 
             Character targetCharacter = target;
             float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
-
             eatTimer += (float)Timing.Step * eatSpeed;
 
-            Vector2 mouthPos = mouthLimb.SimPosition;
-            if (mouthLimb.MouthPos.HasValue)
-            {
-                float cos = (float)Math.Cos(mouthLimb.Rotation);
-                float sin = (float)Math.Sin(mouthLimb.Rotation);
-
-                mouthPos += new Vector2(
-                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
-                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
-            }
-
+            Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
@@ -221,16 +227,16 @@ namespace Barotrauma
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - (float)Timing.Step * eatSpeed) % 1.0f > 0.5f)
                 {
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints,
+                        l => !l.IsSevered && l.CanBeSevered && l.LimbA != null && !l.LimbA.IsSevered && l.LimbB != null && !l.LimbB.IsSevered);
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten
                         Entity.Spawner.AddToRemoveQueue(targetCharacter);
                         character.SelectedCharacter = null;
-                        character.Health += 10.0f;
                     }
                     else //sever a random joint
                     {
@@ -262,8 +268,25 @@ namespace Barotrauma
             }
             else
             {
-                Collider.SmoothRotate(HeadAngle * Dir, 25.0f);
-                MainLimb.body.SmoothRotate(HeadAngle * Dir, steerTorque);
+                if (MainLimb.type == LimbType.Head && HeadAngle.HasValue)
+                {
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, 25.0f);
+                }
+                else if (MainLimb.type == LimbType.Head && TorsoAngle.HasValue)
+                {
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, 25.0f);
+                }
+
+                if (TorsoAngle.HasValue)
+                {
+                    Limb torso = GetLimb(LimbType.Torso);
+                    torso?.body.SmoothRotate(TorsoAngle.Value * Dir, steerTorque);
+                }
+                if (HeadAngle.HasValue)
+                {
+                    Limb head = GetLimb(LimbType.Head);
+                    head?.body.SmoothRotate(HeadAngle.Value * Dir, steerTorque);
+                }
             }
 
             Limb tail = GetLimb(LimbType.Tail);
@@ -293,30 +316,51 @@ namespace Barotrauma
         void UpdateWalkAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
-            
-            float mainLimbHeight, mainLimbAngle;
-            if (MainLimb.type == LimbType.Torso)
+
+            float mainLimbHeight = colliderHeightFromFloor;
+
+            Limb torso = GetLimb(LimbType.Torso);
+            if (torso != null)
             {
-                mainLimbHeight = TorsoPosition;
-                mainLimbAngle = torsoAngle;
-            }
-            else
-            {
-                mainLimbHeight = HeadPosition;
-                mainLimbAngle = headAngle;
+                if (TorsoAngle.HasValue) torso.body.SmoothRotate(TorsoAngle.Value * Dir, 50.0f);
+                if (TorsoPosition.HasValue)
+                {
+                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * TorsoPosition.Value;
+
+                    if (torso != MainLimb)
+                        pos.X = torso.SimPosition.X;
+                    else
+                        mainLimbHeight = TorsoPosition.Value;
+
+                    torso.MoveToPos(pos, 10.0f);
+                    torso.pullJoint.Enabled = true;
+                    torso.pullJoint.WorldAnchorB = pos;
+                }
             }
 
-            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
-            
+            Limb head = GetLimb(LimbType.Head);
+            if (head != null)
+            {
+                if (HeadAngle.HasValue) head.body.SmoothRotate(HeadAngle.Value * Dir, 50.0f);
+                if (HeadPosition.HasValue)
+                {
+                    Vector2 pos = GetColliderBottom() + Vector2.UnitY * HeadPosition.Value;
+
+                    if (head != MainLimb)
+                        pos.X = head.SimPosition.X;
+                    else
+                        mainLimbHeight = HeadPosition.Value;
+
+                    head.MoveToPos(pos, 10.0f);
+                    head.pullJoint.Enabled = true;
+                    head.pullJoint.WorldAnchorB = pos;
+                }
+            }
+
             Collider.LinearVelocity = new Vector2(
                 movement.X,
                 Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
-
-            MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             
-            MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
-
             walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
@@ -380,7 +424,6 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
-
                 limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
             }
         }

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,9 +17,8 @@ namespace Barotrauma.Items.Components
         public readonly ActionType Type;
 
         public string VolumeProperty;
-
         public float VolumeMultiplier;
-
+        
         public readonly float Range;
 
         public readonly bool Loop;
@@ -36,71 +36,137 @@ namespace Barotrauma.Items.Components
     partial class ItemComponent : ISerializableEntity
     {
         private Dictionary<ActionType, List<ItemSound>> sounds;
+        private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
 
-        private GUIFrame guiFrame;
+        protected GUIFrame guiFrame;
 
-        protected GUIFrame GuiFrame
+        enum SoundSelectionMode
+        {
+            Random, 
+            CharacterSpecific,
+            ItemSpecific
+        }
+
+        public GUIFrame GuiFrame
         {
             get
             {
-                if (guiFrame == null)
+                /*if (guiFrame == null)
                 {
                     DebugConsole.ThrowError("Error: the component " + name + " in " + item.Name + " doesn't have a GuiFrame component");
                     guiFrame = new GUIFrame(new Rectangle(0, 0, 100, 100), Color.Black);
-                }
+                }*/
                 return guiFrame;
             }
         }
 
+        [Serialize(0, false)]
+        public int HudPriority
+        {
+            get;
+            private set;
+        }
+        
         private ItemSound loopingSound;
-        private int loopingSoundIndex;
-        public void PlaySound(ActionType type, Vector2 position)
+        private SoundChannel loopingSoundChannel;
+        public void PlaySound(ActionType type, Vector2 position, Character user = null)
         {
             if (loopingSound != null)
             {
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > loopingSound.Range * loopingSound.Range)
+                {
+                    if (loopingSoundChannel != null)
+                    {
+                        loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                    }
+                    return;
+                }
+
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                {
+                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                }
+                if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
+                {
+                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel.Looping = true;
+                    //TODO: tweak
+                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                    loopingSoundChannel.Far = loopingSound.Range;
+                }
+                if (loopingSoundChannel != null)
+                {
+                    loopingSoundChannel.Gain = GetSoundVolume(loopingSound);
+                    loopingSoundChannel.Position = new Vector3(position.X, position.Y, 0.0f);
+                }
                 return;
             }
 
-            List<ItemSound> matchingSounds;
-            if (!sounds.TryGetValue(type, out matchingSounds)) return;
+            if (!sounds.TryGetValue(type, out List<ItemSound> matchingSounds)) return;
 
             ItemSound itemSound = null;
-            if (!Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
-                int index = Rand.Int(matchingSounds.Count);
+                SoundSelectionMode soundSelectionMode = soundSelectionModes[type];
+                int index;
+                if (soundSelectionMode == SoundSelectionMode.CharacterSpecific && user != null)
+                {
+                    index = user.ID % matchingSounds.Count;
+                }
+                else if (soundSelectionMode == SoundSelectionMode.ItemSpecific)
+                {
+                    index = item.ID % matchingSounds.Count;
+                }
+                else
+                {
+                    index = Rand.Int(matchingSounds.Count);
+                }
+                    
                 itemSound = matchingSounds[index];
             }
 
             if (itemSound == null) return;
 
+            if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(position.X, position.Y, 0.0f)) > itemSound.Range * itemSound.Range)
+            {
+                return;
+            }
+
             if (itemSound.Loop)
             {
                 loopingSound = itemSound;
-
-                loopingSoundIndex = loopingSound.Sound.Loop(loopingSoundIndex, GetSoundVolume(loopingSound), position, loopingSound.Range);
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.Sound)
+                {
+                    loopingSoundChannel.Dispose(); loopingSoundChannel = null;
+                }
+                if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
+                {
+                    loopingSoundChannel = loopingSound.Sound.Play(new Vector3(position.X, position.Y, 0.0f), GetSoundVolume(loopingSound));
+                    loopingSoundChannel.Looping = true;
+                    //TODO: tweak
+                    loopingSoundChannel.Near = loopingSound.Range * 0.4f;
+                    loopingSoundChannel.Far = loopingSound.Range;
+                }
             }
             else
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume == 0.0f) return;
-                itemSound.Sound.Play(volume, itemSound.Range, position);
+                SoundPlayer.PlaySound(itemSound.Sound, volume, itemSound.Range, position, item.CurrentHull);
             }
         }
 
         public void StopSounds(ActionType type)
         {
-            if (loopingSoundIndex <= 0) return;
-
             if (loopingSound == null) return;
 
             if (loopingSound.Type != type) return;
 
-            if (Sounds.SoundManager.IsPlaying(loopingSoundIndex))
+            if (loopingSoundChannel != null)
             {
-                Sounds.SoundManager.Stop(loopingSoundIndex);
+                loopingSoundChannel.Dispose();
+                loopingSoundChannel = null;
                 loopingSound = null;
-                loopingSoundIndex = -1;
             }
         }
 
@@ -129,11 +195,16 @@ namespace Barotrauma.Items.Components
             return 0.0f;
         }
         
+        public virtual bool ShouldDrawHUD(Character character)
+        {
+            return true;
+        }
+
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
         public virtual void AddToGUIUpdateList() { }
 
-        public virtual void UpdateHUD(Character character) { }
+        public virtual void UpdateHUD(Character character, float deltaTime) { }
 
         private bool LoadElemProjSpecific(XElement subElement)
         {
@@ -152,9 +223,7 @@ namespace Barotrauma.Items.Components
                     if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
 
                     string style = subElement.GetAttributeString("style", "");
-
-                    Vector4 color = subElement.GetAttributeVector4("color", Vector4.One);
-
+                    
                     Alignment alignment = Alignment.Center;
                     try
                     {
@@ -166,10 +235,11 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Error in " + subElement.Parent + "! \"" + subElement.Parent.Attribute("type").Value + "\" is not a valid alignment");
                     }
 
-                    guiFrame = new GUIFrame(
-                        new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W),
-                        new Color(color.X, color.Y, color.Z) * color.W,
-                        alignment, style);
+                    Color? color = null;                        
+                    if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
+
+                    guiFrame = new GUIFrame(new RectTransform(new Point((int)rect.Z, (int)rect.W), GUI.Canvas, Anchor.Center)
+                        { AbsoluteOffset = new Point((int)rect.X, (int)rect.Y) }, style, color);
 
                     break;
                 case "sound":
@@ -189,7 +259,6 @@ namespace Barotrauma.Items.Components
                     }
 
                     ActionType type;
-
                     try
                     {
                         type = (ActionType)Enum.Parse(typeof(ActionType), subElement.GetAttributeString("type", ""), true);
@@ -199,14 +268,21 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Invalid sound type in " + subElement + "!", e);
                         break;
                     }
-
-                    Sound sound = Sound.Load(filePath);
-
+                    
+                    Sound sound = Submarine.LoadRoundSound(filePath);
                     float range = subElement.GetAttributeFloat("range", 800.0f);
                     bool loop = subElement.GetAttributeBool("loop", false);
                     ItemSound itemSound = new ItemSound(sound, type, range, loop);
                     itemSound.VolumeProperty = subElement.GetAttributeString("volume", "");
                     itemSound.VolumeMultiplier = subElement.GetAttributeFloat("volumemultiplier", 1.0f);
+
+                    if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
+                    {
+                        SoundSelectionMode selectionMode = SoundSelectionMode.Random;
+                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out selectionMode);
+                        soundSelectionModes[type] = selectionMode;
+                    }
 
                     List<ItemSound> soundList = null;
                     if (!sounds.TryGetValue(itemSound.Type, out soundList))
@@ -224,19 +300,25 @@ namespace Barotrauma.Items.Components
         }
 
         //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
-        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync = false)
         {
             if (delayedCorrectionCoroutine != null) CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
 
-            delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime));
+            delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime, waitForMidRoundSync));
         }
 
-        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime, bool waitForMidRoundSync)
         {
-            while (correctionTimer > 0.0f)
+            while (GameMain.Client != null && 
+                (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))
             {
                 correctionTimer -= CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
+            }
+
+            if (item.Removed || GameMain.Client == null)
+            {
+                yield return CoroutineStatus.Success;
             }
 
             ((IServerSerializable)this).ClientRead(type, buffer, sendingTime);

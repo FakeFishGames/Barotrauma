@@ -19,37 +19,37 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            GuiFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
-            itemList = new GUIListBox(new Rectangle(0, 0, GuiFrame.Rect.Width / 2 - 20, 0), "", GuiFrame);
-            itemList.OnSelected = SelectItem;
+            itemList = new GUIListBox(new RectTransform(new Vector2(0.47f, 1.0f), paddedFrame.RectTransform))
+            {
+                OnSelected = SelectItem
+            };
 
             foreach (FabricableItem fi in fabricableItems)
             {
-                GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, itemList)
+                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, 50), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
-                    Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f),
                     HoverColor = Color.Gold * 0.2f,
                     SelectedColor = Color.Gold * 0.5f,
                     ToolTip = fi.TargetItem.Description
                 };
 
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(40, 0, 0, 25),
-                    fi.TargetItem.Name,
-                    Color.Transparent, Color.White,
-                    Alignment.Left, Alignment.Left,
-                    null, frame);
-                textBlock.ToolTip = fi.TargetItem.Description;
-                textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.Zero, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(50, 0) },
+                    fi.DisplayName)
+                {
+                    ToolTip = fi.TargetItem.Description
+                };
 
                 if (fi.TargetItem.sprite != null)
                 {
-                    GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), fi.TargetItem.sprite, Alignment.Left, frame);
-                    img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                    img.Color = fi.TargetItem.SpriteColor;
-                    img.ToolTip = fi.TargetItem.Description;
+                    GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(3, 0) },
+                        fi.TargetItem.sprite, scaleToFit: true)
+                    {
+                        Color = fi.TargetItem.SpriteColor,
+                        ToolTip = fi.TargetItem.Description
+                    };
                 }
             }
         }
@@ -60,87 +60,75 @@ namespace Barotrauma.Items.Components
             if (targetItem == null) return false;
 
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
-
-            //int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 300), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
-
-            selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-
-            progressBar = new GUIProgressBar(new Rectangle(0, 0, 0, 20), Color.Green, "", 0.0f, Alignment.BottomCenter, selectedItemFrame);
-            progressBar.IsHorizontal = true;
+            
+            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.47f, 0.8f), GuiFrame.Children.First().RectTransform, Anchor.CenterRight),
+                style: "InnerFrame");
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.05f };
 
             if (targetItem.TargetItem.sprite != null)
             {
-                int y = 0;
-
-                GUIImage img = new GUIImage(new Rectangle(10, 0, 40, 40), targetItem.TargetItem.sprite, Alignment.TopLeft, selectedItemFrame);
-                img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
-                img.Color = targetItem.TargetItem.SpriteColor;
-
-                new GUITextBlock(
-                    new Rectangle(60, 0, 0, 25),
-                    targetItem.TargetItem.Name,
-                    Color.Transparent, Color.White,
-                    Alignment.TopLeft,
-                    Alignment.TopLeft, null,
-                    selectedItemFrame, true);
-
-                y += 40;
-
-                if (!string.IsNullOrWhiteSpace(targetItem.TargetItem.Description))
+                GUIImage img = new GUIImage(new RectTransform(new Point(40, 40), paddedFrame.RectTransform),
+                    targetItem.TargetItem.sprite, scaleToFit: true)
                 {
-                    var description = new GUITextBlock(
-                        new Rectangle(0, y, 0, 0),
-                        targetItem.TargetItem.Description,
-                        "", Alignment.TopLeft, Alignment.TopLeft,
-                        selectedItemFrame, true, GUI.SmallFont);
-
-                    y += description.Rect.Height + 10;
-                }
-
-
-                List<Skill> inadequateSkills = new List<Skill>();
-
-                if (Character.Controlled != null)
-                {
-                    inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
-                }
-
-                Color textColor = Color.White;
-                string text;
-                if (!inadequateSkills.Any())
-                {
-                    text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
-                    foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
-                    {
-                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
-                    }
-                    text += TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
-                }
-                else
-                {
-                    text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
-                    foreach (Skill skill in inadequateSkills)
-                    {
-                        text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
-                    }
-
-                    textColor = Color.Red;
-                }
-
-                new GUITextBlock(
-                    new Rectangle(0, y, 0, 25),
-                    text,
-                    Color.Transparent, textColor,
-                    Alignment.TopLeft,
-                    Alignment.TopLeft, null,
-                    selectedItemFrame);
-
-                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), TextManager.Get("FabricatorCreate"), Color.White, Alignment.CenterX | Alignment.Bottom, "", selectedItemFrame);
-                activateButton.OnClicked = StartButtonClicked;
-                activateButton.UserData = targetItem;
-                activateButton.Enabled = false;
+                    Color = targetItem.TargetItem.SpriteColor
+                };
             }
+            new GUITextBlock(new RectTransform(new Point(paddedFrame.Rect.Width - 70, 40), paddedFrame.RectTransform) { AbsoluteOffset = new Point(60, 0) },
+                targetItem.TargetItem.Name, textAlignment: Alignment.CenterLeft, wrap: true)
+            {
+                IgnoreLayoutGroups = true
+            };
+
+            if (!string.IsNullOrWhiteSpace(targetItem.TargetItem.Description))
+            {
+                var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                    targetItem.TargetItem.Description,
+                    font: GUI.SmallFont, wrap: true);
+            }
+
+            List<Skill> inadequateSkills = new List<Skill>();
+            if (Character.Controlled != null)
+            {
+                inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
+            }
+
+            Color textColor = Color.White;
+            string text;
+            if (!inadequateSkills.Any())
+            {
+                text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
+                foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
+                {
+                    text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
+                }
+                text += '\n' + TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
+            }
+            else
+            {
+                text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
+                foreach (Skill skill in inadequateSkills)
+                {
+                    text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
+                }
+
+                textColor = Color.Red;
+            }
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), text, textColor: textColor, font: GUI.SmallFont);
+
+            progressBar = new GUIProgressBar(new RectTransform(new Point(paddedFrame.Rect.Width, 20), paddedFrame.RectTransform),
+                barSize: 0.0f, color: Color.Green)
+            {
+                IsHorizontal = true
+            };
+
+            activateButton = new GUIButton(new RectTransform(new Point(100, 20), paddedFrame.RectTransform, Anchor.BottomCenter),
+                TextManager.Get("FabricatorCreate"))
+            {
+                OnClicked = StartButtonClicked,
+                IgnoreLayoutGroups = true,
+                UserData = targetItem,
+                Enabled = false
+            };
 
             return true;
         }
@@ -167,18 +155,13 @@ namespace Barotrauma.Items.Components
 
             return true;
         }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            GuiFrame.Draw(spriteBatch);
-        }
-
+        
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
         }
 
-        public override void UpdateHUD(Character character)
+        public override void UpdateHUD(Character character, float deltaTime)
         {
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;
             if (targetItem != null)
@@ -208,9 +191,6 @@ namespace Barotrauma.Items.Components
 
                 if (itemsChanged) CheckFabricableItems(character);
             }
-
-
-            GuiFrame.Update((float)Timing.Step);
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)

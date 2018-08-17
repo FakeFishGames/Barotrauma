@@ -1,17 +1,22 @@
 ﻿<Items>
   <Item
     name="Headset"
+    identifier="headset"
     category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
-    cargocontainername="Metal Crate"    
-    price="10">
+    cargocontainername="Metal Crate">
+    
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
 
     <Sprite texture="headset.png" depth="0.6" sourcerect="0,0,16,16"/>
 
     <Body width="12" height="8" density="10"/>
 
-    <WifiComponent range="20000.0" LinkToChat="true">
+    <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0">
       <RequiredItems name="Battery Cell" type="Contained"/>      
     </WifiComponent>
 
@@ -20,7 +25,7 @@
       <Containable name="Fulgurium Battery Cell"/>
     </ItemContainer>
 
-    <Wearable limbtype="Head" slots="Any,Face">
+    <Wearable limbtype="Head" slots="Any,Headset">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05"/>
       <sprite texture="headset.png" limb="Head" origin="0.5,0.5"/>
     </Wearable>
@@ -28,6 +33,7 @@
 
   <Item
     name="Clown Mask"
+    identifier="clownmask"
     category="Equipment"
     cargocontainername="Metal Crate"    
     tags="smallitem"
@@ -41,7 +47,7 @@
       <Item name="Bike Horn"/>
     </Deconstruct>
 
-    <Wearable limbtype="Head" slots="Any,Face">
+    <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
       <StatusEffect type="OnWearing" target="Character" HideFace="true"/>
     </Wearable>
@@ -49,8 +55,9 @@
 
   <Item
     name="Clown Costume"
+    identifier="clowncostume"
     category="Equipment"
-    cargocontainername="Metal Crate"    
+    cargocontainername="Metal Crate"
     tags="smallitem"
     description="Praise the honkmother.">
 
@@ -64,7 +71,7 @@
       <Item name="Bike Horn"/>
     </Deconstruct>
 
-    <Wearable slots="Any,Torso+Legs">
+    <Wearable slots="Any,InnerClothes">
       <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>
 
       <sprite texture="clownshirt.png" limb="RightHand" sourcerect="47,0,15,49" origin="0.45,0.6" hidelimb="true"/>

@@ -1,42 +1,39 @@
-Annwn
-Argadnel
-Balagtan
-Dyfed
-Falga
-Moytura
-Powys
-Tara
-Arran Chaos
-Conamara Chaos
-Murias Chaos
-Narbeth Chaos
-Rathmore Chaos
-Thotep Chaos
-Cilicia Flexus
-Delphi Flexus
-Gortyna Flexus
-Phocis Flexus
-Sidon Flexus
 Adonis Linea
 Agave Linea
 Agenor Linea
+Alkonost
 Alphesiboea Linea
+Ana
 Androgeos Linea
+Anid
+Annwn
+Apep
+Argadnel
 Argiope Linea
+Arid Troma
 Asterius Linea
 Astypalaea Linea
+Attis
 Autonoe Linea
+Balagtan
+Bast
 Belus Linea
+Berith
 Butterdon Linea
 Cadmus Linea
-Chthonius Linea
+Cilicia Flexus
 Corick Linea
+Delphi Flexus
 Drizzlecomb Linea
 Drumskinny Linea
+Dyfed
 Echion Linea
 Euphemus Linea
+Falga
 Glaukos Linea
+Gortyna Flexus
 Harmonia Linea
+Hyldemoer
 Hyperenor Linea
 Ino Linea
 Katreus Linea
@@ -44,48 +41,36 @@ Kennet Linea
 Libya Linea
 Mehen Linea
 Merrivale Linea
+Milda
 Minos Linea
+Moytura
+New Iapetus
+Noctae
+Nome
 Onga Linea
+Oshan
 Pelagon Linea
 Pelorus Linea
 Phineus Linea
+Phocis Flexus
 Phoenix Linea
+Powys
 Rhadamanthys Linea
 Sarpedon Linea
+Set
 Sharpitor Linea
+Sidon Flexus
+Skaani
+Sontu
 Sparti Linea
 Staldon Linea
+Tara
 Tectamus Linea
 Telephassa Linea
 Thasus Linea
 Thynia Linea
+Topol
 Tormsdale Linea
 Udaeus Linea
-Yelland Linea
-Boeotia Macula
-Castalia Macula
-Cyclades Macula
-Sabbati Macula
-Thera Macula
-Thrace Macula
-Apep
-Milda
-Ana
-Anid
-Noctae
-Set
-Berith
-Hyldemoer
-Arid Troma
-New Iapetus
-Alkonost
-Skaani
-Topol
-Sontu
-Nome
-Attis
-Bast
-Ashvini II
-Oshan
 Vorta
-Tnaboe
+Yelland Linea

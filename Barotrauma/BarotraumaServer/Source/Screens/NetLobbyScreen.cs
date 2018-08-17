@@ -75,18 +75,18 @@ namespace Barotrauma
             set
             {
                 lastUpdateID++;
-                missionTypeIndex = Math.Max(0, Math.Min(Mission.MissionTypes.Count() - 1, value));
+                missionTypeIndex = Math.Max(0, Math.Min(MissionPrefab.MissionTypes.Count() - 1, value));
             }
         }
 
         public string MissionTypeName
         {
-            get { return Mission.MissionTypes[MissionTypeIndex]; }
+            get { return MissionPrefab.MissionTypes[MissionTypeIndex]; }
             set
             {
-                for (int i = 0; i < Mission.MissionTypes.Count(); i++)
+                for (int i = 0; i < MissionPrefab.MissionTypes.Count(); i++)
                 {
-                    if (Mission.MissionTypes[i].ToLower() == value.ToLower())
+                    if (MissionPrefab.MissionTypes[i].ToLower() == value.ToLower())
                     {
                         MissionTypeIndex = i;
                         break;
@@ -119,7 +119,7 @@ namespace Barotrauma
 
             subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
-            if (subs == null || subs.Count()==0)
+            if (subs == null || subs.Count() == 0)
             {
                 throw new Exception("No submarines are available.");
             }
@@ -187,7 +187,7 @@ namespace Barotrauma
 
             if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = Submarine.SavedSubmarines.FindAll(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus));
+                var nonShuttles = Submarine.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
             if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
