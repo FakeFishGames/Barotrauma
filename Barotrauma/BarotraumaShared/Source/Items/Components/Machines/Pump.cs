@@ -145,7 +145,7 @@ namespace Barotrauma.Items.Components
         {
             if (GameMain.Client != null) return false;
 
-            if (objective.Option.ToLowerInvariant() == "stop pumping")
+            if (objective.Option.ToLowerInvariant() == "stoppumping")
             {
                 if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
                 FlowPercentage = 0.0f;

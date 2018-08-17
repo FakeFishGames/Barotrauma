@@ -216,7 +216,7 @@ namespace Barotrauma
                     TextManager.Get("Mission") + ": " + mission.Name);
                 new GUITextBlock(
                     new RectTransform(new Vector2(1.0f, 0.05f), locationInfoContainer.RectTransform, Anchor.TopCenter),
-                    TextManager.Get("Reward") + ": " + mission.Reward + " " + TextManager.Get("Credits"));
+                    TextManager.Get("Reward").Replace("[reward]", mission.Reward.ToString()));
                 new GUITextBlock(
                     new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform, Anchor.TopCenter),
                     mission.Description, wrap: true);
@@ -400,7 +400,8 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return TextManager.Get("Credits") + ": " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money));
+            return TextManager.Get("PlayerCredits").Replace("[credits]",
+                ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money)));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)

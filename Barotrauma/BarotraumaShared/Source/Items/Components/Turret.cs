@@ -299,8 +299,6 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-
-
             if (GetAvailablePower() < powerConsumption)
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -341,7 +339,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fire at will"))
+            if (projectileCount == 0 || (projectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -393,7 +391,7 @@ namespace Barotrauma.Items.Components
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
 
-            if (objective.Option.ToLowerInvariant() == "fire at will")
+            if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
                 character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Use, true, true);
